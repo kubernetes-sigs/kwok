@@ -20,12 +20,7 @@ If your repo has certain guidelines for contribution, put them here ahead of the
 
 - [Mentoring Initiatives](https://git.k8s.io/community/mentoring) - We have a diverse set of mentorship programs available that are always looking for volunteers!
 
-<!---
-Custom Information - if you're copying this template for the first time you can add custom content here, for example:
-
 ## Contact Information
 
-- [Slack channel](https://kubernetes.slack.com/messages/kubernetes-users) - Replace `kubernetes-users` with your slack channel string, this will send users directly to your channel. 
-- [Mailing list](URL)
-
--->
+- [Slack](https://kubernetes.slack.com/messages/sig-scheduling)
+- [Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-scheduling)
