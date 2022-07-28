@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kwok-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kwok-controller
+  template:
+    metadata:
+      name: kwok-controller
+      namespace: kube-system
+      labels:
+        app: kwok-controller
+    spec:
+      containers:
+        - name: kwok-controller
+          image: registry.k8s.io/kwok/kwok-controller
+          imagePullPolicy: IfNotPresent
+          args:
+            - --all-node-manage=false
+            - --node-manage-annotation-selector=kwok.x-k8s.io/node=fake
+            - --node-manage-label-selector=
+            - --status-custom-annotation-selector=kwok.x-k8s.io/status=custom
+            - --status-custom-label-selector=
+            - --server-address=0.0.0.0:8080
+            - --cidr=10.0.0.1/24
+            - --node-ip=$(POD_IP)
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 2
+            timeoutSeconds: 2
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 2
+            timeoutSeconds: 2
+            periodSeconds: 20
+            failureThreshold: 5
+      serviceAccount: kwok-controller
+      serviceAccountName: kwok-controller
+      restartPolicy: Always
