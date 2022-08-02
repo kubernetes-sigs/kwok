@@ -14,20 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllers
 
 import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"k8s.io/apimachinery/pkg/labels"
 	"net"
 	"strings"
 	"sync"
 	"text/template"
 	"time"
 
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/yaml"
 )
 

@@ -19,7 +19,7 @@ KIND_NODE_IMAGE=docker.io/kindest/node:v1.24.2
 CLUSTER_NAME=kwok-controller-test
 IMAGE=kwok-controller:test
 
-"${DIR}"/../../images/kwok-controller/build.sh --tag "${IMAGE}"
+"${DIR}"/../../images/kwok/build.sh --tag "${IMAGE}"
 
 kind create cluster --name="${CLUSTER_NAME}" --image="${KIND_NODE_IMAGE}"
 

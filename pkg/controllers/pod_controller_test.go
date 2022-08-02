@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllers
 
 import (
 	"context"
@@ -23,11 +23,12 @@ import (
 	"testing"
 	"time"
 
+	"sigs.k8s.io/kwok/pkg/controllers/templates"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
-	"sigs.k8s.io/kwok/pkg/kwok-controller/templates"
 )
 
 func TestPodController(t *testing.T) {
@@ -71,16 +72,16 @@ func TestPodController(t *testing.T) {
 	}
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
-		ClientSet:                      clientset,
-		NodeIP:                         "10.0.0.1",
-		CIDR:                           "10.0.0.1/24",
-		StatusCustomAnnotationSelector: annotationSelector.String(),
-		PodStatusTemplate:              templates.DefaultPodStatusTemplate,
-		NodeHasFunc:                    nodeHasFunc,
-		FuncMap:                        funcMap,
-		LockPodParallelism:             2,
-		DeletePodParallelism:           2,
-		Logger:                         testingLogger{t},
+		ClientSet:                             clientset,
+		NodeIP:                                "10.0.0.1",
+		CIDR:                                  "10.0.0.1/24",
+		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
+		PodStatusTemplate:                     templates.DefaultPodStatusTemplate,
+		NodeHasFunc:                           nodeHasFunc,
+		FuncMap:                               funcMap,
+		LockPodParallelism:                    2,
+		DeletePodParallelism:                  2,
+		Logger:                                testingLogger{t},
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new pods controller error: %v", err))

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllers
 
 import (
 	"bytes"
@@ -25,6 +25,8 @@ import (
 	"text/template"
 	"time"
 
+	"sigs.k8s.io/kwok/pkg/logger"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -33,58 +35,57 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/pager"
-	"sigs.k8s.io/kwok/pkg/logger"
 )
 
 // NodeController is a fake nodes implementation that can be used to test
 type NodeController struct {
-	clientSet                      kubernetes.Interface
-	nodeIP                         string
-	statusCustomAnnotationSelector labels.Selector
-	statusCustomLabelSelector      labels.Selector
-	nodeManageAnnotationSelector   string
-	nodeManageLabelSelector        string
-	nodeSelectorFunc               func(node *corev1.Node) bool
-	nodeAnnotationSelector         string
-	lockPodsOnNodeFunc             func(ctx context.Context, nodeName string) error
-	nodesSets                      *stringSets
-	nodeHeartbeatTemplate          string
-	nodeStatusTemplate             string
-	funcMap                        template.FuncMap
-	logger                         logger.Logger
-	nodeHeartbeatInterval          time.Duration
-	nodeHeartbeatParallelism       int
-	lockNodeParallelism            int
-	nodeChan                       chan string
+	clientSet                             kubernetes.Interface
+	nodeIP                                string
+	disregardStatusWithAnnotationSelector labels.Selector
+	disregardStatusWithLabelSelector      labels.Selector
+	manageNodesWithAnnotationSelector     string
+	manageNodesWithLabelSelector          string
+	nodeSelectorFunc                      func(node *corev1.Node) bool
+	nodeAnnotationSelector                string
+	lockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
+	nodesSets                             *stringSets
+	nodeHeartbeatTemplate                 string
+	nodeStatusTemplate                    string
+	funcMap                               template.FuncMap
+	logger                                logger.Logger
+	nodeHeartbeatInterval                 time.Duration
+	nodeHeartbeatParallelism              int
+	lockNodeParallelism                   int
+	nodeChan                              chan string
 }
 
 // NodeControllerConfig is the configuration for the NodeController
 type NodeControllerConfig struct {
-	ClientSet                      kubernetes.Interface
-	NodeSelectorFunc               func(node *corev1.Node) bool
-	LockPodsOnNodeFunc             func(ctx context.Context, nodeName string) error
-	StatusCustomAnnotationSelector string
-	StatusCustomLabelSelector      string
-	NodeManageAnnotationSelector   string
-	NodeManageLabelSelector        string
-	NodeIP                         string
-	NodeStatusTemplate             string
-	NodeHeartbeatTemplate          string
-	Logger                         logger.Logger
-	NodeHeartbeatInterval          time.Duration
-	NodeHeartbeatParallelism       int
-	LockNodeParallelism            int
-	FuncMap                        template.FuncMap
+	ClientSet                             kubernetes.Interface
+	NodeSelectorFunc                      func(node *corev1.Node) bool
+	LockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
+	DisregardStatusWithAnnotationSelector string
+	DisregardStatusWithLabelSelector      string
+	ManageNodesWithAnnotationSelector     string
+	ManageNodesWithLabelSelector          string
+	NodeIP                                string
+	NodeStatusTemplate                    string
+	NodeHeartbeatTemplate                 string
+	Logger                                logger.Logger
+	NodeHeartbeatInterval                 time.Duration
+	NodeHeartbeatParallelism              int
+	LockNodeParallelism                   int
+	FuncMap                               template.FuncMap
 }
 
 // NewNodeController creates a new fake nodes controller
 func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
-	statusCustomAnnotationSelector, err := labelsParse(conf.StatusCustomAnnotationSelector)
+	disregardStatusWithAnnotationSelector, err := labelsParse(conf.DisregardStatusWithAnnotationSelector)
 	if err != nil {
 		return nil, err
 	}
 
-	statusCustomLabelSelector, err := labelsParse(conf.StatusCustomLabelSelector)
+	disregardStatusWithLabelSelector, err := labelsParse(conf.DisregardStatusWithLabelSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -94,22 +95,22 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		log = logger.Noop
 	}
 	n := &NodeController{
-		clientSet:                      conf.ClientSet,
-		nodeSelectorFunc:               conf.NodeSelectorFunc,
-		statusCustomAnnotationSelector: statusCustomAnnotationSelector,
-		statusCustomLabelSelector:      statusCustomLabelSelector,
-		nodeManageAnnotationSelector:   conf.NodeManageAnnotationSelector,
-		nodeManageLabelSelector:        conf.NodeManageLabelSelector,
-		lockPodsOnNodeFunc:             conf.LockPodsOnNodeFunc,
-		nodeIP:                         conf.NodeIP,
-		nodesSets:                      newStringSets(),
-		logger:                         log,
-		nodeHeartbeatTemplate:          conf.NodeHeartbeatTemplate,
-		nodeStatusTemplate:             conf.NodeStatusTemplate + "\n" + conf.NodeHeartbeatTemplate,
-		nodeHeartbeatInterval:          conf.NodeHeartbeatInterval,
-		nodeHeartbeatParallelism:       conf.NodeHeartbeatParallelism,
-		lockNodeParallelism:            conf.LockNodeParallelism,
-		nodeChan:                       make(chan string),
+		clientSet:                             conf.ClientSet,
+		nodeSelectorFunc:                      conf.NodeSelectorFunc,
+		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
+		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
+		manageNodesWithAnnotationSelector:     conf.ManageNodesWithAnnotationSelector,
+		manageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
+		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
+		nodeIP:                                conf.NodeIP,
+		nodesSets:                             newStringSets(),
+		logger:                                log,
+		nodeHeartbeatTemplate:                 conf.NodeHeartbeatTemplate,
+		nodeStatusTemplate:                    conf.NodeStatusTemplate + "\n" + conf.NodeHeartbeatTemplate,
+		nodeHeartbeatInterval:                 conf.NodeHeartbeatInterval,
+		nodeHeartbeatParallelism:              conf.NodeHeartbeatParallelism,
+		lockNodeParallelism:                   conf.LockNodeParallelism,
+		nodeChan:                              make(chan string),
 	}
 	n.funcMap = template.FuncMap{
 		"NodeIP": func() string {
@@ -131,7 +132,7 @@ func (c *NodeController) Start(ctx context.Context) error {
 	go c.LockNodes(ctx, c.nodeChan)
 
 	opt := metav1.ListOptions{
-		LabelSelector: c.nodeManageLabelSelector,
+		LabelSelector: c.manageNodesWithLabelSelector,
 	}
 	err := c.WatchNodes(ctx, c.nodeChan, opt)
 	if err != nil {
@@ -210,15 +211,15 @@ func (c *NodeController) needHeartbeat(node *corev1.Node) bool {
 }
 
 func (c *NodeController) needLockNode(node *corev1.Node) bool {
-	if c.statusCustomAnnotationSelector != nil &&
+	if c.disregardStatusWithAnnotationSelector != nil &&
 		len(node.Annotations) != 0 &&
-		c.statusCustomAnnotationSelector.Matches(labels.Set(node.Annotations)) {
+		c.disregardStatusWithAnnotationSelector.Matches(labels.Set(node.Annotations)) {
 		return false
 	}
 
-	if c.statusCustomLabelSelector != nil &&
+	if c.disregardStatusWithLabelSelector != nil &&
 		len(node.Labels) != 0 &&
-		c.statusCustomLabelSelector.Matches(labels.Set(node.Labels)) {
+		c.disregardStatusWithLabelSelector.Matches(labels.Set(node.Labels)) {
 		return false
 	}
 	return true

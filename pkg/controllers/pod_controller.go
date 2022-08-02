@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllers
 
 import (
 	"bytes"
@@ -24,6 +24,8 @@ import (
 	"net"
 	"text/template"
 	"time"
+
+	"sigs.k8s.io/kwok/pkg/logger"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -36,7 +38,6 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/pager"
-	"sigs.k8s.io/kwok/pkg/logger"
 )
 
 var (
@@ -47,35 +48,35 @@ var (
 
 // PodController is a fake pods implementation that can be used to test
 type PodController struct {
-	clientSet                      kubernetes.Interface
-	statusCustomAnnotationSelector labels.Selector
-	statusCustomLabelSelector      labels.Selector
-	nodeIP                         string
-	cidrIPNet                      *net.IPNet
-	nodeHasFunc                    func(nodeName string) bool
-	ipPool                         *ipPool
-	podStatusTemplate              string
-	logger                         logger.Logger
-	funcMap                        template.FuncMap
-	lockPodChan                    chan *corev1.Pod
-	lockPodParallelism             int
-	deletePodChan                  chan *corev1.Pod
-	deletePodParallelism           int
+	clientSet                             kubernetes.Interface
+	disregardStatusWithAnnotationSelector labels.Selector
+	disregardStatusWithLabelSelector      labels.Selector
+	nodeIP                                string
+	cidrIPNet                             *net.IPNet
+	nodeHasFunc                           func(nodeName string) bool
+	ipPool                                *ipPool
+	podStatusTemplate                     string
+	logger                                logger.Logger
+	funcMap                               template.FuncMap
+	lockPodChan                           chan *corev1.Pod
+	lockPodParallelism                    int
+	deletePodChan                         chan *corev1.Pod
+	deletePodParallelism                  int
 }
 
 // PodControllerConfig is the configuration for the PodController
 type PodControllerConfig struct {
-	ClientSet                      kubernetes.Interface
-	StatusCustomAnnotationSelector string
-	StatusCustomLabelSelector      string
-	NodeIP                         string
-	CIDR                           string
-	NodeHasFunc                    func(nodeName string) bool
-	PodStatusTemplate              string
-	Logger                         logger.Logger
-	LockPodParallelism             int
-	DeletePodParallelism           int
-	FuncMap                        template.FuncMap
+	ClientSet                             kubernetes.Interface
+	DisregardStatusWithAnnotationSelector string
+	DisregardStatusWithLabelSelector      string
+	NodeIP                                string
+	CIDR                                  string
+	NodeHasFunc                           func(nodeName string) bool
+	PodStatusTemplate                     string
+	Logger                                logger.Logger
+	LockPodParallelism                    int
+	DeletePodParallelism                  int
+	FuncMap                               template.FuncMap
 }
 
 // NewPodController creates a new fake pods controller
@@ -85,12 +86,12 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		return nil, err
 	}
 
-	statusCustomAnnotationSelector, err := labelsParse(conf.StatusCustomAnnotationSelector)
+	disregardStatusWithAnnotationSelector, err := labelsParse(conf.DisregardStatusWithAnnotationSelector)
 	if err != nil {
 		return nil, err
 	}
 
-	statusCustomLabelSelector, err := labelsParse(conf.StatusCustomLabelSelector)
+	disregardStatusWithLabelSelector, err := labelsParse(conf.DisregardStatusWithLabelSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -101,19 +102,19 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 	}
 
 	n := &PodController{
-		clientSet:                      conf.ClientSet,
-		statusCustomAnnotationSelector: statusCustomAnnotationSelector,
-		statusCustomLabelSelector:      statusCustomLabelSelector,
-		nodeIP:                         conf.NodeIP,
-		cidrIPNet:                      cidrIPNet,
-		ipPool:                         newIPPool(cidrIPNet),
-		nodeHasFunc:                    conf.NodeHasFunc,
-		logger:                         log,
-		podStatusTemplate:              conf.PodStatusTemplate,
-		lockPodChan:                    make(chan *corev1.Pod),
-		lockPodParallelism:             conf.LockPodParallelism,
-		deletePodChan:                  make(chan *corev1.Pod),
-		deletePodParallelism:           conf.DeletePodParallelism,
+		clientSet:                             conf.ClientSet,
+		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
+		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
+		nodeIP:                                conf.NodeIP,
+		cidrIPNet:                             cidrIPNet,
+		ipPool:                                newIPPool(cidrIPNet),
+		nodeHasFunc:                           conf.NodeHasFunc,
+		logger:                                log,
+		podStatusTemplate:                     conf.PodStatusTemplate,
+		lockPodChan:                           make(chan *corev1.Pod),
+		lockPodParallelism:                    conf.LockPodParallelism,
+		deletePodChan:                         make(chan *corev1.Pod),
+		deletePodParallelism:                  conf.DeletePodParallelism,
 	}
 	n.funcMap = template.FuncMap{
 		"NodeIP": func() string {
@@ -233,15 +234,15 @@ func (c *PodController) needLockPod(pod *corev1.Pod) bool {
 		return false
 	}
 
-	if c.statusCustomAnnotationSelector != nil &&
+	if c.disregardStatusWithAnnotationSelector != nil &&
 		len(pod.Annotations) != 0 &&
-		c.statusCustomAnnotationSelector.Matches(labels.Set(pod.Annotations)) {
+		c.disregardStatusWithAnnotationSelector.Matches(labels.Set(pod.Annotations)) {
 		return false
 	}
 
-	if c.statusCustomLabelSelector != nil &&
+	if c.disregardStatusWithLabelSelector != nil &&
 		len(pod.Labels) != 0 &&
-		c.statusCustomLabelSelector.Matches(labels.Set(pod.Labels)) {
+		c.disregardStatusWithLabelSelector.Matches(labels.Set(pod.Labels)) {
 		return false
 	}
 	return true

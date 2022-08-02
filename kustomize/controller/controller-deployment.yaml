@@ -16,14 +16,14 @@ spec:
     spec:
       containers:
         - name: kwok-controller
-          image: registry.k8s.io/kwok/kwok-controller
+          image: registry.k8s.io/kwok/kwok
           imagePullPolicy: IfNotPresent
           args:
-            - --all-node-manage=false
-            - --node-manage-annotation-selector=kwok.x-k8s.io/node=fake
-            - --node-manage-label-selector=
-            - --status-custom-annotation-selector=kwok.x-k8s.io/status=custom
-            - --status-custom-label-selector=
+            - --manage-all-nodes=false
+            - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
+            - --manage-nodes-with-label-selector=
+            - --disregard-status-with-annotation-selector=kwok.x-k8s.io/status=custom
+            - --disregard-status-with-label-selector=
             - --server-address=0.0.0.0:8080
             - --cidr=10.0.0.1/24
             - --node-ip=$(POD_IP)

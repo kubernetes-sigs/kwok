@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllers
 
 import (
 	"context"
@@ -23,10 +23,11 @@ import (
 	"text/template"
 	"time"
 
+	"sigs.k8s.io/kwok/pkg/logger"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
-	"sigs.k8s.io/kwok/pkg/logger"
 	"sigs.k8s.io/yaml"
 )
 
@@ -63,31 +64,31 @@ type Controller struct {
 }
 
 type Config struct {
-	ClientSet                      kubernetes.Interface
-	AllNodeManage                  bool
-	NodeManageAnnotationSelector   string
-	NodeManageLabelSelector        string
-	StatusCustomAnnotationSelector string
-	StatusCustomLabelSelector      string
-	CIDR                           string
-	NodeIP                         string
-	Logger                         logger.Logger
-	PodStatusTemplate              string
-	NodeInitializationTemplate     string
-	NodeHeartbeatTemplate          string
+	ClientSet                             kubernetes.Interface
+	ManageAllNodes                        bool
+	ManageNodesWithAnnotationSelector     string
+	ManageNodesWithLabelSelector          string
+	DisregardStatusWithAnnotationSelector string
+	DisregardStatusWithLabelSelector      string
+	CIDR                                  string
+	NodeIP                                string
+	Logger                                logger.Logger
+	PodStatusTemplate                     string
+	NodeInitializationTemplate            string
+	NodeHeartbeatTemplate                 string
 }
 
 // NewController creates a new fake kubelet controller
 func NewController(conf Config) (*Controller, error) {
 	var nodeSelectorFunc func(node *corev1.Node) bool
-	if conf.AllNodeManage {
+	if conf.ManageAllNodes {
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return true
 		}
-		conf.NodeManageAnnotationSelector = ""
-		conf.NodeManageLabelSelector = ""
-	} else if conf.NodeManageAnnotationSelector != "" {
-		selector, err := labels.Parse(conf.NodeManageAnnotationSelector)
+		conf.ManageNodesWithAnnotationSelector = ""
+		conf.ManageNodesWithLabelSelector = ""
+	} else if conf.ManageNodesWithAnnotationSelector != "" {
+		selector, err := labels.Parse(conf.ManageNodesWithAnnotationSelector)
 		if err != nil {
 			return nil, err
 		}
@@ -99,13 +100,13 @@ func NewController(conf Config) (*Controller, error) {
 	var lockPodsOnNodeFunc func(ctx context.Context, nodeName string) error
 
 	nodes, err := NewNodeController(NodeControllerConfig{
-		ClientSet:                      conf.ClientSet,
-		NodeIP:                         conf.NodeIP,
-		StatusCustomAnnotationSelector: conf.StatusCustomAnnotationSelector,
-		StatusCustomLabelSelector:      conf.StatusCustomLabelSelector,
-		NodeManageAnnotationSelector:   conf.NodeManageAnnotationSelector,
-		NodeManageLabelSelector:        conf.NodeManageLabelSelector,
-		NodeSelectorFunc:               nodeSelectorFunc,
+		ClientSet:                             conf.ClientSet,
+		NodeIP:                                conf.NodeIP,
+		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
+		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
+		ManageNodesWithAnnotationSelector:     conf.ManageNodesWithAnnotationSelector,
+		ManageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
+		NodeSelectorFunc:                      nodeSelectorFunc,
 		LockPodsOnNodeFunc: func(ctx context.Context, nodeName string) error {
 			return lockPodsOnNodeFunc(ctx, nodeName)
 		},
@@ -122,17 +123,17 @@ func NewController(conf Config) (*Controller, error) {
 	}
 
 	pods, err := NewPodController(PodControllerConfig{
-		ClientSet:                      conf.ClientSet,
-		NodeIP:                         conf.NodeIP,
-		CIDR:                           conf.CIDR,
-		StatusCustomAnnotationSelector: conf.StatusCustomAnnotationSelector,
-		StatusCustomLabelSelector:      conf.StatusCustomLabelSelector,
-		PodStatusTemplate:              conf.PodStatusTemplate,
-		LockPodParallelism:             16,
-		DeletePodParallelism:           16,
-		NodeHasFunc:                    nodes.Has, // just handle pods that are on nodes we have
-		Logger:                         conf.Logger,
-		FuncMap:                        funcMap,
+		ClientSet:                             conf.ClientSet,
+		NodeIP:                                conf.NodeIP,
+		CIDR:                                  conf.CIDR,
+		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
+		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
+		PodStatusTemplate:                     conf.PodStatusTemplate,
+		LockPodParallelism:                    16,
+		DeletePodParallelism:                  16,
+		NodeHasFunc:                           nodes.Has, // just handle pods that are on nodes we have
+		Logger:                                conf.Logger,
+		FuncMap:                               funcMap,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pods controller: %v", err)

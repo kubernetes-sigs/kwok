@@ -24,6 +24,9 @@ import (
 	"os"
 	"time"
 
+	"sigs.k8s.io/kwok/pkg/controllers"
+	"sigs.k8s.io/kwok/pkg/controllers/templates"
+
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,44 +35,42 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/flowcontrol"
-	"sigs.k8s.io/kwok/pkg/kwok-controller/controller"
-	"sigs.k8s.io/kwok/pkg/kwok-controller/templates"
 )
 
 var (
 	// The default IP assigned to the Pod on maintained Nodes.
 	cidr = "10.0.0.1/24"
-	// The ip of all nodes maintained by the fake-kubelet
+	// The ip of all nodes maintained by the Kwok
 	nodeIP = net.ParseIP("196.168.0.1")
 	// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
-	allNodeManage = false
+	manageAllNodes = false
 	// Default annotations specified on Nodes to demand manage.
 	// Note: when `all-node-manage` is specified as true, this is a no-op.
-	nodeManageAnnotationSelector = ""
+	manageNodesWithAnnotationSelector = ""
 	// Default labels specified on Nodes to demand manage.
 	// Note: when `all-node-manage` is specified as true, this is a no-op.
-	nodeManageLabelSelector = ""
+	manageNodesWithLabelSelector = ""
 	// If a Node being managed has this annotation it will only keep its heartbeat not modify another status
 	// If a Pod is on a managed Node and has this annotation status will not be modified
-	statusCustomAnnotationSelector = ""
+	disregardStatusWithAnnotationSelector = ""
 	// If a Node being managed has this label it will only keep its heartbeat not modify another status
 	// If a Pod is on a managed Node and has this label status will not be modified
-	statusCustomLabelSelector = ""
+	disregardStatusWithLabelSelector = ""
 
 	serverAddress = ""
 	master        = ""
 	kubeconfig    = getEnv("KUBECONFIG", "")
-	logger        = log.New(os.Stderr, "[kwok/kwok-controller] ", log.LstdFlags)
+	logger        = log.New(os.Stderr, "[kwok/controllers] ", log.LstdFlags)
 )
 
 func init() {
 	pflag.StringVar(&cidr, "cidr", cidr, "CIDR of the pod ip")
 	pflag.IPVar(&nodeIP, "node-ip", nodeIP, "IP of the node")
-	pflag.BoolVar(&allNodeManage, "all-node-manage", allNodeManage, "Manage all nodes, there should be no nodes maintained by real Kubelet in the cluster")
-	pflag.StringVar(&nodeManageAnnotationSelector, "node-manage-annotation-selector", nodeManageAnnotationSelector, "Selector of nodes that with this annotation will to manage")
-	pflag.StringVar(&nodeManageLabelSelector, "node-manage-label-selector", nodeManageLabelSelector, "Selector of nodes that with this label will to manage")
-	pflag.StringVar(&statusCustomAnnotationSelector, "status-custom-annotation-selector", statusCustomAnnotationSelector, "Selector of pods that with this annotation will no longer maintain status and will be left to others to modify it")
-	pflag.StringVar(&statusCustomLabelSelector, "status-custom-label-selector", statusCustomLabelSelector, "Selector of pods that with this label will no longer maintain status and will be left to others to modify it")
+	pflag.BoolVar(&manageAllNodes, "manage-all-nodes", manageAllNodes, "All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.")
+	pflag.StringVar(&manageNodesWithAnnotationSelector, "manage-nodes-with-annotation-selector", manageNodesWithAnnotationSelector, "Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes.")
+	pflag.StringVar(&manageNodesWithLabelSelector, "manage-nodes-with-label-selector", manageNodesWithLabelSelector, "Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes.")
+	pflag.StringVar(&disregardStatusWithAnnotationSelector, "disregard-status-with-annotation-selector", disregardStatusWithAnnotationSelector, "All node/pod status excluding the ones that match the annotation selector will be watched and managed.")
+	pflag.StringVar(&disregardStatusWithLabelSelector, "disregard-status-with-label-selector", disregardStatusWithLabelSelector, "All node/pod status excluding the ones that match the label selector will be watched and managed.")
 	pflag.StringVar(&kubeconfig, "kubeconfig", kubeconfig, "Path to the kubeconfig file to use")
 	pflag.StringVar(&master, "master", master, "Server is the address of the kubernetes cluster")
 	pflag.StringVar(&serverAddress, "server-address", serverAddress, "Address to expose health and metrics on")
@@ -92,10 +93,13 @@ func main() {
 		logger.Fatalln(err)
 	}
 
-	if allNodeManage {
+	if manageAllNodes {
+		if manageNodesWithAnnotationSelector != "" || manageNodesWithLabelSelector != "" {
+			logger.Fatalln("manage-all-nodes is conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.")
+		}
 		logger.Printf("Watch all nodes")
-	} else if nodeManageAnnotationSelector != "" || nodeManageLabelSelector != "" {
-		logger.Printf("Watch nodes with annotation %q and label %q", nodeManageAnnotationSelector, nodeManageLabelSelector)
+	} else if manageNodesWithAnnotationSelector != "" || manageNodesWithLabelSelector != "" {
+		logger.Printf("Watch nodes with annotation %q and label %q", manageNodesWithAnnotationSelector, manageNodesWithLabelSelector)
 	}
 
 	backoff := wait.Backoff{
@@ -121,17 +125,19 @@ func main() {
 		logger.Fatalf("Failed to list nodes: %v", err)
 	}
 
-	ctr, err := controller.NewController(controller.Config{
-		ClientSet:                      clientset,
-		AllNodeManage:                  allNodeManage,
-		NodeManageAnnotationSelector:   nodeManageAnnotationSelector,
-		StatusCustomAnnotationSelector: statusCustomAnnotationSelector,
-		CIDR:                           cidr,
-		NodeIP:                         nodeIP.String(),
-		Logger:                         logger,
-		PodStatusTemplate:              templates.DefaultPodStatusTemplate,
-		NodeHeartbeatTemplate:          templates.DefaultNodeHeartbeatTemplate,
-		NodeInitializationTemplate:     templates.DefaultNodeStatusTemplate,
+	ctr, err := controllers.NewController(controllers.Config{
+		ClientSet:                             clientset,
+		ManageAllNodes:                        manageAllNodes,
+		ManageNodesWithAnnotationSelector:     manageNodesWithAnnotationSelector,
+		ManageNodesWithLabelSelector:          manageNodesWithLabelSelector,
+		DisregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
+		DisregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
+		CIDR:                                  cidr,
+		NodeIP:                                nodeIP.String(),
+		Logger:                                logger,
+		PodStatusTemplate:                     templates.DefaultPodStatusTemplate,
+		NodeHeartbeatTemplate:                 templates.DefaultNodeHeartbeatTemplate,
+		NodeInitializationTemplate:            templates.DefaultNodeStatusTemplate,
 	})
 	if err != nil {
 		logger.Fatalln(err)
