@@ -142,7 +142,7 @@ func (c *NodeController) Start(ctx context.Context) error {
 	go func() {
 		err = c.ListNodes(ctx, c.nodeChan, opt)
 		if err != nil {
-			c.logger.Printf("failed list node: %s", err)
+			c.logger.Printf("failed list node: %s", err.Error())
 		}
 	}()
 
@@ -169,7 +169,7 @@ func (c *NodeController) allHeartbeatNode(ctx context.Context, nodes []string, t
 		tasks.Add(func() {
 			err := c.heartbeatNode(ctx, localNode)
 			if err != nil {
-				c.logger.Printf("Failed to heartbeat node %s: %s", localNode, err)
+				c.logger.Printf("Failed to heartbeat node %s: %s", localNode, err.Error())
 			}
 		})
 	}
@@ -193,10 +193,10 @@ loop:
 			heartbeatStartTime = time.Now()
 			c.allHeartbeatNode(ctx, nodes, tasks)
 			tasks.Wait()
-			c.logger.Printf("Heartbeat %d nodes took %s", len(nodes), time.Since(heartbeatStartTime))
+			c.logger.Printf("Heartbeat %d nodes took %v", len(nodes), time.Since(heartbeatStartTime))
 			th.Reset(c.nodeHeartbeatInterval)
 		case <-ctx.Done():
-			c.logger.Printf("Stop keep nodes heartbeat")
+			c.logger.Println("Stop keep nodes heartbeat")
 			break loop
 		}
 	}
@@ -246,7 +246,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 							continue loop
 						}
 
-						c.logger.Printf("Failed to watch nodes: %s", err)
+						c.logger.Printf("Failed to watch nodes: %s", err.Error())
 						select {
 						case <-ctx.Done():
 							break loop
@@ -274,7 +274,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 				break loop
 			}
 		}
-		c.logger.Printf("Stop watch nodes")
+		c.logger.Println("Stop watch nodes")
 	}()
 	return nil
 }
@@ -309,13 +309,13 @@ func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan string) {
 		tasks.Add(func() {
 			err := c.LockNode(ctx, localNode)
 			if err != nil {
-				c.logger.Printf("Failed to lock node %s: %s", localNode, err)
+				c.logger.Printf("Failed to lock node %s: %s", localNode, err.Error())
 				return
 			}
 			if c.lockPodsOnNodeFunc != nil {
 				err = c.lockPodsOnNodeFunc(ctx, localNode)
 				if err != nil {
-					c.logger.Printf("Failed to lock pods on node %s: %s", localNode, err)
+					c.logger.Printf("Failed to lock pods on node %s: %s", localNode, err.Error())
 					return
 				}
 			}

@@ -146,7 +146,7 @@ func (c *PodController) Start(ctx context.Context) error {
 	go func() {
 		err = c.ListPods(ctx, c.lockPodChan, opt)
 		if err != nil {
-			c.logger.Printf("failed list pods: %s", err)
+			c.logger.Printf("failed list pods: %s", err.Error())
 		}
 	}()
 	return nil
@@ -186,7 +186,7 @@ func (c *PodController) DeletePods(ctx context.Context, pods <-chan *corev1.Pod)
 		tasks.Add(func() {
 			err := c.DeletePod(ctx, localPod)
 			if err != nil {
-				c.logger.Printf("Failed to delete pod %s.%s on %s: %s", localPod.Name, localPod.Namespace, localPod.Spec.NodeName, err)
+				c.logger.Printf("Failed to delete pod %s.%s on %s: %s", localPod.Name, localPod.Namespace, localPod.Spec.NodeName, err.Error())
 			}
 		})
 	}
@@ -222,7 +222,7 @@ func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
 		tasks.Add(func() {
 			err := c.LockPod(ctx, localPod)
 			if err != nil {
-				c.logger.Printf("Failed to lock pod %s.%s on %s: %s", localPod.Name, localPod.Namespace, localPod.Spec.NodeName, err)
+				c.logger.Printf("Failed to lock pod %s.%s on %s: %s", localPod.Name, localPod.Namespace, localPod.Spec.NodeName, err.Error())
 			}
 		})
 	}
@@ -269,7 +269,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 							continue loop
 						}
 
-						c.logger.Printf("Failed to watch pods: %s", err)
+						c.logger.Printf("Failed to watch pods: %s", err.Error())
 						select {
 						case <-ctx.Done():
 							break loop
@@ -316,7 +316,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 				break loop
 			}
 		}
-		c.logger.Printf("Stop watch pods")
+		c.logger.Println("Stop watch pods")
 	}()
 
 	return nil

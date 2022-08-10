@@ -25,8 +25,12 @@ type testingLogger struct {
 	*testing.T
 }
 
-func (t testingLogger) Printf(format string, args ...interface{}) {
+func (t testingLogger) Printf(format string, args ...any) {
 	t.Logf(format, args...)
+}
+
+func (t testingLogger) Println(v ...any) {
+	t.Log(v...)
 }
 
 func TestParallelTasks(t *testing.T) {
