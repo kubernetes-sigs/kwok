@@ -11,7 +11,7 @@ commonLabels:
 namespace: kube-system
 
 resources:
-  - controller-deployment.yaml
-  - controller-serviceaccount.yaml
-  - controller-clusterrole.yaml
-  - controller-clusterrolebinding.yaml
+  - kwok-deployment.yaml
+  - kwok-serviceaccount.yaml
+  - kwok-clusterrole.yaml
+  - kwok-clusterrolebinding.yaml

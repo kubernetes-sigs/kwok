@@ -20,15 +20,15 @@ COPY . .
 RUN ls vendor || apk add -U git
 
 ENV CGO_ENABLED=0
-RUN go install ./cmd/controller
+RUN go install ./cmd/kwok
 RUN go install ./cmd/kwokctl
 
 FROM docker.io/library/alpine:3.16
-COPY --from=builder /go/bin/controller /usr/local/bin/
+COPY --from=builder /go/bin/kwok /usr/local/bin/
 COPY --from=builder /go/bin/kwokctl /usr/local/bin/
 COPY images/cluster/entrypoint.sh /entrypoint.sh
 
-ENV KWOK_CONTROLLER_BINARY /usr/local/bin/controller
+ENV KWOK_CONTROLLER_BINARY /usr/local/bin/kwok
 ENV KWOK_APISERVER_PORT 8080
 
 ARG kube_version

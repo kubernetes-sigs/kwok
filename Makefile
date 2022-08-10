@@ -33,16 +33,12 @@ verify:
 
 .PHONY: build
 build:
-	$(GO_CMD) build -o bin/kwok ./cmd/controller/*.go
+	$(GO_CMD) build -o bin/kwok ./cmd/kwok/*.go
 
 .PHONY: integration-test
 integration-test:
 	@echo "Not implemented yet"
 
 .PHONY: e2e-test
-e2e-test: \
-	e2e-test-kwokctl
-
-.PHONY: e2e-test-kwokctl
-e2e-test-kwokctl:
-	./test/kwokctl/kwokctl.test.sh
+e2e-test:
+	./hack/e2e-test.sh
