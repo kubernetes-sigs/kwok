@@ -17,7 +17,8 @@ limitations under the License.
 package logger
 
 type Logger interface {
-	Printf(format string, args ...interface{})
+	Printf(format string, args ...any)
+	Println(v ...any)
 }
 
 var Noop Logger = noopLogger{}
@@ -25,4 +26,5 @@ var Noop Logger = noopLogger{}
 type noopLogger struct {
 }
 
-func (noopLogger) Printf(format string, v ...interface{}) {}
+func (noopLogger) Printf(format string, v ...any) {}
+func (noopLogger) Println(v ...any)               {}
