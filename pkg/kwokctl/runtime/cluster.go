@@ -1,0 +1,199 @@
+/*
+Copyright 2022 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package runtime
+
+import (
+	"bytes"
+	"context"
+	"os"
+	"os/exec"
+	"time"
+
+	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
+	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
+	"sigs.k8s.io/kwok/pkg/logger"
+
+	"sigs.k8s.io/yaml"
+)
+
+var (
+	RawClusterConfigName    = "kwok.yaml"
+	InHostKubeconfigName    = "kubeconfig.yaml"
+	InClusterKubeconfigName = "kubeconfig"
+	EtcdDataDirName         = "etcd"
+	PkiName                 = "pki"
+	ComposeName             = "docker-compose.yaml"
+	Prometheus              = "prometheus.yaml"
+	KindName                = "kind.yaml"
+	KwokDeploy              = "kwok-controller-deployment.yaml"
+	PrometheusDeploy        = "prometheus-deployment.yaml"
+)
+
+type Cluster struct {
+	workdir string
+	name    string
+	conf    *Config
+	logger  logger.Logger
+}
+
+func NewCluster(name, workdir string, logger logger.Logger) *Cluster {
+	return &Cluster{
+		name:    name,
+		workdir: workdir,
+		logger:  logger,
+	}
+}
+
+func (c *Cluster) Logger() logger.Logger {
+	return c.logger
+}
+
+func (c *Cluster) Config() (*Config, error) {
+	if c.conf != nil {
+		return c.conf, nil
+	}
+	conf, err := c.Load()
+	if err != nil {
+		return nil, err
+	}
+	c.conf = conf
+	return conf, nil
+}
+
+func (c *Cluster) Load() (conf *Config, err error) {
+	file, err := os.ReadFile(utils.PathJoin(c.workdir, RawClusterConfigName))
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(file, &conf)
+	if err != nil {
+		return nil, err
+	}
+	return conf, nil
+}
+
+func (c *Cluster) InHostKubeconfig() (string, error) {
+	conf, err := c.Config()
+	if err != nil {
+		return "", err
+	}
+
+	return utils.PathJoin(conf.Workdir, InHostKubeconfigName), nil
+}
+
+func (c *Cluster) Init(ctx context.Context, conf Config) error {
+	config, err := yaml.Marshal(conf)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(c.workdir, 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(utils.PathJoin(c.workdir, RawClusterConfigName), config, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Cluster) Install(ctx context.Context) error {
+	conf, err := c.Config()
+	if err != nil {
+		return err
+	}
+
+	bin := utils.PathJoin(conf.Workdir, "bin")
+
+	kubectlPath := utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
+	err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustKubectlBinary, kubectlPath, 0755, conf.QuietPull)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Cluster) Uninstall(ctx context.Context) error {
+	conf, err := c.Config()
+	if err != nil {
+		return err
+	}
+
+	// cleanup workdir
+	os.RemoveAll(conf.Workdir)
+	return nil
+}
+
+func (c *Cluster) Ready(ctx context.Context) (bool, error) {
+	out := bytes.NewBuffer(nil)
+	err := c.KubectlInCluster(ctx, utils.IOStreams{
+		Out:    out,
+		ErrOut: out,
+	}, "get", "ns")
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
+	var err error
+	var ready bool
+	for i := 0; i < int(timeout/time.Second); i++ {
+		ready, err = c.Ready(ctx)
+		if ready {
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
+	return err
+}
+
+func (c *Cluster) Kubectl(ctx context.Context, stm utils.IOStreams, args ...string) error {
+	conf, err := c.Config()
+	if err != nil {
+		return err
+	}
+
+	kubectlPath, err := exec.LookPath("kubectl")
+	if err != nil {
+		bin := utils.PathJoin(conf.Workdir, "bin")
+		kubectlPath = utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
+		err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustKubectlBinary, kubectlPath, 0755, conf.QuietPull)
+		if err != nil {
+			return err
+		}
+	}
+	return utils.Exec(ctx, "", stm, kubectlPath, args...)
+}
+
+func (c *Cluster) KubectlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
+	conf, err := c.Config()
+	if err != nil {
+		return err
+	}
+
+	bin := utils.PathJoin(conf.Workdir, "bin")
+	kubectlPath := utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
+	err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustKubectlBinary, kubectlPath, 0755, conf.QuietPull)
+	if err != nil {
+		return err
+	}
+	return utils.Exec(ctx, "", stm, kubectlPath,
+		append([]string{"--kubeconfig", utils.PathJoin(conf.Workdir, InHostKubeconfigName)}, args...)...)
+}

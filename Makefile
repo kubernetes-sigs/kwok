@@ -40,5 +40,9 @@ integration-test:
 	@echo "Not implemented yet"
 
 .PHONY: e2e-test
-e2e-test:
-	@echo "Not implemented yet"
+e2e-test: \
+	e2e-test-kwokctl
+
+.PHONY: e2e-test-kwokctl
+e2e-test-kwokctl:
+	./test/kwokctl/kwokctl.test.sh
