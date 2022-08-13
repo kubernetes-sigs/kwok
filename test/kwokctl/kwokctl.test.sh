@@ -34,7 +34,7 @@ function main() {
 
   if [[ "${KWOK_RUNTIME}" == "binary" ]]; then
     export KWOK_CONTROLLER_BINARY="${DIR}/bin/kwok"
-    go build -o "${KWOK_CONTROLLER_BINARY}" "${DIR}"/../../cmd/controller
+    go build -o "${KWOK_CONTROLLER_BINARY}" "${DIR}"/../../cmd/kwok
   else
     export KWOK_CONTROLLER_IMAGE=kwok:test
     "${DIR}"/../../images/kwok/build.sh --tag "${KWOK_CONTROLLER_IMAGE}"

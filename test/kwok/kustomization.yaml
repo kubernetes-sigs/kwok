@@ -3,10 +3,10 @@ kind: Kustomization
 
 images:
   - name: registry.k8s.io/kwok/kwok
-    newName: kwok-controller
+    newName: kwok
     newTag: test
 
 resources:
-  - ../../kustomize/controller
+  - ../../kustomize/kwok
   - fake-deployment.yaml
   - fake-node.yaml
