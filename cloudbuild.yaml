@@ -1,0 +1,16 @@
+timeout: 3600s
+options:
+  substitution_option: ALLOW_LOOSE
+  # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
+  machineType: N1_HIGHCPU_32
+steps:
+  - name: 'gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20211118-2f2d816b90'
+    entrypoint: make
+    env:
+    - PUSH=true
+    - BUCKET=gs://k8s-staging-kwok-gcb
+    - IMAGE_PREFIX=registry.k8s.io/kwok
+    args:
+    - cross-image
+    - cross-build
+    - cross-cluster-image
