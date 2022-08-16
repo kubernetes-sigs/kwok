@@ -18,6 +18,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 DIR="$(realpath "${DIR}")"
 
 KWOK_RUNTIME=""
+KWOK_IMAGE="kwok"
+KWOK_VERSION="test"
 
 function args() {
   if [[ "${KWOK_RUNTIME}" == "" ]]; then
@@ -36,8 +38,8 @@ function main() {
     export KWOK_CONTROLLER_BINARY="${DIR}/bin/kwok"
     go build -o "${KWOK_CONTROLLER_BINARY}" "${DIR}"/../../cmd/kwok
   else
-    export KWOK_CONTROLLER_IMAGE=kwok:test
-    "${DIR}"/../../images/kwok/build.sh --tag "${KWOK_CONTROLLER_IMAGE}"
+    export KWOK_CONTROLLER_IMAGE="${KWOK_IMAGE}:${KWOK_VERSION}"
+    "${DIR}"/../../images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}"
   fi
 
   echo Test workable

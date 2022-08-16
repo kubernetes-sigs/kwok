@@ -22,7 +22,8 @@ KIND_VERSION=0.14.0
 
 KIND_NODE_IMAGE="docker.io/kindest/node:v${KUBE_VERSION}"
 CLUSTER_NAME=kwok-test
-IMAGE=kwok:test
+KWOK_IMAGE="kwok"
+KWOK_VERSION="test"
 
 BIN_DIR="${DIR}/bin"
 
@@ -55,11 +56,11 @@ function requirements() {
 }
 
 function start_cluster() {
-  "${DIR}"/../../images/kwok/build.sh --tag "${IMAGE}"
+  "${DIR}"/../../images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}"
 
   kind create cluster --name="${CLUSTER_NAME}" --image="${KIND_NODE_IMAGE}"
 
-  kind load docker-image --name="${CLUSTER_NAME}" ${IMAGE}
+  kind load docker-image --name="${CLUSTER_NAME}" "${KWOK_IMAGE}:${KWOK_VERSION}"
 
   kubectl kustomize "${DIR}" | kubectl apply -f -
 }

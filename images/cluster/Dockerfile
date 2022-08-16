@@ -13,19 +13,20 @@
 # limitations under the License.
 
 FROM docker.io/library/golang:1.18-alpine AS builder
+
+RUN apk add -U --no-cache bash git
+
 WORKDIR /go/src/sigs.k8s.io/kwok
 COPY . .
 
-# Check that if no vendor exists, install git in preparation for pulling the vendor later
-RUN ls vendor || apk add -U git
-
+ARG kwok_version
+ENV KWOK_VERSION $kwok_version
 ENV CGO_ENABLED=0
-RUN go install ./cmd/kwok
-RUN go install ./cmd/kwokctl
+RUN ./hack/releases.sh --bin=kwok --bin=kwokctl --version=${KWOK_VERSION}
 
 FROM docker.io/library/alpine:3.16
-COPY --from=builder /go/bin/kwok /usr/local/bin/
-COPY --from=builder /go/bin/kwokctl /usr/local/bin/
+COPY --from=builder /go/src/sigs.k8s.io/kwok/bin/kwok /usr/local/bin/
+COPY --from=builder /go/src/sigs.k8s.io/kwok/bin/kwokctl /usr/local/bin/
 COPY images/cluster/entrypoint.sh /entrypoint.sh
 
 ENV KWOK_CONTROLLER_BINARY /usr/local/bin/kwok

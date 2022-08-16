@@ -14,10 +14,39 @@
 
 GO_CMD ?= go
 
+DRY_RUN ?=
+PUSH ?=
+
+BUCKET ?= gs://k8s-staging-kwok-gcb
+
+GIT_TAG ?= $(shell git describe --tags --dirty --always)
+
+SUPPORTED_RELEASES ?= $(shell cat ./supported_releases.txt)
+
+BINARY ?= kwok kwokctl
+
+IMAGE_PREFIX ?= registry.k8s.io/kwok
+
+KWOK_IMAGE ?= $(IMAGE_PREFIX)/kwok
+
+CLUSTER_IMAGE ?= $(IMAGE_PREFIX)/cluster
+
+IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
+
+BINARY_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
+
+.PHONY: default
+default: help
+
+vendor:
+	$(GO_CMD) mod vendor
+
+## unit-test: Run unit tests
 .PHONY: unit-test
-unit-test:
+unit-test: vendor
 	$(GO_CMD) test ./pkg/...
 
+## verify: Verify code
 .PHONY: verify
 verify:
 	@echo "Verify go.mod & go.sum"
@@ -31,14 +60,76 @@ verify:
 		exit 1; \
 	fi
 
+## build: Build binary
 .PHONY: build
-build:
-	$(GO_CMD) build -o bin/kwok ./cmd/kwok/*.go
+build: vendor
+	@./hack/releases.sh \
+		$(addprefix --bin=, $(BINARY)) \
+		--bucket=${BUCKET} \
+		--version=${GIT_TAG} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
 
+## cross-build: Build kwok and kwokctl for all supported platforms
+.PHONY: cross-build
+cross-build: vendor
+	@./hack/releases.sh \
+		$(addprefix --bin=, $(BINARY)) \
+		$(addprefix --platform=, $(BINARY_PLATFORMS)) \
+		--bucket=${BUCKET} \
+		--version=${GIT_TAG} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
+
+## image: Build kwok image
+.PHONY: image
+image: vendor
+	@./images/kwok/build.sh \
+		--image=${KWOK_IMAGE} \
+		--version=${GIT_TAG} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
+
+## cross-image: Build kwok images for all supported platforms
+.PHONY: cross-image
+cross-image: vendor
+	@./images/kwok/build.sh \
+		$(addprefix --platform=, $(IMAGE_PLATFORMS))  \
+		--image=${KWOK_IMAGE} \
+		--version=${GIT_TAG} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
+
+## cross-cluster-image: Build cluster images for all supported platforms and all supported Kubernetes versions.
+# 1.13 and earlier only support Intel architectures.
+.PHONY: cross-cluster-image
+cross-cluster-image: vendor
+	@./images/cluster/build.sh \
+		$(addprefix --platform=, $(IMAGE_PLATFORMS)) \
+		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n -4 )) \
+		--image=${CLUSTER_IMAGE} \
+		--version=${GIT_TAG} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
+
+	@./images/cluster/build.sh \
+		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | tail -n 4 )) \
+		--image=${CLUSTER_IMAGE} \
+		--version=${GIT_TAG} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
+
+## integration-tests: Run integration tests
 .PHONY: integration-test
 integration-test:
 	@echo "Not implemented yet"
 
+## e2e-test: Run e2e tests
 .PHONY: e2e-test
 e2e-test:
-	./hack/e2e-test.sh
+	@./hack/e2e-test.sh
+
+## help: Show this help message
+.PHONY: help
+help:
+	@cat $(MAKEFILE_LIST) | grep -e '^## ' | sed -e 's/^## //'

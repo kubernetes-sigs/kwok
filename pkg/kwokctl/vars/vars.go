@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 )
@@ -36,7 +37,7 @@ var (
 	PrometheusPort = getEnvInt("KWOK_PROMETHEUS_PORT", 0)
 
 	// KwokVersion is the version of the fake to use.
-	KwokVersion = addPrefixV(getEnv("KWOK_VERSION", "v0.1.0"))
+	KwokVersion = addPrefixV(getEnv("KWOK_VERSION", consts.Version))
 
 	// KubeVersion is the version of Kubernetes to use.
 	KubeVersion = addPrefixV(getEnv("KWOK_KUBE_VERSION", "v1.24.2"))
