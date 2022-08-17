@@ -95,7 +95,7 @@ func ForkExecRestart(ctx context.Context, dir string, name string) error {
 
 	args := strings.Split(string(data), "\x00")
 
-	return ForkExec(ctx, dir, args[0], args...)
+	return ForkExec(ctx, dir, args[0], args[1:]...)
 }
 
 func ForkExecKill(ctx context.Context, dir string, name string) error {
