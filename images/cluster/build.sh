@@ -21,15 +21,17 @@ DOCKERFILE="$(realpath "${DIR}/Dockerfile" --relative-to="${ROOT_DIR}")"
 DRY_RUN=false
 PUSH=false
 IMAGES=()
+EXTRA_TAGS=()
 PLATFORMS=()
 VERSION=""
 KUBE_VERSIONS=()
 
 function usage() {
-  echo "Usage: ${0} [--help] [--version <version>] [--kube-version <kube-version> ...] [--image <image> ...] [--platform <platform> ...] [--push] [--dry-run]"
+  echo "Usage: ${0} [--help] [--version <version>] [--kube-version <kube-version> ...] [--image <image> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--push] [--dry-run]"
   echo "  --version <version> is kwok version, is required"
   echo "  --kube-version <kube-version> is kubernetes version, is required"
   echo "  --image <image> is image, is required"
+  echo "  --extra-tag <extra-tag> is extra tag"
   echo "  --platform <platform> is multi-platform capable for image"
   echo "  --push will push image to registry"
   echo "  --dry-run just show what would be done"
@@ -50,6 +52,10 @@ function args() {
       ;;
     --image | --image=*)
       [[ "${arg#*=}" != "${arg}" ]] && IMAGES+=("${arg#*=}") || { IMAGES+=("${2}") && shift; }
+      shift
+      ;;
+    --extra-tag | --extra-tag=*)
+      [[ "${arg#*=}" != "${arg}" ]] && EXTRA_TAGS+=("${arg#*=}") || { EXTRA_TAGS+=("${2}") && shift; }
       shift
       ;;
     --platform | --platform=*)
@@ -104,7 +110,7 @@ function dry_run() {
 
 function main() {
   local extra_args
-
+  local suffix
   if [[ "${#PLATFORMS}" -ne 0 ]]; then
     export DOCKER_CLI_EXPERIMENTAL=enabled
     if [[ "${DRY_RUN}" != "true" ]]; then
@@ -121,10 +127,19 @@ function main() {
       "--build-arg=kwok_version=${VERSION}"
     )
 
+    suffix="-k8s.${kube_version}"
+
     for image in "${IMAGES[@]}"; do
       extra_args+=(
-        "--tag=${image}:${VERSION}-k8s.${kube_version}"
+        "--tag=${image}:${VERSION}${suffix}"
       )
+      if [[ "${#EXTRA_TAGS[@]}" -ne 0 ]]; then
+        for extra_tag in "${EXTRA_TAGS[@]}"; do
+          extra_args+=(
+            "--tag=${image}:${extra_tag}${suffix}"
+          )
+        done
+      fi
     done
 
     if [[ "${#PLATFORMS}" -eq 0 ]]; then
@@ -135,7 +150,12 @@ function main() {
 
       if [[ "${PUSH}" == "true" ]]; then
         for image in "${IMAGES[@]}"; do
-          dry_run docker push "${image}:${VERSION}-k8s.${kube_version}"
+          dry_run docker push "${image}:${VERSION}${suffix}"
+          if [[ "${#EXTRA_TAGS[@]}" -ne 0 ]]; then
+            for extra_tag in "${EXTRA_TAGS[@]}"; do
+              dry_run docker push "${image}:${extra_tag}${suffix}"
+            done
+          fi
         done
       fi
     else

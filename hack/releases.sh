@@ -22,12 +22,14 @@ VERSION=""
 DRY_RUN=false
 PUSH=false
 BINS=()
+EXTRA_TAGS=()
 PLATFORMS=()
 LDFLAGS=()
 
 function usage() {
-  echo "Usage: ${0} [--help] [--bin <bin> ...] [--platform <platform> ...] [--bucket <bucket>] [--version <version>] [--push] [--dry-run]"
+  echo "Usage: ${0} [--help] [--bin <bin> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--bucket <bucket>] [--version <version>] [--push] [--dry-run]"
   echo "  --bin <bin> is binary, is required"
+  echo "  --extra-tag <extra-tag> is extra tag"
   echo "  --platform <platform> is multi-platform capable for binary"
   echo "  --bucket <bucket> is bucket to upload to"
   echo "  --version <version> is version of binary"
@@ -42,6 +44,10 @@ function args() {
     case "${arg}" in
     --bin | --bin=*)
       [[ "${arg#*=}" != "${arg}" ]] && BINS+=("${arg#*=}") || { BINS+=("${2}") && shift; }
+      shift
+      ;;
+    --extra-tag | --extra-tag=*)
+      [[ "${arg#*=}" != "${arg}" ]] && EXTRA_TAGS+=("${arg#*=}") || { EXTRA_TAGS+=("${2}") && shift; }
       shift
       ;;
     --platform | --platform=*)
@@ -115,6 +121,11 @@ function main() {
       dry_run go build "${extra_args[@]}" -o "${dist}" "${src}"
       if [[ "${PUSH}" == "true" ]]; then
         dry_run gsutil cp -P "${dist}" "${BUCKET}/${VERSION}/bin/${bin}"
+        if [[ "${#EXTRA_TAGS}" -ne 0 ]]; then
+          for extra_tag in "${EXTRA_TAGS[@]}"; do
+            dry_run gsutil cp -P "${dist}" "${BUCKET}/${extra_tag}/bin/${bin}"
+          done
+        fi
       fi
     done
   else
@@ -130,6 +141,11 @@ function main() {
         dry_run GOOS="${platform%%/*}" GOARCH="${platform##*/}" go build "${extra_args[@]}" -o "${dist}" "${src}"
         if [[ "${PUSH}" == "true" ]]; then
           dry_run gsutil cp -P "${dist}" "${BUCKET}/${VERSION}/bin/${platform}/${bin}"
+          if [[ "${#EXTRA_TAGS}" -ne 0 ]]; then
+            for extra_tag in "${EXTRA_TAGS[@]}"; do
+              dry_run gsutil cp -P "${dist}" "${BUCKET}/${extra_tag}/bin/${platform}/${bin}"
+            done
+          fi
         fi
       done
     done

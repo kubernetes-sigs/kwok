@@ -21,13 +21,15 @@ DOCKERFILE="$(realpath "${DIR}/Dockerfile" --relative-to="${ROOT_DIR}")"
 DRY_RUN=false
 PUSH=false
 IMAGES=()
+EXTRA_TAGS=()
 PLATFORMS=()
 VERSION=""
 
 function usage() {
-  echo "Usage: ${0} [--help] [--version <version>] [--image <image> ...] [--platform <platform> ...] [--push] [--dry-run]"
+  echo "Usage: ${0} [--help] [--version <version>] [--image <image> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--push] [--dry-run]"
   echo "  --version <version> is kwok version, is required"
   echo "  --image <image> is image, is required"
+  echo "  --extra-tag <extra-tag> is extra tag"
   echo "  --platform <platform> is multi-platform capable for image"
   echo "  --push will push image to registry"
   echo "  --dry-run just show what would be done"
@@ -44,6 +46,10 @@ function args() {
       ;;
     --image | --image=*)
       [[ "${arg#*=}" != "${arg}" ]] && IMAGES+=("${arg#*=}") || { IMAGES+=("${2}") && shift; }
+      shift
+      ;;
+    --extra-tag | --extra-tag=*)
+      [[ "${arg#*=}" != "${arg}" ]] && EXTRA_TAGS+=("${arg#*=}") || { EXTRA_TAGS+=("${2}") && shift; }
       shift
       ;;
     --platform | --platform=*)
@@ -100,6 +106,13 @@ function main() {
     extra_args+=(
       "--tag=${image}:${VERSION}"
     )
+    if [[ "${#EXTRA_TAGS[@]}" -ne 0 ]]; then
+      for extra_tag in "${EXTRA_TAGS[@]}"; do
+        extra_args+=(
+          "--tag=${image}:${extra_tag}"
+        )
+      done
+    fi
   done
 
   if [[ "${#PLATFORMS}" -eq 0 ]]; then
@@ -111,6 +124,11 @@ function main() {
     if [[ "${PUSH}" == "true" ]]; then
       for image in "${IMAGES[@]}"; do
         dry_run docker push "${image}:${VERSION}"
+        if [[ "${#EXTRA_TAGS[@]}" -ne 0 ]]; then
+          for extra_tag in "${EXTRA_TAGS[@]}"; do
+            dry_run docker push "${image}:${extra_tag}"
+          done
+        fi
       done
     fi
   else

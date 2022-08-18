@@ -19,7 +19,21 @@ PUSH ?=
 
 BUCKET ?= gs://k8s-staging-kwok-gcb
 
-GIT_TAG ?= $(shell git describe --tags --dirty --always)
+GIT_TAG ?= $(shell ./hack/get-version.sh)
+
+BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
+
+EXTRA_TAGS =
+
+
+ifneq ($(GIT_TAG),latest)
+
+# add the latest tag to the tags
+ifeq ($(BASE_REF),main)
+EXTRA_TAGS += latest
+endif
+
+endif
 
 SUPPORTED_RELEASES ?= $(shell cat ./supported_releases.txt)
 
@@ -65,6 +79,7 @@ verify:
 build: vendor
 	@./hack/releases.sh \
 		$(addprefix --bin=, $(BINARY)) \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--bucket=${BUCKET} \
 		--version=${GIT_TAG} \
 		--dry-run=${DRY_RUN} \
@@ -76,6 +91,7 @@ cross-build: vendor
 	@./hack/releases.sh \
 		$(addprefix --bin=, $(BINARY)) \
 		$(addprefix --platform=, $(BINARY_PLATFORMS)) \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--bucket=${BUCKET} \
 		--version=${GIT_TAG} \
 		--dry-run=${DRY_RUN} \
@@ -85,6 +101,7 @@ cross-build: vendor
 .PHONY: image
 image: vendor
 	@./images/kwok/build.sh \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${KWOK_IMAGE} \
 		--version=${GIT_TAG} \
 		--dry-run=${DRY_RUN} \
@@ -95,6 +112,7 @@ image: vendor
 cross-image: vendor
 	@./images/kwok/build.sh \
 		$(addprefix --platform=, $(IMAGE_PLATFORMS))  \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${KWOK_IMAGE} \
 		--version=${GIT_TAG} \
 		--dry-run=${DRY_RUN} \
@@ -107,6 +125,7 @@ cross-cluster-image: vendor
 	@./images/cluster/build.sh \
 		$(addprefix --platform=, $(IMAGE_PLATFORMS)) \
 		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n -4 )) \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${CLUSTER_IMAGE} \
 		--version=${GIT_TAG} \
 		--dry-run=${DRY_RUN} \
@@ -114,6 +133,7 @@ cross-cluster-image: vendor
 
 	@./images/cluster/build.sh \
 		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | tail -n 4 )) \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${CLUSTER_IMAGE} \
 		--version=${GIT_TAG} \
 		--dry-run=${DRY_RUN} \
