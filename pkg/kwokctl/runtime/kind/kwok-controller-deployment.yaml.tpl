@@ -116,6 +116,7 @@ spec:
           initialDelaySeconds: 2
           periodSeconds: 20
           timeoutSeconds: 2
+      hostNetwork: true
       nodeName: '{{.Name}}-control-plane'
       restartPolicy: Always
       serviceAccount: kwok-controller

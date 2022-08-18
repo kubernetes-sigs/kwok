@@ -6,6 +6,9 @@ patches:
       - op: replace
         path: /spec/template/spec/nodeName
         value: '{{.Name}}-control-plane'
+      - op: replace
+        path: /spec/template/spec/hostNetwork
+        value: true
     target:
       kind: Deployment
 images:
@@ -14,4 +17,4 @@ images:
     newName: '{{.KwokControllerImageName}}'
 
 resources:
-  - ../../../../kustomize/controller
+  - ../../../../kustomize/kwok

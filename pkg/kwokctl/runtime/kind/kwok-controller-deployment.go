@@ -24,7 +24,7 @@ import (
 	"text/template"
 )
 
-//go:generate sh -c "kubectl kustomize . > kwok-controller-deployment.yaml.tpl"
+//go:generate kubectl kustomize -o kwok-controller-deployment.yaml.tpl .
 
 //go:embed kwok-controller-deployment.yaml.tpl
 var kwokControllerDeploymentYamlTpl string
