@@ -69,7 +69,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return fmt.Errorf("failed to write %s: %w", runtime.KindName, err)
 	}
 
-	kwokControllerDeploy, err := BuildKwokControllerDeploy(BuildKwokControllerDeployConfig{
+	kwokControllerDeploy, err := BuildKwokControllerDeployment(BuildKwokControllerDeploymentConfig{
 		KwokControllerImage: conf.KwokControllerImage,
 		Name:                conf.Name,
 	})
@@ -82,7 +82,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	if conf.PrometheusPort != 0 {
-		prometheusDeploy, err := BuildPrometheusDeploy(BuildPrometheusDeployConfig{
+		prometheusDeploy, err := BuildPrometheusDeployment(BuildPrometheusDeploymentConfig{
 			PrometheusImage: conf.PrometheusImage,
 			Name:            conf.Name,
 		})

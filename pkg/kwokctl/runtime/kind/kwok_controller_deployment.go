@@ -24,26 +24,26 @@ import (
 	"text/template"
 )
 
-//go:generate kubectl kustomize -o kwok-controller-deployment.yaml.tpl .
+//go:generate kubectl kustomize -o kwok_controller_deployment.yaml.tpl .
 
-//go:embed kwok-controller-deployment.yaml.tpl
+//go:embed kwok_controller_deployment.yaml.tpl
 var kwokControllerDeploymentYamlTpl string
 
 var kwokControllerDeploymentYamlTemplate = template.Must(template.New("_").Parse(kwokControllerDeploymentYamlTpl))
 
-func BuildKwokControllerDeploy(conf BuildKwokControllerDeployConfig) (string, error) {
+func BuildKwokControllerDeployment(conf BuildKwokControllerDeploymentConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	split := strings.SplitN(conf.KwokControllerImage, ":", 2)
 	conf.KwokControllerImageName = split[0]
 	conf.KwokControllerImageTag = split[1]
 	err := kwokControllerDeploymentYamlTemplate.Execute(buf, conf)
 	if err != nil {
-		return "", fmt.Errorf("failed to execute kwok controller deploy yaml template: %w", err)
+		return "", fmt.Errorf("failed to execute kwok controller deployment yaml template: %w", err)
 	}
 	return buf.String(), nil
 }
 
-type BuildKwokControllerDeployConfig struct {
+type BuildKwokControllerDeploymentConfig struct {
 	KwokControllerImage     string
 	KwokControllerImageName string
 	KwokControllerImageTag  string
