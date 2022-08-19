@@ -11,7 +11,7 @@ steps:
     - BASE_REF=$_PULL_BASE_REF
     - PUSH=true
     - BUCKET=gs://k8s-staging-kwok-gcb
-    - IMAGE_PREFIX=registry.k8s.io/kwok
+    - IMAGE_PREFIX=gcr.io/k8s-staging-kwok
     args:
     - cross-image
 

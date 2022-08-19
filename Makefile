@@ -25,16 +25,6 @@ BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 EXTRA_TAGS =
 
-
-ifneq ($(GIT_TAG),latest)
-
-# add the latest tag to the tags
-ifeq ($(BASE_REF),main)
-EXTRA_TAGS += latest
-endif
-
-endif
-
 SUPPORTED_RELEASES ?= $(shell cat ./supported_releases.txt)
 
 BINARY ?= kwok kwokctl

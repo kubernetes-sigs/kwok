@@ -17,8 +17,4 @@ if [[ "${GIT_TAG}" == "" ]]; then
   GIT_TAG=$(git describe --tags --dirty --always)
 fi
 
-if [[ ! "${GIT_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  GIT_TAG="latest"
-fi
-
-echo "${GIT_TAG}"
+echo "v$(date +"%Y%m%d")-${GIT_TAG}"
