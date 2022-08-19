@@ -250,15 +250,31 @@ func (c *Cluster) Stop(ctx context.Context, name string) error {
 	return nil
 }
 
-func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow bool) error {
+func (c *Cluster) getClusterName() (string, error) {
 	conf, err := c.Config()
 	if err != nil {
-		return err
+		return "", err
+	}
+	return conf.Name + "-control-plane", nil
+}
+
+func (c *Cluster) getComponentName(name string) (string, error) {
+	clusterName, err := c.getClusterName()
+	if err != nil {
+		return "", err
 	}
 	switch name {
 	case "kwok-controller", "prometheus":
 	default:
-		name = name + "-" + conf.Name + "-control-plane"
+		name = name + "-" + clusterName
+	}
+	return name, nil
+}
+
+func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow bool) error {
+	name, err := c.getComponentName(name)
+	if err != nil {
+		return err
 	}
 
 	args := []string{"logs", "-n", "kube-system"}
