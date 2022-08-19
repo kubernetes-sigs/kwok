@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 )
@@ -36,7 +37,7 @@ var (
 	PrometheusPort = getEnvInt("KWOK_PROMETHEUS_PORT", 0)
 
 	// KwokVersion is the version of the fake to use.
-	KwokVersion = addPrefixV(getEnv("KWOK_VERSION", "v0.1.0"))
+	KwokVersion = addPrefixV(getEnv("KWOK_VERSION", consts.Version))
 
 	// KubeVersion is the version of Kubernetes to use.
 	KubeVersion = addPrefixV(getEnv("KWOK_KUBE_VERSION", "v1.24.2"))
@@ -215,12 +216,26 @@ func detectionRuntime() string {
 	return "docker"
 }
 
+// trimPrefixV returns the version without the prefix 'v'.
 func trimPrefixV(version string) string {
-	return strings.TrimPrefix(version, "v")
+	if len(version) <= 1 {
+		return version
+	}
+
+	if version[0] != 'v' ||
+		version[1] < '0' || version[1] > '9' {
+		return version
+	}
+	return version[1:]
 }
 
+// addPrefixV returns the version with the prefix 'v'.
 func addPrefixV(version string) string {
-	if strings.HasPrefix(version, "v") {
+	if version == "" {
+		return version
+	}
+
+	if version[0] < '0' || version[0] > '9' {
 		return version
 	}
 	return "v" + version

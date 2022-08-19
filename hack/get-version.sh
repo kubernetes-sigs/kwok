@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2022 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,19 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM docker.io/library/golang:1.18-alpine AS builder
+if [[ "${GIT_TAG}" == "" ]]; then
+  GIT_TAG=$(git describe --tags --dirty --always)
+fi
 
-RUN apk add -U --no-cache bash git
-
-WORKDIR /go/src/sigs.k8s.io/kwok
-COPY . .
-
-ARG kwok_version
-ENV KWOK_VERSION $kwok_version
-ENV CGO_ENABLED=0
-RUN ./hack/releases.sh --bin=kwok --version=${KWOK_VERSION}
-
-FROM docker.io/library/alpine:3.16
-COPY --from=builder /go/src/sigs.k8s.io/kwok/bin/kwok /usr/local/bin/
-
-ENTRYPOINT ["/usr/local/bin/kwok"]
+echo "v$(date +"%Y%m%d")-${GIT_TAG}"
