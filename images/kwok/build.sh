@@ -87,6 +87,12 @@ function args() {
     usage
     exit 1
   fi
+
+  if [[ "${#PLATFORMS}" -eq 0 ]]; then
+    PLATFORMS+=(
+      linux/amd64
+    )
+  fi
 }
 
 function dry_run() {
@@ -99,9 +105,7 @@ function dry_run() {
 function main() {
   local extra_args
 
-  extra_args=(
-    "--build-arg=kwok_version=${VERSION}"
-  )
+  extra_args=()
   for image in "${IMAGES[@]}"; do
     extra_args+=(
       "--tag=${image}:${VERSION}"
@@ -115,43 +119,27 @@ function main() {
     fi
   done
 
-  if [[ "${#PLATFORMS}" -eq 0 ]]; then
-    dry_run docker build \
-      "${extra_args[@]}" \
-      -f "${DOCKERFILE}" \
-      . || return 1
-
-    if [[ "${PUSH}" == "true" ]]; then
-      for image in "${IMAGES[@]}"; do
-        dry_run docker push "${image}:${VERSION}"
-        if [[ "${#EXTRA_TAGS[@]}" -ne 0 ]]; then
-          for extra_tag in "${EXTRA_TAGS[@]}"; do
-            dry_run docker push "${image}:${extra_tag}"
-          done
-        fi
-      done
+  export DOCKER_CLI_EXPERIMENTAL=enabled
+  if [[ "${DRY_RUN}" != "true" ]]; then
+    if ! docker buildx inspect --builder kwok >/dev/null 2>&1; then
+      docker buildx create --use --name kwok >/dev/null 2>&1
+      trap 'docker buildx rm kwok' EXIT
     fi
-  else
-    export DOCKER_CLI_EXPERIMENTAL=enabled
-    if [[ "${DRY_RUN}" != "true" ]]; then
-      if ! docker buildx inspect --builder kwok >/dev/null 2>&1; then
-        docker buildx create --use --name kwok >/dev/null 2>&1
-        trap 'docker buildx rm kwok' EXIT
-      fi
-    fi
-    for platform in "${PLATFORMS[@]}"; do
-      extra_args+=(
-        "--platform=${platform}"
-      )
-    done
-    if [[ "${PUSH}" == "true" ]]; then
-      extra_args+=("--push")
-    fi
-    dry_run docker buildx build \
-      "${extra_args[@]}" \
-      -f "${DOCKERFILE}" \
-      .
   fi
+  for platform in "${PLATFORMS[@]}"; do
+    extra_args+=(
+      "--platform=${platform}"
+    )
+  done
+  if [[ "${PUSH}" == "true" ]]; then
+    extra_args+=("--push")
+  else
+    extra_args+=("--load")
+  fi
+  dry_run docker buildx build \
+    "${extra_args[@]}" \
+    -f "${DOCKERFILE}" \
+    .
 }
 
 args "$@"

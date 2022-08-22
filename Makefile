@@ -17,19 +17,23 @@ GO_CMD ?= go
 DRY_RUN ?=
 PUSH ?=
 
-BUCKET ?= gs://k8s-staging-kwok-gcb
+BUCKET ?=
+
+GH_RELEASE ?=
 
 GIT_TAG ?= $(shell ./hack/get-version.sh)
 
 BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 
-EXTRA_TAGS =
+EXTRA_TAGS ?=
 
 SUPPORTED_RELEASES ?= $(shell cat ./supported_releases.txt)
 
 BINARY ?= kwok kwokctl
 
-IMAGE_PREFIX ?= registry.k8s.io/kwok
+IMAGE_PREFIX ?=
+BINARY_PREFIX ?=
+BINARY_NAME ?=
 
 KWOK_IMAGE ?= $(IMAGE_PREFIX)/kwok
 
@@ -71,6 +75,10 @@ build: vendor
 		$(addprefix --bin=, $(BINARY)) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--bucket=${BUCKET} \
+		--gh-release=${GH_RELEASE} \
+		--image-prefix=${IMAGE_PREFIX} \
+		--binary-prefix=${BINARY_PREFIX} \
+		--binary-name=${BINARY_NAME} \
 		--version=${GIT_TAG} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
@@ -83,13 +91,17 @@ cross-build: vendor
 		$(addprefix --platform=, $(BINARY_PLATFORMS)) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--bucket=${BUCKET} \
+		--gh-release=${GH_RELEASE} \
+		--image-prefix=${IMAGE_PREFIX} \
+		--binary-prefix=${BINARY_PREFIX} \
+		--binary-name=${BINARY_NAME} \
 		--version=${GIT_TAG} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
 ## image: Build kwok image
 .PHONY: image
-image: vendor
+image:
 	@./images/kwok/build.sh \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${KWOK_IMAGE} \
@@ -99,7 +111,7 @@ image: vendor
 
 ## cross-image: Build kwok images for all supported platforms
 .PHONY: cross-image
-cross-image: vendor
+cross-image:
 	@./images/kwok/build.sh \
 		$(addprefix --platform=, $(IMAGE_PLATFORMS))  \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
@@ -111,7 +123,7 @@ cross-image: vendor
 ## cross-cluster-image: Build cluster images for all supported platforms and all supported Kubernetes versions.
 # 1.13 and earlier only support Intel architectures.
 .PHONY: cross-cluster-image
-cross-cluster-image: vendor
+cross-cluster-image:
 	@./images/cluster/build.sh \
 		$(addprefix --platform=, $(IMAGE_PLATFORMS)) \
 		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n -4 )) \

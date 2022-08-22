@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+ROOT="$(realpath "${DIR}/../..")"
+
 KUBE_VERSION=1.24.2
 KIND_VERSION=0.14.0
 
@@ -25,7 +27,7 @@ CLUSTER_NAME=kwok-test
 KWOK_IMAGE="kwok"
 KWOK_VERSION="test"
 
-BIN_DIR="${DIR}/bin"
+BIN_DIR="${ROOT}/bin"
 
 PATH="${BIN_DIR}:${PATH}"
 
@@ -56,7 +58,10 @@ function requirements() {
 }
 
 function start_cluster() {
-  "${DIR}"/../../images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}"
+  local linux_platform
+  linux_platform="linux/$(go env GOARCH)"
+  "${ROOT}"/hack/releases.sh --bin kwok --platform "${linux_platform}"
+  "${ROOT}"/images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}" --platform "${linux_platform}"
 
   kind create cluster --name="${CLUSTER_NAME}" --image="${KIND_NODE_IMAGE}"
 

@@ -17,4 +17,8 @@ if [[ "${GIT_TAG}" == "" ]]; then
   GIT_TAG=$(git describe --tags --dirty --always)
 fi
 
-echo "v$(date +"%Y%m%d")-${GIT_TAG}"
+if [[ "${DIRECT}" == "true" ]]; then
+  echo "${GIT_TAG}"
+else
+  echo "v$(date +"%Y%m%d")-${GIT_TAG}"
+fi

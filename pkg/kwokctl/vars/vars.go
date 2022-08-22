@@ -61,7 +61,7 @@ var (
 	EtcdImagePrefix = getEnv("KWOK_ETCD_IMAGE_PREFIX", KubeImagePrefix)
 
 	// KwokImagePrefix is the prefix of the fake image.
-	KwokImagePrefix = getEnv("KWOK_IMAGE_PREFIX", "registry.k8s.io/kwok")
+	KwokImagePrefix = getEnv("KWOK_IMAGE_PREFIX", consts.ImagePrefix)
 
 	// PrometheusImagePrefix is the prefix of the Prometheus image.
 	PrometheusImagePrefix = getEnv("KWOK_PROMETHEUS_IMAGE_PREFIX", "docker.io/prom")
@@ -123,10 +123,10 @@ var (
 	}())
 
 	// KwokBinaryPrefix is the prefix of the kwok binary.
-	KwokBinaryPrefix = getEnv("KWOK_BINARY_PREFIX", "https://github.com/kubernetes-sigs/kwok/releases/download")
+	KwokBinaryPrefix = getEnv("KWOK_BINARY_PREFIX", consts.BinaryPrefix)
 
 	// KwokControllerBinary is the binary of kwok.
-	KwokControllerBinary = getEnv("KWOK_CONTROLLER_BINARY", KwokBinaryPrefix+"/"+KwokVersion+"/kwok-"+runtime.GOOS+"-"+runtime.GOARCH+BinSuffix)
+	KwokControllerBinary = getEnv("KWOK_CONTROLLER_BINARY", KwokBinaryPrefix+"/"+KwokVersion+"/"+consts.BinaryName+BinSuffix)
 
 	// PrometheusBinaryPrefix is the prefix of the Prometheus binary.
 	PrometheusBinaryPrefix = getEnv("KWOK_PROMETHEUS_BINARY_PREFIX", "https://github.com/prometheus/prometheus/releases/download")
