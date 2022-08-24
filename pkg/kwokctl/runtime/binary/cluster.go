@@ -22,7 +22,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
@@ -144,17 +143,25 @@ func (c *Cluster) Up(ctx context.Context) error {
 	adminKeyPath := utils.PathJoin(pkiPath, "admin.key")
 	adminCertPath := utils.PathJoin(pkiPath, "admin.crt")
 
-	etcdPeerPort, err := utils.GetUnusedPort()
-	if err != nil {
-		return err
+	etcdPeerPort := conf.EtcdPeerPort
+	if etcdPeerPort == 0 {
+		etcdPeerPort, err = utils.GetUnusedPort()
+		if err != nil {
+			return err
+		}
+		conf.EtcdPeerPort = etcdPeerPort
 	}
-	etcdPeerPortStr := strconv.Itoa(etcdPeerPort)
+	etcdPeerPortStr := utils.StringUint32(etcdPeerPort)
 
-	etcdClientPort, err := utils.GetUnusedPort()
-	if err != nil {
-		return err
+	etcdClientPort := conf.EtcdPort
+	if etcdClientPort == 0 {
+		etcdClientPort, err = utils.GetUnusedPort()
+		if err != nil {
+			return err
+		}
+		conf.EtcdPort = etcdClientPort
 	}
-	etcdClientPortStr := strconv.Itoa(etcdClientPort)
+	etcdClientPortStr := utils.StringUint32(etcdClientPort)
 
 	etcdArgs := []string{
 		"--data-dir",
@@ -181,14 +188,15 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	apiserverPort := int(conf.ApiserverPort)
-	if apiserverPort == 0 {
-		apiserverPort, err = utils.GetUnusedPort()
+	kubeApiserverPort := conf.KubeApiserverPort
+	if kubeApiserverPort == 0 {
+		kubeApiserverPort, err = utils.GetUnusedPort()
 		if err != nil {
 			return err
 		}
+		conf.KubeApiserverPort = kubeApiserverPort
 	}
-	apiserverPortStr := strconv.Itoa(apiserverPort)
+	kubeApiserverPortStr := utils.StringUint32(kubeApiserverPort)
 
 	kubeApiserverArgs := []string{
 		"--admission-control",
@@ -217,7 +225,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			"--bind-address",
 			serveAddress,
 			"--secure-port",
-			apiserverPortStr,
+			kubeApiserverPortStr,
 			"--tls-cert-file",
 			adminCertPath,
 			"--tls-private-key-file",
@@ -236,7 +244,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			"--insecure-bind-address",
 			serveAddress,
 			"--insecure-port",
-			apiserverPortStr,
+			kubeApiserverPortStr,
 			"--cert-dir",
 			utils.PathJoin(conf.Workdir, "cert"),
 		)
@@ -249,7 +257,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
 		ProjectName:  conf.Name,
 		SecretPort:   conf.SecretPort,
-		Address:      scheme + "://" + localAddress + ":" + apiserverPortStr,
+		Address:      scheme + "://" + localAddress + ":" + kubeApiserverPortStr,
 		AdminCrtPath: adminCertPath,
 		AdminKeyPath: adminKeyPath,
 	})
@@ -279,16 +287,20 @@ func (c *Cluster) Up(ctx context.Context) error {
 		)
 	}
 
-	kubeControllerManagerPort, err := utils.GetUnusedPort()
-	if err != nil {
-		return err
+	kubeControllerManagerPort := conf.KubeControllerManagerPort
+	if kubeControllerManagerPort == 0 {
+		kubeControllerManagerPort, err = utils.GetUnusedPort()
+		if err != nil {
+			return err
+		}
+		conf.KubeControllerManagerPort = kubeControllerManagerPort
 	}
 	if conf.SecretPort {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 			"--bind-address",
 			localAddress,
 			"--secure-port",
-			strconv.Itoa(kubeControllerManagerPort),
+			utils.StringUint32(kubeControllerManagerPort),
 			"--authorization-always-allow-paths",
 			"/healthz,/metrics",
 		)
@@ -297,7 +309,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			"--address",
 			localAddress,
 			"--port",
-			strconv.Itoa(kubeControllerManagerPort),
+			utils.StringUint32(kubeControllerManagerPort),
 			"--secure-port",
 			"0",
 		)
@@ -319,16 +331,20 @@ func (c *Cluster) Up(ctx context.Context) error {
 		)
 	}
 
-	kubeSchedulerPort, err := utils.GetUnusedPort()
-	if err != nil {
-		return err
+	kubeSchedulerPort := conf.KubeSchedulerPort
+	if kubeSchedulerPort == 0 {
+		kubeSchedulerPort, err = utils.GetUnusedPort()
+		if err != nil {
+			return err
+		}
+		conf.KubeSchedulerPort = kubeSchedulerPort
 	}
 	if conf.SecretPort {
 		kubeSchedulerArgs = append(kubeSchedulerArgs,
 			"--bind-address",
 			localAddress,
 			"--secure-port",
-			strconv.Itoa(kubeSchedulerPort),
+			utils.StringUint32(kubeSchedulerPort),
 			"--authorization-always-allow-paths",
 			"/healthz,/metrics",
 		)
@@ -337,7 +353,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			"--address",
 			localAddress,
 			"--port",
-			strconv.Itoa(kubeSchedulerPort),
+			utils.StringUint32(kubeSchedulerPort),
 		)
 	}
 	err = utils.ForkExec(ctx, conf.Workdir, kubeSchedulerPath, kubeSchedulerArgs...)
@@ -350,15 +366,19 @@ func (c *Cluster) Up(ctx context.Context) error {
 		kubeconfigPath,
 		"--manage-all-nodes",
 	}
-	var kwokControllerPort int
+
+	kwokControllerPort := conf.KwokControllerPort
 	if conf.PrometheusPort != 0 {
-		kwokControllerPort, err = utils.GetUnusedPort()
-		if err != nil {
-			return err
+		if kwokControllerPort == 0 {
+			kwokControllerPort, err = utils.GetUnusedPort()
+			if err != nil {
+				return err
+			}
+			conf.KwokControllerPort = kwokControllerPort
 		}
 		kwokControllerArgs = append(kwokControllerArgs,
 			"--server-address",
-			localAddress+":"+strconv.Itoa(kwokControllerPort),
+			localAddress+":"+utils.StringUint32(kwokControllerPort),
 		)
 	}
 	err = utils.ForkExec(ctx, conf.Workdir, kwokControllerPath, kwokControllerArgs...)
@@ -367,19 +387,19 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	if conf.PrometheusPort != 0 {
-		prometheusPortStr := strconv.Itoa(int(conf.PrometheusPort))
+		prometheusPortStr := utils.StringUint32(conf.PrometheusPort)
 
 		prometheusData, err := BuildPrometheus(BuildPrometheusConfig{
 			ProjectName:               conf.Name,
 			SecretPort:                conf.SecretPort,
 			AdminCrtPath:              adminCertPath,
 			AdminKeyPath:              adminKeyPath,
-			PrometheusPort:            int(conf.PrometheusPort),
+			PrometheusPort:            conf.PrometheusPort,
 			EtcdPort:                  etcdClientPort,
-			KubeApiserverPort:         apiserverPort,
+			KubeApiserverPort:         kubeApiserverPort,
 			KubeControllerManagerPort: kubeControllerManagerPort,
 			KubeSchedulerPort:         kubeSchedulerPort,
-			KwokPort:                  kwokControllerPort,
+			KwokControllerPort:        kwokControllerPort,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to generate prometheus yaml: %s", err)
@@ -404,13 +424,18 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://"+localAddress+":"+apiserverPortStr)
+	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://"+localAddress+":"+kubeApiserverPortStr)
 	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", conf.Name)
 	if conf.SecretPort {
 		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".insecure-skip-tls-verify", "true")
 		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", conf.Name)
 		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-certificate", adminCertPath)
 		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
+	}
+
+	err = c.Update(ctx, conf)
+	if err != nil {
+		c.Logger().Printf("failed to update cluster: %s", err)
 	}
 	return nil
 }

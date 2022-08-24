@@ -19,7 +19,7 @@ COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
 COPY --chmod=0755 images/cluster/entrypoint.sh /entrypoint.sh
 
 ENV KWOK_CONTROLLER_BINARY /usr/local/bin/kwok
-ENV KWOK_APISERVER_PORT 8080
+ENV KWOK_KUBE_APISERVER_PORT 8080
 
 ARG kube_version
 ENV KWOK_KUBE_VERSION $kube_version

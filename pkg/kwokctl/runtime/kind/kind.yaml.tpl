@@ -3,8 +3,8 @@ apiVersion: kind.x-k8s.io/v1alpha4
 
 networking:
   apiServerAddress: "0.0.0.0"
-{{ if .ApiserverPort }}
-  apiServerPort: {{ .ApiserverPort }}
+{{ if .KubeApiserverPort }}
+  apiServerPort: {{ .KubeApiserverPort }}
 {{ end }}
 nodes:
   - role: control-plane

@@ -62,26 +62,26 @@ func (c *Cluster) Logger() logger.Logger {
 	return c.logger
 }
 
-func (c *Cluster) Config() (*Config, error) {
+func (c *Cluster) Config() (Config, error) {
 	if c.conf != nil {
-		return c.conf, nil
+		return *c.conf, nil
 	}
 	conf, err := c.Load()
 	if err != nil {
-		return nil, err
+		return conf, err
 	}
-	c.conf = conf
+	c.conf = &conf
 	return conf, nil
 }
 
-func (c *Cluster) Load() (conf *Config, err error) {
+func (c *Cluster) Load() (conf Config, err error) {
 	file, err := os.ReadFile(utils.PathJoin(c.workdir, RawClusterConfigName))
 	if err != nil {
-		return nil, err
+		return conf, err
 	}
 	err = yaml.Unmarshal(file, &conf)
 	if err != nil {
-		return nil, err
+		return conf, err
 	}
 	return conf, nil
 }
@@ -96,6 +96,10 @@ func (c *Cluster) InHostKubeconfig() (string, error) {
 }
 
 func (c *Cluster) Init(ctx context.Context, conf Config) error {
+	return c.Update(ctx, conf)
+}
+
+func (c *Cluster) Update(ctx context.Context, conf Config) error {
 	config, err := yaml.Marshal(conf)
 	if err != nil {
 		return err
@@ -104,6 +108,7 @@ func (c *Cluster) Init(ctx context.Context, conf Config) error {
 	if err != nil {
 		return err
 	}
+	c.conf = &conf
 
 	err = os.WriteFile(utils.PathJoin(c.workdir, RawClusterConfigName), config, 0644)
 	if err != nil {

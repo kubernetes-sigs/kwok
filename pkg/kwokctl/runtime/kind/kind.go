@@ -38,8 +38,8 @@ func BuildKind(conf BuildKindConfig) (string, error) {
 }
 
 type BuildKindConfig struct {
-	ApiserverPort  uint32
-	PrometheusPort uint32
+	KubeApiserverPort uint32
+	PrometheusPort    uint32
 
 	RuntimeConfig []string
 	FeatureGates  []string

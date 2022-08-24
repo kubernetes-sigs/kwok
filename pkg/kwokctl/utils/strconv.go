@@ -17,26 +17,9 @@ limitations under the License.
 package utils
 
 import (
-	"fmt"
-	"net"
+	"strconv"
 )
 
-var (
-	errGetUnusedPort        = fmt.Errorf("unable to get an unused port")
-	lastUsedPort     uint32 = 32767
-)
-
-// GetUnusedPort returns an unused port
-func GetUnusedPort() (uint32, error) {
-	for lastUsedPort > 10000 {
-		lastUsedPort--
-		l, err := net.Listen("tcp", fmt.Sprintf(":%d", lastUsedPort))
-		if err != nil {
-			continue
-		}
-		l.Close()
-		return lastUsedPort, nil
-	}
-
-	return 0, errGetUnusedPort
+func StringUint32(u uint32) string {
+	return strconv.FormatUint(uint64(u), 10)
 }
