@@ -74,7 +74,7 @@ function send_pr() {
   git add supported_releases.txt
   git commit -m "Bump supported_releases.txt"
   git push --set-upstream origin "${branch}"
-  gh pr create
+  gh pr create --fill
 }
 
 function main() {
