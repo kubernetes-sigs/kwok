@@ -12,22 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM docker.io/library/golang:1.18-alpine AS builder
-
-RUN apk add -U --no-cache bash git
-
-WORKDIR /go/src/sigs.k8s.io/kwok
-COPY . .
-
-ARG kwok_version
-ENV KWOK_VERSION $kwok_version
-ENV CGO_ENABLED=0
-RUN ./hack/releases.sh --bin=kwok --bin=kwokctl --version=${KWOK_VERSION}
-
-FROM docker.io/library/alpine:3.16
-COPY --from=builder /go/src/sigs.k8s.io/kwok/bin/kwok /usr/local/bin/
-COPY --from=builder /go/src/sigs.k8s.io/kwok/bin/kwokctl /usr/local/bin/
-COPY images/cluster/entrypoint.sh /entrypoint.sh
+FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3.16
+ARG TARGETPLATFORM
+COPY --chmod=0755 bin/$TARGETPLATFORM/kwok /usr/local/bin/
+COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
+COPY --chmod=0755 images/cluster/entrypoint.sh /entrypoint.sh
 
 ENV KWOK_CONTROLLER_BINARY /usr/local/bin/kwok
 ENV KWOK_APISERVER_PORT 8080

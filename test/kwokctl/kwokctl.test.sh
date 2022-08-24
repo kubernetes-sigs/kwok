@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+ROOT="$(realpath "${DIR}/../..")"
+
 KWOK_RUNTIME=""
 KWOK_IMAGE="kwok"
 KWOK_VERSION="test"
@@ -32,23 +34,27 @@ function args() {
 }
 
 function main() {
-  go build -o "${DIR}/bin/kwokctl" "${DIR}"/../../cmd/kwokctl
-
+  local platform
+  local linux_platform
+  platform="$(go env GOOS)/$(go env GOARCH)"
+  "${ROOT}"/hack/releases.sh --bin kwokctl --platform "${platform}"
   if [[ "${KWOK_RUNTIME}" == "binary" ]]; then
-    export KWOK_CONTROLLER_BINARY="${DIR}/bin/kwok"
-    go build -o "${KWOK_CONTROLLER_BINARY}" "${DIR}"/../../cmd/kwok
+    export KWOK_CONTROLLER_BINARY="${ROOT}/bin/${platform}/kwok"
+    "${ROOT}"/hack/releases.sh --bin kwok --platform "${platform}"
   else
     export KWOK_CONTROLLER_IMAGE="${KWOK_IMAGE}:${KWOK_VERSION}"
-    "${DIR}"/../../images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}"
+    linux_platform="linux/$(go env GOARCH)"
+    "${ROOT}"/hack/releases.sh --bin kwok --platform "${linux_platform}"
+    "${ROOT}"/images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}" --platform "${linux_platform}"
   fi
 
   echo Test workable
 
-  PATH="${DIR}/bin:${PATH}" "${DIR}/kwokctl_workable_test.sh" $(cat "${DIR}"/../../supported_releases.txt) || exit 1
+  PATH="${ROOT}/bin/${platform}/:${PATH}" "${DIR}/kwokctl_workable_test.sh" $(cat "${ROOT}"/supported_releases.txt) || exit 1
 
   echo Test benchmark
 
-  PATH="${DIR}/bin:${PATH}" "${DIR}/kwokctl_benchmark_test.sh" $(cat "${DIR}"/../../supported_releases.txt | head -n 1) || exit 1
+  PATH="${ROOT}/bin/${platform}/:${PATH}" "${DIR}/kwokctl_benchmark_test.sh" $(cat "${ROOT}"/supported_releases.txt | head -n 1) || exit 1
 }
 
 args "$@"

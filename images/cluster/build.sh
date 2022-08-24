@@ -99,6 +99,12 @@ function args() {
     usage
     exit 1
   fi
+
+  if [[ "${#PLATFORMS}" -eq 0 ]]; then
+    PLATFORMS+=(
+      linux/amd64
+    )
+  fi
 }
 
 function dry_run() {
@@ -111,20 +117,18 @@ function dry_run() {
 function main() {
   local extra_args
   local suffix
-  if [[ "${#PLATFORMS}" -ne 0 ]]; then
-    export DOCKER_CLI_EXPERIMENTAL=enabled
-    if [[ "${DRY_RUN}" != "true" ]]; then
-      if ! docker buildx inspect --builder kwok >/dev/null 2>&1; then
-        docker buildx create --use --name kwok >/dev/null 2>&1
-        trap 'docker buildx rm kwok' EXIT
-      fi
+
+  export DOCKER_CLI_EXPERIMENTAL=enabled
+  if [[ "${DRY_RUN}" != "true" ]]; then
+    if ! docker buildx inspect --builder kwok >/dev/null 2>&1; then
+      docker buildx create --use --name kwok >/dev/null 2>&1
+      trap 'docker buildx rm kwok' EXIT
     fi
   fi
 
   for kube_version in "${KUBE_VERSIONS[@]}"; do
     extra_args=(
       "--build-arg=kube_version=${kube_version}"
-      "--build-arg=kwok_version=${VERSION}"
     )
 
     suffix="-k8s.${kube_version}"
@@ -142,36 +146,20 @@ function main() {
       fi
     done
 
-    if [[ "${#PLATFORMS}" -eq 0 ]]; then
-      dry_run docker build \
-        "${extra_args[@]}" \
-        -f "${DOCKERFILE}" \
-        . || return 1
-
-      if [[ "${PUSH}" == "true" ]]; then
-        for image in "${IMAGES[@]}"; do
-          dry_run docker push "${image}:${VERSION}${suffix}"
-          if [[ "${#EXTRA_TAGS[@]}" -ne 0 ]]; then
-            for extra_tag in "${EXTRA_TAGS[@]}"; do
-              dry_run docker push "${image}:${extra_tag}${suffix}"
-            done
-          fi
-        done
-      fi
+    for platform in "${PLATFORMS[@]}"; do
+      extra_args+=(
+        "--platform=${platform}"
+      )
+    done
+    if [[ "${PUSH}" == "true" ]]; then
+      extra_args+=("--push")
     else
-      for platform in "${PLATFORMS[@]}"; do
-        extra_args+=(
-          "--platform=${platform}"
-        )
-      done
-      if [[ "${PUSH}" == "true" ]]; then
-        extra_args+=("--push")
-      fi
-      dry_run docker buildx build \
-        "${extra_args[@]}" \
-        -f "${DOCKERFILE}" \
-        .
+      extra_args+=("--load")
     fi
+    dry_run docker buildx build \
+      "${extra_args[@]}" \
+      -f "${DOCKERFILE}" \
+      .
   done
 }
 

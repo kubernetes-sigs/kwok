@@ -18,6 +18,10 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 BUCKET=""
+GH_RELEASE=""
+IMAGE_PREFIX=""
+BINARY_PREFIX=""
+BINARY_NAME=""
 VERSION=""
 DRY_RUN=false
 PUSH=false
@@ -27,11 +31,15 @@ PLATFORMS=()
 LDFLAGS=()
 
 function usage() {
-  echo "Usage: ${0} [--help] [--bin <bin> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--bucket <bucket>] [--version <version>] [--push] [--dry-run]"
+  echo "Usage: ${0} [--help] [--bin <bin> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--bucket <bucket>] [--image-prefix <image-prefix>] [--binary-prefix <binary-prefix>] [--binary-name <binary-name>] [--version <version>] [--push] [--dry-run]"
   echo "  --bin <bin> is binary, is required"
   echo "  --extra-tag <extra-tag> is extra tag"
   echo "  --platform <platform> is multi-platform capable for binary"
   echo "  --bucket <bucket> is bucket to upload to"
+  echo "  --gh-release <gh-release> is github release"
+  echo "  --image-prefix <image-prefix> is kwok image prefix"
+  echo "  --binary-prefix <binary-prefix> is kwok binary prefix"
+  echo "  --binary-name <binary-name> is kwok binary name"
   echo "  --version <version> is version of binary"
   echo "  --push will push binary to bucket"
   echo "  --dry-run just show what would be done"
@@ -56,6 +64,22 @@ function args() {
       ;;
     --bucket | --bucket=*)
       [[ "${arg#*=}" != "${arg}" ]] && BUCKET="${arg#*=}" || { BUCKET="${2}" && shift; }
+      shift
+      ;;
+    --gh-release | --gh-release=*)
+      [[ "${arg#*=}" != "${arg}" ]] && GH_RELEASE="${arg#*=}" || { GH_RELEASE="${2}" && shift; }
+      shift
+      ;;
+    --image-prefix | --image-prefix=*)
+      [[ "${arg#*=}" != "${arg}" ]] && IMAGE_PREFIX="${arg#*=}" || { IMAGE_PREFIX="${2}" && shift; }
+      shift
+      ;;
+    --binary-prefix | --binary-prefix=*)
+      [[ "${arg#*=}" != "${arg}" ]] && BINARY_PREFIX="${arg#*=}" || { BINARY_PREFIX="${2}" && shift; }
+      shift
+      ;;
+    --binary-name | --binary-name=*)
+      [[ "${arg#*=}" != "${arg}" ]] && BINARY_NAME="${arg#*=}" || { BINARY_NAME="${2}" && shift; }
       shift
       ;;
     --version | --version=*)
@@ -87,6 +111,12 @@ function args() {
     usage
     exit 1
   fi
+
+  if [[ "${#PLATFORMS}" -eq 0 ]]; then
+    PLATFORMS+=(
+      linux/amd64
+    )
+  fi
 }
 
 function dry_run() {
@@ -101,45 +131,38 @@ function main() {
   local dist
   local src
   local bin
+  local tmp_bin
   local extra_args=()
+
   if [[ "${VERSION}" != "" ]]; then
     LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.Version=${VERSION}")
+  fi
+  if [[ "${IMAGE_PREFIX}" != "" ]]; then
+    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=${IMAGE_PREFIX}")
+  fi
+  if [[ "${BINARY_PREFIX}" != "" ]]; then
+    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.BinaryPrefix=${BINARY_PREFIX}")
+  fi
+  if [[ "${BINARY_NAME}" != "" ]]; then
+    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.BinaryName=${BINARY_NAME}")
   fi
   if [[ "${#LDFLAGS}" -gt 0 ]]; then
     extra_args+=("-ldflags" "'${LDFLAGS[*]}'")
   fi
 
-  if [[ "${#PLATFORMS}" -eq 0 ]]; then
-    os=$(go env GOOS)
+  export CGO_ENABLED=0
+  for platform in "${PLATFORMS[@]}"; do
+    os="${platform%%/*}"
     for binary in "${BINS[@]}"; do
       bin="${binary}"
       if [[ "${os}" == "windows" ]]; then
         bin="${bin}.exe"
       fi
-      dist="./bin/${bin}"
+      dist="./bin/${platform}/${bin}"
       src="./cmd/${binary}"
-      dry_run go build "${extra_args[@]}" -o "${dist}" "${src}"
+      dry_run GOOS="${platform%%/*}" GOARCH="${platform##*/}" go build "${extra_args[@]}" -o "${dist}" "${src}"
       if [[ "${PUSH}" == "true" ]]; then
-        dry_run gsutil cp -P "${dist}" "${BUCKET}/${VERSION}/bin/${bin}"
-        if [[ "${#EXTRA_TAGS}" -ne 0 ]]; then
-          for extra_tag in "${EXTRA_TAGS[@]}"; do
-            dry_run gsutil cp -P "${dist}" "${BUCKET}/${extra_tag}/bin/${bin}"
-          done
-        fi
-      fi
-    done
-  else
-    for platform in "${PLATFORMS[@]}"; do
-      os="${platform%%/*}"
-      for binary in "${BINS[@]}"; do
-        bin="${binary}"
-        if [[ "${os}" == "windows" ]]; then
-          bin="${bin}.exe"
-        fi
-        dist="./bin/${platform}/${bin}"
-        src="./cmd/${binary}"
-        dry_run GOOS="${platform%%/*}" GOARCH="${platform##*/}" go build "${extra_args[@]}" -o "${dist}" "${src}"
-        if [[ "${PUSH}" == "true" ]]; then
+        if [[ "${BUCKET}" != "" ]]; then
           dry_run gsutil cp -P "${dist}" "${BUCKET}/${VERSION}/bin/${platform}/${bin}"
           if [[ "${#EXTRA_TAGS}" -ne 0 ]]; then
             for extra_tag in "${EXTRA_TAGS[@]}"; do
@@ -147,9 +170,22 @@ function main() {
             done
           fi
         fi
-      done
+        if [[ "${GH_RELEASE}" != "" ]]; then
+          tmp_bin="${binary}-${platform%%/*}-${platform##*/}"
+           if [[ "${os}" == "windows" ]]; then
+            tmp_bin="${tmp_bin}.exe"
+          fi
+          dry_run cp "${dist}" "${tmp_bin}"
+          dry_run gh -R "${GH_RELEASE}" release upload "${VERSION}" "${tmp_bin}"
+          if [[ "${#EXTRA_TAGS}" -ne 0 ]]; then
+            for extra_tag in "${EXTRA_TAGS[@]}"; do
+              dry_run gh -R "${GH_RELEASE}" release upload "${extra_tag}" "${tmp_bin}"
+            done
+          fi
+        fi
+      fi
     done
-  fi
+  done
 }
 
 args "$@"
