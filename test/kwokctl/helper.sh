@@ -53,5 +53,6 @@ function build_image() {
   if docker image inspect "${KWOK_CONTROLLER_IMAGE}" >/dev/null 2>&1; then
     return
   fi
+  "${ROOT_DIR}/hack/releases.sh" --bin kwok
   "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version="${KWOK_CONTROLLER_IMAGE##*:}"
 }
