@@ -118,14 +118,6 @@ function main() {
   local extra_args
   local suffix
 
-  export DOCKER_CLI_EXPERIMENTAL=enabled
-  if [[ "${DRY_RUN}" != "true" ]]; then
-    if ! docker buildx inspect --builder kwok >/dev/null 2>&1; then
-      docker buildx create --use --name kwok >/dev/null 2>&1
-      trap 'docker buildx rm kwok' EXIT
-    fi
-  fi
-
   for kube_version in "${KUBE_VERSIONS[@]}"; do
     extra_args=(
       "--build-arg=kube_version=${kube_version}"

@@ -13,12 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ "${GIT_TAG}" == "" ]]; then
-  GIT_TAG=$(git describe --tags --dirty --always)
-fi
+DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-if [[ "${DIRECT}" == "true" ]]; then
-  echo "${GIT_TAG}"
-else
-  echo "v$(date +"%Y%m%d")-${GIT_TAG}"
-fi
+DIR="$(realpath "${DIR}")"
+
+source "${DIR}/helper.sh"
+
+function main() {
+  local all_releases=("${@}")
+  build_kwokctl
+  build_kwok
+
+  test_all "binary" "workable" "${all_releases[@]}" || exit 1
+}
+
+main $(supported_releases)

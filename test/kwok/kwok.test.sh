@@ -17,53 +17,19 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
-ROOT="$(realpath "${DIR}/../..")"
+ROOT_DIR="$(realpath "${DIR}/../..")"
 
-KUBE_VERSION=1.24.2
-KIND_VERSION=0.14.0
-
-KIND_NODE_IMAGE="docker.io/kindest/node:v${KUBE_VERSION}"
 CLUSTER_NAME=kwok-test
 KWOK_IMAGE="kwok"
 KWOK_VERSION="test"
 
-BIN_DIR="${ROOT}/bin"
-
-PATH="${BIN_DIR}:${PATH}"
-
-function command_exist() {
-  local command="${1}"
-  type "${command}" >/dev/null 2>&1
-}
-
-function install_kind() {
-  if ! command_exist kind; then
-    mkdir -p "${BIN_DIR}" &&
-      wget -O "${BIN_DIR}/kind" "https://kind.sigs.k8s.io/dl/v${KIND_VERSION}/kind-$(go env GOOS)-$(go env GOARCH)" &&
-      chmod +x "${BIN_DIR}/kind"
-  fi
-}
-
-function install_kubectl() {
-  if ! command_exist kubectl; then
-    mkdir -p "${BIN_DIR}" &&
-      wget -O "${BIN_DIR}/kubectl" "https://dl.k8s.io/release/v${KUBE_VERSION}/bin/$(go env GOOS)/$(go env GOARCH)/kubectl" &&
-      chmod +x "${BIN_DIR}/kubectl"
-  fi
-}
-
-function requirements() {
-  install_kind
-  install_kubectl
-}
-
 function start_cluster() {
   local linux_platform
   linux_platform="linux/$(go env GOARCH)"
-  "${ROOT}"/hack/releases.sh --bin kwok --platform "${linux_platform}"
-  "${ROOT}"/images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}" --platform "${linux_platform}"
+  "${ROOT_DIR}"/hack/releases.sh --bin kwok --platform "${linux_platform}"
+  "${ROOT_DIR}"/images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}" --platform "${linux_platform}"
 
-  kind create cluster --name="${CLUSTER_NAME}" --image="${KIND_NODE_IMAGE}"
+  kind create cluster --name="${CLUSTER_NAME}"
 
   kind load docker-image --name="${CLUSTER_NAME}" "${KWOK_IMAGE}:${KWOK_VERSION}"
 
@@ -82,7 +48,7 @@ function test_node_ready() {
   done
 
   if [[ ! "$(kubectl get node fake-node)" =~ "Ready" ]]; then
-    echo "fake-node is not ready"
+    echo "Error: fake-node is not ready"
     kubectl get node fake-node
     return 1
   fi
@@ -100,7 +66,7 @@ function test_pod_running() {
   done
 
   if [[ ! "$(kubectl get pod | grep Running | wc -l)" -eq 5 ]]; then
-    echo "Not all pods are running"
+    echo "Error: Not all pods are running"
     kubectl get pod -o wide
     return 1
   fi
@@ -114,7 +80,7 @@ function test_modify_node_status() {
   sleep 2
 
   if [[ ! "$(kubectl get node fake-node)" =~ "fake-new" ]]; then
-    echo "fake-node is not updated"
+    echo "Error: fake-node is not updated"
     kubectl get node fake-node
     return 1
   fi
@@ -131,7 +97,7 @@ function test_modify_pod_status() {
   sleep 2
 
   if [[ ! "$(kubectl get pod "${first_pod}" -o wide)" =~ "192.168.0.1" ]]; then
-    echo "fake-pod is not updated"
+    echo "Error: fake-pod is not updated"
     kubectl get pod "${first_pod}" -o wide
     return 1
   fi
@@ -144,9 +110,8 @@ function cleanup() {
 
 function main() {
   failed=()
-  requirements
   start_cluster || {
-    echo "Failed to start cluster"
+    echo "Error: Failed to start cluster"
     exit 1
   }
   trap cleanup EXIT
@@ -158,7 +123,7 @@ function main() {
   test_modify_pod_status || failed+=("modify_pod_status")
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
-    echo "Some tests failed"
+    echo "Error: Some tests failed"
     for test in "${failed[@]}"; do
       echo " - ${test}"
     done

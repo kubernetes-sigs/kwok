@@ -119,13 +119,6 @@ function main() {
     fi
   done
 
-  export DOCKER_CLI_EXPERIMENTAL=enabled
-  if [[ "${DRY_RUN}" != "true" ]]; then
-    if ! docker buildx inspect --builder kwok >/dev/null 2>&1; then
-      docker buildx create --use --name kwok >/dev/null 2>&1
-      trap 'docker buildx rm kwok' EXIT
-    fi
-  fi
   for platform in "${PLATFORMS[@]}"; do
     extra_args+=(
       "--platform=${platform}"

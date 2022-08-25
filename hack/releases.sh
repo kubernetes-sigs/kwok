@@ -150,7 +150,6 @@ function main() {
     extra_args+=("-ldflags" "'${LDFLAGS[*]}'")
   fi
 
-  export CGO_ENABLED=0
   for platform in "${PLATFORMS[@]}"; do
     os="${platform%%/*}"
     for binary in "${BINS[@]}"; do
@@ -160,7 +159,7 @@ function main() {
       fi
       dist="./bin/${platform}/${bin}"
       src="./cmd/${binary}"
-      dry_run GOOS="${platform%%/*}" GOARCH="${platform##*/}" go build "${extra_args[@]}" -o "${dist}" "${src}"
+      CGO_ENABLED=0 dry_run GOOS="${platform%%/*}" GOARCH="${platform##*/}" go build "${extra_args[@]}" -o "${dist}" "${src}"
       if [[ "${PUSH}" == "true" ]]; then
         if [[ "${BUCKET}" != "" ]]; then
           dry_run gsutil cp -P "${dist}" "${BUCKET}/${VERSION}/bin/${platform}/${bin}"
@@ -172,7 +171,7 @@ function main() {
         fi
         if [[ "${GH_RELEASE}" != "" ]]; then
           tmp_bin="${binary}-${platform%%/*}-${platform##*/}"
-           if [[ "${os}" == "windows" ]]; then
+          if [[ "${os}" == "windows" ]]; then
             tmp_bin="${tmp_bin}.exe"
           fi
           dry_run cp "${dist}" "${tmp_bin}"

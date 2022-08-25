@@ -43,7 +43,7 @@ function args() {
         exit 0
         ;;
       -*)
-        echo "Unknown argument: ${arg}"
+        echo "Error: Unknown argument: ${arg}"
         usage
         exit 1
         ;;
@@ -62,24 +62,29 @@ function args() {
 function main() {
   local failed=()
   for target in "${targets[@]}"; do
+    echo "================================================================================"
     target="${target%.test.sh}"
     test="${test_dir}/${target}.test.sh"
     if [[ ! -x "${test}" ]]; then
-      echo "Test ${test} not found."
+      echo "Error: Test ${test} not found."
       failed+=("${test}")
       continue
     fi
 
     echo "Testing ${target}..."
-    if ! "${test_dir}"/${target}.test.sh; then
-      failed+=(${target})
+    if ! "${test_dir}/${target}.test.sh"; then
+      failed+=("${target}")
+      echo "------------------------------"
+      echo "Test ${target} failed."
     else
+      echo "------------------------------"
       echo "Test ${target} passed."
     fi
   done
+  echo "================================================================================"
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
-    echo "Some tests failed"
+    echo "Error: Some tests failed"
     for test in "${failed[@]}"; do
       echo " - ${test}"
     done

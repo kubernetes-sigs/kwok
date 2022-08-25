@@ -21,7 +21,7 @@ BUCKET ?=
 
 GH_RELEASE ?=
 
-GIT_TAG ?= $(shell ./hack/get-version.sh)
+GIT_TAG ?= $(shell git describe --tags --dirty --always)
 
 BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 
@@ -32,16 +32,21 @@ SUPPORTED_RELEASES ?= $(shell cat ./supported_releases.txt)
 BINARY ?= kwok kwokctl
 
 IMAGE_PREFIX ?=
+
 BINARY_PREFIX ?=
 BINARY_NAME ?=
 
-KWOK_IMAGE ?= $(IMAGE_PREFIX)/kwok
+STAGING_IMAGE_PREFIX ?= $(IMAGE_PREFIX)
 
-CLUSTER_IMAGE ?= $(IMAGE_PREFIX)/cluster
+KWOK_IMAGE ?= $(STAGING_IMAGE_PREFIX)/kwok
+
+CLUSTER_IMAGE ?= $(STAGING_IMAGE_PREFIX)/cluster
 
 IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
 
 BINARY_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
+
+DOCKER_CLI_EXPERIMENTAL ?= enabled
 
 .PHONY: default
 default: help
@@ -149,6 +154,7 @@ integration-test:
 ## e2e-test: Run e2e tests
 .PHONY: e2e-test
 e2e-test:
+	@./hack/requirements.sh kubectl buildx compose kind
 	@./hack/e2e-test.sh
 
 ## help: Show this help message

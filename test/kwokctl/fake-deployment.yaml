@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-pod
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fake-pod
+  template:
+    metadata:
+      labels:
+        app: fake-pod
+    spec:
+      containers:
+        - name: fake-pod
+          image: fake

@@ -6,7 +6,6 @@ on:
 
 env:
   PUSH: 'true'
-  DIRECT: 'true'
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
