@@ -101,7 +101,8 @@ function send_pr() {
   fi
 
   if [[ "$(git config --global user.name)" == "" ]]; then
-    git config --global user.name "bot"
+    git config --global user.name "github-actions"
+    git config --global user.email "actions@github.com"
   fi
 
   diff_data="$(git diff)"
@@ -119,6 +120,8 @@ function send_pr() {
 ${diff_data}
 
 \`\`\`
+
+/kind feature
 "
   gh pr create --title="Automated Bump supported_releases.txt" --body="${body}"
 }
