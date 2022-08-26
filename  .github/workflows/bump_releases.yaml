@@ -1,0 +1,21 @@
+name: Bump Releases
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 0 * * *"
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update
+        env:
+          SEND_PR: 'true'
+        run: |
+          ./hack/supported_releases.sh
