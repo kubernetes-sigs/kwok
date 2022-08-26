@@ -18,14 +18,20 @@ var (
 	// DefaultCluster the default cluster name
 	DefaultCluster = "kwok"
 
-	// TempDir creates a temporary directory with the given prefix.
-	TempDir = utils.PathJoin(os.TempDir(), ProjectName)
+	// WorkDir is the directory of the work spaces.
+	WorkDir = getEnv("KWOK_WORKDIR", func() string {
+		dir, err := os.UserHomeDir()
+		if err != nil || dir == "" {
+			return utils.PathJoin(os.TempDir(), ProjectName)
+		}
+		return utils.PathJoin(dir, "."+ProjectName)
+	}())
 
 	// ClustersDir is the directory of the clusters.
-	ClustersDir = utils.PathJoin(TempDir, "clusters")
+	ClustersDir = utils.PathJoin(WorkDir, "clusters")
 
 	// CacheDir is the directory of the cache.
-	CacheDir = utils.PathJoin(TempDir, "cache")
+	CacheDir = utils.PathJoin(WorkDir, "cache")
 
 	// ApiserverPort is the port to expose apiserver.
 	ApiserverPort = getEnvInt("KWOK_APISERVER_PORT", 0)
