@@ -48,7 +48,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the snapshot")
-	cmd.Flags().StringVar(&flags.Path, "format", "etcd", "Format of the snapshot file (etcd)")
+	cmd.Flags().StringVar(&flags.Format, "format", "etcd", "Format of the snapshot file (etcd)")
 	return cmd
 }
 
