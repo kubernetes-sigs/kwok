@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+DIR="$(realpath "${DIR}")"
+
 RELEASES=()
 
 function usage() {
@@ -33,54 +37,18 @@ function args() {
 
 function test_create_cluster() {
   local release="${1}"
-  local name="cluster-${release//./-}"
+  local name="${2}"
   local targets
   local i
 
   KWOK_KUBE_VERSION="${release}" kwokctl create cluster --name "${name}" --quiet-pull --prometheus-port 9090
   if [[ $? -ne 0 ]]; then
-    echo "Cluster ${name} creation failed"
+    echo "Error: Cluster ${name} creation failed"
     exit 1
   fi
 
   for ((i = 0; i < 30; i++)); do
-    kwokctl --name "${name}" kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Node
-metadata:
-  annotations:
-    kwok.x-k8s.io/node: fake
-    node.alpha.kubernetes.io/ttl: "0"
-  labels:
-    beta.kubernetes.io/arch: amd64
-    beta.kubernetes.io/os: linux
-    kubernetes.io/arch: amd64
-    kubernetes.io/hostname: fake-node
-    kubernetes.io/os: linux
-    kubernetes.io/role: agent
-    node-role.kubernetes.io/agent: ""
-    type: kwok-controller
-  name: fake-node
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: fake-pod
-  namespace: default
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: fake-pod
-  template:
-    metadata:
-      labels:
-        app: fake-pod
-    spec:
-      containers:
-        - name: fake-pod
-          image: fake
-EOF
+    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f -
     if kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
       break
     fi
@@ -91,6 +59,7 @@ EOF
   kwokctl --name="${name}" kubectl config view --minify
 
   if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
+    echo "Error: cluster not ready"
     echo kwokctl --name="${name}" logs kube-apiserver
     kwokctl --name="${name}" logs kube-apiserver
     echo
@@ -107,9 +76,9 @@ EOF
   fi
 }
 
-function test_delelte_cluster() {
+function test_delete_cluster() {
   local release="${1}"
-  local name="cluster-${release//./-}"
+  local name="${2}"
   kwokctl delete cluster --name "${name}"
 }
 
@@ -124,6 +93,7 @@ function test_prometheus() {
   done
 
   if ! [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
+    echo "Error: metrics is not health"
     echo curl -s http://127.0.0.1:9090/api/v1/targets
     echo "${targets}"
     return 1
@@ -132,14 +102,20 @@ function test_prometheus() {
 
 function main() {
   local failed=()
+  local name
   for release in "${RELEASES[@]}"; do
-    test_create_cluster "${release}" || failed+=("create_cluster_${release}")
-    test_prometheus || failed+=("prometheus_${release}")
-    test_delelte_cluster "${release}" || failed+=("delete_cluster_${release}")
+    echo "------------------------------"
+    echo "Testing workable on ${KWOK_RUNTIME} for ${release}"
+    name="cluster-${KWOK_RUNTIME}-${release//./-}"
+    test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
+    test_prometheus || failed+=("prometheus_${name}")
+    test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
   done
+  echo "------------------------------"
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
-    echo "Some tests failed"
+    echo "------------------------------"
+    echo "Error: Some tests failed"
     for test in "${failed[@]}"; do
       echo " - ${test}"
     done

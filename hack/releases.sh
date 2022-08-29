@@ -23,6 +23,7 @@ IMAGE_PREFIX=""
 BINARY_PREFIX=""
 BINARY_NAME=""
 VERSION=""
+STAGING_PREFIX=""
 DRY_RUN=false
 PUSH=false
 BINS=()
@@ -31,7 +32,7 @@ PLATFORMS=()
 LDFLAGS=()
 
 function usage() {
-  echo "Usage: ${0} [--help] [--bin <bin> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--bucket <bucket>] [--image-prefix <image-prefix>] [--binary-prefix <binary-prefix>] [--binary-name <binary-name>] [--version <version>] [--push] [--dry-run]"
+  echo "Usage: ${0} [--help] [--bin <bin> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--bucket <bucket>] [--image-prefix <image-prefix>] [--binary-prefix <binary-prefix>] [--binary-name <binary-name>] [--version <version>] [--staging-prefix <staging-prefix>] [--push] [--dry-run]"
   echo "  --bin <bin> is binary, is required"
   echo "  --extra-tag <extra-tag> is extra tag"
   echo "  --platform <platform> is multi-platform capable for binary"
@@ -41,6 +42,7 @@ function usage() {
   echo "  --binary-prefix <binary-prefix> is kwok binary prefix"
   echo "  --binary-name <binary-name> is kwok binary name"
   echo "  --version <version> is version of binary"
+  echo "  --staging-prefix <staging-prefix> is staging prefix for bucket"
   echo "  --push will push binary to bucket"
   echo "  --dry-run just show what would be done"
 }
@@ -84,6 +86,10 @@ function args() {
       ;;
     --version | --version=*)
       [[ "${arg#*=}" != "${arg}" ]] && VERSION="${arg#*=}" || { VERSION="${2}" && shift; }
+      shift
+      ;;
+    --staging-prefix | --staging-prefix=*)
+      [[ "${arg#*=}" != "${arg}" ]] && STAGING_PREFIX="${arg#*=}" || { STAGING_PREFIX="${2}" && shift; }
       shift
       ;;
     --push | --push=*)
@@ -133,6 +139,7 @@ function main() {
   local bin
   local tmp_bin
   local extra_args=()
+  local prefix
 
   if [[ "${VERSION}" != "" ]]; then
     LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.Version=${VERSION}")
@@ -150,7 +157,6 @@ function main() {
     extra_args+=("-ldflags" "'${LDFLAGS[*]}'")
   fi
 
-  export CGO_ENABLED=0
   for platform in "${PLATFORMS[@]}"; do
     os="${platform%%/*}"
     for binary in "${BINS[@]}"; do
@@ -160,19 +166,23 @@ function main() {
       fi
       dist="./bin/${platform}/${bin}"
       src="./cmd/${binary}"
-      dry_run GOOS="${platform%%/*}" GOARCH="${platform##*/}" go build "${extra_args[@]}" -o "${dist}" "${src}"
+      CGO_ENABLED=0 dry_run GOOS="${platform%%/*}" GOARCH="${platform##*/}" go build "${extra_args[@]}" -o "${dist}" "${src}"
       if [[ "${PUSH}" == "true" ]]; then
         if [[ "${BUCKET}" != "" ]]; then
-          dry_run gsutil cp -P "${dist}" "${BUCKET}/${VERSION}/bin/${platform}/${bin}"
+          prefix="${BUCKET}/releases/"
+          if [[ "${STAGING_PREFIX}" != "" ]]; then
+            prefix="${BUCKET}/releases/${STAGING_PREFIX}-"
+          fi
+          dry_run gsutil cp -P "${dist}" "${prefix}${VERSION}/bin/${platform}/${bin}"
           if [[ "${#EXTRA_TAGS}" -ne 0 ]]; then
             for extra_tag in "${EXTRA_TAGS[@]}"; do
-              dry_run gsutil cp -P "${dist}" "${BUCKET}/${extra_tag}/bin/${platform}/${bin}"
+              dry_run gsutil cp -P "${dist}" "${prefix}${extra_tag}/bin/${platform}/${bin}"
             done
           fi
         fi
         if [[ "${GH_RELEASE}" != "" ]]; then
           tmp_bin="${binary}-${platform%%/*}-${platform##*/}"
-           if [[ "${os}" == "windows" ]]; then
+          if [[ "${os}" == "windows" ]]; then
             tmp_bin="${tmp_bin}.exe"
           fi
           dry_run cp "${dist}" "${tmp_bin}"

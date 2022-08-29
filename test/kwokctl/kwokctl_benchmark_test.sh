@@ -38,7 +38,7 @@ function child_timeout() {
   while kill -0 "${wp}" 2>/dev/null; do
     if [[ "${start}" -ge "${to}" ]]; then
       kill "${wp}"
-      echo "Timeout ${to}s" >&2
+      echo "Error: Timeout ${to}s" >&2
       return 1
     fi
     ((start++))
@@ -138,7 +138,7 @@ function scale_create_node() {
 
 function create_cluster() {
   KWOK_KUBE_VERSION="${KWOK_KUBE_VERSION}" kwokctl create cluster --quiet-pull || {
-    echo "Failed to create cluster" >&2
+    echo "Error: Failed to create cluster" >&2
     exit 1
   }
 }
@@ -149,19 +149,25 @@ function delete_cluster() {
 
 function main() {
   local failed=()
+  local name
+
+  echo "------------------------------"
+  echo "Benchmarking on ${KWOK_RUNTIME}"
+  name="benchmark-${KWOK_RUNTIME}"
 
   create_cluster
-  scale_create_node 1 fake-node
-  child_timeout 120 scale_create_pod 10000 || failed+=("scale_create_pod_timeout")
-  child_timeout 120 scale_delete_pod 0 || failed+=("scale_delete_pod_timeout")
+  scale_create_node 1
+  child_timeout 120 scale_create_pod 10000 || failed+=("scale_create_pod_timeout_${name}")
+  child_timeout 120 scale_delete_pod 0 || failed+=("scale_delete_pod_timeout_${name}")
   delete_cluster
 
   create_cluster
-  child_timeout 180 scale_create_node 10000 || failed+=("scale_create_node_timeout")
+  child_timeout 180 scale_create_node 10000 || failed+=("scale_create_node_timeout_${name}")
   delete_cluster
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
-    echo "Some tests failed"
+    echo "------------------------------"
+    echo "Error: Some tests failed"
     for test in "${failed[@]}"; do
       echo " - ${test}"
     done

@@ -4,21 +4,27 @@ options:
   # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
   machineType: N1_HIGHCPU_32
 steps:
-  - name: 'gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20211118-2f2d816b90'
-    entrypoint: make
+  - name: "gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20220617-174ad91c3a"
+    entrypoint: "bash"
     env:
-    - GIT_TAG=$_GIT_TAG
-    - BASE_REF=$_PULL_BASE_REF
-    - PUSH=true
-    - BUCKET=gs://k8s-staging-kwok-gcb
-    - IMAGE_PREFIX=gcr.io/k8s-staging-kwok
+      - DOCKER_CLI_EXPERIMENTAL=enabled
+      - GIT_TAG=$_GIT_TAG
+      - BASE_REF=$_PULL_BASE_REF
+      - PUSH=true
+      - BUCKET=gs://k8s-staging-kwok
+      - STAGING=true
+      - STAGING_IMAGE_PREFIX=gcr.io/k8s-staging-kwok
+      - IMAGE_PREFIX=registry.k8s.io/kwok
     args:
-    - cross-image
+      - -c
+      - |
+        ./hack/requirements.sh gsutil buildx
+        make cross-build cross-image
 
 substitutions:
   # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and
   # can be used as a substitution
-  _GIT_TAG: '12345'
+  _GIT_TAG: "12345"
   # _PULL_BASE_REF will contain the ref that was pushed to to trigger this build -
   # a branch like 'main' or 'release-0.2', or a tag like 'v0.2'.
-  _PULL_BASE_REF: 'main'
+  _PULL_BASE_REF: "main"

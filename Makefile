@@ -21,7 +21,7 @@ BUCKET ?=
 
 GH_RELEASE ?=
 
-GIT_TAG ?= $(shell ./hack/get-version.sh)
+VERSION ?= $(shell ./hack/get-version.sh)
 
 BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 
@@ -32,16 +32,29 @@ SUPPORTED_RELEASES ?= $(shell cat ./supported_releases.txt)
 BINARY ?= kwok kwokctl
 
 IMAGE_PREFIX ?=
+
 BINARY_PREFIX ?=
 BINARY_NAME ?=
 
-KWOK_IMAGE ?= $(IMAGE_PREFIX)/kwok
+STAGING ?= false
 
-CLUSTER_IMAGE ?= $(IMAGE_PREFIX)/cluster
+ifeq ($(STAGING),true)
+STAGING_IMAGE_PREFIX ?= $(IMAGE_PREFIX)
+STAGING_PREFIX ?= $(shell ./hack/get-staging.sh)
+else
+STAGING_IMAGE_PREFIX = $(IMAGE_PREFIX)
+STAGING_PREFIX =
+endif
+
+KWOK_IMAGE ?= $(STAGING_IMAGE_PREFIX)/kwok
+
+CLUSTER_IMAGE ?= $(STAGING_IMAGE_PREFIX)/cluster
 
 IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
 
 BINARY_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
+
+DOCKER_CLI_EXPERIMENTAL ?= enabled
 
 .PHONY: default
 default: help
@@ -79,7 +92,8 @@ build: vendor
 		--image-prefix=${IMAGE_PREFIX} \
 		--binary-prefix=${BINARY_PREFIX} \
 		--binary-name=${BINARY_NAME} \
-		--version=${GIT_TAG} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
@@ -95,7 +109,8 @@ cross-build: vendor
 		--image-prefix=${IMAGE_PREFIX} \
 		--binary-prefix=${BINARY_PREFIX} \
 		--binary-name=${BINARY_NAME} \
-		--version=${GIT_TAG} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
@@ -105,7 +120,8 @@ image:
 	@./images/kwok/build.sh \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${KWOK_IMAGE} \
-		--version=${GIT_TAG} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
@@ -116,7 +132,8 @@ cross-image:
 		$(addprefix --platform=, $(IMAGE_PLATFORMS))  \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${KWOK_IMAGE} \
-		--version=${GIT_TAG} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
@@ -129,7 +146,8 @@ cross-cluster-image:
 		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n -4 )) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${CLUSTER_IMAGE} \
-		--version=${GIT_TAG} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
@@ -137,7 +155,8 @@ cross-cluster-image:
 		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | tail -n 4 )) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${CLUSTER_IMAGE} \
-		--version=${GIT_TAG} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
@@ -149,6 +168,7 @@ integration-test:
 ## e2e-test: Run e2e tests
 .PHONY: e2e-test
 e2e-test:
+	@./hack/requirements.sh kubectl buildx compose kind
 	@./hack/e2e-test.sh
 
 ## help: Show this help message

@@ -24,14 +24,16 @@ IMAGES=()
 EXTRA_TAGS=()
 PLATFORMS=()
 VERSION=""
+STAGING_PREFIX=""
 KUBE_VERSIONS=()
 
 function usage() {
-  echo "Usage: ${0} [--help] [--version <version>] [--kube-version <kube-version> ...] [--image <image> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--push] [--dry-run]"
+  echo "Usage: ${0} [--help] [--version <version>] [--kube-version <kube-version> ...] [--image <image> ...] [--extra-tag <extra-tag> ...] [--staging-prefix <staging-prefix>] [--platform <platform> ...] [--push] [--dry-run]"
   echo "  --version <version> is kwok version, is required"
   echo "  --kube-version <kube-version> is kubernetes version, is required"
   echo "  --image <image> is image, is required"
   echo "  --extra-tag <extra-tag> is extra tag"
+  echo "  --staging-prefix <staging-prefix> is staging prefix for tag"
   echo "  --platform <platform> is multi-platform capable for image"
   echo "  --push will push image to registry"
   echo "  --dry-run just show what would be done"
@@ -56,6 +58,10 @@ function args() {
       ;;
     --extra-tag | --extra-tag=*)
       [[ "${arg#*=}" != "${arg}" ]] && EXTRA_TAGS+=("${arg#*=}") || { EXTRA_TAGS+=("${2}") && shift; }
+      shift
+      ;;
+    --staging-prefix | --staging-prefix=*)
+      [[ "${arg#*=}" != "${arg}" ]] && STAGING_PREFIX="${arg#*=}" || { STAGING_PREFIX="${2}" && shift; }
       shift
       ;;
     --platform | --platform=*)
@@ -117,14 +123,7 @@ function dry_run() {
 function main() {
   local extra_args
   local suffix
-
-  export DOCKER_CLI_EXPERIMENTAL=enabled
-  if [[ "${DRY_RUN}" != "true" ]]; then
-    if ! docker buildx inspect --builder kwok >/dev/null 2>&1; then
-      docker buildx create --use --name kwok >/dev/null 2>&1
-      trap 'docker buildx rm kwok' EXIT
-    fi
-  fi
+  local tag
 
   for kube_version in "${KUBE_VERSIONS[@]}"; do
     extra_args=(
@@ -134,13 +133,21 @@ function main() {
     suffix="-k8s.${kube_version}"
 
     for image in "${IMAGES[@]}"; do
+      tag="${VERSION}${suffix}"
+      if [[ "${STAGING_PREFIX}" != "" ]]; then
+        tag="${STAGING_PREFIX}-${VERSION}${suffix}"
+      fi
       extra_args+=(
-        "--tag=${image}:${VERSION}${suffix}"
+        "--tag=${image}:${tag}"
       )
       if [[ "${#EXTRA_TAGS[@]}" -ne 0 ]]; then
         for extra_tag in "${EXTRA_TAGS[@]}"; do
+          tag="${extra_tag}${suffix}"
+          if [[ "${STAGING_PREFIX}" != "" ]]; then
+            tag="${STAGING_PREFIX}-${extra_tag}${suffix}"
+          fi
           extra_args+=(
-            "--tag=${image}:${extra_tag}${suffix}"
+            "--tag=${image}:${tag}"
           )
         done
       fi

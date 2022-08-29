@@ -13,14 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ "${GIT_TAG}" == "" ]]; then
-  GIT_TAG="$(git describe --tags --dirty --always)"
-fi
+DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-# The value passed by gcr's cloudbuild will have this prefix by default
-# https://github.com/kubernetes/k8s.io/blob/aa5a1f164aece8f116196c40ac7b937be479cd41/images/codesearch/cs-fetch-repos/Makefile#L19
-if [[ "${GIT_TAG}" =~ ^v[0-9]{8}- ]]; then
-  GIT_TAG="${GIT_TAG:10}"
-fi
+DIR="$(realpath "${DIR}")"
 
-echo "${GIT_TAG}"
+source "${DIR}/helper.sh"
+
+function main() {
+  local all_releases=("${@}")
+  build_kwokctl
+  build_image
+
+  test_all "docker" "workable" "${all_releases[@]}" || exit 1
+}
+
+main $(supported_releases)
