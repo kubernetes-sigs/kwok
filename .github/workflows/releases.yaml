@@ -28,7 +28,17 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build binary
+      - name: Build binary for registry.k8s.io
+        if: github.repository == 'kubernetes-sigs/kwok'
+        env:
+          GH_RELEASE: ${{ github.repository }}
+          IMAGE_PREFIX: registry.k8s.io/kwok
+          BINARY_PREFIX: https://github.com/${{ github.repository }}/releases/download
+        run: |
+          REF=${{ github.ref }}
+          GIT_TAG="${REF##*/}" make cross-build
+      - name: Build binary for ghcr.io
+        if: github.repository != 'kubernetes-sigs/kwok'
         env:
           GH_RELEASE: ${{ github.repository }}
           IMAGE_PREFIX: ghcr.io/${{ github.repository }}
