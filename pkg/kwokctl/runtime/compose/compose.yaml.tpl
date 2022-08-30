@@ -6,6 +6,8 @@ services:
     container_name: "{{ .ProjectName }}-etcd"
     image: {{ .EtcdImage }}
     restart: always
+    environment:
+      - ETCDCTL_API=3
     command:
       - etcd
       - --data-dir

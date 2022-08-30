@@ -14,45 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package snapshot
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
 
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create"
-	del "sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete"
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get"
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/kubectl"
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/logs"
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/restore"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/save"
 	"sigs.k8s.io/kwok/pkg/logger"
 )
 
-// NewCommand returns a new cobra.Command for root
+// NewCommand returns a new cobra.Command for cluster snapshot
 func NewCommand(logger logger.Logger) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "kwokctl [command]",
-		Short: "Kwokctl is a Kwok cluster management tool",
-		Long:  "Kwokctl is a Kwok cluster management tool",
+		Use:   "snapshot",
+		Short: "Snapshot [save, restore] one of cluster",
+		Long:  "Snapshot [save, restore] one of cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("subcommand is required")
 		},
 	}
-
-	cmd.PersistentFlags().StringVar(&vars.DefaultCluster, "name", vars.DefaultCluster, "cluster name")
-	cmd.TraverseChildren = true
-
-	cmd.AddCommand(
-		create.NewCommand(logger),
-		del.NewCommand(logger),
-		get.NewCommand(logger),
-		kubectl.NewCommand(logger),
-		logs.NewCommand(logger),
-		snapshot.NewCommand(logger),
-	)
+	cmd.AddCommand(save.NewCommand(logger))
+	cmd.AddCommand(restore.NewCommand(logger))
 	return cmd
 }

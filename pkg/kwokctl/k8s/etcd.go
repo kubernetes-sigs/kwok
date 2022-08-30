@@ -55,4 +55,5 @@ func GetEtcdVersion(version int) string {
 
 func init() {
 	os.Setenv("ETCD_UNSUPPORTED_ARCH", runtime.GOARCH)
+	os.Setenv("ETCDCTL_API", "3")
 }

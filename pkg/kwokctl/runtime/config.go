@@ -124,4 +124,10 @@ type Runtime interface {
 
 	// ListImages list images in the cluster
 	ListImages(ctx context.Context, actual bool) ([]string, error)
+
+	// SnapshotSave save the snapshot of cluster
+	SnapshotSave(ctx context.Context, path string) error
+
+	// SnapshotRestore restore the snapshot of cluster
+	SnapshotRestore(ctx context.Context, path string) error
 }
