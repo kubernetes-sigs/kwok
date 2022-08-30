@@ -162,7 +162,7 @@ function main() {
   delete_cluster
 
   create_cluster
-  child_timeout 180 scale_create_node 10000 || failed+=("scale_create_node_timeout_${name}")
+  child_timeout 240 scale_create_node 10000 || failed+=("scale_create_node_timeout_${name}")
   delete_cluster
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
