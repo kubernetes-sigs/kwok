@@ -70,16 +70,7 @@ unit-test: vendor
 ## verify: Verify code
 .PHONY: verify
 verify:
-	@echo "Verify go.mod & go.sum"
-	$(GO_CMD) mod tidy
-	git --no-pager diff --exit-code go.mod go.sum
-
-	@echo "Verify gofmt"
-	@out=`gofmt -l -d $$(find . -name '*.go')`; \
-	if [ -n "$$out" ]; then \
-		echo "$$out"; \
-		exit 1; \
-	fi
+	@./hack/verify-all.sh
 
 ## build: Build binary
 .PHONY: build
