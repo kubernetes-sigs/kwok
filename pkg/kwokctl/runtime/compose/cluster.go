@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
@@ -62,7 +61,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	inClusterAdminKeyPath := ""
 	inClusterAdminCertPath := ""
 	inClusterCACertPath := ""
-	inClusterPort := 8080
+	inClusterPort := uint32(8080)
 	scheme := "http"
 
 	// generate ca cert
@@ -100,9 +99,9 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 	}
 
-	apiserverPort := int(conf.ApiserverPort)
-	if apiserverPort == 0 {
-		apiserverPort, err = utils.GetUnusedPort()
+	kubeApiserverPort := conf.KubeApiserverPort
+	if kubeApiserverPort == 0 {
+		kubeApiserverPort, err = utils.GetUnusedPort()
 		if err != nil {
 			return err
 		}
@@ -111,7 +110,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	// Setup compose
 	compose, err := BuildCompose(BuildComposeConfig{
 		ProjectName:                conf.Name,
-		ApiserverPort:              uint32(apiserverPort),
+		KubeApiserverPort:          kubeApiserverPort,
 		KubeconfigPath:             inClusterOnHostKubeconfigPath,
 		AdminCertPath:              adminCertPath,
 		AdminKeyPath:               adminKeyPath,
@@ -143,7 +142,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
 		ProjectName:  conf.Name,
 		SecretPort:   conf.SecretPort,
-		Address:      scheme + "://127.0.0.1:" + strconv.Itoa(apiserverPort),
+		Address:      scheme + "://127.0.0.1:" + utils.StringUint32(kubeApiserverPort),
 		AdminCrtPath: adminCertPath,
 		AdminKeyPath: adminKeyPath,
 	})
@@ -153,7 +152,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	inClusterKubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
 		ProjectName:  conf.Name,
 		SecretPort:   conf.SecretPort,
-		Address:      scheme + "://" + conf.Name + "-kube-apiserver:" + strconv.Itoa(inClusterPort),
+		Address:      scheme + "://" + conf.Name + "-kube-apiserver:" + utils.StringUint32(inClusterPort),
 		AdminCrtPath: inClusterAdminCertPath,
 		AdminKeyPath: inClusterAdminKeyPath,
 	})
@@ -178,7 +177,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://127.0.0.1:"+strconv.Itoa(apiserverPort))
+	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://127.0.0.1:"+utils.StringUint32(kubeApiserverPort))
 	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", conf.Name)
 	if conf.SecretPort {
 		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".insecure-skip-tls-verify", "true")

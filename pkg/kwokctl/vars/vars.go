@@ -49,8 +49,8 @@ var (
 	// CacheDir is the directory of the cache.
 	CacheDir = utils.PathJoin(WorkDir, "cache")
 
-	// ApiserverPort is the port to expose apiserver.
-	ApiserverPort = getEnvInt("KWOK_APISERVER_PORT", 0)
+	// KubeApiserverPort is the port to expose apiserver.
+	KubeApiserverPort = getEnvInt("KWOK_KUBE_APISERVER_PORT", 0)
 
 	// Runtime is the runtime to use.
 	Runtime = getEnv("KWOK_RUNTIME", detectionRuntime())

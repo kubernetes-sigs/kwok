@@ -6,6 +6,8 @@ services:
     container_name: "{{ .ProjectName }}-etcd"
     image: {{ .EtcdImage }}
     restart: always
+    environment:
+      - ETCDCTL_API=3
     command:
       - etcd
       - --data-dir
@@ -36,9 +38,9 @@ services:
       - etcd
     ports:
 {{ if .SecretPort }}
-      - {{ .ApiserverPort }}:6443
+      - {{ .KubeApiserverPort }}:6443
 {{ else }}
-      - {{ .ApiserverPort }}:8080
+      - {{ .KubeApiserverPort }}:8080
 {{ end }}
     command:
       - kube-apiserver

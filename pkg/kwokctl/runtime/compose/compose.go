@@ -62,8 +62,8 @@ type BuildComposeConfig struct {
 	SecretPort bool
 	QuietPull  bool
 
-	ApiserverPort  uint32
-	PrometheusPort uint32
+	KubeApiserverPort uint32
+	PrometheusPort    uint32
 
 	RuntimeConfig string
 	FeatureGates  string

@@ -42,10 +42,10 @@ type BuildPrometheusConfig struct {
 	SecretPort                bool
 	AdminCrtPath              string
 	AdminKeyPath              string
-	PrometheusPort            int
-	EtcdPort                  int
-	KubeApiserverPort         int
-	KubeControllerManagerPort int
-	KubeSchedulerPort         int
-	KwokPort                  int
+	PrometheusPort            uint32
+	EtcdPort                  uint32
+	KubeApiserverPort         uint32
+	KubeControllerManagerPort uint32
+	KubeSchedulerPort         uint32
+	KwokControllerPort        uint32
 }

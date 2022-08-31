@@ -25,11 +25,16 @@ import (
 )
 
 type Config struct {
-	Name           string `json:"name,omitempty"`
-	ApiserverPort  uint32 `json:"apiserver_port,omitempty"`
-	Workdir        string `json:"workdir,omitempty"`
-	Runtime        string `json:"runtime,omitempty"`
-	PrometheusPort uint32 `json:"prometheus_port,omitempty"`
+	Name                      string `json:"name,omitempty"`
+	Workdir                   string `json:"workdir,omitempty"`
+	Runtime                   string `json:"runtime,omitempty"`
+	EtcdPort                  uint32 `json:"etcd_port,omitempty"`
+	EtcdPeerPort              uint32 `json:"etcd_peer_port,omitempty"`
+	KubeApiserverPort         uint32 `json:"kube_apiserver_port,omitempty"`
+	KubeControllerManagerPort uint32 `json:"kube_controller_manager_port,omitempty"`
+	KubeSchedulerPort         uint32 `json:"kube_scheduler_port,omitempty"`
+	KwokControllerPort        uint32 `json:"kwok_controller_port,omitempty"`
+	PrometheusPort            uint32 `json:"prometheus_port,omitempty"`
 
 	// For docker-compose
 	EtcdImage                  string `json:"etcd_image,omitempty"`
@@ -73,7 +78,7 @@ type Runtime interface {
 	Init(ctx context.Context, conf Config) error
 
 	// Config return the config of cluster
-	Config() (*Config, error)
+	Config() (Config, error)
 
 	// Install the cluster
 	Install(ctx context.Context) error
@@ -119,4 +124,10 @@ type Runtime interface {
 
 	// ListImages list images in the cluster
 	ListImages(ctx context.Context, actual bool) ([]string, error)
+
+	// SnapshotSave save the snapshot of cluster
+	SnapshotSave(ctx context.Context, path string) error
+
+	// SnapshotRestore restore the snapshot of cluster
+	SnapshotRestore(ctx context.Context, path string) error
 }

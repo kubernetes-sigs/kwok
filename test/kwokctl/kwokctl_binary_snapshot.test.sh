@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2022 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3.16
-ARG TARGETPLATFORM
-COPY --chmod=0755 bin/$TARGETPLATFORM/kwok /usr/local/bin/
-COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
-COPY --chmod=0755 images/cluster/entrypoint.sh /entrypoint.sh
+DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-ENV KWOK_CONTROLLER_BINARY /usr/local/bin/kwok
-ENV KWOK_KUBE_APISERVER_PORT 8080
+DIR="$(realpath "${DIR}")"
 
-ARG kube_version
-ENV KWOK_KUBE_VERSION $kube_version
+ROOT_DIR="$(realpath "${DIR}/../..")"
 
-RUN echo "KUBE_VERSION: ${KWOK_KUBE_VERSION}" && \
-    kwokctl create cluster --quiet-pull && \
-    kwokctl kubectl version && \
-    kwokctl delete cluster
+source "${DIR}/helper.sh"
+source "${ROOT_DIR}/hack/requirements.sh"
 
-ENTRYPOINT ["/entrypoint.sh"]
+function requirements() {
+  install_kubectl
+}
+
+function main() {
+  local all_releases=("${@}")
+  build_kwokctl
+  build_binary
+
+  test_all "binary" "snapshot" "${all_releases[@]}" || exit 1
+}
+
+requirements
+
+main $(supported_releases)

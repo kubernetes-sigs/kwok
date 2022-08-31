@@ -38,7 +38,7 @@ scrape_configs:
   enable_http2: true
   static_configs:
   - targets:
-    - localhost:{{ .KwokPort }}
+    - localhost:{{ .KwokControllerPort }}
 
 {{ if .SecretPort }}
 - job_name: "kube-apiserver"

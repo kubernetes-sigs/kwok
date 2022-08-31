@@ -32,7 +32,7 @@ import (
 
 type flagpole struct {
 	Name                        string
-	ApiserverPort               uint32
+	KubeApiserverPort           uint32
 	PrometheusPort              uint32
 	SecurePort                  bool
 	QuietPull                   bool
@@ -70,7 +70,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 			return runE(cmd.Context(), logger, flags)
 		},
 	}
-	cmd.Flags().Uint32Var(&flags.ApiserverPort, "apiserver-port", uint32(vars.ApiserverPort), "Port of the apiserver (default random)")
+	cmd.Flags().Uint32Var(&flags.KubeApiserverPort, "kube-apiserver-port", uint32(vars.KubeApiserverPort), `Port of the apiserver (default random)`)
 	cmd.Flags().Uint32Var(&flags.PrometheusPort, "prometheus-port", uint32(vars.PrometheusPort), `Port to expose Prometheus metrics`)
 	cmd.Flags().BoolVar(&flags.SecurePort, "secure-port", vars.SecurePort, `Apiserver use TLS`)
 	cmd.Flags().BoolVar(&flags.QuietPull, "quiet-pull", vars.QuietPull, `Pull without printing progress information`)
@@ -157,7 +157,7 @@ func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
 		logger.Printf("Creating cluster %q", name)
 		err = rt.Init(ctx, runtime.Config{
 			Name:                        name,
-			ApiserverPort:               flags.ApiserverPort,
+			KubeApiserverPort:           flags.KubeApiserverPort,
 			Workdir:                     workdir,
 			Runtime:                     flags.Runtime,
 			PrometheusImage:             flags.PrometheusImage,
