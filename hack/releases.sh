@@ -23,6 +23,7 @@ IMAGE_PREFIX=""
 BINARY_PREFIX=""
 BINARY_NAME=""
 VERSION=""
+KUBE_VERSION=""
 STAGING_PREFIX=""
 DRY_RUN=false
 PUSH=false
@@ -32,7 +33,7 @@ PLATFORMS=()
 LDFLAGS=()
 
 function usage() {
-  echo "Usage: ${0} [--help] [--bin <bin> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--bucket <bucket>] [--image-prefix <image-prefix>] [--binary-prefix <binary-prefix>] [--binary-name <binary-name>] [--version <version>] [--staging-prefix <staging-prefix>] [--push] [--dry-run]"
+  echo "Usage: ${0} [--help] [--bin <bin> ...] [--extra-tag <extra-tag> ...] [--platform <platform> ...] [--bucket <bucket>] [--image-prefix <image-prefix>] [--binary-prefix <binary-prefix>] [--binary-name <binary-name>] [--version <version>] [--kube-version <kube-version>] [--staging-prefix <staging-prefix>] [--push] [--dry-run]"
   echo "  --bin <bin> is binary, is required"
   echo "  --extra-tag <extra-tag> is extra tag"
   echo "  --platform <platform> is multi-platform capable for binary"
@@ -42,6 +43,7 @@ function usage() {
   echo "  --binary-prefix <binary-prefix> is kwok binary prefix"
   echo "  --binary-name <binary-name> is kwok binary name"
   echo "  --version <version> is version of binary"
+  echo "  --kube-version <kube-version> is default version of Kubernetes"
   echo "  --staging-prefix <staging-prefix> is staging prefix for bucket"
   echo "  --push will push binary to bucket"
   echo "  --dry-run just show what would be done"
@@ -86,6 +88,10 @@ function args() {
       ;;
     --version | --version=*)
       [[ "${arg#*=}" != "${arg}" ]] && VERSION="${arg#*=}" || { VERSION="${2}" && shift; }
+      shift
+      ;;
+    --kube-version | --kube-version=*)
+      [[ "${arg#*=}" != "${arg}" ]] && KUBE_VERSION="${arg#*=}" || { KUBE_VERSION="${2}" && shift; }
       shift
       ;;
     --staging-prefix | --staging-prefix=*)
@@ -143,6 +149,9 @@ function main() {
 
   if [[ "${VERSION}" != "" ]]; then
     LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.Version=${VERSION}")
+  fi
+  if [[ "${KUBE_VERSION}" != "" ]]; then
+    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.KubeVersion=${KUBE_VERSION}")
   fi
   if [[ "${IMAGE_PREFIX}" != "" ]]; then
     LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=${IMAGE_PREFIX}")

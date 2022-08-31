@@ -84,6 +84,7 @@ build: vendor
 		--binary-prefix=${BINARY_PREFIX} \
 		--binary-name=${BINARY_NAME} \
 		--version=${VERSION} \
+		--kube-version=v$(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n 1 ) \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
@@ -101,6 +102,7 @@ cross-build: vendor
 		--binary-prefix=${BINARY_PREFIX} \
 		--binary-name=${BINARY_NAME} \
 		--version=${VERSION} \
+		--kube-version=v$(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n 1 ) \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
