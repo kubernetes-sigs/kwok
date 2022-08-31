@@ -62,7 +62,7 @@ var (
 	KwokVersion = addPrefixV(getEnv("KWOK_VERSION", consts.Version))
 
 	// KubeVersion is the version of Kubernetes to use.
-	KubeVersion = addPrefixV(getEnv("KWOK_KUBE_VERSION", "v1.24.2"))
+	KubeVersion = addPrefixV(getEnv("KWOK_KUBE_VERSION", consts.KubeVersion))
 
 	// EtcdVersion is the version of etcd to use.
 	EtcdVersion = trimPrefixV(getEnv("KWOK_ETCD_VERSION", k8s.GetEtcdVersion(parseRelease(KubeVersion))))
