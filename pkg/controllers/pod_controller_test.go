@@ -84,19 +84,19 @@ func TestPodController(t *testing.T) {
 		Logger:                                testingLogger{t},
 	})
 	if err != nil {
-		t.Fatal(fmt.Errorf("new pods controller error: %v", err))
+		t.Fatal(fmt.Errorf("new pods controller error: %w", err))
 	}
 
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer func() {
+	t.Cleanup(func() {
 		cancel()
 		time.Sleep(time.Second)
-	}()
+	})
 
 	err = pods.Start(ctx)
 	if err != nil {
-		t.Fatal(fmt.Errorf("start pods controller error: %v", err))
+		t.Fatal(fmt.Errorf("start pods controller error: %w", err))
 	}
 
 	clientset.CoreV1().Pods("default").Create(ctx, &corev1.Pod{
@@ -118,7 +118,7 @@ func TestPodController(t *testing.T) {
 
 	pod1, err := clientset.CoreV1().Pods("default").Get(ctx, "pod1", metav1.GetOptions{})
 	if err != nil {
-		t.Fatal(fmt.Errorf("get pod1 error: %v", err))
+		t.Fatal(fmt.Errorf("get pod1 error: %w", err))
 	}
 	pod1.Annotations = map[string]string{
 		"fake": "custom",
@@ -128,7 +128,7 @@ func TestPodController(t *testing.T) {
 
 	pod1, err = clientset.CoreV1().Pods("default").Get(ctx, "pod1", metav1.GetOptions{})
 	if err != nil {
-		t.Fatal(fmt.Errorf("get pod1 error: %v", err))
+		t.Fatal(fmt.Errorf("get pod1 error: %w", err))
 	}
 	if pod1.Status.Reason != "custom" {
 		t.Fatal(fmt.Errorf("pod1 status reason not custom"))
@@ -138,7 +138,7 @@ func TestPodController(t *testing.T) {
 
 	list, err := clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
 	if err != nil {
-		t.Fatal(fmt.Errorf("list pods error: %v", err))
+		t.Fatal(fmt.Errorf("list pods error: %w", err))
 	}
 
 	if len(list.Items) != 3 {
@@ -150,13 +150,13 @@ func TestPodController(t *testing.T) {
 	pod.DeletionTimestamp = &now
 	_, err = clientset.CoreV1().Pods("default").Update(ctx, &pod, metav1.UpdateOptions{})
 	if err != nil {
-		t.Fatal(fmt.Errorf("delete pod error: %v", err))
+		t.Fatal(fmt.Errorf("delete pod error: %w", err))
 	}
 
 	time.Sleep(2 * time.Second)
 	list, err = clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
 	if err != nil {
-		t.Fatal(fmt.Errorf("list pods error: %v", err))
+		t.Fatal(fmt.Errorf("list pods error: %w", err))
 	}
 	if len(list.Items) != 2 {
 		t.Fatal(fmt.Errorf("want 2 pods, got %d", len(list.Items)))

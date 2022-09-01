@@ -82,10 +82,10 @@ func TestNodeController(t *testing.T) {
 	}
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer func() {
+	t.Cleanup(func() {
 		cancel()
 		time.Sleep(time.Second)
-	}()
+	})
 
 	err = nodes.Start(ctx)
 	if err != nil {
