@@ -174,8 +174,8 @@ var (
 	// Mode is several default parameter templates for clusters
 	Mode = getEnv("KWOK_MODE", "")
 
-	// ModeStableFeatureGateAndAPI efforts to reduce cluster configuration requirements
-	// Disables all alpha feature by default, as well as Bata feature that are not eventually GA
+	// ModeStableFeatureGateAndAPI is intended to reduce cluster configuration requirements
+	// Disables all Alpha feature by default, as well as Beta feature that are not eventually GA
 	ModeStableFeatureGateAndAPI = "StableFeatureGateAndAPI"
 
 	// KubeFeatureGates is a set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes.
