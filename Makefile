@@ -131,21 +131,11 @@ cross-image:
 		--push=${PUSH}
 
 ## cross-cluster-image: Build cluster images for all supported platforms and all supported Kubernetes versions.
-# 1.13 and earlier only support Intel architectures.
 .PHONY: cross-cluster-image
 cross-cluster-image:
 	@./images/cluster/build.sh \
 		$(addprefix --platform=, $(IMAGE_PLATFORMS)) \
-		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n -4 )) \
-		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
-		--image=${CLUSTER_IMAGE} \
-		--version=${VERSION} \
-		--staging-prefix=${STAGING_PREFIX} \
-		--dry-run=${DRY_RUN} \
-		--push=${PUSH}
-
-	@./images/cluster/build.sh \
-		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | tail -n 4 )) \
+		$(addprefix --kube-version=v, $(SUPPORTED_RELEASES)) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${CLUSTER_IMAGE} \
 		--version=${VERSION} \
