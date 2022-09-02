@@ -23,8 +23,6 @@ import (
 	"strings"
 )
 
-//go:generate ./feature_gates_data.sh 24
-
 var lockEnabled = map[string]bool{}
 
 func GetFeatureGates(version int) string {
