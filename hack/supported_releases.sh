@@ -131,7 +131,7 @@ function main() {
   fi
 
   record_data="$(record_releases)"
-  out="$(bump ${record_data} ${latest_data} | sort --reverse --version-sort)"
+  out="$(bump ${record_data} ${latest_data} | sort --reverse --version-sort | head -n 6)"
 
   if [[ "${out}" == "$(record_releases)" ]]; then
     echo "No update"
