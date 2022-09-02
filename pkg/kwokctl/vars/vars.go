@@ -171,11 +171,28 @@ var (
 		return ""
 	}()
 
+	// Mode is several default parameter templates for clusters
+	Mode = getEnv("KWOK_MODE", "")
+
+	// ModeStableFeatureGateAndAPI is intended to reduce cluster configuration requirements
+	// Disables all Alpha feature by default, as well as Beta feature that are not eventually GA
+	ModeStableFeatureGateAndAPI = "StableFeatureGateAndAPI"
+
 	// KubeFeatureGates is a set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes.
-	KubeFeatureGates = getEnv("KWOK_KUBE_FEATURE_GATES", k8s.GetFeatureGates(parseRelease(KubeVersion)))
+	KubeFeatureGates = getEnv("KWOK_KUBE_FEATURE_GATES", func() string {
+		if Mode == ModeStableFeatureGateAndAPI {
+			return k8s.GetFeatureGates(parseRelease(KubeVersion))
+		}
+		return ""
+	}())
 
 	// KubeRuntimeConfig is a set of key=value pairs that enable or disable built-in APIs.
-	KubeRuntimeConfig = getEnv("KWOK_KUBE_RUNTIME_CONFIG", k8s.GetRuntimeConfig(parseRelease(KubeVersion)))
+	KubeRuntimeConfig = getEnv("KWOK_KUBE_RUNTIME_CONFIG", func() string {
+		if Mode == ModeStableFeatureGateAndAPI {
+			return k8s.GetRuntimeConfig(parseRelease(KubeVersion))
+		}
+		return ""
+	}())
 )
 
 // getEnv returns the value of the environment variable named by the key.
