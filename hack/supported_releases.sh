@@ -82,11 +82,6 @@ function send_pr() {
     echo "No modification"
     return 1
   fi
-  if [[ "${status}" != " M supported_releases.txt" ]]; then
-    echo "Modified unintended documents"
-    echo "${status}"
-    return 1
-  fi
 
   # Use the fixed branch as the key to prevent duplicate PRs from being created
   branch="bump-releases"
@@ -107,8 +102,7 @@ function send_pr() {
 
   diff_data="$(git diff)"
 
-  git add supported_releases.txt
-  git commit -m "Bump supported_releases.txt"
+  git commit -a -m "Bump supported_releases.txt"
   if ! git push --set-upstream origin "${branch}"; then
     echo "Failed push branch ${branch}"
     return 1
@@ -145,6 +139,9 @@ function main() {
   fi
 
   echo "${out}" >"${record}"
+
+  # Update feature gate data
+  "${ROOT_DIR}/pkg/kwokctl/k8s/feature_gates_data.sh" "$(echo "${out}" | head -n 1 | awk -F. '{print $2}')"
 
   if [[ "${SEND_PR}" == "true" ]]; then
     send_pr
