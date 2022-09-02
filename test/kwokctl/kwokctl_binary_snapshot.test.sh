@@ -29,7 +29,7 @@ function requirements() {
 function main() {
   local all_releases=("${@}")
   build_kwokctl
-  build_binary
+  build_kwok
 
   test_all "binary" "snapshot" "${all_releases[@]}" || exit 1
 }
