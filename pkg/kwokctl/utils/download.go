@@ -123,6 +123,8 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 	}
 	switch u.Scheme {
 	case "http", "https":
+		fmt.Fprintf(os.Stderr, "Download %s\n", src)
+
 		cli := &http.Client{}
 		req, err := http.NewRequest("GET", u.String(), nil)
 		if err != nil {
@@ -151,7 +153,6 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 
 		var srcReader io.Reader = resp.Body
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Download %s\n", src)
 			pb := NewProgressBar()
 			contentLength := resp.Header.Get("Content-Length")
 			contentLengthInt, _ := strconv.Atoi(contentLength)

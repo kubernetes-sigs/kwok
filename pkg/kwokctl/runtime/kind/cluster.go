@@ -111,6 +111,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			image,
 		)
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "Pull image %s\n", image)
 			err = utils.Exec(ctx, "", utils.IOStreams{
 				Out:    out,
 				ErrOut: out,
