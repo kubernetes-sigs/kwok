@@ -157,12 +157,12 @@ function main() {
 
   create_cluster
   scale_create_node 1
-  child_timeout 120 scale_create_pod 10000 || failed+=("scale_create_pod_timeout_${name}")
+  child_timeout 120 scale_create_pod 1000 || failed+=("scale_create_pod_timeout_${name}")
   child_timeout 120 scale_delete_pod 0 || failed+=("scale_delete_pod_timeout_${name}")
   delete_cluster
 
   create_cluster
-  child_timeout 240 scale_create_node 10000 || failed+=("scale_create_node_timeout_${name}")
+  child_timeout 120 scale_create_node 1000 || failed+=("scale_create_node_timeout_${name}")
   delete_cluster
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
