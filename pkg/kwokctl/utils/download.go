@@ -64,6 +64,11 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 		}
 	}
 
+	err = os.MkdirAll(filepath.Dir(dest), 0755)
+	if err != nil {
+		return err
+	}
+
 	// link the cache file to the dest file
 	err = os.Symlink(cache, dest)
 	if err != nil {
