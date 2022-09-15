@@ -193,12 +193,16 @@ func (c *Cluster) KubectlInCluster(ctx context.Context, stm utils.IOStreams, arg
 		return err
 	}
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
-	kubectlPath := utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
-	err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustKubectlBinary, kubectlPath, 0755, conf.QuietPull)
+	kubectlPath, err := exec.LookPath("kubectl")
 	if err != nil {
-		return err
+		bin := utils.PathJoin(conf.Workdir, "bin")
+		kubectlPath := utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
+		err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustKubectlBinary, kubectlPath, 0755, conf.QuietPull)
+		if err != nil {
+			return err
+		}
 	}
+
 	return utils.Exec(ctx, "", stm, kubectlPath,
 		append([]string{"--kubeconfig", utils.PathJoin(conf.Workdir, InHostKubeconfigName)}, args...)...)
 }
