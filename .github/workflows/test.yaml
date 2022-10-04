@@ -1,0 +1,135 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+
+env:
+  DOCKER_CLI_EXPERIMENTAL: "enabled"
+  CGO_ENABLED: "0"
+
+jobs:
+  test-kwok:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Install Kind
+        shell: bash
+        run: |
+          ./hack/requirements.sh kind
+          kind version
+
+      - name: Install kubectl
+        shell: bash
+        run: |
+          ./hack/requirements.sh kubectl
+          kubectl version || :
+
+      - name: Test Workable
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwok/kwok
+
+  test-kwokctl:
+    # https://docs.github.com/en/actions/using-jobs/using-concurrency
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}
+      cancel-in-progress: true
+
+    # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          # Linux containers are not supported on Windows Runner
+          # https://github.com/orgs/community/discussions/25491#discussioncomment-3248089
+          # - windows-latest
+        kwokctl-runtime:
+          - binary
+          - docker
+          - kind
+        exclude:
+          # No binary is provided by default for control plane components outside of Linux
+          # https://www.downloadkubernetes.com
+          # TODO: we can build the required binary
+          - os: macos-latest
+            kwokctl-runtime: binary
+
+    continue-on-error: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Install CoreUtils for MacOS
+        if: ${{ matrix.os == 'macos-latest' && matrix.kwokctl-runtime != 'binary' }}
+        shell: bash
+        run: |
+          brew install coreutils
+
+      - name: Install Docker for MacOS
+        if: ${{ matrix.os == 'macos-latest' && matrix.kwokctl-runtime != 'binary' }}
+        shell: bash
+        run: |
+          brew install colima docker
+          colima start --mount $HOME/.kwok/:w
+
+      - name: Install Buildx
+        if: ${{ matrix.kwokctl-runtime != 'binary' }}
+        shell: bash
+        run: |
+          ./hack/requirements.sh buildx
+          docker buildx version
+
+      - name: Install Docker Compose V2
+        if: ${{ matrix.kwokctl-runtime == 'docker' }}
+        shell: bash
+        run: |
+          ./hack/requirements.sh compose
+           docker compose version
+
+      - name: Install Kind
+        if: ${{ matrix.kwokctl-runtime == 'kind' }}
+        shell: bash
+        run: |
+          ./hack/requirements.sh kind
+          kind version
+
+      - name: Docker Info
+        if: ${{ matrix.kwokctl-runtime != 'binary' }}
+        shell: bash
+        run: |
+          docker info
+
+      - name: Install kubectl
+        shell: bash
+        run: |
+          ./hack/requirements.sh kubectl
+          kubectl version || :
+
+      - name: Test Workable
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
+
+      - name: Test Snapshot
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_snapshot
+
+      - name: Test Benchmark
+        shell: bash
+        if: ${{ matrix.kwokctl-runtime != 'kind' }}
+        continue-on-error: true
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark
