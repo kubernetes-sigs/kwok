@@ -142,6 +142,21 @@ func (c *Cluster) Up(ctx context.Context) error {
 	caCertPath := utils.PathJoin(pkiPath, "ca.crt")
 	adminKeyPath := utils.PathJoin(pkiPath, "admin.key")
 	adminCertPath := utils.PathJoin(pkiPath, "admin.crt")
+	auditLogPath := ""
+	auditPolicyPath := ""
+	if conf.AuditPolicy != "" {
+		auditLogPath = utils.PathJoin(conf.Workdir, "logs", runtime.AuditLogName)
+		err = utils.CreateFile(auditLogPath, 0644)
+		if err != nil {
+			return err
+		}
+
+		auditPolicyPath = utils.PathJoin(conf.Workdir, runtime.AuditPolicyName)
+		err = utils.CopyFile(conf.AuditPolicy, auditPolicyPath)
+		if err != nil {
+			return err
+		}
+	}
 
 	etcdPeerPort := conf.EtcdPeerPort
 	if etcdPeerPort == 0 {
@@ -249,6 +264,16 @@ func (c *Cluster) Up(ctx context.Context) error {
 			utils.PathJoin(conf.Workdir, "cert"),
 		)
 	}
+
+	if auditPolicyPath != "" {
+		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--audit-policy-file",
+			auditPolicyPath,
+			"--audit-log-path",
+			auditLogPath,
+		)
+	}
+
 	err = utils.ForkExec(ctx, conf.Workdir, kubeApiserverPath, kubeApiserverArgs...)
 	if err != nil {
 		return err

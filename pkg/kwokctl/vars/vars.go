@@ -193,6 +193,9 @@ var (
 		}
 		return ""
 	}())
+
+	// KubeAuditPolicy is path to the file that defines the audit policy configuration
+	KubeAuditPolicy = getEnv("KWOK_KUBE_AUDIT_POLICY", "")
 )
 
 // getEnv returns the value of the environment variable named by the key.

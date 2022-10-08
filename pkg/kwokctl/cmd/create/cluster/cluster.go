@@ -54,6 +54,7 @@ type flagpole struct {
 	Runtime                     string
 	KubeFeatureGates            string
 	KubeRuntimeConfig           string
+	KubeAuditPolicy             string
 	Timeout                     time.Duration
 }
 
@@ -113,6 +114,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 `)
 	cmd.Flags().StringVar(&flags.KubeRuntimeConfig, "kube-runtime-config", vars.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs
 `)
+	cmd.Flags().StringVar(&flags.KubeAuditPolicy, "kube-audit-policy", vars.KubeAuditPolicy, "Path to the file that defines the audit policy configuration")
 	cmd.Flags().StringVar(&flags.Runtime, "runtime", vars.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
 	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 30*time.Second, "Timeout for waiting for the cluster to be ready")
 	return cmd
@@ -181,6 +183,7 @@ func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
 			PrometheusPort:              flags.PrometheusPort,
 			FeatureGates:                flags.KubeFeatureGates,
 			RuntimeConfig:               flags.KubeRuntimeConfig,
+			AuditPolicy:                 flags.KubeAuditPolicy,
 		})
 		if err != nil {
 			logger.Printf("Failed to setup config %q: %v", name, err)

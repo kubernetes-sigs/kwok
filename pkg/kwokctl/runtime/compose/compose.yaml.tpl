@@ -83,13 +83,26 @@ services:
       - "8080"
 {{ end }}
 
-{{ if .SecretPort }}
+{{ if .AuditPolicy }}
+      - --audit-policy-file
+      - /etc/kubernetes/audit-policy.yaml
+      - --audit-log-path
+      - /var/log/kubernetes/audit/audit.log
+{{ end }}
+
+{{ if or .SecretPort .AuditPolicy }}
     volumes:
+{{ end }}
+
+{{ if .SecretPort }}
       - {{ .AdminKeyPath }}:{{ .InClusterAdminKeyPath }}:ro
       - {{ .AdminCertPath }}:{{ .InClusterAdminCertPath }}:ro
       - {{ .CACertPath }}:{{ .InClusterCACertPath }}:ro
 {{ end }}
-
+{{ if .AuditPolicy }}
+      - {{ .AuditPolicy }}:/etc/kubernetes/audit-policy.yaml:ro
+      - {{ .AuditLog }}:/var/log/kubernetes/audit/audit.log:rw
+{{ end }}
 
   # Kube-controller-manager
   kube_controller_manager:
