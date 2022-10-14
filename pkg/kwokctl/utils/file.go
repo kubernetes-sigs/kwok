@@ -14,36 +14,42 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kind
+package utils
 
 import (
-	"bytes"
-	_ "embed"
-	"fmt"
-	"text/template"
+	"os"
+	"path/filepath"
 )
 
-//go:embed kind.yaml.tpl
-var kindYamlTpl string
-
-var kindYamlTemplate = template.Must(template.New("_").Parse(kindYamlTpl))
-
-func BuildKind(conf BuildKindConfig) (string, error) {
-	buf := bytes.NewBuffer(nil)
-	err := kindYamlTemplate.Execute(buf, conf)
+func CreateFile(name string, perm os.FileMode) error {
+	err := os.MkdirAll(filepath.Dir(name), 0755)
 	if err != nil {
-		return "", fmt.Errorf("failed to execute kind yaml template: %w", err)
+		return err
 	}
-	return buf.String(), nil
+	file, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
+	if err != nil {
+		return err
+	}
+	file.Close()
+	return nil
 }
 
-type BuildKindConfig struct {
-	KubeApiserverPort uint32
-	PrometheusPort    uint32
+func CopyFile(oldpath, newpath string) error {
 
-	RuntimeConfig []string
-	FeatureGates  []string
+	err := os.MkdirAll(filepath.Dir(newpath), 0755)
+	if err != nil {
+		return err
+	}
 
-	AuditPolicy string
-	AuditLog    string
+	data, err := os.ReadFile(oldpath)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(newpath, data, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

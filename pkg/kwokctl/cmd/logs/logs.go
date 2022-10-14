@@ -40,8 +40,8 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.ExactArgs(1),
 		Use:   "logs",
-		Short: "Logs one of [etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
-		Long:  "Logs one of [etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
+		Short: "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
+		Long:  "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags, args)
@@ -60,10 +60,18 @@ func runE(ctx context.Context, logger logger.Logger, flags *flagpole, args []str
 		return err
 	}
 
-	if flags.Follow {
-		err = rt.LogsFollow(ctx, args[0], os.Stdout)
+	if args[0] == "audit" {
+		if flags.Follow {
+			err = rt.AuditLogsFollow(ctx, os.Stdout)
+		} else {
+			err = rt.AuditLogs(ctx, os.Stdout)
+		}
 	} else {
-		err = rt.Logs(ctx, args[0], os.Stdout)
+		if flags.Follow {
+			err = rt.LogsFollow(ctx, args[0], os.Stdout)
+		} else {
+			err = rt.Logs(ctx, args[0], os.Stdout)
+		}
 	}
 	if err != nil {
 		return err

@@ -67,4 +67,7 @@ type BuildComposeConfig struct {
 
 	RuntimeConfig string
 	FeatureGates  string
+
+	AuditPolicy string
+	AuditLog    string
 }

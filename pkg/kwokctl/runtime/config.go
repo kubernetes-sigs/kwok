@@ -69,6 +69,9 @@ type Config struct {
 	// Feature gates of Kubernetes
 	FeatureGates string `json:"kube_feature_gates,omitempty"`
 
+	// For audit log
+	AuditPolicy string `json:"audit_policy,omitempty"`
+
 	// Runtime config of Kubernetes
 	RuntimeConfig string `json:"kube_runtime_config,omitempty"`
 }
@@ -118,6 +121,12 @@ type Runtime interface {
 
 	// LogsFollow follow logs of a component with follow
 	LogsFollow(ctx context.Context, name string, out io.Writer) error
+
+	// AuditLogs audit logs of apiserver
+	AuditLogs(ctx context.Context, out io.Writer) error
+
+	// AuditLogsFollow follow audit logs of apiserver
+	AuditLogsFollow(ctx context.Context, out io.Writer) error
 
 	// ListBinaries list binaries in the cluster
 	ListBinaries(ctx context.Context, actual bool) ([]string, error)

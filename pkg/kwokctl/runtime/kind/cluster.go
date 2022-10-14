@@ -55,11 +55,30 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.RuntimeConfig != "" {
 		runtimeConfig = strings.Split(strings.ReplaceAll(conf.RuntimeConfig, "=", ": "), ",")
 	}
+
+	auditLogPath := ""
+	auditPolicyPath := ""
+	if conf.AuditPolicy != "" {
+		auditLogPath = utils.PathJoin(conf.Workdir, "logs", runtime.AuditLogName)
+		err = utils.CreateFile(auditLogPath, 0644)
+		if err != nil {
+			return err
+		}
+
+		auditPolicyPath = utils.PathJoin(conf.Workdir, runtime.AuditPolicyName)
+		err = utils.CopyFile(conf.AuditPolicy, auditPolicyPath)
+		if err != nil {
+			return err
+		}
+	}
+
 	kindYaml, err := BuildKind(BuildKindConfig{
 		KubeApiserverPort: conf.KubeApiserverPort,
 		PrometheusPort:    conf.PrometheusPort,
 		FeatureGates:      featureGates,
 		RuntimeConfig:     runtimeConfig,
+		AuditPolicy:       auditPolicyPath,
+		AuditLog:          auditLogPath,
 	})
 	if err != nil {
 		return err

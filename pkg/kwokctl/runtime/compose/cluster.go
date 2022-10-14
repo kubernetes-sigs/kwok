@@ -51,6 +51,21 @@ func (c *Cluster) Install(ctx context.Context) error {
 	inClusterOnHostKubeconfigPath := utils.PathJoin(conf.Workdir, runtime.InClusterKubeconfigName)
 	pkiPath := utils.PathJoin(conf.Workdir, runtime.PkiName)
 	composePath := utils.PathJoin(conf.Workdir, runtime.ComposeName)
+	auditLogPath := ""
+	auditPolicyPath := ""
+	if conf.AuditPolicy != "" {
+		auditLogPath = utils.PathJoin(conf.Workdir, "logs", runtime.AuditLogName)
+		err = utils.CreateFile(auditLogPath, 0644)
+		if err != nil {
+			return err
+		}
+
+		auditPolicyPath = utils.PathJoin(conf.Workdir, runtime.AuditPolicyName)
+		err = utils.CopyFile(conf.AuditPolicy, auditPolicyPath)
+		if err != nil {
+			return err
+		}
+	}
 
 	caCertPath := ""
 	adminKeyPath := ""
@@ -133,6 +148,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		PrometheusPort:             conf.PrometheusPort,
 		RuntimeConfig:              conf.RuntimeConfig,
 		FeatureGates:               conf.FeatureGates,
+		AuditPolicy:                auditPolicyPath,
+		AuditLog:                   auditLogPath,
 	})
 	if err != nil {
 		return err

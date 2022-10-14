@@ -19,6 +19,7 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"io"
 	"os"
 	"os/exec"
 	"time"
@@ -27,6 +28,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/logger"
 
+	"github.com/nxadm/tail"
 	"sigs.k8s.io/yaml"
 )
 
@@ -41,6 +43,8 @@ var (
 	KindName                = "kind.yaml"
 	KwokDeploy              = "kwok-controller-deployment.yaml"
 	PrometheusDeploy        = "prometheus-deployment.yaml"
+	AuditPolicyName         = "audit.yaml"
+	AuditLogName            = "audit.log"
 )
 
 type Cluster struct {
@@ -205,4 +209,45 @@ func (c *Cluster) KubectlInCluster(ctx context.Context, stm utils.IOStreams, arg
 
 	return utils.Exec(ctx, "", stm, kubectlPath,
 		append([]string{"--kubeconfig", utils.PathJoin(conf.Workdir, InHostKubeconfigName)}, args...)...)
+}
+
+func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
+	conf, err := c.Config()
+	if err != nil {
+		return err
+	}
+
+	logs := utils.PathJoin(conf.Workdir, "logs", AuditLogName)
+
+	f, err := os.OpenFile(logs, os.O_RDONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	io.Copy(out, f)
+	return nil
+}
+
+func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
+	conf, err := c.Config()
+	if err != nil {
+		return err
+	}
+
+	logs := utils.PathJoin(conf.Workdir, "logs", AuditLogName)
+
+	t, err := tail.TailFile(logs, tail.Config{ReOpen: true, Follow: true})
+	if err != nil {
+		return err
+	}
+	defer t.Stop()
+
+	go func() {
+		for line := range t.Lines {
+			out.Write([]byte(line.Text + "\n"))
+		}
+	}()
+	<-ctx.Done()
+	return nil
 }
