@@ -53,7 +53,7 @@ var (
 	KubeApiserverPort = getEnvInt("KWOK_KUBE_APISERVER_PORT", 0)
 
 	// Runtime is the runtime to use.
-	Runtime = getEnv("KWOK_RUNTIME", detectionRuntime())
+	Runtime = getEnv("KWOK_RUNTIME", "docker")
 
 	// PrometheusPort is the port to expose Prometheus metrics.
 	PrometheusPort = getEnvInt("KWOK_PROMETHEUS_PORT", 0)
@@ -249,13 +249,6 @@ func parseRelease(version string) int {
 		return 0
 	}
 	return int(r)
-}
-
-func detectionRuntime() string {
-	if runtime.GOOS == "linux" {
-		return "binary"
-	}
-	return "docker"
 }
 
 // trimPrefixV returns the version without the prefix 'v'.
