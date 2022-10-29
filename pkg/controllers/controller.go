@@ -95,6 +95,8 @@ func NewController(conf Config) (*Controller, error) {
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return selector.Matches(labels.Set(node.Annotations))
 		}
+		// client-go supports label filtering, so ignore this.
+		// } else if conf.ManageNodesWithLabelSelector != "" {
 	}
 
 	var lockPodsOnNodeFunc func(ctx context.Context, nodeName string) error
