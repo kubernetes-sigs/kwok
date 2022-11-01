@@ -71,7 +71,7 @@ services:
       - --client-ca-file
       - {{ .InClusterCACertPath }}
       - --service-account-key-file
-      - {{ .InClusterAdminKeyPath }}
+      - {{ .InClusterAdminCertPath }}
       - --service-account-signing-key-file
       - {{ .InClusterAdminKeyPath }}
       - --service-account-issuer
@@ -119,15 +119,19 @@ services:
       - --feature-gates
       - {{ .FeatureGates }}
 {{ end }}
-{{ if .PrometheusPath }}
 {{ if .SecretPort }}
+{{ if .PrometheusPath }}
       - --bind-address
       - 0.0.0.0
       - --secure-port
       - "10257"
       - --authorization-always-allow-paths
       - /healthz,/metrics
+{{ end }}
+      - --service-account-private-key-file
+      - {{ .InClusterAdminKeyPath }}
 {{ else }}
+{{ if .PrometheusPath }}
       - --address
       - 0.0.0.0
       - --port
