@@ -21,5 +21,5 @@ package testdata
 //go:generate openssl genrsa -out ca.key 2048
 //go:generate openssl req -sha256 -x509 -new -nodes -key ca.key -subj "/CN=kwok-ca" -out ca.crt -days 365000
 //go:generate openssl genrsa -out admin.key 2048
-//go:generate openssl req -new -key admin.key -subj "/CN=kwok-admin" -out admin.csr -config openssl.cnf
+//go:generate openssl req -new -key admin.key -subj "/CN=kwok-admin/O=system:masters" -out admin.csr -config openssl.cnf
 //go:generate openssl x509 -sha256 -req -in admin.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out admin.crt -days 365000 -extensions v3_req -extfile openssl.cnf
