@@ -321,23 +321,33 @@ func (c *Cluster) Up(ctx context.Context) error {
 		conf.KubeControllerManagerPort = kubeControllerManagerPort
 	}
 	if conf.SecretPort {
+		if conf.PrometheusPort != 0 {
+			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+				"--bind-address",
+				localAddress,
+				"--secure-port",
+				utils.StringUint32(kubeControllerManagerPort),
+				"--authorization-always-allow-paths",
+				"/healthz,/metrics",
+			)
+		}
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-			"--bind-address",
-			localAddress,
-			"--secure-port",
-			utils.StringUint32(kubeControllerManagerPort),
-			"--authorization-always-allow-paths",
-			"/healthz,/metrics",
+			"--root-ca-file",
+			caCertPath,
+			"--service-account-private-key-file",
+			adminKeyPath,
 		)
 	} else {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-			"--address",
-			localAddress,
-			"--port",
-			utils.StringUint32(kubeControllerManagerPort),
-			"--secure-port",
-			"0",
-		)
+		if conf.PrometheusPort != 0 {
+			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+				"--address",
+				localAddress,
+				"--port",
+				utils.StringUint32(kubeControllerManagerPort),
+				"--secure-port",
+				"0",
+			)
+		}
 	}
 
 	err = utils.ForkExec(ctx, conf.Workdir, kubeControllerManagerPath, kubeControllerManagerArgs...)
