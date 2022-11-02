@@ -24,8 +24,11 @@ ENV KWOK_KUBE_APISERVER_PORT 8080
 ARG kube_version
 ENV KWOK_KUBE_VERSION $kube_version
 
+ENV KWOK_RUNTIME binary
+ENV KWOK_QUIET_PULL true
+
 RUN echo "KUBE_VERSION: ${KWOK_KUBE_VERSION}" && \
-    kwokctl create cluster --quiet-pull && \
+    kwokctl create cluster && \
     kwokctl kubectl version && \
     kwokctl delete cluster
 
