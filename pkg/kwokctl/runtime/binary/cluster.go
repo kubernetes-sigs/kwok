@@ -216,6 +216,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 	kubeApiserverArgs := []string{
 		"--admission-control",
 		"",
+		"--authorization-mode",
+		"Node,RBAC",
 		"--etcd-servers",
 		"http://" + localAddress + ":" + etcdClientPortStr,
 		"--etcd-prefix",

@@ -46,6 +46,8 @@ services:
       - kube-apiserver
       - --admission-control
       - ""
+      - --authorization-mode
+      - Node,RBAC
       - --etcd-servers
       - http://{{ .ProjectName }}-etcd:2379
       - --etcd-prefix
