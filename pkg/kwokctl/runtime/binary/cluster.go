@@ -330,7 +330,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 				"--secure-port",
 				utils.StringUint32(kubeControllerManagerPort),
 				"--authorization-always-allow-paths",
-				"/healthz,/metrics",
+				"/healthz,/readyz,/livez,/metrics",
 			)
 		}
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
@@ -383,7 +383,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			"--secure-port",
 			utils.StringUint32(kubeSchedulerPort),
 			"--authorization-always-allow-paths",
-			"/healthz,/metrics",
+			"/healthz,/readyz,/livez,/metrics",
 		)
 	} else {
 		kubeSchedulerArgs = append(kubeSchedulerArgs,

@@ -128,7 +128,7 @@ services:
       - --secure-port
       - "10257"
       - --authorization-always-allow-paths
-      - /healthz,/metrics
+      - /healthz,/readyz,/livez,/metrics
 {{ end }}
       - --root-ca-file
       - {{ .InClusterCACertPath }}
@@ -172,7 +172,7 @@ services:
       - --secure-port
       - "10259"
       - --authorization-always-allow-paths
-      - /healthz,/metrics
+      - /healthz,/readyz,/livez,/metrics
 {{ else }}
       - --address
       - 0.0.0.0
