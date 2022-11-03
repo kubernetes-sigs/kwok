@@ -237,6 +237,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	if conf.SecretPort {
 		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--authorization-mode",
+			"Node,RBAC",
 			"--bind-address",
 			serveAddress,
 			"--secure-port",

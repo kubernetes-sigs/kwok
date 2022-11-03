@@ -60,6 +60,8 @@ services:
       - {{ .FeatureGates }}
 {{ end }}
 {{ if .SecretPort }}
+      - --authorization-mode
+      - Node,RBAC
       - --bind-address
       - 0.0.0.0
       - --secure-port
