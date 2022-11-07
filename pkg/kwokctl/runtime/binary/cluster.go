@@ -109,7 +109,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	if conf.SecretPort {
 		pkiPath := utils.PathJoin(conf.Workdir, runtime.PkiName)
-		err = pki.DumpPki(pkiPath)
+		err = pki.GeneratePki(pkiPath)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %s", err)
 		}

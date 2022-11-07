@@ -14,12 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package testdata
+package pki
 
-// This is just a local key, it doesn't matter if it is leaked.
+import (
+	"testing"
+)
 
-//go:generate openssl genrsa -out ca.key 2048
-//go:generate openssl req -sha256 -x509 -new -nodes -key ca.key -subj "/CN=kwok-ca" -out ca.crt -days 365000
-//go:generate openssl genrsa -out admin.key 2048
-//go:generate openssl req -new -key admin.key -subj "/CN=kwok-admin" -out admin.csr -config openssl.cnf
-//go:generate openssl x509 -sha256 -req -in admin.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out admin.crt -days 365000 -extensions v3_req -extfile openssl.cnf
+func TestGeneratePki(t *testing.T) {
+	_, err := generatePki()
+	if err != nil {
+		t.Fatal(err)
+	}
+}

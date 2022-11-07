@@ -81,7 +81,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// generate ca cert
 	if conf.SecretPort {
-		err := pki.DumpPki(pkiPath)
+		err := pki.GeneratePki(pkiPath)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %s", err)
 		}
