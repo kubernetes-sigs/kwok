@@ -72,6 +72,9 @@ type Config struct {
 	// For audit log
 	AuditPolicy string `json:"audit_policy,omitempty"`
 
+	// Enable authorization on secure port
+	Authorization bool `json:"authorization,omitempty"`
+
 	// Runtime config of Kubernetes
 	RuntimeConfig string `json:"kube_runtime_config,omitempty"`
 }

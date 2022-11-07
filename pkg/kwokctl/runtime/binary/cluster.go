@@ -109,7 +109,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	if conf.SecretPort {
 		pkiPath := utils.PathJoin(conf.Workdir, runtime.PkiName)
-		err = pki.DumpPki(pkiPath)
+		err = pki.GeneratePki(pkiPath)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %s", err)
 		}
@@ -236,6 +236,12 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	if conf.SecretPort {
+		if conf.Authorization {
+			kubeApiserverArgs = append(kubeApiserverArgs,
+				"--authorization-mode",
+				"Node,RBAC",
+			)
+		}
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--bind-address",
 			serveAddress,
@@ -321,23 +327,35 @@ func (c *Cluster) Up(ctx context.Context) error {
 		conf.KubeControllerManagerPort = kubeControllerManagerPort
 	}
 	if conf.SecretPort {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-			"--bind-address",
-			localAddress,
-			"--secure-port",
-			utils.StringUint32(kubeControllerManagerPort),
-			"--authorization-always-allow-paths",
-			"/healthz,/metrics",
-		)
+		if conf.PrometheusPort != 0 {
+			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+				"--bind-address",
+				localAddress,
+				"--secure-port",
+				utils.StringUint32(kubeControllerManagerPort),
+				"--authorization-always-allow-paths",
+				"/healthz,/readyz,/livez,/metrics",
+			)
+		}
+		if conf.Authorization {
+			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+				"--root-ca-file",
+				caCertPath,
+				"--service-account-private-key-file",
+				adminKeyPath,
+			)
+		}
 	} else {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-			"--address",
-			localAddress,
-			"--port",
-			utils.StringUint32(kubeControllerManagerPort),
-			"--secure-port",
-			"0",
-		)
+		if conf.PrometheusPort != 0 {
+			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+				"--address",
+				localAddress,
+				"--port",
+				utils.StringUint32(kubeControllerManagerPort),
+				"--secure-port",
+				"0",
+			)
+		}
 	}
 
 	err = utils.ForkExec(ctx, conf.Workdir, kubeControllerManagerPath, kubeControllerManagerArgs...)
@@ -371,7 +389,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			"--secure-port",
 			utils.StringUint32(kubeSchedulerPort),
 			"--authorization-always-allow-paths",
-			"/healthz,/metrics",
+			"/healthz,/readyz,/livez,/metrics",
 		)
 	} else {
 		kubeSchedulerArgs = append(kubeSchedulerArgs,

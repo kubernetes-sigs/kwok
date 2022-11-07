@@ -153,9 +153,12 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	err := c.KubectlInCluster(ctx, utils.IOStreams{
 		Out:    out,
 		ErrOut: out,
-	}, "get", "ns")
+	}, "get", "--raw", "/healthz")
 	if err != nil {
 		return false, err
+	}
+	if !bytes.Equal(out.Bytes(), []byte("ok")) {
+		return false, nil
 	}
 	return true, nil
 }

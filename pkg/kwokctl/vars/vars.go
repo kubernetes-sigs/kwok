@@ -70,7 +70,7 @@ var (
 	// PrometheusVersion is the version of Prometheus to use.
 	PrometheusVersion = addPrefixV(getEnv("KWOK_PROMETHEUS_VERSION", "v2.35.0"))
 
-	// SecurePort is the Apiserver use TLS.
+	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
 	SecurePort = getEnvBool("KWOK_SECURE_PORT", parseRelease(KubeVersion) > 19)
 
 	// QuietPull is the flag to quiet the pull.
@@ -196,6 +196,9 @@ var (
 
 	// KubeAuditPolicy is path to the file that defines the audit policy configuration
 	KubeAuditPolicy = getEnv("KWOK_KUBE_AUDIT_POLICY", "")
+
+	// KubeAuthorization is the flag to enable authorization on secure port.
+	KubeAuthorization = getEnvBool("KWOK_KUBE_AUTHORIZATION", false)
 )
 
 // getEnv returns the value of the environment variable named by the key.

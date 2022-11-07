@@ -59,8 +59,9 @@ type BuildComposeConfig struct {
 	InClusterEtcdDataPath   string
 	InClusterPrometheusPath string
 
-	SecretPort bool
-	QuietPull  bool
+	SecretPort    bool
+	Authorization bool
+	QuietPull     bool
 
 	KubeApiserverPort uint32
 	PrometheusPort    uint32

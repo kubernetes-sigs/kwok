@@ -60,6 +60,10 @@ services:
       - {{ .FeatureGates }}
 {{ end }}
 {{ if .SecretPort }}
+{{ if .Authorization }}
+      - --authorization-mode
+      - Node,RBAC
+{{ end }}
       - --bind-address
       - 0.0.0.0
       - --secure-port
@@ -119,15 +123,23 @@ services:
       - --feature-gates
       - {{ .FeatureGates }}
 {{ end }}
-{{ if .PrometheusPath }}
 {{ if .SecretPort }}
+{{ if .PrometheusPath }}
       - --bind-address
       - 0.0.0.0
       - --secure-port
       - "10257"
       - --authorization-always-allow-paths
-      - /healthz,/metrics
+      - /healthz,/readyz,/livez,/metrics
+{{ end }}
+{{ if .Authorization }}
+      - --root-ca-file
+      - {{ .InClusterCACertPath }}
+      - --service-account-private-key-file
+      - {{ .InClusterAdminKeyPath }}
+{{ end }}
 {{ else }}
+{{ if .PrometheusPath }}
       - --address
       - 0.0.0.0
       - --port
@@ -164,7 +176,7 @@ services:
       - --secure-port
       - "10259"
       - --authorization-always-allow-paths
-      - /healthz,/metrics
+      - /healthz,/readyz,/livez,/metrics
 {{ else }}
       - --address
       - 0.0.0.0

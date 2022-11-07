@@ -17,36 +17,73 @@ limitations under the License.
 package pki
 
 import (
-	_ "embed"
-	"os"
-
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
+	"crypto"
+	"crypto/x509"
+	"net"
+	"time"
 )
 
-var (
-	//go:embed testdata/ca.crt
-	CACrt []byte
-	//go:embed testdata/admin.key
-	AdminKey []byte
-	//go:embed testdata/admin.crt
-	AdminCrt []byte
-)
+type pkiSuite struct {
+	cert   *x509.Certificate
+	key    crypto.Signer
+	caCert *x509.Certificate
+	caKey  crypto.Signer
+}
 
-// DumpPki generates a pki directory.
-func DumpPki(dir string) error {
-	err := os.MkdirAll(dir, 0755)
+func generatePki() (*pkiSuite, error) {
+	now := time.Now()
+	notBefore := now.UTC()
+	notAfter := now.Add(CertificateValidity).UTC()
+	caCert, caKey, err := NewCertificateAuthority(CertConfig{
+		CommonName:         "kwok-ca",
+		PublicKeyAlgorithm: x509.RSA,
+		NotAfter:           notAfter,
+		NotBefore:          notBefore,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	cert, key, err := NewCertAndKey(caCert, caKey, CertConfig{
+		CommonName:   "kwok-admin",
+		Organization: []string{"system:masters"},
+		Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
+		AltNames: AltNames{
+			DNSNames: []string{
+				"kubernetes",
+				"kubernetes.default",
+				"kubernetes.default.svc",
+				"kubernetes.default.svc.cluster.local",
+			},
+			IPs: []net.IP{
+				net.IPv4(127, 0, 0, 1),
+			},
+		},
+		PublicKeyAlgorithm: x509.RSA,
+		NotAfter:           notAfter,
+		NotBefore:          notBefore,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &pkiSuite{
+		cert:   cert,
+		key:    key,
+		caCert: caCert,
+		caKey:  caKey,
+	}, nil
+}
+
+func GeneratePki(dir string) error {
+	p, err := generatePki()
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(utils.PathJoin(dir, "ca.crt"), CACrt, 0644)
+	err = writeCertAndKey(dir, "admin", p.cert, p.key)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(utils.PathJoin(dir, "admin.key"), AdminKey, 0644)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(utils.PathJoin(dir, "admin.crt"), AdminCrt, 0644)
+	err = writeCert(dir, "ca", p.caCert)
 	if err != nil {
 		return err
 	}
