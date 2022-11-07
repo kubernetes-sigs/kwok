@@ -236,9 +236,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	if conf.SecretPort {
+		if conf.Authorization {
+			kubeApiserverArgs = append(kubeApiserverArgs,
+				"--authorization-mode",
+				"Node,RBAC",
+			)
+		}
 		kubeApiserverArgs = append(kubeApiserverArgs,
-			"--authorization-mode",
-			"Node,RBAC",
 			"--bind-address",
 			serveAddress,
 			"--secure-port",
@@ -333,12 +337,14 @@ func (c *Cluster) Up(ctx context.Context) error {
 				"/healthz,/readyz,/livez,/metrics",
 			)
 		}
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-			"--root-ca-file",
-			caCertPath,
-			"--service-account-private-key-file",
-			adminKeyPath,
-		)
+		if conf.Authorization {
+			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+				"--root-ca-file",
+				caCertPath,
+				"--service-account-private-key-file",
+				adminKeyPath,
+			)
+		}
 	} else {
 		if conf.PrometheusPort != 0 {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,

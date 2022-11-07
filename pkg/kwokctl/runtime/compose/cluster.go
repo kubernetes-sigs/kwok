@@ -144,6 +144,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		KwokControllerImage:        conf.KwokControllerImage,
 		PrometheusImage:            conf.PrometheusImage,
 		SecretPort:                 conf.SecretPort,
+		Authorization:              conf.Authorization,
 		QuietPull:                  conf.QuietPull,
 		PrometheusPort:             conf.PrometheusPort,
 		RuntimeConfig:              conf.RuntimeConfig,
