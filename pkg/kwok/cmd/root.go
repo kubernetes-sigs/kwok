@@ -39,6 +39,31 @@ import (
 
 // NewCommand returns a new cobra.Command for root
 func NewCommand(logger logger.Logger) *cobra.Command {
+	var (
+		// The default IP assigned to the Pod on maintained Nodes.
+		cidr = "10.0.0.1/24"
+		// The ip of all nodes maintained by the Kwok
+		nodeIP = net.ParseIP("196.168.0.1")
+		// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
+		manageAllNodes = false
+		// Default annotations specified on Nodes to demand manage.
+		// Note: when `all-node-manage` is specified as true, this is a no-op.
+		manageNodesWithAnnotationSelector = ""
+		// Default labels specified on Nodes to demand manage.
+		// Note: when `all-node-manage` is specified as true, this is a no-op.
+		manageNodesWithLabelSelector = ""
+		// If a Node being managed has this annotation it will only keep its heartbeat not modify another status
+		// If a Pod is on a managed Node and has this annotation status will not be modified
+		disregardStatusWithAnnotationSelector = ""
+		// If a Node being managed has this label it will only keep its heartbeat not modify another status
+		// If a Pod is on a managed Node and has this label status will not be modified
+		disregardStatusWithLabelSelector = ""
+
+		serverAddress = ""
+		master        = ""
+		kubeconfig    = getEnv("KUBECONFIG", "")
+	)
+
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "kwok [command]",
@@ -137,31 +162,6 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 
 	return cmd
 }
-
-var (
-	// The default IP assigned to the Pod on maintained Nodes.
-	cidr = "10.0.0.1/24"
-	// The ip of all nodes maintained by the Kwok
-	nodeIP = net.ParseIP("196.168.0.1")
-	// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
-	manageAllNodes = false
-	// Default annotations specified on Nodes to demand manage.
-	// Note: when `all-node-manage` is specified as true, this is a no-op.
-	manageNodesWithAnnotationSelector = ""
-	// Default labels specified on Nodes to demand manage.
-	// Note: when `all-node-manage` is specified as true, this is a no-op.
-	manageNodesWithLabelSelector = ""
-	// If a Node being managed has this annotation it will only keep its heartbeat not modify another status
-	// If a Pod is on a managed Node and has this annotation status will not be modified
-	disregardStatusWithAnnotationSelector = ""
-	// If a Node being managed has this label it will only keep its heartbeat not modify another status
-	// If a Pod is on a managed Node and has this label status will not be modified
-	disregardStatusWithLabelSelector = ""
-
-	serverAddress = ""
-	master        = ""
-	kubeconfig    = getEnv("KUBECONFIG", "")
-)
 
 func Serve(ctx context.Context, address string, logger logger.Logger) {
 	promHandler := promhttp.Handler()
