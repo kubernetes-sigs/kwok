@@ -32,8 +32,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/flowcontrol"
 
-	"sigs.k8s.io/kwok/pkg/controllers"
-	"sigs.k8s.io/kwok/pkg/controllers/templates"
+	"sigs.k8s.io/kwok/pkg/kwok/controllers"
+	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
 	"sigs.k8s.io/kwok/pkg/logger"
 )
 

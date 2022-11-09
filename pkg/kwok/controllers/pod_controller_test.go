@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/controllers/templates"
+	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
