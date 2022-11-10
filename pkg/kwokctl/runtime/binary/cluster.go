@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
@@ -32,6 +33,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/logger"
 
 	"github.com/nxadm/tail"
+	"golang.org/x/sync/errgroup"
 )
 
 type Cluster struct {
@@ -358,11 +360,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 	}
 
-	err = utils.ForkExec(ctx, conf.Workdir, kubeControllerManagerPath, kubeControllerManagerArgs...)
-	if err != nil {
-		return err
-	}
-
 	kubeSchedulerArgs := []string{
 		"--kubeconfig",
 		kubeconfigPath,
@@ -399,10 +396,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 			utils.StringUint32(kubeSchedulerPort),
 		)
 	}
-	err = utils.ForkExec(ctx, conf.Workdir, kubeSchedulerPath, kubeSchedulerArgs...)
-	if err != nil {
-		return err
-	}
 
 	kwokControllerArgs := []string{
 		"--kubeconfig",
@@ -424,11 +417,9 @@ func (c *Cluster) Up(ctx context.Context) error {
 			localAddress+":"+utils.StringUint32(kwokControllerPort),
 		)
 	}
-	err = utils.ForkExec(ctx, conf.Workdir, kwokControllerPath, kwokControllerArgs...)
-	if err != nil {
-		return err
-	}
 
+	var prometheusPath string
+	var prometheusArgs []string
 	if conf.PrometheusPort != 0 {
 		prometheusPortStr := utils.StringUint32(conf.PrometheusPort)
 
@@ -453,17 +444,34 @@ func (c *Cluster) Up(ctx context.Context) error {
 			return fmt.Errorf("failed to write prometheus yaml: %s", err)
 		}
 
-		prometheusPath := utils.PathJoin(bin, "prometheus")
-		prometheusArgs := []string{
+		prometheusPath = utils.PathJoin(bin, "prometheus")
+		prometheusArgs = []string{
 			"--config.file",
 			prometheusConfigPath,
 			"--web.listen-address",
 			serveAddress + ":" + prometheusPortStr,
 		}
-		err = utils.ForkExec(ctx, conf.Workdir, prometheusPath, prometheusArgs...)
-		if err != nil {
-			return err
-		}
+	}
+
+	componentPathArgs := map[string][]string{
+		kubeControllerManagerPath: kubeControllerManagerArgs,
+		kubeSchedulerPath:         kubeSchedulerArgs,
+		kwokControllerPath:        kwokControllerArgs,
+	}
+	if prometheusPath != "" {
+		componentPathArgs[prometheusPath] = prometheusArgs
+	}
+
+	// do not use ctx which returns from errgroup, g.wait() will cancel the ctx and kill the daemon process
+	g, _ := errgroup.WithContext(ctx)
+	for path, args := range componentPathArgs {
+		path, args := path, args
+		g.Go(func() error {
+			return utils.ForkExec(ctx, conf.Workdir, path, args...)
+		})
+	}
+	if err = g.Wait(); err != nil {
+		return err
 	}
 
 	// set the context in default kubeconfig
@@ -501,20 +509,27 @@ func (c *Cluster) Down(ctx context.Context) error {
 	etcdPath := utils.PathJoin(bin, "etcd")
 	prometheusPath := utils.PathJoin(bin, "prometheus")
 
-	err = utils.ForkExecKill(ctx, conf.Workdir, kwokControllerPath)
-	if err != nil {
-		c.Logger().Printf("failed to kill kwok: %s", err)
+	componentPaths := []string{
+		kwokControllerPath,
+		kubeSchedulerPath,
+		kubeControllerManagerPath,
+	}
+	if conf.PrometheusPort != 0 {
+		componentPaths = append(componentPaths, prometheusPath)
 	}
 
-	err = utils.ForkExecKill(ctx, conf.Workdir, kubeSchedulerPath)
-	if err != nil {
-		c.Logger().Printf("failed to kill kube-scheduler: %s", err)
+	var wg sync.WaitGroup
+	for _, path := range componentPaths {
+		wg.Add(1)
+		go func(path string) {
+			defer wg.Done()
+			err = utils.ForkExecKill(ctx, conf.Workdir, path)
+			if err != nil {
+				c.Logger().Printf("failed to kill %s: %s", path, err)
+			}
+		}(path)
 	}
-
-	err = utils.ForkExecKill(ctx, conf.Workdir, kubeControllerManagerPath)
-	if err != nil {
-		c.Logger().Printf("failed to kill kube-controller-manager: %s", err)
-	}
+	wg.Wait()
 
 	err = utils.ForkExecKill(ctx, conf.Workdir, kubeApiserverPath)
 	if err != nil {
@@ -524,13 +539,6 @@ func (c *Cluster) Down(ctx context.Context) error {
 	err = utils.ForkExecKill(ctx, conf.Workdir, etcdPath)
 	if err != nil {
 		c.Logger().Printf("failed to kill etcd: %s", err)
-	}
-
-	if conf.PrometheusPort != 0 {
-		err = utils.ForkExecKill(ctx, conf.Workdir, prometheusPath)
-		if err != nil {
-			c.Logger().Printf("failed to kill prometheus: %s", err)
-		}
 	}
 
 	return nil

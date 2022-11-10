@@ -6,6 +6,7 @@ require (
 	github.com/nxadm/tail v1.4.4
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.5.0
+	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158
 	k8s.io/api v0.24.3
 	k8s.io/apimachinery v0.24.3
