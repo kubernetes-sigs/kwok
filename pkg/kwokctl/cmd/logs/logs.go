@@ -38,10 +38,11 @@ type flagpole struct {
 func NewCommand(logger logger.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:  cobra.ExactArgs(1),
-		Use:   "logs",
-		Short: "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
-		Long:  "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
+		Args:         cobra.ExactArgs(1),
+		Use:          "logs",
+		Short:        "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
+		Long:         "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags, args)

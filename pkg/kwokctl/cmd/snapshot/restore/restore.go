@@ -38,10 +38,11 @@ type flagpole struct {
 func NewCommand(logger logger.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "restore",
-		Short: "Restore the snapshot of the cluster",
-		Long:  "Restore the snapshot of the cluster",
+		Args:         cobra.NoArgs,
+		Use:          "restore",
+		Short:        "Restore the snapshot of the cluster",
+		Long:         "Restore the snapshot of the cluster",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags)

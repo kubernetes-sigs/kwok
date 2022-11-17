@@ -17,8 +17,6 @@ limitations under the License.
 package snapshot
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/restore"
@@ -34,7 +32,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 		Short: "Snapshot [save, restore] one of cluster",
 		Long:  "Snapshot [save, restore] one of cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("subcommand is required")
+			return cmd.Help()
 		},
 	}
 	cmd.AddCommand(save.NewCommand(logger))

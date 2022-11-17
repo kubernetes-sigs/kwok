@@ -37,9 +37,10 @@ type flagpole struct {
 func NewCommand(logger logger.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Use:   "kubectl",
-		Short: "kubectl in cluster",
-		Long:  "kubectl in cluster",
+		Use:          "kubectl",
+		Short:        "kubectl in cluster",
+		Long:         "kubectl in cluster",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			err := runE(cmd.Context(), logger, flags, args)
