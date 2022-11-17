@@ -46,7 +46,6 @@ type NodeController struct {
 	manageNodesWithAnnotationSelector     string
 	manageNodesWithLabelSelector          string
 	nodeSelectorFunc                      func(node *corev1.Node) bool
-	nodeAnnotationSelector                string
 	lockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
 	nodesSets                             *stringSets
 	nodeHeartbeatTemplate                 string
