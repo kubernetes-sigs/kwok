@@ -50,6 +50,8 @@ KWOK_IMAGE ?= $(STAGING_IMAGE_PREFIX)/kwok
 
 CLUSTER_IMAGE ?= $(STAGING_IMAGE_PREFIX)/cluster
 
+PLATFORM ?= $(shell ./hack/get-platform.sh)
+
 IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
 
 BINARY_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
@@ -78,6 +80,7 @@ build: vendor
 	@./hack/releases.sh \
 		$(addprefix --bin=, $(BINARY)) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
+		--platform=${PLATFROM} \
 		--bucket=${BUCKET} \
 		--gh-release=${GH_RELEASE} \
 		--image-prefix=${IMAGE_PREFIX} \
@@ -112,6 +115,7 @@ cross-build: vendor
 image:
 	@./images/kwok/build.sh \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
+		--platform=${PLATFROM} \
 		--image=${KWOK_IMAGE} \
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
