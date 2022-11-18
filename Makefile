@@ -80,7 +80,7 @@ build: vendor
 	@./hack/releases.sh \
 		$(addprefix --bin=, $(BINARY)) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
-		--platform=${PLATFROM} \
+		--platform=${PLATFORM} \
 		--bucket=${BUCKET} \
 		--gh-release=${GH_RELEASE} \
 		--image-prefix=${IMAGE_PREFIX} \
@@ -115,7 +115,6 @@ cross-build: vendor
 image:
 	@./images/kwok/build.sh \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
-		--platform=${PLATFROM} \
 		--image=${KWOK_IMAGE} \
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
