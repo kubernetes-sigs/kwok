@@ -17,8 +17,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create"
@@ -39,7 +37,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 		Short: "Kwokctl is a Kwok cluster management tool",
 		Long:  "Kwokctl is a Kwok cluster management tool",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("subcommand is required")
+			return cmd.Help()
 		},
 	}
 

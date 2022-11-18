@@ -29,10 +29,11 @@ import (
 // NewCommand returns a new cobra.Command for getting the list of clusters
 func NewCommand(logger logger.Logger) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "clusters",
-		Short: "Lists existing clusters by their name",
-		Long:  "Lists existing clusters by their name",
+		Args:         cobra.NoArgs,
+		Use:          "clusters",
+		Short:        "Lists existing clusters by their name",
+		Long:         "Lists existing clusters by their name",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(logger)
 		},

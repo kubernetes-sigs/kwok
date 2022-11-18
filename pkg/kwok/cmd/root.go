@@ -65,10 +65,11 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "kwok [command]",
-		Short: "kwok is a tool for simulate thousands of fake kubelets",
-		Long:  "kwok is a tool for simulate thousands of fake kubelets",
+		Args:         cobra.NoArgs,
+		Use:          "kwok [command]",
+		Short:        "kwok is a tool for simulate thousands of fake kubelets",
+		Long:         "kwok is a tool for simulate thousands of fake kubelets",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if kubeconfig != "" {
 				f, err := os.Stat(kubeconfig)

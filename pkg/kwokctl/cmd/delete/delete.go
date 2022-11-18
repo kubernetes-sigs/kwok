@@ -17,8 +17,6 @@ limitations under the License.
 package delete
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete/cluster"
@@ -33,7 +31,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 		Short: "Deletes one of [cluster]",
 		Long:  "Deletes one of [cluster]",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("subcommand is required")
+			return cmd.Help()
 		},
 	}
 	cmd.AddCommand(cluster.NewCommand(logger))

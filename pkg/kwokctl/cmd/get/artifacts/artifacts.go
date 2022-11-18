@@ -40,10 +40,11 @@ type flagpole struct {
 func NewCommand(logger logger.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "artifacts",
-		Short: "Lists binaries or images used by cluster",
-		Long:  "Lists binaries or images used by cluster",
+		Args:         cobra.NoArgs,
+		Use:          "artifacts",
+		Short:        "Lists binaries or images used by cluster",
+		Long:         "Lists binaries or images used by cluster",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags)
