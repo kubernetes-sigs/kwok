@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/flowcontrol"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
 	"sigs.k8s.io/kwok/pkg/logger"
@@ -70,6 +71,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 		Short:        "kwok is a tool for simulate thousands of fake kubelets",
 		Long:         "kwok is a tool for simulate thousands of fake kubelets",
 		SilenceUsage: true,
+		Version:      consts.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if kubeconfig != "" {
 				f, err := os.Stat(kubeconfig)
