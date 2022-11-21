@@ -19,6 +19,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create"
 	del "sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get"
@@ -32,10 +33,11 @@ import (
 // NewCommand returns a new cobra.Command for root
 func NewCommand(logger logger.Logger) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "kwokctl [command]",
-		Short: "Kwokctl is a Kwok cluster management tool",
-		Long:  "Kwokctl is a Kwok cluster management tool",
+		Args:    cobra.NoArgs,
+		Use:     "kwokctl [command]",
+		Short:   "Kwokctl is a Kwok cluster management tool",
+		Long:    "Kwokctl is a Kwok cluster management tool",
+		Version: consts.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
