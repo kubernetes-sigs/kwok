@@ -47,7 +47,7 @@ type NodeController struct {
 	manageNodesWithLabelSelector          string
 	nodeSelectorFunc                      func(node *corev1.Node) bool
 	lockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
-	nodesSets                             *stringSets
+	nodesSets                             *nodeSets
 	nodeHeartbeatTemplate                 string
 	nodeStatusTemplate                    string
 	renderer                              *renderer
@@ -102,7 +102,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		manageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
 		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
 		nodeIP:                                conf.NodeIP,
-		nodesSets:                             newStringSets(),
+		nodesSets:                             newNodeSets(),
 		logger:                                log,
 		nodeHeartbeatTemplate:                 conf.NodeHeartbeatTemplate,
 		nodeStatusTemplate:                    conf.NodeStatusTemplate + "\n" + conf.NodeHeartbeatTemplate,
@@ -254,7 +254,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 				case watch.Added, watch.Modified:
 					node := event.Object.(*corev1.Node)
 					if c.needHeartbeat(node) {
-						c.nodesSets.Put(node.Name)
+						c.nodesSets.Put(node.Name, node.DeepCopy())
 						if c.needLockNode(node) {
 							ch <- node.Name
 						}
@@ -283,7 +283,7 @@ func (c *NodeController) ListNodes(ctx context.Context, ch chan<- string, opt me
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		node := obj.(*corev1.Node)
 		if c.needHeartbeat(node) {
-			c.nodesSets.Put(node.Name)
+			c.nodesSets.Put(node.Name, node.DeepCopy())
 			if c.needLockNode(node) {
 				ch <- node.Name
 			}
@@ -391,6 +391,10 @@ func (c *NodeController) configureHeartbeatNode(node *corev1.Node) ([]byte, erro
 
 func (c *NodeController) Has(nodeName string) bool {
 	return c.nodesSets.Has(nodeName)
+}
+
+func (c *NodeController) Get(nodeName string) *nodeInfo {
+	return c.nodesSets.Get(nodeName)
 }
 
 func (c *NodeController) Size() int {

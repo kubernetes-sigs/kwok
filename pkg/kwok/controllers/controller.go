@@ -134,6 +134,7 @@ func NewController(conf Config) (*Controller, error) {
 		LockPodParallelism:                    16,
 		DeletePodParallelism:                  16,
 		NodeHasFunc:                           nodes.Has, // just handle pods that are on nodes we have
+		NodeInfoGetFunc:                       nodes.Get, // get node info from the node controller
 		Logger:                                conf.Logger,
 		FuncMap:                               funcMap,
 	})
