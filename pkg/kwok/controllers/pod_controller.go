@@ -54,6 +54,7 @@ type PodController struct {
 	nodeIP                                string
 	cidrIPNet                             *net.IPNet
 	nodeHasFunc                           func(nodeName string) bool
+	nodeInfoGetFunc                       func(nodeName string) *nodeInfo
 	ipPool                                *ipPool
 	podStatusTemplate                     string
 	logger                                logger.Logger
@@ -72,6 +73,7 @@ type PodControllerConfig struct {
 	NodeIP                                string
 	CIDR                                  string
 	NodeHasFunc                           func(nodeName string) bool
+	NodeInfoGetFunc                       func(nodeName string) *nodeInfo
 	PodStatusTemplate                     string
 	Logger                                logger.Logger
 	LockPodParallelism                    int
@@ -109,6 +111,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		cidrIPNet:                             cidrIPNet,
 		ipPool:                                newIPPool(cidrIPNet),
 		nodeHasFunc:                           conf.NodeHasFunc,
+		nodeInfoGetFunc:                       conf.NodeInfoGetFunc,
 		logger:                                log,
 		podStatusTemplate:                     conf.PodStatusTemplate,
 		lockPodChan:                           make(chan *corev1.Pod),
@@ -120,7 +123,11 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		"NodeIP": func() string {
 			return n.nodeIP
 		},
-		"PodIP": func() string {
+		"PodIP": func(nodeName string) string {
+			nodeInfo := n.nodeInfoGetFunc(nodeName)
+			if nodeInfo != nil && nodeInfo.IPPool != nil {
+				return nodeInfo.IPPool.Get()
+			}
 			return n.ipPool.Get()
 		},
 	}
@@ -305,12 +312,10 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 					}
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
-					if c.nodeHasFunc(pod.Spec.NodeName) {
-						// Recycling PodIP
-						if pod.Status.PodIP != "" && c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
-							c.ipPool.Put(pod.Status.PodIP)
-						}
-					}
+				if c.nodeHasFunc(pod.Spec.NodeName) {
+					// Recycling PodIP
+					c.reclaimPodIP(pod)
+				}
 				}
 			case <-ctx.Done():
 				watcher.Stop()
@@ -347,9 +352,7 @@ func (c *PodController) LockPodsOnNode(ctx context.Context, nodeName string) err
 func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
 
 	// Mark the pod IP that existed before the kubelet was started
-	if c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
-		c.ipPool.Use(pod.Status.PodIP)
-	}
+	c.markPodIP(pod)
 
 	patch, err := c.computePatchData(pod, c.podStatusTemplate)
 	if err != nil {
@@ -399,4 +402,37 @@ func (c *PodController) computePatchData(pod *corev1.Pod, temp string) ([]byte, 
 	}
 
 	return patch, nil
+}
+func (c *PodController) markPodIP(pod *corev1.Pod) {
+	if c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
+		c.ipPool.Use(pod.Status.PodIP)
+	}
+
+	nodeInfo := c.nodeInfoGetFunc(pod.Spec.NodeName)
+	if nodeInfo == nil || nodeInfo.CidrIPNet == nil || nodeInfo.IPPool == nil {
+		return
+	}
+
+	if nodeInfo.CidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
+		nodeInfo.IPPool.Use(pod.Status.PodIP)
+	}
+}
+
+func (c *PodController) reclaimPodIP(pod *corev1.Pod) {
+	nodeInfo := c.nodeInfoGetFunc(pod.Spec.NodeName)
+	if nodeInfo == nil || pod.Status.PodIP == "" {
+		return
+	}
+
+	if c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
+		c.ipPool.Put(pod.Status.PodIP)
+	}
+
+	if nodeInfo.CidrIPNet == nil || nodeInfo.IPPool == nil {
+		return
+	}
+
+	if nodeInfo.CidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
+		nodeInfo.IPPool.Put(pod.Status.PodIP)
+	}
 }

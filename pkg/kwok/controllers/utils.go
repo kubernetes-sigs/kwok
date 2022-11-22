@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
 
@@ -116,6 +117,13 @@ func (i *ipPool) Use(ip string) {
 	i.used[ip] = struct{}{}
 }
 
+func (i *ipPool) InUsed(ip string) bool {
+	i.mut.Lock()
+	defer i.mut.Unlock()
+	_, ok := i.used[ip]
+	return ok
+}
+
 type parallelTasks struct {
 	wg     sync.WaitGroup
 	bucket chan struct{}
@@ -160,43 +168,71 @@ func (p *parallelTasks) Wait() {
 	p.wg.Wait()
 }
 
-type stringSets struct {
-	mut  sync.RWMutex
-	sets map[string]struct{}
+// nodeInfo holds information about a node
+type nodeInfo struct {
+	CidrIPNet *net.IPNet
+	IPPool    *ipPool
 }
 
-func newStringSets() *stringSets {
-	return &stringSets{
-		sets: make(map[string]struct{}),
+type nodeSets struct {
+	mut  sync.RWMutex
+	sets map[string]*nodeInfo
+}
+
+func newNodeSets() *nodeSets {
+	return &nodeSets{
+		sets: make(map[string]*nodeInfo),
 	}
 }
 
-func (s *stringSets) Size() int {
+func (s *nodeSets) Size() int {
 	s.mut.RLock()
 	defer s.mut.RUnlock()
 	return len(s.sets)
 }
 
-func (s *stringSets) Put(key string) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-	s.sets[key] = struct{}{}
+func (s *nodeSets) Get(key string) *nodeInfo {
+	s.mut.RLock()
+	defer s.mut.RUnlock()
+	return s.sets[key]
 }
 
-func (s *stringSets) Delete(key string) {
+func (s *nodeSets) Put(key string, node *corev1.Node) {
+	s.mut.Lock()
+	defer s.mut.Unlock()
+
+	existing, ok := s.sets[key]
+	s.sets[key] = &nodeInfo{}
+	if ok && existing.IPPool != nil {
+		return
+	}
+
+	if node.Spec.PodCIDR != "" {
+		cidrIPNet, err := parseCIDR(node.Spec.PodCIDR)
+		if err != nil {
+			return
+		}
+		s.sets[key] = &nodeInfo{
+			CidrIPNet: cidrIPNet,
+			IPPool:    newIPPool(cidrIPNet),
+		}
+	}
+}
+
+func (s *nodeSets) Delete(key string) {
 	s.mut.Lock()
 	defer s.mut.Unlock()
 	delete(s.sets, key)
 }
 
-func (s *stringSets) Has(key string) bool {
+func (s *nodeSets) Has(key string) bool {
 	s.mut.RLock()
 	defer s.mut.RUnlock()
 	_, ok := s.sets[key]
 	return ok
 }
 
-func (s *stringSets) Foreach(f func(string)) {
+func (s *nodeSets) Foreach(f func(string)) {
 	s.mut.RLock()
 	defer s.mut.RUnlock()
 	for k := range s.sets {

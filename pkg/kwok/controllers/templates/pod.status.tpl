@@ -1,4 +1,5 @@
 {{ $startTime := .metadata.creationTimestamp }}
+{{ $nodeName := .spec.nodeName }}
 
 conditions:
 - lastTransitionTime: {{ $startTime }}
@@ -46,7 +47,7 @@ initContainerStatuses:
 
 {{ with .status }}
 hostIP: {{ with .hostIP }} {{ . }} {{ else }} {{ NodeIP }} {{ end }}
-podIP: {{ with .podIP }} {{ . }} {{ else }} {{ PodIP }} {{ end }}
+podIP: {{ with .podIP }} {{ . }} {{ else }} {{ PodIP $nodeName }} {{ end }}
 {{ end }}
 
 phase: Running
