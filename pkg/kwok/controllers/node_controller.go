@@ -203,10 +203,7 @@ loop:
 }
 
 func (c *NodeController) needHeartbeat(node *corev1.Node) bool {
-	if !c.nodeSelectorFunc(node) {
-		return false
-	}
-	return true
+	return c.nodeSelectorFunc(node)
 }
 
 func (c *NodeController) needLockNode(node *corev1.Node) bool {
@@ -337,7 +334,7 @@ func (c *NodeController) LockNode(ctx context.Context, nodeName string) error {
 	if patch == nil {
 		return nil
 	}
-	node, err = c.clientSet.CoreV1().Nodes().PatchStatus(ctx, node.Name, patch)
+	_, err = c.clientSet.CoreV1().Nodes().PatchStatus(ctx, node.Name, patch)
 	if err != nil {
 		return err
 	}
