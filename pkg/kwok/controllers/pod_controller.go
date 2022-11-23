@@ -123,6 +123,60 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		"PodIP": func() string {
 			return n.ipPool.Get()
 		},
+		"Finish": func(in map[string]interface{}, key string, schedule string) bool {
+			pod := metav1.ObjectMeta{}
+			marshal, _ := json.Marshal(in["metadata"])
+			e := json.Unmarshal(marshal, &pod)
+			if e != nil {
+				return false
+			}
+			start := metav1.Time{}
+			e = json.Unmarshal([]byte(schedule), &start)
+			if e != nil {
+				return false
+			}
+			success := pod.Annotations[key]
+			duration, e := time.ParseDuration(success)
+			if e == nil && time.Since(start.Add(duration)) > 0 {
+				return true
+			}
+			return false
+		},
+		"Schedule": func(in map[string]interface{}) string {
+			pod := corev1.PodStatus{}
+			marshal, _ := json.Marshal(in["status"])
+			e := json.Unmarshal(marshal, &pod)
+			if e != nil {
+				r2, _ := json.Marshal(metav1.NewTime(time.Now()))
+				return string(r2)
+			}
+			for _, c := range pod.Conditions {
+				if c.Type == corev1.PodScheduled && c.Status == corev1.ConditionTrue {
+					r2, _ := json.Marshal(c.LastTransitionTime)
+					return string(r2)
+				}
+			}
+
+			return ""
+		},
+		"LastTime": func(in map[string]interface{}, key string, schedule string) string {
+			pod := metav1.ObjectMeta{}
+			marshal, _ := json.Marshal(in["metadata"])
+			e := json.Unmarshal(marshal, &pod)
+			if e != nil {
+				return ""
+			}
+			start := metav1.Time{}
+			e = json.Unmarshal([]byte(schedule), &start)
+			if e != nil {
+				return ""
+			}
+			success := pod.Annotations[key]
+			duration, _ := time.ParseDuration(success)
+
+			r2, _ := json.Marshal(metav1.NewTime(start.Add(duration)))
+			return string(r2)
+		},
 	}
 	for k, v := range conf.FuncMap {
 		n.funcMap[k] = v
