@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 type flagpole struct {
@@ -37,14 +37,13 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:         cobra.NoArgs,
-		Use:          "artifacts",
-		Short:        "Lists binaries or images used by cluster",
-		Long:         "Lists binaries or images used by cluster",
-		SilenceUsage: true,
+		Args:  cobra.NoArgs,
+		Use:   "artifacts",
+		Short: "Lists binaries or images used by cluster",
+		Long:  "Lists binaries or images used by cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags)
@@ -55,7 +54,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	return cmd
 }
 
-func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
+func runE(ctx context.Context, logger *log.Logger, flags *flagpole) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
 
@@ -91,9 +90,14 @@ func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
 
 	if len(artifacts) == 0 {
 		if flags.Filter == "" {
-			logger.Printf("No artifacts found for runtime %s", flags.Runtime)
+			logger.Info("No artifacts found",
+				"runtime", flags.Runtime,
+			)
 		} else {
-			logger.Printf("No artifacts found for runtime %s and filter %s", flags.Runtime, flags.Filter)
+			logger.Info("No artifacts found",
+				"runtime", flags.Runtime,
+				"filter", flags.Filter,
+			)
 		}
 	} else {
 		for _, artifact := range artifacts {

@@ -17,18 +17,19 @@ limitations under the License.
 package main
 
 import (
-	"log"
 	"os"
 
 	"sigs.k8s.io/kwok/pkg/kwok/cmd"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/signals"
 )
 
 func main() {
-	logger := log.New(os.Stdout, "", 0)
+	logger := log.NewLogger(os.Stdout, log.InfoLevel)
 	command := cmd.NewCommand(logger)
 	err := command.ExecuteContext(signals.SetupSignalContext())
 	if err != nil {
+		logger.Error("Execute exit", err)
 		os.Exit(1)
 	}
 }

@@ -23,7 +23,7 @@ import (
 	"text/template"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -72,7 +72,7 @@ type Config struct {
 	DisregardStatusWithLabelSelector      string
 	CIDR                                  string
 	NodeIP                                string
-	Logger                                logger.Logger
+	Logger                                *log.Logger
 	PodStatusTemplate                     string
 	NodeInitializationTemplate            string
 	NodeHeartbeatTemplate                 string
@@ -99,6 +99,11 @@ func NewController(conf Config) (*Controller, error) {
 		// } else if conf.ManageNodesWithLabelSelector != "" {
 	}
 
+	logger := conf.Logger
+	if logger == nil {
+		logger = log.Noop
+	}
+
 	var lockPodsOnNodeFunc func(ctx context.Context, nodeName string) error
 
 	nodes, err := NewNodeController(NodeControllerConfig{
@@ -117,7 +122,7 @@ func NewController(conf Config) (*Controller, error) {
 		NodeHeartbeatInterval:    30 * time.Second,
 		NodeHeartbeatParallelism: 16,
 		LockNodeParallelism:      16,
-		Logger:                   conf.Logger,
+		Logger:                   logger.With("controller", "node"),
 		FuncMap:                  funcMap,
 	})
 	if err != nil {
@@ -134,7 +139,7 @@ func NewController(conf Config) (*Controller, error) {
 		LockPodParallelism:                    16,
 		DeletePodParallelism:                  16,
 		NodeHasFunc:                           nodes.Has, // just handle pods that are on nodes we have
-		Logger:                                conf.Logger,
+		Logger:                                logger.With("controller", "pod"),
 		FuncMap:                               funcMap,
 	})
 	if err != nil {

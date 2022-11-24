@@ -21,11 +21,11 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/restore"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/save"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // NewCommand returns a new cobra.Command for cluster snapshot
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "snapshot",

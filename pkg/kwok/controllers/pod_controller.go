@@ -25,7 +25,7 @@ import (
 	"text/template"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -56,7 +56,7 @@ type PodController struct {
 	nodeHasFunc                           func(nodeName string) bool
 	ipPool                                *ipPool
 	podStatusTemplate                     string
-	logger                                logger.Logger
+	logger                                *log.Logger
 	renderer                              *renderer
 	lockPodChan                           chan *corev1.Pod
 	lockPodParallelism                    int
@@ -73,7 +73,7 @@ type PodControllerConfig struct {
 	CIDR                                  string
 	NodeHasFunc                           func(nodeName string) bool
 	PodStatusTemplate                     string
-	Logger                                logger.Logger
+	Logger                                *log.Logger
 	LockPodParallelism                    int
 	DeletePodParallelism                  int
 	FuncMap                               template.FuncMap
@@ -96,9 +96,9 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		return nil, err
 	}
 
-	log := conf.Logger
-	if log == nil {
-		log = logger.Noop
+	logger := conf.Logger
+	if logger == nil {
+		logger = log.Noop
 	}
 
 	n := &PodController{
@@ -109,7 +109,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		cidrIPNet:                             cidrIPNet,
 		ipPool:                                newIPPool(cidrIPNet),
 		nodeHasFunc:                           conf.NodeHasFunc,
-		logger:                                log,
+		logger:                                logger,
 		podStatusTemplate:                     conf.PodStatusTemplate,
 		lockPodChan:                           make(chan *corev1.Pod),
 		lockPodParallelism:                    conf.LockPodParallelism,
@@ -147,7 +147,7 @@ func (c *PodController) Start(ctx context.Context) error {
 	go func() {
 		err = c.ListPods(ctx, c.lockPodChan, opt)
 		if err != nil {
-			c.logger.Printf("failed list pods: %s", err)
+			c.logger.Error("Failed list pods", err)
 		}
 	}()
 	return nil
@@ -155,11 +155,15 @@ func (c *PodController) Start(ctx context.Context) error {
 
 // DeletePod deletes a pod
 func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
+	logger := c.logger.With(
+		"pod", log.KObj(pod),
+		"node", pod.Spec.NodeName,
+	)
 	if len(pod.Finalizers) != 0 {
 		_, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.MergePatchType, removeFinalizers, metav1.PatchOptions{})
 		if err != nil {
 			if errors.IsNotFound(err) {
-				c.logger.Printf("pod %s.%s not found", pod.Name, pod.Namespace)
+				logger.Warn("Patch pod", err)
 				return nil
 			}
 			return err
@@ -169,13 +173,13 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 	err := c.clientSet.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			c.logger.Printf("pod %s.%s not found", pod.Name, pod.Namespace)
+			logger.Warn("Delete pod", err)
 			return nil
 		}
 		return err
 	}
 
-	c.logger.Printf("Delete pod %s.%s on %s", pod.Name, pod.Namespace, pod.Spec.NodeName)
+	logger.Info("Delete pod")
 	return nil
 }
 
@@ -187,7 +191,10 @@ func (c *PodController) DeletePods(ctx context.Context, pods <-chan *corev1.Pod)
 		tasks.Add(func() {
 			err := c.DeletePod(ctx, localPod)
 			if err != nil {
-				c.logger.Printf("Failed to delete pod %s.%s on %s: %s", localPod.Name, localPod.Namespace, localPod.Spec.NodeName, err)
+				c.logger.Error("Failed to delete pod", err,
+					"pod", log.KObj(localPod),
+					"node", localPod.Spec.NodeName,
+				)
 			}
 		})
 	}
@@ -196,22 +203,29 @@ func (c *PodController) DeletePods(ctx context.Context, pods <-chan *corev1.Pod)
 
 // LockPod locks a given pod
 func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
+	logger := c.logger.With(
+		"pod", log.KObj(pod),
+		"node", pod.Spec.NodeName,
+	)
 	patch, err := c.configurePod(pod)
 	if err != nil {
 		return err
 	}
 	if patch == nil {
-		c.logger.Printf("Skip pod %s.%s on %s: do not need to modify", pod.Name, pod.Namespace, pod.Spec.NodeName)
+		logger.Info("Skip pod",
+			"reason", "do not need to modify",
+		)
 		return nil
 	}
 	_, err = c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if errors.IsNotFound(err) {
+			logger.Warn("Patch pod", err)
 			return nil
 		}
 		return err
 	}
-	c.logger.Printf("Lock pod %s.%s on %s", pod.Name, pod.Namespace, pod.Spec.NodeName)
+	logger.Info("Lock pod")
 	return nil
 }
 
@@ -223,7 +237,10 @@ func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
 		tasks.Add(func() {
 			err := c.LockPod(ctx, localPod)
 			if err != nil {
-				c.logger.Printf("Failed to lock pod %s.%s on %s: %s", localPod.Name, localPod.Namespace, localPod.Spec.NodeName, err)
+				c.logger.Error("Failed to lock pod", err,
+					"pod", log.KObj(localPod),
+					"node", localPod.Spec.NodeName,
+				)
 			}
 		})
 	}
@@ -270,7 +287,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 							continue loop
 						}
 
-						c.logger.Printf("Failed to watch pods: %s", err)
+						c.logger.Error("Failed to watch pods", err)
 						select {
 						case <-ctx.Done():
 							break loop
@@ -284,7 +301,12 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 					if c.needLockPod(pod) {
 						lockChan <- pod.DeepCopy()
 					} else {
-						c.logger.Printf("Skip pod %s.%s on %s: not manage", pod.Name, pod.Namespace, pod.Spec.NodeName)
+						c.logger.Info("Skip pod",
+							"reason", "not manage",
+							"event", event.Type,
+							"pod", log.KObj(pod),
+							"node", pod.Spec.NodeName,
+						)
 					}
 				case watch.Modified:
 					pod := event.Object.(*corev1.Pod)
@@ -294,13 +316,23 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 						if c.nodeHasFunc(pod.Spec.NodeName) {
 							deleteChan <- pod.DeepCopy()
 						} else {
-							c.logger.Printf("Skip pod %s.%s on %s: not manage", pod.Name, pod.Namespace, pod.Spec.NodeName)
+							c.logger.Info("Skip pod",
+								"reason", "not manage",
+								"event", event.Type,
+								"pod", log.KObj(pod),
+								"node", pod.Spec.NodeName,
+							)
 						}
 					} else {
 						if c.needLockPod(pod) {
 							lockChan <- pod.DeepCopy()
 						} else {
-							c.logger.Printf("Skip pod %s.%s on %s: not manage", pod.Name, pod.Namespace, pod.Spec.NodeName)
+							c.logger.Info("Skip pod",
+								"reason", "not manage",
+								"event", event.Type,
+								"pod", log.KObj(pod),
+								"node", pod.Spec.NodeName,
+							)
 						}
 					}
 				case watch.Deleted:
@@ -317,7 +349,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 				break loop
 			}
 		}
-		c.logger.Printf("Stop watch pods")
+		c.logger.Info("Stop watch pods")
 	}()
 
 	return nil

@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 
 	"github.com/nxadm/tail"
 	"golang.org/x/sync/errgroup"
@@ -40,7 +40,7 @@ type Cluster struct {
 	*runtime.Cluster
 }
 
-func NewCluster(name, workdir string, logger logger.Logger) (runtime.Runtime, error) {
+func NewCluster(name, workdir string, logger *log.Logger) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir, logger),
 	}, nil
@@ -490,7 +490,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	err = c.Update(ctx, conf)
 	if err != nil {
-		c.Logger().Printf("failed to update cluster: %s", err)
+		c.Logger().Error("Failed to update cluster", err)
 	}
 	return nil
 }
@@ -536,7 +536,9 @@ func (c *Cluster) Down(ctx context.Context) error {
 			defer wg.Done()
 			err = utils.ForkExecKill(ctx, conf.Workdir, path)
 			if err != nil {
-				c.Logger().Printf("failed to kill %s: %s", path, err)
+				c.Logger().Error("Failed to kill", err,
+					"component", filepath.Base(path),
+				)
 			}
 		}(path)
 	}
@@ -544,12 +546,16 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 	err = utils.ForkExecKill(ctx, conf.Workdir, kubeApiserverPath)
 	if err != nil {
-		c.Logger().Printf("failed to kill kube-apiserver: %s", err)
+		c.Logger().Error("Failed to kill", err,
+			"component", "kube-apiserver",
+		)
 	}
 
 	err = utils.ForkExecKill(ctx, conf.Workdir, etcdPath)
 	if err != nil {
-		c.Logger().Printf("failed to kill etcd: %s", err)
+		c.Logger().Error("Failed to kill", err,
+			"component", "etcd",
+		)
 	}
 
 	return nil

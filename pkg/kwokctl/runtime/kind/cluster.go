@@ -28,14 +28,14 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 type Cluster struct {
 	*runtime.Cluster
 }
 
-func NewCluster(name, workdir string, logger logger.Logger) (runtime.Runtime, error) {
+func NewCluster(name, workdir string, logger *log.Logger) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir, logger),
 	}, nil
@@ -263,7 +263,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 		ErrOut: os.Stderr,
 	}, conf.Runtime, "delete", "cluster", "--name", conf.Name)
 	if err != nil {
-		c.Logger().Printf("failed to delete cluster: %v", err)
+		c.Logger().Error("Failed to delete cluster", err)
 	}
 
 	return nil

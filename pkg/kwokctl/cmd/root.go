@@ -27,17 +27,19 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/logs"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // NewCommand returns a new cobra.Command for root
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:    cobra.NoArgs,
-		Use:     "kwokctl [command]",
-		Short:   "Kwokctl is a Kwok cluster management tool",
-		Long:    "Kwokctl is a Kwok cluster management tool",
-		Version: consts.Version,
+		Args:          cobra.NoArgs,
+		Use:           "kwokctl [command]",
+		Short:         "Kwokctl is a Kwok cluster management tool",
+		Long:          "Kwokctl is a Kwok cluster management tool",
+		Version:       consts.Version,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},

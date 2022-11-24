@@ -25,7 +25,7 @@ import (
 	"text/template"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,7 +51,7 @@ type NodeController struct {
 	nodeHeartbeatTemplate                 string
 	nodeStatusTemplate                    string
 	renderer                              *renderer
-	logger                                logger.Logger
+	logger                                *log.Logger
 	nodeHeartbeatInterval                 time.Duration
 	nodeHeartbeatParallelism              int
 	lockNodeParallelism                   int
@@ -70,7 +70,7 @@ type NodeControllerConfig struct {
 	NodeIP                                string
 	NodeStatusTemplate                    string
 	NodeHeartbeatTemplate                 string
-	Logger                                logger.Logger
+	Logger                                *log.Logger
 	NodeHeartbeatInterval                 time.Duration
 	NodeHeartbeatParallelism              int
 	LockNodeParallelism                   int
@@ -89,9 +89,9 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		return nil, err
 	}
 
-	log := conf.Logger
-	if log == nil {
-		log = logger.Noop
+	logger := conf.Logger
+	if logger == nil {
+		logger = log.Noop
 	}
 	n := &NodeController{
 		clientSet:                             conf.ClientSet,
@@ -103,7 +103,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
 		nodeIP:                                conf.NodeIP,
 		nodesSets:                             newStringSets(),
-		logger:                                log,
+		logger:                                logger,
 		nodeHeartbeatTemplate:                 conf.NodeHeartbeatTemplate,
 		nodeStatusTemplate:                    conf.NodeStatusTemplate + "\n" + conf.NodeHeartbeatTemplate,
 		nodeHeartbeatInterval:                 conf.NodeHeartbeatInterval,
@@ -141,7 +141,7 @@ func (c *NodeController) Start(ctx context.Context) error {
 	go func() {
 		err = c.ListNodes(ctx, c.nodeChan, opt)
 		if err != nil {
-			c.logger.Printf("failed list node: %s", err)
+			c.logger.Error("Failed list node", err)
 		}
 	}()
 
@@ -168,7 +168,9 @@ func (c *NodeController) allHeartbeatNode(ctx context.Context, nodes []string, t
 		tasks.Add(func() {
 			err := c.heartbeatNode(ctx, localNode)
 			if err != nil {
-				c.logger.Printf("Failed to heartbeat node %s: %s", localNode, err)
+				c.logger.Error("Failed to heartbeat", err,
+					"node", localNode,
+				)
 			}
 		})
 	}
@@ -192,10 +194,13 @@ loop:
 			heartbeatStartTime = time.Now()
 			c.allHeartbeatNode(ctx, nodes, tasks)
 			tasks.Wait()
-			c.logger.Printf("Heartbeat %d nodes took %s", len(nodes), time.Since(heartbeatStartTime))
+			c.logger.Info("Heartbeat nodes",
+				"nodeSize", len(nodes),
+				"took", time.Since(heartbeatStartTime),
+			)
 			th.Reset(c.nodeHeartbeatInterval)
 		case <-ctx.Done():
-			c.logger.Printf("Stop keep nodes heartbeat")
+			c.logger.Info("Stop keep nodes heartbeat")
 			break loop
 		}
 	}
@@ -242,7 +247,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 							continue loop
 						}
 
-						c.logger.Printf("Failed to watch nodes: %s", err)
+						c.logger.Error("Failed to watch nodes", err)
 						select {
 						case <-ctx.Done():
 							break loop
@@ -270,7 +275,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 				break loop
 			}
 		}
-		c.logger.Printf("Stop watch nodes")
+		c.logger.Info("Stop watch nodes")
 	}()
 	return nil
 }
@@ -305,13 +310,17 @@ func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan string) {
 		tasks.Add(func() {
 			err := c.LockNode(ctx, localNode)
 			if err != nil {
-				c.logger.Printf("Failed to lock node %s: %s", localNode, err)
+				c.logger.Error("Failed to lock node", err,
+					"node", localNode,
+				)
 				return
 			}
 			if c.lockPodsOnNodeFunc != nil {
 				err = c.lockPodsOnNodeFunc(ctx, localNode)
 				if err != nil {
-					c.logger.Printf("Failed to lock pods on node %s: %s", localNode, err)
+					c.logger.Error("Failed to lock pods on node", err,
+						"node", localNode,
+					)
 					return
 				}
 			}
@@ -338,7 +347,9 @@ func (c *NodeController) LockNode(ctx context.Context, nodeName string) error {
 	if err != nil {
 		return err
 	}
-	c.logger.Printf("Lock node %s", nodeName)
+	c.logger.Info("Lock node",
+		"node", nodeName,
+	)
 	return nil
 }
 

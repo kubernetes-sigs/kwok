@@ -29,17 +29,19 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/flowcontrol"
 
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // NewCommand returns a new cobra.Command for root
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	var (
 		// The default IP assigned to the Pod on maintained Nodes.
 		cidr = "10.0.0.1/24"
@@ -66,12 +68,13 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Args:         cobra.NoArgs,
-		Use:          "kwok [command]",
-		Short:        "kwok is a tool for simulate thousands of fake kubelets",
-		Long:         "kwok is a tool for simulate thousands of fake kubelets",
-		SilenceUsage: true,
-		Version:      consts.Version,
+		Args:          cobra.NoArgs,
+		Use:           "kwok [command]",
+		Short:         "kwok is a tool for simulate thousands of fake kubelets",
+		Long:          "kwok is a tool for simulate thousands of fake kubelets",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Version:       consts.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if kubeconfig != "" {
 				f, err := os.Stat(kubeconfig)
@@ -82,19 +85,22 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 
 			ctx := cmd.Context()
 
-			clientset, err := newClientset(master, kubeconfig)
+			clientset, err := newClientset(logger, master, kubeconfig)
 			if err != nil {
 				return err
 			}
 
 			if manageAllNodes {
 				if manageNodesWithAnnotationSelector != "" || manageNodesWithLabelSelector != "" {
-					logger.Printf("manage-all-nodes is conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.")
+					logger.Error("manage-all-nodes is conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.", nil)
 					os.Exit(1)
 				}
-				logger.Printf("Watch all nodes")
+				logger.Info("Watch all nodes")
 			} else if manageNodesWithAnnotationSelector != "" || manageNodesWithLabelSelector != "" {
-				logger.Printf("Watch nodes with annotation %q and label %q", manageNodesWithAnnotationSelector, manageNodesWithLabelSelector)
+				logger.Info("Watch nodes",
+					"annotation", manageNodesWithAnnotationSelector,
+					"label", manageNodesWithLabelSelector,
+				)
 			}
 
 			backoff := wait.Backoff{
@@ -110,7 +116,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 							Limit: 1,
 						})
 					if err != nil {
-						logger.Printf("Failed to list nodes: %v", err)
+						logger.Error("Failed to list nodes", err)
 						return false, nil
 					}
 					return true, nil
@@ -166,7 +172,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	return cmd
 }
 
-func Serve(ctx context.Context, address string, logger logger.Logger) {
+func Serve(ctx context.Context, address string, logger *log.Logger) {
 	promHandler := promhttp.Handler()
 	svc := &http.Server{
 		BaseContext: func(_ net.Listener) context.Context {
@@ -187,13 +193,30 @@ func Serve(ctx context.Context, address string, logger logger.Logger) {
 
 	err := svc.ListenAndServe()
 	if err != nil {
-		logger.Printf("Fatal start server")
+		logger.Error("Fatal start server", err)
 		os.Exit(1)
 	}
 }
 
-func newClientset(master, kubeconfig string) (kubernetes.Interface, error) {
-	cfg, err := clientcmd.BuildConfigFromFlags(master, kubeconfig)
+// buildConfigFromFlags is a helper function that builds configs from a master url or a kubeconfig filepath.
+func buildConfigFromFlags(logger *log.Logger, masterUrl, kubeconfigPath string) (*restclient.Config, error) {
+	if kubeconfigPath == "" && masterUrl == "" {
+		logger.Warn("Neither --kubeconfig nor --master was specified")
+		logger.Info("Using the inClusterConfig")
+		kubeconfig, err := restclient.InClusterConfig()
+		if err == nil {
+			return kubeconfig, nil
+		}
+		logger.Error("Creating inClusterConfig", err)
+		logger.Info("Falling back to default config")
+	}
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
+		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}}).ClientConfig()
+}
+
+func newClientset(logger *log.Logger, master, kubeconfig string) (kubernetes.Interface, error) {
+	cfg, err := buildConfigFromFlags(logger, master, kubeconfig)
 	if err != nil {
 		return nil, err
 	}

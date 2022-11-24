@@ -1,0 +1,1546 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184577"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  phase: Pending
+  qosClass: BestEffort
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184578"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  nodeName: zsm-test-1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    status: "True"
+    type: PodScheduled
+  phase: Pending
+  qosClass: BestEffort
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184584"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  nodeName: zsm-test-1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    message: 'containers with incomplete status: [init-0 init-1]'
+    reason: ContainersNotInitialized
+    status: "False"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    message: 'containers with unready status: [container-0 container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    message: 'containers with unready status: [container-0 container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - image: m.daocloud.io/docker.io/nginx
+    imageID: ""
+    lastState: {}
+    name: container-0
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        reason: PodInitializing
+  - image: m.daocloud.io/docker.io/nginx
+    imageID: ""
+    lastState: {}
+    name: container-1
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        reason: PodInitializing
+  hostIP: 10.7.111.10
+  initContainerStatuses:
+  - image: m.daocloud.io/docker.io/busybox
+    imageID: ""
+    lastState: {}
+    name: init-0
+    ready: false
+    restartCount: 0
+    state:
+      waiting:
+        reason: PodInitializing
+  - image: m.daocloud.io/docker.io/busybox
+    imageID: ""
+    lastState: {}
+    name: init-1
+    ready: false
+    restartCount: 0
+    state:
+      waiting:
+        reason: PodInitializing
+  phase: Pending
+  qosClass: BestEffort
+  startTime: "2022-11-23T11:27:36Z"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184595"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  nodeName: zsm-test-1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    message: 'containers with incomplete status: [init-1]'
+    reason: ContainersNotInitialized
+    status: "False"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    message: 'containers with unready status: [container-0 container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    message: 'containers with unready status: [container-0 container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - image: m.daocloud.io/docker.io/nginx
+    imageID: ""
+    lastState: {}
+    name: container-0
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        reason: PodInitializing
+  - image: m.daocloud.io/docker.io/nginx
+    imageID: ""
+    lastState: {}
+    name: container-1
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        reason: PodInitializing
+  hostIP: 10.7.111.10
+  initContainerStatuses:
+  - containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-0
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:39Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:39Z"
+  - image: m.daocloud.io/docker.io/busybox
+    imageID: ""
+    lastState: {}
+    name: init-1
+    ready: false
+    restartCount: 0
+    state:
+      waiting:
+        reason: PodInitializing
+  phase: Pending
+  podIP: 10.88.0.172
+  podIPs:
+  - ip: 10.88.0.172
+  - ip: 2001:4860:4860::ac
+  qosClass: BestEffort
+  startTime: "2022-11-23T11:27:36Z"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184600"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  nodeName: zsm-test-1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:41Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    message: 'containers with unready status: [container-0 container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    message: 'containers with unready status: [container-0 container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - image: m.daocloud.io/docker.io/nginx
+    imageID: ""
+    lastState: {}
+    name: container-0
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        reason: PodInitializing
+  - image: m.daocloud.io/docker.io/nginx
+    imageID: ""
+    lastState: {}
+    name: container-1
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        reason: PodInitializing
+  hostIP: 10.7.111.10
+  initContainerStatuses:
+  - containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-0
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:39Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:39Z"
+  - containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-1
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:41Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:41Z"
+  phase: Pending
+  podIP: 10.88.0.172
+  podIPs:
+  - ip: 10.88.0.172
+  - ip: 2001:4860:4860::ac
+  qosClass: BestEffort
+  startTime: "2022-11-23T11:27:36Z"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184610"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  nodeName: zsm-test-1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:41Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:43Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:43Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://62ca9a3fe62e5d71b324b979803d336ca780fcf2e47efc1d45b630b1f3ab5bf6
+    image: m.daocloud.io/docker.io/nginx:latest
+    imageID: m.daocloud.io/docker.io/nginx@sha256:e209ac2f37c70c1e0e9873a5f7231e91dcd83fdf1178d8ed36c2ec09974210ba
+    lastState: {}
+    name: container-0
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2022-11-23T11:27:42Z"
+  - containerID: containerd://9fa42f8cbac948ab35efa7860d9a6a9702b511ba53612d9a29d5ebda5f8585d9
+    image: m.daocloud.io/docker.io/nginx:latest
+    imageID: m.daocloud.io/docker.io/nginx@sha256:e209ac2f37c70c1e0e9873a5f7231e91dcd83fdf1178d8ed36c2ec09974210ba
+    lastState: {}
+    name: container-1
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2022-11-23T11:27:42Z"
+  hostIP: 10.7.111.10
+  initContainerStatuses:
+  - containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-0
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:39Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:39Z"
+  - containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-1
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:41Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:41Z"
+  phase: Running
+  podIP: 10.88.0.172
+  podIPs:
+  - ip: 10.88.0.172
+  - ip: 2001:4860:4860::ac
+  qosClass: BestEffort
+  startTime: "2022-11-23T11:27:36Z"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184631"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  nodeName: zsm-test-1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:41Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:45Z"
+    message: 'containers with unready status: [container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:45Z"
+    message: 'containers with unready status: [container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://62ca9a3fe62e5d71b324b979803d336ca780fcf2e47efc1d45b630b1f3ab5bf6
+    image: m.daocloud.io/docker.io/nginx:latest
+    imageID: m.daocloud.io/docker.io/nginx@sha256:e209ac2f37c70c1e0e9873a5f7231e91dcd83fdf1178d8ed36c2ec09974210ba
+    lastState: {}
+    name: container-0
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2022-11-23T11:27:42Z"
+  - containerID: containerd://9fa42f8cbac948ab35efa7860d9a6a9702b511ba53612d9a29d5ebda5f8585d9
+    image: m.daocloud.io/docker.io/nginx:latest
+    imageID: m.daocloud.io/docker.io/nginx@sha256:e209ac2f37c70c1e0e9873a5f7231e91dcd83fdf1178d8ed36c2ec09974210ba
+    lastState: {}
+    name: container-1
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      terminated:
+        containerID: containerd://9fa42f8cbac948ab35efa7860d9a6a9702b511ba53612d9a29d5ebda5f8585d9
+        exitCode: 1
+        finishedAt: "2022-11-23T11:27:45Z"
+        reason: Error
+        startedAt: "2022-11-23T11:27:42Z"
+  hostIP: 10.7.111.10
+  initContainerStatuses:
+  - containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-0
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:39Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:39Z"
+  - containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-1
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:41Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:41Z"
+  phase: Running
+  podIP: 10.88.0.172
+  podIPs:
+  - ip: 10.88.0.172
+  - ip: 2001:4860:4860::ac
+  qosClass: BestEffort
+  startTime: "2022-11-23T11:27:36Z"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184639"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  nodeName: zsm-test-1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:41Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:46Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:46Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://62ca9a3fe62e5d71b324b979803d336ca780fcf2e47efc1d45b630b1f3ab5bf6
+    image: m.daocloud.io/docker.io/nginx:latest
+    imageID: m.daocloud.io/docker.io/nginx@sha256:e209ac2f37c70c1e0e9873a5f7231e91dcd83fdf1178d8ed36c2ec09974210ba
+    lastState: {}
+    name: container-0
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2022-11-23T11:27:42Z"
+  - containerID: containerd://c12b0339f80ae0bf0515de4da9d8c6857bce91d7bb91becd65b6427819915682
+    image: m.daocloud.io/docker.io/nginx:latest
+    imageID: m.daocloud.io/docker.io/nginx@sha256:e209ac2f37c70c1e0e9873a5f7231e91dcd83fdf1178d8ed36c2ec09974210ba
+    lastState:
+      terminated:
+        containerID: containerd://9fa42f8cbac948ab35efa7860d9a6a9702b511ba53612d9a29d5ebda5f8585d9
+        exitCode: 1
+        finishedAt: "2022-11-23T11:27:45Z"
+        reason: Error
+        startedAt: "2022-11-23T11:27:42Z"
+    name: container-1
+    ready: true
+    restartCount: 1
+    started: true
+    state:
+      running:
+        startedAt: "2022-11-23T11:27:46Z"
+  hostIP: 10.7.111.10
+  initContainerStatuses:
+  - containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-0
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:39Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:39Z"
+  - containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-1
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:41Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:41Z"
+  phase: Running
+  podIP: 10.88.0.172
+  podIPs:
+  - ip: 10.88.0.172
+  - ip: 2001:4860:4860::ac
+  qosClass: BestEffort
+  startTime: "2022-11-23T11:27:36Z"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-11-23T11:27:36Z"
+  generateName: test-pod-59bdf9d984-
+  labels:
+    app: test-pod
+    pod-template-hash: 59bdf9d984
+  name: test-pod-59bdf9d984-bfdld
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: test-pod-59bdf9d984
+    uid: 236b8a4b-39ee-4d38-9e72-19ca243d7b16
+  resourceVersion: "14184645"
+  uid: 3cc13057-096f-491e-9ea5-3c4583096d4f
+spec:
+  containers:
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - image: m.daocloud.io/docker.io/nginx
+    imagePullPolicy: Always
+    name: container-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-0
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  - command:
+    - echo
+    - hello
+    image: m.daocloud.io/docker.io/busybox
+    imagePullPolicy: Always
+    name: init-1
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pb4bz
+      readOnly: true
+  nodeName: zsm-test-1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: 'Exists'
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: 'Exists'
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pb4bz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:41Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:49Z"
+    message: 'containers with unready status: [container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:49Z"
+    message: 'containers with unready status: [container-1]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-11-23T11:27:36Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://62ca9a3fe62e5d71b324b979803d336ca780fcf2e47efc1d45b630b1f3ab5bf6
+    image: m.daocloud.io/docker.io/nginx:latest
+    imageID: m.daocloud.io/docker.io/nginx@sha256:e209ac2f37c70c1e0e9873a5f7231e91dcd83fdf1178d8ed36c2ec09974210ba
+    lastState: {}
+    name: container-0
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2022-11-23T11:27:42Z"
+  - containerID: containerd://c12b0339f80ae0bf0515de4da9d8c6857bce91d7bb91becd65b6427819915682
+    image: m.daocloud.io/docker.io/nginx:latest
+    imageID: m.daocloud.io/docker.io/nginx@sha256:e209ac2f37c70c1e0e9873a5f7231e91dcd83fdf1178d8ed36c2ec09974210ba
+    lastState:
+      terminated:
+        containerID: containerd://9fa42f8cbac948ab35efa7860d9a6a9702b511ba53612d9a29d5ebda5f8585d9
+        exitCode: 1
+        finishedAt: "2022-11-23T11:27:45Z"
+        reason: Error
+        startedAt: "2022-11-23T11:27:42Z"
+    name: container-1
+    ready: false
+    restartCount: 1
+    started: false
+    state:
+      terminated:
+        containerID: containerd://c12b0339f80ae0bf0515de4da9d8c6857bce91d7bb91becd65b6427819915682
+        exitCode: 1
+        finishedAt: "2022-11-23T11:27:48Z"
+        reason: Error
+        startedAt: "2022-11-23T11:27:46Z"
+  hostIP: 10.7.111.10
+  initContainerStatuses:
+  - containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-0
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://335a684e472628a4decdc5223bde636f01c7895d1d18a3efabb386a3f21360ed
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:39Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:39Z"
+  - containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+    image: m.daocloud.io/docker.io/busybox:latest
+    imageID: m.daocloud.io/docker.io/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+    lastState: {}
+    name: init-1
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://19f6aace88d3d4915f0ed76ca4104d1fed2aa650d456ab5adc36abf0f7a573ef
+        exitCode: 0
+        finishedAt: "2022-11-23T11:27:41Z"
+        reason: Completed
+        startedAt: "2022-11-23T11:27:41Z"
+  phase: Running
+  podIP: 10.88.0.172
+  podIPs:
+  - ip: 10.88.0.172
+  - ip: 2001:4860:4860::ac
+  qosClass: BestEffort
+  startTime: "2022-11-23T11:27:36Z"

@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 type flagpole struct {
@@ -35,14 +35,13 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for cluster snapshotting.
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:         cobra.NoArgs,
-		Use:          "save",
-		Short:        "Save the snapshot of the cluster",
-		Long:         "Save the snapshot of the cluster",
-		SilenceUsage: true,
+		Args:  cobra.NoArgs,
+		Use:   "save",
+		Short: "Save the snapshot of the cluster",
+		Long:  "Save the snapshot of the cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags)
@@ -53,7 +52,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	return cmd
 }
 
-func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
+func runE(ctx context.Context, logger *log.Logger, flags *flagpole) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
 

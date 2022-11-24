@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 type flagpole struct {
@@ -33,14 +33,13 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for cluster creation
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:         cobra.NoArgs,
-		Use:          "cluster",
-		Short:        "Deletes a cluster",
-		Long:         "Deletes a cluster",
-		SilenceUsage: true,
+		Args:  cobra.NoArgs,
+		Use:   "cluster",
+		Short: "Deletes a cluster",
+		Long:  "Deletes a cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags)
@@ -49,25 +48,27 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	return cmd
 }
 
-func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
+func runE(ctx context.Context, logger *log.Logger, flags *flagpole) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
+
+	logger = logger.With("cluster", flags.Name)
 
 	rt, err := runtime.DefaultRegistry.Load(name, workdir, logger)
 	if err != nil {
 		return err
 	}
-	logger.Printf("Stopping cluster %q", name)
+	logger.Info("Stopping cluster")
 	err = rt.Down(ctx)
 	if err != nil {
-		logger.Printf("Error stopping cluster %q: %v", name, err)
+		logger.Error("Stopping cluster", err)
 	}
 
-	logger.Printf("Deleting cluster %q", name)
+	logger.Info("Deleting cluster")
 	err = rt.Uninstall(ctx)
 	if err != nil {
 		return err
 	}
-	logger.Printf("Cluster %q deleted", name)
+	logger.Info("Cluster deleted")
 	return nil
 }
