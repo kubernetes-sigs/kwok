@@ -1,0 +1,4 @@
+contact_links:
+  - name: Support Request
+    url: https://github.com/kubernetes-sigs/kwok/discussions
+    about: Support request or question relating to Kwok

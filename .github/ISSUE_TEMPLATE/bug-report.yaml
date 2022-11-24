@@ -1,0 +1,84 @@
+name: Bug Report
+description: Report a bug encountered while operating Kwok
+labels: kind/bug
+body:
+  - type: checkboxes
+    id: usage
+    attributes:
+      label: How to use it?
+      options:
+        - label: kwok
+        - label: kwokctl --runtime=docker (default runtime)
+        - label: kwokctl --runtime=binary
+        - label: kwokctl --runtime=nerdctl
+        - label: kwokctl --runtime=kind
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: |
+        Please provide as much info as possible. Not doing so may result in your bug not being addressed in a timely manner.
+        If this matter is security related, please disclose it privately via https://kubernetes.io/security
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How can we reproduce it (as minimally and precisely as possible)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Anything else we need to know?
+
+  - type: textarea
+    id: kwokVersion
+    attributes:
+      label: Kwok version
+      value: |
+        <details>
+
+        ```console
+        $ kwok --version
+        # paste output here
+
+        $ kwokctl --version
+        # paste output here
+        ```
+
+        </details>
+    validations:
+      required: true
+
+    id: osVersion
+    attributes:
+      label: OS version
+      value: |
+        <details>
+        ```console        
+        # On Linux:
+        $ cat /etc/os-release
+        # paste output here
+        $ uname -a
+        # paste output here
+
+        # On Darwin:
+        $ uname -a
+        # paste output here
+
+        # On Windows:
+        C:\> wmic os get Caption, Version, BuildNumber, OSArchitecture
+        # paste output here
+        ```
+        </details>
