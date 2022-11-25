@@ -129,7 +129,7 @@ var (
 	// MustKubectlBinary is the binary of kubectl.
 	MustKubectlBinary = "https://dl.k8s.io/release/" + KubeVersion + "/bin/" + runtime.GOOS + "/" + runtime.GOARCH + "/kubectl" + BinSuffix
 
-	MustComposeBinary = "https://github.com/docker/compose/releases/download/" + DockerComposeVersion + "/docker-compose" + "-" + runtime.GOOS + "-" + runtime.GOARCH + BinSuffix
+	MustDockerComposeBinary = "https://github.com/docker/compose/releases/download/" + DockerComposeVersion + "/docker-compose" + "-" + runtime.GOOS + "-" + runtime.GOARCH + BinSuffix
 
 	// KubectlBinary is the binary of kubectl.
 	KubectlBinary = getEnv("KWOK_KUBECTL_BINARY", KubeBinaryPrefix+"/kubectl"+BinSuffix)
