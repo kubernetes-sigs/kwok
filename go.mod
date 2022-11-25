@@ -1,6 +1,6 @@
 module sigs.k8s.io/kwok
 
-go 1.18
+go 1.19
 
 require (
 	github.com/nxadm/tail v1.4.4

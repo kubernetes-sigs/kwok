@@ -16,7 +16,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.19
 
       - name: Install Kind
         shell: bash
@@ -69,7 +69,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.19
 
       - name: Install CoreUtils for MacOS
         if: ${{ matrix.os == 'macos-latest' && matrix.kwokctl-runtime != 'binary' }}
