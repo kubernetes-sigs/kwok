@@ -17,18 +17,12 @@ limitations under the License.
 package controllers
 
 import (
-	"bytes"
 	"encoding/binary"
-	"encoding/json"
-	"fmt"
 	"net"
-	"strings"
 	"sync"
-	"text/template"
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
-	"sigs.k8s.io/yaml"
 )
 
 func parseCIDR(s string) (*net.IPNet, error) {
@@ -121,57 +115,6 @@ func (i *ipPool) Use(ip string) {
 	}
 	i.used[ip] = struct{}{}
 }
-
-func toTemplateJson(text string, original interface{}, funcMap template.FuncMap) ([]byte, error) {
-	text = strings.TrimSpace(text)
-	v, ok := templateCache.Load(text)
-	if !ok {
-		temp, err := template.New("_").Funcs(funcMap).Parse(text)
-		if err != nil {
-			return nil, err
-		}
-		templateCache.Store(text, temp)
-		v = temp
-	}
-	temp := v.(*template.Template)
-	buf := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buf)
-
-	buf.Reset()
-	err := json.NewEncoder(buf).Encode(original)
-	if err != nil {
-		return nil, err
-	}
-
-	var data interface{}
-	decoder := json.NewDecoder(buf)
-	decoder.UseNumber()
-	err = decoder.Decode(&data)
-	if err != nil {
-		return nil, err
-	}
-
-	buf.Reset()
-	err = temp.Execute(buf, data)
-	if err != nil {
-		return nil, err
-	}
-
-	out, err := yaml.YAMLToJSON(buf.Bytes())
-	if err != nil {
-		return nil, fmt.Errorf("%w: %s", err, buf.String())
-	}
-	return out, nil
-}
-
-var (
-	templateCache = sync.Map{}
-	bufferPool    = sync.Pool{
-		New: func() interface{} {
-			return &bytes.Buffer{}
-		},
-	}
-)
 
 type parallelTasks struct {
 	wg     sync.WaitGroup

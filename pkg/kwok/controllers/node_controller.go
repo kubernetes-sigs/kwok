@@ -50,7 +50,7 @@ type NodeController struct {
 	nodesSets                             *stringSets
 	nodeHeartbeatTemplate                 string
 	nodeStatusTemplate                    string
-	funcMap                               template.FuncMap
+	renderer                              *renderer
 	logger                                logger.Logger
 	nodeHeartbeatInterval                 time.Duration
 	nodeHeartbeatParallelism              int
@@ -111,15 +111,15 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		lockNodeParallelism:                   conf.LockNodeParallelism,
 		nodeChan:                              make(chan string),
 	}
-	n.funcMap = template.FuncMap{
+	funcMap = template.FuncMap{
 		"NodeIP": func() string {
 			return n.nodeIP
 		},
 	}
 	for k, v := range conf.FuncMap {
-		n.funcMap[k] = v
+		funcMap[k] = v
 	}
-
+	n.renderer = newRenderer(funcMap)
 	return n, nil
 }
 
@@ -343,7 +343,7 @@ func (c *NodeController) LockNode(ctx context.Context, nodeName string) error {
 }
 
 func (c *NodeController) configureNode(node *corev1.Node) ([]byte, error) {
-	patch, err := toTemplateJson(c.nodeStatusTemplate, node, c.funcMap)
+	patch, err := c.renderer.renderToJson(c.nodeStatusTemplate, node)
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +380,7 @@ func (c *NodeController) configureNode(node *corev1.Node) ([]byte, error) {
 }
 
 func (c *NodeController) configureHeartbeatNode(node *corev1.Node) ([]byte, error) {
-	patch, err := toTemplateJson(c.nodeHeartbeatTemplate, node, c.funcMap)
+	patch, err := c.renderer.renderToJson(c.nodeHeartbeatTemplate, node)
 	if err != nil {
 		return nil, err
 	}
