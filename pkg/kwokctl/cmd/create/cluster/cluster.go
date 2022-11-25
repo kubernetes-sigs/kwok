@@ -54,6 +54,7 @@ type flagpole struct {
 	EtcdBinaryTar                string
 	PrometheusBinary             string
 	PrometheusBinaryTar          string
+	DockerComposeBinary          string
 	Runtime                      string
 	KubeFeatureGates             string
 	KubeRuntimeConfig            string
@@ -116,6 +117,7 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().StringVar(&flags.PrometheusBinary, "prometheus-binary", vars.PrometheusBinary, `Binary of Prometheus, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.PrometheusBinaryTar, "prometheus-binary-tar", vars.PrometheusBinaryTar, `Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
 `)
+	cmd.Flags().StringVar(&flags.DockerComposeBinary, "docker-compose-binary", vars.DockerComposeBinary, `Binary of Docker-compose, only for docker runtime`)
 	cmd.Flags().StringVar(&flags.KubeFeatureGates, "kube-feature-gates", vars.KubeFeatureGates, `A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes
 `)
 	cmd.Flags().StringVar(&flags.KubeRuntimeConfig, "kube-runtime-config", vars.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs
@@ -188,6 +190,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 			EtcdBinaryTar:                flags.EtcdBinaryTar,
 			PrometheusBinary:             flags.PrometheusBinary,
 			PrometheusBinaryTar:          flags.PrometheusBinaryTar,
+			DockerComposeBinary:          flags.DockerComposeBinary,
 			CacheDir:                     vars.CacheDir,
 			SecretPort:                   flags.SecurePort,
 			QuietPull:                    flags.QuietPull,
