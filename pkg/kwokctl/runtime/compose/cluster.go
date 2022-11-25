@@ -270,13 +270,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	args := []string{"up", "-d"}
+	args := []string{"compose", "up", "-d"}
 	if conf.QuietPull {
 		args = append(args, "--quiet-pull")
 	}
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
+	err = utils.Exec(ctx, composePath, utils.IOStreams{
 		ErrOut: os.Stderr,
-	}, composePath, args...)
+	}, conf.Runtime, args...)
 	if err != nil {
 		return err
 	}
@@ -296,10 +296,10 @@ func (c *Cluster) Down(ctx context.Context) error {
 		return err
 	}
 
-	args := []string{"down"}
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
+	args := []string{"compose", "down"}
+	err = utils.Exec(ctx, composePath, utils.IOStreams{
 		ErrOut: os.Stderr,
-	}, composePath, args...)
+	}, conf.Runtime, args...)
 	if err != nil {
 		c.Logger().Printf("Failed to down cluster: %v", err)
 	}
@@ -406,18 +406,16 @@ func (c *Cluster) getCompose(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	composePath, err := exec.LookPath("docker-compose")
+	bin := utils.PathJoin(conf.Workdir, "bin")
+	cmd := exec.Command("docker", "compose")
+	_, err = cmd.CombinedOutput()
 	if err != nil {
-		bin := utils.PathJoin(conf.Workdir, "bin")
-		composePath = utils.PathJoin(bin, "docker-compose"+vars.BinSuffix)
-		binary := vars.MustComposeBinary
-		if strings.Contains(binary, "arm64") {
-			binary = strings.ReplaceAll(binary, "arm64", "aarch64")
-		}
-		err = utils.DownloadWithCache(ctx, conf.CacheDir, binary, composePath, 0755, conf.QuietPull)
+		src := strings.ReplaceAll(vars.MustComposeBinary, "arm64", "aarch64")
+		composePath := utils.PathJoin(bin, "docker-compose")
+		err = utils.DownloadWithCache(ctx, conf.CacheDir, src, composePath, 0755, conf.QuietPull)
 		if err != nil {
 			return "", err
 		}
 	}
-	return composePath, nil
+	return bin, nil
 }

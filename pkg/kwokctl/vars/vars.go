@@ -64,7 +64,7 @@ var (
 	// KubeVersion is the version of Kubernetes to use.
 	KubeVersion = addPrefixV(getEnv("KWOK_KUBE_VERSION", consts.KubeVersion))
 
-	ComposeVersion = addPrefixV(getEnv("COMPOSE_VERSION", consts.ComposeVersion))
+	DockerComposeVersion = addPrefixV(getEnv("KWOK_DOCKER_COMPOSE_VERSION", consts.DockerComposeVersion))
 
 	// EtcdVersion is the version of etcd to use.
 	EtcdVersion = trimPrefixV(getEnv("KWOK_ETCD_VERSION", k8s.GetEtcdVersion(parseRelease(KubeVersion))))
@@ -129,7 +129,7 @@ var (
 	// MustKubectlBinary is the binary of kubectl.
 	MustKubectlBinary = "https://dl.k8s.io/release/" + KubeVersion + "/bin/" + runtime.GOOS + "/" + runtime.GOARCH + "/kubectl" + BinSuffix
 
-	MustComposeBinary = "https://github.com/docker/compose/releases/download/" + ComposeVersion + "/docker-compose" + "-" + runtime.GOOS + "-" + runtime.GOARCH + BinSuffix
+	MustComposeBinary = "https://github.com/docker/compose/releases/download/" + DockerComposeVersion + "/docker-compose" + "-" + runtime.GOOS + "-" + runtime.GOARCH + BinSuffix
 
 	// KubectlBinary is the binary of kubectl.
 	KubectlBinary = getEnv("KWOK_KUBECTL_BINARY", KubeBinaryPrefix+"/kubectl"+BinSuffix)
