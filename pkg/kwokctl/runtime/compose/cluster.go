@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"strings"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
@@ -261,13 +263,20 @@ func (c *Cluster) Up(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	args := []string{"compose", "up", "-d"}
+
+	composePath, err := c.getCompose(ctx)
+	if err != nil {
+		c.Logger().Printf("Download Compose failed: %v", err)
+		return err
+	}
+
+	args := []string{"up", "-d"}
 	if conf.QuietPull {
 		args = append(args, "--quiet-pull")
 	}
 	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
 		ErrOut: os.Stderr,
-	}, conf.Runtime, args...)
+	}, composePath, args...)
 	if err != nil {
 		return err
 	}
@@ -280,10 +289,17 @@ func (c *Cluster) Down(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	args := []string{"compose", "down"}
+
+	composePath, err := c.getCompose(ctx)
+	if err != nil {
+		c.Logger().Printf("Download Compose failed: %v", err)
+		return err
+	}
+
+	args := []string{"down"}
 	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
 		ErrOut: os.Stderr,
-	}, conf.Runtime, args...)
+	}, composePath, args...)
 	if err != nil {
 		c.Logger().Printf("Failed to down cluster: %v", err)
 	}
@@ -383,4 +399,25 @@ func (c *Cluster) ListImages(ctx context.Context, actual bool) ([]string, error)
 		conf.KwokControllerImage,
 		conf.PrometheusImage,
 	}, nil
+}
+
+func (c *Cluster) getCompose(ctx context.Context) (string, error) {
+	conf, err := c.Config()
+	if err != nil {
+		return "", err
+	}
+	composePath, err := exec.LookPath("docker-compose")
+	if err != nil {
+		bin := utils.PathJoin(conf.Workdir, "bin")
+		composePath = utils.PathJoin(bin, "docker-compose"+vars.BinSuffix)
+		binary := vars.MustComposeBinary
+		if strings.Contains(binary, "arm64") {
+			binary = strings.ReplaceAll(binary, "arm64", "aarch64")
+		}
+		err = utils.DownloadWithCache(ctx, conf.CacheDir, binary, composePath, 0755, conf.QuietPull)
+		if err != nil {
+			return "", err
+		}
+	}
+	return composePath, nil
 }

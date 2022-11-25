@@ -21,9 +21,10 @@ import (
 )
 
 var (
-	Version      = "unknown"
-	KubeVersion  = "unknown"
-	ImagePrefix  = "registry.k8s.io/kwok"
-	BinaryPrefix = "https://github.com/kubernetes-sigs/kwok/releases/download"
-	BinaryName   = "kwok-" + runtime.GOOS + "-" + runtime.GOARCH
+	Version        = "unknown"
+	KubeVersion    = "unknown"
+	ComposeVersion = "v2.13.0"
+	ImagePrefix    = "registry.k8s.io/kwok"
+	BinaryPrefix   = "https://github.com/kubernetes-sigs/kwok/releases/download"
+	BinaryName     = "kwok-" + runtime.GOOS + "-" + runtime.GOARCH
 )
