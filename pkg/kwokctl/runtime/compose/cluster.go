@@ -261,13 +261,21 @@ func (c *Cluster) Up(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	args := []string{"compose", "up", "-d"}
+
+	args := []string{"up", "-d"}
 	if conf.QuietPull {
 		args = append(args, "--quiet-pull")
 	}
+
+	commands, err := c.buildComamnds(ctx, args...)
+	if err != nil {
+		c.Logger().Printf("Failed to build commands: %v", err)
+		return err
+	}
+
 	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
 		ErrOut: os.Stderr,
-	}, conf.Runtime, args...)
+	}, commands[0], commands[1:]...)
 	if err != nil {
 		return err
 	}
@@ -280,10 +288,17 @@ func (c *Cluster) Down(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	args := []string{"compose", "down"}
+
+	args := []string{"down"}
+	commands, err := c.buildComamnds(ctx, args...)
+	if err != nil {
+		c.Logger().Printf("Failed to build commands: %v", err)
+		return err
+	}
+
 	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
 		ErrOut: os.Stderr,
-	}, conf.Runtime, args...)
+	}, commands[0], commands[1:]...)
 	if err != nil {
 		c.Logger().Printf("Failed to down cluster: %v", err)
 	}
@@ -383,4 +398,23 @@ func (c *Cluster) ListImages(ctx context.Context, actual bool) ([]string, error)
 		conf.KwokControllerImage,
 		conf.PrometheusImage,
 	}, nil
+}
+
+func (c *Cluster) buildComamnds(ctx context.Context, args ...string) ([]string, error) {
+	conf, err := c.Config()
+	if err != nil {
+		return nil, err
+	}
+	if conf.Runtime == "docker" {
+		err = utils.Exec(ctx, "", utils.IOStreams{}, conf.Runtime, "compose")
+		if err != nil {
+			dockerComposePath := utils.PathJoin(conf.Workdir, "bin", "docker-compose"+vars.BinSuffix)
+			err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustDockerComposeBinary, dockerComposePath, 0755, conf.QuietPull)
+			if err != nil {
+				return nil, err
+			}
+			return append([]string{dockerComposePath}, args...), nil
+		}
+	}
+	return append([]string{conf.Runtime, "compose"}, args...), nil
 }

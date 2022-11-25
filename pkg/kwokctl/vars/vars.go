@@ -64,6 +64,9 @@ var (
 	// KubeVersion is the version of Kubernetes to use.
 	KubeVersion = addPrefixV(getEnv("KWOK_KUBE_VERSION", consts.KubeVersion))
 
+	// DockerComposeVersion is the version of docker-compose to use.
+	DockerComposeVersion = addPrefixV(getEnv("KWOK_DOCKER_COMPOSE_VERSION", "v2.13.0"))
+
 	// EtcdVersion is the version of etcd to use.
 	EtcdVersion = trimPrefixV(getEnv("KWOK_ETCD_VERSION", k8s.GetEtcdVersion(parseRelease(KubeVersion))))
 
@@ -126,6 +129,11 @@ var (
 
 	// MustKubectlBinary is the binary of kubectl.
 	MustKubectlBinary = "https://dl.k8s.io/release/" + KubeVersion + "/bin/" + runtime.GOOS + "/" + runtime.GOARCH + "/kubectl" + BinSuffix
+
+	// DockerComposeBinaryPrefix is the binary of docker-compose.
+	DockerComposeBinaryPrefix = getEnv("KWOK_DOCKER_COMPOSE_BINARY_PERFIX", "https://github.com/docker/compose/releases/download/"+DockerComposeVersion)
+
+	MustDockerComposeBinary = DockerComposeBinaryPrefix + "/docker-compose" + "-" + runtime.GOOS + "-" + archAlias(runtime.GOARCH) + BinSuffix
 
 	// KubectlBinary is the binary of kubectl.
 	KubectlBinary = getEnv("KWOK_KUBECTL_BINARY", KubeBinaryPrefix+"/kubectl"+BinSuffix)
@@ -277,4 +285,18 @@ func addPrefixV(version string) string {
 		return version
 	}
 	return "v" + version
+}
+
+var archMapping = map[string]string{
+	"arm64": "aarch64",
+	"arm":   "armv7",
+	"amd64": "x86_64",
+	"386":   "x86",
+}
+
+func archAlias(arch string) string {
+	if v, ok := archMapping[arch]; ok {
+		return v
+	}
+	return arch
 }
