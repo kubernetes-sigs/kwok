@@ -63,6 +63,9 @@ type BuildComposeConfig struct {
 	Authorization bool
 	QuietPull     bool
 
+	DisableKubeScheduler         bool
+	DisableKubeControllerManager bool
+
 	KubeApiserverPort uint32
 	PrometheusPort    uint32
 
