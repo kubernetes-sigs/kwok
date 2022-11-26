@@ -57,7 +57,7 @@ type PodController struct {
 	ipPool                                *ipPool
 	podStatusTemplate                     string
 	logger                                logger.Logger
-	funcMap                               template.FuncMap
+	renderer                              *renderer
 	lockPodChan                           chan *corev1.Pod
 	lockPodParallelism                    int
 	deletePodChan                         chan *corev1.Pod
@@ -116,7 +116,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		deletePodChan:                         make(chan *corev1.Pod),
 		deletePodParallelism:                  conf.DeletePodParallelism,
 	}
-	n.funcMap = template.FuncMap{
+	funcMap = template.FuncMap{
 		"NodeIP": func() string {
 			return n.nodeIP
 		},
@@ -125,8 +125,9 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		},
 	}
 	for k, v := range conf.FuncMap {
-		n.funcMap[k] = v
+		funcMap[k] = v
 	}
+	n.renderer = newRenderer(funcMap)
 	return n, nil
 }
 
@@ -350,7 +351,7 @@ func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
 		c.ipPool.Use(pod.Status.PodIP)
 	}
 
-	patch, err := configurePod(pod, c.podStatusTemplate, c.funcMap)
+	patch, err := c.computePatchData(pod, c.podStatusTemplate)
 	if err != nil {
 		return nil, err
 	}
@@ -363,8 +364,8 @@ func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
 	})
 }
 
-func configurePod(pod *corev1.Pod, temp string, funcMap template.FuncMap) ([]byte, error) {
-	patch, err := toTemplateJson(temp, pod, funcMap)
+func (c *PodController) computePatchData(pod *corev1.Pod, temp string) ([]byte, error) {
+	patch, err := c.renderer.renderToJson(temp, pod)
 	if err != nil {
 		return nil, err
 	}
