@@ -406,10 +406,11 @@ func (c *Cluster) getCompose(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	bin := utils.PathJoin(conf.Workdir, "bin")
+	bin := conf.Workdir
 	cmd := exec.Command("docker", "compose")
 	_, err = cmd.CombinedOutput()
 	if err != nil {
+		bin = utils.PathJoin(conf.Workdir, "bin")
 		src := strings.ReplaceAll(vars.MustDockerComposeBinary, "arm64", "aarch64")
 		composePath := utils.PathJoin(bin, "docker-compose")
 		err = utils.DownloadWithCache(ctx, conf.CacheDir, src, composePath, 0755, conf.QuietPull)
