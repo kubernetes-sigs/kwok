@@ -37,24 +37,31 @@ type Logger struct {
 	log *slog.Logger
 }
 
+func (l *Logger) LogDepth(calldepth int, level Level, msg string, args ...any) {
+	l.log.LogDepth(calldepth+1, level, msg, args...)
+}
+
 func (l *Logger) Log(level Level, msg string, args ...any) {
-	l.log.Log(level, msg, args...)
+	l.log.LogDepth(1, level, msg, args...)
 }
 
 func (l *Logger) Debug(msg string, args ...any) {
-	l.log.Debug(msg, args...)
+	l.log.LogDepth(1, DebugLevel, msg, args...)
 }
 
 func (l *Logger) Info(msg string, args ...any) {
-	l.log.Info(msg, args...)
+	l.log.LogDepth(1, InfoLevel, msg, args...)
 }
 
 func (l *Logger) Warn(msg string, args ...any) {
-	l.log.Warn(msg, args...)
+	l.log.LogDepth(1, WarnLevel, msg, args...)
 }
 
 func (l *Logger) Error(msg string, err error, args ...any) {
-	l.log.Error(msg, err, args...)
+	if err != nil {
+		args = append(args[:len(args):len(args)], slog.Any(slog.ErrorKey, err))
+	}
+	l.log.LogDepth(1, ErrorLevel, msg, args...)
 }
 
 func (l *Logger) With(args ...any) *Logger {
