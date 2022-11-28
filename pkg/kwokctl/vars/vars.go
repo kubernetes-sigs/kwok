@@ -266,8 +266,11 @@ func trimPrefixV(version string) string {
 		return version
 	}
 
+	// Not a semantic version or unprefixed 'v'
 	if version[0] != 'v' ||
-		version[1] < '0' || version[1] > '9' {
+		!strings.Contains(version, ".") ||
+		version[1] < '0' ||
+		version[1] > '9' {
 		return version
 	}
 	return version[1:]
@@ -279,7 +282,10 @@ func addPrefixV(version string) string {
 		return version
 	}
 
-	if version[0] < '0' || version[0] > '9' {
+	// Not a semantic version or prefixed 'v'
+	if !strings.Contains(version, ".") ||
+		version[0] < '0' ||
+		version[0] > '9' {
 		return version
 	}
 	return "v" + version
