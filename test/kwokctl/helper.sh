@@ -29,7 +29,7 @@ function test_all() {
 }
 
 export KWOK_CONTROLLER_BINARY="${DIR}/bin/kwok"
-export KWOK_CONTROLLER_IMAGE=kwok:test
+export KWOK_CONTROLLER_IMAGE=local/kwok:test
 
 function supported_releases() {
   cat "${ROOT_DIR}/supported_releases.txt"
@@ -55,4 +55,11 @@ function build_image() {
   fi
   "${ROOT_DIR}/hack/releases.sh" --bin kwok
   "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version="${KWOK_CONTROLLER_IMAGE##*:}"
+}
+
+function build_image_for_nerdctl() {
+  build_image
+  mkdir "tmp"
+  docker save -o "tmp/kwok.tar" "${KWOK_CONTROLLER_IMAGE}"
+  nerdctl load -i "tmp/kwok.tar"
 }
