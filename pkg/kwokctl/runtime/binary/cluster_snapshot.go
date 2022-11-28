@@ -65,12 +65,12 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	err = c.Stop(ctx, "etcd")
 	if err != nil {
-		c.Logger().Printf("Failed to stop etcd: %v", err)
+		c.Logger().Error("Failed to stop etcd", err)
 	}
 	defer func() {
 		err = c.Start(ctx, "etcd")
 		if err != nil {
-			c.Logger().Printf("Failed to start etcd: %v", err)
+			c.Logger().Error("Failed to start etcd", err)
 		}
 	}()
 

@@ -19,6 +19,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -27,7 +28,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 type flagpole struct {
@@ -62,14 +63,13 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for cluster creation
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:         cobra.NoArgs,
-		Use:          "cluster",
-		Short:        "Creates a cluster",
-		Long:         "Creates a cluster",
-		SilenceUsage: true,
+		Args:  cobra.NoArgs,
+		Use:   "cluster",
+		Short: "Creates a cluster",
+		Long:  "Creates a cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags)
@@ -127,9 +127,11 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	return cmd
 }
 
-func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
+func runE(ctx context.Context, logger *log.Logger, flags *flagpole) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
+
+	logger = logger.With("cluster", flags.Name)
 
 	buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Runtime)
 	if !ok {
@@ -143,27 +145,27 @@ func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
 
 	_, err = rt.Config()
 	if err == nil {
-		logger.Printf("Cluster %q already exists", name)
+		logger.Info("Cluster already exists")
 
 		if ready, err := rt.Ready(ctx); err == nil && ready {
-			logger.Printf("Cluster %q is already ready", name)
+			logger.Info("Cluster is already ready")
 			return nil
 		}
 
-		logger.Printf("Cluster %q is not ready yet, will be restarted", name)
+		logger.Info("Cluster is not ready yet, will be restarted")
 		err = rt.Install(ctx)
 		if err != nil {
-			logger.Printf("Failed to continue install cluster %q: %v", name, err)
+			logger.Error("Failed to continue install cluster", err)
 			return err
 		}
 
 		// Down the cluster for restart
 		err = rt.Down(ctx)
 		if err != nil {
-			logger.Printf("Failed to down cluster %q: %v", name, err)
+			logger.Error("Failed to down cluster", err)
 		}
 	} else {
-		logger.Printf("Creating cluster %q", name)
+		logger.Info("Creating cluster")
 		err = rt.Init(ctx, runtime.Config{
 			Name:                         name,
 			KubeApiserverPort:            flags.KubeApiserverPort,
@@ -196,30 +198,30 @@ func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
 			Authorization:                flags.KubeAuthorization,
 		})
 		if err != nil {
-			logger.Printf("Failed to setup config %q: %v", name, err)
+			logger.Error("Failed to setup config", err)
 			err0 := rt.Uninstall(ctx)
 			if err0 != nil {
-				logger.Printf("Failed to clean up cluster %q: %v", name, err0)
+				logger.Error("Failed to clean up cluster", err0)
 			} else {
-				logger.Printf("Cleaned up %q", name)
+				logger.Info("Cluster is cleaned up")
 			}
 			return err
 		}
 
 		err = rt.Install(ctx)
 		if err != nil {
-			logger.Printf("Failed to setup config %q: %v", name, err)
+			logger.Error("Failed to setup config", err)
 			err0 := rt.Uninstall(ctx)
 			if err0 != nil {
-				logger.Printf("Failed to uninstall cluster %q: %v", name, err0)
+				logger.Error("Failed to uninstall cluster", err0)
 			} else {
-				logger.Printf("Cleaned up %q", name)
+				logger.Info("Cluster is cleaned up")
 			}
 			return err
 		}
 	}
 
-	logger.Printf("Starting cluster %q", name)
+	logger.Info("Starting cluster")
 	err = rt.Up(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start cluster %q: %w", name, err)
@@ -230,11 +232,13 @@ func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
 		return fmt.Errorf("failed wait for cluster %q be ready: %w", name, err)
 	}
 
-	logger.Printf("Cluster %q is ready", name)
-	logger.Printf("You can now use your cluster with:")
-	logger.Printf("")
-	logger.Printf("    kubectl config use-context %s", name)
-	logger.Printf("")
-	logger.Printf("Thanks for using kwok!")
+	logger.Info("Cluster is ready")
+
+	fmt.Fprintf(os.Stderr, `You can now use your cluster with:
+
+    kubectl config use-context %s
+
+Thanks for using kwok!
+`, name)
 	return nil
 }

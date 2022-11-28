@@ -14,15 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package logger
+package log
 
-type Logger interface {
-	Printf(format string, args ...interface{})
+import (
+	"golang.org/x/exp/slog"
+)
+
+var Noop = wrapSlog(slog.New(noopHandler{}))
+
+type noopHandler struct{}
+
+var _ slog.Handler = noopHandler{}
+
+func (noopHandler) Enabled(slog.Level) bool {
+	return false
 }
 
-var Noop Logger = noopLogger{}
-
-type noopLogger struct {
+func (noopHandler) Handle(r slog.Record) error {
+	return nil
 }
 
-func (noopLogger) Printf(format string, v ...interface{}) {}
+func (h noopHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return h
+}
+
+func (h noopHandler) WithGroup(name string) slog.Handler {
+	return h
+}

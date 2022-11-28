@@ -19,11 +19,13 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
+	"sigs.k8s.io/kwok/pkg/log"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,7 +84,7 @@ func TestPodController(t *testing.T) {
 		FuncMap:                               funcMap,
 		LockPodParallelism:                    2,
 		DeletePodParallelism:                  2,
-		Logger:                                testingLogger{t},
+		Logger:                                log.NewLogger(os.Stderr, log.DebugLevel),
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new pods controller error: %w", err))

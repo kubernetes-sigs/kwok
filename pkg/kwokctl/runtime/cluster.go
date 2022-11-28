@@ -26,7 +26,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 
 	"github.com/nxadm/tail"
 	"sigs.k8s.io/yaml"
@@ -51,10 +51,10 @@ type Cluster struct {
 	workdir string
 	name    string
 	conf    *Config
-	logger  logger.Logger
+	logger  *log.Logger
 }
 
-func NewCluster(name, workdir string, logger logger.Logger) *Cluster {
+func NewCluster(name, workdir string, logger *log.Logger) *Cluster {
 	return &Cluster{
 		name:    name,
 		workdir: workdir,
@@ -62,7 +62,7 @@ func NewCluster(name, workdir string, logger logger.Logger) *Cluster {
 	}
 }
 
-func (c *Cluster) Logger() logger.Logger {
+func (c *Cluster) Logger() *log.Logger {
 	return c.logger
 }
 

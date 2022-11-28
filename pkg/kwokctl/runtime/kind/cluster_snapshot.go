@@ -45,7 +45,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 	defer func() {
 		err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "exec", "-i", kindName, "rm", "-f", tmpFile)
 		if err != nil {
-			c.Logger().Printf("failed to clean snapshot: %v", err)
+			c.Logger().Error("Failed to clean snapshot", err)
 		}
 	}()
 
@@ -81,12 +81,12 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	err = c.Stop(ctx, "etcd")
 	if err != nil {
-		c.Logger().Printf("Failed to stop etcd: %v", err)
+		c.Logger().Error("Failed to stop etcd", err)
 	}
 	defer func() {
 		err = c.Start(ctx, "etcd")
 		if err != nil {
-			c.Logger().Printf("Failed to start etcd: %v", err)
+			c.Logger().Error("Failed to start etcd", err)
 		}
 	}()
 

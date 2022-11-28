@@ -21,14 +21,6 @@ import (
 	"time"
 )
 
-type testingLogger struct {
-	*testing.T
-}
-
-func (t testingLogger) Printf(format string, args ...interface{}) {
-	t.Logf(format, args...)
-}
-
 func TestParallelTasks(t *testing.T) {
 	tasks := newParallelTasks(4)
 	startTime := time.Now()

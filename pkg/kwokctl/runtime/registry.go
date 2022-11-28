@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"sort"
 
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
-type BuildRuntime func(name, workdir string, logger logger.Logger) (Runtime, error)
+type BuildRuntime func(name, workdir string, logger *log.Logger) (Runtime, error)
 
 var DefaultRegistry = NewRegistry()
 
@@ -49,7 +49,7 @@ func (r *Registry) Get(name string) (BuildRuntime, bool) {
 }
 
 // Load a runtime
-func (r *Registry) Load(name, workdir string, logger logger.Logger) (Runtime, error) {
+func (r *Registry) Load(name, workdir string, logger *log.Logger) (Runtime, error) {
 	cluster := NewCluster(name, workdir, logger)
 	conf, err := cluster.Load()
 	if err != nil {

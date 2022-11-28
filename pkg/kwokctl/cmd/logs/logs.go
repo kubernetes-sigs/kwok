@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 type flagpole struct {
@@ -35,14 +35,13 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:         cobra.ExactArgs(1),
-		Use:          "logs",
-		Short:        "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
-		Long:         "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
-		SilenceUsage: true,
+		Args:  cobra.ExactArgs(1),
+		Use:   "logs",
+		Short: "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
+		Long:  "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			return runE(cmd.Context(), logger, flags, args)
@@ -52,7 +51,7 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	return cmd
 }
 
-func runE(ctx context.Context, logger logger.Logger, flags *flagpole, args []string) error {
+func runE(ctx context.Context, logger *log.Logger, flags *flagpole, args []string) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
 

@@ -23,17 +23,16 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/logger"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
-func NewCommand(logger logger.Logger) *cobra.Command {
+func NewCommand(logger *log.Logger) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:         cobra.NoArgs,
-		Use:          "clusters",
-		Short:        "Lists existing clusters by their name",
-		Long:         "Lists existing clusters by their name",
-		SilenceUsage: true,
+		Args:  cobra.NoArgs,
+		Use:   "clusters",
+		Short: "Lists existing clusters by their name",
+		Long:  "Lists existing clusters by their name",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(logger)
 		},
@@ -41,13 +40,13 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	return cmd
 }
 
-func runE(logger logger.Logger) error {
+func runE(logger *log.Logger) error {
 	clusters, err := runtime.ListClusters(vars.ClustersDir)
 	if err != nil {
 		return err
 	}
 	if len(clusters) == 0 {
-		logger.Printf("no clusters found")
+		logger.Info("No clusters found")
 	} else {
 		for _, cluster := range clusters {
 			fmt.Println(cluster)
