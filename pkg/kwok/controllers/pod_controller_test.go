@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -88,7 +89,7 @@ func TestPodController(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	t.Cleanup(func() {
 		cancel()
 		time.Sleep(time.Second)
@@ -134,15 +135,19 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("pod1 status reason not custom"))
 	}
 
-	time.Sleep(2 * time.Second)
-
-	list, err := clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
+	var list *corev1.PodList
+	err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+		list, err = clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return false, fmt.Errorf("list pods error: %w", err)
+		}
+		if len(list.Items) != 3 {
+			return false, fmt.Errorf("want 3 pods, got %d", len(list.Items))
+		}
+		return true, nil
+	})
 	if err != nil {
-		t.Fatal(fmt.Errorf("list pods error: %w", err))
-	}
-
-	if len(list.Items) != 3 {
-		t.Fatal(fmt.Errorf("want 3 pods, got %d", len(list.Items)))
+		t.Fatal(err)
 	}
 
 	pod := list.Items[0]
@@ -153,13 +158,18 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("delete pod error: %w", err))
 	}
 
-	time.Sleep(2 * time.Second)
-	list, err = clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
+	err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+		list, err = clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return false, fmt.Errorf("list pods error: %w", err)
+		}
+		if len(list.Items) != 2 {
+			return false, fmt.Errorf("want 2 pods, got %d", len(list.Items))
+		}
+		return true, nil
+	})
 	if err != nil {
-		t.Fatal(fmt.Errorf("list pods error: %w", err))
-	}
-	if len(list.Items) != 2 {
-		t.Fatal(fmt.Errorf("want 2 pods, got %d", len(list.Items)))
+		t.Fatal(err)
 	}
 
 	for _, pod := range list.Items {

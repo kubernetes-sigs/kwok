@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -81,7 +82,7 @@ func TestNodeController(t *testing.T) {
 		t.Fatal(fmt.Errorf("new nodes controller error: %v", err))
 	}
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	t.Cleanup(func() {
 		cancel()
 		time.Sleep(time.Second)
@@ -92,14 +93,19 @@ func TestNodeController(t *testing.T) {
 		t.Fatal(fmt.Errorf("failed to start nodes controller: %w", err))
 	}
 
-	time.Sleep(2 * time.Second)
-
-	node0, err := clientset.CoreV1().Nodes().Get(ctx, "node0", metav1.GetOptions{})
+	var node0 *corev1.Node
+	err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+		node0, err = clientset.CoreV1().Nodes().Get(ctx, "node0", metav1.GetOptions{})
+		if err != nil {
+			return false, fmt.Errorf("failed to get node0: %w", err)
+		}
+		if node0.Status.Allocatable[corev1.ResourceCPU] != resource.MustParse("4") {
+			return false, fmt.Errorf("node0 want 4 cpu, got %v", node0.Status.Allocatable[corev1.ResourceCPU])
+		}
+		return true, nil
+	})
 	if err != nil {
-		t.Fatal(fmt.Errorf("failed to get node0: %w", err))
-	}
-	if node0.Status.Allocatable[corev1.ResourceCPU] != resource.MustParse("4") {
-		t.Fatal(fmt.Errorf("node0 want 4 cpu, got %v", node0.Status.Allocatable[corev1.ResourceCPU]))
+		t.Fatal(err)
 	}
 
 	node1 := node0.DeepCopy()
@@ -109,11 +115,16 @@ func TestNodeController(t *testing.T) {
 	if err != nil {
 		t.Fatal(fmt.Errorf("failed to create node1: %w", err))
 	}
-	time.Sleep(2 * time.Second)
 
-	nodeSize := nodes.Size()
-	if nodeSize != 2 {
-		t.Fatal(fmt.Errorf("want 2 nodes, got %d", nodeSize))
+	err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+		nodeSize := nodes.Size()
+		if nodeSize != 2 {
+			return false, fmt.Errorf("want 2 nodes, got %d", nodeSize)
+		}
+		return true, nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	node1, err = clientset.CoreV1().Nodes().Get(ctx, "node1", metav1.GetOptions{})
