@@ -14,21 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package signals
 
 import (
-	"log"
 	"os"
-
-	"sigs.k8s.io/kwok/pkg/kwok/cmd"
-	"sigs.k8s.io/kwok/pkg/utils/signals"
 )
 
-func main() {
-	logger := log.New(os.Stdout, "", 0)
-	command := cmd.NewCommand(logger)
-	err := command.ExecuteContext(signals.SetupSignalContext())
-	if err != nil {
-		os.Exit(1)
-	}
-}
+var shutdownSignals = []os.Signal{os.Interrupt}

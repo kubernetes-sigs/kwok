@@ -25,12 +25,13 @@ import (
 	_ "sigs.k8s.io/kwok/pkg/kwokctl/runtime/kind"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd"
+	"sigs.k8s.io/kwok/pkg/utils/signals"
 )
 
 func main() {
 	logger := log.New(os.Stdout, "", 0)
 	command := cmd.NewCommand(logger)
-	err := command.Execute()
+	err := command.ExecuteContext(signals.SetupSignalContext())
 	if err != nil {
 		os.Exit(1)
 	}
