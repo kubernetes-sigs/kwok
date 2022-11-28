@@ -35,6 +35,32 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwok/kwok
 
+  test-kwok-with-cni:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+
+      - name: Install Kind
+        shell: bash
+        run: |
+          ./hack/requirements.sh kind
+          kind version
+
+      - name: Install kubectl
+        shell: bash
+        run: |
+          ./hack/requirements.sh kubectl
+          kubectl version || :
+
+      - name: Test Workable
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwok-with-cni/kwok-with-cni
+
   test-kwokctl:
     # https://docs.github.com/en/actions/using-jobs/using-concurrency
     concurrency:
