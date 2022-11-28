@@ -108,6 +108,7 @@ services:
       - {{ .AuditLog }}:/var/log/kubernetes/audit/audit.log:rw
 {{ end }}
 
+{{ if not .DisableKubeControllerManager }}
   # Kube-controller-manager
   kube_controller_manager:
     container_name: "{{ .ProjectName }}-kube-controller-manager"
@@ -153,7 +154,9 @@ services:
       - {{ .AdminCertPath }}:{{ .InClusterAdminCertPath }}:ro
       - {{ .CACertPath }}:{{ .InClusterCACertPath }}:ro
 {{ end }}
+{{ end }}
 
+{{ if not .DisableKubeScheduler }}
   # Kube-scheduler
   kube_scheduler:
     container_name: "{{ .ProjectName }}-kube-scheduler"
@@ -190,6 +193,7 @@ services:
       - {{ .AdminKeyPath }}:{{ .InClusterAdminKeyPath }}:ro
       - {{ .AdminCertPath }}:{{ .InClusterAdminCertPath }}:ro
       - {{ .CACertPath }}:{{ .InClusterCACertPath }}:ro
+{{ end }}
 {{ end }}
 
   # Kwok-controller

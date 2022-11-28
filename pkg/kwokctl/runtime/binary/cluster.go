@@ -454,9 +454,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	componentPathArgs := map[string][]string{
-		kubeControllerManagerPath: kubeControllerManagerArgs,
-		kubeSchedulerPath:         kubeSchedulerArgs,
-		kwokControllerPath:        kwokControllerArgs,
+		kwokControllerPath: kwokControllerArgs,
+	}
+	if !conf.DisableKubeControllerManager {
+		componentPathArgs[kubeControllerManagerPath] = kubeControllerManagerArgs
+	}
+	if !conf.DisableKubeScheduler {
+		componentPathArgs[kubeSchedulerPath] = kubeSchedulerArgs
 	}
 	if prometheusPath != "" {
 		componentPathArgs[prometheusPath] = prometheusArgs
@@ -511,9 +515,16 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 	componentPaths := []string{
 		kwokControllerPath,
-		kubeSchedulerPath,
-		kubeControllerManagerPath,
 	}
+
+	if !conf.DisableKubeControllerManager {
+		componentPaths = append(componentPaths, kubeControllerManagerPath)
+	}
+
+	if !conf.DisableKubeScheduler {
+		componentPaths = append(componentPaths, kubeSchedulerPath)
+	}
+
 	if conf.PrometheusPort != 0 {
 		componentPaths = append(componentPaths, prometheusPath)
 	}

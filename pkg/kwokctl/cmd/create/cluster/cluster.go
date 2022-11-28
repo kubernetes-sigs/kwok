@@ -31,32 +31,34 @@ import (
 )
 
 type flagpole struct {
-	Name                        string
-	KubeApiserverPort           uint32
-	PrometheusPort              uint32
-	SecurePort                  bool
-	QuietPull                   bool
-	EtcdImage                   string
-	KubeApiserverImage          string
-	KubeControllerManagerImage  string
-	KubeSchedulerImage          string
-	KwokControllerImage         string
-	PrometheusImage             string
-	KindNodeImage               string
-	KubeApiserverBinary         string
-	KubeControllerManagerBinary string
-	KubeSchedulerBinary         string
-	KwokControllerBinary        string
-	EtcdBinary                  string
-	EtcdBinaryTar               string
-	PrometheusBinary            string
-	PrometheusBinaryTar         string
-	Runtime                     string
-	KubeFeatureGates            string
-	KubeRuntimeConfig           string
-	KubeAuditPolicy             string
-	KubeAuthorization           bool
-	Timeout                     time.Duration
+	Name                         string
+	KubeApiserverPort            uint32
+	PrometheusPort               uint32
+	SecurePort                   bool
+	QuietPull                    bool
+	DisableKubeScheduler         bool
+	DisableKubeControllerManager bool
+	EtcdImage                    string
+	KubeApiserverImage           string
+	KubeControllerManagerImage   string
+	KubeSchedulerImage           string
+	KwokControllerImage          string
+	PrometheusImage              string
+	KindNodeImage                string
+	KubeApiserverBinary          string
+	KubeControllerManagerBinary  string
+	KubeSchedulerBinary          string
+	KwokControllerBinary         string
+	EtcdBinary                   string
+	EtcdBinaryTar                string
+	PrometheusBinary             string
+	PrometheusBinaryTar          string
+	Runtime                      string
+	KubeFeatureGates             string
+	KubeRuntimeConfig            string
+	KubeAuditPolicy              string
+	KubeAuthorization            bool
+	Timeout                      time.Duration
 }
 
 // NewCommand returns a new cobra.Command for cluster creation
@@ -77,6 +79,8 @@ func NewCommand(logger logger.Logger) *cobra.Command {
 	cmd.Flags().Uint32Var(&flags.PrometheusPort, "prometheus-port", uint32(vars.PrometheusPort), `Port to expose Prometheus metrics`)
 	cmd.Flags().BoolVar(&flags.SecurePort, "secure-port", vars.SecurePort, `The apiserver port on which to serve HTTPS with authentication and authorization`)
 	cmd.Flags().BoolVar(&flags.QuietPull, "quiet-pull", vars.QuietPull, `Pull without printing progress information`)
+	cmd.Flags().BoolVar(&flags.DisableKubeScheduler, "disable-kube-scheduler", vars.DisableKubeScheduler, `Disable the kube-scheduler`)
+	cmd.Flags().BoolVar(&flags.DisableKubeControllerManager, "disable-kube-controller-manager", vars.DisableKubeControllerManager, `Disable the kube-controller-manager`)
 	cmd.Flags().StringVar(&flags.EtcdImage, "etcd-image", vars.EtcdImage, `Image of etcd, only for docker/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
 `)
@@ -161,33 +165,35 @@ func runE(ctx context.Context, logger logger.Logger, flags *flagpole) error {
 	} else {
 		logger.Printf("Creating cluster %q", name)
 		err = rt.Init(ctx, runtime.Config{
-			Name:                        name,
-			KubeApiserverPort:           flags.KubeApiserverPort,
-			Workdir:                     workdir,
-			Runtime:                     flags.Runtime,
-			PrometheusImage:             flags.PrometheusImage,
-			EtcdImage:                   flags.EtcdImage,
-			KubeApiserverImage:          flags.KubeApiserverImage,
-			KubeControllerManagerImage:  flags.KubeControllerManagerImage,
-			KubeSchedulerImage:          flags.KubeSchedulerImage,
-			KwokControllerImage:         flags.KwokControllerImage,
-			KindNodeImage:               flags.KindNodeImage,
-			KubeApiserverBinary:         flags.KubeApiserverBinary,
-			KubeControllerManagerBinary: flags.KubeControllerManagerBinary,
-			KubeSchedulerBinary:         flags.KubeSchedulerBinary,
-			KwokControllerBinary:        flags.KwokControllerBinary,
-			EtcdBinary:                  flags.EtcdBinary,
-			EtcdBinaryTar:               flags.EtcdBinaryTar,
-			PrometheusBinary:            flags.PrometheusBinary,
-			PrometheusBinaryTar:         flags.PrometheusBinaryTar,
-			CacheDir:                    vars.CacheDir,
-			SecretPort:                  flags.SecurePort,
-			QuietPull:                   flags.QuietPull,
-			PrometheusPort:              flags.PrometheusPort,
-			FeatureGates:                flags.KubeFeatureGates,
-			RuntimeConfig:               flags.KubeRuntimeConfig,
-			AuditPolicy:                 flags.KubeAuditPolicy,
-			Authorization:               flags.KubeAuthorization,
+			Name:                         name,
+			KubeApiserverPort:            flags.KubeApiserverPort,
+			Workdir:                      workdir,
+			Runtime:                      flags.Runtime,
+			PrometheusImage:              flags.PrometheusImage,
+			EtcdImage:                    flags.EtcdImage,
+			KubeApiserverImage:           flags.KubeApiserverImage,
+			KubeControllerManagerImage:   flags.KubeControllerManagerImage,
+			KubeSchedulerImage:           flags.KubeSchedulerImage,
+			KwokControllerImage:          flags.KwokControllerImage,
+			KindNodeImage:                flags.KindNodeImage,
+			KubeApiserverBinary:          flags.KubeApiserverBinary,
+			KubeControllerManagerBinary:  flags.KubeControllerManagerBinary,
+			KubeSchedulerBinary:          flags.KubeSchedulerBinary,
+			KwokControllerBinary:         flags.KwokControllerBinary,
+			EtcdBinary:                   flags.EtcdBinary,
+			EtcdBinaryTar:                flags.EtcdBinaryTar,
+			PrometheusBinary:             flags.PrometheusBinary,
+			PrometheusBinaryTar:          flags.PrometheusBinaryTar,
+			CacheDir:                     vars.CacheDir,
+			SecretPort:                   flags.SecurePort,
+			QuietPull:                    flags.QuietPull,
+			DisableKubeScheduler:         flags.DisableKubeScheduler,
+			DisableKubeControllerManager: flags.DisableKubeControllerManager,
+			PrometheusPort:               flags.PrometheusPort,
+			FeatureGates:                 flags.KubeFeatureGates,
+			RuntimeConfig:                flags.KubeRuntimeConfig,
+			AuditPolicy:                  flags.KubeAuditPolicy,
+			Authorization:                flags.KubeAuthorization,
 		})
 		if err != nil {
 			logger.Printf("Failed to setup config %q: %v", name, err)

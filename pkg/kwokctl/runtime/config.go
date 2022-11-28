@@ -66,6 +66,10 @@ type Config struct {
 	// Pull image
 	QuietPull bool `json:"quiet_pull,omitempty"`
 
+	// Disable kube components
+	DisableKubeScheduler         bool `json:"disable_kube_scheduler,omitempty"`
+	DisableKubeControllerManager bool `json:"disable_kube_controller_manager,omitempty"`
+
 	// Feature gates of Kubernetes
 	FeatureGates string `json:"kube_feature_gates,omitempty"`
 

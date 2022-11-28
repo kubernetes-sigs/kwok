@@ -223,6 +223,29 @@ func (c *Cluster) Up(ctx context.Context) error {
 	// set the context in default kubeconfig
 	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", "kind-"+conf.Name)
 	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", "kind-"+conf.Name)
+
+	if conf.DisableKubeControllerManager {
+		// waiting for kwok-controller and other addons to be ready
+		// Fixme: use a better way to wait for pods to be ready when the kube-controller-manager is disabled
+		err = c.Kubectl(ctx, utils.IOStreams{
+			ErrOut: os.Stderr,
+		}, "-n", "kube-system", "wait", "deployment/kwok-controller", "--for", "condition=Available=true", "--timeout=5m")
+		if err != nil {
+			return err
+		}
+	}
+
+	if conf.DisableKubeScheduler {
+		if err := c.Stop(ctx, "kube-scheduler"); err != nil {
+			return err
+		}
+	}
+
+	if conf.DisableKubeControllerManager {
+		if err := c.Stop(ctx, "kube-controller-manager"); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

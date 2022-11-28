@@ -76,6 +76,12 @@ var (
 	// QuietPull is the flag to quiet the pull.
 	QuietPull = getEnvBool("KWOK_QUIET_PULL", false)
 
+	// DisableKubeScheduler is the flag to disable kube-scheduler.
+	DisableKubeScheduler = getEnvBool("KWOK_DISABLE_KUBE_SCHEDULER", false)
+
+	// DisableKubeControllerManager is the flag to disable kube-controller-manager.
+	DisableKubeControllerManager = getEnvBool("KWOK_DISABLE_KUBE_CONTROLLER_MANAGER", false)
+
 	// KubeImagePrefix is the prefix of the kubernetes image.
 	KubeImagePrefix = getEnv("KWOK_KUBE_IMAGE_PREFIX", "registry.k8s.io")
 
