@@ -312,8 +312,10 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 					}
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
+				if c.nodeHasFunc(pod.Spec.NodeName) {
 					// Recycling PodIP
 					c.reclaimPodIP(pod)
+				}
 				}
 			case <-ctx.Done():
 				watcher.Stop()
