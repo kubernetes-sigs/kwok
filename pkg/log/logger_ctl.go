@@ -29,12 +29,12 @@ import (
 )
 
 type ctlHandler struct {
-	level     slog.Level
-	output    io.Writer
-	attrs     []slog.Attr
-	groups    []string
-	groupsStr *string
-	fd        int
+	level    slog.Level
+	output   io.Writer
+	attrs    []slog.Attr
+	attrsStr *string
+	groups   []string
+	fd       int
 }
 
 func newCtlHandler(w io.Writer, fd int, level slog.Level) *ctlHandler {
@@ -53,46 +53,52 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 	if r.Level < c.level {
 		return nil
 	}
-	var err error
 
-	attrs := make([]string, 0, r.NumAttrs())
+	if c.attrsStr == nil {
+		attrs := make([]string, 0, len(c.attrs))
+		for _, attr := range c.attrs {
+			attrs = append(attrs, attr.Key+"="+quoteIfNeed(attr.Value.String()))
+		}
+		attrsStr := strings.Join(attrs, " ")
+		c.attrsStr = &attrsStr
+	}
+
+	attrs := make([]string, 0, r.NumAttrs()+1)
+	if c.attrsStr != nil {
+		attrs = append(attrs, *c.attrsStr)
+	}
 	r.Attrs(func(attr slog.Attr) {
-		attrs = append(attrs, attr.Key+"="+quoteIfNeed(attr.Value.String()))
+		if len(c.groups) == 0 {
+			attrs = append(attrs, attr.Key+"="+quoteIfNeed(attr.Value.String()))
+		} else {
+			attrs = append(attrs, strings.Join(append(c.groups, attr.Key), ".")+"="+quoteIfNeed(attr.Value.String()))
+		}
 	})
 
-	attrs = append(attrs, "time="+quoteIfNeed(r.Time.Format("04:05")))
 	attrsStr := ""
 	if len(attrs) != 0 {
-		attrsStr = " " + strings.Join(attrs, " ")
+		attrsStr = strings.Join(attrs, " ")
 	}
 
-	if c.groupsStr == nil {
-		groups := make([]string, 0, len(c.groups))
-		for _, group := range c.groups {
-			groups = append(groups, group)
-		}
-
-		groupsStr := ""
-		if len(groups) != 0 {
-			groupsStr = strings.Join(groups, " ") + " "
-		}
-		c.groupsStr = &groupsStr
-	}
-
-	msg := fmt.Sprintf("%s%s", *c.groupsStr, r.Message)
-	msgWidth := stringWidth(msg)
-	if r.Level != slog.InfoLevel {
-		c, ok := levelColour[r.Level.String()]
-		if ok {
-			msg = c.renderer + " " + msg
-			msgWidth += c.width + 1
-		}
-	}
-	termWidth, _, _ := term.GetSize(c.fd)
-	if termWidth > msgWidth {
-		_, err = fmt.Fprintf(c.output, "%s%*s\n", msg, termWidth-msgWidth, attrsStr)
+	msg := r.Message
+	var err error
+	if attrsStr == "" {
+		_, err = fmt.Fprintf(c.output, "%s\n", msg)
 	} else {
-		_, err = fmt.Fprintf(c.output, "%s%s\n", msg, attrsStr)
+		msgWidth := stringWidth(msg)
+		if r.Level != slog.InfoLevel {
+			c, ok := levelColour[r.Level.String()]
+			if ok {
+				msg = c.renderer + " " + msg
+				msgWidth += c.width + 1
+			}
+		}
+		termWidth, _, _ := term.GetSize(c.fd)
+		if termWidth > msgWidth {
+			_, err = fmt.Fprintf(c.output, "%s%*s\n", msg, termWidth-msgWidth, attrsStr)
+		} else {
+			_, err = fmt.Fprintf(c.output, "%s%s\n", msg, attrsStr)
+		}
 	}
 	return err
 }
@@ -118,7 +124,16 @@ var levelColour = map[string]colour{
 func (c *ctlHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	newAttrs := make([]slog.Attr, 0, len(c.attrs)+len(attrs))
 	newAttrs = append(newAttrs, c.attrs...)
-	newAttrs = append(newAttrs, attrs...)
+	if len(c.groups) == 0 {
+		newAttrs = append(newAttrs, attrs...)
+	} else {
+		for _, attr := range attrs {
+			newAttrs = append(newAttrs, slog.Attr{
+				Key:   strings.Join(append(c.groups, attr.Key), "."),
+				Value: attr.Value,
+			})
+		}
+	}
 	return &ctlHandler{
 		fd:     c.fd,
 		level:  c.level,
