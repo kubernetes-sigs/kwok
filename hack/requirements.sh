@@ -21,6 +21,8 @@ BUILDX_VERSION=0.8.2
 
 COMPOSE_VERSION=2.10.1
 
+NERDCTL_VERSION=1.0.0
+
 function command_exist() {
   local command="${1}"
   type "${command}" >/dev/null 2>&1
@@ -117,7 +119,7 @@ function install_kubectl() {
     chmod +x "/usr/local/bin/kubectl"
 
   if ! command_exist kubectl; then
-    echo kind is installed but not effective >&2
+    echo kubectl is installed but not effective >&2
     return 1
   fi
 
@@ -164,6 +166,25 @@ function install_compose() {
     echo docker-compose is installed but not effective >&2
     return 1
   fi
+}
+
+function install_nerdctl() {
+  if command_exist nerdctl; then
+    return 0
+  fi
+
+  wget -O /tmp/nerdctl.tar.gz "https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-full-${NERDCTL_VERSION}-$(runtime_os)-$(runtime_arch).tar.gz"
+  tar xvf /tmp/nerdctl.tar.gz -C /usr/local/
+
+  containerd-rootless-setuptool.sh install
+  rm /tmp/nerdctl.tar.gz
+
+  if ! command_exist nerdctl; then
+    echo nerdctl is installed but not effective >&2
+    return 1
+  fi
+
+  nerdctl version
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

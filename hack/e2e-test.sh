@@ -19,10 +19,15 @@ DIR="$(realpath "${DIR}")"
 
 test_dir=$(realpath "${DIR}"/../test)
 
-targets=()
+TARGETS=()
+SKIPS=()
 
 function all_cases() {
-  find "${test_dir}" -name '*.test.sh' | sed "s#^${test_dir}/##g" | sed "s#.test.sh\$##g" | sort
+  cases="$(find "${test_dir}" -name '*.test.sh' | sed "s#^${test_dir}/##g" | sed "s#.test.sh\$##g" | sort)"
+  for skip in "${SKIPS[@]}"; do
+    cases="$(echo "${cases}" | grep -v "${skip}" || :)"
+  done
+  echo "${cases}"
 }
 
 function usage() {
@@ -36,24 +41,31 @@ function usage() {
 
 function args() {
   if [[ "${#}" -ne 0 ]]; then
-    for arg in "${@}"; do
+    while [[ $# -gt 0 ]]; do
+      arg="$1"
       case ${arg} in
       --help)
         usage
         exit 0
         ;;
+      --skip | --skip=*)
+        [[ "${arg#*=}" != "${arg}" ]] && SKIPS+=("${arg#*=}") || { SKIPS+=("${2}") && shift; }
+        shift
+      ;;
       -*)
         echo "Error: Unknown argument: ${arg}"
         usage
         exit 1
         ;;
       *)
-        targets+=("${arg}")
+        TARGETS+=("${arg}")
+        shift
         ;;
       esac
     done
-  else
-    targets=(
+  fi
+  if [[ "${#TARGETS[@]}" == 0 ]]; then
+    TARGETS=(
       $(all_cases)
     )
   fi
@@ -61,7 +73,7 @@ function args() {
 
 function main() {
   local failed=()
-  for target in "${targets[@]}"; do
+  for target in "${TARGETS[@]}"; do
     echo "================================================================================"
     target="${target%.test.sh}"
     test="${test_dir}/${target}.test.sh"
