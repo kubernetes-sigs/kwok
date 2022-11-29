@@ -84,13 +84,13 @@ func TestPodController(t *testing.T) {
 		FuncMap:                               funcMap,
 		LockPodParallelism:                    2,
 		DeletePodParallelism:                  2,
-		Logger:                                log.NewLogger(os.Stderr, log.DebugLevel),
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new pods controller error: %w", err))
 	}
 
 	ctx := context.Background()
+	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.DebugLevel))
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	t.Cleanup(func() {
 		cancel()

@@ -27,11 +27,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/logs"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // NewCommand returns a new cobra.Command for root
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Args:          cobra.NoArgs,
 		Use:           "kwokctl [command]",
@@ -49,12 +48,12 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 	cmd.TraverseChildren = true
 
 	cmd.AddCommand(
-		create.NewCommand(logger),
-		del.NewCommand(logger),
-		get.NewCommand(logger),
-		kubectl.NewCommand(logger),
-		logs.NewCommand(logger),
-		snapshot.NewCommand(logger),
+		create.NewCommand(),
+		del.NewCommand(),
+		get.NewCommand(),
+		kubectl.NewCommand(),
+		logs.NewCommand(),
+		snapshot.NewCommand(),
 	)
 	return cmd
 }

@@ -20,11 +20,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete/cluster"
-	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // NewCommand returns a new cobra.Command for cluster creation
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "delete",
@@ -34,6 +33,6 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 			return cmd.Help()
 		},
 	}
-	cmd.AddCommand(cluster.NewCommand(logger))
+	cmd.AddCommand(cluster.NewCommand())
 	return cmd
 }

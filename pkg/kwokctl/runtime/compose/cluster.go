@@ -34,9 +34,9 @@ type Cluster struct {
 	*runtime.Cluster
 }
 
-func NewCluster(name, workdir string, logger *log.Logger) (runtime.Runtime, error) {
+func NewCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
-		Cluster: runtime.NewCluster(name, workdir, logger),
+		Cluster: runtime.NewCluster(name, workdir),
 	}, nil
 }
 
@@ -220,12 +220,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
+	logger := log.FromContext(ctx)
 	for _, image := range images {
 		err = utils.Exec(ctx, "", utils.IOStreams{}, conf.Runtime, "inspect",
 			image,
 		)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Pull image %s\n", image)
+			logger.Info("Pull image", "image", image)
 			err = utils.Exec(ctx, "", utils.IOStreams{
 				Out:    out,
 				ErrOut: out,
@@ -282,12 +283,14 @@ func (c *Cluster) Down(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	logger := log.FromContext(ctx)
 	args := []string{"compose", "down"}
 	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
 		ErrOut: os.Stderr,
 	}, conf.Runtime, args...)
 	if err != nil {
-		c.Logger().Error("Failed to down cluster", err)
+		logger.Error("Failed to down cluster", err)
 	}
 	return nil
 }

@@ -25,9 +25,10 @@ import (
 )
 
 func main() {
-	logger := log.NewLogger(os.Stdout, log.InfoLevel)
-	command := cmd.NewCommand(logger)
-	err := command.ExecuteContext(signals.SetupSignalContext())
+	command := cmd.NewCommand()
+	ctx := signals.SetupSignalContext()
+	ctx, logger := log.InitFlags(ctx, command.PersistentFlags())
+	err := command.ExecuteContext(ctx)
 	if err != nil {
 		logger.Error("Execute exit", err)
 		os.Exit(1)

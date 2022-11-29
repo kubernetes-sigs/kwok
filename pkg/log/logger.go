@@ -17,6 +17,7 @@ limitations under the License.
 package log
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -27,10 +28,19 @@ import (
 
 var IsTerminal = term.IsTerminal
 
-func NewLogger(w io.Writer, level Level) *Logger {
+func FromContext(ctx context.Context) *Logger {
+	return wrapSlog(slog.FromContext(ctx))
+}
+
+func NewContext(ctx context.Context, logger *Logger) context.Context {
+	return slog.NewContext(ctx, logger.log)
+}
+
+func NewLogger(w io.Writer, level slog.Level) *Logger {
 	if w == nil {
-		return Noop
+		return noop
 	}
+
 	if file, ok := w.(*os.File); ok {
 		fd := int(file.Fd())
 		if IsTerminal(fd) {

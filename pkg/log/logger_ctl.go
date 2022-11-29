@@ -83,11 +83,19 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 	msg := r.Message
 	var err error
 	if attrsStr == "" {
+		if r.Level != slog.InfoLevel {
+			levelStr := r.Level.String()
+			c, ok := levelColour[strings.SplitN(levelStr, "+", 2)[0]]
+			if ok {
+				msg = c.renderer + " " + msg
+			}
+		}
 		_, err = fmt.Fprintf(c.output, "%s\n", msg)
 	} else {
 		msgWidth := stringWidth(msg)
 		if r.Level != slog.InfoLevel {
-			c, ok := levelColour[r.Level.String()]
+			levelStr := r.Level.String()
+			c, ok := levelColour[strings.SplitN(levelStr, "+", 2)[0]]
 			if ok {
 				msg = c.renderer + " " + msg
 				msgWidth += c.width + 1

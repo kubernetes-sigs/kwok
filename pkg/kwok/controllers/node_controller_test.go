@@ -78,12 +78,12 @@ func TestNodeController(t *testing.T) {
 		NodeHeartbeatInterval:    1 * time.Second,
 		NodeHeartbeatParallelism: 2,
 		LockNodeParallelism:      2,
-		Logger:                   log.NewLogger(os.Stderr, log.DebugLevel),
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new nodes controller error: %v", err))
 	}
 	ctx := context.Background()
+	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.DebugLevel))
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	t.Cleanup(func() {
 		cancel()

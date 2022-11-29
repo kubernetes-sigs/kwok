@@ -56,7 +56,6 @@ type PodController struct {
 	nodeHasFunc                           func(nodeName string) bool
 	ipPool                                *ipPool
 	podStatusTemplate                     string
-	logger                                *log.Logger
 	renderer                              *renderer
 	lockPodChan                           chan *corev1.Pod
 	lockPodParallelism                    int
@@ -73,7 +72,6 @@ type PodControllerConfig struct {
 	CIDR                                  string
 	NodeHasFunc                           func(nodeName string) bool
 	PodStatusTemplate                     string
-	Logger                                *log.Logger
 	LockPodParallelism                    int
 	DeletePodParallelism                  int
 	FuncMap                               template.FuncMap
@@ -96,11 +94,6 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		return nil, err
 	}
 
-	logger := conf.Logger
-	if logger == nil {
-		logger = log.Noop
-	}
-
 	n := &PodController{
 		clientSet:                             conf.ClientSet,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
@@ -109,7 +102,6 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		cidrIPNet:                             cidrIPNet,
 		ipPool:                                newIPPool(cidrIPNet),
 		nodeHasFunc:                           conf.NodeHasFunc,
-		logger:                                logger,
 		podStatusTemplate:                     conf.PodStatusTemplate,
 		lockPodChan:                           make(chan *corev1.Pod),
 		lockPodParallelism:                    conf.LockPodParallelism,
@@ -144,10 +136,12 @@ func (c *PodController) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed watch pods: %w", err)
 	}
+
+	logger := log.FromContext(ctx)
 	go func() {
 		err = c.ListPods(ctx, c.lockPodChan, opt)
 		if err != nil {
-			c.logger.Error("Failed list pods", err)
+			logger.Error("Failed list pods", err)
 		}
 	}()
 	return nil
@@ -155,7 +149,8 @@ func (c *PodController) Start(ctx context.Context) error {
 
 // DeletePod deletes a pod
 func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
-	logger := c.logger.With(
+	logger := log.FromContext(ctx)
+	logger = logger.With(
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
@@ -186,12 +181,13 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 // DeletePods deletes pods from the channel
 func (c *PodController) DeletePods(ctx context.Context, pods <-chan *corev1.Pod) {
 	tasks := newParallelTasks(c.lockPodParallelism)
+	logger := log.FromContext(ctx)
 	for pod := range pods {
 		localPod := pod
 		tasks.Add(func() {
 			err := c.DeletePod(ctx, localPod)
 			if err != nil {
-				c.logger.Error("Failed to delete pod", err,
+				logger.Error("Failed to delete pod", err,
 					"pod", log.KObj(localPod),
 					"node", localPod.Spec.NodeName,
 				)
@@ -203,7 +199,8 @@ func (c *PodController) DeletePods(ctx context.Context, pods <-chan *corev1.Pod)
 
 // LockPod locks a given pod
 func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
-	logger := c.logger.With(
+	logger := log.FromContext(ctx)
+	logger = logger.With(
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
@@ -231,13 +228,14 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 
 // LockPods locks a pods from the channel
 func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
+	logger := log.FromContext(ctx)
 	tasks := newParallelTasks(c.lockPodParallelism)
 	for pod := range pods {
 		localPod := pod
 		tasks.Add(func() {
 			err := c.LockPod(ctx, localPod)
 			if err != nil {
-				c.logger.Error("Failed to lock pod", err,
+				logger.Error("Failed to lock pod", err,
 					"pod", log.KObj(localPod),
 					"node", localPod.Spec.NodeName,
 				)
@@ -273,6 +271,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 		return err
 	}
 
+	logger := log.FromContext(ctx)
 	go func() {
 		rc := watcher.ResultChan()
 	loop:
@@ -287,7 +286,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 							continue loop
 						}
 
-						c.logger.Error("Failed to watch pods", err)
+						logger.Error("Failed to watch pods", err)
 						select {
 						case <-ctx.Done():
 							break loop
@@ -301,7 +300,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 					if c.needLockPod(pod) {
 						lockChan <- pod.DeepCopy()
 					} else {
-						c.logger.Info("Skip pod",
+						logger.Info("Skip pod",
 							"reason", "not manage",
 							"event", event.Type,
 							"pod", log.KObj(pod),
@@ -316,7 +315,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 						if c.nodeHasFunc(pod.Spec.NodeName) {
 							deleteChan <- pod.DeepCopy()
 						} else {
-							c.logger.Info("Skip pod",
+							logger.Info("Skip pod",
 								"reason", "not manage",
 								"event", event.Type,
 								"pod", log.KObj(pod),
@@ -327,7 +326,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 						if c.needLockPod(pod) {
 							lockChan <- pod.DeepCopy()
 						} else {
-							c.logger.Info("Skip pod",
+							logger.Info("Skip pod",
 								"reason", "not manage",
 								"event", event.Type,
 								"pod", log.KObj(pod),
@@ -349,7 +348,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 				break loop
 			}
 		}
-		c.logger.Info("Stop watch pods")
+		logger.Info("Stop watch pods")
 	}()
 
 	return nil

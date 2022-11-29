@@ -17,6 +17,7 @@ limitations under the License.
 package clusters
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -27,25 +28,26 @@ import (
 )
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "clusters",
 		Short: "Lists existing clusters by their name",
 		Long:  "Lists existing clusters by their name",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runE(logger)
+			return runE(cmd.Context())
 		},
 	}
 	return cmd
 }
 
-func runE(logger *log.Logger) error {
+func runE(ctx context.Context) error {
 	clusters, err := runtime.ListClusters(vars.ClustersDir)
 	if err != nil {
 		return err
 	}
 	if len(clusters) == 0 {
+		logger := log.FromContext(ctx)
 		logger.Info("No clusters found")
 	} else {
 		for _, cluster := range clusters {
