@@ -41,6 +41,11 @@ if [[ "${VERIFY_GO_FORMAT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-go-format.sh || failed+=(go-format)
 fi
 
+if [[ "${ROOT_DIR:-true}" == "true" ]]; then
+  echo "[*] Verifying help command..."
+  "${ROOT_DIR}"/hack/verify-help-command.sh || failed+=(help-command)
+fi
+
 # exit based on verify scripts
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Verify failed for: ${failed[*]}"
