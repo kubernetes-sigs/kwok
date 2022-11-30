@@ -17,6 +17,7 @@ limitations under the License.
 package k8s
 
 import (
+	"math"
 	"os"
 	"runtime"
 )
@@ -44,11 +45,14 @@ var etcdVersions = map[int]string{
 }
 
 func GetEtcdVersion(version int) string {
+	if version < 0 {
+		return "unknown"
+	}
 	v, ok := etcdVersions[version]
 	if ok {
 		return v
 	}
-	min, max := ^0, 0
+	min, max := math.MaxInt, 0
 	for k := range etcdVersions {
 		if k < min {
 			min = k
@@ -56,6 +60,11 @@ func GetEtcdVersion(version int) string {
 		if k > max {
 			max = k
 		}
+	}
+	if version > max {
+		version = max
+	} else if version < min {
+		version = min
 	}
 	return etcdVersions[version]
 }

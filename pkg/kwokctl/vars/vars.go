@@ -251,11 +251,11 @@ func joinImageURI(prefix, name, version string) string {
 func parseRelease(version string) int {
 	release := strings.Split(version, ".")
 	if len(release) < 2 {
-		return 0
+		return -1
 	}
 	r, err := strconv.ParseInt(release[1], 10, 64)
 	if err != nil {
-		return 0
+		return -1
 	}
 	return int(r)
 }
