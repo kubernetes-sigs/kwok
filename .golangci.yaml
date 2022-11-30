@@ -15,9 +15,9 @@ linters:
     - goimports
     - goprintffuncname
     # - gosec
-    # - gosimple
+    - gosimple
     - govet
-    # - importas
+    - importas
     - ineffassign
     - misspell
     - nakedret

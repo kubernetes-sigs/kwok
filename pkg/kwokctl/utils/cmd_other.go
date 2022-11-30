@@ -45,8 +45,5 @@ func isRunning(pid int) bool {
 		return false
 	}
 	err = process.Signal(syscall.Signal(0))
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
