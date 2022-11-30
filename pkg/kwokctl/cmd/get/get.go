@@ -22,11 +22,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get/artifacts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get/clusters"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get/kubeconfig"
-	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // NewCommand returns a new cobra.Command for get
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "get",
@@ -37,8 +36,8 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 		},
 	}
 	// add subcommands
-	cmd.AddCommand(clusters.NewCommand(logger))
-	cmd.AddCommand(artifacts.NewCommand(logger))
-	cmd.AddCommand(kubeconfig.NewCommand(logger))
+	cmd.AddCommand(clusters.NewCommand())
+	cmd.AddCommand(artifacts.NewCommand())
+	cmd.AddCommand(kubeconfig.NewCommand())
 	return cmd
 }

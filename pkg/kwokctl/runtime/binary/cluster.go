@@ -40,9 +40,9 @@ type Cluster struct {
 	*runtime.Cluster
 }
 
-func NewCluster(name, workdir string, logger *log.Logger) (runtime.Runtime, error) {
+func NewCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
-		Cluster: runtime.NewCluster(name, workdir, logger),
+		Cluster: runtime.NewCluster(name, workdir),
 	}, nil
 }
 
@@ -488,9 +488,10 @@ func (c *Cluster) Up(ctx context.Context) error {
 		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
 	}
 
+	logger := log.FromContext(ctx)
 	err = c.Update(ctx, conf)
 	if err != nil {
-		c.Logger().Error("Failed to update cluster", err)
+		logger.Error("Failed to update cluster", err)
 	}
 	return nil
 }
@@ -529,6 +530,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 		componentPaths = append(componentPaths, prometheusPath)
 	}
 
+	logger := log.FromContext(ctx)
 	var wg sync.WaitGroup
 	for _, path := range componentPaths {
 		wg.Add(1)
@@ -536,7 +538,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 			defer wg.Done()
 			err = utils.ForkExecKill(ctx, conf.Workdir, path)
 			if err != nil {
-				c.Logger().Error("Failed to kill", err,
+				logger.Error("Failed to kill", err,
 					"component", filepath.Base(path),
 				)
 			}
@@ -546,14 +548,14 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 	err = utils.ForkExecKill(ctx, conf.Workdir, kubeApiserverPath)
 	if err != nil {
-		c.Logger().Error("Failed to kill", err,
+		logger.Error("Failed to kill", err,
 			"component", "kube-apiserver",
 		)
 	}
 
 	err = utils.ForkExecKill(ctx, conf.Workdir, etcdPath)
 	if err != nil {
-		c.Logger().Error("Failed to kill", err,
+		logger.Error("Failed to kill", err,
 			"component", "etcd",
 		)
 	}

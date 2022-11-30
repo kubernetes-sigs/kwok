@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // SnapshotSave save the snapshot of cluster
@@ -35,6 +36,8 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 		return err
 	}
 
+	logger := log.FromContext(ctx)
+
 	// Save to /var/lib/etcd/snapshot.db on container of Kind use Kubectl
 	// Why this path, etcd is just the volume /var/lib/etcd/ in container of Kind.
 	tmpFile := "/var/lib/etcd/snapshot.db"
@@ -45,7 +48,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 	defer func() {
 		err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "exec", "-i", kindName, "rm", "-f", tmpFile)
 		if err != nil {
-			c.Logger().Error("Failed to clean snapshot", err)
+			logger.Error("Failed to clean snapshot", err)
 		}
 	}()
 
@@ -79,14 +82,15 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		return err
 	}
 
+	logger := log.FromContext(ctx)
 	err = c.Stop(ctx, "etcd")
 	if err != nil {
-		c.Logger().Error("Failed to stop etcd", err)
+		logger.Error("Failed to stop etcd", err)
 	}
 	defer func() {
 		err = c.Start(ctx, "etcd")
 		if err != nil {
-			c.Logger().Error("Failed to start etcd", err)
+			logger.Error("Failed to start etcd", err)
 		}
 	}()
 

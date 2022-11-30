@@ -35,9 +35,9 @@ type Cluster struct {
 	*runtime.Cluster
 }
 
-func NewCluster(name, workdir string, logger *log.Logger) (runtime.Runtime, error) {
+func NewCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
-		Cluster: runtime.NewCluster(name, workdir, logger),
+		Cluster: runtime.NewCluster(name, workdir),
 	}, nil
 }
 
@@ -125,12 +125,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
+	logger := log.FromContext(ctx)
 	for _, image := range images {
 		err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "inspect",
 			image,
 		)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Pull image %s\n", image)
+			logger.Info("Pull image", "image", image)
 			err = utils.Exec(ctx, "", utils.IOStreams{
 				Out:    out,
 				ErrOut: out,
@@ -259,11 +260,12 @@ func (c *Cluster) Down(ctx context.Context) error {
 	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name+".cluster")
 	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name+".user")
 
+	logger := log.FromContext(ctx)
 	err = utils.Exec(ctx, "", utils.IOStreams{
 		ErrOut: os.Stderr,
 	}, conf.Runtime, "delete", "cluster", "--name", conf.Name)
 	if err != nil {
-		c.Logger().Error("Failed to delete cluster", err)
+		logger.Error("Failed to delete cluster", err)
 	}
 
 	return nil

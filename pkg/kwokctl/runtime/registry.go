@@ -19,11 +19,9 @@ package runtime
 import (
 	"fmt"
 	"sort"
-
-	"sigs.k8s.io/kwok/pkg/log"
 )
 
-type BuildRuntime func(name, workdir string, logger *log.Logger) (Runtime, error)
+type BuildRuntime func(name, workdir string) (Runtime, error)
 
 var DefaultRegistry = NewRegistry()
 
@@ -49,8 +47,8 @@ func (r *Registry) Get(name string) (BuildRuntime, bool) {
 }
 
 // Load a runtime
-func (r *Registry) Load(name, workdir string, logger *log.Logger) (Runtime, error) {
-	cluster := NewCluster(name, workdir, logger)
+func (r *Registry) Load(name, workdir string) (Runtime, error) {
+	cluster := NewCluster(name, workdir)
 	conf, err := cluster.Load()
 	if err != nil {
 		return nil, err
@@ -59,7 +57,7 @@ func (r *Registry) Load(name, workdir string, logger *log.Logger) (Runtime, erro
 	if !ok {
 		return nil, fmt.Errorf("not found runtime %q", conf.Runtime)
 	}
-	return buildRuntime(name, workdir, logger)
+	return buildRuntime(name, workdir)
 }
 
 // List all registered runtime

@@ -51,7 +51,6 @@ type NodeController struct {
 	nodeHeartbeatTemplate                 string
 	nodeStatusTemplate                    string
 	renderer                              *renderer
-	logger                                *log.Logger
 	nodeHeartbeatInterval                 time.Duration
 	nodeHeartbeatParallelism              int
 	lockNodeParallelism                   int
@@ -70,7 +69,6 @@ type NodeControllerConfig struct {
 	NodeIP                                string
 	NodeStatusTemplate                    string
 	NodeHeartbeatTemplate                 string
-	Logger                                *log.Logger
 	NodeHeartbeatInterval                 time.Duration
 	NodeHeartbeatParallelism              int
 	LockNodeParallelism                   int
@@ -89,10 +87,6 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		return nil, err
 	}
 
-	logger := conf.Logger
-	if logger == nil {
-		logger = log.Noop
-	}
 	n := &NodeController{
 		clientSet:                             conf.ClientSet,
 		nodeSelectorFunc:                      conf.NodeSelectorFunc,
@@ -103,7 +97,6 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
 		nodeIP:                                conf.NodeIP,
 		nodesSets:                             newStringSets(),
-		logger:                                logger,
 		nodeHeartbeatTemplate:                 conf.NodeHeartbeatTemplate,
 		nodeStatusTemplate:                    conf.NodeStatusTemplate + "\n" + conf.NodeHeartbeatTemplate,
 		nodeHeartbeatInterval:                 conf.NodeHeartbeatInterval,
@@ -138,10 +131,11 @@ func (c *NodeController) Start(ctx context.Context) error {
 		return fmt.Errorf("failed watch node: %w", err)
 	}
 
+	logger := log.FromContext(ctx)
 	go func() {
 		err = c.ListNodes(ctx, c.nodeChan, opt)
 		if err != nil {
-			c.logger.Error("Failed list node", err)
+			logger.Error("Failed list node", err)
 		}
 	}()
 
@@ -163,12 +157,13 @@ func (c *NodeController) heartbeatNode(ctx context.Context, nodeName string) err
 }
 
 func (c *NodeController) allHeartbeatNode(ctx context.Context, nodes []string, tasks *parallelTasks) {
+	logger := log.FromContext(ctx)
 	for _, node := range nodes {
 		localNode := node
 		tasks.Add(func() {
 			err := c.heartbeatNode(ctx, localNode)
 			if err != nil {
-				c.logger.Error("Failed to heartbeat", err,
+				logger.Error("Failed to heartbeat", err,
 					"node", localNode,
 				)
 			}
@@ -180,6 +175,7 @@ func (c *NodeController) allHeartbeatNode(ctx context.Context, nodes []string, t
 func (c *NodeController) KeepNodeHeartbeat(ctx context.Context) {
 	th := time.NewTimer(c.nodeHeartbeatInterval)
 	tasks := newParallelTasks(c.nodeHeartbeatParallelism)
+	logger := log.FromContext(ctx)
 	var heartbeatStartTime time.Time
 	var nodes []string
 loop:
@@ -194,13 +190,13 @@ loop:
 			heartbeatStartTime = time.Now()
 			c.allHeartbeatNode(ctx, nodes, tasks)
 			tasks.Wait()
-			c.logger.Info("Heartbeat nodes",
+			logger.Info("Heartbeat nodes",
 				"nodeSize", len(nodes),
 				"took", time.Since(heartbeatStartTime),
 			)
 			th.Reset(c.nodeHeartbeatInterval)
 		case <-ctx.Done():
-			c.logger.Info("Stop keep nodes heartbeat")
+			logger.Info("Stop keep nodes heartbeat")
 			break loop
 		}
 	}
@@ -233,6 +229,8 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 	if err != nil {
 		return err
 	}
+
+	logger := log.FromContext(ctx)
 	go func() {
 		rc := watcher.ResultChan()
 	loop:
@@ -247,7 +245,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 							continue loop
 						}
 
-						c.logger.Error("Failed to watch nodes", err)
+						logger.Error("Failed to watch nodes", err)
 						select {
 						case <-ctx.Done():
 							break loop
@@ -275,7 +273,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 				break loop
 			}
 		}
-		c.logger.Info("Stop watch nodes")
+		logger.Info("Stop watch nodes")
 	}()
 	return nil
 }
@@ -302,6 +300,7 @@ func (c *NodeController) ListNodes(ctx context.Context, ch chan<- string, opt me
 // if they exist we manage them
 func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan string) {
 	tasks := newParallelTasks(c.lockNodeParallelism)
+	logger := log.FromContext(ctx)
 	for node := range nodes {
 		if node == "" {
 			continue
@@ -310,7 +309,7 @@ func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan string) {
 		tasks.Add(func() {
 			err := c.LockNode(ctx, localNode)
 			if err != nil {
-				c.logger.Error("Failed to lock node", err,
+				logger.Error("Failed to lock node", err,
 					"node", localNode,
 				)
 				return
@@ -318,7 +317,7 @@ func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan string) {
 			if c.lockPodsOnNodeFunc != nil {
 				err = c.lockPodsOnNodeFunc(ctx, localNode)
 				if err != nil {
-					c.logger.Error("Failed to lock pods on node", err,
+					logger.Error("Failed to lock pods on node", err,
 						"node", localNode,
 					)
 					return
@@ -347,7 +346,8 @@ func (c *NodeController) LockNode(ctx context.Context, nodeName string) error {
 	if err != nil {
 		return err
 	}
-	c.logger.Info("Lock node",
+	logger := log.FromContext(ctx)
+	logger.Info("Lock node",
 		"node", nodeName,
 	)
 	return nil

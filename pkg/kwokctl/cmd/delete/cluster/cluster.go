@@ -33,7 +33,7 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for cluster creation
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -42,19 +42,21 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 		Long:  "Deletes a cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
-			return runE(cmd.Context(), logger, flags)
+			return runE(cmd.Context(), flags)
 		},
 	}
 	return cmd
 }
 
-func runE(ctx context.Context, logger *log.Logger, flags *flagpole) error {
+func runE(ctx context.Context, flags *flagpole) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
 
+	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", flags.Name)
+	ctx = log.NewContext(ctx, logger)
 
-	rt, err := runtime.DefaultRegistry.Load(name, workdir, logger)
+	rt, err := runtime.DefaultRegistry.Load(name, workdir)
 	if err != nil {
 		return err
 	}

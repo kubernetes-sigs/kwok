@@ -26,6 +26,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string, match string, mode fs.FileMode, quiet bool, clean bool) error {
@@ -128,7 +130,9 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 	}
 	switch u.Scheme {
 	case "http", "https":
-		fmt.Fprintf(os.Stderr, "Download %s\n", src)
+
+		logger := log.FromContext(ctx)
+		logger.Info("Download", "uri", src)
 
 		cli := &http.Client{}
 		req, err := http.NewRequest("GET", u.String(), nil)

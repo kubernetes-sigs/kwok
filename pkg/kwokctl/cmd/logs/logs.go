@@ -35,7 +35,7 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.ExactArgs(1),
@@ -44,18 +44,22 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 		Long:  "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
-			return runE(cmd.Context(), logger, flags, args)
+			return runE(cmd.Context(), flags, args)
 		},
 	}
 	cmd.Flags().BoolVarP(&flags.Follow, "follow", "f", false, "Specify if the logs should be streamed")
 	return cmd
 }
 
-func runE(ctx context.Context, logger *log.Logger, flags *flagpole, args []string) error {
+func runE(ctx context.Context, flags *flagpole, args []string) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
 
-	rt, err := runtime.DefaultRegistry.Load(name, workdir, logger)
+	logger := log.FromContext(ctx)
+	logger = logger.With("cluster", flags.Name)
+	ctx = log.NewContext(ctx, logger)
+
+	rt, err := runtime.DefaultRegistry.Load(name, workdir)
 	if err != nil {
 		return err
 	}

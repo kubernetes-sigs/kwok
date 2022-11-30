@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // SnapshotSave save the snapshot of cluster
@@ -64,14 +65,16 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		return err
 	}
 
+	logger := log.FromContext(ctx)
+
 	err = c.Stop(ctx, "etcd")
 	if err != nil {
-		c.Logger().Error("Failed to stop etcd", err)
+		logger.Error("Failed to stop etcd", err)
 	}
 	defer func() {
 		err = c.Start(ctx, "etcd")
 		if err != nil {
-			c.Logger().Error("Failed to start etcd", err)
+			logger.Error("Failed to start etcd", err)
 		}
 	}()
 

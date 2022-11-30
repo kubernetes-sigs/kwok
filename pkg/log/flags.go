@@ -14,25 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package create
+package log
 
 import (
-	"github.com/spf13/cobra"
+	"context"
+	"os"
 
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create/cluster"
+	"github.com/spf13/pflag"
 )
 
-// NewCommand returns a new cobra.Command for cluster creation
-func NewCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "create",
-		Short: "Creates one of [cluster]",
-		Long:  "Creates one of [cluster]",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Help()
-		},
+func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, *Logger) {
+	v := flags.IntP("v", "v", 0, "number for the log level verbosity")
+	if !flags.Parsed() {
+		flags.Parse(os.Args[1:])
 	}
-	cmd.AddCommand(cluster.NewCommand())
-	return cmd
+	logger := NewLogger(os.Stdout, Level(*v))
+	return NewContext(ctx, logger), logger
 }

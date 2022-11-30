@@ -37,7 +37,7 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -46,7 +46,7 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 		Long:  "Lists binaries or images used by cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
-			return runE(cmd.Context(), logger, flags)
+			return runE(cmd.Context(), flags)
 		},
 	}
 	cmd.Flags().StringVar(&flags.Runtime, "runtime", vars.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
@@ -54,16 +54,20 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 	return cmd
 }
 
-func runE(ctx context.Context, logger *log.Logger, flags *flagpole) error {
+func runE(ctx context.Context, flags *flagpole) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
+
+	logger := log.FromContext(ctx)
+	logger = logger.With("cluster", flags.Name)
+	ctx = log.NewContext(ctx, logger)
 
 	buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Runtime)
 	if !ok {
 		return fmt.Errorf("runtime %q not found", flags.Runtime)
 	}
 
-	rt, err := buildRuntime(name, workdir, logger)
+	rt, err := buildRuntime(name, workdir)
 	if err != nil {
 		return err
 	}

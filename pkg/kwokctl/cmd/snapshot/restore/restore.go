@@ -35,7 +35,7 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command to save the cluster as a snapshot.
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -44,7 +44,7 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 		Long:  "Restore the snapshot of the cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
-			return runE(cmd.Context(), logger, flags)
+			return runE(cmd.Context(), flags)
 		},
 	}
 	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the snapshot")
@@ -52,15 +52,18 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 	return cmd
 }
 
-func runE(ctx context.Context, logger *log.Logger, flags *flagpole) error {
+func runE(ctx context.Context, flags *flagpole) error {
 	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
 	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
-
 	if flags.Path == "" {
 		return fmt.Errorf("path is required")
 	}
 
-	rt, err := runtime.DefaultRegistry.Load(name, workdir, logger)
+	logger := log.FromContext(ctx)
+	logger = logger.With("cluster", flags.Name)
+	ctx = log.NewContext(ctx, logger)
+
+	rt, err := runtime.DefaultRegistry.Load(name, workdir)
 	if err != nil {
 		return err
 	}

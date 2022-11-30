@@ -41,7 +41,7 @@ import (
 )
 
 // NewCommand returns a new cobra.Command for root
-func NewCommand(logger *log.Logger) *cobra.Command {
+func NewCommand() *cobra.Command {
 	var (
 		// The default IP assigned to the Pod on maintained Nodes.
 		cidr = "10.0.0.1/24"
@@ -84,8 +84,9 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 			}
 
 			ctx := cmd.Context()
+			logger := log.FromContext(ctx)
 
-			clientset, err := newClientset(logger, master, kubeconfig)
+			clientset, err := newClientset(ctx, master, kubeconfig)
 			if err != nil {
 				return err
 			}
@@ -135,7 +136,6 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 				DisregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 				CIDR:                                  cidr,
 				NodeIP:                                nodeIP.String(),
-				Logger:                                logger,
 				PodStatusTemplate:                     templates.DefaultPodStatusTemplate,
 				NodeHeartbeatTemplate:                 templates.DefaultNodeHeartbeatTemplate,
 				NodeInitializationTemplate:            templates.DefaultNodeStatusTemplate,
@@ -145,7 +145,7 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 			}
 
 			if serverAddress != "" {
-				go Serve(ctx, serverAddress, logger)
+				go Serve(ctx, serverAddress)
 			}
 
 			err = ctr.Start(ctx)
@@ -172,7 +172,7 @@ func NewCommand(logger *log.Logger) *cobra.Command {
 	return cmd
 }
 
-func Serve(ctx context.Context, address string, logger *log.Logger) {
+func Serve(ctx context.Context, address string) {
 	promHandler := promhttp.Handler()
 	svc := &http.Server{
 		BaseContext: func(_ net.Listener) context.Context {
@@ -191,6 +191,7 @@ func Serve(ctx context.Context, address string, logger *log.Logger) {
 		}),
 	}
 
+	logger := log.FromContext(ctx)
 	err := svc.ListenAndServe()
 	if err != nil {
 		logger.Error("Fatal start server", err)
@@ -199,8 +200,9 @@ func Serve(ctx context.Context, address string, logger *log.Logger) {
 }
 
 // buildConfigFromFlags is a helper function that builds configs from a master url or a kubeconfig filepath.
-func buildConfigFromFlags(logger *log.Logger, masterUrl, kubeconfigPath string) (*restclient.Config, error) {
+func buildConfigFromFlags(ctx context.Context, masterUrl, kubeconfigPath string) (*restclient.Config, error) {
 	if kubeconfigPath == "" && masterUrl == "" {
+		logger := log.FromContext(ctx)
 		logger.Warn("Neither --kubeconfig nor --master was specified")
 		logger.Info("Using the inClusterConfig")
 		kubeconfig, err := restclient.InClusterConfig()
@@ -215,8 +217,8 @@ func buildConfigFromFlags(logger *log.Logger, masterUrl, kubeconfigPath string) 
 		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}}).ClientConfig()
 }
 
-func newClientset(logger *log.Logger, master, kubeconfig string) (kubernetes.Interface, error) {
-	cfg, err := buildConfigFromFlags(logger, master, kubeconfig)
+func newClientset(ctx context.Context, master, kubeconfig string) (kubernetes.Interface, error) {
+	cfg, err := buildConfigFromFlags(ctx, master, kubeconfig)
 	if err != nil {
 		return nil, err
 	}
