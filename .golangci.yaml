@@ -28,11 +28,11 @@ linters:
     # - rowserrcheck
     # - staticcheck
     # - stylecheck
-    # - typecheck
+    - typecheck
     - unconvert
     - unparam
     - unused
-    # - whitespace
+    - whitespace
 
 linters-settings:
   ifshort:
