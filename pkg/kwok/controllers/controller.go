@@ -48,7 +48,7 @@ var (
 			data := string(d)
 			if len(indent) == 1 && indent[0] > 0 {
 				pad := strings.Repeat(" ", indent[0]*2)
-				data = strings.Replace("\n"+data, "\n", "\n"+pad, -1)
+				data = strings.ReplaceAll("\n"+data, "\n", "\n"+pad)
 			}
 			return data, nil
 		},

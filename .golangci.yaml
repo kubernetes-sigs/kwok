@@ -9,7 +9,7 @@ linters:
     # - errorlint
     - exportloopref
     - goconst
-    # - gocritic
+    - gocritic
     # - gocyclo
     - gofmt
     - goimports

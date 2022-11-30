@@ -328,8 +328,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 		conf.KubeControllerManagerPort = kubeControllerManagerPort
 	}
-	if conf.SecretPort {
-		if conf.PrometheusPort != 0 {
+	if conf.PrometheusPort != 0 {
+		if conf.SecretPort {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--bind-address",
 				localAddress,
@@ -338,17 +338,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 				"--authorization-always-allow-paths",
 				"/healthz,/readyz,/livez,/metrics",
 			)
-		}
-		if conf.Authorization {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--root-ca-file",
-				caCertPath,
-				"--service-account-private-key-file",
-				adminKeyPath,
-			)
-		}
-	} else {
-		if conf.PrometheusPort != 0 {
+		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--address",
 				localAddress,
@@ -358,6 +348,15 @@ func (c *Cluster) Up(ctx context.Context) error {
 				"0",
 			)
 		}
+	}
+
+	if conf.Authorization {
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			"--root-ca-file",
+			caCertPath,
+			"--service-account-private-key-file",
+			adminKeyPath,
+		)
 	}
 
 	kubeSchedulerArgs := []string{

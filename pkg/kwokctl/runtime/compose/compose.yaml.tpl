@@ -124,28 +124,26 @@ services:
       - --feature-gates
       - {{ .FeatureGates }}
 {{ end }}
+{{ if .PrometheusPort }}
 {{ if .SecretPort }}
-{{ if .PrometheusPath }}
       - --bind-address
       - 0.0.0.0
       - --secure-port
       - "10257"
       - --authorization-always-allow-paths
       - /healthz,/readyz,/livez,/metrics
+{{ else }}
+      - --address
+      - 0.0.0.0
+      - --port
+      - "10252"
+{{ end }}
 {{ end }}
 {{ if .Authorization }}
       - --root-ca-file
       - {{ .InClusterCACertPath }}
       - --service-account-private-key-file
       - {{ .InClusterAdminKeyPath }}
-{{ end }}
-{{ else }}
-{{ if .PrometheusPath }}
-      - --address
-      - 0.0.0.0
-      - --port
-      - "10252"
-{{ end }}
 {{ end }}
     volumes:
       - {{ .KubeconfigPath }}:{{ .InClusterKubeconfigPath }}:ro
