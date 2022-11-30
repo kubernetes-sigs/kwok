@@ -24,11 +24,11 @@ import (
 	"os/exec"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
-
 	"github.com/nxadm/tail"
 	"sigs.k8s.io/yaml"
+
+	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
+	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 )
 
 var (

@@ -18,9 +18,10 @@ package k8s
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"text/template"
+
+	_ "embed"
 )
 
 //go:embed kubeconfig.yaml.tpl

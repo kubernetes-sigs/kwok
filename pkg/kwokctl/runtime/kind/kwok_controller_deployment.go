@@ -18,10 +18,11 @@ package kind
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"strings"
 	"text/template"
+
+	_ "embed"
 )
 
 //go:generate kubectl kustomize -o kwok_controller_deployment.yaml.tpl .
