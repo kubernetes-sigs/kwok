@@ -83,7 +83,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.SecretPort {
 		err := pki.GeneratePki(pkiPath)
 		if err != nil {
-			return fmt.Errorf("failed to generate pki: %s", err)
+			return fmt.Errorf("failed to generate pki: %w", err)
 		}
 		caCertPath = utils.PathJoin(pkiPath, "ca.crt")
 		adminKeyPath = utils.PathJoin(pkiPath, "admin.key")
@@ -106,11 +106,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 			AdminKeyPath: inClusterAdminKeyPath,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to generate prometheus yaml: %s", err)
+			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
 		}
 		err = os.WriteFile(prometheusPath, []byte(prometheusData), 0644)
 		if err != nil {
-			return fmt.Errorf("failed to write prometheus yaml: %s", err)
+			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
 	}
 
