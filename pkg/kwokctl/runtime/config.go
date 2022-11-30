@@ -56,6 +56,7 @@ type Config struct {
 	EtcdBinaryTar               string `json:"etcd_binary_tar,omitempty"`
 	PrometheusBinary            string `json:"prometheus_binary,omitempty"`
 	PrometheusBinaryTar         string `json:"prometheus_binary_tar,omitempty"`
+	DockerComposeBinary         string `json:"docker_compose_binary,omitempty"`
 
 	// Cache directory
 	CacheDir string `json:"cache_dir,omitempty"`

@@ -70,6 +70,9 @@ var (
 	// PrometheusVersion is the version of Prometheus to use.
 	PrometheusVersion = addPrefixV(getEnv("KWOK_PROMETHEUS_VERSION", "v2.35.0"))
 
+	// DockerComposeVersion is the version of docker-compose to use.
+	DockerComposeVersion = addPrefixV(getEnv("KWOK_DOCKER_COMPOSE_VERSION", "v2.13.0"))
+
 	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
 	SecurePort = getEnvBool("KWOK_SECURE_PORT", parseRelease(KubeVersion) > 19)
 
@@ -169,6 +172,12 @@ var (
 		}
 		return "tar.gz"
 	}())
+
+	// DockerComposeBinaryPrefix is the binary of docker-compose.
+	DockerComposeBinaryPrefix = getEnv("KWOK_DOCKER_COMPOSE_BINARY_PREFIX", "https://github.com/docker/compose/releases/download/"+DockerComposeVersion)
+
+	// DockerComposeBinary is the binary of Docker compose.
+	DockerComposeBinary = getEnv("KWOK_DOCKER_COMPOSE_BINARY", DockerComposeBinaryPrefix+"/docker-compose-"+runtime.GOOS+"-"+archAlias(runtime.GOARCH)+BinSuffix)
 
 	BinSuffix = func() string {
 		if runtime.GOOS == "windows" {
@@ -289,4 +298,19 @@ func addPrefixV(version string) string {
 		return version
 	}
 	return "v" + version
+}
+
+var archMapping = map[string]string{
+	"arm64": "aarch64",
+	"arm":   "armv7",
+	"amd64": "x86_64",
+	"386":   "x86",
+}
+
+// archAlias returns the alias of the given arch
+func archAlias(arch string) string {
+	if v, ok := archMapping[arch]; ok {
+		return v
+	}
+	return arch
 }
