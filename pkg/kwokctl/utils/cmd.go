@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 func ForkExec(ctx context.Context, dir string, name string, arg ...string) error {
@@ -100,7 +102,14 @@ func ForkExecRestart(ctx context.Context, dir string, name string) error {
 
 func ForkExecKill(ctx context.Context, dir string, name string) error {
 	pidPath := PathJoin(dir, "pids", filepath.Base(name)+".pid")
-	if _, err := os.Stat(pidPath); err != nil {
+	_, err := os.Stat(pidPath)
+	if err != nil {
+		// No pid file exists, which means the process has been terminated
+		logger := log.FromContext(ctx)
+		logger.Debug("Stat file",
+			"path", pidPath,
+			"err", err,
+		)
 		return nil
 	}
 	raw, err := os.ReadFile(pidPath)
