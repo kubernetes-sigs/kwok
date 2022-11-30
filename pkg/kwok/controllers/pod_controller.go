@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -157,7 +157,7 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 	if len(pod.Finalizers) != 0 {
 		_, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.MergePatchType, removeFinalizers, metav1.PatchOptions{})
 		if err != nil {
-			if errors.IsNotFound(err) {
+			if apierrors.IsNotFound(err) {
 				logger.Warn("Patch pod", err)
 				return nil
 			}
@@ -167,7 +167,7 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 
 	err := c.clientSet.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			logger.Warn("Delete pod", err)
 			return nil
 		}
@@ -216,7 +216,7 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 	}
 	_, err = c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch pod", err)
 			return nil
 		}
