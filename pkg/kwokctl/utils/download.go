@@ -135,7 +135,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 		logger.Info("Download", "uri", src)
 
 		cli := &http.Client{}
-		req, err := http.NewRequest("GET", u.String(), nil)
+		req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 		if err != nil {
 			return "", err
 		}
@@ -146,7 +146,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode != 200 {
+		if resp.StatusCode != http.StatusOK {
 			return "", fmt.Errorf("%s: %s", u.String(), resp.Status)
 		}
 
