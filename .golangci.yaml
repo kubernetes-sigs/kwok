@@ -6,7 +6,7 @@ linters:
     - depguard
     - dogsled
     # - errcheck
-    # - errorlint
+    - errorlint
     - exportloopref
     - goconst
     # - gocritic

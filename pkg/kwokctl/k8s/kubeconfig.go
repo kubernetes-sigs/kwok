@@ -32,7 +32,7 @@ func BuildKubeconfig(conf BuildKubeconfigConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	err := kubeconfigYamlTemplate.Execute(buf, conf)
 	if err != nil {
-		return "", fmt.Errorf("build kubeconfig error: %s", err)
+		return "", fmt.Errorf("build kubeconfig error: %w", err)
 	}
 	return buf.String(), nil
 }

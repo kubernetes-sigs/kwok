@@ -80,7 +80,7 @@ func TestNodeController(t *testing.T) {
 		LockNodeParallelism:      2,
 	})
 	if err != nil {
-		t.Fatal(fmt.Errorf("new nodes controller error: %v", err))
+		t.Fatal(fmt.Errorf("new nodes controller error: %w", err))
 	}
 	ctx := context.Background()
 	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.DebugLevel))

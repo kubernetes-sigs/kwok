@@ -117,7 +117,7 @@ func NewController(conf Config) (*Controller, error) {
 		FuncMap:                  funcMap,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create nodes controller: %v", err)
+		return nil, fmt.Errorf("failed to create nodes controller: %w", err)
 	}
 
 	pods, err := NewPodController(PodControllerConfig{
@@ -133,7 +133,7 @@ func NewController(conf Config) (*Controller, error) {
 		FuncMap:                               funcMap,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create pods controller: %v", err)
+		return nil, fmt.Errorf("failed to create pods controller: %w", err)
 	}
 
 	lockPodsOnNodeFunc = pods.LockPodsOnNode
@@ -149,11 +149,11 @@ func NewController(conf Config) (*Controller, error) {
 func (c *Controller) Start(ctx context.Context) error {
 	err := c.pods.Start(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to start pods controller: %v", err)
+		return fmt.Errorf("failed to start pods controller: %w", err)
 	}
 	err = c.nodes.Start(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to start nodes controller: %v", err)
+		return fmt.Errorf("failed to start nodes controller: %w", err)
 	}
 	return nil
 }

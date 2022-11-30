@@ -113,7 +113,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		pkiPath := utils.PathJoin(conf.Workdir, runtime.PkiName)
 		err = pki.GeneratePki(pkiPath)
 		if err != nil {
-			return fmt.Errorf("failed to generate pki: %s", err)
+			return fmt.Errorf("failed to generate pki: %w", err)
 		}
 	}
 
@@ -306,7 +306,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	err = c.WaitReady(ctx, 30*time.Second)
 	if err != nil {
-		return fmt.Errorf("failed to wait for kube-apiserver ready: %v", err)
+		return fmt.Errorf("failed to wait for kube-apiserver ready: %w", err)
 	}
 
 	kubeControllerManagerArgs := []string{
@@ -436,12 +436,12 @@ func (c *Cluster) Up(ctx context.Context) error {
 			KwokControllerPort:        kwokControllerPort,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to generate prometheus yaml: %s", err)
+			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
 		}
 		prometheusConfigPath := utils.PathJoin(conf.Workdir, runtime.Prometheus)
 		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0644)
 		if err != nil {
-			return fmt.Errorf("failed to write prometheus yaml: %s", err)
+			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
 
 		prometheusPath = utils.PathJoin(bin, "prometheus")

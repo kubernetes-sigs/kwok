@@ -32,7 +32,7 @@ func BuildPrometheus(conf BuildPrometheusConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	err := prometheusYamlTemplate.Execute(buf, conf)
 	if err != nil {
-		return "", fmt.Errorf("build prometheus error: %s", err)
+		return "", fmt.Errorf("build prometheus error: %w", err)
 	}
 	return buf.String(), nil
 }
