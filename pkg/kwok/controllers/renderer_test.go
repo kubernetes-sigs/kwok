@@ -17,12 +17,11 @@ limitations under the License.
 package controllers
 
 import (
-	"html/template"
 	"testing"
+	"text/template"
 )
 
 func TestRenderToJson(t *testing.T) {
-
 	testCases := []struct {
 		name      string
 		funcMap   template.FuncMap

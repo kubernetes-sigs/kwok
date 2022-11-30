@@ -20,7 +20,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"html/template"
+	"text/template"
 )
 
 //go:embed kubeconfig.yaml.tpl

@@ -64,7 +64,6 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 // SnapshotRestore restore the snapshot of cluster
 func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
-
 	conf, err := c.Config()
 	if err != nil {
 		return err

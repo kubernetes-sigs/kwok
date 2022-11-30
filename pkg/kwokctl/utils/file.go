@@ -35,7 +35,6 @@ func CreateFile(name string, perm os.FileMode) error {
 }
 
 func CopyFile(oldpath, newpath string) error {
-
 	err := os.MkdirAll(filepath.Dir(newpath), 0755)
 	if err != nil {
 		return err

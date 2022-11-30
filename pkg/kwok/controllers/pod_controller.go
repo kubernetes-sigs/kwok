@@ -376,7 +376,6 @@ func (c *PodController) LockPodsOnNode(ctx context.Context, nodeName string) err
 }
 
 func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
-
 	// Mark the pod IP that existed before the kubelet was started
 	if c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
 		c.ipPool.Use(pod.Status.PodIP)
