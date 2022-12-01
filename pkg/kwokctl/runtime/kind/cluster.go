@@ -382,3 +382,14 @@ func (c *Cluster) ListImages(ctx context.Context, actual bool) ([]string, error)
 		conf.PrometheusImage,
 	}, nil
 }
+
+// EtcdctlInCluster implements the ectdctl subcommand
+func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
+	etcdContainerName, err := c.getComponentName("etcd")
+	if err != nil {
+		return err
+	}
+
+	return c.KubectlInCluster(ctx, stm,
+		append([]string{"exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "--endpoints=127.0.0.1:2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt"}, args...)...)
+}

@@ -423,3 +423,15 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 	}
 	return append([]string{runtime, "compose"}, args...), nil
 }
+
+// EtcdctlInCluster implements the ectdctl subcommand
+func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
+	conf, err := c.Config()
+	if err != nil {
+		return err
+	}
+
+	etcdContainerName := conf.Name + "-etcd"
+
+	return utils.Exec(ctx, "", stm, conf.Runtime, append([]string{"exec", "-i", etcdContainerName, "etcdctl"}, args...)...)
+}

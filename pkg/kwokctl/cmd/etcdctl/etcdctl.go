@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kubectl
+package etcdctl
 
 import (
 	"context"
@@ -33,13 +33,13 @@ type flagpole struct {
 	Name string
 }
 
-// NewCommand returns a new cobra.Command for use kubectl in a cluster
+// NewCommand returns a new cobra.Command for use etcdctl in a cluster
 func NewCommand() *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Use:   "kubectl",
-		Short: "kubectl in cluster",
-		Long:  "kubectl in cluster",
+		Use:   "etcdctl",
+		Short: "etcdctl in cluster",
+		Long:  "etcdctl in cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = vars.DefaultCluster
 			err := runE(cmd.Context(), flags, args)
@@ -66,7 +66,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return err
 	}
 
-	err = rt.KubectlInCluster(ctx, utils.IOStreams{
+	err = rt.EtcdctlInCluster(ctx, utils.IOStreams{
 		In:     os.Stdin,
 		Out:    os.Stdout,
 		ErrOut: os.Stderr,
