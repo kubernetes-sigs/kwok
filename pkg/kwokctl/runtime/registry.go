@@ -62,7 +62,7 @@ func (r *Registry) Load(name, workdir string) (Runtime, error) {
 
 // List all registered runtime
 func (r *Registry) List() []string {
-	var items []string
+	items := make([]string, 0, len(r.items))
 	for name := range r.items {
 		items = append(items, name)
 	}
