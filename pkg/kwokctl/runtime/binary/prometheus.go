@@ -18,9 +18,10 @@ package binary
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"text/template"
+
+	_ "embed"
 )
 
 //go:embed prometheus.yaml.tpl

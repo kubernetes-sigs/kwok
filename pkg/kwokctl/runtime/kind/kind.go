@@ -18,9 +18,10 @@ package kind
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"text/template"
+
+	_ "embed"
 )
 
 //go:embed kind.yaml.tpl

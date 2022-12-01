@@ -8,6 +8,7 @@ linters:
     # - errcheck
     - errorlint
     - exportloopref
+    - gci
     - goconst
     - gocritic
     # - gocyclo
@@ -35,9 +36,15 @@ linters:
     - whitespace
 
 linters-settings:
-  ifshort:
-    # Maximum length of variable declaration measured in number of characters, after which linter won't suggest using short syntax.
-    max-decl-chars: 50
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(sigs.k8s.io/kwok)
+      - blank
+      - dot
+    skip-generated: true
+    custom-order: true
   importas:
     no-unaliased: true
     alias:

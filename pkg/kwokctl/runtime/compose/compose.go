@@ -18,9 +18,10 @@ package compose
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"text/template"
+
+	_ "embed"
 )
 
 //go:embed compose.yaml.tpl

@@ -19,13 +19,13 @@ package main
 import (
 	"os"
 
-	_ "sigs.k8s.io/kwok/pkg/kwokctl/runtime/binary"
-	_ "sigs.k8s.io/kwok/pkg/kwokctl/runtime/compose"
-	_ "sigs.k8s.io/kwok/pkg/kwokctl/runtime/kind"
-
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/signals"
+
+	_ "sigs.k8s.io/kwok/pkg/kwokctl/runtime/binary"
+	_ "sigs.k8s.io/kwok/pkg/kwokctl/runtime/compose"
+	_ "sigs.k8s.io/kwok/pkg/kwokctl/runtime/kind"
 )
 
 func main() {

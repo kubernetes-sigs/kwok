@@ -25,15 +25,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nxadm/tail"
+	"golang.org/x/sync/errgroup"
+
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
-
-	"github.com/nxadm/tail"
-	"golang.org/x/sync/errgroup"
 )
 
 type Cluster struct {

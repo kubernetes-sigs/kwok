@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/flowcontrol"
@@ -200,12 +199,12 @@ func Serve(ctx context.Context, address string) {
 }
 
 // buildConfigFromFlags is a helper function that builds configs from a master url or a kubeconfig filepath.
-func buildConfigFromFlags(ctx context.Context, masterUrl, kubeconfigPath string) (*restclient.Config, error) {
+func buildConfigFromFlags(ctx context.Context, masterUrl, kubeconfigPath string) (*rest.Config, error) {
 	if kubeconfigPath == "" && masterUrl == "" {
 		logger := log.FromContext(ctx)
 		logger.Warn("Neither --kubeconfig nor --master was specified")
 		logger.Info("Using the inClusterConfig")
-		kubeconfig, err := restclient.InClusterConfig()
+		kubeconfig, err := rest.InClusterConfig()
 		if err == nil {
 			return kubeconfig, nil
 		}
