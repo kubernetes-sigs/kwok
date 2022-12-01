@@ -38,7 +38,7 @@ jobs:
   test-kwokctl:
     # https://docs.github.com/en/actions/using-jobs/using-concurrency
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}
+      group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}
       cancel-in-progress: true
 
     # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
