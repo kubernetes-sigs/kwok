@@ -114,16 +114,26 @@ func (c *Cluster) Update(ctx context.Context, conf Config) error {
 	return nil
 }
 
-func (c *Cluster) Install(ctx context.Context) error {
+func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
 	conf, err := c.Config()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
+	kubectlPath, err := exec.LookPath("kubectl")
+	if err != nil {
+		bin := utils.PathJoin(conf.Workdir, "bin")
+		kubectlPath = utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
+		err = utils.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0755, conf.QuietPull)
+		if err != nil {
+			return "", err
+		}
+	}
+	return kubectlPath, nil
+}
 
-	kubectlPath := utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
-	err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustKubectlBinary, kubectlPath, 0755, conf.QuietPull)
+func (c *Cluster) Install(ctx context.Context) error {
+	_, err := c.kubectlPath(ctx)
 	if err != nil {
 		return err
 	}
@@ -170,20 +180,11 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 }
 
 func (c *Cluster) Kubectl(ctx context.Context, stm utils.IOStreams, args ...string) error {
-	conf, err := c.Config()
+	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
 		return err
 	}
 
-	kubectlPath, err := exec.LookPath("kubectl")
-	if err != nil {
-		bin := utils.PathJoin(conf.Workdir, "bin")
-		kubectlPath = utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
-		err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustKubectlBinary, kubectlPath, 0755, conf.QuietPull)
-		if err != nil {
-			return err
-		}
-	}
 	return utils.Exec(ctx, "", stm, kubectlPath, args...)
 }
 
@@ -193,14 +194,9 @@ func (c *Cluster) KubectlInCluster(ctx context.Context, stm utils.IOStreams, arg
 		return err
 	}
 
-	kubectlPath, err := exec.LookPath("kubectl")
+	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
-		bin := utils.PathJoin(conf.Workdir, "bin")
-		kubectlPath = utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
-		err = utils.DownloadWithCache(ctx, conf.CacheDir, vars.MustKubectlBinary, kubectlPath, 0755, conf.QuietPull)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return utils.Exec(ctx, "", stm, kubectlPath,

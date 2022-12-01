@@ -133,9 +133,6 @@ var (
 	// KubeSchedulerBinary is the binary of kube-scheduler.
 	KubeSchedulerBinary = getEnv("KWOK_KUBE_SCHEDULER_BINARY", KubeBinaryPrefix+"/kube-scheduler"+BinSuffix)
 
-	// MustKubectlBinary is the binary of kubectl.
-	MustKubectlBinary = "https://dl.k8s.io/release/" + KubeVersion + "/bin/" + runtime.GOOS + "/" + runtime.GOARCH + "/kubectl" + BinSuffix
-
 	// KubectlBinary is the binary of kubectl.
 	KubectlBinary = getEnv("KWOK_KUBECTL_BINARY", KubeBinaryPrefix+"/kubectl"+BinSuffix)
 
