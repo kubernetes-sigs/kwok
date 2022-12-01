@@ -17,8 +17,11 @@ limitations under the License.
 package utils
 
 import (
+	"context"
 	"fmt"
 	"net"
+
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 var (
@@ -27,14 +30,20 @@ var (
 )
 
 // GetUnusedPort returns an unused port
-func GetUnusedPort() (uint32, error) {
+func GetUnusedPort(ctx context.Context) (uint32, error) {
+	logger := log.FromContext(ctx)
 	for lastUsedPort > 10000 {
 		lastUsedPort--
 		l, err := net.Listen("tcp", fmt.Sprintf(":%d", lastUsedPort))
 		if err != nil {
 			continue
 		}
-		l.Close()
+		defer func() {
+			err = l.Close()
+			if err != nil {
+				logger.Error("Failed to close Listen", err)
+			}
+		}()
 		return lastUsedPort, nil
 	}
 

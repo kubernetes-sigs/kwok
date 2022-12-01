@@ -45,7 +45,7 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 		if err != nil {
 			return err
 		}
-		err = Untar(cacheTar, func(file string) (string, bool) {
+		err = Untar(ctx, cacheTar, func(file string) (string, bool) {
 			if filepath.Base(file) == match {
 				return cache, true
 			}
@@ -144,7 +144,13 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 		if err != nil {
 			return "", err
 		}
-		defer resp.Body.Close()
+
+		defer func() {
+			err = resp.Body.Close()
+			if err != nil {
+				logger.Error("Failed to close body of response", err)
+			}
+		}()
 
 		if resp.StatusCode != http.StatusOK {
 			return "", fmt.Errorf("%s: %s", u.String(), resp.Status)
@@ -174,11 +180,14 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 
 		_, err = io.Copy(d, srcReader)
 		if err != nil {
-			d.Close()
+			_ = d.Close()
 			fmt.Println()
 			return "", err
 		}
-		d.Close()
+		err = d.Close()
+		if err != nil {
+			logger.Error("Failed to close file", err)
+		}
 
 		err = os.Rename(cache+".tmp", cache)
 		if err != nil {

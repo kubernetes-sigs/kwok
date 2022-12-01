@@ -116,7 +116,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	kubeApiserverPort := conf.KubeApiserverPort
 	if kubeApiserverPort == 0 {
-		kubeApiserverPort, err = utils.GetUnusedPort()
+		kubeApiserverPort, err = utils.GetUnusedPort(ctx)
 		if err != nil {
 			return err
 		}
@@ -197,13 +197,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://127.0.0.1:"+utils.StringUint32(kubeApiserverPort))
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://127.0.0.1:"+utils.StringUint32(kubeApiserverPort))
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", conf.Name)
 	if conf.SecretPort {
-		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".insecure-skip-tls-verify", "true")
-		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", conf.Name)
-		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-certificate", adminCertPath)
-		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".insecure-skip-tls-verify", "true")
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", conf.Name)
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-certificate", adminCertPath)
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
 	}
 
 	var out io.Writer = os.Stderr
@@ -248,9 +248,9 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 	}
 
 	// unset the context in default kubeconfig
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "clusters."+conf.Name)
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+conf.Name)
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "clusters."+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name)
 
 	err = c.Cluster.Uninstall(ctx)
 	if err != nil {

@@ -29,6 +29,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 var (
@@ -147,8 +148,7 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 	}
 
 	// cleanup workdir
-	os.RemoveAll(conf.Workdir)
-	return nil
+	return os.RemoveAll(conf.Workdir)
 }
 
 func (c *Cluster) Ready(ctx context.Context) (bool, error) {
@@ -215,9 +215,18 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	logger := log.FromContext(ctx)
+	defer func() {
+		err = f.Close()
+		if err != nil {
+			logger.Error("Failed to close file", err)
+		}
+	}()
 
-	io.Copy(out, f)
+	_, err = io.Copy(out, f)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -233,11 +242,20 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer t.Stop()
+	logger := log.FromContext(ctx)
+	defer func() {
+		err = t.Stop()
+		if err != nil {
+			logger.Error("Failed to stop tail file", err)
+		}
+	}()
 
 	go func() {
 		for line := range t.Lines {
-			out.Write([]byte(line.Text + "\n"))
+			_, err = out.Write([]byte(line.Text + "\n"))
+			if err != nil {
+				logger.Error("Failed to write line text", err)
+			}
 		}
 	}()
 	<-ctx.Done()

@@ -102,7 +102,7 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("start pods controller error: %w", err))
 	}
 
-	clientset.CoreV1().Pods("default").Create(ctx, &corev1.Pod{
+	_, err = clientset.CoreV1().Pods("default").Create(ctx, &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "pod1",
 			Namespace:         "default",
@@ -118,6 +118,9 @@ func TestPodController(t *testing.T) {
 			NodeName: "node0",
 		},
 	}, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatal(fmt.Errorf("create pod1 error: %w", err))
+	}
 
 	pod1, err := clientset.CoreV1().Pods("default").Get(ctx, "pod1", metav1.GetOptions{})
 	if err != nil {
@@ -127,7 +130,10 @@ func TestPodController(t *testing.T) {
 		"fake": "custom",
 	}
 	pod1.Status.Reason = "custom"
-	clientset.CoreV1().Pods("default").Update(ctx, pod1, metav1.UpdateOptions{})
+	_, err = clientset.CoreV1().Pods("default").Update(ctx, pod1, metav1.UpdateOptions{})
+	if err != nil {
+		t.Fatal(fmt.Errorf("update pod1 error: %w", err))
+	}
 
 	pod1, err = clientset.CoreV1().Pods("default").Get(ctx, "pod1", metav1.GetOptions{})
 	if err != nil {

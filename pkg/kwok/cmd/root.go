@@ -172,6 +172,7 @@ func NewCommand() *cobra.Command {
 }
 
 func Serve(ctx context.Context, address string) {
+	logger := log.FromContext(ctx)
 	promHandler := promhttp.Handler()
 	svc := &http.Server{
 		BaseContext: func(_ net.Listener) context.Context {
@@ -181,7 +182,10 @@ func Serve(ctx context.Context, address string) {
 		Handler: http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			switch r.URL.Path {
 			case "/healthz", "/health":
-				rw.Write([]byte("health"))
+				_, err := rw.Write([]byte("health"))
+				if err != nil {
+					logger.Error("Failed to write", err)
+				}
 			case "/metrics":
 				promHandler.ServeHTTP(rw, r)
 			default:
@@ -190,7 +194,6 @@ func Serve(ctx context.Context, address string) {
 		}),
 	}
 
-	logger := log.FromContext(ctx)
 	err := svc.ListenAndServe()
 	if err != nil {
 		logger.Error("Fatal start server", err)

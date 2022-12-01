@@ -78,14 +78,20 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	}()
 
 	etcdDataTmp := utils.PathJoin(conf.Workdir, "etcd-data")
-	os.RemoveAll(etcdDataTmp)
+	err = os.RemoveAll(etcdDataTmp)
+	if err != nil {
+		return err
+	}
 	err = utils.Exec(ctx, "", utils.IOStreams{}, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err
 	}
 
 	etcdDataPath := utils.PathJoin(conf.Workdir, runtime.EtcdDataDirName)
-	os.RemoveAll(etcdDataPath)
+	err = os.RemoveAll(etcdDataPath)
+	if err != nil {
+		return err
+	}
 	err = os.Rename(etcdDataTmp, etcdDataPath)
 	if err != nil {
 		return err
