@@ -277,6 +277,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
 		ErrOut: os.Stderr,
+		Out:    os.Stderr,
 	}, commands[0], commands[1:]...)
 	if err != nil {
 		return err
@@ -300,6 +301,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
 		ErrOut: os.Stderr,
+		Out:    os.Stderr,
 	}, commands[0], commands[1:]...)
 	if err != nil {
 		logger.Error("Failed to down cluster", err)

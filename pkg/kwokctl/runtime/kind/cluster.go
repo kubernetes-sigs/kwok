@@ -154,6 +154,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	err = utils.Exec(ctx, "", utils.IOStreams{
 		ErrOut: os.Stderr,
+		Out:    os.Stderr,
 	}, conf.Runtime, "create", "cluster",
 		"--config", utils.PathJoin(conf.Workdir, runtime.KindName),
 		"--name", conf.Name,
@@ -263,6 +264,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 	err = utils.Exec(ctx, "", utils.IOStreams{
 		ErrOut: os.Stderr,
+		Out:    os.Stderr,
 	}, conf.Runtime, "delete", "cluster", "--name", conf.Name)
 	if err != nil {
 		logger.Error("Failed to delete cluster", err)
