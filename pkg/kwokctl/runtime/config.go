@@ -57,6 +57,7 @@ type Config struct {
 	PrometheusBinary            string `json:"prometheus_binary,omitempty"`
 	PrometheusBinaryTar         string `json:"prometheus_binary_tar,omitempty"`
 	DockerComposeBinary         string `json:"docker_compose_binary,omitempty"`
+	KubectlBinary               string `json:"kubectl_binary,omitempty"`
 
 	// Cache directory
 	CacheDir string `json:"cache_dir,omitempty"`

@@ -190,6 +190,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 			EtcdBinaryTar:                flags.EtcdBinaryTar,
 			PrometheusBinary:             flags.PrometheusBinary,
 			PrometheusBinaryTar:          flags.PrometheusBinaryTar,
+			KubectlBinary:                vars.KubectlBinary,
 			DockerComposeBinary:          flags.DockerComposeBinary,
 			CacheDir:                     vars.CacheDir,
 			SecretPort:                   flags.SecurePort,
