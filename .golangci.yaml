@@ -5,7 +5,7 @@ linters:
     - bodyclose
     - depguard
     - dogsled
-    # - errcheck
+    - errcheck
     - errorlint
     - exportloopref
     - gci

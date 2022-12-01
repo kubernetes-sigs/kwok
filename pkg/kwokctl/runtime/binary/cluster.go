@@ -107,7 +107,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	etcdDataPath := utils.PathJoin(conf.Workdir, runtime.EtcdDataDirName)
-	os.MkdirAll(etcdDataPath, 0755)
+	err = os.MkdirAll(etcdDataPath, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
+	}
 
 	if conf.SecretPort {
 		pkiPath := utils.PathJoin(conf.Workdir, runtime.PkiName)
@@ -162,7 +165,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	etcdPeerPort := conf.EtcdPeerPort
 	if etcdPeerPort == 0 {
-		etcdPeerPort, err = utils.GetUnusedPort()
+		etcdPeerPort, err = utils.GetUnusedPort(ctx)
 		if err != nil {
 			return err
 		}
@@ -172,7 +175,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	etcdClientPort := conf.EtcdPort
 	if etcdClientPort == 0 {
-		etcdClientPort, err = utils.GetUnusedPort()
+		etcdClientPort, err = utils.GetUnusedPort(ctx)
 		if err != nil {
 			return err
 		}
@@ -207,7 +210,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	kubeApiserverPort := conf.KubeApiserverPort
 	if kubeApiserverPort == 0 {
-		kubeApiserverPort, err = utils.GetUnusedPort()
+		kubeApiserverPort, err = utils.GetUnusedPort(ctx)
 		if err != nil {
 			return err
 		}
@@ -322,7 +325,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	kubeControllerManagerPort := conf.KubeControllerManagerPort
 	if kubeControllerManagerPort == 0 {
-		kubeControllerManagerPort, err = utils.GetUnusedPort()
+		kubeControllerManagerPort, err = utils.GetUnusedPort(ctx)
 		if err != nil {
 			return err
 		}
@@ -372,7 +375,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	kubeSchedulerPort := conf.KubeSchedulerPort
 	if kubeSchedulerPort == 0 {
-		kubeSchedulerPort, err = utils.GetUnusedPort()
+		kubeSchedulerPort, err = utils.GetUnusedPort(ctx)
 		if err != nil {
 			return err
 		}
@@ -405,7 +408,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	kwokControllerPort := conf.KwokControllerPort
 	if conf.PrometheusPort != 0 {
 		if kwokControllerPort == 0 {
-			kwokControllerPort, err = utils.GetUnusedPort()
+			kwokControllerPort, err = utils.GetUnusedPort(ctx)
 			if err != nil {
 				return err
 			}
@@ -478,13 +481,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://"+localAddress+":"+kubeApiserverPortStr)
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://"+localAddress+":"+kubeApiserverPortStr)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", conf.Name)
 	if conf.SecretPort {
-		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".insecure-skip-tls-verify", "true")
-		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", conf.Name)
-		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-certificate", adminCertPath)
-		c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".insecure-skip-tls-verify", "true")
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", conf.Name)
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-certificate", adminCertPath)
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
 	}
 
 	logger := log.FromContext(ctx)
@@ -501,9 +504,9 @@ func (c *Cluster) Down(ctx context.Context) error {
 		return err
 	}
 
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "clusters."+conf.Name)
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+conf.Name)
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "clusters."+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name)
 
 	bin := utils.PathJoin(conf.Workdir, "bin")
 	kubeApiserverPath := utils.PathJoin(bin, "kube-apiserver"+vars.BinSuffix)
@@ -595,6 +598,7 @@ func (c *Cluster) Stop(ctx context.Context, name string) error {
 }
 
 func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
+	logger := log.FromContext(ctx)
 	conf, err := c.Config()
 	if err != nil {
 		return err
@@ -606,13 +610,22 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		err = f.Close()
+		if err != nil {
+			logger.Error("Failed to close file ", err)
+		}
+	}()
 
-	io.Copy(out, f)
+	_, err = io.Copy(out, f)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) error {
+	logger := log.FromContext(ctx)
 	conf, err := c.Config()
 	if err != nil {
 		return err
@@ -624,11 +637,19 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 	if err != nil {
 		return err
 	}
-	defer t.Stop()
+	defer func() {
+		err = t.Stop()
+		if err != nil {
+			logger.Error("Failed to stop tail file", err)
+		}
+	}()
 
 	go func() {
 		for line := range t.Lines {
-			out.Write([]byte(line.Text + "\n"))
+			_, err = out.Write([]byte(line.Text + "\n"))
+			if err != nil {
+				logger.Error("Failed to write line text", err)
+			}
 		}
 	}()
 	<-ctx.Done()

@@ -20,6 +20,7 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -27,23 +28,31 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
-func Untar(src string, filter func(file string) (string, bool)) error {
+func Untar(ctx context.Context, src string, filter func(file string) (string, bool)) error {
 	if strings.HasSuffix(src, ".tar.gz") {
-		return Untargz(src, filter)
+		return Untargz(ctx, src, filter)
 	} else if strings.HasSuffix(src, ".zip") {
-		return Unzip(src, filter)
+		return Unzip(ctx, src, filter)
 	}
 	return fmt.Errorf("unsupported archive format: %s", src)
 }
 
-func Unzip(src string, filter func(file string) (string, bool)) error {
+func Unzip(ctx context.Context, src string, filter func(file string) (string, bool)) error {
+	logger := log.FromContext(ctx)
 	r, err := zip.OpenReader(src)
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() {
+		err = r.Close()
+		if err != nil {
+			logger.Error("Failed to close file", err)
+		}
+	}()
 
 	for _, f := range r.File {
 		fi := f.FileInfo()
@@ -68,13 +77,23 @@ func Unzip(src string, filter func(file string) (string, bool)) error {
 			if err != nil {
 				return err
 			}
-			defer rc.Close()
+			defer func() {
+				err = rc.Close()
+				if err != nil {
+					logger.Error("Failed to close file of tar", err)
+				}
+			}()
 
 			outFile, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fi.Mode())
 			if err != nil {
 				return err
 			}
-			defer outFile.Close()
+			defer func() {
+				err = outFile.Close()
+				if err != nil {
+					logger.Error("Failed to close file", err)
+				}
+			}()
 
 			_, err = io.Copy(outFile, rc)
 			if err != nil {
@@ -89,18 +108,29 @@ func Unzip(src string, filter func(file string) (string, bool)) error {
 	return nil
 }
 
-func Untargz(src string, filter func(file string) (string, bool)) error {
+func Untargz(ctx context.Context, src string, filter func(file string) (string, bool)) error {
+	logger := log.FromContext(ctx)
 	r, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() {
+		err = r.Close()
+		if err != nil {
+			logger.Error("Failed to close file", err)
+		}
+	}()
 
 	gzr, err := gzip.NewReader(r)
 	if err != nil {
 		return err
 	}
-	defer gzr.Close()
+	defer func() {
+		err = gzr.Close()
+		if err != nil {
+			logger.Error("Failed to close gzip reader", err)
+		}
+	}()
 
 	tr := tar.NewReader(gzr)
 	for {
@@ -131,7 +161,12 @@ func Untargz(src string, filter func(file string) (string, bool)) error {
 			if err != nil {
 				return err
 			}
-			defer outFile.Close()
+			defer func() {
+				err = outFile.Close()
+				if err != nil {
+					logger.Error("Failed to close file", err)
+				}
+			}()
 
 			if _, err := io.Copy(outFile, tr); err != nil {
 				return err

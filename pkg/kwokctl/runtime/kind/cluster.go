@@ -222,8 +222,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", "kind-"+conf.Name)
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", "kind-"+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", "kind-"+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", "kind-"+conf.Name)
 
 	if conf.DisableKubeControllerManager {
 		// waiting for kwok-controller and other addons to be ready
@@ -257,8 +257,8 @@ func (c *Cluster) Down(ctx context.Context) error {
 	}
 
 	// unset the context in default kubeconfig
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name+".cluster")
-	c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name+".user")
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name+".cluster")
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name+".user")
 
 	logger := log.FromContext(ctx)
 	err = utils.Exec(ctx, "", utils.IOStreams{

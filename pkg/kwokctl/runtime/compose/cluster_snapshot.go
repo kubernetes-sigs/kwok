@@ -85,7 +85,10 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		return err
 	}
 	defer func() {
-		os.RemoveAll(etcdDataTmp)
+		err = os.RemoveAll(etcdDataTmp)
+		if err != nil {
+			logger.Error("Failed to clear etcd temporary data", err)
+		}
 	}()
 
 	// Copy to container from host temporary directory

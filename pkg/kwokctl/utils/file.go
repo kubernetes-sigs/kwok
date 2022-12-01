@@ -30,7 +30,10 @@ func CreateFile(name string, perm os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
