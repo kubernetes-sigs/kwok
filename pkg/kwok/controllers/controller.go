@@ -62,6 +62,7 @@ type Controller struct {
 }
 
 type Config struct {
+	EnableCNI                             bool
 	ClientSet                             kubernetes.Interface
 	ManageAllNodes                        bool
 	ManageNodesWithAnnotationSelector     string
@@ -121,6 +122,7 @@ func NewController(conf Config) (*Controller, error) {
 	}
 
 	pods, err := NewPodController(PodControllerConfig{
+		EnableCNI:                             conf.EnableCNI,
 		ClientSet:                             conf.ClientSet,
 		NodeIP:                                conf.NodeIP,
 		CIDR:                                  conf.CIDR,

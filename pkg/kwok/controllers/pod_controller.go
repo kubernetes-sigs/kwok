@@ -37,6 +37,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/pager"
 
+	"sigs.k8s.io/kwok/pkg/cni"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
@@ -48,6 +49,7 @@ var (
 
 // PodController is a fake pods implementation that can be used to test
 type PodController struct {
+	enableCNI                             bool
 	clientSet                             kubernetes.Interface
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
@@ -65,6 +67,7 @@ type PodController struct {
 
 // PodControllerConfig is the configuration for the PodController
 type PodControllerConfig struct {
+	EnableCNI                             bool
 	ClientSet                             kubernetes.Interface
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
@@ -95,6 +98,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 	}
 
 	n := &PodController{
+		enableCNI:                             conf.EnableCNI,
 		clientSet:                             conf.ClientSet,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
@@ -337,9 +341,16 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
 					if c.nodeHasFunc(pod.Spec.NodeName) {
-						// Recycling PodIP
-						if pod.Status.PodIP != "" && c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
-							c.ipPool.Put(pod.Status.PodIP)
+						if !c.enableCNI {
+							// Recycling PodIP
+							if pod.Status.PodIP != "" && c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
+								c.ipPool.Put(pod.Status.PodIP)
+							}
+						} else {
+							err := cni.Remove(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
+							if err != nil {
+								logger.Error("cni remove", err)
+							}
 						}
 					}
 				}
@@ -376,9 +387,17 @@ func (c *PodController) LockPodsOnNode(ctx context.Context, nodeName string) err
 }
 
 func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
-	// Mark the pod IP that existed before the kubelet was started
-	if c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
-		c.ipPool.Use(pod.Status.PodIP)
+	if !c.enableCNI {
+		// Mark the pod IP that existed before the kubelet was started
+		if c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
+			c.ipPool.Use(pod.Status.PodIP)
+		}
+	} else if pod.Status.PodIP == "" {
+		ips, err := cni.Setup(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
+		if err != nil {
+			return nil, err
+		}
+		pod.Status.PodIP = ips[0]
 	}
 
 	patch, err := c.computePatchData(pod, c.podStatusTemplate)
