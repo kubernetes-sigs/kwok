@@ -88,16 +88,16 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return fmt.Errorf("failed to write %s: %w", runtime.KindName, err)
 	}
 
-	kwokControllerDeploy, err := BuildKwokControllerDeployment(BuildKwokControllerDeploymentConfig{
+	kwokControllerPod, err := BuildKwokControllerPod(BuildKwokControllerPodConfig{
 		KwokControllerImage: conf.KwokControllerImage,
 		Name:                conf.Name,
 	})
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(utils.PathJoin(conf.Workdir, runtime.KwokDeploy), []byte(kwokControllerDeploy), 0644)
+	err = os.WriteFile(utils.PathJoin(conf.Workdir, runtime.KwokPod), []byte(kwokControllerPod), 0644)
 	if err != nil {
-		return fmt.Errorf("failed to write %s: %w", runtime.KwokDeploy, err)
+		return fmt.Errorf("failed to write %s: %w", runtime.KwokPod, err)
 	}
 
 	if conf.PrometheusPort != 0 {
@@ -199,9 +199,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = c.Kubectl(ctx, utils.IOStreams{
-		ErrOut: os.Stderr,
-	}, "apply", "-f", utils.PathJoin(conf.Workdir, runtime.KwokDeploy))
+
+	err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "cp", utils.PathJoin(conf.Workdir, runtime.KwokPod), conf.Name+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
 	if err != nil {
 		return err
 	}
@@ -225,17 +224,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 	// set the context in default kubeconfig
 	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", "kind-"+conf.Name)
 	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", "kind-"+conf.Name)
-
-	if conf.DisableKubeControllerManager {
-		// waiting for kwok-controller and other addons to be ready
-		// Fixme: use a better way to wait for pods to be ready when the kube-controller-manager is disabled
-		err = c.Kubectl(ctx, utils.IOStreams{
-			ErrOut: os.Stderr,
-		}, "-n", "kube-system", "wait", "deployment/kwok-controller", "--for", "condition=Available=true", "--timeout=5m")
-		if err != nil {
-			return err
-		}
-	}
 
 	if conf.DisableKubeScheduler {
 		if err := c.Stop(ctx, "kube-scheduler"); err != nil {
