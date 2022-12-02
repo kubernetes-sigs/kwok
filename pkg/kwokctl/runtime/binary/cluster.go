@@ -224,7 +224,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		"--etcd-servers",
 		"http://" + localAddress + ":" + etcdClientPortStr,
 		"--etcd-prefix",
-		"/prefix/registry",
+		"/registry",
 		"--allow-privileged",
 	}
 	if conf.RuntimeConfig != "" {
@@ -695,4 +695,21 @@ func (c *Cluster) ListImages(ctx context.Context, actual bool) ([]string, error)
 		return nil, err
 	}
 	return []string{}, nil
+}
+
+// EtcdctlInCluster implements the ectdctl subcommand
+func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
+	conf, err := c.Config()
+	if err != nil {
+		return err
+	}
+	bin := utils.PathJoin(conf.Workdir, "bin")
+	etcdctlPath := utils.PathJoin(bin, "etcdctl"+vars.BinSuffix)
+
+	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+vars.BinSuffix, 0755, conf.QuietPull, true)
+	if err != nil {
+		return err
+	}
+
+	return utils.Exec(ctx, "", stm, etcdctlPath, append([]string{"--endpoints", "127.0.0.1:" + utils.StringUint32(conf.EtcdPort)}, args...)...)
 }

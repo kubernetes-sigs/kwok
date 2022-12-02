@@ -49,7 +49,7 @@ services:
       - --etcd-servers
       - http://{{ .ProjectName }}-etcd:2379
       - --etcd-prefix
-      - /prefix/registry
+      - /registry
       - --allow-privileged
 {{ if .RuntimeConfig }}
       - --runtime-config

@@ -74,6 +74,11 @@ function test_create_cluster() {
     echo
     return 1
   fi
+
+  if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
+    echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
+    return 1
+  fi
 }
 
 function test_delete_cluster() {

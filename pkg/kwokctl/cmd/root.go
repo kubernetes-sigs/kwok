@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create"
 	del "sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/etcdctl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/kubectl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/logs"
@@ -52,6 +53,7 @@ func NewCommand() *cobra.Command {
 		del.NewCommand(),
 		get.NewCommand(),
 		kubectl.NewCommand(),
+		etcdctl.NewCommand(),
 		logs.NewCommand(),
 		snapshot.NewCommand(),
 	)

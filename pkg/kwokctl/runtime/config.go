@@ -125,6 +125,9 @@ type Runtime interface {
 	// KubectlInCluster command in cluster
 	KubectlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error
 
+	// EtcdctlInCluster command in cluster
+	EtcdctlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error
+
 	// Logs logs of a component
 	Logs(ctx context.Context, name string, out io.Writer) error
 
