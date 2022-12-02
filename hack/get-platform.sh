@@ -42,7 +42,7 @@ function os() {
   local os
   os="$(uname -s)"
 
-  echo "${os,,}"
+  echo "${os}" | tr '[:upper:]' '[:lower:]'
 }
 
 echo "$(os)/$(arch)"
