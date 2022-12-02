@@ -1,6 +1,6 @@
 # Development
 
-This doc walks you through how to run `kwok` and `kwokctl` in the local.
+This doc provides details on how to build and run `kwok` and `kwokctl` locally.
 
 ## Building
 
@@ -10,7 +10,7 @@ This doc walks you through how to run `kwok` and `kwokctl` in the local.
 make build
 ```
 
-On `./bin/$(go env GOOS)/$(go env GOARCH)` will contain the freshly build binary upon a successful build.
+On a successful build, the binaries will be located in `./bin/$(go env GOOS)/$(go env GOARCH)`
 
 ### Building `kwok` image
 
@@ -27,9 +27,9 @@ BINARY_PLATFORMS=${CONTAINER_PLATFORMS} BINARY=kwok make cross-build
 IMAGE_PLATFORMS=${CONTAINER_PLATFORMS} IMAGE_PREFIX=local make cross-image
 ```
 
-Image `local/kwok:${tag}` will contain in `docker images`
+The image will be tagged as `local/kwok:${tag}` and can be found in `docker images`
 
-### Start a local cluster with `kwokctl` and `kwok` on Docker
+### Starting a local cluster with locally built `kwokctl` and `kwok` using Docker
 
 ``` bash
 KWOK_IMAGE_PREFIX=local ./bin/$(go env GOOS)/$(go env GOARCH)/kwokctl create cluster
