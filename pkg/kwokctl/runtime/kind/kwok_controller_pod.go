@@ -25,26 +25,24 @@ import (
 	_ "embed"
 )
 
-//go:generate kubectl kustomize -o kwok_controller_deployment.yaml.tpl .
+//go:embed kwok_controller_pod.yaml.tpl
+var kwokControllerPodYamlTpl string
 
-//go:embed kwok_controller_deployment.yaml.tpl
-var kwokControllerDeploymentYamlTpl string
+var kwokControllerPodYamlTemplate = template.Must(template.New("_").Parse(kwokControllerPodYamlTpl))
 
-var kwokControllerDeploymentYamlTemplate = template.Must(template.New("_").Parse(kwokControllerDeploymentYamlTpl))
-
-func BuildKwokControllerDeployment(conf BuildKwokControllerDeploymentConfig) (string, error) {
+func BuildKwokControllerPod(conf BuildKwokControllerPodConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	split := strings.SplitN(conf.KwokControllerImage, ":", 2)
 	conf.KwokControllerImageName = split[0]
 	conf.KwokControllerImageTag = split[1]
-	err := kwokControllerDeploymentYamlTemplate.Execute(buf, conf)
+	err := kwokControllerPodYamlTemplate.Execute(buf, conf)
 	if err != nil {
-		return "", fmt.Errorf("failed to execute kwok controller deployment yaml template: %w", err)
+		return "", fmt.Errorf("failed to execute kwok controller pod yaml template: %w", err)
 	}
 	return buf.String(), nil
 }
 
-type BuildKwokControllerDeploymentConfig struct {
+type BuildKwokControllerPodConfig struct {
 	KwokControllerImage     string
 	KwokControllerImageName string
 	KwokControllerImageTag  string

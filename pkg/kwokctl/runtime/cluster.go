@@ -41,7 +41,7 @@ var (
 	ComposeName             = "docker-compose.yaml"
 	Prometheus              = "prometheus.yaml"
 	KindName                = "kind.yaml"
-	KwokDeploy              = "kwok-controller-deployment.yaml"
+	KwokPod                 = "kwok-controller-pod.yaml"
 	PrometheusDeploy        = "prometheus-deployment.yaml"
 	AuditPolicyName         = "audit.yaml"
 	AuditLogName            = "audit.log"
