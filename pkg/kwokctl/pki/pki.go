@@ -83,9 +83,5 @@ func GeneratePki(dir string) error {
 	if err != nil {
 		return err
 	}
-	err = writeCert(dir, "ca", p.caCert)
-	if err != nil {
-		return err
-	}
-	return nil
+	return writeCert(dir, "ca", p.caCert)
 }

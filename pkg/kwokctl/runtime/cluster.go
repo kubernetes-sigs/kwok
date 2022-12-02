@@ -108,11 +108,7 @@ func (c *Cluster) Update(ctx context.Context, conf Config) error {
 	}
 	c.conf = &conf
 
-	err = os.WriteFile(utils.PathJoin(c.workdir, RawClusterConfigName), config, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return os.WriteFile(utils.PathJoin(c.workdir, RawClusterConfigName), config, 0644)
 }
 
 func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {

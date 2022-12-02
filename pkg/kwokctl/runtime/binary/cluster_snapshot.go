@@ -92,9 +92,5 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	if err != nil {
 		return err
 	}
-	err = os.Rename(etcdDataTmp, etcdDataPath)
-	if err != nil {
-		return err
-	}
-	return nil
+	return os.Rename(etcdDataTmp, etcdDataPath)
 }

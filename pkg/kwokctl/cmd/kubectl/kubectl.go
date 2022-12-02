@@ -66,14 +66,9 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return err
 	}
 
-	err = rt.KubectlInCluster(ctx, utils.IOStreams{
+	return rt.KubectlInCluster(ctx, utils.IOStreams{
 		In:     os.Stdin,
 		Out:    os.Stdout,
 		ErrOut: os.Stderr,
 	}, args...)
-
-	if err != nil {
-		return err
-	}
-	return nil
 }

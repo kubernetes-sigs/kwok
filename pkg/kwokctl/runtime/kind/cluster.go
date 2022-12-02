@@ -266,11 +266,7 @@ func (c *Cluster) Start(ctx context.Context, name string) error {
 	if err != nil {
 		return err
 	}
-	err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "exec", conf.Name+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
-	if err != nil {
-		return err
-	}
-	return nil
+	return utils.Exec(ctx, "", utils.IOStreams{}, "docker", "exec", conf.Name+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 }
 
 func (c *Cluster) Stop(ctx context.Context, name string) error {
@@ -278,11 +274,7 @@ func (c *Cluster) Stop(ctx context.Context, name string) error {
 	if err != nil {
 		return err
 	}
-	err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "exec", conf.Name+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
-	if err != nil {
-		return err
-	}
-	return nil
+	return utils.Exec(ctx, "", utils.IOStreams{}, "docker", "exec", conf.Name+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 }
 
 func (c *Cluster) getClusterName() (string, error) {
@@ -318,14 +310,10 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	}
 	args = append(args, name)
 
-	err = c.Kubectl(ctx, utils.IOStreams{
+	return c.Kubectl(ctx, utils.IOStreams{
 		ErrOut: out,
 		Out:    out,
 	}, args...)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {

@@ -41,11 +41,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 	}
 
 	// Copy to host path from container
-	err = utils.Exec(ctx, "", utils.IOStreams{}, conf.Runtime, "cp", etcdContainerName+":"+tmpFile, path)
-	if err != nil {
-		return err
-	}
-	return nil
+	return utils.Exec(ctx, "", utils.IOStreams{}, conf.Runtime, "cp", etcdContainerName+":"+tmpFile, path)
 }
 
 // SnapshotRestore restore the snapshot of cluster
@@ -92,9 +88,5 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	}()
 
 	// Copy to container from host temporary directory
-	err = utils.Exec(ctx, "", utils.IOStreams{}, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
-	if err != nil {
-		return err
-	}
-	return nil
+	return utils.Exec(ctx, "", utils.IOStreams{}, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
 }

@@ -252,11 +252,7 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+conf.Name)
 	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name)
 
-	err = c.Cluster.Uninstall(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.Cluster.Uninstall(ctx)
 }
 
 func (c *Cluster) Up(ctx context.Context) error {
@@ -314,11 +310,7 @@ func (c *Cluster) Start(ctx context.Context, name string) error {
 	if err != nil {
 		return err
 	}
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{}, conf.Runtime, "start", conf.Name+"-"+name)
-	if err != nil {
-		return err
-	}
-	return nil
+	return utils.Exec(ctx, conf.Workdir, utils.IOStreams{}, conf.Runtime, "start", conf.Name+"-"+name)
 }
 
 func (c *Cluster) Stop(ctx context.Context, name string) error {
@@ -326,11 +318,7 @@ func (c *Cluster) Stop(ctx context.Context, name string) error {
 	if err != nil {
 		return err
 	}
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{}, conf.Runtime, "stop", conf.Name+"-"+name)
-	if err != nil {
-		return err
-	}
-	return nil
+	return utils.Exec(ctx, conf.Workdir, utils.IOStreams{}, conf.Runtime, "stop", conf.Name+"-"+name)
 }
 
 func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow bool) error {
@@ -343,14 +331,10 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 		args = append(args, "-f")
 	}
 	args = append(args, conf.Name+"-"+name)
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
+	return utils.Exec(ctx, conf.Workdir, utils.IOStreams{
 		ErrOut: out,
 		Out:    out,
 	}, conf.Runtime, args...)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {

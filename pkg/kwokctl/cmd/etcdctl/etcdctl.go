@@ -66,14 +66,9 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return err
 	}
 
-	err = rt.EtcdctlInCluster(ctx, utils.IOStreams{
+	return rt.EtcdctlInCluster(ctx, utils.IOStreams{
 		In:     os.Stdin,
 		Out:    os.Stdout,
 		ErrOut: os.Stderr,
 	}, args...)
-
-	if err != nil {
-		return err
-	}
-	return nil
 }

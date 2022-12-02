@@ -72,11 +72,7 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 	}
 
 	// link the cache file to the dest file
-	err = os.Symlink(cache, dest)
-	if err != nil {
-		return err
-	}
-	return nil
+	return os.Symlink(cache, dest)
 }
 
 func DownloadWithCache(ctx context.Context, cacheDir, src, dest string, mode fs.FileMode, quiet bool) error {
@@ -95,11 +91,7 @@ func DownloadWithCache(ctx context.Context, cacheDir, src, dest string, mode fs.
 	}
 
 	// link the cache file to the dest file
-	err = os.Symlink(cache, dest)
-	if err != nil {
-		return err
-	}
-	return nil
+	return os.Symlink(cache, dest)
 }
 
 func getCachePath(cacheDir, src string) (string, error) {

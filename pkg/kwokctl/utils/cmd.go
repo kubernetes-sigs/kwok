@@ -124,11 +124,7 @@ func ForkExecKill(ctx context.Context, dir string, name string) error {
 	if err != nil {
 		return err
 	}
-	err = os.Remove(pidPath)
-	if err != nil {
-		return err
-	}
-	return nil
+	return os.Remove(pidPath)
 }
 
 func Exec(ctx context.Context, dir string, stm IOStreams, name string, arg ...string) error {
