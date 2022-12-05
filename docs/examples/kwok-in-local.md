@@ -1,6 +1,6 @@
 # Run Kwok in the Local
 
-This doc walks you through how to run `kwok` in the local.
+This document walks you through how to run `kwok` in the local.
 
 ## Variables preparation
 

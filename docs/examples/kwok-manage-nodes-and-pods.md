@@ -6,11 +6,11 @@ Kwok will be in charge of all nodes in the cluster and maintain their heartbeats
 
 ## Kwok with args `--manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake`
 
-Kwok will be in charge of all Pods with annotation `kwok.x-k8s.io/node=fake`. If they carry an accurate `.spec.nodeName` filed, kwok will ensure they stay in the `Running` state.
+Kwok will be in charge of all Pods with annotation `kwok.x-k8s.io/node=fake`. If they carry an accurate `.spec.nodeName` filed, Kwok will ensure they stay in the `Running` state.
 
 ## Create a Node
 
-With kowk, you can join arbitrary Node(s) just by simply creating `v1.Node` object(s):
+With Kwok, you can join arbitrary Node(s) just by simply creating `v1.Node` object(s):
 
 > The status can be any value.
 
@@ -61,6 +61,8 @@ status:
 EOF
 ```
 
+After the Node is created, Kwok will maintain its heartbeat and keep it in the `ready` state.
+
 ``` console
 $ kubectl get node -o wide
 NAME          STATUS   ROLES   AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE    KERNEL-VERSION   CONTAINER-RUNTIME
@@ -109,6 +111,8 @@ spec:
 EOF
 ```
 
+After the Pod is created, we can see that all the Pods are landed on that Node(s) and are in the `Running` state.
+
 ``` console
 $ kubectl get pod -o wide
 NAME                        READY   STATUS    RESTARTS   AGE   IP          NODE          NOMINATED NODE   READINESS GATES
@@ -126,4 +130,4 @@ fake-pod-59bb47845f-wxn4b   1/1     Running   0          5s    10.0.0.1    kwok-
 
 ## Update spec of nodes or pods
 
-In a kwok context, Nodes and Pods are nothing but pure API objects so feel free to mutate their API specs to do whatever simulation / testing you want.
+In a Kwok context, Nodes and Pods are nothing but pure API objects so feel free to mutate their API specs to do whatever simulation or testing you want.
