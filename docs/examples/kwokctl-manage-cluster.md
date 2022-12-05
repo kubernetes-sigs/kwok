@@ -1,6 +1,6 @@
 # Use Kwokctl Create a Cluster
 
-This doc walks you through how to run `kwokctl` to manage fake clusters.
+This document walks you through how to run `kwokctl` to manage fake clusters.
 
 ## Variables preparation
 
@@ -45,6 +45,15 @@ kubectl config use-context kwok-kwok
 ```
 
 Subsequent usage is just like any other Kubernetes cluster
+
+## Get Clusters
+
+Get the clusters managed by `kwokctl`
+
+```console
+$ kwokctl get clusters
+kwok
+```
 
 ## Delete a Cluster
 

@@ -1,10 +1,10 @@
 # Development
 
-This doc provides details on how to build and run `kwok` and `kwokctl` locally.
+This document provides details on how to build and run `kwok` and `kwokctl` locally.
 
 ## Building
 
-### Building `kwok` & `kwokctl`
+### Building `kwok` and `kwokctl`
 
 ``` bash
 make build
