@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/nxadm/tail"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
@@ -167,16 +168,22 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 }
 
 func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
-	var err error
-	var ready bool
-	for i := 0; i < int(timeout/time.Second); i++ {
+	var (
+		err     error
+		waitErr error
+		ready   bool
+	)
+	waitErr = wait.PollImmediateWithContext(ctx, time.Second/10, timeout, func(ctx context.Context) (bool, error) {
 		ready, err = c.Ready(ctx)
-		if ready {
-			return nil
-		}
-		time.Sleep(time.Second)
+		return ready, nil
+	})
+	if err != nil {
+		return err
 	}
-	return err
+	if waitErr != nil {
+		return waitErr
+	}
+	return nil
 }
 
 func (c *Cluster) Kubectl(ctx context.Context, stm utils.IOStreams, args ...string) error {
