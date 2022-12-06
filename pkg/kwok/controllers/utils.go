@@ -34,7 +34,7 @@ func parseCIDR(s string) (*net.IPNet, error) {
 	return ipnet, nil
 }
 
-func addIp(ip net.IP, add uint64) net.IP {
+func addIP(ip net.IP, add uint64) net.IP {
 	if len(ip) < 8 {
 		return ip
 	}
@@ -67,7 +67,7 @@ func newIPPool(cidr *net.IPNet) *ipPool {
 
 func (i *ipPool) new() string {
 	for {
-		ip := addIp(i.cidr.IP, i.index).String()
+		ip := addIP(i.cidr.IP, i.index).String()
 		i.index++
 
 		if _, ok := i.used[ip]; ok {

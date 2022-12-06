@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package save provides a command to save the snapshot of a cluster.
 package save
 
 import (

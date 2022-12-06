@@ -69,7 +69,7 @@ func TestRenderToJson(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			r := newRenderer(tc.funcMap)
-			actual, err := r.renderToJson(tc.templText, tc.original)
+			actual, err := r.renderToJSON(tc.templText, tc.original)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package kubectl contains a command to use the kubectl in a cluster.
 package kubectl
 
 import (

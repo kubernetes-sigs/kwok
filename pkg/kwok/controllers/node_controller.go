@@ -354,7 +354,7 @@ func (c *NodeController) LockNode(ctx context.Context, nodeName string) error {
 }
 
 func (c *NodeController) configureNode(node *corev1.Node) ([]byte, error) {
-	patch, err := c.renderer.renderToJson(c.nodeStatusTemplate, node)
+	patch, err := c.renderer.renderToJSON(c.nodeStatusTemplate, node)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +391,7 @@ func (c *NodeController) configureNode(node *corev1.Node) ([]byte, error) {
 }
 
 func (c *NodeController) configureHeartbeatNode(node *corev1.Node) ([]byte, error) {
-	patch, err := c.renderer.renderToJson(c.nodeHeartbeatTemplate, node)
+	patch, err := c.renderer.renderToJSON(c.nodeHeartbeatTemplate, node)
 	if err != nil {
 		return nil, err
 	}

@@ -45,8 +45,8 @@ func newRenderer(funcMap template.FuncMap) *renderer {
 	}
 }
 
-// renderToJson renders the template with the given text and original object.
-func (r *renderer) renderToJson(text string, original interface{}) ([]byte, error) {
+// renderToJSON renders the template with the given text and original object.
+func (r *renderer) renderToJSON(text string, original interface{}) ([]byte, error) {
 	text = strings.TrimSpace(text)
 	v, ok := r.cache.Load(text)
 	if !ok {

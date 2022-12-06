@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package etcdctl provides a method for users to use the etcdctl binary in a cluster.
 package etcdctl
 
 import (

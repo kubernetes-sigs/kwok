@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package snapshot contains a parent command which snapshots one of cluster.
 package snapshot
 
 import (
