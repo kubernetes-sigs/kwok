@@ -116,10 +116,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 	}
 
-	var out io.Writer = os.Stderr
-	if conf.QuietPull {
-		out = nil
-	}
 	images := []string{
 		conf.KindNodeImage,
 		conf.KwokControllerImage,
@@ -127,24 +123,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	logger := log.FromContext(ctx)
-	for _, image := range images {
-		err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "inspect",
-			image,
-		)
-		if err != nil {
-			logger.Info("Pull image", "image", image)
-			err = utils.Exec(ctx, "", utils.IOStreams{
-				Out:    out,
-				ErrOut: out,
-			}, "docker", "pull",
-				image,
-			)
-			if err != nil {
-				return err
-			}
-		}
+	err = runtime.PullImages(ctx, "docker", images, conf.QuietPull)
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 
@@ -169,6 +152,15 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
+	images := []string{conf.KwokControllerImage}
+	if conf.PrometheusPort != 0 {
+		images = append(images, conf.PrometheusImage)
+	}
+	err = loadImages(ctx, "kind", conf.Name, images)
+	if err != nil {
+		return err
+	}
+
 	kubeconfig, err := c.InHostKubeconfig()
 	if err != nil {
 		return err
@@ -187,27 +179,12 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = utils.Exec(ctx, "", utils.IOStreams{}, "kind", "load", "docker-image",
-		conf.KwokControllerImage,
-		"--name", conf.Name,
-	)
-	if err != nil {
-		return err
-	}
-
 	err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "cp", utils.PathJoin(conf.Workdir, runtime.KwokPod), conf.Name+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
 	if err != nil {
 		return err
 	}
 
 	if conf.PrometheusPort != 0 {
-		err = utils.Exec(ctx, "", utils.IOStreams{}, "kind", "load", "docker-image",
-			conf.PrometheusImage,
-			"--name", conf.Name,
-		)
-		if err != nil {
-			return err
-		}
 		err = c.Kubectl(ctx, utils.IOStreams{
 			ErrOut: os.Stderr,
 		}, "apply", "-f", utils.PathJoin(conf.Workdir, runtime.PrometheusDeploy))
@@ -244,6 +221,22 @@ func (c *Cluster) Up(ctx context.Context) error {
 	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", "kind-"+conf.Name)
 	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", "kind-"+conf.Name)
 
+	return nil
+}
+
+func loadImages(ctx context.Context, command, kindCluster string, images []string) error {
+	logger := log.FromContext(ctx)
+	for _, image := range images {
+		err := utils.Exec(ctx, "", utils.IOStreams{},
+			command, "load", "docker-image",
+			image,
+			"--name", kindCluster,
+		)
+		if err != nil {
+			return err
+		}
+		logger.Info("Loaded image", "image", image)
+	}
 	return nil
 }
 
