@@ -10,9 +10,6 @@ conditions:
 - lastTransitionTime: {{ $startTime }}
   status: "True"
   type: ContainersReady
-- lastTransitionTime: {{ $startTime }}
-  status: "True"
-  type: PodScheduled
 {{ range .spec.readinessGates }}
 - lastTransitionTime: {{ $startTime }}
   status: "True"
