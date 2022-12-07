@@ -207,10 +207,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
 	}
 
-	var out io.Writer = os.Stderr
-	if conf.QuietPull {
-		out = nil
-	}
 	images := []string{
 		conf.EtcdImage,
 		conf.KubeApiserverImage,
@@ -221,24 +217,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	logger := log.FromContext(ctx)
-	for _, image := range images {
-		err = utils.Exec(ctx, "", utils.IOStreams{}, conf.Runtime, "inspect",
-			image,
-		)
-		if err != nil {
-			logger.Info("Pull image", "image", image)
-			err = utils.Exec(ctx, "", utils.IOStreams{
-				Out:    out,
-				ErrOut: out,
-			}, conf.Runtime, "pull",
-				image,
-			)
-			if err != nil {
-				return err
-			}
-		}
+	err = runtime.PullImages(ctx, conf.Runtime, images, conf.QuietPull)
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 
