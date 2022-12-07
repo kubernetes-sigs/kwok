@@ -295,19 +295,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 					}
 				}
 				switch event.Type {
-				case watch.Added:
-					pod := event.Object.(*corev1.Pod)
-					if c.needLockPod(pod) {
-						lockChan <- pod.DeepCopy()
-					} else {
-						logger.Info("Skip pod",
-							"reason", "not manage",
-							"event", event.Type,
-							"pod", log.KObj(pod),
-							"node", pod.Spec.NodeName,
-						)
-					}
-				case watch.Modified:
+				case watch.Added, watch.Modified:
 					pod := event.Object.(*corev1.Pod)
 
 					// At a Kubelet, we need to delete this pod on the node we manage
