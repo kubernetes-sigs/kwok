@@ -162,6 +162,11 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	if !bytes.Equal(out.Bytes(), []byte("ok")) {
+		logger := log.FromContext(ctx)
+		logger.Debug("Check Ready",
+			"method", "get /healthz",
+			"response", out,
+		)
 		return false, nil
 	}
 	return true, nil
@@ -173,7 +178,7 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		waitErr error
 		ready   bool
 	)
-	waitErr = wait.PollImmediateWithContext(ctx, time.Second/10, timeout, func(ctx context.Context) (bool, error) {
+	waitErr = wait.PollImmediateWithContext(ctx, time.Second, timeout, func(ctx context.Context) (bool, error) {
 		ready, err = c.Ready(ctx)
 		return ready, nil
 	})

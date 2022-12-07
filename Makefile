@@ -155,7 +155,7 @@ integration-test:
 .PHONY: e2e-test
 e2e-test:
 	@./hack/requirements.sh kubectl buildx kind
-	@./hack/e2e-test.sh --skip=nerdctl
+	@./hack/e2e-test.sh --skip=nerdctl --skip=kind
 
 ## help: Show this help message
 .PHONY: help
