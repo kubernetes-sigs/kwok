@@ -41,7 +41,7 @@ function test_create_cluster() {
   local targets
   local i
 
-  KWOK_KUBE_VERSION="${release}" kwokctl create cluster --name "${name}" --quiet-pull --prometheus-port 9090
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 5m --quiet-pull --prometheus-port 9090
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
@@ -60,6 +60,12 @@ function test_create_cluster() {
 
   if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
     echo "Error: cluster not ready"
+    echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
+    kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
+    echo
+    echo kwokctl --name="${name}" logs etcd
+    kwokctl --name="${name}" logs etcd
+    echo
     echo kwokctl --name="${name}" logs kube-apiserver
     kwokctl --name="${name}" logs kube-apiserver
     echo

@@ -25,6 +25,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
@@ -152,6 +154,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
+	logger := log.FromContext(ctx)
+
 	err = utils.Exec(ctx, "", utils.IOStreams{
 		ErrOut: os.Stderr,
 		Out:    os.Stderr,
@@ -159,6 +163,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		"--config", utils.PathJoin(conf.Workdir, runtime.KindName),
 		"--name", conf.Name,
 		"--image", conf.KindNodeImage,
+		"--wait", "1m",
 	)
 	if err != nil {
 		return err
@@ -178,16 +183,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	err = os.WriteFile(kubeconfig, kubeconfigBuf.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-
-	err = c.WaitReady(ctx, 30*time.Second)
-	if err != nil {
-		return fmt.Errorf("failed to wait for kube-apiserver ready: %w", err)
-	}
-
-	err = c.Kubectl(ctx, utils.IOStreams{}, "cordon", conf.Name+"-control-plane")
 	if err != nil {
 		return err
 	}
@@ -221,22 +216,81 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 	}
 
-	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", "kind-"+conf.Name)
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", "kind-"+conf.Name)
+	err = c.WaitReady(ctx, 30*time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to wait for kube-apiserver ready: %w", err)
+	}
+
+	err = c.Kubectl(ctx, utils.IOStreams{}, "cordon", conf.Name+"-control-plane")
+	if err != nil {
+		logger.Error("Failed cordon node", err)
+	}
 
 	if conf.DisableKubeScheduler {
-		if err := c.Stop(ctx, "kube-scheduler"); err != nil {
-			return err
+		err := c.Stop(ctx, "kube-scheduler")
+		if err != nil {
+			logger.Error("Failed to disable kube-scheduler", err)
 		}
 	}
 
 	if conf.DisableKubeControllerManager {
-		if err := c.Stop(ctx, "kube-controller-manager"); err != nil {
-			return err
+		err := c.Stop(ctx, "kube-controller-manager")
+		if err != nil {
+			logger.Error("Failed to disable kube-controller-manager", err)
 		}
 	}
+
+	// set the context in default kubeconfig
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", "kind-"+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", "kind-"+conf.Name)
+
 	return nil
+}
+
+func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
+	var (
+		err     error
+		waitErr error
+		ready   bool
+	)
+	waitErr = wait.PollImmediateWithContext(ctx, time.Second, timeout, func(ctx context.Context) (bool, error) {
+		ready, err = c.Ready(ctx)
+		return ready, nil
+	})
+	if err != nil {
+		return err
+	}
+	if waitErr != nil {
+		return waitErr
+	}
+	return nil
+}
+
+func (c *Cluster) Ready(ctx context.Context) (bool, error) {
+	ok, err := c.Cluster.Ready(ctx)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	out := bytes.NewBuffer(nil)
+	err = c.KubectlInCluster(ctx, utils.IOStreams{
+		Out: out,
+	}, "get", "pod", "--namespace=kube-system", "--field-selector=status.phase!=Running")
+	if err != nil {
+		return false, err
+	}
+	if out.Len() != 0 {
+		logger := log.FromContext(ctx)
+		logger.Debug("Check Ready",
+			"method", "get pod",
+			"response", out,
+		)
+		return false, nil
+	}
+	return true, nil
 }
 
 func (c *Cluster) Down(ctx context.Context) error {
@@ -299,7 +353,7 @@ func (c *Cluster) getComponentName(name string) (string, error) {
 		return "", err
 	}
 	switch name {
-	case "kwok-controller", "prometheus":
+	case "prometheus":
 	default:
 		name = name + "-" + clusterName
 	}

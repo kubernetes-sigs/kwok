@@ -152,7 +152,6 @@ jobs:
 
       - name: Test Benchmark
         shell: bash
-        if: ${{ matrix.kwokctl-runtime != 'kind' }}
         continue-on-error: true
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark

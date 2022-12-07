@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
@@ -275,12 +276,27 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
-		ErrOut: os.Stderr,
-		Out:    os.Stderr,
-	}, commands[0], commands[1:]...)
+	logger := log.FromContext(ctx)
+	for i := 0; i != 5; i++ {
+		if i != 0 {
+			logger.Warn("Try again later", "times", i, "err", err)
+			time.Sleep(time.Second)
+		}
+		err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
+			ErrOut: os.Stderr,
+			Out:    os.Stderr,
+		}, commands[0], commands[1:]...)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return err
+	}
+
+	err = c.WaitReady(ctx, 30*time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to wait for kube-apiserver ready: %w", err)
 	}
 
 	return nil

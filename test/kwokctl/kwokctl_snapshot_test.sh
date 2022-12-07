@@ -39,7 +39,7 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_KUBE_VERSION="${release}" kwokctl create cluster --name "${name}" --quiet-pull
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 5m --quiet-pull
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
@@ -54,7 +54,7 @@ function test_delete_cluster() {
 
 function get_snapshot_info() {
   local name="${1}"
-  kwokctl --name "${name}" kubectl get pod --all-namespaces | awk '{print $1, $2}'
+  kwokctl --name "${name}" kubectl get pod | awk '{print $1, $2}'
   kwokctl --name "${name}" kubectl get node | awk '{print $1}'
 }
 
