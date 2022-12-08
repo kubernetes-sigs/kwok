@@ -127,13 +127,6 @@ jobs:
           ./hack/requirements.sh compose
            docker compose version
 
-      - name: Install Kind
-        if: ${{ matrix.kwokctl-runtime == 'kind' }}
-        shell: bash
-        run: |
-          ./hack/requirements.sh kind
-          kind version
-
       - name: Docker Info
         if: ${{ matrix.kwokctl-runtime != 'binary' }}
         shell: bash

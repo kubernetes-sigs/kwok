@@ -98,6 +98,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 `)
 	cmd.Flags().StringVar(&flags.DockerComposeBinary, "docker-compose-binary", flags.DockerComposeBinary, `Binary of Docker-compose, only for docker runtime
 `)
+	cmd.Flags().StringVar(&flags.KindBinary, "kind-binary", flags.KindBinary, `Binary of kind, only for kind runtime`)
+
 	cmd.Flags().StringVar(&flags.KubeFeatureGates, "kube-feature-gates", flags.KubeFeatureGates, `A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes
 `)
 	cmd.Flags().StringVar(&flags.KubeRuntimeConfig, "kube-runtime-config", flags.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs

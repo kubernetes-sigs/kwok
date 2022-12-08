@@ -142,10 +142,15 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	logger := log.FromContext(ctx)
 
+	kindPath, err := c.preDownloadKind(ctx)
+	if err != nil {
+		return err
+	}
+
 	err = exec.Exec(ctx, "", exec.IOStreams{
 		ErrOut: os.Stderr,
 		Out:    os.Stderr,
-	}, conf.Runtime, "create", "cluster",
+	}, kindPath, "create", "cluster",
 		"--config", c.GetWorkdirPath(runtime.KindName),
 		"--name", c.Name(),
 		"--image", conf.KindNodeImage,
@@ -159,7 +164,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	err = loadImages(ctx, "kind", c.Name(), images)
+	err = loadImages(ctx, kindPath, c.Name(), images)
 	if err != nil {
 		return err
 	}
@@ -290,20 +295,20 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 }
 
 func (c *Cluster) Down(ctx context.Context) error {
-	conf, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
 	// unset the context in default kubeconfig
 	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name()+".cluster")
 	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name()+".user")
+
+	kindPath, err := c.preDownloadKind(ctx)
+	if err != nil {
+		return err
+	}
 
 	logger := log.FromContext(ctx)
 	err = exec.Exec(ctx, "", exec.IOStreams{
 		ErrOut: os.Stderr,
 		Out:    os.Stderr,
-	}, conf.Runtime, "delete", "cluster", "--name", c.Name())
+	}, kindPath, "delete", "cluster", "--name", c.Name())
 	if err != nil {
 		logger.Error("Failed to delete cluster", err)
 	}
@@ -400,4 +405,25 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args
 
 	return c.KubectlInCluster(ctx, stm,
 		append([]string{"exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "--endpoints=127.0.0.1:2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt"}, args...)...)
+}
+
+// preDownloadKind pre-download and cache kind
+func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = exec.LookPath("kind")
+	if err != nil {
+		// kind does not exist, try to download it
+		kindPath := c.GetBinPath("kind" + conf.BinSuffix)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0755, conf.QuietPull)
+		if err != nil {
+			return "", err
+		}
+		return kindPath, nil
+	}
+
+	return "kind", nil
 }
