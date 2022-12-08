@@ -33,6 +33,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/flowcontrol"
 
+	"sigs.k8s.io/kwok/pkg/cni"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
@@ -60,6 +61,8 @@ func NewCommand() *cobra.Command {
 		// If a Node being managed has this label it will only keep its heartbeat not modify another status
 		// If a Pod is on a managed Node and has this label status will not be modified
 		disregardStatusWithLabelSelector = ""
+
+		enableCNI = false
 
 		serverAddress = ""
 		master        = ""
@@ -127,6 +130,7 @@ func NewCommand() *cobra.Command {
 			}
 
 			ctr, err := controllers.NewController(controllers.Config{
+				EnableCNI:                             enableCNI,
 				ClientSet:                             clientset,
 				ManageAllNodes:                        manageAllNodes,
 				ManageNodesWithAnnotationSelector:     manageNodesWithAnnotationSelector,
@@ -168,6 +172,9 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().StringVar(&master, "master", master, "Server is the address of the kubernetes cluster")
 	cmd.Flags().StringVar(&serverAddress, "server-address", serverAddress, "Address to expose health and metrics on")
 
+	if cni.SupportedCNI() {
+		cmd.Flags().BoolVar(&enableCNI, "experimental-enable-cni", enableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components")
+	}
 	return cmd
 }
 
