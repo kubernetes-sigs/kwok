@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
@@ -47,40 +46,38 @@ func NewCluster(name, workdir string) (runtime.Runtime, error) {
 }
 
 func (c *Cluster) Install(ctx context.Context) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
-
-	kubeApiserverPath := utils.PathJoin(bin, "kube-apiserver"+vars.BinSuffix)
+	kubeApiserverPath := c.GetBinPath("kube-apiserver" + conf.BinSuffix)
 	err = utils.DownloadWithCache(ctx, conf.CacheDir, conf.KubeApiserverBinary, kubeApiserverPath, 0755, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
-	kubeControllerManagerPath := utils.PathJoin(bin, "kube-controller-manager"+vars.BinSuffix)
+	kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
 	err = utils.DownloadWithCache(ctx, conf.CacheDir, conf.KubeControllerManagerBinary, kubeControllerManagerPath, 0755, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
-	kubeSchedulerPath := utils.PathJoin(bin, "kube-scheduler"+vars.BinSuffix)
+	kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
 	err = utils.DownloadWithCache(ctx, conf.CacheDir, conf.KubeSchedulerBinary, kubeSchedulerPath, 0755, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
-	kwokControllerPath := utils.PathJoin(bin, "kwok-controller"+vars.BinSuffix)
+	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
 	err = utils.DownloadWithCache(ctx, conf.CacheDir, conf.KwokControllerBinary, kwokControllerPath, 0755, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
-	etcdPath := utils.PathJoin(bin, "etcd"+vars.BinSuffix)
+	etcdPath := c.GetBinPath("etcd" + conf.BinSuffix)
 	if conf.EtcdBinary == "" {
-		err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdPath, "etcd"+vars.BinSuffix, 0755, conf.QuietPull, true)
+		err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdPath, "etcd"+conf.BinSuffix, 0755, conf.QuietPull, true)
 		if err != nil {
 			return err
 		}
@@ -92,9 +89,9 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	if conf.PrometheusPort != 0 {
-		prometheusPath := utils.PathJoin(bin, "prometheus"+vars.BinSuffix)
+		prometheusPath := c.GetBinPath("prometheus" + conf.BinSuffix)
 		if conf.PrometheusBinary == "" {
-			err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.PrometheusBinaryTar, prometheusPath, "prometheus"+vars.BinSuffix, 0755, conf.QuietPull, true)
+			err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.PrometheusBinaryTar, prometheusPath, "prometheus"+conf.BinSuffix, 0755, conf.QuietPull, true)
 			if err != nil {
 				return err
 			}
@@ -106,14 +103,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 	}
 
-	etcdDataPath := utils.PathJoin(conf.Workdir, runtime.EtcdDataDirName)
+	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
 	err = os.MkdirAll(etcdDataPath, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
 
-	if conf.SecretPort {
-		pkiPath := utils.PathJoin(conf.Workdir, runtime.PkiName)
+	if conf.SecurePort {
+		pkiPath := c.GetWorkdirPath(runtime.PkiName)
 		err = pki.GeneratePki(pkiPath)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %w", err)
@@ -124,40 +121,39 @@ func (c *Cluster) Install(ctx context.Context) error {
 }
 
 func (c *Cluster) Up(ctx context.Context) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 	scheme := "http"
-	if conf.SecretPort {
+	if conf.SecurePort {
 		scheme = "https"
 	}
-	bin := utils.PathJoin(conf.Workdir, "bin")
 
 	localAddress := "127.0.0.1"
 	serveAddress := "0.0.0.0"
 
-	kubeApiserverPath := utils.PathJoin(bin, "kube-apiserver"+vars.BinSuffix)
-	kubeControllerManagerPath := utils.PathJoin(bin, "kube-controller-manager"+vars.BinSuffix)
-	kubeSchedulerPath := utils.PathJoin(bin, "kube-scheduler"+vars.BinSuffix)
-	kwokControllerPath := utils.PathJoin(bin, "kwok-controller"+vars.BinSuffix)
-	etcdPath := utils.PathJoin(bin, "etcd"+vars.BinSuffix)
-	etcdDataPath := utils.PathJoin(conf.Workdir, runtime.EtcdDataDirName)
-	pkiPath := utils.PathJoin(conf.Workdir, runtime.PkiName)
+	kubeApiserverPath := c.GetBinPath("kube-apiserver" + conf.BinSuffix)
+	kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
+	kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
+	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
+	etcdPath := c.GetBinPath("etcd" + conf.BinSuffix)
+	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
+	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	caCertPath := utils.PathJoin(pkiPath, "ca.crt")
 	adminKeyPath := utils.PathJoin(pkiPath, "admin.key")
 	adminCertPath := utils.PathJoin(pkiPath, "admin.crt")
 	auditLogPath := ""
 	auditPolicyPath := ""
-	if conf.AuditPolicy != "" {
-		auditLogPath = utils.PathJoin(conf.Workdir, "logs", runtime.AuditLogName)
+	if conf.KubeAuditPolicy != "" {
+		auditLogPath = c.GetLogPath(runtime.AuditLogName)
 		err = utils.CreateFile(auditLogPath, 0644)
 		if err != nil {
 			return err
 		}
 
-		auditPolicyPath = utils.PathJoin(conf.Workdir, runtime.AuditPolicyName)
-		err = utils.CopyFile(conf.AuditPolicy, auditPolicyPath)
+		auditPolicyPath = c.GetWorkdirPath(runtime.AuditPolicyName)
+		err = utils.CopyFile(conf.KubeAuditPolicy, auditPolicyPath)
 		if err != nil {
 			return err
 		}
@@ -203,7 +199,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		"--quota-backend-bytes",
 		"8589934592",
 	}
-	err = utils.ForkExec(ctx, conf.Workdir, etcdPath, etcdArgs...)
+	err = utils.ForkExec(ctx, c.Workdir(), etcdPath, etcdArgs...)
 	if err != nil {
 		return err
 	}
@@ -227,21 +223,21 @@ func (c *Cluster) Up(ctx context.Context) error {
 		"/registry",
 		"--allow-privileged",
 	}
-	if conf.RuntimeConfig != "" {
+	if conf.KubeRuntimeConfig != "" {
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--runtime-config",
-			conf.RuntimeConfig,
+			conf.KubeRuntimeConfig,
 		)
 	}
-	if conf.FeatureGates != "" {
+	if conf.KubeFeatureGates != "" {
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--feature-gates",
-			conf.FeatureGates,
+			conf.KubeFeatureGates,
 		)
 	}
 
-	if conf.SecretPort {
-		if conf.Authorization {
+	if conf.SecurePort {
+		if conf.KubeAuthorization {
 			kubeApiserverArgs = append(kubeApiserverArgs,
 				"--authorization-mode",
 				"Node,RBAC",
@@ -272,7 +268,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			"--insecure-port",
 			kubeApiserverPortStr,
 			"--cert-dir",
-			utils.PathJoin(conf.Workdir, "cert"),
+			c.GetWorkdirPath("cert"),
 		)
 	}
 
@@ -285,14 +281,14 @@ func (c *Cluster) Up(ctx context.Context) error {
 		)
 	}
 
-	err = utils.ForkExec(ctx, conf.Workdir, kubeApiserverPath, kubeApiserverArgs...)
+	err = utils.ForkExec(ctx, c.Workdir(), kubeApiserverPath, kubeApiserverArgs...)
 	if err != nil {
 		return err
 	}
 
 	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
-		ProjectName:  conf.Name,
-		SecretPort:   conf.SecretPort,
+		ProjectName:  c.Name(),
+		SecurePort:   conf.SecurePort,
 		Address:      scheme + "://" + localAddress + ":" + kubeApiserverPortStr,
 		AdminCrtPath: adminCertPath,
 		AdminKeyPath: adminKeyPath,
@@ -301,7 +297,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	kubeconfigPath := utils.PathJoin(conf.Workdir, runtime.InHostKubeconfigName)
+	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
 	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0644)
 	if err != nil {
 		return err
@@ -316,10 +312,10 @@ func (c *Cluster) Up(ctx context.Context) error {
 		"--kubeconfig",
 		kubeconfigPath,
 	}
-	if conf.FeatureGates != "" {
+	if conf.KubeFeatureGates != "" {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 			"--feature-gates",
-			conf.FeatureGates,
+			conf.KubeFeatureGates,
 		)
 	}
 
@@ -332,7 +328,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		conf.KubeControllerManagerPort = kubeControllerManagerPort
 	}
 	if conf.PrometheusPort != 0 {
-		if conf.SecretPort {
+		if conf.SecurePort {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--bind-address",
 				localAddress,
@@ -353,7 +349,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 	}
 
-	if conf.Authorization {
+	if conf.KubeAuthorization {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 			"--root-ca-file",
 			caCertPath,
@@ -366,10 +362,10 @@ func (c *Cluster) Up(ctx context.Context) error {
 		"--kubeconfig",
 		kubeconfigPath,
 	}
-	if conf.FeatureGates != "" {
+	if conf.KubeFeatureGates != "" {
 		kubeSchedulerArgs = append(kubeSchedulerArgs,
 			"--feature-gates",
-			conf.FeatureGates,
+			conf.KubeFeatureGates,
 		)
 	}
 
@@ -381,7 +377,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 		conf.KubeSchedulerPort = kubeSchedulerPort
 	}
-	if conf.SecretPort {
+	if conf.SecurePort {
 		kubeSchedulerArgs = append(kubeSchedulerArgs,
 			"--bind-address",
 			localAddress,
@@ -399,9 +395,12 @@ func (c *Cluster) Up(ctx context.Context) error {
 		)
 	}
 
+	configPath := c.GetWorkdirPath(runtime.ConfigName)
 	kwokControllerArgs := []string{
 		"--kubeconfig",
 		kubeconfigPath,
+		"--config",
+		configPath,
 		"--manage-all-nodes",
 	}
 
@@ -426,8 +425,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 		prometheusPortStr := utils.StringUint32(conf.PrometheusPort)
 
 		prometheusData, err := BuildPrometheus(BuildPrometheusConfig{
-			ProjectName:               conf.Name,
-			SecretPort:                conf.SecretPort,
+			ProjectName:               c.Name(),
+			SecurePort:                conf.SecurePort,
 			AdminCrtPath:              adminCertPath,
 			AdminKeyPath:              adminKeyPath,
 			PrometheusPort:            conf.PrometheusPort,
@@ -440,13 +439,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
 		}
-		prometheusConfigPath := utils.PathJoin(conf.Workdir, runtime.Prometheus)
+		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
 		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
 
-		prometheusPath = utils.PathJoin(bin, "prometheus")
+		prometheusPath = c.GetBinPath("prometheus")
 		prometheusArgs = []string{
 			"--config.file",
 			prometheusConfigPath,
@@ -473,7 +472,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	for path, args := range componentPathArgs {
 		path, args := path, args
 		g.Go(func() error {
-			return utils.ForkExec(ctx, conf.Workdir, path, args...)
+			return utils.ForkExec(ctx, c.Workdir(), path, args...)
 		})
 	}
 	if err = g.Wait(); err != nil {
@@ -481,17 +480,21 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://"+localAddress+":"+kubeApiserverPortStr)
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", conf.Name)
-	if conf.SecretPort {
-		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".insecure-skip-tls-verify", "true")
-		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", conf.Name)
-		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-certificate", adminCertPath)
-		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+c.Name()+".server", scheme+"://"+localAddress+":"+kubeApiserverPortStr)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
+	if conf.SecurePort {
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", c.Name())
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
 	}
 
 	logger := log.FromContext(ctx)
-	err = c.Update(ctx, conf)
+	err = c.SetConfig(ctx, conf)
+	if err != nil {
+		logger.Error("Failed to set config", err)
+	}
+	err = c.Save(ctx)
 	if err != nil {
 		logger.Error("Failed to update cluster", err)
 	}
@@ -499,22 +502,21 @@ func (c *Cluster) Up(ctx context.Context) error {
 }
 
 func (c *Cluster) Down(ctx context.Context) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "clusters."+conf.Name)
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+conf.Name)
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "clusters."+c.Name())
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+c.Name())
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+c.Name())
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
-	kubeApiserverPath := utils.PathJoin(bin, "kube-apiserver"+vars.BinSuffix)
-	kubeControllerManagerPath := utils.PathJoin(bin, "kube-controller-manager"+vars.BinSuffix)
-	kubeSchedulerPath := utils.PathJoin(bin, "kube-scheduler"+vars.BinSuffix)
-	kwokControllerPath := utils.PathJoin(bin, "kwok-controller"+vars.BinSuffix)
-	etcdPath := utils.PathJoin(bin, "etcd")
-	prometheusPath := utils.PathJoin(bin, "prometheus")
+	kubeApiserverPath := c.GetBinPath("kube-apiserver" + conf.BinSuffix)
+	kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
+	kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
+	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
+	etcdPath := c.GetBinPath("etcd")
+	prometheusPath := c.GetBinPath("prometheus")
 
 	componentPaths := []string{
 		kwokControllerPath,
@@ -538,7 +540,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 		wg.Add(1)
 		go func(path string) {
 			defer wg.Done()
-			err = utils.ForkExecKill(ctx, conf.Workdir, path)
+			err = utils.ForkExecKill(ctx, c.Workdir(), path)
 			if err != nil {
 				logger.Error("Failed to kill", err,
 					"component", filepath.Base(path),
@@ -548,14 +550,14 @@ func (c *Cluster) Down(ctx context.Context) error {
 	}
 	wg.Wait()
 
-	err = utils.ForkExecKill(ctx, conf.Workdir, kubeApiserverPath)
+	err = utils.ForkExecKill(ctx, c.Workdir(), kubeApiserverPath)
 	if err != nil {
 		logger.Error("Failed to kill", err,
 			"component", "kube-apiserver",
 		)
 	}
 
-	err = utils.ForkExecKill(ctx, conf.Workdir, etcdPath)
+	err = utils.ForkExecKill(ctx, c.Workdir(), etcdPath)
 	if err != nil {
 		logger.Error("Failed to kill", err,
 			"component", "etcd",
@@ -566,15 +568,9 @@ func (c *Cluster) Down(ctx context.Context) error {
 }
 
 func (c *Cluster) Start(ctx context.Context, name string) error {
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
+	svc := c.GetBinPath(name)
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
-	svc := utils.PathJoin(bin, name)
-
-	err = utils.ForkExecRestart(ctx, conf.Workdir, svc)
+	err := utils.ForkExecRestart(ctx, c.Workdir(), svc)
 	if err != nil {
 		return fmt.Errorf("failed to restart %s: %w", name, err)
 	}
@@ -582,15 +578,9 @@ func (c *Cluster) Start(ctx context.Context, name string) error {
 }
 
 func (c *Cluster) Stop(ctx context.Context, name string) error {
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
+	svc := c.GetBinPath(name)
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
-	svc := utils.PathJoin(bin, name)
-
-	err = utils.ForkExecKill(ctx, conf.Workdir, svc)
+	err := utils.ForkExecKill(ctx, c.Workdir(), svc)
 	if err != nil {
 		return fmt.Errorf("failed to kill %s: %w", name, err)
 	}
@@ -599,12 +589,8 @@ func (c *Cluster) Stop(ctx context.Context, name string) error {
 
 func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	logger := log.FromContext(ctx)
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
 
-	logs := utils.PathJoin(conf.Workdir, "logs", filepath.Base(name)+".log")
+	logs := c.GetLogPath(filepath.Base(name) + ".log")
 
 	f, err := os.OpenFile(logs, os.O_RDONLY, 0644)
 	if err != nil {
@@ -613,7 +599,7 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	defer func() {
 		err = f.Close()
 		if err != nil {
-			logger.Error("Failed to close file ", err)
+			logger.Error("Failed to close file", err)
 		}
 	}()
 
@@ -626,12 +612,8 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 
 func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) error {
 	logger := log.FromContext(ctx)
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
 
-	logs := utils.PathJoin(conf.Workdir, "logs", filepath.Base(name)+".log")
+	logs := c.GetLogPath(filepath.Base(name) + ".log")
 
 	t, err := tail.TailFile(logs, tail.Config{ReOpen: true, Follow: true})
 	if err != nil {
@@ -657,19 +639,8 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 }
 
 // ListBinaries list binaries in the cluster
-func (c *Cluster) ListBinaries(ctx context.Context, actual bool) ([]string, error) {
-	if !actual {
-		return []string{
-			vars.EtcdBinaryTar,
-			vars.KubeApiserverBinary,
-			vars.KubeControllerManagerBinary,
-			vars.KubeSchedulerBinary,
-			vars.KwokControllerBinary,
-			vars.PrometheusBinaryTar,
-			vars.KubectlBinary,
-		}, nil
-	}
-	conf, err := c.Config()
+func (c *Cluster) ListBinaries(ctx context.Context) ([]string, error) {
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -681,32 +652,24 @@ func (c *Cluster) ListBinaries(ctx context.Context, actual bool) ([]string, erro
 		conf.KubeSchedulerBinary,
 		conf.KwokControllerBinary,
 		conf.PrometheusBinaryTar,
-		vars.KubectlBinary,
+		conf.KubectlBinary,
 	}, nil
 }
 
 // ListImages list images in the cluster
-func (c *Cluster) ListImages(ctx context.Context, actual bool) ([]string, error) {
-	if !actual {
-		return []string{}, nil
-	}
-	_, err := c.Config()
-	if err != nil {
-		return nil, err
-	}
+func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 	return []string{}, nil
 }
 
 // EtcdctlInCluster implements the ectdctl subcommand
 func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
-	bin := utils.PathJoin(conf.Workdir, "bin")
-	etcdctlPath := utils.PathJoin(bin, "etcdctl"+vars.BinSuffix)
+	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+vars.BinSuffix, 0755, conf.QuietPull, true)
+	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}

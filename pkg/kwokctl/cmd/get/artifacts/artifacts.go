@@ -24,39 +24,43 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
 type flagpole struct {
-	Name    string
-	Runtime string
-	Filter  string
+	Name   string
+	Filter string
+
+	internalversion.KwokctlConfigurationOptions
 }
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
-func NewCommand() *cobra.Command {
+func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
+	flags.KwokctlConfigurationOptions = config.GetKwokctlConfiguration(ctx).Options
+
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "artifacts",
 		Short: "Lists binaries or images used by cluster",
 		Long:  "Lists binaries or images used by cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			flags.Name = vars.DefaultCluster
+			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)
 		},
 	}
-	cmd.Flags().StringVar(&flags.Runtime, "runtime", vars.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
-	cmd.Flags().StringVar(&flags.Filter, "filter", "", "Filter the list of (binary or image)")
+	cmd.Flags().StringVar(&flags.Runtime, "runtime", flags.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
+	cmd.Flags().StringVar(&flags.Filter, "filter", flags.Filter, "Filter the list of (binary or image)")
 	return cmd
 }
 
 func runE(ctx context.Context, flags *flagpole) error {
-	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
-	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
+	name := config.ClusterName(flags.Name)
+	workdir := utils.PathJoin(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", flags.Name)
@@ -73,17 +77,22 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 	artifacts := []string{}
 
-	_, err = rt.Config()
-	actual := err == nil
+	_, err = rt.Config(ctx)
+	if err != nil {
+		err = rt.SetConfig(ctx, &flags.KwokctlConfigurationOptions)
+		if err != nil {
+			return err
+		}
+	}
 	if flags.Filter == "" || flags.Filter == "binary" {
-		binaries, err := rt.ListBinaries(ctx, actual)
+		binaries, err := rt.ListBinaries(ctx)
 		if err != nil {
 			return err
 		}
 		artifacts = append(artifacts, binaries...)
 	}
 	if flags.Filter == "" || flags.Filter == "image" {
-		images, err := rt.ListImages(ctx, actual)
+		images, err := rt.ListImages(ctx)
 		if err != nil {
 			return err
 		}

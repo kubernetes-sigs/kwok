@@ -16,14 +16,26 @@ limitations under the License.
 
 package consts
 
-import (
-	"runtime"
-)
-
 var (
+	ProjectName = "kwok"
+	ConfigName  = "kwok.yaml"
+
 	Version      = "unknown"
-	KubeVersion  = "unknown"
-	ImagePrefix  = "registry.k8s.io/kwok"
 	BinaryPrefix = "https://github.com/kubernetes-sigs/kwok/releases/download"
-	BinaryName   = "kwok-" + runtime.GOOS + "-" + runtime.GOARCH
+	ImagePrefix  = "registry.k8s.io/kwok"
+
+	KubeVersion      = "unknown"
+	KubeBinaryPrefix = "https://dl.k8s.io/release"
+	KubeImagePrefix  = "registry.k8s.io"
+
+	EtcdBinaryPrefix = "https://github.com/etcd-io/etcd/releases/download"
+
+	DockerComposeVersion      = "2.13.0"
+	DockerComposeBinaryPrefix = "https://github.com/docker/compose/releases/download"
+
+	PrometheusVersion      = "2.35.0"
+	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
+	PrometheusImagePrefix  = "docker.io/prom"
+
+	KindNodeImagePrefix = "docker.io/kindest"
 )

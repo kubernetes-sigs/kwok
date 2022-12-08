@@ -17,6 +17,7 @@ limitations under the License.
 package log
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -49,6 +50,19 @@ func (c *ctlHandler) Enabled(level slog.Level) bool {
 	return level >= c.level
 }
 
+func formatValue(val slog.Value) string {
+	switch val.Kind() {
+	case slog.StringKind:
+		return quoteIfNeed(val.String())
+	default:
+		v, err := json.Marshal(val.Any())
+		if err == nil {
+			return string(v)
+		}
+		return quoteIfNeed(val.String())
+	}
+}
+
 func (c *ctlHandler) Handle(r slog.Record) error {
 	if r.Level < c.level {
 		return nil
@@ -57,7 +71,7 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 	if c.attrsStr == nil {
 		attrs := make([]string, 0, len(c.attrs))
 		for _, attr := range c.attrs {
-			attrs = append(attrs, attr.Key+"="+quoteIfNeed(attr.Value.String()))
+			attrs = append(attrs, attr.Key+"="+formatValue(attr.Value))
 		}
 		attrsStr := strings.Join(attrs, " ")
 		c.attrsStr = &attrsStr
@@ -68,10 +82,11 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 		attrs = append(attrs, *c.attrsStr)
 	}
 	r.Attrs(func(attr slog.Attr) {
+		value := formatValue(attr.Value)
 		if len(c.groups) == 0 {
-			attrs = append(attrs, attr.Key+"="+quoteIfNeed(attr.Value.String()))
+			attrs = append(attrs, attr.Key+"="+value)
 		} else {
-			attrs = append(attrs, strings.Join(append(c.groups, attr.Key), ".")+"="+quoteIfNeed(attr.Value.String()))
+			attrs = append(attrs, strings.Join(append(c.groups, attr.Key), ".")+"="+value)
 		}
 	})
 

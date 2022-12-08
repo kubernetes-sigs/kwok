@@ -37,7 +37,7 @@ services:
     links:
       - etcd
     ports:
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       - {{ .KubeApiserverPort }}:6443
 {{ else }}
       - {{ .KubeApiserverPort }}:8080
@@ -59,7 +59,7 @@ services:
       - --feature-gates
       - {{ .FeatureGates }}
 {{ end }}
-{{ if .SecretPort }}
+{{ if .SecurePort }}
 {{ if .Authorization }}
       - --authorization-mode
       - Node,RBAC
@@ -94,11 +94,11 @@ services:
       - /var/log/kubernetes/audit/audit.log
 {{ end }}
 
-{{ if or .SecretPort .AuditPolicy }}
+{{ if or .SecurePort .AuditPolicy }}
     volumes:
 {{ end }}
 
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       - {{ .AdminKeyPath }}:{{ .InClusterAdminKeyPath }}:ro
       - {{ .AdminCertPath }}:{{ .InClusterAdminCertPath }}:ro
       - {{ .CACertPath }}:{{ .InClusterCACertPath }}:ro
@@ -125,7 +125,7 @@ services:
       - {{ .FeatureGates }}
 {{ end }}
 {{ if .PrometheusPort }}
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       - --bind-address
       - 0.0.0.0
       - --secure-port
@@ -147,7 +147,7 @@ services:
 {{ end }}
     volumes:
       - {{ .KubeconfigPath }}:{{ .InClusterKubeconfigPath }}:ro
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       - {{ .AdminKeyPath }}:{{ .InClusterAdminKeyPath }}:ro
       - {{ .AdminCertPath }}:{{ .InClusterAdminCertPath }}:ro
       - {{ .CACertPath }}:{{ .InClusterCACertPath }}:ro
@@ -171,7 +171,7 @@ services:
       - {{ .FeatureGates }}
 {{ end }}
 {{ if .PrometheusPath }}
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       - --bind-address
       - 0.0.0.0
       - --secure-port
@@ -187,7 +187,7 @@ services:
 {{ end }}
     volumes:
       - {{ .KubeconfigPath }}:{{ .InClusterKubeconfigPath }}:ro
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       - {{ .AdminKeyPath }}:{{ .InClusterAdminKeyPath }}:ro
       - {{ .AdminCertPath }}:{{ .InClusterAdminCertPath }}:ro
       - {{ .CACertPath }}:{{ .InClusterCACertPath }}:ro
@@ -202,8 +202,8 @@ services:
     command:
       - --kubeconfig
       - {{ .InClusterKubeconfigPath }}
-      - --cidr
-      - 10.0.0.1/24
+      - --config
+      - {{ .InClusterConfigPath }}
       - --manage-all-nodes
 {{ if .PrometheusPath }}
       - --server-address
@@ -213,8 +213,9 @@ services:
       - kube_apiserver
 
     volumes:
+      - {{ .ConfigPath }}:{{ .InClusterConfigPath }}:ro
       - {{ .KubeconfigPath }}:{{ .InClusterKubeconfigPath }}:ro
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       - {{ .AdminKeyPath }}:{{ .InClusterAdminKeyPath }}:ro
       - {{ .AdminCertPath }}:{{ .InClusterAdminCertPath }}:ro
       - {{ .CACertPath }}:{{ .InClusterCACertPath }}:ro
@@ -239,7 +240,7 @@ services:
       - {{ .PrometheusPort }}:9090
     volumes:
       - {{ .PrometheusPath }}:{{ .InClusterPrometheusPath }}:ro
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       - {{ .AdminKeyPath }}:{{ .InClusterAdminKeyPath }}:ro
       - {{ .AdminCertPath }}:{{ .InClusterAdminCertPath }}:ro
       - {{ .CACertPath }}:{{ .InClusterCACertPath }}:ro

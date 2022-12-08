@@ -8,6 +8,7 @@ metadata:
 spec:
   containers:
   - args:
+    - --config=/etc/kwok/kwok.yaml
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
     - --manage-nodes-with-label-selector=
@@ -15,7 +16,6 @@ spec:
     - --disregard-status-with-label-selector=
     - --server-address=0.0.0.0:8080
     - --kubeconfig=/etc/kubernetes/admin.conf
-    - --cidr=10.0.0.1/24
     - --node-ip=$(POD_IP)
     env:
     - name: POD_IP
@@ -47,6 +47,9 @@ spec:
     - mountPath: /etc/kubernetes/admin.conf
       name: kubeconfig
       readOnly: true
+    - mountPath: /etc/kwok/kwok.yaml
+      name: config
+      readOnly: true
   hostNetwork: true
   restartPolicy: Always
   volumes:
@@ -54,3 +57,7 @@ spec:
       path: /etc/kubernetes/admin.conf
       type: FileOrCreate
     name: kubeconfig
+  - hostPath:
+      path: /etc/kwok/kwok.yaml
+      type: FileOrCreate
+    name: config

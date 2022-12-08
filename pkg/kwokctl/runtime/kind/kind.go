@@ -47,4 +47,6 @@ type BuildKindConfig struct {
 
 	AuditPolicy string
 	AuditLog    string
+
+	ConfigPath string
 }

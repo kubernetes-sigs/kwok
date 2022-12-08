@@ -23,9 +23,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
@@ -34,14 +34,15 @@ type flagpole struct {
 }
 
 // NewCommand returns a new cobra.Command for use kubectl in a cluster
-func NewCommand() *cobra.Command {
+func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
+
 	cmd := &cobra.Command{
 		Use:   "kubectl",
 		Short: "kubectl in cluster",
 		Long:  "kubectl in cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			flags.Name = vars.DefaultCluster
+			flags.Name = config.DefaultCluster
 			err := runE(cmd.Context(), flags, args)
 			if err != nil {
 				return fmt.Errorf("%v: %w", args, err)
@@ -54,14 +55,14 @@ func NewCommand() *cobra.Command {
 }
 
 func runE(ctx context.Context, flags *flagpole, args []string) error {
-	name := fmt.Sprintf("%s-%s", vars.ProjectName, flags.Name)
-	workdir := utils.PathJoin(vars.ClustersDir, flags.Name)
+	name := config.ClusterName(flags.Name)
+	workdir := utils.PathJoin(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", flags.Name)
 	ctx = log.NewContext(ctx, logger)
 
-	rt, err := runtime.DefaultRegistry.Load(name, workdir)
+	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 	if err != nil {
 		return err
 	}

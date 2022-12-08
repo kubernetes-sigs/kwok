@@ -79,13 +79,14 @@ type Config struct {
 // NewController creates a new fake kubelet controller
 func NewController(conf Config) (*Controller, error) {
 	var nodeSelectorFunc func(node *corev1.Node) bool
-	if conf.ManageAllNodes {
+	switch {
+	case conf.ManageAllNodes:
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return true
 		}
 		conf.ManageNodesWithAnnotationSelector = ""
 		conf.ManageNodesWithLabelSelector = ""
-	} else if conf.ManageNodesWithAnnotationSelector != "" {
+	case conf.ManageNodesWithAnnotationSelector != "":
 		selector, err := labels.Parse(conf.ManageNodesWithAnnotationSelector)
 		if err != nil {
 			return nil, err
@@ -93,8 +94,11 @@ func NewController(conf Config) (*Controller, error) {
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return selector.Matches(labels.Set(node.Annotations))
 		}
+
 		// client-go supports label filtering, so ignore this.
-		// } else if conf.ManageNodesWithLabelSelector != "" {
+		// case conf.ManageNodesWithLabelSelector != "":
+	default:
+		return nil, fmt.Errorf("no nodes are managed")
 	}
 
 	var lockPodsOnNodeFunc func(ctx context.Context, nodeName string) error

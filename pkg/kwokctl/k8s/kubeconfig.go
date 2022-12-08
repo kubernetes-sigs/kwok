@@ -40,7 +40,7 @@ func BuildKubeconfig(conf BuildKubeconfigConfig) (string, error) {
 
 type BuildKubeconfigConfig struct {
 	ProjectName  string
-	SecretPort   bool
+	SecurePort   bool
 	Address      string
 	AdminCrtPath string
 	AdminKeyPath string

@@ -17,6 +17,8 @@ limitations under the License.
 package get
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get/artifacts"
@@ -25,7 +27,7 @@ import (
 )
 
 // NewCommand returns a new cobra.Command for get
-func NewCommand() *cobra.Command {
+func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "get",
@@ -36,8 +38,8 @@ func NewCommand() *cobra.Command {
 		},
 	}
 	// add subcommands
-	cmd.AddCommand(clusters.NewCommand())
-	cmd.AddCommand(artifacts.NewCommand())
-	cmd.AddCommand(kubeconfig.NewCommand())
+	cmd.AddCommand(clusters.NewCommand(ctx))
+	cmd.AddCommand(artifacts.NewCommand(ctx))
+	cmd.AddCommand(kubeconfig.NewCommand(ctx))
 	return cmd
 }

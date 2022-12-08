@@ -17,6 +17,7 @@ limitations under the License.
 package runtime
 
 import (
+	"context"
 	"fmt"
 	"sort"
 )
@@ -47,9 +48,9 @@ func (r *Registry) Get(name string) (BuildRuntime, bool) {
 }
 
 // Load a runtime
-func (r *Registry) Load(name, workdir string) (Runtime, error) {
+func (r *Registry) Load(ctx context.Context, name, workdir string) (Runtime, error) {
 	cluster := NewCluster(name, workdir)
-	conf, err := cluster.Load()
+	conf, err := cluster.Load(ctx)
 	if err != nil {
 		return nil, err
 	}

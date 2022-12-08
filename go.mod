@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/containerd/go-cni v1.1.7
 	github.com/containernetworking/plugins v1.1.1
+	github.com/google/go-cmp v0.5.9
 	github.com/nxadm/tail v1.4.8
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.6.1

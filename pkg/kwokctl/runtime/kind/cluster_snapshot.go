@@ -21,27 +21,21 @@ import (
 	"os"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // SnapshotSave save the snapshot of cluster
 func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
-	etcdContainerName, err := c.getComponentName("etcd")
-	if err != nil {
-		return err
-	}
-	kindName, err := c.getClusterName()
-	if err != nil {
-		return err
-	}
+	etcdContainerName := c.getComponentName("etcd")
+
+	kindName := c.getClusterName()
 
 	logger := log.FromContext(ctx)
 
 	// Save to /var/lib/etcd/snapshot.db on container of Kind use Kubectl
 	// Why this path, etcd is just the volume /var/lib/etcd/ in container of Kind.
 	tmpFile := "/var/lib/etcd/snapshot.db"
-	err = c.KubectlInCluster(ctx, utils.IOStreams{}, "exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "snapshot", "save", tmpFile, "--endpoints=127.0.0.1:2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt")
+	err := c.KubectlInCluster(ctx, utils.IOStreams{}, "exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "snapshot", "save", tmpFile, "--endpoints=127.0.0.1:2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt")
 	if err != nil {
 		return err
 	}
@@ -64,19 +58,15 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 // SnapshotRestore restore the snapshot of cluster
 func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
-	kindName, err := c.getClusterName()
-	if err != nil {
-		return err
-	}
+	kindName := c.getClusterName()
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
-	etcdctlPath := utils.PathJoin(bin, "etcdctl"+vars.BinSuffix)
+	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+vars.BinSuffix, 0755, conf.QuietPull, true)
+	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}
@@ -94,7 +84,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	}()
 
 	// Restore snapshot to host temporary directory
-	etcdDataTmp := utils.PathJoin(conf.Workdir, "etcd")
+	etcdDataTmp := c.GetWorkdirPath("etcd")
 	err = utils.Exec(ctx, "", utils.IOStreams{}, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err

@@ -17,6 +17,8 @@ limitations under the License.
 package snapshot
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/restore"
@@ -24,7 +26,7 @@ import (
 )
 
 // NewCommand returns a new cobra.Command for cluster snapshot
-func NewCommand() *cobra.Command {
+func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "snapshot",
@@ -34,7 +36,7 @@ func NewCommand() *cobra.Command {
 			return cmd.Help()
 		},
 	}
-	cmd.AddCommand(save.NewCommand())
-	cmd.AddCommand(restore.NewCommand())
+	cmd.AddCommand(save.NewCommand(ctx))
+	cmd.AddCommand(restore.NewCommand(ctx))
 	return cmd
 }

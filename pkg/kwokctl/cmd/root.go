@@ -17,8 +17,11 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create"
 	del "sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete"
@@ -27,11 +30,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/kubectl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/logs"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 )
 
 // NewCommand returns a new cobra.Command for root
-func NewCommand() *cobra.Command {
+func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:          cobra.NoArgs,
 		Use:           "kwokctl [command]",
@@ -45,17 +47,17 @@ func NewCommand() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().StringVar(&vars.DefaultCluster, "name", vars.DefaultCluster, "cluster name")
+	cmd.PersistentFlags().StringVar(&config.DefaultCluster, "name", config.DefaultCluster, "cluster name")
 	cmd.TraverseChildren = true
 
 	cmd.AddCommand(
-		create.NewCommand(),
-		del.NewCommand(),
-		get.NewCommand(),
-		kubectl.NewCommand(),
-		etcdctl.NewCommand(),
-		logs.NewCommand(),
-		snapshot.NewCommand(),
+		create.NewCommand(ctx),
+		del.NewCommand(ctx),
+		get.NewCommand(ctx),
+		kubectl.NewCommand(ctx),
+		etcdctl.NewCommand(ctx),
+		logs.NewCommand(ctx),
+		snapshot.NewCommand(ctx),
 	)
 	return cmd
 }
