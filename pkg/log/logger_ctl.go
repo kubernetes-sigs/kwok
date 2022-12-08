@@ -21,6 +21,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/wzshiming/ctc"
@@ -188,9 +189,13 @@ func runeWidth(r rune) int {
 	return 0
 }
 
+// quoteIfNeed returns wrap it in double quotes if the string contains characters other than letters and digits,
+// otherwise return the original string
 func quoteIfNeed(s string) string {
-	if strings.ContainsAny(s, "'\"\t\n\r\xff\u0100\\ ") {
-		return strconv.Quote(s)
+	for _, c := range s {
+		if !unicode.In(c, unicode.Letter, unicode.Digit) {
+			return strconv.Quote(s)
+		}
 	}
 	return s
 }

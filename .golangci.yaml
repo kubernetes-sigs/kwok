@@ -27,7 +27,7 @@ linters:
     - prealloc
     # - revive
     # - rowserrcheck
-    # - staticcheck
+    - staticcheck
     # - stylecheck
     - typecheck
     - unconvert
