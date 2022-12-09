@@ -41,6 +41,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type flagpole struct {
@@ -65,6 +66,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Version:       consts.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if flags.Kubeconfig != "" {
+				flags.Kubeconfig = path.ExpandHome(flags.Kubeconfig)
 				f, err := os.Stat(flags.Kubeconfig)
 				if err != nil || f.IsDir() {
 					flags.Kubeconfig = ""
