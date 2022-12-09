@@ -28,9 +28,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 var (
@@ -41,13 +41,13 @@ var (
 	WorkDir = envs.GetEnvWithPrefix("WORKDIR", func() string {
 		dir, err := os.UserHomeDir()
 		if err != nil || dir == "" {
-			return utils.PathJoin(os.TempDir(), consts.ProjectName)
+			return path.Join(os.TempDir(), consts.ProjectName)
 		}
-		return utils.PathJoin(dir, "."+consts.ProjectName)
+		return path.Join(dir, "."+consts.ProjectName)
 	}())
 
 	// ClustersDir is the directory of the clusters.
-	ClustersDir = utils.PathJoin(WorkDir, "clusters")
+	ClustersDir = path.Join(WorkDir, "clusters")
 )
 
 func ClusterName(name string) string {
@@ -184,7 +184,7 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	conf.KubeAuditPolicy = envs.GetEnvWithPrefix("KUBE_AUDIT_POLICY", conf.KubeAuditPolicy)
 
 	if conf.CacheDir == "" {
-		conf.CacheDir = utils.PathJoin(WorkDir, "cache")
+		conf.CacheDir = path.Join(WorkDir, "cache")
 	}
 
 	if conf.BinSuffix == "" {

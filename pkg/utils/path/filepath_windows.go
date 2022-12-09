@@ -1,3 +1,5 @@
+//go:build windows
+
 /*
 Copyright 2022 The Kubernetes Authors.
 
@@ -14,12 +16,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package path
 
 import (
-	"strconv"
+	"path/filepath"
+	"strings"
 )
 
-func StringUint32(u uint32) string {
-	return strconv.FormatUint(uint64(u), 10)
+// Join is a wrapper around filepath.Join that converts all path separators to
+// forward slashes. This is useful for Windows paths that are used in URLs.
+func Join(elem ...string) string {
+	return strings.Replace(filepath.Join(elem...), `\`, `/`, -1)
 }

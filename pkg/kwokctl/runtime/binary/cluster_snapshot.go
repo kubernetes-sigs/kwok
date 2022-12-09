@@ -21,8 +21,10 @@ import (
 	"os"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
+	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 // SnapshotSave save the snapshot of cluster
@@ -34,12 +36,12 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
+	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}
 
-	err = utils.Exec(ctx, "", utils.IOStreams{}, etcdctlPath, "snapshot", "save", path, "--endpoints=127.0.0.1:"+utils.StringUint32(conf.EtcdPort))
+	err = exec.Exec(ctx, "", exec.IOStreams{}, etcdctlPath, "snapshot", "save", path, "--endpoints=127.0.0.1:"+format.String(conf.EtcdPort))
 	if err != nil {
 		return err
 	}
@@ -56,7 +58,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
+	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}
@@ -79,7 +81,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	if err != nil {
 		return err
 	}
-	err = utils.Exec(ctx, "", utils.IOStreams{}, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
+	err = exec.Exec(ctx, "", exec.IOStreams{}, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err
 	}

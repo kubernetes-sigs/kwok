@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/nxadm/tail"
@@ -32,8 +31,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
+	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 var (
@@ -139,7 +140,7 @@ func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
 	kubectlPath, err := exec.LookPath("kubectl")
 	if err != nil {
 		kubectlPath = c.GetBinPath("kubectl" + conf.BinSuffix)
-		err = utils.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0755, conf.QuietPull)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0755, conf.QuietPull)
 		if err != nil {
 			return "", err
 		}
@@ -162,7 +163,7 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 
 func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	out := bytes.NewBuffer(nil)
-	err := c.KubectlInCluster(ctx, utils.IOStreams{
+	err := c.KubectlInCluster(ctx, exec.IOStreams{
 		Out:    out,
 		ErrOut: out,
 	}, "get", "--raw", "/healthz")
@@ -199,22 +200,22 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 	return nil
 }
 
-func (c *Cluster) Kubectl(ctx context.Context, stm utils.IOStreams, args ...string) error {
+func (c *Cluster) Kubectl(ctx context.Context, stm exec.IOStreams, args ...string) error {
 	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
 		return err
 	}
 
-	return utils.Exec(ctx, "", stm, kubectlPath, args...)
+	return exec.Exec(ctx, "", stm, kubectlPath, args...)
 }
 
-func (c *Cluster) KubectlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
+func (c *Cluster) KubectlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error {
 	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
 		return err
 	}
 
-	return utils.Exec(ctx, "", stm, kubectlPath,
+	return exec.Exec(ctx, "", stm, kubectlPath,
 		append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
 }
 
@@ -268,13 +269,13 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 }
 
 func (c *Cluster) GetWorkdirPath(name string) string {
-	return utils.PathJoin(c.workdir, name)
+	return path.Join(c.workdir, name)
 }
 
 func (c *Cluster) GetBinPath(name string) string {
-	return utils.PathJoin(c.workdir, "bin", name)
+	return path.Join(c.workdir, "bin", name)
 }
 
 func (c *Cluster) GetLogPath(name string) string {
-	return utils.PathJoin(c.workdir, "logs", name)
+	return path.Join(c.workdir, "logs", name)
 }

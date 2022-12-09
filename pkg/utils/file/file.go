@@ -14,14 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package file
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 )
 
-func CreateFile(name string, perm os.FileMode) error {
+// Create creates a file at path with the given content.
+func Create(name string, perm os.FileMode) error {
 	err := os.MkdirAll(filepath.Dir(name), 0755)
 	if err != nil {
 		return err
@@ -37,21 +39,37 @@ func CreateFile(name string, perm os.FileMode) error {
 	return nil
 }
 
-func CopyFile(oldpath, newpath string) error {
+// Copy copies a file from src to dst.
+func Copy(oldpath, newpath string) error {
 	err := os.MkdirAll(filepath.Dir(newpath), 0755)
 	if err != nil {
 		return err
 	}
 
-	data, err := os.ReadFile(oldpath)
+	oldFile, err := os.OpenFile(oldpath, os.O_RDONLY, 0)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = oldFile.Close()
+	}()
+
+	fi, err := oldFile.Stat()
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(newpath, data, 0644)
+	newFile, err := os.OpenFile(newpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fi.Mode())
 	if err != nil {
 		return err
 	}
+	defer func() {
+		_ = newFile.Close()
+	}()
 
+	_, err = io.Copy(newFile, oldFile)
+	if err != nil {
+		return err
+	}
 	return nil
 }

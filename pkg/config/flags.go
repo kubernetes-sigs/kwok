@@ -24,14 +24,14 @@ import (
 	"github.com/spf13/pflag"
 
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type configCtx int
 
 func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, error) {
-	defaultConfigPath := utils.PathJoin(WorkDir, consts.ConfigName)
+	defaultConfigPath := path.Join(WorkDir, consts.ConfigName)
 	config := flags.StringP("config", "c", defaultConfigPath, "config path")
 	_ = flags.Parse(os.Args[1:])
 

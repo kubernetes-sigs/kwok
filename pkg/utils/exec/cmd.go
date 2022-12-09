@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package exec
 
 import (
 	"bytes"
@@ -29,10 +29,13 @@ import (
 	"syscall"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
+// ForkExec forks a new process and execs the given command.
+// The process will be terminated when the context is canceled.
 func ForkExec(ctx context.Context, dir string, name string, arg ...string) error {
-	pidPath := PathJoin(dir, "pids", filepath.Base(name)+".pid")
+	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
 	pidData, err := os.ReadFile(pidPath)
 	if err == nil {
 		pid, err := strconv.Atoi(string(pidData))
@@ -43,8 +46,8 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 		}
 	}
 
-	logPath := PathJoin(dir, "logs", filepath.Base(name)+".log")
-	cmdlinePath := PathJoin(dir, "cmdline", filepath.Base(name))
+	logPath := path.Join(dir, "logs", filepath.Base(name)+".log")
+	cmdlinePath := path.Join(dir, "cmdline", filepath.Base(name))
 
 	err = os.MkdirAll(filepath.Dir(pidPath), 0755)
 	if err != nil {
@@ -87,8 +90,9 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 	return nil
 }
 
+// ForkExecRestart restarts the process if it is not running.
 func ForkExecRestart(ctx context.Context, dir string, name string) error {
-	cmdlinePath := PathJoin(dir, "cmdline", filepath.Base(name))
+	cmdlinePath := path.Join(dir, "cmdline", filepath.Base(name))
 
 	data, err := os.ReadFile(cmdlinePath)
 	if err != nil {
@@ -100,8 +104,9 @@ func ForkExecRestart(ctx context.Context, dir string, name string) error {
 	return ForkExec(ctx, dir, args[0], args[1:]...)
 }
 
+// ForkExecKill kills the process if it is running.
 func ForkExecKill(ctx context.Context, dir string, name string) error {
-	pidPath := PathJoin(dir, "pids", filepath.Base(name)+".pid")
+	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
 	_, err := os.Stat(pidPath)
 	if err != nil {
 		// No pid file exists, which means the process has been terminated
@@ -131,6 +136,7 @@ func ForkExecKill(ctx context.Context, dir string, name string) error {
 	return nil
 }
 
+// Exec executes the given command and returns the output.
 func Exec(ctx context.Context, dir string, stm IOStreams, name string, arg ...string) error {
 	cmd := command(ctx, name, arg...)
 	cmd.Dir = dir

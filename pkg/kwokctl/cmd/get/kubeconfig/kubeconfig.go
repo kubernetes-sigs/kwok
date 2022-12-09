@@ -24,8 +24,9 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type flagpole struct {
@@ -51,7 +52,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 func runE(ctx context.Context, flags *flagpole) error {
 	name := config.ClusterName(flags.Name)
-	workdir := utils.PathJoin(config.ClustersDir, flags.Name)
+	workdir := path.Join(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", flags.Name)
@@ -62,7 +63,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	err = rt.KubectlInCluster(ctx, utils.IOStreams{
+	err = rt.KubectlInCluster(ctx, exec.IOStreams{
 		Out:    os.Stdout,
 		ErrOut: os.Stderr,
 	}, "config", "view", "--minify", "--flatten", "--raw")

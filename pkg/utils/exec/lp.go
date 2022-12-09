@@ -1,5 +1,3 @@
-//go:build windows
-
 /*
 Copyright 2022 The Kubernetes Authors.
 
@@ -16,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package exec
 
 import (
-	"path/filepath"
-	"strings"
+	"os/exec"
 )
 
-func PathJoin(elem ...string) string {
-	return strings.Replace(filepath.Join(elem...), `\`, `/`, -1)
+// LookPath is a wrapper around exec.LookPath.
+func LookPath(file string) (string, error) {
+	return exec.LookPath(file)
 }
