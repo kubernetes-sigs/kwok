@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
 type Runtime interface {
@@ -63,13 +63,13 @@ type Runtime interface {
 	InHostKubeconfig() (string, error)
 
 	// Kubectl command
-	Kubectl(ctx context.Context, stm utils.IOStreams, args ...string) error
+	Kubectl(ctx context.Context, stm exec.IOStreams, args ...string) error
 
 	// KubectlInCluster command in cluster
-	KubectlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error
+	KubectlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error
 
 	// EtcdctlInCluster command in cluster
-	EtcdctlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error
+	EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error
 
 	// Logs logs of a component
 	Logs(ctx context.Context, name string, out io.Writer) error

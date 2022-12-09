@@ -16,12 +16,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package path
 
 import (
 	"path/filepath"
 )
 
-func PathJoin(elem ...string) string {
+// Join is a wrapper around filepath.Join.
+func Join(elem ...string) string {
 	return filepath.Join(elem...)
 }

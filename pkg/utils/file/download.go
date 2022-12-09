@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package file
 
 import (
 	"context"
@@ -28,8 +28,10 @@ import (
 	"strconv"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
+// DownloadWithCacheAndExtract downloads the src file to the dest file, and extract it to the dest directory.
 func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string, match string, mode fs.FileMode, quiet bool, clean bool) error {
 	if _, err := os.Stat(dest); err == nil {
 		return nil
@@ -39,13 +41,13 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 	if err != nil {
 		return err
 	}
-	cache := PathJoin(filepath.Dir(cacheTar), match)
+	cache := path.Join(filepath.Dir(cacheTar), match)
 	if _, err = os.Stat(cache); err != nil {
 		cacheTar, err = getCacheOrDownload(ctx, cacheDir, src, 0644, quiet)
 		if err != nil {
 			return err
 		}
-		err = Untar(ctx, cacheTar, func(file string) (string, bool) {
+		err = untar(ctx, cacheTar, func(file string) (string, bool) {
 			if filepath.Base(file) == match {
 				return cache, true
 			}
@@ -79,6 +81,7 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 	return nil
 }
 
+// DownloadWithCache downloads the src file to the dest file.
 func DownloadWithCache(ctx context.Context, cacheDir, src, dest string, mode fs.FileMode, quiet bool) error {
 	if _, err := os.Stat(dest); err == nil {
 		return nil
@@ -109,7 +112,7 @@ func getCachePath(cacheDir, src string) (string, error) {
 	}
 	switch u.Scheme {
 	case "http", "https":
-		return PathJoin(cacheDir, u.Scheme, u.Host, u.Path), nil
+		return path.Join(cacheDir, u.Scheme, u.Host, u.Path), nil
 	default:
 		return src, nil
 	}
@@ -168,7 +171,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 
 		var srcReader io.Reader = resp.Body
 		if !quiet {
-			pb := NewProgressBar()
+			pb := newProgressBar()
 			contentLength := resp.Header.Get("Content-Length")
 			contentLengthInt, _ := strconv.Atoi(contentLength)
 			counter := newCounterWriter(func(counter int) {

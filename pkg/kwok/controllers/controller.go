@@ -94,9 +94,8 @@ func NewController(conf Config) (*Controller, error) {
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return selector.Matches(labels.Set(node.Annotations))
 		}
-
+	case conf.ManageNodesWithLabelSelector != "":
 		// client-go supports label filtering, so ignore this.
-		// case conf.ManageNodesWithLabelSelector != "":
 	default:
 		return nil, fmt.Errorf("no nodes are managed")
 	}

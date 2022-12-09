@@ -14,28 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package path
+package format
 
 import (
-	"os"
+	"strconv"
+
+	"golang.org/x/exp/constraints"
 )
 
-// ExpandHome expands home directory in file paths.
-func ExpandHome(path string) string {
-	if len(path) == 0 {
-		return path
-	}
-	if path[0] != '~' {
-		return path
-	}
-	if len(path) > 1 && path[1] != '/' && path[1] != '\\' {
-		return path
-	}
-
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return path
-	}
-
-	return Join(home, path[1:])
+// String returns the string representation of u.
+func String[T constraints.Unsigned](u T) string {
+	return strconv.FormatUint(uint64(u), 10)
 }

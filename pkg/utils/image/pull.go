@@ -14,17 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package runtime
+package image
 
 import (
 	"context"
 	"io"
 	"os"
 
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
+// PullImages is a helper function to pull images
 func PullImages(ctx context.Context, command string, images []string, quiet bool) error {
 	var out io.Writer = os.Stderr
 	if quiet {
@@ -34,13 +35,13 @@ func PullImages(ctx context.Context, command string, images []string, quiet bool
 	logger := log.FromContext(ctx)
 
 	for _, image := range images {
-		err := utils.Exec(ctx, "", utils.IOStreams{},
+		err := exec.Exec(ctx, "", exec.IOStreams{},
 			command, "inspect",
 			image,
 		)
 		if err != nil {
 			logger.Info("Pull image", "image", image)
-			err = utils.Exec(ctx, "", utils.IOStreams{
+			err = exec.Exec(ctx, "", exec.IOStreams{
 				Out:    out,
 				ErrOut: out,
 			}, command, "pull",

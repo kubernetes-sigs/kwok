@@ -14,14 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package net
 
 import (
 	"context"
 	"fmt"
 	"net"
-
-	"sigs.k8s.io/kwok/pkg/log"
 )
 
 var (
@@ -29,23 +27,21 @@ var (
 	lastUsedPort     uint32 = 32767
 )
 
-// GetUnusedPort returns an unused port
-func GetUnusedPort(ctx context.Context) (uint32, error) {
-	logger := log.FromContext(ctx)
-	for lastUsedPort > 10000 {
+// GetUnusedPort returns an unused port on the local machine.
+func GetUnusedPort(ctx context.Context) (port uint32, err error) {
+	var listener net.Listener
+	for lastUsedPort > 10000 && ctx.Err() == nil {
 		lastUsedPort--
-		l, err := net.Listen("tcp", fmt.Sprintf(":%d", lastUsedPort))
-		if err != nil {
-			continue
+		listener, err = net.Listen("tcp", fmt.Sprintf(":%d", lastUsedPort))
+		if err == nil {
+			break
 		}
-		defer func() {
-			err = l.Close()
-			if err != nil {
-				logger.Error("Failed to close Listen", err)
-			}
-		}()
-		return lastUsedPort, nil
 	}
 
-	return 0, errGetUnusedPort
+	if listener == nil {
+		return 0, fmt.Errorf("%w: %v", errGetUnusedPort, err)
+	}
+
+	_ = listener.Close()
+	return lastUsedPort, nil
 }

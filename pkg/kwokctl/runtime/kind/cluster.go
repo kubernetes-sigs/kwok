@@ -28,8 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
-	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
+	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/image"
 )
 
 type Cluster struct {
@@ -61,13 +63,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	auditPolicyPath := ""
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath = c.GetLogPath(runtime.AuditLogName)
-		err = utils.CreateFile(auditLogPath, 0644)
+		err = file.Create(auditLogPath, 0644)
 		if err != nil {
 			return err
 		}
 
 		auditPolicyPath = c.GetWorkdirPath(runtime.AuditPolicyName)
-		err = utils.CopyFile(conf.KubeAuditPolicy, auditPolicyPath)
+		err = file.Copy(conf.KubeAuditPolicy, auditPolicyPath)
 		if err != nil {
 			return err
 		}
@@ -124,7 +126,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	err = runtime.PullImages(ctx, "docker", images, conf.QuietPull)
+	err = image.PullImages(ctx, "docker", images, conf.QuietPull)
 	if err != nil {
 		return err
 	}
@@ -140,7 +142,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	logger := log.FromContext(ctx)
 
-	err = utils.Exec(ctx, "", utils.IOStreams{
+	err = exec.Exec(ctx, "", exec.IOStreams{
 		ErrOut: os.Stderr,
 		Out:    os.Stderr,
 	}, conf.Runtime, "create", "cluster",
@@ -168,7 +170,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	kubeconfigBuf := bytes.NewBuffer(nil)
-	err = c.Kubectl(ctx, utils.IOStreams{
+	err = c.Kubectl(ctx, exec.IOStreams{
 		Out: kubeconfigBuf,
 	}, "config", "view", "--minify=true", "--raw=true")
 	if err != nil {
@@ -180,13 +182,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = utils.Exec(ctx, "", utils.IOStreams{}, "docker", "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
+	err = exec.Exec(ctx, "", exec.IOStreams{}, "docker", "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
 	if err != nil {
 		return err
 	}
 
 	if conf.PrometheusPort != 0 {
-		err = c.Kubectl(ctx, utils.IOStreams{
+		err = c.Kubectl(ctx, exec.IOStreams{
 			ErrOut: os.Stderr,
 		}, "apply", "-f", c.GetWorkdirPath(runtime.PrometheusDeploy))
 		if err != nil {
@@ -199,7 +201,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return fmt.Errorf("failed to wait for kube-apiserver ready: %w", err)
 	}
 
-	err = c.Kubectl(ctx, utils.IOStreams{}, "cordon", c.Name()+"-control-plane")
+	err = c.Kubectl(ctx, exec.IOStreams{}, "cordon", c.Name()+"-control-plane")
 	if err != nil {
 		logger.Error("Failed cordon node", err)
 	}
@@ -219,8 +221,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", "kind-"+c.Name())
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", "kind-"+c.Name())
+	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", "kind-"+c.Name())
+	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", "kind-"+c.Name())
 
 	return nil
 }
@@ -228,7 +230,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 func loadImages(ctx context.Context, command, kindCluster string, images []string) error {
 	logger := log.FromContext(ctx)
 	for _, image := range images {
-		err := utils.Exec(ctx, "", utils.IOStreams{},
+		err := exec.Exec(ctx, "", exec.IOStreams{},
 			command, "load", "docker-image",
 			image,
 			"--name", kindCluster,
@@ -270,7 +272,7 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	}
 
 	out := bytes.NewBuffer(nil)
-	err = c.KubectlInCluster(ctx, utils.IOStreams{
+	err = c.KubectlInCluster(ctx, exec.IOStreams{
 		Out: out,
 	}, "get", "pod", "--namespace=kube-system", "--field-selector=status.phase!=Running")
 	if err != nil {
@@ -294,11 +296,11 @@ func (c *Cluster) Down(ctx context.Context) error {
 	}
 
 	// unset the context in default kubeconfig
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+c.Name()+".cluster")
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+c.Name()+".user")
+	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name()+".cluster")
+	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name()+".user")
 
 	logger := log.FromContext(ctx)
-	err = utils.Exec(ctx, "", utils.IOStreams{
+	err = exec.Exec(ctx, "", exec.IOStreams{
 		ErrOut: os.Stderr,
 		Out:    os.Stderr,
 	}, conf.Runtime, "delete", "cluster", "--name", c.Name())
@@ -310,7 +312,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 }
 
 func (c *Cluster) Start(ctx context.Context, name string) error {
-	err := utils.Exec(ctx, "", utils.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
+	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
 		return err
 	}
@@ -318,7 +320,7 @@ func (c *Cluster) Start(ctx context.Context, name string) error {
 }
 
 func (c *Cluster) Stop(ctx context.Context, name string) error {
-	err := utils.Exec(ctx, "", utils.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
+	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
 		return err
 	}
@@ -348,7 +350,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	}
 	args = append(args, componentName)
 
-	err := c.Kubectl(ctx, utils.IOStreams{
+	err := c.Kubectl(ctx, exec.IOStreams{
 		ErrOut: out,
 		Out:    out,
 	}, args...)
@@ -393,7 +395,7 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 }
 
 // EtcdctlInCluster implements the ectdctl subcommand
-func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
+func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error {
 	etcdContainerName := c.getComponentName("etcd")
 
 	return c.KubectlInCluster(ctx, stm,

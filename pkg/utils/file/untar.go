@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package file
 
 import (
 	"archive/tar"
@@ -32,16 +32,17 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
-func Untar(ctx context.Context, src string, filter func(file string) (string, bool)) error {
+// untar untars the given tarball to the given destination.
+func untar(ctx context.Context, src string, filter func(file string) (string, bool)) error {
 	if strings.HasSuffix(src, ".tar.gz") {
-		return Untargz(ctx, src, filter)
+		return untargz(ctx, src, filter)
 	} else if strings.HasSuffix(src, ".zip") {
-		return Unzip(ctx, src, filter)
+		return unzip(ctx, src, filter)
 	}
 	return fmt.Errorf("unsupported archive format: %s", src)
 }
 
-func Unzip(ctx context.Context, src string, filter func(file string) (string, bool)) error {
+func unzip(ctx context.Context, src string, filter func(file string) (string, bool)) error {
 	logger := log.FromContext(ctx)
 	r, err := zip.OpenReader(src)
 	if err != nil {
@@ -108,7 +109,7 @@ func Unzip(ctx context.Context, src string, filter func(file string) (string, bo
 	return nil
 }
 
-func Untargz(ctx context.Context, src string, filter func(file string) (string, bool)) error {
+func untargz(ctx context.Context, src string, filter func(file string) (string, bool)) error {
 	logger := log.FromContext(ctx)
 	r, err := os.Open(src)
 	if err != nil {
