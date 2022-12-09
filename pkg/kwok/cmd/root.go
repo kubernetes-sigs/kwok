@@ -33,41 +33,27 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/flowcontrol"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/cni"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/envs"
 )
 
+type flagpole struct {
+	Kubeconfig string
+	Master     string
+
+	internalversion.KwokConfigurationOptions
+}
+
 // NewCommand returns a new cobra.Command for root
-func NewCommand() *cobra.Command {
-	var (
-		// The default IP assigned to the Pod on maintained Nodes.
-		cidr = "10.0.0.1/24"
-		// The ip of all nodes maintained by the Kwok
-		nodeIP = net.ParseIP("196.168.0.1")
-		// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
-		manageAllNodes = false
-		// Default annotations specified on Nodes to demand manage.
-		// Note: when `all-node-manage` is specified as true, this is a no-op.
-		manageNodesWithAnnotationSelector = ""
-		// Default labels specified on Nodes to demand manage.
-		// Note: when `all-node-manage` is specified as true, this is a no-op.
-		manageNodesWithLabelSelector = ""
-		// If a Node being managed has this annotation it will only keep its heartbeat not modify another status
-		// If a Pod is on a managed Node and has this annotation status will not be modified
-		disregardStatusWithAnnotationSelector = ""
-		// If a Node being managed has this label it will only keep its heartbeat not modify another status
-		// If a Pod is on a managed Node and has this label status will not be modified
-		disregardStatusWithLabelSelector = ""
-
-		enableCNI = false
-
-		serverAddress = ""
-		master        = ""
-		kubeconfig    = getEnv("KUBECONFIG", "")
-	)
+func NewCommand(ctx context.Context) *cobra.Command {
+	flags := &flagpole{}
+	flags.KwokConfigurationOptions = config.GetKwokConfiguration(ctx).Options
 
 	cmd := &cobra.Command{
 		Args:          cobra.NoArgs,
@@ -78,31 +64,31 @@ func NewCommand() *cobra.Command {
 		SilenceErrors: true,
 		Version:       consts.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if kubeconfig != "" {
-				f, err := os.Stat(kubeconfig)
+			if flags.Kubeconfig != "" {
+				f, err := os.Stat(flags.Kubeconfig)
 				if err != nil || f.IsDir() {
-					kubeconfig = ""
+					flags.Kubeconfig = ""
 				}
 			}
 
 			ctx := cmd.Context()
 			logger := log.FromContext(ctx)
 
-			clientset, err := newClientset(ctx, master, kubeconfig)
+			clientset, err := newClientset(ctx, flags.Master, flags.Kubeconfig)
 			if err != nil {
 				return err
 			}
 
-			if manageAllNodes {
-				if manageNodesWithAnnotationSelector != "" || manageNodesWithLabelSelector != "" {
+			if flags.ManageAllNodes {
+				if flags.ManageNodesWithAnnotationSelector != "" || flags.ManageNodesWithLabelSelector != "" {
 					logger.Error("manage-all-nodes is conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.", nil)
 					os.Exit(1)
 				}
 				logger.Info("Watch all nodes")
-			} else if manageNodesWithAnnotationSelector != "" || manageNodesWithLabelSelector != "" {
+			} else if flags.ManageNodesWithAnnotationSelector != "" || flags.ManageNodesWithLabelSelector != "" {
 				logger.Info("Watch nodes",
-					"annotation", manageNodesWithAnnotationSelector,
-					"label", manageNodesWithLabelSelector,
+					"annotation", flags.ManageNodesWithAnnotationSelector,
+					"label", flags.ManageNodesWithLabelSelector,
 				)
 			}
 
@@ -130,15 +116,15 @@ func NewCommand() *cobra.Command {
 			}
 
 			ctr, err := controllers.NewController(controllers.Config{
-				EnableCNI:                             enableCNI,
 				ClientSet:                             clientset,
-				ManageAllNodes:                        manageAllNodes,
-				ManageNodesWithAnnotationSelector:     manageNodesWithAnnotationSelector,
-				ManageNodesWithLabelSelector:          manageNodesWithLabelSelector,
-				DisregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
-				DisregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
-				CIDR:                                  cidr,
-				NodeIP:                                nodeIP.String(),
+				EnableCNI:                             flags.EnableCNI,
+				ManageAllNodes:                        flags.ManageAllNodes,
+				ManageNodesWithAnnotationSelector:     flags.ManageNodesWithAnnotationSelector,
+				ManageNodesWithLabelSelector:          flags.ManageNodesWithLabelSelector,
+				DisregardStatusWithAnnotationSelector: flags.DisregardStatusWithAnnotationSelector,
+				DisregardStatusWithLabelSelector:      flags.DisregardStatusWithLabelSelector,
+				CIDR:                                  flags.CIDR,
+				NodeIP:                                flags.NodeIP,
 				PodStatusTemplate:                     templates.DefaultPodStatusTemplate,
 				NodeHeartbeatTemplate:                 templates.DefaultNodeHeartbeatTemplate,
 				NodeInitializationTemplate:            templates.DefaultNodeStatusTemplate,
@@ -147,8 +133,8 @@ func NewCommand() *cobra.Command {
 				return err
 			}
 
-			if serverAddress != "" {
-				go Serve(ctx, serverAddress)
+			if flags.ServerAddress != "" {
+				go Serve(ctx, flags.ServerAddress)
 			}
 
 			err = ctr.Start(ctx)
@@ -161,19 +147,21 @@ func NewCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cidr, "cidr", cidr, "CIDR of the pod ip")
-	cmd.Flags().IPVar(&nodeIP, "node-ip", nodeIP, "IP of the node")
-	cmd.Flags().BoolVar(&manageAllNodes, "manage-all-nodes", manageAllNodes, "All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.")
-	cmd.Flags().StringVar(&manageNodesWithAnnotationSelector, "manage-nodes-with-annotation-selector", manageNodesWithAnnotationSelector, "Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes.")
-	cmd.Flags().StringVar(&manageNodesWithLabelSelector, "manage-nodes-with-label-selector", manageNodesWithLabelSelector, "Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes.")
-	cmd.Flags().StringVar(&disregardStatusWithAnnotationSelector, "disregard-status-with-annotation-selector", disregardStatusWithAnnotationSelector, "All node/pod status excluding the ones that match the annotation selector will be watched and managed.")
-	cmd.Flags().StringVar(&disregardStatusWithLabelSelector, "disregard-status-with-label-selector", disregardStatusWithLabelSelector, "All node/pod status excluding the ones that match the label selector will be watched and managed.")
-	cmd.Flags().StringVar(&kubeconfig, "kubeconfig", kubeconfig, "Path to the kubeconfig file to use")
-	cmd.Flags().StringVar(&master, "master", master, "Server is the address of the kubernetes cluster")
-	cmd.Flags().StringVar(&serverAddress, "server-address", serverAddress, "Address to expose health and metrics on")
+	flags.Kubeconfig = envs.GetEnv("KUBECONFIG", flags.Kubeconfig)
+
+	cmd.Flags().StringVar(&flags.CIDR, "cidr", flags.CIDR, "CIDR of the pod ip")
+	cmd.Flags().StringVar(&flags.NodeIP, "node-ip", flags.NodeIP, "IP of the node")
+	cmd.Flags().BoolVar(&flags.ManageAllNodes, "manage-all-nodes", flags.ManageAllNodes, "All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.")
+	cmd.Flags().StringVar(&flags.ManageNodesWithAnnotationSelector, "manage-nodes-with-annotation-selector", flags.ManageNodesWithAnnotationSelector, "Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes.")
+	cmd.Flags().StringVar(&flags.ManageNodesWithLabelSelector, "manage-nodes-with-label-selector", flags.ManageNodesWithLabelSelector, "Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes.")
+	cmd.Flags().StringVar(&flags.DisregardStatusWithAnnotationSelector, "disregard-status-with-annotation-selector", flags.DisregardStatusWithAnnotationSelector, "All node/pod status excluding the ones that match the annotation selector will be watched and managed.")
+	cmd.Flags().StringVar(&flags.DisregardStatusWithLabelSelector, "disregard-status-with-label-selector", flags.DisregardStatusWithLabelSelector, "All node/pod status excluding the ones that match the label selector will be watched and managed.")
+	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "Path to the kubeconfig file to use")
+	cmd.Flags().StringVar(&flags.Master, "master", flags.Master, "Server is the address of the kubernetes cluster")
+	cmd.Flags().StringVar(&flags.ServerAddress, "server-address", flags.ServerAddress, "Address to expose health and metrics on")
 
 	if cni.SupportedCNI() {
-		cmd.Flags().BoolVar(&enableCNI, "experimental-enable-cni", enableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components")
+		cmd.Flags().BoolVar(&flags.EnableCNI, "experimental-enable-cni", flags.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components")
 	}
 	return cmd
 }
@@ -241,12 +229,4 @@ func newClientset(ctx context.Context, master, kubeconfig string) (kubernetes.In
 func setConfigDefaults(config *rest.Config) error {
 	config.RateLimiter = flowcontrol.NewFakeAlwaysRateLimiter()
 	return rest.SetKubernetesDefaults(config)
-}
-
-func getEnv(name string, defaults string) string {
-	val, ok := os.LookupEnv(name)
-	if ok {
-		return val
-	}
-	return defaults
 }

@@ -17,13 +17,15 @@ limitations under the License.
 package delete
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete/cluster"
 )
 
 // NewCommand returns a new cobra.Command for cluster creation
-func NewCommand() *cobra.Command {
+func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "delete",
@@ -33,6 +35,6 @@ func NewCommand() *cobra.Command {
 			return cmd.Help()
 		},
 	}
-	cmd.AddCommand(cluster.NewCommand())
+	cmd.AddCommand(cluster.NewCommand(ctx))
 	return cmd
 }

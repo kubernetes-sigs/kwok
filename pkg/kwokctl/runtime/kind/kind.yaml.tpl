@@ -38,8 +38,14 @@ nodes:
         mountPath: "/var/log/kubernetes"
         readOnly: false
         pathType: DirectoryOrCreate
+{{ end }}
+
   # mount the local file on the control plane
   extraMounts:
+  - hostPath: {{ .ConfigPath }}
+    containerPath: /etc/kwok/kwok.yaml
+    readOnly: true
+{{ if .AuditPolicy }}
   - hostPath: {{ .AuditPolicy }}
     containerPath: /etc/kubernetes/audit/audit.yaml
     readOnly: true

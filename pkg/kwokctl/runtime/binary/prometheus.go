@@ -40,7 +40,7 @@ func BuildPrometheus(conf BuildPrometheusConfig) (string, error) {
 
 type BuildPrometheusConfig struct {
 	ProjectName               string
-	SecretPort                bool
+	SecurePort                bool
 	AdminCrtPath              string
 	AdminKeyPath              string
 	PrometheusPort            uint32

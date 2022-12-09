@@ -60,7 +60,7 @@ type BuildComposeConfig struct {
 	InClusterEtcdDataPath   string
 	InClusterPrometheusPath string
 
-	SecretPort    bool
+	SecurePort    bool
 	Authorization bool
 	QuietPull     bool
 
@@ -75,4 +75,7 @@ type BuildComposeConfig struct {
 
 	AuditPolicy string
 	AuditLog    string
+
+	ConfigPath          string
+	InClusterConfigPath string
 }

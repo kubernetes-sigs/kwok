@@ -6,7 +6,7 @@ clusters:
   - name: {{ .ProjectName }}
     cluster:
       server: {{ .Address }}
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       insecure-skip-tls-verify: true
 {{ end}}
 contexts:
@@ -14,7 +14,7 @@ contexts:
     context:
       cluster: {{ .ProjectName }}
 
-{{ if .SecretPort }}
+{{ if .SecurePort }}
       user: {{ .ProjectName }}
 users:
   - name: {{ .ProjectName }}

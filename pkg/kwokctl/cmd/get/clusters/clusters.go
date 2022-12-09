@@ -22,13 +22,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
-func NewCommand() *cobra.Command {
+func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "clusters",
@@ -42,7 +42,7 @@ func NewCommand() *cobra.Command {
 }
 
 func runE(ctx context.Context) error {
-	clusters, err := runtime.ListClusters(vars.ClustersDir)
+	clusters, err := runtime.ListClusters(config.ClustersDir)
 	if err != nil {
 		return err
 	}

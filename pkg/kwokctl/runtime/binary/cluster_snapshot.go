@@ -22,21 +22,19 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // SnapshotSave save the snapshot of cluster
 func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
-	etcdctlPath := utils.PathJoin(bin, "etcdctl"+vars.BinSuffix)
+	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+vars.BinSuffix, 0755, conf.QuietPull, true)
+	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}
@@ -51,15 +49,14 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 // SnapshotRestore restore the snapshot of cluster
 func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 
-	bin := utils.PathJoin(conf.Workdir, "bin")
-	etcdctlPath := utils.PathJoin(bin, "etcdctl"+vars.BinSuffix)
+	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+vars.BinSuffix, 0755, conf.QuietPull, true)
+	err = utils.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}
@@ -77,7 +74,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}
 	}()
 
-	etcdDataTmp := utils.PathJoin(conf.Workdir, "etcd-data")
+	etcdDataTmp := c.GetWorkdirPath("etcd-data")
 	err = os.RemoveAll(etcdDataTmp)
 	if err != nil {
 		return err
@@ -87,7 +84,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		return err
 	}
 
-	etcdDataPath := utils.PathJoin(conf.Workdir, runtime.EtcdDataDirName)
+	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
 	err = os.RemoveAll(etcdDataPath)
 	if err != nil {
 		return err

@@ -19,16 +19,31 @@ package main
 import (
 	"os"
 
+	"github.com/spf13/pflag"
+
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwok/cmd"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/signals"
 )
 
 func main() {
-	command := cmd.NewCommand()
+	flagset := pflag.NewFlagSet("global", pflag.ContinueOnError)
+	flagset.Usage = func() {}
+
 	ctx := signals.SetupSignalContext()
-	ctx, logger := log.InitFlags(ctx, command.PersistentFlags())
-	err := command.ExecuteContext(ctx)
+	ctx, logger := log.InitFlags(ctx, flagset)
+
+	ctx, err := config.InitFlags(ctx, flagset)
+	if err != nil {
+		_, _ = os.Stderr.Write([]byte(flagset.FlagUsages()))
+		logger.Error("Init config flags", err)
+		os.Exit(1)
+	}
+
+	command := cmd.NewCommand(ctx)
+	command.PersistentFlags().AddFlagSet(flagset)
+	err = command.ExecuteContext(ctx)
 	if err != nil {
 		logger.Error("Execute exit", err)
 		os.Exit(1)

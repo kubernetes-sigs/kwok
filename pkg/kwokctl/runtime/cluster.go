@@ -19,22 +19,25 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"time"
 
 	"github.com/nxadm/tail"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/yaml"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
 var (
-	RawClusterConfigName    = "kwok.yaml"
+	ConfigName              = consts.ConfigName
 	InHostKubeconfigName    = "kubeconfig.yaml"
 	InClusterKubeconfigName = "kubeconfig"
 	EtcdDataDirName         = "etcd"
@@ -51,7 +54,7 @@ var (
 type Cluster struct {
 	workdir string
 	name    string
-	conf    *Config
+	conf    *internalversion.KwokctlConfigurationOptions
 }
 
 func NewCluster(name, workdir string) *Cluster {
@@ -61,71 +64,81 @@ func NewCluster(name, workdir string) *Cluster {
 	}
 }
 
-func (c *Cluster) Config() (Config, error) {
+func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfigurationOptions, error) {
 	if c.conf != nil {
-		return *c.conf, nil
+		return c.conf, nil
 	}
-	conf, err := c.Load()
+	conf, err := c.Load(ctx)
 	if err != nil {
 		return conf, err
 	}
-	c.conf = &conf
+	c.conf = conf
 	return conf, nil
 }
 
-func (c *Cluster) Load() (conf Config, err error) {
-	file, err := os.ReadFile(utils.PathJoin(c.workdir, RawClusterConfigName))
+func (c *Cluster) Name() string {
+	return c.name
+}
+
+func (c *Cluster) Workdir() string {
+	return c.workdir
+}
+
+func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfigurationOptions, error) {
+	objs, err := config.Load(ctx, c.GetWorkdirPath(ConfigName))
 	if err != nil {
-		return conf, err
+		return nil, err
 	}
-	err = yaml.Unmarshal(file, &conf)
-	if err != nil {
-		return conf, err
+
+	configs := config.FilterWithType[*internalversion.KwokctlConfiguration](objs)
+	if len(configs) == 0 {
+		return nil, fmt.Errorf("failed to load config")
 	}
-	return conf, nil
+	return &configs[0].Options, nil
 }
 
 func (c *Cluster) InHostKubeconfig() (string, error) {
-	conf, err := c.Config()
-	if err != nil {
-		return "", err
-	}
-
-	return utils.PathJoin(conf.Workdir, InHostKubeconfigName), nil
+	return c.GetWorkdirPath(InHostKubeconfigName), nil
 }
 
-func (c *Cluster) Init(ctx context.Context, conf Config) error {
-	return c.Update(ctx, conf)
+func (c *Cluster) SetConfig(ctx context.Context, conf *internalversion.KwokctlConfigurationOptions) error {
+	c.conf = conf
+	return nil
 }
 
-func (c *Cluster) Update(ctx context.Context, conf Config) error {
-	config, err := yaml.Marshal(conf)
-	if err != nil {
-		return err
+func (c *Cluster) Save(ctx context.Context) error {
+	if c.conf == nil {
+		return nil
 	}
-	err = os.MkdirAll(c.workdir, 0755)
-	if err != nil {
-		return err
-	}
-	c.conf = &conf
 
-	err = os.WriteFile(utils.PathJoin(c.workdir, RawClusterConfigName), config, 0644)
+	objs := []metav1.Object{
+		&internalversion.KwokctlConfiguration{
+			Options: *c.conf,
+		},
+	}
+
+	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
+	if len(others) != 0 {
+		objs = append(objs, others...)
+	}
+
+	err := config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	kubectlPath, err := exec.LookPath("kubectl")
 	if err != nil {
-		bin := utils.PathJoin(conf.Workdir, "bin")
-		kubectlPath = utils.PathJoin(bin, "kubectl"+vars.BinSuffix)
+		kubectlPath = c.GetBinPath("kubectl" + conf.BinSuffix)
 		err = utils.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0755, conf.QuietPull)
 		if err != nil {
 			return "", err
@@ -143,13 +156,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 }
 
 func (c *Cluster) Uninstall(ctx context.Context) error {
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
-
 	// cleanup workdir
-	return os.RemoveAll(conf.Workdir)
+	return os.RemoveAll(c.Workdir())
 }
 
 func (c *Cluster) Ready(ctx context.Context) (bool, error) {
@@ -201,27 +209,17 @@ func (c *Cluster) Kubectl(ctx context.Context, stm utils.IOStreams, args ...stri
 }
 
 func (c *Cluster) KubectlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
-
 	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
 		return err
 	}
 
 	return utils.Exec(ctx, "", stm, kubectlPath,
-		append([]string{"--kubeconfig", utils.PathJoin(conf.Workdir, InHostKubeconfigName)}, args...)...)
+		append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
 }
 
 func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
-
-	logs := utils.PathJoin(conf.Workdir, "logs", AuditLogName)
+	logs := c.GetLogPath(AuditLogName)
 
 	f, err := os.OpenFile(logs, os.O_RDONLY, 0644)
 	if err != nil {
@@ -243,12 +241,7 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 }
 
 func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
-
-	logs := utils.PathJoin(conf.Workdir, "logs", AuditLogName)
+	logs := c.GetLogPath(AuditLogName)
 
 	t, err := tail.TailFile(logs, tail.Config{ReOpen: true, Follow: true})
 	if err != nil {
@@ -272,4 +265,16 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 	}()
 	<-ctx.Done()
 	return nil
+}
+
+func (c *Cluster) GetWorkdirPath(name string) string {
+	return utils.PathJoin(c.workdir, name)
+}
+
+func (c *Cluster) GetBinPath(name string) string {
+	return utils.PathJoin(c.workdir, "bin", name)
+}
+
+func (c *Cluster) GetLogPath(name string) string {
+	return utils.PathJoin(c.workdir, "logs", name)
 }

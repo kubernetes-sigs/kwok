@@ -41,6 +41,11 @@ if [[ "${VERIFY_GO_FORMAT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-go-format.sh || failed+=(go-format)
 fi
 
+if [[ "${VERIFY_GENERATE:-true}" == "true" ]]; then
+  echo "[*] Verifying generate..."
+  "${ROOT_DIR}"/hack/verify-generate.sh || failed+=(go-generate)
+fi
+
 # exit based on verify scripts
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Verify failed for: ${failed[*]}"

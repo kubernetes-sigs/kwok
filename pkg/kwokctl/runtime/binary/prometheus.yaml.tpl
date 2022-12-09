@@ -40,7 +40,7 @@ scrape_configs:
   - targets:
     - localhost:{{ .KwokControllerPort }}
 
-{{ if .SecretPort }}
+{{ if .SecurePort }}
 - job_name: "kube-apiserver"
   scheme: https
   honor_timestamps: true

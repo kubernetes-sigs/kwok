@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/utils"
-	"sigs.k8s.io/kwok/pkg/kwokctl/vars"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
@@ -42,31 +41,35 @@ func NewCluster(name, workdir string) (runtime.Runtime, error) {
 }
 
 func (c *Cluster) Install(ctx context.Context) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 
-	kubeconfigPath := utils.PathJoin(conf.Workdir, runtime.InHostKubeconfigName)
+	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
 	prometheusPath := ""
-	inClusterOnHostKubeconfigPath := utils.PathJoin(conf.Workdir, runtime.InClusterKubeconfigName)
-	pkiPath := utils.PathJoin(conf.Workdir, runtime.PkiName)
-	composePath := utils.PathJoin(conf.Workdir, runtime.ComposeName)
+	inClusterOnHostKubeconfigPath := c.GetWorkdirPath(runtime.InClusterKubeconfigName)
+	pkiPath := c.GetWorkdirPath(runtime.PkiName)
+	composePath := c.GetWorkdirPath(runtime.ComposeName)
 	auditLogPath := ""
 	auditPolicyPath := ""
-	if conf.AuditPolicy != "" {
-		auditLogPath = utils.PathJoin(conf.Workdir, "logs", runtime.AuditLogName)
+	if conf.KubeAuditPolicy != "" {
+		auditLogPath = c.GetLogPath(runtime.AuditLogName)
 		err = utils.CreateFile(auditLogPath, 0644)
 		if err != nil {
 			return err
 		}
 
-		auditPolicyPath = utils.PathJoin(conf.Workdir, runtime.AuditPolicyName)
-		err = utils.CopyFile(conf.AuditPolicy, auditPolicyPath)
+		auditPolicyPath = c.GetWorkdirPath(runtime.AuditPolicyName)
+		err = utils.CopyFile(conf.KubeAuditPolicy, auditPolicyPath)
 		if err != nil {
 			return err
 		}
 	}
+
+	configPath := c.GetWorkdirPath(runtime.ConfigName)
+
+	inClusterConfigPath := "/etc/kwok/kwok.yaml"
 
 	caCertPath := ""
 	adminKeyPath := ""
@@ -81,7 +84,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	scheme := "http"
 
 	// generate ca cert
-	if conf.SecretPort {
+	if conf.SecurePort {
 		err := pki.GeneratePki(pkiPath)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %w", err)
@@ -99,10 +102,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// Setup prometheus
 	if conf.PrometheusPort != 0 {
-		prometheusPath = utils.PathJoin(conf.Workdir, runtime.Prometheus)
+		prometheusPath = c.GetWorkdirPath(runtime.Prometheus)
 		prometheusData, err := BuildPrometheus(BuildPrometheusConfig{
-			ProjectName:  conf.Name,
-			SecretPort:   conf.SecretPort,
+			ProjectName:  c.Name(),
+			SecurePort:   conf.SecurePort,
 			AdminCrtPath: inClusterAdminCertPath,
 			AdminKeyPath: inClusterAdminKeyPath,
 		})
@@ -125,7 +128,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// Setup compose
 	compose, err := BuildCompose(BuildComposeConfig{
-		ProjectName:                  conf.Name,
+		ProjectName:                  c.Name(),
 		KubeApiserverPort:            kubeApiserverPort,
 		KubeconfigPath:               inClusterOnHostKubeconfigPath,
 		AdminCertPath:                adminCertPath,
@@ -144,16 +147,18 @@ func (c *Cluster) Install(ctx context.Context) error {
 		KubeSchedulerImage:           conf.KubeSchedulerImage,
 		KwokControllerImage:          conf.KwokControllerImage,
 		PrometheusImage:              conf.PrometheusImage,
-		SecretPort:                   conf.SecretPort,
-		Authorization:                conf.Authorization,
+		SecurePort:                   conf.SecurePort,
+		Authorization:                conf.KubeAuthorization,
 		QuietPull:                    conf.QuietPull,
 		DisableKubeScheduler:         conf.DisableKubeScheduler,
 		DisableKubeControllerManager: conf.DisableKubeControllerManager,
 		PrometheusPort:               conf.PrometheusPort,
-		RuntimeConfig:                conf.RuntimeConfig,
-		FeatureGates:                 conf.FeatureGates,
+		RuntimeConfig:                conf.KubeRuntimeConfig,
+		FeatureGates:                 conf.KubeFeatureGates,
 		AuditPolicy:                  auditPolicyPath,
 		AuditLog:                     auditLogPath,
+		ConfigPath:                   configPath,
+		InClusterConfigPath:          inClusterConfigPath,
 	})
 	if err != nil {
 		return err
@@ -161,8 +166,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// Setup kubeconfig
 	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
-		ProjectName:  conf.Name,
-		SecretPort:   conf.SecretPort,
+		ProjectName:  c.Name(),
+		SecurePort:   conf.SecurePort,
 		Address:      scheme + "://127.0.0.1:" + utils.StringUint32(kubeApiserverPort),
 		AdminCrtPath: adminCertPath,
 		AdminKeyPath: adminKeyPath,
@@ -171,9 +176,9 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 	inClusterKubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
-		ProjectName:  conf.Name,
-		SecretPort:   conf.SecretPort,
-		Address:      scheme + "://" + conf.Name + "-kube-apiserver:" + utils.StringUint32(inClusterPort),
+		ProjectName:  c.Name(),
+		SecurePort:   conf.SecurePort,
+		Address:      scheme + "://" + c.Name() + "-kube-apiserver:" + utils.StringUint32(inClusterPort),
 		AdminCrtPath: inClusterAdminCertPath,
 		AdminKeyPath: inClusterAdminKeyPath,
 	})
@@ -198,13 +203,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".server", scheme+"://127.0.0.1:"+utils.StringUint32(kubeApiserverPort))
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".cluster", conf.Name)
-	if conf.SecretPort {
-		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+conf.Name+".insecure-skip-tls-verify", "true")
-		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+conf.Name+".user", conf.Name)
-		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-certificate", adminCertPath)
-		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+conf.Name+".client-key", adminKeyPath)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+c.Name()+".server", scheme+"://127.0.0.1:"+utils.StringUint32(kubeApiserverPort))
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
+	if conf.SecurePort {
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", c.Name())
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
+		_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
 	}
 
 	images := []string{
@@ -226,17 +231,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 }
 
 func (c *Cluster) Uninstall(ctx context.Context) error {
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
-
 	// unset the context in default kubeconfig
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "clusters."+conf.Name)
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+conf.Name)
-	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+conf.Name)
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "clusters."+c.Name())
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "users."+c.Name())
+	_ = c.Kubectl(ctx, utils.IOStreams{}, "config", "unset", "contexts."+c.Name())
 
-	err = c.Cluster.Uninstall(ctx)
+	err := c.Cluster.Uninstall(ctx)
 	if err != nil {
 		return err
 	}
@@ -244,7 +244,7 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 }
 
 func (c *Cluster) Up(ctx context.Context) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			logger.Warn("Try again later", "times", i, "err", err)
 			time.Sleep(time.Second)
 		}
-		err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
+		err = utils.Exec(ctx, c.Workdir(), utils.IOStreams{
 			ErrOut: os.Stderr,
 			Out:    os.Stderr,
 		}, commands[0], commands[1:]...)
@@ -286,11 +286,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 }
 
 func (c *Cluster) Down(ctx context.Context) error {
-	conf, err := c.Config()
-	if err != nil {
-		return err
-	}
-
 	logger := log.FromContext(ctx)
 	args := []string{"down"}
 	commands, err := c.buildComposeCommands(ctx, args...)
@@ -298,7 +293,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 		return err
 	}
 
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
+	err = utils.Exec(ctx, c.Workdir(), utils.IOStreams{
 		ErrOut: os.Stderr,
 		Out:    os.Stderr,
 	}, commands[0], commands[1:]...)
@@ -309,11 +304,11 @@ func (c *Cluster) Down(ctx context.Context) error {
 }
 
 func (c *Cluster) Start(ctx context.Context, name string) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{}, conf.Runtime, "start", conf.Name+"-"+name)
+	err = utils.Exec(ctx, c.Workdir(), utils.IOStreams{}, conf.Runtime, "start", c.Name()+"-"+name)
 	if err != nil {
 		return err
 	}
@@ -321,11 +316,11 @@ func (c *Cluster) Start(ctx context.Context, name string) error {
 }
 
 func (c *Cluster) Stop(ctx context.Context, name string) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{}, conf.Runtime, "stop", conf.Name+"-"+name)
+	err = utils.Exec(ctx, c.Workdir(), utils.IOStreams{}, conf.Runtime, "stop", c.Name()+"-"+name)
 	if err != nil {
 		return err
 	}
@@ -333,7 +328,7 @@ func (c *Cluster) Stop(ctx context.Context, name string) error {
 }
 
 func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow bool) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
@@ -341,8 +336,8 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	if follow {
 		args = append(args, "-f")
 	}
-	args = append(args, conf.Name+"-"+name)
-	err = utils.Exec(ctx, conf.Workdir, utils.IOStreams{
+	args = append(args, c.Name()+"-"+name)
+	err = utils.Exec(ctx, c.Workdir(), utils.IOStreams{
 		ErrOut: out,
 		Out:    out,
 	}, conf.Runtime, args...)
@@ -361,35 +356,20 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 }
 
 // ListBinaries list binaries in the cluster
-func (c *Cluster) ListBinaries(ctx context.Context, actual bool) ([]string, error) {
-	if !actual {
-		return []string{
-			vars.KubectlBinary,
-		}, nil
-	}
-	_, err := c.Config()
+func (c *Cluster) ListBinaries(ctx context.Context) ([]string, error) {
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	return []string{
-		vars.KubectlBinary,
+		conf.KubectlBinary,
 	}, nil
 }
 
 // ListImages list images in the cluster
-func (c *Cluster) ListImages(ctx context.Context, actual bool) ([]string, error) {
-	if !actual {
-		return []string{
-			vars.EtcdImage,
-			vars.KubeApiserverImage,
-			vars.KubeControllerManagerImage,
-			vars.KubeSchedulerImage,
-			vars.KwokControllerImage,
-			vars.PrometheusImage,
-		}, nil
-	}
-	conf, err := c.Config()
+func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +385,7 @@ func (c *Cluster) ListImages(ctx context.Context, actual bool) ([]string, error)
 
 // buildComposeCommands returns the compose commands with given current runtime and args
 func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]string, error) {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +394,7 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 		err := utils.Exec(ctx, "", utils.IOStreams{}, runtime, "compose", "version")
 		if err != nil {
 			// docker compose subcommand does not exist, try to download it
-			dockerComposePath := utils.PathJoin(conf.Workdir, "bin", "docker-compose"+vars.BinSuffix)
+			dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
 			err = utils.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0755, conf.QuietPull)
 			if err != nil {
 				return nil, err
@@ -427,12 +407,12 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 
 // EtcdctlInCluster implements the ectdctl subcommand
 func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm utils.IOStreams, args ...string) error {
-	conf, err := c.Config()
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 
-	etcdContainerName := conf.Name + "-etcd"
+	etcdContainerName := c.Name() + "-etcd"
 
 	return utils.Exec(ctx, "", stm, conf.Runtime, append([]string{"exec", "-i", etcdContainerName, "etcdctl"}, args...)...)
 }
