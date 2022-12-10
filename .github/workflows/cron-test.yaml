@@ -1,0 +1,65 @@
+name: Cron Test
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+env:
+  LAST_RELEASE_SIZE: "20"
+  DOCKER_CLI_EXPERIMENTAL: "enabled"
+  CGO_ENABLED: "0"
+
+jobs:
+  test-kwokctl:
+    # https://docs.github.com/en/actions/using-jobs/using-concurrency
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}
+      cancel-in-progress: true
+
+    # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        kwokctl-runtime:
+          - binary
+          - docker
+          - nerdctl
+
+    continue-on-error: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+
+      - name: Install Buildx
+        if: ${{ matrix.kwokctl-runtime != 'binary' }}
+        shell: bash
+        run: |
+          ./hack/requirements.sh buildx
+          docker buildx version
+
+      - name: Install Nerdctl and Start Containerd
+        if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
+        shell: bash
+        run: |
+          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.0.0/nerdctl-full-1.0.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+          sudo systemctl daemon-reload
+          sudo systemctl enable --now containerd
+          containerd-rootless-setuptool.sh install
+
+      - name: Install kubectl
+        shell: bash
+        run: |
+          ./hack/requirements.sh kubectl
+          kubectl version || :
+
+      - name: Test Workable
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}

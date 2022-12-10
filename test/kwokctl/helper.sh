@@ -31,8 +31,11 @@ function test_all() {
 export KWOK_CONTROLLER_BINARY="${DIR}/bin/kwok"
 export KWOK_CONTROLLER_IMAGE=local/kwok:test
 
+# Test only the latest releases of Kubernetes
+LAST_RELEASE_SIZE="${LAST_RELEASE_SIZE:-6}"
+
 function supported_releases() {
-  cat "${ROOT_DIR}/supported_releases.txt"
+  cat "${ROOT_DIR}/supported_releases.txt" | head -n "${LAST_RELEASE_SIZE}"
 }
 
 function build_kwokctl() {
