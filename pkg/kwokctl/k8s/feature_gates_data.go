@@ -31,6 +31,9 @@ var rawData = []FeatureSpec{
 	{"APIResponseCompression", Alpha, 8, 15},
 	{"APIResponseCompression", Beta, 16, -1},
 
+	// APISelfSubjectReview
+	{"APISelfSubjectReview", Alpha, 26, -1},
+
 	// Accelerators
 	{"Accelerators", Alpha, 6, 10},
 
@@ -41,6 +44,9 @@ var rawData = []FeatureSpec{
 
 	// AffinityInAnnotations
 	{"AffinityInAnnotations", Alpha, 6, 7},
+
+	// AggregatedDiscoveryEndpoint
+	{"AggregatedDiscoveryEndpoint", Alpha, 26, -1},
 
 	// AllowInsecureBackendProxy
 	{"AllowInsecureBackendProxy", Beta, 17, 20},
@@ -76,7 +82,8 @@ var rawData = []FeatureSpec{
 
 	// CPUManager
 	{"CPUManager", Alpha, 8, 9},
-	{"CPUManager", Beta, 10, -1},
+	{"CPUManager", Beta, 10, 25},
+	{"CPUManager", GA, 26, -1},
 
 	// CPUManagerPolicyAlphaOptions
 	{"CPUManagerPolicyAlphaOptions", Alpha, 23, -1},
@@ -131,7 +138,8 @@ var rawData = []FeatureSpec{
 
 	// CSIMigrationAzureFile
 	{"CSIMigrationAzureFile", Alpha, 15, 20},
-	{"CSIMigrationAzureFile", Beta, 21, -1},
+	{"CSIMigrationAzureFile", Beta, 21, 25},
+	{"CSIMigrationAzureFile", GA, 26, -1},
 
 	// CSIMigrationAzureFileComplete
 	{"CSIMigrationAzureFileComplete", Alpha, 17, 20},
@@ -147,7 +155,7 @@ var rawData = []FeatureSpec{
 	// CSIMigrationOpenStack
 	{"CSIMigrationOpenStack", Alpha, 14, 17},
 	{"CSIMigrationOpenStack", Beta, 18, 23},
-	{"CSIMigrationOpenStack", GA, 24, -1},
+	{"CSIMigrationOpenStack", GA, 24, 25},
 
 	// CSIMigrationOpenStackComplete
 	{"CSIMigrationOpenStackComplete", Alpha, 17, 20},
@@ -160,7 +168,8 @@ var rawData = []FeatureSpec{
 	{"CSIMigrationRBD", Alpha, 23, -1},
 
 	// CSIMigrationvSphere
-	{"CSIMigrationvSphere", Beta, 19, -1},
+	{"CSIMigrationvSphere", Beta, 19, 25},
+	{"CSIMigrationvSphere", GA, 26, -1},
 
 	// CSIMigrationvSphereComplete
 	{"CSIMigrationvSphereComplete", Beta, 19, 21},
@@ -198,12 +207,15 @@ var rawData = []FeatureSpec{
 
 	// CSRDuration
 	{"CSRDuration", Beta, 22, 23},
-	{"CSRDuration", GA, 24, -1},
+	{"CSRDuration", GA, 24, 25},
 
 	// ConfigurableFSGroupPolicy
 	{"ConfigurableFSGroupPolicy", Alpha, 18, 19},
 	{"ConfigurableFSGroupPolicy", Beta, 20, 22},
 	{"ConfigurableFSGroupPolicy", GA, 23, 24},
+
+	// ConsistentHTTPGetHandlers
+	{"ConsistentHTTPGetHandlers", GA, 26, -1},
 
 	// ContainerCheckpoint
 	{"ContainerCheckpoint", Alpha, 25, -1},
@@ -220,6 +232,9 @@ var rawData = []FeatureSpec{
 	// CronJobTimeZone
 	{"CronJobTimeZone", Alpha, 24, 24},
 	{"CronJobTimeZone", Beta, 25, -1},
+
+	// CrossNamespaceVolumeDataSource
+	{"CrossNamespaceVolumeDataSource", Alpha, 26, -1},
 
 	// CustomPodDNS
 	{"CustomPodDNS", Alpha, 9, 9},
@@ -270,15 +285,17 @@ var rawData = []FeatureSpec{
 	// DefaultPodTopologySpread
 	{"DefaultPodTopologySpread", Alpha, 19, 19},
 	{"DefaultPodTopologySpread", Beta, 20, 23},
-	{"DefaultPodTopologySpread", GA, 24, -1},
+	{"DefaultPodTopologySpread", GA, 24, 25},
 
 	// DelegateFSGroupToCSIDriver
 	{"DelegateFSGroupToCSIDriver", Alpha, 22, 22},
-	{"DelegateFSGroupToCSIDriver", Beta, 23, -1},
+	{"DelegateFSGroupToCSIDriver", Beta, 23, 25},
+	{"DelegateFSGroupToCSIDriver", GA, 26, -1},
 
 	// DevicePlugins
 	{"DevicePlugins", Alpha, 8, 9},
-	{"DevicePlugins", Beta, 10, -1},
+	{"DevicePlugins", Beta, 10, 25},
+	{"DevicePlugins", GA, 26, -1},
 
 	// DisableAcceleratorUsageMetrics
 	{"DisableAcceleratorUsageMetrics", Alpha, 19, 19},
@@ -306,10 +323,13 @@ var rawData = []FeatureSpec{
 	// DynamicKubeletConfig
 	{"DynamicKubeletConfig", Alpha, 6, 10},
 	{"DynamicKubeletConfig", Beta, 11, 21},
-	{"DynamicKubeletConfig", Deprecated, 22, -1},
+	{"DynamicKubeletConfig", Deprecated, 22, 25},
 
 	// DynamicProvisioningScheduling
 	{"DynamicProvisioningScheduling", Alpha, 11, 11},
+
+	// DynamicResourceAllocation
+	{"DynamicResourceAllocation", Alpha, 26, -1},
 
 	// DynamicVolumeProvisioning
 	{"DynamicVolumeProvisioning", Alpha, 6, 7},
@@ -336,7 +356,8 @@ var rawData = []FeatureSpec{
 
 	// EndpointSliceTerminatingCondition
 	{"EndpointSliceTerminatingCondition", Alpha, 20, 21},
-	{"EndpointSliceTerminatingCondition", Beta, 22, -1},
+	{"EndpointSliceTerminatingCondition", Beta, 22, 25},
+	{"EndpointSliceTerminatingCondition", GA, 26, -1},
 
 	// EphemeralContainers
 	{"EphemeralContainers", Alpha, 16, 22},
@@ -347,6 +368,9 @@ var rawData = []FeatureSpec{
 	{"EvenPodsSpread", Alpha, 16, 17},
 	{"EvenPodsSpread", Beta, 18, 18},
 	{"EvenPodsSpread", GA, 19, 20},
+
+	// EventedPLEG
+	{"EventedPLEG", Alpha, 26, -1},
 
 	// ExecProbeTimeout
 	{"ExecProbeTimeout", GA, 20, -1},
@@ -367,7 +391,8 @@ var rawData = []FeatureSpec{
 	{"ExpandPersistentVolumes", GA, 24, -1},
 
 	// ExpandedDNSConfig
-	{"ExpandedDNSConfig", Alpha, 22, -1},
+	{"ExpandedDNSConfig", Alpha, 22, 25},
+	{"ExpandedDNSConfig", Beta, 26, -1},
 
 	// ExperimentalCriticalPodAnnotation
 	{"ExperimentalCriticalPodAnnotation", Alpha, 6, 15},
@@ -471,7 +496,7 @@ var rawData = []FeatureSpec{
 	// IndexedJob
 	{"IndexedJob", Alpha, 21, 21},
 	{"IndexedJob", Beta, 22, 23},
-	{"IndexedJob", GA, 24, -1},
+	{"IndexedJob", GA, 24, 25},
 
 	// IngressClassNamespacedParams
 	{"IngressClassNamespacedParams", Alpha, 21, 21},
@@ -485,7 +510,8 @@ var rawData = []FeatureSpec{
 	{"JobMutableNodeSchedulingDirectives", Beta, 23, -1},
 
 	// JobPodFailurePolicy
-	{"JobPodFailurePolicy", Alpha, 25, -1},
+	{"JobPodFailurePolicy", Alpha, 25, 25},
+	{"JobPodFailurePolicy", Beta, 26, -1},
 
 	// JobReadyPods
 	{"JobReadyPods", Alpha, 23, 23},
@@ -493,14 +519,16 @@ var rawData = []FeatureSpec{
 
 	// JobTrackingWithFinalizers
 	{"JobTrackingWithFinalizers", Alpha, 22, 22},
-	{"JobTrackingWithFinalizers", Beta, 23, -1},
+	{"JobTrackingWithFinalizers", Beta, 23, 25},
+	{"JobTrackingWithFinalizers", GA, 26, -1},
 
 	// KubeletConfigFile
 	{"KubeletConfigFile", Alpha, 8, 9},
 
 	// KubeletCredentialProviders
 	{"KubeletCredentialProviders", Alpha, 20, 23},
-	{"KubeletCredentialProviders", Beta, 24, -1},
+	{"KubeletCredentialProviders", Beta, 24, 25},
+	{"KubeletCredentialProviders", GA, 26, -1},
 
 	// KubeletInUserNamespace
 	{"KubeletInUserNamespace", Alpha, 22, -1},
@@ -527,7 +555,11 @@ var rawData = []FeatureSpec{
 	{"LegacyNodeRoleBehavior", GA, 21, 21},
 
 	// LegacyServiceAccountTokenNoAutoGeneration
-	{"LegacyServiceAccountTokenNoAutoGeneration", Beta, 24, -1},
+	{"LegacyServiceAccountTokenNoAutoGeneration", Beta, 24, 25},
+	{"LegacyServiceAccountTokenNoAutoGeneration", GA, 26, -1},
+
+	// LegacyServiceAccountTokenTracking
+	{"LegacyServiceAccountTokenTracking", Alpha, 26, -1},
 
 	// LocalStorageCapacityIsolation
 	{"LocalStorageCapacityIsolation", Alpha, 7, 9},
@@ -558,9 +590,13 @@ var rawData = []FeatureSpec{
 	{"MinDomainsInPodTopologySpread", Alpha, 24, 24},
 	{"MinDomainsInPodTopologySpread", Beta, 25, -1},
 
+	// MinimizeIPTablesRestore
+	{"MinimizeIPTablesRestore", Alpha, 26, -1},
+
 	// MixedProtocolLBService
 	{"MixedProtocolLBService", Alpha, 20, 23},
-	{"MixedProtocolLBService", Beta, 24, -1},
+	{"MixedProtocolLBService", Beta, 24, 25},
+	{"MixedProtocolLBService", GA, 26, -1},
 
 	// MountContainers
 	{"MountContainers", Alpha, 9, 16},
@@ -591,7 +627,8 @@ var rawData = []FeatureSpec{
 	{"NodeDisruptionExclusion", GA, 21, 21},
 
 	// NodeInclusionPolicyInPodTopologySpread
-	{"NodeInclusionPolicyInPodTopologySpread", Alpha, 25, -1},
+	{"NodeInclusionPolicyInPodTopologySpread", Alpha, 25, 25},
+	{"NodeInclusionPolicyInPodTopologySpread", Beta, 26, -1},
 
 	// NodeLease
 	{"NodeLease", Alpha, 12, 13},
@@ -599,7 +636,8 @@ var rawData = []FeatureSpec{
 	{"NodeLease", GA, 17, 22},
 
 	// NodeOutOfServiceVolumeDetach
-	{"NodeOutOfServiceVolumeDetach", Alpha, 24, -1},
+	{"NodeOutOfServiceVolumeDetach", Alpha, 24, 25},
+	{"NodeOutOfServiceVolumeDetach", Beta, 26, -1},
 
 	// NodeSwap
 	{"NodeSwap", Alpha, 22, -1},
@@ -607,7 +645,7 @@ var rawData = []FeatureSpec{
 	// NonPreemptingPriority
 	{"NonPreemptingPriority", Alpha, 15, 18},
 	{"NonPreemptingPriority", Beta, 19, 23},
-	{"NonPreemptingPriority", GA, 24, -1},
+	{"NonPreemptingPriority", GA, 24, 25},
 
 	// OpenAPIEnums
 	{"OpenAPIEnums", Alpha, 23, 23},
@@ -616,6 +654,9 @@ var rawData = []FeatureSpec{
 	// OpenAPIV3
 	{"OpenAPIV3", Alpha, 23, 23},
 	{"OpenAPIV3", Beta, 24, -1},
+
+	// PDBUnhealthyPodEvictionPolicy
+	{"PDBUnhealthyPodEvictionPolicy", Alpha, 26, -1},
 
 	// PVCProtection
 	{"PVCProtection", Alpha, 9, 9},
@@ -628,7 +669,7 @@ var rawData = []FeatureSpec{
 	// PodAffinityNamespaceSelector
 	{"PodAffinityNamespaceSelector", Alpha, 21, 21},
 	{"PodAffinityNamespaceSelector", Beta, 22, 23},
-	{"PodAffinityNamespaceSelector", GA, 24, -1},
+	{"PodAffinityNamespaceSelector", GA, 24, 25},
 
 	// PodAndContainerStatsFromCRI
 	{"PodAndContainerStatsFromCRI", Alpha, 23, -1},
@@ -642,7 +683,8 @@ var rawData = []FeatureSpec{
 	{"PodDisruptionBudget", GA, 21, 24},
 
 	// PodDisruptionConditions
-	{"PodDisruptionConditions", Alpha, 25, -1},
+	{"PodDisruptionConditions", Alpha, 25, 25},
+	{"PodDisruptionConditions", Beta, 26, -1},
 
 	// PodHasNetworkCondition
 	{"PodHasNetworkCondition", Alpha, 25, -1},
@@ -650,7 +692,7 @@ var rawData = []FeatureSpec{
 	// PodOverhead
 	{"PodOverhead", Alpha, 16, 17},
 	{"PodOverhead", Beta, 18, 23},
-	{"PodOverhead", GA, 24, -1},
+	{"PodOverhead", GA, 24, 25},
 
 	// PodPriority
 	{"PodPriority", Alpha, 8, 10},
@@ -660,6 +702,9 @@ var rawData = []FeatureSpec{
 	// PodReadinessGates
 	{"PodReadinessGates", Beta, 11, 13},
 	{"PodReadinessGates", GA, 14, 15},
+
+	// PodSchedulingReadiness
+	{"PodSchedulingReadiness", Alpha, 26, -1},
 
 	// PodSecurity
 	{"PodSecurity", Alpha, 22, 22},
@@ -674,7 +719,7 @@ var rawData = []FeatureSpec{
 	// PreferNominatedNode
 	{"PreferNominatedNode", Alpha, 21, 21},
 	{"PreferNominatedNode", Beta, 22, 23},
-	{"PreferNominatedNode", GA, 24, -1},
+	{"PreferNominatedNode", GA, 24, 25},
 
 	// ProbeTerminationGracePeriod
 	{"ProbeTerminationGracePeriod", Alpha, 21, 21},
@@ -684,7 +729,8 @@ var rawData = []FeatureSpec{
 	{"ProcMountType", Alpha, 12, -1},
 
 	// ProxyTerminatingEndpoints
-	{"ProxyTerminatingEndpoints", Alpha, 22, -1},
+	{"ProxyTerminatingEndpoints", Alpha, 22, 25},
+	{"ProxyTerminatingEndpoints", Beta, 26, -1},
 
 	// QOSReserved
 	{"QOSReserved", Alpha, 11, -1},
@@ -710,7 +756,8 @@ var rawData = []FeatureSpec{
 	{"ResourceQuotaScopeSelectors", GA, 17, 17},
 
 	// RetroactiveDefaultStorageClass
-	{"RetroactiveDefaultStorageClass", Alpha, 25, -1},
+	{"RetroactiveDefaultStorageClass", Alpha, 25, 25},
+	{"RetroactiveDefaultStorageClass", Beta, 26, -1},
 
 	// RootCAConfigMap
 	{"RootCAConfigMap", Beta, 20, 20},
@@ -773,21 +820,23 @@ var rawData = []FeatureSpec{
 
 	// ServiceIPStaticSubrange
 	{"ServiceIPStaticSubrange", Alpha, 24, 24},
-	{"ServiceIPStaticSubrange", Beta, 25, -1},
+	{"ServiceIPStaticSubrange", Beta, 25, 25},
+	{"ServiceIPStaticSubrange", GA, 26, -1},
 
 	// ServiceInternalTrafficPolicy
 	{"ServiceInternalTrafficPolicy", Alpha, 21, 21},
-	{"ServiceInternalTrafficPolicy", Beta, 22, -1},
+	{"ServiceInternalTrafficPolicy", Beta, 22, 25},
+	{"ServiceInternalTrafficPolicy", GA, 26, -1},
 
 	// ServiceLBNodePortControl
 	{"ServiceLBNodePortControl", Alpha, 20, 21},
 	{"ServiceLBNodePortControl", Beta, 22, 23},
-	{"ServiceLBNodePortControl", GA, 24, -1},
+	{"ServiceLBNodePortControl", GA, 24, 25},
 
 	// ServiceLoadBalancerClass
 	{"ServiceLoadBalancerClass", Alpha, 21, 21},
 	{"ServiceLoadBalancerClass", Beta, 22, 23},
-	{"ServiceLoadBalancerClass", GA, 24, -1},
+	{"ServiceLoadBalancerClass", GA, 24, 25},
 
 	// ServiceLoadBalancerFinalizer
 	{"ServiceLoadBalancerFinalizer", Alpha, 15, 15},
@@ -827,6 +876,9 @@ var rawData = []FeatureSpec{
 	{"StatefulSetMinReadySeconds", Beta, 23, 24},
 	{"StatefulSetMinReadySeconds", GA, 25, -1},
 
+	// StatefulSetStartOrdinal
+	{"StatefulSetStartOrdinal", Alpha, 26, -1},
+
 	// StorageObjectInUseProtection
 	{"StorageObjectInUseProtection", Beta, 10, 10},
 	{"StorageObjectInUseProtection", GA, 11, 24},
@@ -853,7 +905,7 @@ var rawData = []FeatureSpec{
 	// SuspendJob
 	{"SuspendJob", Alpha, 21, 21},
 	{"SuspendJob", Beta, 22, 23},
-	{"SuspendJob", GA, 24, -1},
+	{"SuspendJob", GA, 24, 25},
 
 	// Sysctls
 	{"Sysctls", Beta, 11, 20},
@@ -892,12 +944,24 @@ var rawData = []FeatureSpec{
 	{"TopologyManager", Alpha, 16, 17},
 	{"TopologyManager", Beta, 18, -1},
 
+	// TopologyManagerPolicyAlphaOptions
+	{"TopologyManagerPolicyAlphaOptions", Alpha, 26, -1},
+
+	// TopologyManagerPolicyBetaOptions
+	{"TopologyManagerPolicyBetaOptions", Beta, 26, -1},
+
+	// TopologyManagerPolicyOptions
+	{"TopologyManagerPolicyOptions", Alpha, 26, -1},
+
 	// UserNamespacesStatelessPodsSupport
 	{"UserNamespacesStatelessPodsSupport", Alpha, 25, -1},
 
 	// ValidateProxyRedirects
 	{"ValidateProxyRedirects", Beta, 14, 21},
 	{"ValidateProxyRedirects", Deprecated, 22, 23},
+
+	// ValidatingAdmissionPolicy
+	{"ValidatingAdmissionPolicy", Alpha, 26, -1},
 
 	// VolumeCapacityPriority
 	{"VolumeCapacityPriority", Alpha, 21, -1},
@@ -946,9 +1010,13 @@ var rawData = []FeatureSpec{
 	{"WindowsGMSA", Beta, 16, 17},
 	{"WindowsGMSA", GA, 18, 20},
 
+	// WindowsHostNetwork
+	{"WindowsHostNetwork", Alpha, 26, -1},
+
 	// WindowsHostProcessContainers
 	{"WindowsHostProcessContainers", Alpha, 22, 22},
-	{"WindowsHostProcessContainers", Beta, 23, -1},
+	{"WindowsHostProcessContainers", Beta, 23, 25},
+	{"WindowsHostProcessContainers", GA, 26, -1},
 
 	// WindowsRunAsUserName
 	{"WindowsRunAsUserName", Alpha, 16, 16},
