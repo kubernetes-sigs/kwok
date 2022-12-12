@@ -56,11 +56,18 @@ func formatValue(val slog.Value) string {
 	case slog.StringKind:
 		return quoteIfNeed(val.String())
 	default:
-		v, err := json.Marshal(val.Any())
-		if err == nil {
-			return string(v)
+		switch x := val.Any().(type) {
+		case error:
+			return quoteIfNeed(x.Error())
+		case fmt.Stringer:
+			return quoteIfNeed(x.String())
+		default:
+			v, err := json.Marshal(x)
+			if err == nil {
+				return string(v)
+			}
+			return quoteIfNeed(val.String())
 		}
-		return quoteIfNeed(val.String())
 	}
 }
 
