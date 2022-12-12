@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package cmd defines a root command for the kwok.
 package cmd
 
 import (
@@ -199,8 +200,8 @@ func Serve(ctx context.Context, address string) {
 }
 
 // buildConfigFromFlags is a helper function that builds configs from a master url or a kubeconfig filepath.
-func buildConfigFromFlags(ctx context.Context, masterUrl, kubeconfigPath string) (*rest.Config, error) {
-	if kubeconfigPath == "" && masterUrl == "" {
+func buildConfigFromFlags(ctx context.Context, masterURL, kubeconfigPath string) (*rest.Config, error) {
+	if kubeconfigPath == "" && masterURL == "" {
 		logger := log.FromContext(ctx)
 		logger.Warn("Neither --kubeconfig nor --master was specified")
 		logger.Info("Using the inClusterConfig")
@@ -213,7 +214,7 @@ func buildConfigFromFlags(ctx context.Context, masterUrl, kubeconfigPath string)
 	}
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
-		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}}).ClientConfig()
+		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterURL}}).ClientConfig()
 }
 
 func newClientset(ctx context.Context, master, kubeconfig string) (kubernetes.Interface, error) {

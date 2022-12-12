@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package get defines a parent command for getting artifacts,
+// clusters and kubeconfig.
 package get
 
 import (

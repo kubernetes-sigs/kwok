@@ -14,20 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package templates contains node and pod templates used by controllers.
-package templates
-
-import (
-	_ "embed"
-)
-
-var (
-	//go:embed pod.status.tpl
-	DefaultPodStatusTemplate string
-
-	//go:embed node.heartbeat.tpl
-	DefaultNodeHeartbeatTemplate string
-
-	//go:embed node.status.tpl
-	DefaultNodeStatusTemplate string
-)
+// Package controllers is the package that contains the core logic on pods and nodes simulation.
+package controllers

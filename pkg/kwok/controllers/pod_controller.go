@@ -402,7 +402,7 @@ func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
 }
 
 func (c *PodController) computePatchData(pod *corev1.Pod, temp string) ([]byte, error) {
-	patch, err := c.renderer.renderToJson(temp, pod)
+	patch, err := c.renderer.renderToJSON(temp, pod)
 	if err != nil {
 		return nil, err
 	}

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package signals is the package that provide helper functions to receive signals from the system.
 package signals
 
 import (

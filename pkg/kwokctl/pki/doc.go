@@ -14,20 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package templates contains node and pod templates used by controllers.
-package templates
-
-import (
-	_ "embed"
-)
-
-var (
-	//go:embed pod.status.tpl
-	DefaultPodStatusTemplate string
-
-	//go:embed node.heartbeat.tpl
-	DefaultNodeHeartbeatTemplate string
-
-	//go:embed node.status.tpl
-	DefaultNodeStatusTemplate string
-)
+// Package pki is the package that provides functions to generate certificates
+package pki

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package clusters contains a command to list existing clusters.
 package clusters
 
 import (

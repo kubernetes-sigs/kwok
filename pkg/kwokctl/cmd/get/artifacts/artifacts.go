@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package artifacts contains a command to list binaries or images used by a cluster.
 package artifacts
 
 import (

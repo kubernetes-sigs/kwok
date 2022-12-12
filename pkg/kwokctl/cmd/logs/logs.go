@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package logs contains a command to log a component of a cluster.
 package logs
 
 import (
