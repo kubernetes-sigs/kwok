@@ -161,3 +161,8 @@ e2e-test:
 .PHONY: help
 help:
 	@cat $(MAKEFILE_LIST) | grep -e '^## ' | sed -e 's/^## //'
+
+## Automatically generate command line documents
+.PHONY: docsgen
+docsgen:
+	go run tools/docs/main.go
