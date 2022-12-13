@@ -183,6 +183,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.EtcdVersion = in.EtcdVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.DockerComposeVersion = in.DockerComposeVersion
+	out.KindVersion = in.KindVersion
 	if err := v1.Convert_bool_To_Pointer_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
 		return err
 	}
@@ -213,6 +214,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.PrometheusBinary = in.PrometheusBinary
 	out.PrometheusBinaryTar = in.PrometheusBinaryTar
 	out.DockerComposeBinary = in.DockerComposeBinary
+	out.KindBinary = in.KindBinary
 	out.Mode = in.Mode
 	out.KubeFeatureGates = in.KubeFeatureGates
 	out.KubeRuntimeConfig = in.KubeRuntimeConfig
@@ -243,6 +245,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.EtcdVersion = in.EtcdVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.DockerComposeVersion = in.DockerComposeVersion
+	out.KindVersion = in.KindVersion
 	if err := v1.Convert_Pointer_bool_To_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
 		return err
 	}
@@ -283,6 +286,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.PrometheusBinaryTar = in.PrometheusBinaryTar
 	// WARNING: in.DockerComposeBinaryPrefix requires manual conversion: does not exist in peer-type
 	out.DockerComposeBinary = in.DockerComposeBinary
+	// WARNING: in.KindBinaryPrefix requires manual conversion: does not exist in peer-type
+	out.KindBinary = in.KindBinary
 	out.Mode = in.Mode
 	out.KubeFeatureGates = in.KubeFeatureGates
 	out.KubeRuntimeConfig = in.KubeRuntimeConfig

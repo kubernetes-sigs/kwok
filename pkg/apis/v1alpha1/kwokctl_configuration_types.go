@@ -75,6 +75,10 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for env KWOK_DOCKER_COMPOSE_VERSION
 	DockerComposeVersion string `json:"dockerComposeVersion,omitempty"`
 
+	// KindVersion is the version of kind to use.
+	// is the default value for env KWOK_KIND_VERSION
+	KindVersion string `json:"kindVersion,omitempty"`
+
 	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
 	// is the default value for flag --secure-port and env KWOK_SECURE_PORT
 	// +default=false
@@ -206,6 +210,14 @@ type KwokctlConfigurationOptions struct {
 	// DockerComposeBinary is the binary of Docker compose.
 	// is the default value for flag --docker-compose-binary and env KWOK_DOCKER_COMPOSE_BINARY
 	DockerComposeBinary string `json:"dockerComposeBinary,omitempty"`
+
+	// KindBinaryPrefix is the binary prefix of kind.
+	// is the default value for env KWOK_KIND_BINARY_PREFIX
+	KindBinaryPrefix string `json:"kindBinaryPrefix,omitempty"`
+
+	// KindBinary is the binary of kind.
+	// is the default value for flag --kind-binary and env KWOK_KIND_BINARY
+	KindBinary string `json:"kindBinary,omitempty"`
 
 	// Mode is several default parameter templates for clusters
 	// is the default value for env KWOK_MODE

@@ -58,6 +58,9 @@ type KwokctlConfigurationOptions struct {
 	// DockerComposeVersion is the version of docker-compose to use.
 	DockerComposeVersion string
 
+	// KindVersion is the version of kind to use.
+	KindVersion string
+
 	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
 	SecurePort bool
 
@@ -124,6 +127,9 @@ type KwokctlConfigurationOptions struct {
 
 	// DockerComposeBinary is the binary of Docker compose.
 	DockerComposeBinary string
+
+	// KindBinary is the binary of kind.
+	KindBinary string
 
 	// Mode is several default parameter templates for clusters
 	Mode string

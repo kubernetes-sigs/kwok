@@ -318,6 +318,21 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 			conf.KindNodeImage = joinImageURI(conf.KindNodeImagePrefix, "node", conf.KubeVersion)
 		}
 		conf.KindNodeImage = envs.GetEnvWithPrefix("KIND_NODE_IMAGE", conf.KindNodeImage)
+
+		if conf.KindVersion == "" {
+			conf.KindVersion = consts.KindVersion
+		}
+		conf.KindVersion = addPrefixV(envs.GetEnvWithPrefix("KIND_VERSION", conf.KindVersion))
+
+		if conf.KindBinaryPrefix == "" {
+			conf.KindBinaryPrefix = consts.KindBinaryPrefix + "/" + conf.KindVersion
+		}
+		conf.KindBinaryPrefix = envs.GetEnvWithPrefix("KIND_BINARY_PREFIX", conf.KindBinaryPrefix)
+
+		if conf.KindBinary == "" {
+			conf.KindBinary = conf.KindBinaryPrefix + "/kind-" + runtime.GOOS + "-" + runtime.GOARCH + conf.BinSuffix
+		}
+		conf.KindBinary = envs.GetEnvWithPrefix("KIND_BINARY", conf.KindBinary)
 	}
 
 	if runtimeDocker {

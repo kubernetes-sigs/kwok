@@ -34,6 +34,9 @@ var (
 	DockerComposeVersion      = "2.13.0"
 	DockerComposeBinaryPrefix = "https://github.com/docker/compose/releases/download"
 
+	KindVersion      = "0.17.0"
+	KindBinaryPrefix = "https://github.com/kubernetes-sigs/kind/releases/download"
+
 	PrometheusVersion      = "2.35.0"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
