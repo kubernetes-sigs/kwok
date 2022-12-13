@@ -109,7 +109,7 @@ function send_pr() {
   fi
 
   body="
-\`\`\` console
+\`\`\` diff
 
 ${diff_data}
 
@@ -131,7 +131,7 @@ function main() {
   fi
 
   record_data="$(record_releases)"
-  out="$(bump ${record_data} ${latest_data} | sort --reverse --version-sort | head -n 6)"
+  out="$(bump ${record_data} ${latest_data} | sort --reverse --version-sort)"
 
   if [[ "${out}" == "$(record_releases)" ]]; then
     echo "No update"
