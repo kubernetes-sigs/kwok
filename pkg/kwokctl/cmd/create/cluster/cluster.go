@@ -99,12 +99,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 `)
 	cmd.Flags().StringVar(&flags.DockerComposeBinary, "docker-compose-binary", flags.DockerComposeBinary, `Binary of Docker-compose, only for docker runtime
 `)
-	cmd.Flags().StringVar(&flags.KindBinary, "kind-binary", flags.KindBinary, `Binary of kind, only for kind runtime`)
-
-	cmd.Flags().StringVar(&flags.KubeFeatureGates, "kube-feature-gates", flags.KubeFeatureGates, `A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes
+	cmd.Flags().StringVar(&flags.KindBinary, "kind-binary", flags.KindBinary, `Binary of kind, only for kind runtime
 `)
-	cmd.Flags().StringVar(&flags.KubeRuntimeConfig, "kube-runtime-config", flags.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs
-`)
+	cmd.Flags().StringVar(&flags.KubeFeatureGates, "kube-feature-gates", flags.KubeFeatureGates, `A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes`)
+	cmd.Flags().StringVar(&flags.KubeRuntimeConfig, "kube-runtime-config", flags.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs`)
 	cmd.Flags().StringVar(&flags.KubeAuditPolicy, "kube-audit-policy", flags.KubeAuditPolicy, "Path to the file that defines the audit policy configuration")
 	cmd.Flags().BoolVar(&flags.KubeAuthorization, "kube-authorization", flags.KubeAuthorization, "Enable authorization on secure port")
 	cmd.Flags().StringVar(&flags.Runtime, "runtime", flags.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))

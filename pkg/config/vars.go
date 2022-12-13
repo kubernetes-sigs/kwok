@@ -193,19 +193,15 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 		}
 	}
 
+	if conf.KubeBinaryPrefix == "" {
+		conf.KubeBinaryPrefix = consts.KubeBinaryPrefix + "/" + conf.KubeVersion + "/bin/" + runtime.GOOS + "/" + runtime.GOARCH
+	}
+	conf.KubeBinaryPrefix = envs.GetEnvWithPrefix("KUBE_BINARY_PREFIX", conf.KubeBinaryPrefix)
+
 	if conf.KubectlBinary == "" {
 		conf.KubectlBinary = conf.KubeBinaryPrefix + "/kubectl" + conf.BinSuffix
 	}
 	conf.KubectlBinary = envs.GetEnvWithPrefix("KUBECTL_BINARY", conf.KubectlBinary)
-
-	runtimeBinary := conf.Runtime == "binary"
-	runtimeDocker := conf.Runtime == "docker"
-	runtimeNerdctl := conf.Runtime == "nerdctl"
-	runtimeKind := conf.Runtime == "kind"
-	runtimeCompose := runtimeDocker || runtimeNerdctl
-	needImage := runtimeCompose || runtimeKind
-	disableKubeScheduler := *conf.DisableKubeScheduler
-	disableKubeControllerManager := *conf.DisableKubeControllerManager
 
 	if conf.EtcdBinaryPrefix == "" {
 		conf.EtcdBinaryPrefix = consts.EtcdBinaryPrefix + "/v" + strings.TrimSuffix(conf.EtcdVersion, "-0")
@@ -224,164 +220,138 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	}
 	conf.EtcdBinaryTar = envs.GetEnvWithPrefix("ETCD_BINARY_TAR", conf.EtcdBinaryTar)
 
-	if runtimeBinary {
-		if conf.KubeBinaryPrefix == "" {
-			conf.KubeBinaryPrefix = consts.KubeBinaryPrefix + "/" + conf.KubeVersion + "/bin/" + runtime.GOOS + "/" + runtime.GOARCH
-		}
-		conf.KubeBinaryPrefix = envs.GetEnvWithPrefix("KUBE_BINARY_PREFIX", conf.KubeBinaryPrefix)
-
-		if conf.KubeApiserverBinary == "" {
-			conf.KubeApiserverBinary = conf.KubeBinaryPrefix + "/kube-apiserver" + conf.BinSuffix
-		}
-		conf.KubeApiserverBinary = envs.GetEnvWithPrefix("KUBE_APISERVER_BINARY", conf.KubeApiserverBinary)
-
-		if !disableKubeControllerManager {
-			if conf.KubeControllerManagerBinary == "" {
-				conf.KubeControllerManagerBinary = conf.KubeBinaryPrefix + "/kube-controller-manager" + conf.BinSuffix
-			}
-			conf.KubeControllerManagerBinary = envs.GetEnvWithPrefix("KUBE_CONTROLLER_MANAGER_BINARY", conf.KubeControllerManagerBinary)
-		}
-
-		if !disableKubeScheduler {
-			if conf.KubeSchedulerBinary == "" {
-				conf.KubeSchedulerBinary = conf.KubeBinaryPrefix + "/kube-scheduler" + conf.BinSuffix
-			}
-			conf.KubeSchedulerBinary = envs.GetEnvWithPrefix("KUBE_SCHEDULER_BINARY", conf.KubeSchedulerBinary)
-		}
-
-		if conf.KwokBinaryPrefix == "" {
-			conf.KwokBinaryPrefix = consts.BinaryPrefix
-		}
-		conf.KwokBinaryPrefix = envs.GetEnvWithPrefix("BINARY_PREFIX", conf.KwokBinaryPrefix+"/"+conf.KwokVersion)
-
-		if conf.KwokControllerBinary == "" {
-			conf.KwokControllerBinary = conf.KwokBinaryPrefix + "/kwok-" + runtime.GOOS + "-" + runtime.GOARCH + conf.BinSuffix
-		}
-		conf.KwokControllerBinary = envs.GetEnvWithPrefix("CONTROLLER_BINARY", conf.KwokControllerBinary)
+	if conf.KubeApiserverBinary == "" {
+		conf.KubeApiserverBinary = conf.KubeBinaryPrefix + "/kube-apiserver" + conf.BinSuffix
 	}
+	conf.KubeApiserverBinary = envs.GetEnvWithPrefix("KUBE_APISERVER_BINARY", conf.KubeApiserverBinary)
 
-	if needImage {
-		if conf.KwokImagePrefix == "" {
-			conf.KwokImagePrefix = consts.ImagePrefix
-		}
-		conf.KwokImagePrefix = envs.GetEnvWithPrefix("IMAGE_PREFIX", conf.KwokImagePrefix)
-
-		if conf.KwokControllerImage == "" {
-			conf.KwokControllerImage = joinImageURI(conf.KwokImagePrefix, "kwok", conf.KwokVersion)
-		}
-		conf.KwokControllerImage = envs.GetEnvWithPrefix("CONTROLLER_IMAGE", conf.KwokControllerImage)
+	if conf.KubeControllerManagerBinary == "" {
+		conf.KubeControllerManagerBinary = conf.KubeBinaryPrefix + "/kube-controller-manager" + conf.BinSuffix
 	}
+	conf.KubeControllerManagerBinary = envs.GetEnvWithPrefix("KUBE_CONTROLLER_MANAGER_BINARY", conf.KubeControllerManagerBinary)
 
-	if runtimeCompose {
-		if conf.KubeImagePrefix == "" {
-			conf.KubeImagePrefix = consts.KubeImagePrefix
-		}
-		conf.KubeImagePrefix = envs.GetEnvWithPrefix("KUBE_IMAGE_PREFIX", conf.KubeImagePrefix)
-
-		if conf.EtcdImagePrefix == "" {
-			conf.EtcdImagePrefix = conf.KubeImagePrefix
-		}
-		conf.EtcdImagePrefix = envs.GetEnvWithPrefix("ETCD_IMAGE_PREFIX", conf.EtcdImagePrefix)
-
-		if conf.EtcdImage == "" {
-			conf.EtcdImage = joinImageURI(conf.EtcdImagePrefix, "etcd", conf.EtcdVersion)
-		}
-		conf.EtcdImage = envs.GetEnvWithPrefix("ETCD_IMAGE", conf.EtcdImage)
-
-		if conf.KubeApiserverImage == "" {
-			conf.KubeApiserverImage = joinImageURI(conf.KubeImagePrefix, "kube-apiserver", conf.KubeVersion)
-		}
-		conf.KubeApiserverImage = envs.GetEnvWithPrefix("KUBE_APISERVER_IMAGE", conf.KubeApiserverImage)
-
-		if !disableKubeControllerManager {
-			if conf.KubeControllerManagerImage == "" {
-				conf.KubeControllerManagerImage = joinImageURI(conf.KubeImagePrefix, "kube-controller-manager", conf.KubeVersion)
-			}
-			conf.KubeControllerManagerImage = envs.GetEnvWithPrefix("KUBE_CONTROLLER_MANAGER_IMAGE", conf.KubeControllerManagerImage)
-		}
-
-		if !disableKubeScheduler {
-			if conf.KubeSchedulerImage == "" {
-				conf.KubeSchedulerImage = joinImageURI(conf.KubeImagePrefix, "kube-scheduler", conf.KubeVersion)
-			}
-			conf.KubeSchedulerImage = envs.GetEnvWithPrefix("KUBE_SCHEDULER_IMAGE", conf.KubeSchedulerImage)
-		}
+	if conf.KubeSchedulerBinary == "" {
+		conf.KubeSchedulerBinary = conf.KubeBinaryPrefix + "/kube-scheduler" + conf.BinSuffix
 	}
+	conf.KubeSchedulerBinary = envs.GetEnvWithPrefix("KUBE_SCHEDULER_BINARY", conf.KubeSchedulerBinary)
 
-	if runtimeKind {
-		if conf.KindNodeImagePrefix == "" {
-			conf.KindNodeImagePrefix = consts.KindNodeImagePrefix
-		}
-		conf.KindNodeImagePrefix = envs.GetEnvWithPrefix("KIND_NODE_IMAGE_PREFIX", conf.KindNodeImagePrefix)
-
-		if conf.KindNodeImage == "" {
-			conf.KindNodeImage = joinImageURI(conf.KindNodeImagePrefix, "node", conf.KubeVersion)
-		}
-		conf.KindNodeImage = envs.GetEnvWithPrefix("KIND_NODE_IMAGE", conf.KindNodeImage)
-
-		if conf.KindVersion == "" {
-			conf.KindVersion = consts.KindVersion
-		}
-		conf.KindVersion = addPrefixV(envs.GetEnvWithPrefix("KIND_VERSION", conf.KindVersion))
-
-		if conf.KindBinaryPrefix == "" {
-			conf.KindBinaryPrefix = consts.KindBinaryPrefix + "/" + conf.KindVersion
-		}
-		conf.KindBinaryPrefix = envs.GetEnvWithPrefix("KIND_BINARY_PREFIX", conf.KindBinaryPrefix)
-
-		if conf.KindBinary == "" {
-			conf.KindBinary = conf.KindBinaryPrefix + "/kind-" + runtime.GOOS + "-" + runtime.GOARCH + conf.BinSuffix
-		}
-		conf.KindBinary = envs.GetEnvWithPrefix("KIND_BINARY", conf.KindBinary)
+	if conf.KwokBinaryPrefix == "" {
+		conf.KwokBinaryPrefix = consts.BinaryPrefix
 	}
+	conf.KwokBinaryPrefix = envs.GetEnvWithPrefix("BINARY_PREFIX", conf.KwokBinaryPrefix+"/"+conf.KwokVersion)
 
-	if runtimeDocker {
-		if conf.DockerComposeVersion == "" {
-			conf.DockerComposeVersion = consts.DockerComposeVersion
-		}
-		conf.DockerComposeVersion = addPrefixV(envs.GetEnvWithPrefix("DOCKER_COMPOSE_VERSION", conf.DockerComposeVersion))
-
-		if conf.DockerComposeBinaryPrefix == "" {
-			conf.DockerComposeBinaryPrefix = consts.DockerComposeBinaryPrefix + "/" + conf.DockerComposeVersion
-		}
-		conf.DockerComposeBinaryPrefix = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY_PREFIX", conf.DockerComposeBinaryPrefix)
-
-		if conf.DockerComposeBinary == "" {
-			conf.DockerComposeBinary = conf.DockerComposeBinaryPrefix + "/docker-compose-" + runtime.GOOS + "-" + archAlias(runtime.GOARCH) + conf.BinSuffix
-		}
-		conf.DockerComposeBinary = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY", conf.DockerComposeBinary)
+	if conf.KwokControllerBinary == "" {
+		conf.KwokControllerBinary = conf.KwokBinaryPrefix + "/kwok-" + runtime.GOOS + "-" + runtime.GOARCH + conf.BinSuffix
 	}
+	conf.KwokControllerBinary = envs.GetEnvWithPrefix("CONTROLLER_BINARY", conf.KwokControllerBinary)
+
+	if conf.KwokImagePrefix == "" {
+		conf.KwokImagePrefix = consts.ImagePrefix
+	}
+	conf.KwokImagePrefix = envs.GetEnvWithPrefix("IMAGE_PREFIX", conf.KwokImagePrefix)
+
+	if conf.KwokControllerImage == "" {
+		conf.KwokControllerImage = joinImageURI(conf.KwokImagePrefix, "kwok", conf.KwokVersion)
+	}
+	conf.KwokControllerImage = envs.GetEnvWithPrefix("CONTROLLER_IMAGE", conf.KwokControllerImage)
+
+	if conf.KubeImagePrefix == "" {
+		conf.KubeImagePrefix = consts.KubeImagePrefix
+	}
+	conf.KubeImagePrefix = envs.GetEnvWithPrefix("KUBE_IMAGE_PREFIX", conf.KubeImagePrefix)
+
+	if conf.EtcdImagePrefix == "" {
+		conf.EtcdImagePrefix = conf.KubeImagePrefix
+	}
+	conf.EtcdImagePrefix = envs.GetEnvWithPrefix("ETCD_IMAGE_PREFIX", conf.EtcdImagePrefix)
+
+	if conf.EtcdImage == "" {
+		conf.EtcdImage = joinImageURI(conf.EtcdImagePrefix, "etcd", conf.EtcdVersion)
+	}
+	conf.EtcdImage = envs.GetEnvWithPrefix("ETCD_IMAGE", conf.EtcdImage)
+
+	if conf.KubeApiserverImage == "" {
+		conf.KubeApiserverImage = joinImageURI(conf.KubeImagePrefix, "kube-apiserver", conf.KubeVersion)
+	}
+	conf.KubeApiserverImage = envs.GetEnvWithPrefix("KUBE_APISERVER_IMAGE", conf.KubeApiserverImage)
+
+	if conf.KubeControllerManagerImage == "" {
+		conf.KubeControllerManagerImage = joinImageURI(conf.KubeImagePrefix, "kube-controller-manager", conf.KubeVersion)
+	}
+	conf.KubeControllerManagerImage = envs.GetEnvWithPrefix("KUBE_CONTROLLER_MANAGER_IMAGE", conf.KubeControllerManagerImage)
+
+	if conf.KubeSchedulerImage == "" {
+		conf.KubeSchedulerImage = joinImageURI(conf.KubeImagePrefix, "kube-scheduler", conf.KubeVersion)
+	}
+	conf.KubeSchedulerImage = envs.GetEnvWithPrefix("KUBE_SCHEDULER_IMAGE", conf.KubeSchedulerImage)
+
+	if conf.KindNodeImagePrefix == "" {
+		conf.KindNodeImagePrefix = consts.KindNodeImagePrefix
+	}
+	conf.KindNodeImagePrefix = envs.GetEnvWithPrefix("KIND_NODE_IMAGE_PREFIX", conf.KindNodeImagePrefix)
+
+	if conf.KindNodeImage == "" {
+		conf.KindNodeImage = joinImageURI(conf.KindNodeImagePrefix, "node", conf.KubeVersion)
+	}
+	conf.KindNodeImage = envs.GetEnvWithPrefix("KIND_NODE_IMAGE", conf.KindNodeImage)
+
+	if conf.KindVersion == "" {
+		conf.KindVersion = consts.KindVersion
+	}
+	conf.KindVersion = addPrefixV(envs.GetEnvWithPrefix("KIND_VERSION", conf.KindVersion))
+
+	if conf.KindBinaryPrefix == "" {
+		conf.KindBinaryPrefix = consts.KindBinaryPrefix + "/" + conf.KindVersion
+	}
+	conf.KindBinaryPrefix = envs.GetEnvWithPrefix("KIND_BINARY_PREFIX", conf.KindBinaryPrefix)
+
+	if conf.KindBinary == "" {
+		conf.KindBinary = conf.KindBinaryPrefix + "/kind-" + runtime.GOOS + "-" + runtime.GOARCH + conf.BinSuffix
+	}
+	conf.KindBinary = envs.GetEnvWithPrefix("KIND_BINARY", conf.KindBinary)
+
+	if conf.DockerComposeVersion == "" {
+		conf.DockerComposeVersion = consts.DockerComposeVersion
+	}
+	conf.DockerComposeVersion = addPrefixV(envs.GetEnvWithPrefix("DOCKER_COMPOSE_VERSION", conf.DockerComposeVersion))
+
+	if conf.DockerComposeBinaryPrefix == "" {
+		conf.DockerComposeBinaryPrefix = consts.DockerComposeBinaryPrefix + "/" + conf.DockerComposeVersion
+	}
+	conf.DockerComposeBinaryPrefix = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY_PREFIX", conf.DockerComposeBinaryPrefix)
+
+	if conf.DockerComposeBinary == "" {
+		conf.DockerComposeBinary = conf.DockerComposeBinaryPrefix + "/docker-compose-" + runtime.GOOS + "-" + archAlias(runtime.GOARCH) + conf.BinSuffix
+	}
+	conf.DockerComposeBinary = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY", conf.DockerComposeBinary)
 
 	if conf.PrometheusImagePrefix == "" {
 		conf.PrometheusImagePrefix = consts.PrometheusImagePrefix
 	}
 	conf.PrometheusImagePrefix = envs.GetEnvWithPrefix("PROMETHEUS_IMAGE_PREFIX", conf.PrometheusImagePrefix)
 
-	if needImage {
-		if conf.PrometheusImage == "" {
-			conf.PrometheusImage = joinImageURI(conf.PrometheusImagePrefix, "prometheus", conf.PrometheusVersion)
-		}
-		conf.PrometheusImage = envs.GetEnvWithPrefix("PROMETHEUS_IMAGE", conf.PrometheusImage)
+	if conf.PrometheusImage == "" {
+		conf.PrometheusImage = joinImageURI(conf.PrometheusImagePrefix, "prometheus", conf.PrometheusVersion)
 	}
+	conf.PrometheusImage = envs.GetEnvWithPrefix("PROMETHEUS_IMAGE", conf.PrometheusImage)
 
-	if runtimeBinary {
-		if conf.PrometheusBinaryPrefix == "" {
-			conf.PrometheusBinaryPrefix = consts.PrometheusBinaryPrefix + "/" + conf.PrometheusVersion
-		}
-		conf.PrometheusBinaryPrefix = envs.GetEnvWithPrefix("PROMETHEUS_BINARY_PREFIX", conf.PrometheusBinaryPrefix)
-
-		conf.PrometheusBinary = envs.GetEnvWithPrefix("PROMETHEUS_BINARY", conf.PrometheusBinary)
-
-		if conf.PrometheusBinaryTar == "" {
-			conf.PrometheusBinaryTar = conf.PrometheusBinaryPrefix + "/prometheus-" + strings.TrimPrefix(conf.PrometheusVersion, "v") + "." + runtime.GOOS + "-" + runtime.GOARCH + "." + func() string {
-				if runtime.GOOS == "windows" {
-					return "zip"
-				}
-				return "tar.gz"
-			}()
-		}
-		conf.PrometheusBinaryTar = envs.GetEnvWithPrefix("PROMETHEUS_BINARY_TAR", conf.PrometheusBinaryTar)
+	if conf.PrometheusBinaryPrefix == "" {
+		conf.PrometheusBinaryPrefix = consts.PrometheusBinaryPrefix + "/" + conf.PrometheusVersion
 	}
+	conf.PrometheusBinaryPrefix = envs.GetEnvWithPrefix("PROMETHEUS_BINARY_PREFIX", conf.PrometheusBinaryPrefix)
+
+	conf.PrometheusBinary = envs.GetEnvWithPrefix("PROMETHEUS_BINARY", conf.PrometheusBinary)
+
+	if conf.PrometheusBinaryTar == "" {
+		conf.PrometheusBinaryTar = conf.PrometheusBinaryPrefix + "/prometheus-" + strings.TrimPrefix(conf.PrometheusVersion, "v") + "." + runtime.GOOS + "-" + runtime.GOARCH + "." + func() string {
+			if runtime.GOOS == "windows" {
+				return "zip"
+			}
+			return "tar.gz"
+		}()
+	}
+	conf.PrometheusBinaryTar = envs.GetEnvWithPrefix("PROMETHEUS_BINARY_TAR", conf.PrometheusBinaryTar)
+
 	return config
 }
 
