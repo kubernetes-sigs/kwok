@@ -60,7 +60,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	auditPolicyPath := ""
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath = c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0644)
+		err = file.Create(auditLogPath, 0600)
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
 		}
-		err = os.WriteFile(prometheusPath, []byte(prometheusData), 0644)
+		err = os.WriteFile(prometheusPath, []byte(prometheusData), 0600)
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
@@ -192,17 +192,17 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Save config
-	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0644)
+	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0600)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0644)
+	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0600)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(composePath, []byte(compose), 0644)
+	err = os.WriteFile(composePath, []byte(compose), 0600)
 	if err != nil {
 		return err
 	}
