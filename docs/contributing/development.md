@@ -14,17 +14,8 @@ On a successful build, the binaries will be located in `./bin/$(go env GOOS)/$(g
 
 ### Building `kwok` image
 
-On Linux:
-``` bash
-BINARY=kwok make build
-IMAGE_PREFIX=local make image
-```
-
-On Darwin:
-``` bash
-CONTAINER_PLATFORMS=linux/$(go env GOARCH)
-BINARY_PLATFORMS=${CONTAINER_PLATFORMS} BINARY=kwok make cross-build
-IMAGE_PLATFORMS=${CONTAINER_PLATFORMS} IMAGE_PREFIX=local make cross-image
+```bash
+IMAGE_PREFIX=local make build-image
 ```
 
 The image will be tagged as `local/kwok:${tag}` and can be found in `docker images`
