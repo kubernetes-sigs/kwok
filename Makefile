@@ -74,6 +74,12 @@ unit-test: vendor
 verify:
 	@./hack/verify-all.sh
 
+## local-image: Build local image for testing
+.PHONY: local-image
+local-image:
+	@./hack/local-image.sh
+
+
 ## build: Build binary
 .PHONY: build
 build: vendor
