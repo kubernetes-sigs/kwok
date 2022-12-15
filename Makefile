@@ -38,6 +38,10 @@ BINARY_NAME ?=
 
 STAGING ?= false
 
+GOOS ?= $(shell go env GOOS)
+
+GOARCH ?= $(shell go env GOARCH)
+
 ifeq ($(STAGING),true)
 STAGING_IMAGE_PREFIX ?= $(IMAGE_PREFIX)
 STAGING_PREFIX ?= $(shell ./hack/get-staging.sh)
@@ -73,6 +77,19 @@ unit-test: vendor
 .PHONY: verify
 verify:
 	@./hack/verify-all.sh
+
+## build-image: Build binary and image 
+.PHONY: build-image
+build-image:
+ifeq ($(GOOS),linux)
+	@make BINARY=kwok build && \
+		make image
+else ifeq ($(GOOS),darwin)
+	@make BINARY=kwok BINARY_PLATFORMS=linux/$(GOARCH) cross-build && \
+		make IMAGE_PLATFORMS=linux/$(GOARCH) cross-image
+else 
+	@echo "Unsupported OS: $(GOOS)"
+endif
 
 ## build: Build binary
 .PHONY: build
