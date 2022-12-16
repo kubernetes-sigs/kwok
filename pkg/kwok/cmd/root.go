@@ -66,16 +66,17 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		SilenceErrors: true,
 		Version:       consts.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			logger := log.FromContext(ctx)
+
 			if flags.Kubeconfig != "" {
 				flags.Kubeconfig = path.ExpandHome(flags.Kubeconfig)
 				f, err := os.Stat(flags.Kubeconfig)
 				if err != nil || f.IsDir() {
+					logger.Warn("Failed to get kubeconfig file or it is a directory", "kubeconfig", flags.Kubeconfig)
 					flags.Kubeconfig = ""
 				}
 			}
-
-			ctx := cmd.Context()
-			logger := log.FromContext(ctx)
 
 			clientset, err := newClientset(ctx, flags.Master, flags.Kubeconfig)
 			if err != nil {
