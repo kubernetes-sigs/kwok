@@ -122,16 +122,6 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	}
 	conf.KubeVersion = addPrefixV(envs.GetEnvWithPrefix("KUBE_VERSION", conf.KubeVersion))
 
-	if conf.EtcdVersion == "" {
-		conf.EtcdVersion = k8s.GetEtcdVersion(parseRelease(conf.KubeVersion))
-	}
-	conf.EtcdVersion = trimPrefixV(envs.GetEnvWithPrefix("ETCD_VERSION", conf.EtcdVersion))
-
-	if conf.PrometheusVersion == "" {
-		conf.PrometheusVersion = consts.PrometheusVersion
-	}
-	conf.PrometheusVersion = addPrefixV(envs.GetEnvWithPrefix("PROMETHEUS_VERSION", conf.PrometheusVersion))
-
 	if conf.SecurePort == nil {
 		conf.SecurePort = ptrVar(parseRelease(conf.KubeVersion) > 19)
 	}
@@ -142,6 +132,38 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	}
 	conf.QuietPull = ptrVar(envs.GetEnvBoolWithPrefix("QUIET_PULL", *conf.QuietPull))
 
+	conf.Runtime = envs.GetEnvWithPrefix("RUNTIME", conf.Runtime)
+
+	conf.Mode = envs.GetEnvWithPrefix("MODE", conf.Mode)
+
+	if conf.CacheDir == "" {
+		conf.CacheDir = path.Join(WorkDir, "cache")
+	}
+
+	if conf.BinSuffix == "" {
+		if runtime.GOOS == "windows" {
+			conf.BinSuffix = ".exe"
+		}
+	}
+
+	setKwokctlKubernetesConfig(conf)
+
+	setKwokctlKwokConfig(conf)
+
+	setKwokctlEtcdConfig(conf)
+
+	setKwokctlKindConfig(conf)
+
+	setKwokctlDockerConfig(conf)
+
+	setKwokctlPrometheusConfig(conf)
+
+	v1alpha1.SetObjectDefaults_KwokctlConfiguration(config)
+
+	return config
+}
+
+func setKwokctlKubernetesConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	if conf.DisableKubeScheduler == nil {
 		conf.DisableKubeScheduler = ptrVar(false)
 	}
@@ -157,15 +179,7 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	}
 	conf.KubeAuthorization = ptrVar(envs.GetEnvBoolWithPrefix("KUBE_AUTHORIZATION", *conf.KubeAuthorization))
 
-	v1alpha1.SetObjectDefaults_KwokctlConfiguration(config)
-
 	conf.KubeApiserverPort = envs.GetEnvUint32WithPrefix("KUBE_APISERVER_PORT", conf.KubeApiserverPort)
-
-	conf.Runtime = envs.GetEnvWithPrefix("RUNTIME", conf.Runtime)
-
-	conf.PrometheusPort = envs.GetEnvUint32WithPrefix("PROMETHEUS_PORT", conf.PrometheusPort)
-
-	conf.Mode = envs.GetEnvWithPrefix("MODE", conf.Mode)
 
 	if conf.KubeFeatureGates == "" {
 		if conf.Mode == v1alpha1.ModeStableFeatureGateAndAPI {
@@ -183,16 +197,6 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 
 	conf.KubeAuditPolicy = envs.GetEnvWithPrefix("KUBE_AUDIT_POLICY", conf.KubeAuditPolicy)
 
-	if conf.CacheDir == "" {
-		conf.CacheDir = path.Join(WorkDir, "cache")
-	}
-
-	if conf.BinSuffix == "" {
-		if runtime.GOOS == "windows" {
-			conf.BinSuffix = ".exe"
-		}
-	}
-
 	if conf.KubeBinaryPrefix == "" {
 		conf.KubeBinaryPrefix = consts.KubeBinaryPrefix + "/" + conf.KubeVersion + "/bin/" + runtime.GOOS + "/" + runtime.GOARCH
 	}
@@ -202,23 +206,6 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 		conf.KubectlBinary = conf.KubeBinaryPrefix + "/kubectl" + conf.BinSuffix
 	}
 	conf.KubectlBinary = envs.GetEnvWithPrefix("KUBECTL_BINARY", conf.KubectlBinary)
-
-	if conf.EtcdBinaryPrefix == "" {
-		conf.EtcdBinaryPrefix = consts.EtcdBinaryPrefix + "/v" + strings.TrimSuffix(conf.EtcdVersion, "-0")
-	}
-	conf.EtcdBinaryPrefix = envs.GetEnvWithPrefix("ETCD_BINARY_PREFIX", conf.EtcdBinaryPrefix)
-
-	conf.EtcdBinary = envs.GetEnvWithPrefix("ETCD_BINARY", conf.EtcdBinary)
-
-	if conf.EtcdBinaryTar == "" {
-		conf.EtcdBinaryTar = conf.EtcdBinaryPrefix + "/etcd-v" + strings.TrimSuffix(conf.EtcdVersion, "-0") + "-" + runtime.GOOS + "-" + runtime.GOARCH + "." + func() string {
-			if runtime.GOOS == "linux" {
-				return "tar.gz"
-			}
-			return "zip"
-		}()
-	}
-	conf.EtcdBinaryTar = envs.GetEnvWithPrefix("ETCD_BINARY_TAR", conf.EtcdBinaryTar)
 
 	if conf.KubeApiserverBinary == "" {
 		conf.KubeApiserverBinary = conf.KubeBinaryPrefix + "/kube-apiserver" + conf.BinSuffix
@@ -235,6 +222,28 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	}
 	conf.KubeSchedulerBinary = envs.GetEnvWithPrefix("KUBE_SCHEDULER_BINARY", conf.KubeSchedulerBinary)
 
+	if conf.KubeImagePrefix == "" {
+		conf.KubeImagePrefix = consts.KubeImagePrefix
+	}
+	conf.KubeImagePrefix = envs.GetEnvWithPrefix("KUBE_IMAGE_PREFIX", conf.KubeImagePrefix)
+
+	if conf.KubeApiserverImage == "" {
+		conf.KubeApiserverImage = joinImageURI(conf.KubeImagePrefix, "kube-apiserver", conf.KubeVersion)
+	}
+	conf.KubeApiserverImage = envs.GetEnvWithPrefix("KUBE_APISERVER_IMAGE", conf.KubeApiserverImage)
+
+	if conf.KubeControllerManagerImage == "" {
+		conf.KubeControllerManagerImage = joinImageURI(conf.KubeImagePrefix, "kube-controller-manager", conf.KubeVersion)
+	}
+	conf.KubeControllerManagerImage = envs.GetEnvWithPrefix("KUBE_CONTROLLER_MANAGER_IMAGE", conf.KubeControllerManagerImage)
+
+	if conf.KubeSchedulerImage == "" {
+		conf.KubeSchedulerImage = joinImageURI(conf.KubeImagePrefix, "kube-scheduler", conf.KubeVersion)
+	}
+	conf.KubeSchedulerImage = envs.GetEnvWithPrefix("KUBE_SCHEDULER_IMAGE", conf.KubeSchedulerImage)
+}
+
+func setKwokctlKwokConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	if conf.KwokBinaryPrefix == "" {
 		conf.KwokBinaryPrefix = consts.BinaryPrefix
 	}
@@ -254,11 +263,30 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 		conf.KwokControllerImage = joinImageURI(conf.KwokImagePrefix, "kwok", conf.KwokVersion)
 	}
 	conf.KwokControllerImage = envs.GetEnvWithPrefix("CONTROLLER_IMAGE", conf.KwokControllerImage)
+}
 
-	if conf.KubeImagePrefix == "" {
-		conf.KubeImagePrefix = consts.KubeImagePrefix
+func setKwokctlEtcdConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
+	if conf.EtcdVersion == "" {
+		conf.EtcdVersion = k8s.GetEtcdVersion(parseRelease(conf.KubeVersion))
 	}
-	conf.KubeImagePrefix = envs.GetEnvWithPrefix("KUBE_IMAGE_PREFIX", conf.KubeImagePrefix)
+	conf.EtcdVersion = trimPrefixV(envs.GetEnvWithPrefix("ETCD_VERSION", conf.EtcdVersion))
+
+	if conf.EtcdBinaryPrefix == "" {
+		conf.EtcdBinaryPrefix = consts.EtcdBinaryPrefix + "/v" + strings.TrimSuffix(conf.EtcdVersion, "-0")
+	}
+	conf.EtcdBinaryPrefix = envs.GetEnvWithPrefix("ETCD_BINARY_PREFIX", conf.EtcdBinaryPrefix)
+
+	conf.EtcdBinary = envs.GetEnvWithPrefix("ETCD_BINARY", conf.EtcdBinary)
+
+	if conf.EtcdBinaryTar == "" {
+		conf.EtcdBinaryTar = conf.EtcdBinaryPrefix + "/etcd-v" + strings.TrimSuffix(conf.EtcdVersion, "-0") + "-" + runtime.GOOS + "-" + runtime.GOARCH + "." + func() string {
+			if runtime.GOOS == "linux" {
+				return "tar.gz"
+			}
+			return "zip"
+		}()
+	}
+	conf.EtcdBinaryTar = envs.GetEnvWithPrefix("ETCD_BINARY_TAR", conf.EtcdBinaryTar)
 
 	if conf.EtcdImagePrefix == "" {
 		conf.EtcdImagePrefix = conf.KubeImagePrefix
@@ -269,22 +297,9 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 		conf.EtcdImage = joinImageURI(conf.EtcdImagePrefix, "etcd", conf.EtcdVersion)
 	}
 	conf.EtcdImage = envs.GetEnvWithPrefix("ETCD_IMAGE", conf.EtcdImage)
+}
 
-	if conf.KubeApiserverImage == "" {
-		conf.KubeApiserverImage = joinImageURI(conf.KubeImagePrefix, "kube-apiserver", conf.KubeVersion)
-	}
-	conf.KubeApiserverImage = envs.GetEnvWithPrefix("KUBE_APISERVER_IMAGE", conf.KubeApiserverImage)
-
-	if conf.KubeControllerManagerImage == "" {
-		conf.KubeControllerManagerImage = joinImageURI(conf.KubeImagePrefix, "kube-controller-manager", conf.KubeVersion)
-	}
-	conf.KubeControllerManagerImage = envs.GetEnvWithPrefix("KUBE_CONTROLLER_MANAGER_IMAGE", conf.KubeControllerManagerImage)
-
-	if conf.KubeSchedulerImage == "" {
-		conf.KubeSchedulerImage = joinImageURI(conf.KubeImagePrefix, "kube-scheduler", conf.KubeVersion)
-	}
-	conf.KubeSchedulerImage = envs.GetEnvWithPrefix("KUBE_SCHEDULER_IMAGE", conf.KubeSchedulerImage)
-
+func setKwokctlKindConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	if conf.KindNodeImagePrefix == "" {
 		conf.KindNodeImagePrefix = consts.KindNodeImagePrefix
 	}
@@ -309,7 +324,9 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 		conf.KindBinary = conf.KindBinaryPrefix + "/kind-" + runtime.GOOS + "-" + runtime.GOARCH + conf.BinSuffix
 	}
 	conf.KindBinary = envs.GetEnvWithPrefix("KIND_BINARY", conf.KindBinary)
+}
 
+func setKwokctlDockerConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	if conf.DockerComposeVersion == "" {
 		conf.DockerComposeVersion = consts.DockerComposeVersion
 	}
@@ -324,6 +341,15 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 		conf.DockerComposeBinary = conf.DockerComposeBinaryPrefix + "/docker-compose-" + runtime.GOOS + "-" + archAlias(runtime.GOARCH) + conf.BinSuffix
 	}
 	conf.DockerComposeBinary = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY", conf.DockerComposeBinary)
+}
+
+func setKwokctlPrometheusConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
+	conf.PrometheusPort = envs.GetEnvUint32WithPrefix("PROMETHEUS_PORT", conf.PrometheusPort)
+
+	if conf.PrometheusVersion == "" {
+		conf.PrometheusVersion = consts.PrometheusVersion
+	}
+	conf.PrometheusVersion = addPrefixV(envs.GetEnvWithPrefix("PROMETHEUS_VERSION", conf.PrometheusVersion))
 
 	if conf.PrometheusImagePrefix == "" {
 		conf.PrometheusImagePrefix = consts.PrometheusImagePrefix
@@ -351,8 +377,6 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 		}()
 	}
 	conf.PrometheusBinaryTar = envs.GetEnvWithPrefix("PROMETHEUS_BINARY_TAR", conf.PrometheusBinaryTar)
-
-	return config
 }
 
 // joinImageURI joins the image URI.
