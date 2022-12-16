@@ -17,6 +17,7 @@ limitations under the License.
 package compatibility
 
 import (
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 )
 
@@ -81,12 +82,12 @@ type Config struct {
 	RuntimeConfig string `json:"kube_runtime_config,omitempty"`
 }
 
-func Convert_Config_To_v1alpha1_KwokctlConfiguration(in *Config) (*v1alpha1.KwokctlConfiguration, bool) {
+func Convert_Config_To_internalversion_KwokctlConfiguration(in *Config) (*internalversion.KwokctlConfiguration, bool) {
 	if in.Name == "" || in.Workdir == "" || in.Runtime == "" {
 		return nil, false
 	}
 
-	out := v1alpha1.KwokctlConfiguration{}
+	out := internalversion.KwokctlConfiguration{}
 	out.APIVersion = v1alpha1.GroupVersion.String()
 	out.Kind = v1alpha1.KwokctlConfigurationKind
 	out.Options.Runtime = in.Runtime
@@ -115,13 +116,13 @@ func Convert_Config_To_v1alpha1_KwokctlConfiguration(in *Config) (*v1alpha1.Kwok
 	out.Options.DockerComposeBinary = in.DockerComposeBinary
 	out.Options.KubectlBinary = in.KubectlBinary
 	out.Options.CacheDir = in.CacheDir
-	out.Options.SecurePort = &in.SecretPort
-	out.Options.QuietPull = &in.QuietPull
-	out.Options.DisableKubeScheduler = &in.DisableKubeScheduler
-	out.Options.DisableKubeControllerManager = &in.DisableKubeControllerManager
+	out.Options.SecurePort = in.SecretPort
+	out.Options.QuietPull = in.QuietPull
+	out.Options.DisableKubeScheduler = in.DisableKubeScheduler
+	out.Options.DisableKubeControllerManager = in.DisableKubeControllerManager
 	out.Options.KubeFeatureGates = in.FeatureGates
 	out.Options.KubeAuditPolicy = in.AuditPolicy
-	out.Options.KubeAuthorization = &in.Authorization
+	out.Options.KubeAuthorization = in.Authorization
 	out.Options.KubeRuntimeConfig = in.RuntimeConfig
 
 	return &out, true

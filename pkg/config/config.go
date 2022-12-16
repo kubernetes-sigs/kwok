@@ -65,7 +65,7 @@ func Load(ctx context.Context, path string) ([]metav1.Object, error) {
 				)
 				continue
 			}
-			obj, ok := compatibility.Convert_Config_To_v1alpha1_KwokctlConfiguration(&conf)
+			obj, ok := compatibility.Convert_Config_To_internalversion_KwokctlConfiguration(&conf)
 			if ok {
 				logger.Debug("Convert old config",
 					"path", path,
