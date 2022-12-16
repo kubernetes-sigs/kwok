@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
@@ -123,14 +124,14 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	conf.KubeVersion = addPrefixV(envs.GetEnvWithPrefix("KUBE_VERSION", conf.KubeVersion))
 
 	if conf.SecurePort == nil {
-		conf.SecurePort = ptrVar(parseRelease(conf.KubeVersion) > 19)
+		conf.SecurePort = format.Ptr(parseRelease(conf.KubeVersion) > 19)
 	}
-	conf.SecurePort = ptrVar(envs.GetEnvBoolWithPrefix("SECURE_PORT", *conf.SecurePort))
+	conf.SecurePort = format.Ptr(envs.GetEnvWithPrefix("SECURE_PORT", *conf.SecurePort))
 
 	if conf.QuietPull == nil {
-		conf.QuietPull = ptrVar(false)
+		conf.QuietPull = format.Ptr(false)
 	}
-	conf.QuietPull = ptrVar(envs.GetEnvBoolWithPrefix("QUIET_PULL", *conf.QuietPull))
+	conf.QuietPull = format.Ptr(envs.GetEnvWithPrefix("QUIET_PULL", *conf.QuietPull))
 
 	conf.Runtime = envs.GetEnvWithPrefix("RUNTIME", conf.Runtime)
 
@@ -165,21 +166,21 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 
 func setKwokctlKubernetesConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	if conf.DisableKubeScheduler == nil {
-		conf.DisableKubeScheduler = ptrVar(false)
+		conf.DisableKubeScheduler = format.Ptr(false)
 	}
-	conf.DisableKubeScheduler = ptrVar(envs.GetEnvBoolWithPrefix("DISABLE_KUBE_SCHEDULER", *conf.DisableKubeScheduler))
+	conf.DisableKubeScheduler = format.Ptr(envs.GetEnvWithPrefix("DISABLE_KUBE_SCHEDULER", *conf.DisableKubeScheduler))
 
 	if conf.DisableKubeControllerManager == nil {
-		conf.DisableKubeControllerManager = ptrVar(false)
+		conf.DisableKubeControllerManager = format.Ptr(false)
 	}
-	conf.DisableKubeControllerManager = ptrVar(envs.GetEnvBoolWithPrefix("DISABLE_KUBE_CONTROLLER_MANAGER", *conf.DisableKubeControllerManager))
+	conf.DisableKubeControllerManager = format.Ptr(envs.GetEnvWithPrefix("DISABLE_KUBE_CONTROLLER_MANAGER", *conf.DisableKubeControllerManager))
 
 	if conf.KubeAuthorization == nil {
-		conf.KubeAuthorization = ptrVar(false)
+		conf.KubeAuthorization = format.Ptr(false)
 	}
-	conf.KubeAuthorization = ptrVar(envs.GetEnvBoolWithPrefix("KUBE_AUTHORIZATION", *conf.KubeAuthorization))
+	conf.KubeAuthorization = format.Ptr(envs.GetEnvWithPrefix("KUBE_AUTHORIZATION", *conf.KubeAuthorization))
 
-	conf.KubeApiserverPort = envs.GetEnvUint32WithPrefix("KUBE_APISERVER_PORT", conf.KubeApiserverPort)
+	conf.KubeApiserverPort = envs.GetEnvWithPrefix("KUBE_APISERVER_PORT", conf.KubeApiserverPort)
 
 	if conf.KubeFeatureGates == "" {
 		if conf.Mode == v1alpha1.ModeStableFeatureGateAndAPI {
@@ -344,7 +345,7 @@ func setKwokctlDockerConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 }
 
 func setKwokctlPrometheusConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
-	conf.PrometheusPort = envs.GetEnvUint32WithPrefix("PROMETHEUS_PORT", conf.PrometheusPort)
+	conf.PrometheusPort = envs.GetEnvWithPrefix("PROMETHEUS_PORT", conf.PrometheusPort)
 
 	if conf.PrometheusVersion == "" {
 		conf.PrometheusVersion = consts.PrometheusVersion
@@ -441,8 +442,4 @@ func archAlias(arch string) string {
 		return v
 	}
 	return arch
-}
-
-func ptrVar(b bool) *bool {
-	return &b
 }
