@@ -28,6 +28,7 @@ import (
 	"github.com/nxadm/tail"
 	"golang.org/x/sync/errgroup"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
@@ -137,41 +138,10 @@ func (c *Cluster) Up(ctx context.Context) error {
 	localAddress := "127.0.0.1"
 	serveAddress := "0.0.0.0"
 
-	kubeApiserverPath := c.GetBinPath("kube-apiserver" + conf.BinSuffix)
-	kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
-	kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
-	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
-	etcdPath := c.GetBinPath("etcd" + conf.BinSuffix)
-	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	caCertPath := path.Join(pkiPath, "ca.crt")
 	adminKeyPath := path.Join(pkiPath, "admin.key")
 	adminCertPath := path.Join(pkiPath, "admin.crt")
-	auditLogPath := ""
-	auditPolicyPath := ""
-	if conf.KubeAuditPolicy != "" {
-		auditLogPath = c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0644)
-		if err != nil {
-			return err
-		}
-
-		auditPolicyPath = c.GetWorkdirPath(runtime.AuditPolicyName)
-		err = file.Copy(conf.KubeAuditPolicy, auditPolicyPath)
-		if err != nil {
-			return err
-		}
-	}
-
-	etcdPeerPort := conf.EtcdPeerPort
-	if etcdPeerPort == 0 {
-		etcdPeerPort, err = net.GetUnusedPort(ctx)
-		if err != nil {
-			return err
-		}
-		conf.EtcdPeerPort = etcdPeerPort
-	}
-	etcdPeerPortStr := format.String(etcdPeerPort)
 
 	etcdClientPort := conf.EtcdPort
 	if etcdClientPort == 0 {
@@ -182,6 +152,86 @@ func (c *Cluster) Up(ctx context.Context) error {
 		conf.EtcdPort = etcdClientPort
 	}
 	etcdClientPortStr := format.String(etcdClientPort)
+
+	if err := c.setupEtcd(ctx, conf, localAddress, etcdClientPortStr); err != nil {
+		return err
+	}
+
+	kubeApiserverPort := conf.KubeApiserverPort
+	if kubeApiserverPort == 0 {
+		kubeApiserverPort, err = net.GetUnusedPort(ctx)
+		if err != nil {
+			return err
+		}
+		conf.KubeApiserverPort = kubeApiserverPort
+	}
+	kubeApiserverPortStr := format.String(kubeApiserverPort)
+
+	if err := c.setupApiserver(ctx, conf, localAddress, serveAddress, etcdClientPortStr, kubeApiserverPortStr, caCertPath, adminKeyPath, adminCertPath); err != nil {
+		return err
+	}
+
+	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
+		ProjectName:  c.Name(),
+		SecurePort:   conf.SecurePort,
+		Address:      scheme + "://" + localAddress + ":" + kubeApiserverPortStr,
+		AdminCrtPath: adminCertPath,
+		AdminKeyPath: adminKeyPath,
+	})
+	if err != nil {
+		return err
+	}
+
+	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
+	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0644)
+	if err != nil {
+		return err
+	}
+
+	err = c.WaitReady(ctx, 30*time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to wait for kube-apiserver ready: %w", err)
+	}
+
+	if err := c.setupComponents(ctx, conf, localAddress, serveAddress, kubeconfigPath, caCertPath, adminKeyPath, adminCertPath); err != nil {
+		return err
+	}
+
+	// set the context in default kubeconfig
+	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "clusters."+c.Name()+".server", scheme+"://"+localAddress+":"+kubeApiserverPortStr)
+	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
+	if conf.SecurePort {
+		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
+		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", c.Name())
+		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
+		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
+	}
+
+	logger := log.FromContext(ctx)
+	err = c.SetConfig(ctx, conf)
+	if err != nil {
+		logger.Error("Failed to set config", err)
+	}
+	err = c.Save(ctx)
+	if err != nil {
+		logger.Error("Failed to update cluster", err)
+	}
+	return nil
+}
+
+func (c *Cluster) setupEtcd(ctx context.Context, conf *internalversion.KwokctlConfigurationOptions, localAddress string, etcdClientPortStr string) error {
+	var err error
+	etcdPath := c.GetBinPath("etcd" + conf.BinSuffix)
+	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
+	etcdPeerPort := conf.EtcdPeerPort
+	if etcdPeerPort == 0 {
+		etcdPeerPort, err = net.GetUnusedPort(ctx)
+		if err != nil {
+			return err
+		}
+		conf.EtcdPeerPort = etcdPeerPort
+	}
+	etcdPeerPortStr := format.String(etcdPeerPort)
 
 	etcdArgs := []string{
 		"--data-dir",
@@ -203,20 +253,28 @@ func (c *Cluster) Up(ctx context.Context) error {
 		"--quota-backend-bytes",
 		"8589934592",
 	}
-	err = exec.ForkExec(ctx, c.Workdir(), etcdPath, etcdArgs...)
-	if err != nil {
-		return err
-	}
 
-	kubeApiserverPort := conf.KubeApiserverPort
-	if kubeApiserverPort == 0 {
-		kubeApiserverPort, err = net.GetUnusedPort(ctx)
+	return exec.ForkExec(ctx, c.Workdir(), etcdPath, etcdArgs...)
+}
+
+func (c *Cluster) setupApiserver(ctx context.Context, conf *internalversion.KwokctlConfigurationOptions, localAddress, serveAddress, etcdClientPortStr, kubeApiserverPortStr, caCertPath, adminKeyPath, adminCertPath string) error {
+	var err error
+	kubeApiserverPath := c.GetBinPath("kube-apiserver" + conf.BinSuffix)
+	auditLogPath := ""
+	auditPolicyPath := ""
+	if conf.KubeAuditPolicy != "" {
+		auditLogPath = c.GetLogPath(runtime.AuditLogName)
+		err = file.Create(auditLogPath, 0644)
 		if err != nil {
 			return err
 		}
-		conf.KubeApiserverPort = kubeApiserverPort
+
+		auditPolicyPath = c.GetWorkdirPath(runtime.AuditPolicyName)
+		err = file.Copy(conf.KubeAuditPolicy, auditPolicyPath)
+		if err != nil {
+			return err
+		}
 	}
-	kubeApiserverPortStr := format.String(kubeApiserverPort)
 
 	kubeApiserverArgs := []string{
 		"--admission-control",
@@ -285,33 +343,15 @@ func (c *Cluster) Up(ctx context.Context) error {
 		)
 	}
 
-	err = exec.ForkExec(ctx, c.Workdir(), kubeApiserverPath, kubeApiserverArgs...)
-	if err != nil {
-		return err
-	}
+	return exec.ForkExec(ctx, c.Workdir(), kubeApiserverPath, kubeApiserverArgs...)
+}
 
-	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
-		ProjectName:  c.Name(),
-		SecurePort:   conf.SecurePort,
-		Address:      scheme + "://" + localAddress + ":" + kubeApiserverPortStr,
-		AdminCrtPath: adminCertPath,
-		AdminKeyPath: adminKeyPath,
-	})
-	if err != nil {
-		return err
-	}
+func (c *Cluster) setupComponents(ctx context.Context, conf *internalversion.KwokctlConfigurationOptions, localAddress, serveAddress, kubeconfigPath, caCertPath, adminKeyPath, adminCertPath string) error {
+	kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
+	kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
+	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
 
-	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
-	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0644)
-	if err != nil {
-		return err
-	}
-
-	err = c.WaitReady(ctx, 30*time.Second)
-	if err != nil {
-		return fmt.Errorf("failed to wait for kube-apiserver ready: %w", err)
-	}
-
+	var err error
 	kubeControllerManagerArgs := []string{
 		"--kubeconfig",
 		kubeconfigPath,
@@ -434,8 +474,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 			AdminCrtPath:              adminCertPath,
 			AdminKeyPath:              adminKeyPath,
 			PrometheusPort:            conf.PrometheusPort,
-			EtcdPort:                  etcdClientPort,
-			KubeApiserverPort:         kubeApiserverPort,
+			EtcdPort:                  conf.EtcdPort,
+			KubeApiserverPort:         conf.KubeApiserverPort,
 			KubeControllerManagerPort: kubeControllerManagerPort,
 			KubeSchedulerPort:         kubeSchedulerPort,
 			KwokControllerPort:        kwokControllerPort,
@@ -479,30 +519,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			return exec.ForkExec(ctx, c.Workdir(), path, args...)
 		})
 	}
-	if err = g.Wait(); err != nil {
-		return err
-	}
-
-	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "clusters."+c.Name()+".server", scheme+"://"+localAddress+":"+kubeApiserverPortStr)
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
-	if conf.SecurePort {
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", c.Name())
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
-	}
-
-	logger := log.FromContext(ctx)
-	err = c.SetConfig(ctx, conf)
-	if err != nil {
-		logger.Error("Failed to set config", err)
-	}
-	err = c.Save(ctx)
-	if err != nil {
-		logger.Error("Failed to update cluster", err)
-	}
-	return nil
+	return g.Wait()
 }
 
 func (c *Cluster) Down(ctx context.Context) error {
