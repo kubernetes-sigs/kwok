@@ -69,7 +69,7 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 				return nil
 			}
 
-			err = os.MkdirAll(filepath.Dir(name), 0755)
+			err = os.MkdirAll(filepath.Dir(name), 0750)
 			if err != nil {
 				return err
 			}
@@ -85,7 +85,7 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 				}
 			}()
 
-			outFile, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fi.Mode())
+			outFile, err := os.OpenFile(filepath.Clean(name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fi.Mode())
 			if err != nil {
 				return err
 			}
@@ -96,11 +96,7 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 				}
 			}()
 
-			_, err = io.Copy(outFile, rc)
-			if err != nil {
-				return err
-			}
-			return nil
+			return copy(outFile, rc)
 		}()
 		if err != nil {
 			return err
@@ -111,7 +107,7 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 
 func untargz(ctx context.Context, src string, filter func(file string) (string, bool)) error {
 	logger := log.FromContext(ctx)
-	r, err := os.Open(src)
+	r, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
@@ -158,7 +154,7 @@ func untargz(ctx context.Context, src string, filter func(file string) (string, 
 			if err != nil {
 				return err
 			}
-			outFile, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fs.FileMode(hdr.Mode))
+			outFile, err := os.OpenFile(filepath.Clean(name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fs.FileMode(hdr.Mode))
 			if err != nil {
 				return err
 			}
@@ -169,12 +165,22 @@ func untargz(ctx context.Context, src string, filter func(file string) (string, 
 				}
 			}()
 
-			if _, err := io.Copy(outFile, tr); err != nil {
-				return err
-			}
-			return nil
+			return copy(outFile, tr)
 		}()
 		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func copy(dst io.Writer, src io.Reader) error {
+	for {
+		_, err := io.CopyN(dst, src, 1024)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
 			return err
 		}
 	}

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -145,7 +146,7 @@ func verifyFile(filePath string) error {
 	}
 
 	// read the file
-	b, err := os.ReadFile(filePath)
+	b, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return err
 	}

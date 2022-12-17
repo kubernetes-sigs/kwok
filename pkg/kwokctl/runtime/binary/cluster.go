@@ -108,7 +108,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
-	err = os.MkdirAll(etcdDataPath, 0755)
+	err = os.MkdirAll(etcdDataPath, 0750)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
@@ -302,7 +302,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
-	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0644)
+	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0600)
 	if err != nil {
 		return err
 	}
@@ -444,7 +444,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
 		}
 		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
-		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0644)
+		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0600)
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
@@ -594,9 +594,9 @@ func (c *Cluster) Stop(ctx context.Context, name string) error {
 func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	logger := log.FromContext(ctx)
 
-	logs := c.GetLogPath(filepath.Base(name) + ".log")
+	logs := filepath.Clean(c.GetLogPath(filepath.Base(name) + ".log"))
 
-	f, err := os.OpenFile(logs, os.O_RDONLY, 0644)
+	f, err := os.OpenFile(logs, os.O_RDONLY, 0600)
 	if err != nil {
 		return err
 	}

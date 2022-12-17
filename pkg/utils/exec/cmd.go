@@ -35,7 +35,7 @@ import (
 // ForkExec forks a new process and execs the given command.
 // The process will be terminated when the context is canceled.
 func ForkExec(ctx context.Context, dir string, name string, arg ...string) error {
-	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	pidPath := filepath.Clean(path.Join(dir, "pids", filepath.Base(name)+".pid"))
 	pidData, err := os.ReadFile(pidPath)
 	if err == nil {
 		pid, err := strconv.Atoi(string(pidData))
@@ -49,27 +49,27 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 	logPath := path.Join(dir, "logs", filepath.Base(name)+".log")
 	cmdlinePath := path.Join(dir, "cmdline", filepath.Base(name))
 
-	err = os.MkdirAll(filepath.Dir(pidPath), 0755)
+	err = os.MkdirAll(filepath.Dir(pidPath), 0750)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Dir(logPath), 0755)
+	err = os.MkdirAll(filepath.Dir(logPath), 0750)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Dir(cmdlinePath), 0755)
+	err = os.MkdirAll(filepath.Dir(cmdlinePath), 0750)
 	if err != nil {
 		return err
 	}
 
-	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	logFile, err := os.OpenFile(filepath.Clean(logPath), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("open log file %s: %w", logPath, err)
 	}
 
 	args := append([]string{name}, arg...)
 
-	err = os.WriteFile(cmdlinePath, []byte(strings.Join(args, "\x00")), 0644)
+	err = os.WriteFile(cmdlinePath, []byte(strings.Join(args, "\x00")), 0600)
 	if err != nil {
 		return fmt.Errorf("write cmdline file %s: %w", cmdlinePath, err)
 	}
@@ -83,7 +83,7 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 		return err
 	}
 
-	err = os.WriteFile(pidPath, []byte(strconv.Itoa(cmd.Process.Pid)), 0644)
+	err = os.WriteFile(pidPath, []byte(strconv.Itoa(cmd.Process.Pid)), 0600)
 	if err != nil {
 		return fmt.Errorf("write pid file %s: %w", pidPath, err)
 	}
@@ -92,7 +92,7 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 
 // ForkExecRestart restarts the process if it is not running.
 func ForkExecRestart(ctx context.Context, dir string, name string) error {
-	cmdlinePath := path.Join(dir, "cmdline", filepath.Base(name))
+	cmdlinePath := filepath.Clean(path.Join(dir, "cmdline", filepath.Base(name))）
 
 	data, err := os.ReadFile(cmdlinePath)
 	if err != nil {
@@ -106,7 +106,7 @@ func ForkExecRestart(ctx context.Context, dir string, name string) error {
 
 // ForkExecKill kills the process if it is running.
 func ForkExecKill(ctx context.Context, dir string, name string) error {
-	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	pidPath := filepath.Clean(path.Join(dir, "pids", filepath.Base(name)+".pid"))
 	_, err := os.Stat(pidPath)
 	if err != nil {
 		// No pid file exists, which means the process has been terminated

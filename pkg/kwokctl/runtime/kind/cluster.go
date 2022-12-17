@@ -63,7 +63,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	auditPolicyPath := ""
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath = c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0644)
+		err = file.Create(auditLogPath, 0600)
 		if err != nil {
 			return err
 		}
@@ -88,7 +88,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(c.GetWorkdirPath(runtime.KindName), []byte(kindYaml), 0644)
+	err = os.WriteFile(c.GetWorkdirPath(runtime.KindName), []byte(kindYaml), 0600)
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", runtime.KindName, err)
 	}
@@ -100,7 +100,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(c.GetWorkdirPath(runtime.KwokPod), []byte(kwokControllerPod), 0644)
+	err = os.WriteFile(c.GetWorkdirPath(runtime.KwokPod), []byte(kwokControllerPod), 0600)
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", runtime.KwokPod, err)
 	}
@@ -113,7 +113,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(c.GetWorkdirPath(runtime.PrometheusDeploy), []byte(prometheusDeploy), 0644)
+		err = os.WriteFile(c.GetWorkdirPath(runtime.PrometheusDeploy), []byte(prometheusDeploy), 0600)
 		if err != nil {
 			return fmt.Errorf("failed to write %s: %w", runtime.PrometheusDeploy, err)
 		}
@@ -182,7 +182,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = os.WriteFile(kubeconfig, kubeconfigBuf.Bytes(), 0644)
+	err = os.WriteFile(kubeconfig, kubeconfigBuf.Bytes(), 0600)
 	if err != nil {
 		return err
 	}

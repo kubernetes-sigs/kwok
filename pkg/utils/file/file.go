@@ -23,12 +23,14 @@ import (
 )
 
 // Create creates a file at path with the given content.
+//
+//nolint:gosec
 func Create(name string, perm os.FileMode) error {
-	err := os.MkdirAll(filepath.Dir(name), 0755)
+	err := os.MkdirAll(filepath.Dir(name), 0750)
 	if err != nil {
 		return err
 	}
-	file, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
+	file, err := os.OpenFile(filepath.Clean(name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
 	if err != nil {
 		return err
 	}
@@ -41,12 +43,12 @@ func Create(name string, perm os.FileMode) error {
 
 // Copy copies a file from src to dst.
 func Copy(oldpath, newpath string) error {
-	err := os.MkdirAll(filepath.Dir(newpath), 0755)
+	err := os.MkdirAll(filepath.Dir(newpath), 0750)
 	if err != nil {
 		return err
 	}
 
-	oldFile, err := os.OpenFile(oldpath, os.O_RDONLY, 0)
+	oldFile, err := os.OpenFile(filepath.Clean(oldpath), os.O_RDONLY, 0)
 	if err != nil {
 		return err
 	}
@@ -59,7 +61,7 @@ func Copy(oldpath, newpath string) error {
 		return err
 	}
 
-	newFile, err := os.OpenFile(newpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fi.Mode())
+	newFile, err := os.OpenFile(filepath.Clean(newpath), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fi.Mode())
 	if err != nil {
 		return err
 	}

@@ -141,8 +141,8 @@ func TestNodeController(t *testing.T) {
 	if err != nil {
 		t.Fatal(fmt.Errorf("failed to list nodes: %w", err))
 	}
-	for _, node := range list.Items {
-		if nodeSelectorFunc(&node) {
+	for i, node := range list.Items {
+		if nodeSelectorFunc(&list.Items[i]) {
 			if node.Status.Phase != corev1.NodeRunning {
 				t.Fatal(fmt.Errorf("want node %s to be running, got %s", node.Name, node.Status.Phase))
 			}
