@@ -16,17 +16,7 @@ limitations under the License.
 
 package format
 
-import (
-	"fmt"
-)
-
-// Parse returns the value of the string representation of u.
-func Parse[T any](s string) (t T, err error) {
-	_, err = fmt.Sscan(s, &t)
-	return t, err
-}
-
-// String returns the string representation of u.
-func String(i any) string {
-	return fmt.Sprintf("%v", i)
+// Ptr returns the pointer of v.
+func Ptr[T any](v T) *T {
+	return &v
 }

@@ -18,7 +18,8 @@ package envs
 
 import (
 	"os"
-	"strconv"
+
+	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 var (
@@ -27,41 +28,22 @@ var (
 )
 
 // GetEnv returns the value of the environment variable named by the key.
-func GetEnv(key, def string) string {
+func GetEnv[T any](key string, def T) T {
 	value, ok := os.LookupEnv(key)
 	if !ok {
 		return def
 	}
-	return value
+	if value == "" {
+		return def
+	}
+	t, err := format.Parse[T](value)
+	if err != nil {
+		return def
+	}
+	return t
 }
 
 // GetEnvWithPrefix returns the value of the environment variable named by the key with kwok prefix.
-func GetEnvWithPrefix(key, def string) string {
+func GetEnvWithPrefix[T any](key string, def T) T {
 	return GetEnv(EnvPrefix+key, def)
-}
-
-// GetEnvUint32WithPrefix returns the value of the environment variable named by the key.
-func GetEnvUint32WithPrefix(key string, def uint32) uint32 {
-	v := GetEnvWithPrefix(key, "")
-	if v == "" {
-		return def
-	}
-	i, err := strconv.Atoi(v)
-	if err != nil {
-		return def
-	}
-	return uint32(i)
-}
-
-// GetEnvBoolWithPrefix returns the value of the environment variable named by the key.
-func GetEnvBoolWithPrefix(key string, def bool) bool {
-	v := GetEnvWithPrefix(key, "")
-	if v == "" {
-		return def
-	}
-	b, err := strconv.ParseBool(v)
-	if err != nil {
-		return def
-	}
-	return b
 }
