@@ -28,6 +28,8 @@ import (
 	"github.com/wzshiming/ctc"
 	"golang.org/x/exp/slog"
 	"golang.org/x/term"
+
+	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 type ctlHandler struct {
@@ -55,6 +57,8 @@ func formatValue(val slog.Value) string {
 	switch val.Kind() {
 	case slog.StringKind:
 		return quoteIfNeed(val.String())
+	case slog.DurationKind:
+		return format.HumanDuration(val.Duration())
 	default:
 		switch x := val.Any().(type) {
 		case error:
