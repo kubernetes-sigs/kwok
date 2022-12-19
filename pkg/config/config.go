@@ -136,11 +136,12 @@ func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 }
 
 func Save(ctx context.Context, path string, objs []metav1.Object) error {
-	err := os.MkdirAll(filepath.Dir(path), 0755)
+	err := os.MkdirAll(filepath.Dir(path), 0750)
 	if err != nil {
 		return err
 	}
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+
+	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
 	if err != nil {
 		return err
 	}

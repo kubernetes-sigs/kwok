@@ -24,7 +24,7 @@ import (
 
 // Create creates a file at path with the given content.
 func Create(name string, perm os.FileMode) error {
-	err := os.MkdirAll(filepath.Dir(name), 0755)
+	err := os.MkdirAll(filepath.Dir(name), 0750)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func Create(name string, perm os.FileMode) error {
 
 // Copy copies a file from src to dst.
 func Copy(oldpath, newpath string) error {
-	err := os.MkdirAll(filepath.Dir(newpath), 0755)
+	err := os.MkdirAll(filepath.Dir(newpath), 0750)
 	if err != nil {
 		return err
 	}

@@ -68,7 +68,7 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 		}
 	}
 
-	err = os.MkdirAll(filepath.Dir(dest), 0755)
+	err = os.MkdirAll(filepath.Dir(dest), 0750)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func DownloadWithCache(ctx context.Context, cacheDir, src, dest string, mode fs.
 		return err
 	}
 
-	err = os.MkdirAll(filepath.Dir(dest), 0755)
+	err = os.MkdirAll(filepath.Dir(dest), 0750)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 			return "", fmt.Errorf("%s: %s", u.String(), resp.Status)
 		}
 
-		err = os.MkdirAll(filepath.Dir(cache), 0755)
+		err = os.MkdirAll(filepath.Dir(cache), 0750)
 		if err != nil {
 			return "", err
 		}
