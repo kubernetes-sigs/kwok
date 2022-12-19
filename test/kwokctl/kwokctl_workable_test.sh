@@ -35,31 +35,11 @@ function args() {
   done
 }
 
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-  local targets
-  local i
-
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 5m --quiet-pull --prometheus-port 9090
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    exit 1
-  fi
-
-  for ((i = 0; i < 30; i++)); do
-    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f -
-    if kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
-      break
-    fi
-    sleep 1
-  done
-
-  echo kwokctl --name="${name}" kubectl config view --minify
-  kwokctl --name="${name}" kubectl config view --minify
-
-  if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
-    echo "Error: cluster not ready"
+function show_info() {
+    local name="${1}"
+    echo kwokctl get clusters
+    kwokctl get clusters
+    echo
     echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
     kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
     echo
@@ -78,11 +58,41 @@ function test_create_cluster() {
     echo kwokctl --name="${name}" logs kwok-controller
     kwokctl --name="${name}" logs kwok-controller
     echo
+}
+
+function test_create_cluster() {
+  local release="${1}"
+  local name="${2}"
+  local targets
+  local i
+
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090
+  if [[ $? -ne 0 ]]; then
+    echo "Error: Cluster ${name} creation failed"
+    show_info "${name}"
+    return 1
+  fi
+
+  for ((i = 0; i < 30; i++)); do
+    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f -
+    if kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
+
+  echo kwokctl --name="${name}" kubectl config view --minify
+  kwokctl --name="${name}" kubectl config view --minify
+
+  if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
+    echo "Error: cluster not ready"
+    show_info "${name}"
     return 1
   fi
 
   if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
     echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
+    show_info "${name}"
     return 1
   fi
 }

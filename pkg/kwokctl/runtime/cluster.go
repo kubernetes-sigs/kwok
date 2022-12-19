@@ -55,7 +55,7 @@ var (
 type Cluster struct {
 	workdir string
 	name    string
-	conf    *internalversion.KwokctlConfigurationOptions
+	conf    *internalversion.KwokctlConfiguration
 }
 
 func NewCluster(name, workdir string) *Cluster {
@@ -65,7 +65,7 @@ func NewCluster(name, workdir string) *Cluster {
 	}
 }
 
-func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfigurationOptions, error) {
+func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfiguration, error) {
 	if c.conf != nil {
 		return c.conf, nil
 	}
@@ -85,7 +85,7 @@ func (c *Cluster) Workdir() string {
 	return c.workdir
 }
 
-func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfigurationOptions, error) {
+func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfiguration, error) {
 	objs, err := config.Load(ctx, c.GetWorkdirPath(ConfigName))
 	if err != nil {
 		return nil, err
@@ -95,14 +95,14 @@ func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfigurati
 	if len(configs) == 0 {
 		return nil, fmt.Errorf("failed to load config")
 	}
-	return &configs[0].Options, nil
+	return configs[0], nil
 }
 
 func (c *Cluster) InHostKubeconfig() (string, error) {
 	return c.GetWorkdirPath(InHostKubeconfigName), nil
 }
 
-func (c *Cluster) SetConfig(ctx context.Context, conf *internalversion.KwokctlConfigurationOptions) error {
+func (c *Cluster) SetConfig(ctx context.Context, conf *internalversion.KwokctlConfiguration) error {
 	c.conf = conf
 	return nil
 }
@@ -113,9 +113,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	objs := []metav1.Object{
-		&internalversion.KwokctlConfiguration{
-			Options: *c.conf,
-		},
+		c.conf,
 	}
 
 	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
@@ -132,10 +130,11 @@ func (c *Cluster) Save(ctx context.Context) error {
 }
 
 func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
-	conf, err := c.Config(ctx)
+	config, err := c.Config(ctx)
 	if err != nil {
 		return "", err
 	}
+	conf := &config.Options
 
 	kubectlPath, err := exec.LookPath("kubectl")
 	if err != nil {
@@ -187,8 +186,14 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		waitErr error
 		ready   bool
 	)
+	logger := log.FromContext(ctx)
 	waitErr = wait.PollImmediateWithContext(ctx, time.Second, timeout, func(ctx context.Context) (bool, error) {
 		ready, err = c.Ready(ctx)
+		if err != nil {
+			logger.Debug("Cluster is not ready",
+				"err", err,
+			)
+		}
 		return ready, nil
 	})
 	if err != nil {

@@ -73,3 +73,9 @@ func Copy(oldpath, newpath string) error {
 	}
 	return nil
 }
+
+// Exists checks if a file exists.
+func Exists(name string) bool {
+	_, err := os.Stat(name)
+	return err == nil
+}

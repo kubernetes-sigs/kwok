@@ -17,65 +17,69 @@ limitations under the License.
 package compose
 
 import (
-	"bytes"
-	"fmt"
-	"text/template"
+	"strings"
 
-	_ "embed"
+	"github.com/compose-spec/compose-go/types"
+
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
-//go:embed compose.yaml.tpl
-var composeYamlTpl string
-
-var composeYamlTemplate = template.Must(template.New("_").Parse(composeYamlTpl))
-
-func BuildCompose(conf BuildComposeConfig) (string, error) {
-	buf := bytes.NewBuffer(nil)
-	err := composeYamlTemplate.Execute(buf, conf)
-	if err != nil {
-		return "", fmt.Errorf("failed to execute compose yaml template: %w", err)
+func convertToCompose(name string, cs []internalversion.Component) *types.Config {
+	svcs := convertComponentsToComposeServices(name, cs)
+	return &types.Config{
+		Extensions: map[string]interface{}{
+			"version": "3",
+		},
+		Services: svcs,
+		Networks: map[string]types.NetworkConfig{
+			"default": {
+				Name: name,
+			},
+		},
 	}
-	return buf.String(), nil
 }
 
-type BuildComposeConfig struct {
-	ProjectName string
+func convertComponentsToComposeServices(prefix string, cs []internalversion.Component) (svcs types.Services) {
+	svcs = make(types.Services, len(cs))
+	for i, c := range cs {
+		svcs[i] = convertComponentToComposeService(prefix, c)
+	}
+	return svcs
+}
 
-	PrometheusImage            string
-	EtcdImage                  string
-	KubeApiserverImage         string
-	KubeControllerManagerImage string
-	KubeSchedulerImage         string
-	KwokControllerImage        string
-
-	PrometheusPath          string
-	AdminKeyPath            string
-	AdminCertPath           string
-	CACertPath              string
-	KubeconfigPath          string
-	InClusterAdminKeyPath   string
-	InClusterAdminCertPath  string
-	InClusterCACertPath     string
-	InClusterKubeconfigPath string
-	InClusterEtcdDataPath   string
-	InClusterPrometheusPath string
-
-	SecurePort    bool
-	Authorization bool
-	QuietPull     bool
-
-	DisableKubeScheduler         bool
-	DisableKubeControllerManager bool
-
-	KubeApiserverPort uint32
-	PrometheusPort    uint32
-
-	RuntimeConfig string
-	FeatureGates  string
-
-	AuditPolicy string
-	AuditLog    string
-
-	ConfigPath          string
-	InClusterConfigPath string
+func convertComponentToComposeService(prefix string, cs internalversion.Component) (svc types.ServiceConfig) {
+	svc.Name = cs.Name
+	svc.ContainerName = prefix + "-" + cs.Name
+	svc.Image = cs.Image
+	svc.Links = cs.Links
+	svc.Entrypoint = cs.Command
+	if svc.Entrypoint == nil {
+		svc.Entrypoint = []string{}
+	}
+	svc.Command = cs.Args
+	svc.Restart = "always"
+	svc.Ports = make([]types.ServicePortConfig, len(cs.Ports))
+	for i, p := range cs.Ports {
+		svc.Ports[i] = types.ServicePortConfig{
+			Mode:      "ingress",
+			Target:    p.Port,
+			Published: format.String(p.HostPort),
+			Protocol:  strings.ToLower(string(p.Protocol)),
+		}
+	}
+	svc.Environment = make(map[string]*string, len(cs.Envs))
+	for i, e := range cs.Envs {
+		svc.Environment[e.Name] = &cs.Envs[i].Value
+	}
+	svc.Volumes = make([]types.ServiceVolumeConfig, len(cs.Volumes))
+	for i, v := range cs.Volumes {
+		svc.Volumes[i] = types.ServiceVolumeConfig{
+			Type:     types.VolumeTypeBind,
+			Source:   v.HostPath,
+			Target:   v.MountPath,
+			ReadOnly: v.ReadOnly,
+		}
+	}
+	return svc
 }

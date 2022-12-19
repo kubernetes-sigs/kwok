@@ -36,13 +36,13 @@ type flagpole struct {
 	Name   string
 	Filter string
 
-	internalversion.KwokctlConfigurationOptions
+	*internalversion.KwokctlConfiguration
 }
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
-	flags.KwokctlConfigurationOptions = config.GetKwokctlConfiguration(ctx).Options
+	flags.KwokctlConfiguration = config.GetKwokctlConfiguration(ctx)
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -54,7 +54,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			return runE(cmd.Context(), flags)
 		},
 	}
-	cmd.Flags().StringVar(&flags.Runtime, "runtime", flags.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
+	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
 	cmd.Flags().StringVar(&flags.Filter, "filter", flags.Filter, "Filter the list of (binary or image)")
 	return cmd
 }
@@ -67,9 +67,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 	logger = logger.With("cluster", flags.Name)
 	ctx = log.NewContext(ctx, logger)
 
-	buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Runtime)
+	buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Options.Runtime)
 	if !ok {
-		return fmt.Errorf("runtime %q not found", flags.Runtime)
+		return fmt.Errorf("runtime %q not found", flags.Options.Runtime)
 	}
 
 	rt, err := buildRuntime(name, workdir)
@@ -80,7 +80,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	_, err = rt.Config(ctx)
 	if err != nil {
-		err = rt.SetConfig(ctx, &flags.KwokctlConfigurationOptions)
+		err = rt.SetConfig(ctx, flags.KwokctlConfiguration)
 		if err != nil {
 			return err
 		}
@@ -105,11 +105,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if len(artifacts) == 0 {
 		if flags.Filter == "" {
 			logger.Info("No artifacts found",
-				"runtime", flags.Runtime,
+				"runtime", flags.Options.Runtime,
 			)
 		} else {
 			logger.Info("No artifacts found",
-				"runtime", flags.Runtime,
+				"runtime", flags.Options.Runtime,
 				"filter", flags.Filter,
 			)
 		}

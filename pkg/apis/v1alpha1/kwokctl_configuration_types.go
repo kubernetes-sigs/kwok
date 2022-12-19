@@ -38,10 +38,11 @@ type KwokctlConfiguration struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Options holds information about the default value.
 	Options KwokctlConfigurationOptions `json:"options,omitempty"`
+	// Components holds information about the components.
+	Components []Component `json:"components,omitempty"`
 }
 
 type KwokctlConfigurationOptions struct {
-
 	// KubeApiserverPort is the port to expose apiserver.
 	// is the default value for flag --kube-apiserver-port and env KWOK_KUBE_APISERVER_PORT
 	KubeApiserverPort uint32 `json:"kubeApiserverPort,omitempty"`
@@ -257,4 +258,102 @@ type KwokctlConfigurationOptions struct {
 
 	// CacheDir is the directory of the cache.
 	CacheDir string `json:"cacheDir,omitempty"`
+}
+
+type Component struct {
+	// Name of the component specified as a DNS_LABEL.
+	// Each component must have a unique name (DNS_LABEL).
+	// Cannot be updated.
+	Name string `json:"name,omitempty"`
+
+	// Links is a set of links for the component.
+	// +optional
+	Links []string `json:"links,omitempty"`
+
+	// Binary is the binary of the component.
+	// +optional
+	Binary string `json:"binary,omitempty"`
+
+	// Image is the image of the component.
+	// +optional
+	Image string `json:"image,omitempty"`
+
+	// Command is Entrypoint array. Not executed within a shell. Only works with Image.
+	// +optional
+	Command []string `json:"command,omitempty"`
+
+	// Args is Arguments to the entrypoint.
+	// +optional
+	Args []string `json:"args,omitempty"`
+
+	// WorkDir is component's working directory.
+	// +optional
+	WorkDir string `json:"workDir,omitempty"`
+
+	// Ports is list of ports to expose from the component.
+	// +optional
+	Ports []Port `json:"ports,omitempty"`
+
+	// Envs is list of environment variables to set in the component.
+	// +optional
+	Envs []Env `json:"envs,omitempty"`
+
+	// Volumes is a list of named volumes that can be mounted by containers belonging to the component.
+	// +optional
+	Volumes []Volume `json:"volumes,omitempty"`
+}
+
+// Env represents an environment variable present in a Container.
+type Env struct {
+	// Name of the environment variable.
+	Name string `json:"name"`
+
+	// Value is using the previously defined environment variables in the component.
+	// +optional
+	// +default=""
+	Value string `json:"value,omitempty"`
+}
+
+// Port represents a network port in a single component.
+type Port struct {
+	// Name for the port that can be referred to by components.
+	// +optional
+	Name string `json:"name,omitempty"`
+	// Port is number of port to expose on the component's IP address.
+	// This must be a valid port number, 0 < x < 65536.
+	Port uint32 `json:"port"`
+	// HostPort is number of port to expose on the host.
+	// If specified, this must be a valid port number, 0 < x < 65536.
+	// +optional
+	HostPort uint32 `json:"hostPort,omitempty"`
+	// Protocol for port. Must be UDP, TCP, or SCTP.
+	// +optional
+	// +default="TCP"
+	Protocol Protocol `json:"protocol,omitempty"`
+}
+
+// Protocol defines network protocols supported for things like component ports.
+// +enum
+type Protocol string
+
+const (
+	// ProtocolTCP is the TCP protocol.
+	ProtocolTCP Protocol = "TCP"
+	// ProtocolUDP is the UDP protocol.
+	ProtocolUDP Protocol = "UDP"
+	// ProtocolSCTP is the SCTP protocol.
+	ProtocolSCTP Protocol = "SCTP"
+)
+
+type Volume struct {
+	// Name of the volume specified.
+	// +optional
+	Name string `json:"name,omitempty"`
+	// Mounted read-only if true, read-write otherwise.
+	// +optional
+	ReadOnly *bool `json:"readOnly,omitempty"`
+	// HostPath represents a pre-existing file or directory on the host machine that is directly exposed to the container.
+	HostPath string `json:"hostPath,omitempty"`
+	// MountPath within the container at which the volume should be mounted.
+	MountPath string `json:"mountPath,omitempty"`
 }

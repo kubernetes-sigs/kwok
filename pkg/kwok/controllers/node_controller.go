@@ -192,7 +192,7 @@ loop:
 			tasks.Wait()
 			logger.Info("Heartbeat nodes",
 				"nodeSize", len(nodes),
-				"took", time.Since(heartbeatStartTime),
+				"elapsed", time.Since(heartbeatStartTime),
 			)
 			th.Reset(c.nodeHeartbeatInterval)
 		case <-ctx.Done():

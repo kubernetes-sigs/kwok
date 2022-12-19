@@ -30,6 +30,8 @@ type KwokctlConfiguration struct {
 	metav1.ObjectMeta
 	// Options holds information about the default value.
 	Options KwokctlConfigurationOptions
+	// Components holds information about the components.
+	Components []Component
 }
 
 type KwokctlConfigurationOptions struct {
@@ -163,4 +165,85 @@ type KwokctlConfigurationOptions struct {
 
 	// CacheDir is the directory of the cache.
 	CacheDir string
+}
+
+type Component struct {
+	// Name of the component specified as a DNS_LABEL.
+	// Each component must have a unique name (DNS_LABEL).
+	// Cannot be updated.
+	Name string
+
+	// Links is a set of links for the component.
+	Links []string
+
+	// Binary is the binary of the component.
+	Binary string
+
+	// Image is the image of the component.
+	Image string
+
+	// Command is Entrypoint array. Not executed within a shell. Only works with Image.
+	Command []string
+
+	// Args is Arguments to the entrypoint.
+	Args []string
+
+	// WorkDir is component's working directory.
+	WorkDir string
+
+	// Ports is list of ports to expose from the component.
+	Ports []Port
+
+	// Envs is list of environment variables to set in the component.
+	Envs []Env
+
+	// Volumes is a list of named volumes that can be mounted by containers belonging to the component.
+	Volumes []Volume
+}
+
+// Env represents an environment variable present in a Container.
+type Env struct {
+	// Name of the environment variable.
+	Name string
+
+	// Value is using the previously defined environment variables in the component.
+	Value string
+}
+
+// Port represents a network port in a single component.
+type Port struct {
+	// Name for the port that can be referred to by components.
+	Name string
+	// Port is number of port to expose on the component's IP address.
+	// This must be a valid port number, 0 < x < 65536.
+	Port uint32
+	// HostPort is number of port to expose on the host.
+	// If specified, this must be a valid port number, 0 < x < 65536.
+	HostPort uint32
+	// Protocol for port. Must be UDP, TCP, or SCTP.
+	Protocol Protocol
+}
+
+// Protocol defines network protocols supported for things like component ports.
+// +enum
+type Protocol string
+
+const (
+	// ProtocolTCP is the TCP protocol.
+	ProtocolTCP Protocol = "TCP"
+	// ProtocolUDP is the UDP protocol.
+	ProtocolUDP Protocol = "UDP"
+	// ProtocolSCTP is the SCTP protocol.
+	ProtocolSCTP Protocol = "SCTP"
+)
+
+type Volume struct {
+	// Name of the volume specified.
+	Name string
+	// Mounted read-only if true, read-write otherwise (false or unspecified).
+	ReadOnly bool
+	// HostPath represents a pre-existing file or directory on the host machine that is directly exposed to the container.
+	HostPath string
+	// MountPath within the container at which the volume should be mounted.
+	MountPath string
 }
