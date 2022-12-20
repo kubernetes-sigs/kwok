@@ -29,10 +29,11 @@ import (
 
 // SnapshotSave save the snapshot of cluster
 func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
-	conf, err := c.Config(ctx)
+	config, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
+	conf := &config.Options
 
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
@@ -51,10 +52,11 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 // SnapshotRestore restore the snapshot of cluster
 func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
-	conf, err := c.Config(ctx)
+	config, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
+	conf := &config.Options
 
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 

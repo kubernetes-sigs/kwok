@@ -74,7 +74,8 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 		return fmt.Errorf("write cmdline file %s: %w", cmdlinePath, err)
 	}
 
-	cmd := startProcess(ctx, args[0], args[1:]...)
+	subCtx := context.Background()
+	cmd := startProcess(subCtx, args[0], args[1:]...)
 	cmd.Dir = dir
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
@@ -187,4 +188,20 @@ func killProcess(pid int) error {
 		return err
 	}
 	return nil
+}
+
+func IsRunning(ctx context.Context, dir string, name string) bool {
+	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	pidData, err := os.ReadFile(pidPath)
+	if err != nil {
+		return false
+	}
+	pid, err := strconv.Atoi(string(pidData))
+	if err != nil {
+		return false
+	}
+	if !isRunning(pid) {
+		return false
+	}
+	return true
 }

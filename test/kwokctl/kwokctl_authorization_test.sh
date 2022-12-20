@@ -35,13 +35,28 @@ function args() {
   done
 }
 
+
+function show_info() {
+    local name="${1}"
+    echo kwokctl get clusters
+    kwokctl get clusters
+    echo
+    echo kwokctl --name="${name}" logs etcd
+    kwokctl --name="${name}" logs etcd
+    echo
+    echo kwokctl --name="${name}" logs kube-apiserver
+    kwokctl --name="${name}" logs kube-apiserver
+    echo
+}
+
 function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 5m --quiet-pull --kube-authorization
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --kube-authorization
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
+    show_info "${name}"
     exit 1
   fi
 }

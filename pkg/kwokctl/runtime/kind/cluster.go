@@ -27,10 +27,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/image"
 )
 
@@ -45,10 +47,11 @@ func NewCluster(name, workdir string) (runtime.Runtime, error) {
 }
 
 func (c *Cluster) Install(ctx context.Context) error {
-	conf, err := c.Config(ctx)
+	config, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
+	conf := &config.Options
 
 	var featureGates []string
 	var runtimeConfig []string
@@ -135,10 +138,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 }
 
 func (c *Cluster) Up(ctx context.Context) error {
-	conf, err := c.Config(ctx)
+	config, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
+	conf := &config.Options
 
 	logger := log.FromContext(ctx)
 
@@ -147,15 +151,28 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, "", exec.IOStreams{
-		ErrOut: os.Stderr,
-		Out:    os.Stderr,
-	}, kindPath, "create", "cluster",
+	args := []string{
+		"create", "cluster",
 		"--config", c.GetWorkdirPath(runtime.KindName),
 		"--name", c.Name(),
 		"--image", conf.KindNodeImage,
-		"--wait", "1m",
-	)
+	}
+
+	deadline, ok := ctx.Deadline()
+	if ok {
+		wait := time.Until(deadline)
+		if wait < 0 {
+			wait = time.Minute
+		}
+		args = append(args, "--wait", format.HumanDuration(wait))
+	} else {
+		args = append(args, "--wait", "1m")
+	}
+
+	err = exec.Exec(ctx, "", exec.IOStreams{
+		ErrOut: os.Stderr,
+		Out:    os.Stderr,
+	}, kindPath, args...)
 	if err != nil {
 		return err
 	}
@@ -192,6 +209,18 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
+	config.Components = append(config.Components,
+		internalversion.Component{
+			Name: "etcd",
+		},
+		internalversion.Component{
+			Name: "kube-apiserver",
+		},
+		internalversion.Component{
+			Name: "kwok-controller",
+		},
+	)
+
 	if conf.PrometheusPort != 0 {
 		err = c.Kubectl(ctx, exec.IOStreams{
 			ErrOut: os.Stderr,
@@ -199,11 +228,12 @@ func (c *Cluster) Up(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-	}
 
-	err = c.WaitReady(ctx, 30*time.Second)
-	if err != nil {
-		return fmt.Errorf("failed to wait for kube-apiserver ready: %w", err)
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "prometheus",
+			},
+		)
 	}
 
 	err = c.Kubectl(ctx, exec.IOStreams{}, "cordon", c.Name()+"-control-plane")
@@ -216,6 +246,12 @@ func (c *Cluster) Up(ctx context.Context) error {
 		if err != nil {
 			logger.Error("Failed to disable kube-scheduler", err)
 		}
+	} else {
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "kube-scheduler",
+			},
+		)
 	}
 
 	if conf.DisableKubeControllerManager {
@@ -223,6 +259,21 @@ func (c *Cluster) Up(ctx context.Context) error {
 		if err != nil {
 			logger.Error("Failed to disable kube-controller-manager", err)
 		}
+	} else {
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "kube-scheduler",
+			},
+		)
+	}
+
+	err = c.SetConfig(ctx, config)
+	if err != nil {
+		logger.Error("Failed to set config", err)
+	}
+	err = c.Save(ctx)
+	if err != nil {
+		logger.Error("Failed to update cluster", err)
 	}
 
 	// set the context in default kubeconfig
@@ -254,8 +305,14 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		waitErr error
 		ready   bool
 	)
+	logger := log.FromContext(ctx)
 	waitErr = wait.PollImmediateWithContext(ctx, time.Second, timeout, func(ctx context.Context) (bool, error) {
 		ready, err = c.Ready(ctx)
+		if err != nil {
+			logger.Debug("Cluster is not ready",
+				"err", err,
+			)
+		}
 		return ready, nil
 	})
 	if err != nil {
@@ -375,10 +432,11 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 
 // ListBinaries list binaries in the cluster
 func (c *Cluster) ListBinaries(ctx context.Context) ([]string, error) {
-	conf, err := c.Config(ctx)
+	config, err := c.Config(ctx)
 	if err != nil {
 		return nil, err
 	}
+	conf := &config.Options
 
 	return []string{
 		conf.KubectlBinary,
@@ -387,10 +445,11 @@ func (c *Cluster) ListBinaries(ctx context.Context) ([]string, error) {
 
 // ListImages list images in the cluster
 func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
-	conf, err := c.Config(ctx)
+	config, err := c.Config(ctx)
 	if err != nil {
 		return nil, err
 	}
+	conf := &config.Options
 
 	return []string{
 		conf.KindNodeImage,
@@ -409,10 +468,11 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args
 
 // preDownloadKind pre-download and cache kind
 func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
-	conf, err := c.Config(ctx)
+	config, err := c.Config(ctx)
 	if err != nil {
 		return "", err
 	}
+	conf := &config.Options
 
 	_, err = exec.LookPath("kind")
 	if err != nil {

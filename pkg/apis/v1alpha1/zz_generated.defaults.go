@@ -75,4 +75,19 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		var ptrVar1 bool = false
 		in.Options.KubeAuthorization = &ptrVar1
 	}
+	for i := range in.Components {
+		a := &in.Components[i]
+		for j := range a.Ports {
+			b := &a.Ports[j]
+			if b.Protocol == "" {
+				b.Protocol = "TCP"
+			}
+		}
+		for j := range a.Envs {
+			b := &a.Envs[j]
+			if b.Value == "" {
+				b.Value = ""
+			}
+		}
+	}
 }

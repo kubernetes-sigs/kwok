@@ -70,6 +70,7 @@ type KwokConfigurationOptions struct {
 	// is the default value for flag --disregard-status-with-label-selector
 	DisregardStatusWithLabelSelector string `json:"disregardStatusWithLabelSelector,omitempty"`
 
+	// ServerAddress is server address of the Kwok.
 	// is the default value for flag --server-address
 	ServerAddress string `json:"serverAddress,omitempty"`
 

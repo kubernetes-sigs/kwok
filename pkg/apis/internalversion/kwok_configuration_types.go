@@ -34,39 +34,29 @@ type KwokConfiguration struct {
 
 type KwokConfigurationOptions struct {
 	// The default IP assigned to the Pod on maintained Nodes.
-	// is the default value for flag --cidr
 	CIDR string
 
 	// The ip of all nodes maintained by the Kwok
-	// is the default value for flag --node-ip
 	NodeIP string
 
 	// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
-	// is the default value for flag --manage-all-nodes
 	ManageAllNodes bool
 
 	// Default annotations specified on Nodes to demand manage.
-	// Note: when `all-node-manage` is specified as true, this is a no-op.
-	// is the default value for flag --manage-nodes-with-annotation-selector
 	ManageNodesWithAnnotationSelector string
 
 	// Default labels specified on Nodes to demand manage.
-	// Note: when `all-node-manage` is specified as true, this is a no-op.
-	// is the default value for flag --manage-nodes-with-label-selector
 	ManageNodesWithLabelSelector string
 
 	// If a Node/Pod is on a managed Node and has this annotation status will not be modified
-	// is the default value for flag --disregard-status-with-annotation-selector
 	DisregardStatusWithAnnotationSelector string
 
 	// If a Node/Pod is on a managed Node and has this label status will not be modified
-	// is the default value for flag --disregard-status-with-label-selector
 	DisregardStatusWithLabelSelector string
 
-	// is the default value for flag --server-address
+	// ServerAddress is server address of the Kwok.
 	ServerAddress string
 
 	// Experimental support for getting pod ip from CNI, for CNI-related components
-	// is the default value for flag --experimental-enable-cni
 	EnableCNI bool
 }

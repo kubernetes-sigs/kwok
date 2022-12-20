@@ -27,13 +27,13 @@ import (
 
 type Runtime interface {
 	// SetConfig sets the config of cluster
-	SetConfig(ctx context.Context, conf *internalversion.KwokctlConfigurationOptions) error
+	SetConfig(ctx context.Context, conf *internalversion.KwokctlConfiguration) error
 
 	// Save the config of cluster
 	Save(ctx context.Context) error
 
 	// Config return the config of cluster
-	Config(ctx context.Context) (*internalversion.KwokctlConfigurationOptions, error)
+	Config(ctx context.Context) (*internalversion.KwokctlConfiguration, error)
 
 	// Install the cluster
 	Install(ctx context.Context) error

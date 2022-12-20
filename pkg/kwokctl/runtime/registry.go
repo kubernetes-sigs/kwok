@@ -50,10 +50,12 @@ func (r *Registry) Get(name string) (BuildRuntime, bool) {
 // Load a runtime
 func (r *Registry) Load(ctx context.Context, name, workdir string) (Runtime, error) {
 	cluster := NewCluster(name, workdir)
-	conf, err := cluster.Load(ctx)
+	config, err := cluster.Load(ctx)
 	if err != nil {
 		return nil, err
 	}
+	conf := &config.Options
+
 	buildRuntime, ok := r.Get(conf.Runtime)
 	if !ok {
 		return nil, fmt.Errorf("not found runtime %q", conf.Runtime)
