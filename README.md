@@ -1,4 +1,6 @@
-# KWOK (Kubernetes-WithOut-Kubelet)
+# `KWOK` (`K`ubernetes-`W`ith`O`ut-`K`ubelet)
+
+<img align="right" width="180px" src="./logo/kwok.svg"/>
 
 The repository is a toolkit that enables setting up a cluster of thousands of Nodes in seconds.
 Under the scene, all Nodes are simulated to behave like real ones, so the overall approach employes
@@ -6,7 +8,7 @@ a pretty low resource footprint that you can easily play around on your laptop.
 
 So far we provide two tools:
 
-- **Kwok:** core of this repo. It simulates thousands of fake Nodes.
+- **Kwok:** Core of this repo. It simulates thousands of fake Nodes.
 - **Kwokctl:** A CLI to facilitate creating and managing clusters simulated by Kwok.
 
 ## Get started
