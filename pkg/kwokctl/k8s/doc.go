@@ -14,5 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package k8s contains some helper functions related to the Kuberentes.
+// Package k8s contains some helper functions related to the Kubernetes.
 package k8s
