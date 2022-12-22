@@ -130,7 +130,7 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 		}
 		termWidth, _, _ := term.GetSize(c.fd)
 		if termWidth > msgWidth {
-			_, err = fmt.Fprintf(c.output, "%s%*s\n", msg, termWidth-msgWidth, attrsStr)
+			_, err = fmt.Fprintf(c.output, "%s%*s\n", msg, termWidth-1-msgWidth, attrsStr)
 		} else {
 			_, err = fmt.Fprintf(c.output, "%s%s\n", msg, attrsStr)
 		}

@@ -51,7 +51,7 @@ func PullImages(ctx context.Context, command string, images []string, quiet bool
 				return err
 			}
 		} else {
-			logger.Info("Image already exists", "image", image)
+			logger.Debug("Image already exists", "image", image)
 		}
 	}
 	return nil
