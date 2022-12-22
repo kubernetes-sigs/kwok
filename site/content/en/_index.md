@@ -20,6 +20,8 @@ So far we provide two tools:
 
 The following examples are tested to work with the latest version of Kwok/Kwokctl.
 
+<img width="700px" src="/manage-clusters.svg">
+
 ### Basic Usage
 
 - [Kwok Manage Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}) - Kwok's basic management of Node and Pod operations
