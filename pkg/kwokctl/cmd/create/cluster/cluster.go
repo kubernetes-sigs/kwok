@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -105,7 +106,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.KubeRuntimeConfig, "kube-runtime-config", flags.Options.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs`)
 	cmd.Flags().StringVar(&flags.Options.KubeAuditPolicy, "kube-audit-policy", flags.Options.KubeAuditPolicy, "Path to the file that defines the audit policy configuration")
 	cmd.Flags().BoolVar(&flags.Options.KubeAuthorization, "kube-authorization", flags.Options.KubeAuthorization, "Enable authorization on secure port")
-	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 5*time.Minute, "Timeout for waiting for the cluster to be created")
+	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
+	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 0, "Timeout for waiting for the cluster to be created")
 	cmd.Flags().DurationVar(&flags.Wait, "wait", 0, "Wait for the cluster to be ready")
 	return cmd
 }
@@ -118,8 +120,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 	logger = logger.With("cluster", flags.Name)
 	ctx = log.NewContext(ctx, logger)
 
-	ctx, cancel := context.WithTimeout(ctx, flags.Timeout)
-	defer cancel()
+	if flags.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, flags.Timeout)
+		defer cancel()
+	}
 
 	buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Options.Runtime)
 	if !ok {
