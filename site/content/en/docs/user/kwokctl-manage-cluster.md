@@ -1,6 +1,10 @@
 # Use Kwokctl Create a Cluster
 
+{{< hint "info" >}}
+
 This document walks you through how to run `kwokctl` to manage fake clusters.
+
+{{< /hint >}}
 
 ## Variables preparation
 

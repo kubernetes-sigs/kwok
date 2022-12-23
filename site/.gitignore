@@ -1,0 +1,5 @@
+# hugo
+/themes
+/resources
+/*.lock
+/public

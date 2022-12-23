@@ -1,6 +1,10 @@
 # Kwokctl Save/Restore a Cluster
 
+{{< hint "info" >}}
+
 This document walks you through how to save and restore a cluster with `kwokctl`
+
+{{< /hint >}}
 
 ## Save cluster data to file
 

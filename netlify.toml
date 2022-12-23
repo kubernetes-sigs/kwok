@@ -1,0 +1,17 @@
+# netlify configuration
+[build]
+base = "site/"
+publish = "public/"
+command = "hugo"
+
+[build.environment]
+HUGO_VERSION = "0.107.0"
+
+[context.production.environment]
+# this controls our robots.txt
+# HUGO_ENV = "production"
+HUGO_BASEURL = "/"
+# HUGO_BASEURL = "https://kwok.sigs.k8s.io/"
+
+[context.branch-deploy]
+command = "make build"

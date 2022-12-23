@@ -1,6 +1,10 @@
 # Deploy Kwok in a Cluster
 
+{{< hint "info" >}}
+
 This document walks you through how to deploy `kwok` in a Kubernetes cluster.
+
+{{< /hint >}}
 
 ## Variables preparation
 
