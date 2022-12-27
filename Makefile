@@ -54,7 +54,7 @@ KWOK_IMAGE ?= $(STAGING_IMAGE_PREFIX)/kwok
 
 CLUSTER_IMAGE ?= $(STAGING_IMAGE_PREFIX)/cluster
 
-PLATFORM ?= $(shell ./hack/get-platform.sh)
+PLATFORM ?= $(GOOS)/$(GOARCH)
 
 IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
 
