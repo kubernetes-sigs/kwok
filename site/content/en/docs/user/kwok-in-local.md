@@ -1,6 +1,10 @@
 # Run Kwok in the Local
 
+{{< hint "info" >}}
+
 This document walks you through how to run `kwok` in the local.
+
+{{< /hint >}}
 
 ## Variables preparation
 

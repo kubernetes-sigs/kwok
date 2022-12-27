@@ -1,5 +1,11 @@
 # Manage nodes and pods with kwok
 
+{{< hint "info" >}}
+
+This document walks you through how to manage nodes and pods with `kwok`.
+
+{{< /hint >}}
+
 ## Kwok with args `--manage-all-nodes=true`
 
 Kwok will be in charge of all nodes in the cluster and maintain their heartbeats to API Server. In this way, all nodes will behave like real nodes and stay in `Ready` state.

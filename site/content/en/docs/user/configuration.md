@@ -1,6 +1,10 @@
 # Configuration
 
+{{< hint "info" >}}
+
 This document walks you through how to configure Kwok/Kwokctl options.
+
+{{< /hint >}}
 
 ## Getting Started
 

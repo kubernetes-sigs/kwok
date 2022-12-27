@@ -1,6 +1,10 @@
 # Development
 
+{{< hint "info" >}}
+
 This document provides details on how to build and run `kwok` and `kwokctl` locally.
+
+{{< /hint >}}
 
 ## Building
 
