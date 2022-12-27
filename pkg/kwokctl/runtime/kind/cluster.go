@@ -262,7 +262,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	} else {
 		config.Components = append(config.Components,
 			internalversion.Component{
-				Name: "kube-scheduler",
+				Name: "kube-controller-manager",
 			},
 		)
 	}
