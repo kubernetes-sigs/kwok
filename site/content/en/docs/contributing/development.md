@@ -11,7 +11,7 @@ This document provides details on how to build and run `kwok` and `kwokctl` loca
 ### Building `kwok` and `kwokctl`
 
 ``` bash
-make build
+IMAGE_PREFIX=local make build
 ```
 
 On a successful build, the binaries will be located in `./bin/$(go env GOOS)/$(go env GOARCH)`
@@ -27,5 +27,5 @@ The image will be tagged as `local/kwok:${tag}` and can be found in `docker imag
 ### Starting a local cluster with locally built `kwokctl` and `kwok` using Docker
 
 ``` bash
-KWOK_IMAGE_PREFIX=local ./bin/$(go env GOOS)/$(go env GOARCH)/kwokctl create cluster
+./bin/$(go env GOOS)/$(go env GOARCH)/kwokctl create cluster
 ```
