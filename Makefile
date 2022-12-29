@@ -52,11 +52,11 @@ endif
 
 ifeq ($(STAGING_IMAGE_PREFIX),)
 KWOK_IMAGE ?= kwok
+CLUSTER_IMAGE ?= cluster
 else
 KWOK_IMAGE ?= $(STAGING_IMAGE_PREFIX)/kwok
-endif
-
 CLUSTER_IMAGE ?= $(STAGING_IMAGE_PREFIX)/cluster
+endif
 
 PLATFORM ?= $(GOOS)/$(GOARCH)
 
