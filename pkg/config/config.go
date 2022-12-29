@@ -35,17 +35,25 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
-func Load(ctx context.Context, path string) ([]metav1.Object, error) {
-	raws, err := loadRawConfig(path)
-	if err != nil {
-		return nil, err
+func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
+	var raws []json.RawMessage
+
+	for _, p := range path {
+		r, err := loadRawConfig(p)
+		if err != nil {
+			return nil, err
+		}
+		raws = append(raws, r...)
 	}
+
+	var kwokConfiguration *internalversion.KwokConfiguration
+	var kwokctlConfiguration *internalversion.KwokctlConfiguration
 
 	logger := log.FromContext(ctx)
 	meta := metav1.TypeMeta{}
 	objs := make([]metav1.Object, 0, len(raws))
 	for _, raw := range raws {
-		err = json.Unmarshal(raw, &meta)
+		err := json.Unmarshal(raw, &meta)
 		if err != nil {
 			logger.Error("Unsupported config", err,
 				"path", path,
@@ -102,7 +110,7 @@ func Load(ctx context.Context, path string) ([]metav1.Object, error) {
 			if err != nil {
 				return nil, err
 			}
-			objs = append(objs, out)
+			kwokConfiguration = out
 		case v1alpha1.KwokctlConfigurationKind:
 			obj := &v1alpha1.KwokctlConfiguration{}
 			err = json.Unmarshal(raw, &obj)
@@ -114,8 +122,15 @@ func Load(ctx context.Context, path string) ([]metav1.Object, error) {
 			if err != nil {
 				return nil, err
 			}
-			objs = append(objs, out)
+			kwokctlConfiguration = out
 		}
+	}
+
+	if kwokctlConfiguration != nil {
+		objs = append(objs, kwokctlConfiguration)
+	}
+	if kwokConfiguration != nil {
+		objs = append(objs, kwokConfiguration)
 	}
 	return objs, nil
 }
