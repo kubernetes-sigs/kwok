@@ -29,6 +29,7 @@ import (
 
 func main() {
 	flagset := pflag.NewFlagSet("global", pflag.ContinueOnError)
+	flagset.ParseErrorsWhitelist.UnknownFlags = true
 	flagset.Usage = func() {}
 
 	ctx := signals.SetupSignalContext()

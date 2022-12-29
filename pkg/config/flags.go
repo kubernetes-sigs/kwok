@@ -32,21 +32,30 @@ type configCtx int
 
 func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, error) {
 	defaultConfigPath := path.Join(WorkDir, consts.ConfigName)
-	config := flags.StringP("config", "c", defaultConfigPath, "config path")
+	config := flags.StringArrayP("config", "c", []string{defaultConfigPath}, "config path")
 	_ = flags.Parse(os.Args[1:])
 
-	objs, err := Load(ctx, *config)
+	logger := log.FromContext(ctx)
+	objs, err := Load(ctx, *config...)
 	if err != nil {
-		if *config == defaultConfigPath && errors.Is(err, os.ErrNotExist) {
+		if len(*config) == 1 && (*config)[0] == defaultConfigPath && errors.Is(err, os.ErrNotExist) {
+			logger.Debug("Load config",
+				"path", *config,
+				"err", err,
+			)
 			return ctx, nil
 		}
 		return nil, err
 	}
+
 	if len(objs) == 0 {
+		logger.Debug("Load config",
+			"path", *config,
+			"err", "empty config",
+		)
 		return ctx, nil
 	}
 
-	logger := log.FromContext(ctx)
 	logger.Debug("Load config",
 		"path", *config,
 	)
