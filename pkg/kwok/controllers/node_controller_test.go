@@ -30,8 +30,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/stages"
 )
 
 func TestNodeController(t *testing.T) {
@@ -68,16 +68,14 @@ func TestNodeController(t *testing.T) {
 	nodeSelectorFunc := func(node *corev1.Node) bool {
 		return strings.HasPrefix(node.Name, "node")
 	}
+	nodeStageStatus, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
 	nodes, err := NewNodeController(NodeControllerConfig{
-		ClientSet:                clientset,
-		NodeIP:                   "10.0.0.1",
-		NodeSelectorFunc:         nodeSelectorFunc,
-		NodeStatusTemplate:       templates.DefaultNodeStatusTemplate,
-		NodeHeartbeatTemplate:    templates.DefaultNodeHeartbeatTemplate,
-		FuncMap:                  funcMap,
-		NodeHeartbeatInterval:    1 * time.Second,
-		NodeHeartbeatParallelism: 2,
-		LockNodeParallelism:      2,
+		ClientSet:           clientset,
+		NodeIP:              "10.0.0.1",
+		NodeSelectorFunc:    nodeSelectorFunc,
+		Stages:              nodeStageStatus,
+		FuncMap:             funcMap,
+		LockNodeParallelism: 2,
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new nodes controller error: %w", err))

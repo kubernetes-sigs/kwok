@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-pod-had-init
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-pod-had-init
+  template:
+    metadata:
+      labels:
+        app: test-pod-had-init
+    spec:
+      tolerations:
+        - key: "kwok-controller/provider"
+          operator: "Exists"
+          effect: "NoSchedule"
+      initContainers:
+        - name: init-0
+          image: fake
+        - name: init-1
+          image: fake
+      containers:
+        - name: container-0
+          image: fake
+        - name: container-1
+          image: fake
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-pod
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-pod
+  template:
+    metadata:
+      labels:
+        app: test-pod
+    spec:
+      tolerations:
+        - key: "kwok-controller/provider"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: container-0
+          image: fake
+        - name: container-1
+          image: fake
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name:  test-pod-for-job
+spec:
+  template:
+    spec:
+      tolerations:
+        - key: "kwok-controller/provider"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: job
+          image: fake
+      restartPolicy: Never
+  backoffLimit: 4

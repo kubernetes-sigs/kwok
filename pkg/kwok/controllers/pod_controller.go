@@ -22,9 +22,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"sync"
 	"text/template"
 	"time"
 
+	"github.com/wzshiming/cron"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,13 +38,15 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/pager"
+	"k8s.io/client-go/tools/record"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/cni"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/expression"
 )
 
 var (
-	removeFinalizers = []byte(`{"metadata":{"finalizers":null}}`)
 	deleteOpt        = *metav1.NewDeleteOptions(0)
 	podFieldSelector = fields.OneTermNotEqualSelector("spec.nodeName", "").String()
 )
@@ -57,12 +61,13 @@ type PodController struct {
 	cidrIPNet                             *net.IPNet
 	nodeHasFunc                           func(nodeName string) bool
 	ipPool                                *ipPool
-	podStatusTemplate                     string
 	renderer                              *renderer
 	lockPodChan                           chan *corev1.Pod
-	lockPodParallelism                    int
-	deletePodChan                         chan *corev1.Pod
-	deletePodParallelism                  int
+	parallelTasks                         *parallelTasks
+	lifecycle                             Lifecycle
+	cronjob                               *cron.Cron
+	delayJobsCancels                      sync.Map
+	recorder                              record.EventRecorder
 }
 
 // PodControllerConfig is the configuration for the PodController
@@ -74,10 +79,10 @@ type PodControllerConfig struct {
 	NodeIP                                string
 	CIDR                                  string
 	NodeHasFunc                           func(nodeName string) bool
-	PodStatusTemplate                     string
+	Stages                                []*internalversion.Stage
 	LockPodParallelism                    int
-	DeletePodParallelism                  int
 	FuncMap                               template.FuncMap
+	Recorder                              record.EventRecorder
 }
 
 // NewPodController creates a new fake pods controller
@@ -97,6 +102,11 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		return nil, err
 	}
 
+	lifecycles, err := NewLifecycle(conf.Stages)
+	if err != nil {
+		return nil, err
+	}
+
 	n := &PodController{
 		enableCNI:                             conf.EnableCNI,
 		clientSet:                             conf.ClientSet,
@@ -106,11 +116,11 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		cidrIPNet:                             cidrIPNet,
 		ipPool:                                newIPPool(cidrIPNet),
 		nodeHasFunc:                           conf.NodeHasFunc,
-		podStatusTemplate:                     conf.PodStatusTemplate,
+		cronjob:                               cron.NewCron(),
+		lifecycle:                             lifecycles,
+		parallelTasks:                         newParallelTasks(conf.LockPodParallelism),
 		lockPodChan:                           make(chan *corev1.Pod),
-		lockPodParallelism:                    conf.LockPodParallelism,
-		deletePodChan:                         make(chan *corev1.Pod),
-		deletePodParallelism:                  conf.DeletePodParallelism,
+		recorder:                              conf.Recorder,
 	}
 	funcMap = template.FuncMap{
 		"NodeIP": func() string {
@@ -131,12 +141,11 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 // It will modify the pods status to we want
 func (c *PodController) Start(ctx context.Context) error {
 	go c.LockPods(ctx, c.lockPodChan)
-	go c.DeletePods(ctx, c.deletePodChan)
 
 	opt := metav1.ListOptions{
 		FieldSelector: podFieldSelector,
 	}
-	err := c.WatchPods(ctx, c.lockPodChan, c.deletePodChan, opt)
+	err := c.WatchPods(ctx, c.lockPodChan, opt)
 	if err != nil {
 		return fmt.Errorf("failed watch pods: %w", err)
 	}
@@ -151,6 +160,27 @@ func (c *PodController) Start(ctx context.Context) error {
 	return nil
 }
 
+func (c *PodController) FinalizersModify(ctx context.Context, pod *corev1.Pod, finalizers *internalversion.StageFinalizers) error {
+	ops := finalizersModify(pod.Finalizers, finalizers)
+	if len(ops) == 0 {
+		return nil
+	}
+	data, err := json.Marshal(ops)
+	if err != nil {
+		return err
+	}
+	logger := log.FromContext(ctx)
+	_, err = c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Error("pod not found", err, "node", pod.Name)
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
 // DeletePod deletes a pod
 func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 	logger := log.FromContext(ctx)
@@ -158,17 +188,6 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
-	if len(pod.Finalizers) != 0 {
-		_, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.MergePatchType, removeFinalizers, metav1.PatchOptions{})
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				logger.Warn("Patch pod", err)
-				return nil
-			}
-			return err
-		}
-	}
-
 	err := c.clientSet.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -182,25 +201,6 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 	return nil
 }
 
-// DeletePods deletes pods from the channel
-func (c *PodController) DeletePods(ctx context.Context, pods <-chan *corev1.Pod) {
-	tasks := newParallelTasks(c.lockPodParallelism)
-	logger := log.FromContext(ctx)
-	for pod := range pods {
-		localPod := pod
-		tasks.Add(func() {
-			err := c.DeletePod(ctx, localPod)
-			if err != nil {
-				logger.Error("Failed to delete pod", err,
-					"pod", log.KObj(localPod),
-					"node", localPod.Spec.NodeName,
-				)
-			}
-		})
-	}
-	tasks.Wait()
-}
-
 // LockPod locks a given pod
 func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 	logger := log.FromContext(ctx)
@@ -208,17 +208,106 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
-	patch, err := c.configurePod(pod)
+	data, err := expression.ToJsonStandard(pod)
 	if err != nil {
 		return err
 	}
-	if patch == nil {
+	key := pod.Name + "." + pod.Namespace
+
+	_, ok := c.delayJobsCancels.Load(key)
+	if ok {
+		return nil
+	}
+
+	stage, err := c.lifecycle.Match(pod.Labels, pod.Annotations, data)
+	if err != nil {
+		return fmt.Errorf("stage match: %w", err)
+	}
+	if stage == nil {
 		logger.Info("Skip pod",
-			"reason", "do not need to modify",
+			"reason", "not match any stages",
 		)
 		return nil
 	}
-	_, err = c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	now := time.Now()
+	delay, _ := stage.Delay(ctx, data, now)
+	stageName := stage.Name()
+	next := stage.Next()
+
+	do := func() {
+		if next.Event != nil && c.recorder != nil {
+			c.recorder.Event(&corev1.ObjectReference{
+				Kind:      "Pod",
+				UID:       pod.UID,
+				Name:      pod.Name,
+				Namespace: pod.Namespace,
+			}, next.Event.Type, next.Event.Reason, next.Event.Message)
+		}
+		if next.Finalizers != nil {
+			err = c.FinalizersModify(ctx, pod, next.Finalizers)
+			if err != nil {
+				logger.Error("Failed to finalizers", err)
+			}
+		}
+		if next.Delete {
+			err = c.DeletePod(ctx, pod)
+			if err != nil {
+				logger.Error("Failed to delete pod", err)
+			}
+		} else if next.StatusTemplate != "" {
+			patch, err := c.configurePod(pod, next.StatusTemplate)
+			if err != nil {
+				logger.Error("Failed to configure pod", err)
+				return
+			}
+			if patch == nil {
+				logger.Info("Skip pod",
+					"reason", "do not need to modify",
+				)
+			} else {
+				err = c.lockPod(ctx, pod, patch)
+				if err != nil {
+					logger.Error("Failed to lock pod", err)
+				}
+			}
+		}
+	}
+
+	if delay == 0 {
+		do()
+		return nil
+	}
+
+	logger.Info("Delayed play stage",
+		"delay", delay,
+		"stage", stageName,
+	)
+	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(time.Now().Add(delay)), func() {
+		c.parallelTasks.Add(func() {
+			old, ok := c.delayJobsCancels.LoadAndDelete(key)
+			if ok {
+				old.(cron.DoFunc)()
+			}
+			do()
+		})
+	})
+	if ok {
+		old, ok := c.delayJobsCancels.LoadOrStore(key, cancelFunc)
+		if ok {
+			old.(cron.DoFunc)()
+		}
+	}
+
+	return nil
+}
+
+func (c *PodController) lockPod(ctx context.Context, pod *corev1.Pod, patch []byte) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"pod", log.KObj(pod),
+		"node", pod.Spec.NodeName,
+	)
+	_, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch pod", err)
@@ -233,10 +322,9 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 // LockPods locks a pods from the channel
 func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
 	logger := log.FromContext(ctx)
-	tasks := newParallelTasks(c.lockPodParallelism)
 	for pod := range pods {
 		localPod := pod
-		tasks.Add(func() {
+		c.parallelTasks.Add(func() {
 			err := c.LockPod(ctx, localPod)
 			if err != nil {
 				logger.Error("Failed to lock pod", err,
@@ -246,7 +334,7 @@ func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
 			}
 		})
 	}
-	tasks.Wait()
+	c.parallelTasks.Wait()
 }
 
 func (c *PodController) needLockPod(pod *corev1.Pod) bool {
@@ -269,7 +357,7 @@ func (c *PodController) needLockPod(pod *corev1.Pod) bool {
 }
 
 // WatchPods watch pods put into the channel
-func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan<- *corev1.Pod, opt metav1.ListOptions) error {
+func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.Pod, opt metav1.ListOptions) error {
 	watcher, err := c.clientSet.CoreV1().Pods(corev1.NamespaceAll).Watch(ctx, opt)
 	if err != nil {
 		return err
@@ -298,34 +386,21 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan, deleteChan chan
 						}
 					}
 				}
+
 				switch event.Type {
 				case watch.Added, watch.Modified:
 					pod := event.Object.(*corev1.Pod)
-
-					// At a Kubelet, we need to delete this pod on the node we manage
-					if pod.DeletionTimestamp != nil {
-						if c.nodeHasFunc(pod.Spec.NodeName) {
-							deleteChan <- pod.DeepCopy()
-						} else {
-							logger.Info("Skip pod",
-								"reason", "not manage",
-								"event", event.Type,
-								"pod", log.KObj(pod),
-								"node", pod.Spec.NodeName,
-							)
-						}
+					if c.needLockPod(pod) {
+						lockChan <- pod.DeepCopy()
 					} else {
-						if c.needLockPod(pod) {
-							lockChan <- pod.DeepCopy()
-						} else {
-							logger.Info("Skip pod",
-								"reason", "not manage",
-								"event", event.Type,
-								"pod", log.KObj(pod),
-								"node", pod.Spec.NodeName,
-							)
-						}
+						logger.Info("Skip pod",
+							"reason", "not manage",
+							"event", event.Type,
+							"pod", log.KObj(pod),
+							"node", pod.Spec.NodeName,
+						)
 					}
+
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
 					if c.nodeHasFunc(pod.Spec.NodeName) {
@@ -374,7 +449,7 @@ func (c *PodController) LockPodsOnNode(ctx context.Context, nodeName string) err
 	})
 }
 
-func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
+func (c *PodController) configurePod(pod *corev1.Pod, template string) ([]byte, error) {
 	if !c.enableCNI {
 		// Mark the pod IP that existed before the kubelet was started
 		if c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
@@ -388,7 +463,7 @@ func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
 		pod.Status.PodIP = ips[0]
 	}
 
-	patch, err := c.computePatchData(pod, c.podStatusTemplate)
+	patch, err := c.computePatchData(pod, template)
 	if err != nil {
 		return nil, err
 	}
@@ -401,38 +476,35 @@ func (c *PodController) configurePod(pod *corev1.Pod) ([]byte, error) {
 	})
 }
 
-func (c *PodController) computePatchData(pod *corev1.Pod, temp string) ([]byte, error) {
-	patch, err := c.renderer.renderToJSON(temp, pod)
+func (c *PodController) computePatchData(pod *corev1.Pod, tpl string) ([]byte, error) {
+	patch, err := c.renderer.renderToJSON(tpl, pod)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check whether the pod need to be patch
-	if pod.Status.Phase != corev1.PodPending {
-		original, err := json.Marshal(pod.Status)
-		if err != nil {
-			return nil, err
-		}
+	original, err := json.Marshal(pod.Status)
+	if err != nil {
+		return nil, err
+	}
 
-		sum, err := strategicpatch.StrategicMergePatch(original, patch, pod.Status)
-		if err != nil {
-			return nil, err
-		}
+	sum, err := strategicpatch.StrategicMergePatch(original, patch, pod.Status)
+	if err != nil {
+		return nil, err
+	}
 
-		podStatus := corev1.PodStatus{}
-		err = json.Unmarshal(sum, &podStatus)
-		if err != nil {
-			return nil, err
-		}
+	podStatus := corev1.PodStatus{}
+	err = json.Unmarshal(sum, &podStatus)
+	if err != nil {
+		return nil, err
+	}
 
-		dist, err := json.Marshal(podStatus)
-		if err != nil {
-			return nil, err
-		}
+	dist, err := json.Marshal(podStatus)
+	if err != nil {
+		return nil, err
+	}
 
-		if bytes.Equal(original, dist) {
-			return nil, nil
-		}
+	if bytes.Equal(original, dist) {
+		return nil, nil
 	}
 
 	return patch, nil

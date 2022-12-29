@@ -65,3 +65,23 @@ func ConvertToInternalVersionKwokConfiguration(in *v1alpha1.KwokConfiguration) (
 	}
 	return &out, nil
 }
+
+func ConvertToV1alpha1Stage(in *Stage) (*v1alpha1.Stage, error) {
+	var out v1alpha1.Stage
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.StageKind
+	err := Convert_internalversion_Stage_To_v1alpha1_Stage(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func ConvertToInternalVersionStage(in *v1alpha1.Stage) (*Stage, error) {
+	var out Stage
+	err := Convert_v1alpha1_Stage_To_internalversion_Stage(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

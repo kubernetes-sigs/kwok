@@ -30,8 +30,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/stages"
 )
 
 func TestPodController(t *testing.T) {
@@ -73,17 +73,17 @@ func TestPodController(t *testing.T) {
 	nodeHasFunc := func(nodeName string) bool {
 		return strings.HasPrefix(nodeName, "node")
 	}
+	podStageStatus, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
 		ClientSet:                             clientset,
 		NodeIP:                                "10.0.0.1",
 		CIDR:                                  "10.0.0.1/24",
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
-		PodStatusTemplate:                     templates.DefaultPodStatusTemplate,
+		Stages:                                podStageStatus,
 		NodeHasFunc:                           nodeHasFunc,
 		FuncMap:                               funcMap,
 		LockPodParallelism:                    2,
-		DeletePodParallelism:                  2,
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new pods controller error: %w", err))

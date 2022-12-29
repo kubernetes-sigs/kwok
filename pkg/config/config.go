@@ -123,6 +123,18 @@ func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 				return nil, err
 			}
 			kwokctlConfiguration = out
+		case v1alpha1.StageKind:
+			obj := &v1alpha1.Stage{}
+			err = json.Unmarshal(raw, &obj)
+			if err != nil {
+				return nil, err
+			}
+			obj = setStageDefaults(obj)
+			out, err := internalversion.ConvertToInternalVersionStage(obj)
+			if err != nil {
+				return nil, err
+			}
+			objs = append(objs, out)
 		}
 	}
 
@@ -174,6 +186,11 @@ func Save(ctx context.Context, path string, objs []metav1.Object) error {
 			}
 		case *internalversion.KwokctlConfiguration:
 			obj, err = internalversion.ConvertToV1alpha1KwokctlConfiguration(o)
+			if err != nil {
+				return err
+			}
+		case *internalversion.Stage:
+			obj, err = internalversion.ConvertToV1alpha1Stage(o)
 			if err != nil {
 				return err
 			}

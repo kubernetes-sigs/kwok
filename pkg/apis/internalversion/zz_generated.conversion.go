@@ -57,6 +57,26 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*ExpressionFromSource)(nil), (*v1alpha1.ExpressionFromSource)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(a.(*ExpressionFromSource), b.(*v1alpha1.ExpressionFromSource), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExpressionFromSource)(nil), (*ExpressionFromSource)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(a.(*v1alpha1.ExpressionFromSource), b.(*ExpressionFromSource), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*FinalizerItem)(nil), (*v1alpha1.FinalizerItem)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_FinalizerItem_To_v1alpha1_FinalizerItem(a.(*FinalizerItem), b.(*v1alpha1.FinalizerItem), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.FinalizerItem)(nil), (*FinalizerItem)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(a.(*v1alpha1.FinalizerItem), b.(*FinalizerItem), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*KwokConfiguration)(nil), (*v1alpha1.KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(a.(*KwokConfiguration), b.(*v1alpha1.KwokConfiguration), scope)
 	}); err != nil {
@@ -99,6 +119,96 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.Port)(nil), (*Port)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_Port_To_internalversion_Port(a.(*v1alpha1.Port), b.(*Port), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*SelectorRequirement)(nil), (*v1alpha1.SelectorRequirement)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(a.(*SelectorRequirement), b.(*v1alpha1.SelectorRequirement), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.SelectorRequirement)(nil), (*SelectorRequirement)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement(a.(*v1alpha1.SelectorRequirement), b.(*SelectorRequirement), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*Stage)(nil), (*v1alpha1.Stage)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_Stage_To_v1alpha1_Stage(a.(*Stage), b.(*v1alpha1.Stage), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.Stage)(nil), (*Stage)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Stage_To_internalversion_Stage(a.(*v1alpha1.Stage), b.(*Stage), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*StageDelay)(nil), (*v1alpha1.StageDelay)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StageDelay_To_v1alpha1_StageDelay(a.(*StageDelay), b.(*v1alpha1.StageDelay), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageDelay)(nil), (*StageDelay)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageDelay_To_internalversion_StageDelay(a.(*v1alpha1.StageDelay), b.(*StageDelay), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*StageEvent)(nil), (*v1alpha1.StageEvent)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StageEvent_To_v1alpha1_StageEvent(a.(*StageEvent), b.(*v1alpha1.StageEvent), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageEvent)(nil), (*StageEvent)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageEvent_To_internalversion_StageEvent(a.(*v1alpha1.StageEvent), b.(*StageEvent), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*StageFinalizers)(nil), (*v1alpha1.StageFinalizers)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StageFinalizers_To_v1alpha1_StageFinalizers(a.(*StageFinalizers), b.(*v1alpha1.StageFinalizers), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageFinalizers)(nil), (*StageFinalizers)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers(a.(*v1alpha1.StageFinalizers), b.(*StageFinalizers), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*StageNext)(nil), (*v1alpha1.StageNext)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StageNext_To_v1alpha1_StageNext(a.(*StageNext), b.(*v1alpha1.StageNext), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageNext)(nil), (*StageNext)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageNext_To_internalversion_StageNext(a.(*v1alpha1.StageNext), b.(*StageNext), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*StageResourceRef)(nil), (*v1alpha1.StageResourceRef)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef(a.(*StageResourceRef), b.(*v1alpha1.StageResourceRef), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageResourceRef)(nil), (*StageResourceRef)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef(a.(*v1alpha1.StageResourceRef), b.(*StageResourceRef), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*StageSelector)(nil), (*v1alpha1.StageSelector)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StageSelector_To_v1alpha1_StageSelector(a.(*StageSelector), b.(*v1alpha1.StageSelector), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageSelector)(nil), (*StageSelector)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageSelector_To_internalversion_StageSelector(a.(*v1alpha1.StageSelector), b.(*StageSelector), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*StageSpec)(nil), (*v1alpha1.StageSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StageSpec_To_v1alpha1_StageSpec(a.(*StageSpec), b.(*v1alpha1.StageSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageSpec)(nil), (*StageSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(a.(*v1alpha1.StageSpec), b.(*StageSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -200,6 +310,46 @@ func autoConvert_v1alpha1_Env_To_internalversion_Env(in *v1alpha1.Env, out *Env,
 // Convert_v1alpha1_Env_To_internalversion_Env is an autogenerated conversion function.
 func Convert_v1alpha1_Env_To_internalversion_Env(in *v1alpha1.Env, out *Env, s conversion.Scope) error {
 	return autoConvert_v1alpha1_Env_To_internalversion_Env(in, out, s)
+}
+
+func autoConvert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(in *ExpressionFromSource, out *v1alpha1.ExpressionFromSource, s conversion.Scope) error {
+	out.ExpressionFrom = in.ExpressionFrom
+	return nil
+}
+
+// Convert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource is an autogenerated conversion function.
+func Convert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(in *ExpressionFromSource, out *v1alpha1.ExpressionFromSource, s conversion.Scope) error {
+	return autoConvert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in *v1alpha1.ExpressionFromSource, out *ExpressionFromSource, s conversion.Scope) error {
+	out.ExpressionFrom = in.ExpressionFrom
+	return nil
+}
+
+// Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource is an autogenerated conversion function.
+func Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in *v1alpha1.ExpressionFromSource, out *ExpressionFromSource, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in, out, s)
+}
+
+func autoConvert_internalversion_FinalizerItem_To_v1alpha1_FinalizerItem(in *FinalizerItem, out *v1alpha1.FinalizerItem, s conversion.Scope) error {
+	out.Value = in.Value
+	return nil
+}
+
+// Convert_internalversion_FinalizerItem_To_v1alpha1_FinalizerItem is an autogenerated conversion function.
+func Convert_internalversion_FinalizerItem_To_v1alpha1_FinalizerItem(in *FinalizerItem, out *v1alpha1.FinalizerItem, s conversion.Scope) error {
+	return autoConvert_internalversion_FinalizerItem_To_v1alpha1_FinalizerItem(in, out, s)
+}
+
+func autoConvert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(in *v1alpha1.FinalizerItem, out *FinalizerItem, s conversion.Scope) error {
+	out.Value = in.Value
+	return nil
+}
+
+// Convert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem is an autogenerated conversion function.
+func Convert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(in *v1alpha1.FinalizerItem, out *FinalizerItem, s conversion.Scope) error {
+	return autoConvert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(in, out, s)
 }
 
 func autoConvert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(in *KwokConfiguration, out *v1alpha1.KwokConfiguration, s conversion.Scope) error {
@@ -474,6 +624,238 @@ func autoConvert_v1alpha1_Port_To_internalversion_Port(in *v1alpha1.Port, out *P
 // Convert_v1alpha1_Port_To_internalversion_Port is an autogenerated conversion function.
 func Convert_v1alpha1_Port_To_internalversion_Port(in *v1alpha1.Port, out *Port, s conversion.Scope) error {
 	return autoConvert_v1alpha1_Port_To_internalversion_Port(in, out, s)
+}
+
+func autoConvert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(in *SelectorRequirement, out *v1alpha1.SelectorRequirement, s conversion.Scope) error {
+	out.Key = in.Key
+	out.Operator = v1alpha1.SelectorOperator(in.Operator)
+	out.Values = *(*[]string)(unsafe.Pointer(&in.Values))
+	return nil
+}
+
+// Convert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement is an autogenerated conversion function.
+func Convert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(in *SelectorRequirement, out *v1alpha1.SelectorRequirement, s conversion.Scope) error {
+	return autoConvert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(in, out, s)
+}
+
+func autoConvert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement(in *v1alpha1.SelectorRequirement, out *SelectorRequirement, s conversion.Scope) error {
+	out.Key = in.Key
+	out.Operator = SelectorOperator(in.Operator)
+	out.Values = *(*[]string)(unsafe.Pointer(&in.Values))
+	return nil
+}
+
+// Convert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement is an autogenerated conversion function.
+func Convert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement(in *v1alpha1.SelectorRequirement, out *SelectorRequirement, s conversion.Scope) error {
+	return autoConvert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement(in, out, s)
+}
+
+func autoConvert_internalversion_Stage_To_v1alpha1_Stage(in *Stage, out *v1alpha1.Stage, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_StageSpec_To_v1alpha1_StageSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_Stage_To_v1alpha1_Stage is an autogenerated conversion function.
+func Convert_internalversion_Stage_To_v1alpha1_Stage(in *Stage, out *v1alpha1.Stage, s conversion.Scope) error {
+	return autoConvert_internalversion_Stage_To_v1alpha1_Stage(in, out, s)
+}
+
+func autoConvert_v1alpha1_Stage_To_internalversion_Stage(in *v1alpha1.Stage, out *Stage, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_v1alpha1_Stage_To_internalversion_Stage is an autogenerated conversion function.
+func Convert_v1alpha1_Stage_To_internalversion_Stage(in *v1alpha1.Stage, out *Stage, s conversion.Scope) error {
+	return autoConvert_v1alpha1_Stage_To_internalversion_Stage(in, out, s)
+}
+
+func autoConvert_internalversion_StageDelay_To_v1alpha1_StageDelay(in *StageDelay, out *v1alpha1.StageDelay, s conversion.Scope) error {
+	out.Duration = in.Duration
+	out.DurationFrom = (*v1alpha1.ExpressionFromSource)(unsafe.Pointer(in.DurationFrom))
+	out.JitterDuration = (*v1.Duration)(unsafe.Pointer(in.JitterDuration))
+	out.JitterDurationFrom = (*v1alpha1.ExpressionFromSource)(unsafe.Pointer(in.JitterDurationFrom))
+	return nil
+}
+
+// Convert_internalversion_StageDelay_To_v1alpha1_StageDelay is an autogenerated conversion function.
+func Convert_internalversion_StageDelay_To_v1alpha1_StageDelay(in *StageDelay, out *v1alpha1.StageDelay, s conversion.Scope) error {
+	return autoConvert_internalversion_StageDelay_To_v1alpha1_StageDelay(in, out, s)
+}
+
+func autoConvert_v1alpha1_StageDelay_To_internalversion_StageDelay(in *v1alpha1.StageDelay, out *StageDelay, s conversion.Scope) error {
+	out.Duration = in.Duration
+	out.DurationFrom = (*ExpressionFromSource)(unsafe.Pointer(in.DurationFrom))
+	out.JitterDuration = (*v1.Duration)(unsafe.Pointer(in.JitterDuration))
+	out.JitterDurationFrom = (*ExpressionFromSource)(unsafe.Pointer(in.JitterDurationFrom))
+	return nil
+}
+
+// Convert_v1alpha1_StageDelay_To_internalversion_StageDelay is an autogenerated conversion function.
+func Convert_v1alpha1_StageDelay_To_internalversion_StageDelay(in *v1alpha1.StageDelay, out *StageDelay, s conversion.Scope) error {
+	return autoConvert_v1alpha1_StageDelay_To_internalversion_StageDelay(in, out, s)
+}
+
+func autoConvert_internalversion_StageEvent_To_v1alpha1_StageEvent(in *StageEvent, out *v1alpha1.StageEvent, s conversion.Scope) error {
+	out.Type = in.Type
+	out.Reason = in.Reason
+	out.Message = in.Message
+	return nil
+}
+
+// Convert_internalversion_StageEvent_To_v1alpha1_StageEvent is an autogenerated conversion function.
+func Convert_internalversion_StageEvent_To_v1alpha1_StageEvent(in *StageEvent, out *v1alpha1.StageEvent, s conversion.Scope) error {
+	return autoConvert_internalversion_StageEvent_To_v1alpha1_StageEvent(in, out, s)
+}
+
+func autoConvert_v1alpha1_StageEvent_To_internalversion_StageEvent(in *v1alpha1.StageEvent, out *StageEvent, s conversion.Scope) error {
+	out.Type = in.Type
+	out.Reason = in.Reason
+	out.Message = in.Message
+	return nil
+}
+
+// Convert_v1alpha1_StageEvent_To_internalversion_StageEvent is an autogenerated conversion function.
+func Convert_v1alpha1_StageEvent_To_internalversion_StageEvent(in *v1alpha1.StageEvent, out *StageEvent, s conversion.Scope) error {
+	return autoConvert_v1alpha1_StageEvent_To_internalversion_StageEvent(in, out, s)
+}
+
+func autoConvert_internalversion_StageFinalizers_To_v1alpha1_StageFinalizers(in *StageFinalizers, out *v1alpha1.StageFinalizers, s conversion.Scope) error {
+	out.Add = *(*[]v1alpha1.FinalizerItem)(unsafe.Pointer(&in.Add))
+	out.Remove = *(*[]v1alpha1.FinalizerItem)(unsafe.Pointer(&in.Remove))
+	out.Empty = in.Empty
+	return nil
+}
+
+// Convert_internalversion_StageFinalizers_To_v1alpha1_StageFinalizers is an autogenerated conversion function.
+func Convert_internalversion_StageFinalizers_To_v1alpha1_StageFinalizers(in *StageFinalizers, out *v1alpha1.StageFinalizers, s conversion.Scope) error {
+	return autoConvert_internalversion_StageFinalizers_To_v1alpha1_StageFinalizers(in, out, s)
+}
+
+func autoConvert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers(in *v1alpha1.StageFinalizers, out *StageFinalizers, s conversion.Scope) error {
+	out.Add = *(*[]FinalizerItem)(unsafe.Pointer(&in.Add))
+	out.Remove = *(*[]FinalizerItem)(unsafe.Pointer(&in.Remove))
+	out.Empty = in.Empty
+	return nil
+}
+
+// Convert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers is an autogenerated conversion function.
+func Convert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers(in *v1alpha1.StageFinalizers, out *StageFinalizers, s conversion.Scope) error {
+	return autoConvert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers(in, out, s)
+}
+
+func autoConvert_internalversion_StageNext_To_v1alpha1_StageNext(in *StageNext, out *v1alpha1.StageNext, s conversion.Scope) error {
+	out.Event = (*v1alpha1.StageEvent)(unsafe.Pointer(in.Event))
+	out.Finalizers = (*v1alpha1.StageFinalizers)(unsafe.Pointer(in.Finalizers))
+	out.Delete = in.Delete
+	out.StatusTemplate = in.StatusTemplate
+	return nil
+}
+
+// Convert_internalversion_StageNext_To_v1alpha1_StageNext is an autogenerated conversion function.
+func Convert_internalversion_StageNext_To_v1alpha1_StageNext(in *StageNext, out *v1alpha1.StageNext, s conversion.Scope) error {
+	return autoConvert_internalversion_StageNext_To_v1alpha1_StageNext(in, out, s)
+}
+
+func autoConvert_v1alpha1_StageNext_To_internalversion_StageNext(in *v1alpha1.StageNext, out *StageNext, s conversion.Scope) error {
+	out.Event = (*StageEvent)(unsafe.Pointer(in.Event))
+	out.Finalizers = (*StageFinalizers)(unsafe.Pointer(in.Finalizers))
+	out.Delete = in.Delete
+	out.StatusTemplate = in.StatusTemplate
+	return nil
+}
+
+// Convert_v1alpha1_StageNext_To_internalversion_StageNext is an autogenerated conversion function.
+func Convert_v1alpha1_StageNext_To_internalversion_StageNext(in *v1alpha1.StageNext, out *StageNext, s conversion.Scope) error {
+	return autoConvert_v1alpha1_StageNext_To_internalversion_StageNext(in, out, s)
+}
+
+func autoConvert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef(in *StageResourceRef, out *v1alpha1.StageResourceRef, s conversion.Scope) error {
+	out.APIGroup = in.APIGroup
+	out.Kind = in.Kind
+	return nil
+}
+
+// Convert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef is an autogenerated conversion function.
+func Convert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef(in *StageResourceRef, out *v1alpha1.StageResourceRef, s conversion.Scope) error {
+	return autoConvert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef(in, out, s)
+}
+
+func autoConvert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef(in *v1alpha1.StageResourceRef, out *StageResourceRef, s conversion.Scope) error {
+	out.APIGroup = in.APIGroup
+	out.Kind = in.Kind
+	return nil
+}
+
+// Convert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef is an autogenerated conversion function.
+func Convert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef(in *v1alpha1.StageResourceRef, out *StageResourceRef, s conversion.Scope) error {
+	return autoConvert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef(in, out, s)
+}
+
+func autoConvert_internalversion_StageSelector_To_v1alpha1_StageSelector(in *StageSelector, out *v1alpha1.StageSelector, s conversion.Scope) error {
+	out.MatchLabels = *(*map[string]string)(unsafe.Pointer(&in.MatchLabels))
+	out.MatchAnnotations = *(*map[string]string)(unsafe.Pointer(&in.MatchAnnotations))
+	out.MatchExpressions = *(*[]v1alpha1.SelectorRequirement)(unsafe.Pointer(&in.MatchExpressions))
+	return nil
+}
+
+// Convert_internalversion_StageSelector_To_v1alpha1_StageSelector is an autogenerated conversion function.
+func Convert_internalversion_StageSelector_To_v1alpha1_StageSelector(in *StageSelector, out *v1alpha1.StageSelector, s conversion.Scope) error {
+	return autoConvert_internalversion_StageSelector_To_v1alpha1_StageSelector(in, out, s)
+}
+
+func autoConvert_v1alpha1_StageSelector_To_internalversion_StageSelector(in *v1alpha1.StageSelector, out *StageSelector, s conversion.Scope) error {
+	out.MatchLabels = *(*map[string]string)(unsafe.Pointer(&in.MatchLabels))
+	out.MatchAnnotations = *(*map[string]string)(unsafe.Pointer(&in.MatchAnnotations))
+	out.MatchExpressions = *(*[]SelectorRequirement)(unsafe.Pointer(&in.MatchExpressions))
+	return nil
+}
+
+// Convert_v1alpha1_StageSelector_To_internalversion_StageSelector is an autogenerated conversion function.
+func Convert_v1alpha1_StageSelector_To_internalversion_StageSelector(in *v1alpha1.StageSelector, out *StageSelector, s conversion.Scope) error {
+	return autoConvert_v1alpha1_StageSelector_To_internalversion_StageSelector(in, out, s)
+}
+
+func autoConvert_internalversion_StageSpec_To_v1alpha1_StageSpec(in *StageSpec, out *v1alpha1.StageSpec, s conversion.Scope) error {
+	if err := Convert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef(&in.ResourceRef, &out.ResourceRef, s); err != nil {
+		return err
+	}
+	out.Selector = (*v1alpha1.StageSelector)(unsafe.Pointer(in.Selector))
+	out.Weight = in.Weight
+	out.Delay = (*v1alpha1.StageDelay)(unsafe.Pointer(in.Delay))
+	if err := Convert_internalversion_StageNext_To_v1alpha1_StageNext(&in.Next, &out.Next, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_StageSpec_To_v1alpha1_StageSpec is an autogenerated conversion function.
+func Convert_internalversion_StageSpec_To_v1alpha1_StageSpec(in *StageSpec, out *v1alpha1.StageSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_StageSpec_To_v1alpha1_StageSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.StageSpec, out *StageSpec, s conversion.Scope) error {
+	if err := Convert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef(&in.ResourceRef, &out.ResourceRef, s); err != nil {
+		return err
+	}
+	out.Selector = (*StageSelector)(unsafe.Pointer(in.Selector))
+	out.Weight = in.Weight
+	out.Delay = (*StageDelay)(unsafe.Pointer(in.Delay))
+	if err := Convert_v1alpha1_StageNext_To_internalversion_StageNext(&in.Next, &out.Next, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_v1alpha1_StageSpec_To_internalversion_StageSpec is an autogenerated conversion function.
+func Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.StageSpec, out *StageSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in, out, s)
 }
 
 func autoConvert_internalversion_Volume_To_v1alpha1_Volume(in *Volume, out *v1alpha1.Volume, s conversion.Scope) error {

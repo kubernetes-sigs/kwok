@@ -21,20 +21,26 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sort"
+	"sync"
 	"text/template"
 	"time"
 
+	"github.com/wzshiming/cron"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/pager"
+	"k8s.io/client-go/tools/record"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/expression"
 )
 
 // NodeController is a fake nodes implementation that can be used to test
@@ -48,13 +54,13 @@ type NodeController struct {
 	nodeSelectorFunc                      func(node *corev1.Node) bool
 	lockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
 	nodesSets                             *stringSets
-	nodeHeartbeatTemplate                 string
-	nodeStatusTemplate                    string
 	renderer                              *renderer
-	nodeHeartbeatInterval                 time.Duration
-	nodeHeartbeatParallelism              int
-	lockNodeParallelism                   int
-	nodeChan                              chan string
+	nodeChan                              chan *corev1.Node
+	parallelTasks                         *parallelTasks
+	lifecycle                             Lifecycle
+	cronjob                               *cron.Cron
+	delayJobsCancels                      sync.Map
+	recorder                              record.EventRecorder
 }
 
 // NodeControllerConfig is the configuration for the NodeController
@@ -67,12 +73,10 @@ type NodeControllerConfig struct {
 	ManageNodesWithAnnotationSelector     string
 	ManageNodesWithLabelSelector          string
 	NodeIP                                string
-	NodeStatusTemplate                    string
-	NodeHeartbeatTemplate                 string
-	NodeHeartbeatInterval                 time.Duration
-	NodeHeartbeatParallelism              int
+	Stages                                []*internalversion.Stage
 	LockNodeParallelism                   int
 	FuncMap                               template.FuncMap
+	Recorder                              record.EventRecorder
 }
 
 // NewNodeController creates a new fake nodes controller
@@ -87,6 +91,11 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		return nil, err
 	}
 
+	lifecycles, err := NewLifecycle(conf.Stages)
+	if err != nil {
+		return nil, err
+	}
+
 	n := &NodeController{
 		clientSet:                             conf.ClientSet,
 		nodeSelectorFunc:                      conf.NodeSelectorFunc,
@@ -97,12 +106,11 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
 		nodeIP:                                conf.NodeIP,
 		nodesSets:                             newStringSets(),
-		nodeHeartbeatTemplate:                 conf.NodeHeartbeatTemplate,
-		nodeStatusTemplate:                    conf.NodeStatusTemplate + "\n" + conf.NodeHeartbeatTemplate,
-		nodeHeartbeatInterval:                 conf.NodeHeartbeatInterval,
-		nodeHeartbeatParallelism:              conf.NodeHeartbeatParallelism,
-		lockNodeParallelism:                   conf.LockNodeParallelism,
-		nodeChan:                              make(chan string),
+		cronjob:                               cron.NewCron(),
+		lifecycle:                             lifecycles,
+		parallelTasks:                         newParallelTasks(conf.LockNodeParallelism),
+		nodeChan:                              make(chan *corev1.Node),
+		recorder:                              conf.Recorder,
 	}
 	funcMap = template.FuncMap{
 		"NodeIP": func() string {
@@ -119,8 +127,6 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 // Start starts the fake nodes controller
 // if nodeSelectorFunc is not nil, it will use it to determine if the node should be managed
 func (c *NodeController) Start(ctx context.Context) error {
-	go c.KeepNodeHeartbeat(ctx)
-
 	go c.LockNodes(ctx, c.nodeChan)
 
 	opt := metav1.ListOptions{
@@ -142,72 +148,10 @@ func (c *NodeController) Start(ctx context.Context) error {
 	return nil
 }
 
-func (c *NodeController) heartbeatNode(ctx context.Context, nodeName string) error {
-	var node corev1.Node
-	node.Name = nodeName
-	patch, err := c.configureHeartbeatNode(&node)
-	if err != nil {
-		return err
-	}
-	_, err = c.clientSet.CoreV1().Nodes().PatchStatus(ctx, node.Name, patch)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *NodeController) allHeartbeatNode(ctx context.Context, nodes []string, tasks *parallelTasks) {
-	logger := log.FromContext(ctx)
-	for _, node := range nodes {
-		localNode := node
-		tasks.Add(func() {
-			err := c.heartbeatNode(ctx, localNode)
-			if err != nil {
-				logger.Error("Failed to heartbeat", err,
-					"node", localNode,
-				)
-			}
-		})
-	}
-}
-
-// KeepNodeHeartbeat keep node heartbeat
-func (c *NodeController) KeepNodeHeartbeat(ctx context.Context) {
-	th := time.NewTimer(c.nodeHeartbeatInterval)
-	tasks := newParallelTasks(c.nodeHeartbeatParallelism)
-	logger := log.FromContext(ctx)
-	var heartbeatStartTime time.Time
-	var nodes []string
-loop:
-	for {
-		select {
-		case <-th.C:
-			nodes = nodes[:0]
-			c.nodesSets.Foreach(func(node string) {
-				nodes = append(nodes, node)
-			})
-			sort.Strings(nodes)
-			heartbeatStartTime = time.Now()
-			c.allHeartbeatNode(ctx, nodes, tasks)
-			tasks.Wait()
-			logger.Info("Heartbeat nodes",
-				"nodeSize", len(nodes),
-				"elapsed", time.Since(heartbeatStartTime),
-			)
-			th.Reset(c.nodeHeartbeatInterval)
-		case <-ctx.Done():
-			logger.Info("Stop keep nodes heartbeat")
-			break loop
-		}
-	}
-	tasks.Wait()
-}
-
-func (c *NodeController) needHeartbeat(node *corev1.Node) bool {
-	return c.nodeSelectorFunc(node)
-}
-
 func (c *NodeController) needLockNode(node *corev1.Node) bool {
+	if !c.nodeSelectorFunc(node) {
+		return false
+	}
 	if c.disregardStatusWithAnnotationSelector != nil &&
 		len(node.Annotations) != 0 &&
 		c.disregardStatusWithAnnotationSelector.Matches(labels.Set(node.Annotations)) {
@@ -223,7 +167,7 @@ func (c *NodeController) needLockNode(node *corev1.Node) bool {
 }
 
 // WatchNodes watch nodes put into the channel
-func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt metav1.ListOptions) error {
+func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node, opt metav1.ListOptions) error {
 	// Watch nodes in the cluster
 	watcher, err := c.clientSet.CoreV1().Nodes().Watch(ctx, opt)
 	if err != nil {
@@ -254,13 +198,26 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 					}
 				}
 				switch event.Type {
-				case watch.Added, watch.Modified:
+				case watch.Added:
 					node := event.Object.(*corev1.Node)
-					if c.needHeartbeat(node) {
+					if c.needLockNode(node) {
 						c.nodesSets.Put(node.Name)
-						if c.needLockNode(node) {
-							ch <- node.Name
+						ch <- node
+						if c.lockPodsOnNodeFunc != nil {
+							err = c.lockPodsOnNodeFunc(ctx, node.Name)
+							if err != nil {
+								logger.Error("Failed to lock pods on node", err,
+									"node", node.Name,
+								)
+								return
+							}
 						}
+					}
+				case watch.Modified:
+					node := event.Object.(*corev1.Node)
+					if c.needLockNode(node) {
+						c.nodesSets.Put(node.Name)
+						ch <- node
 					}
 				case watch.Deleted:
 					node := event.Object.(*corev1.Node)
@@ -279,82 +236,198 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- string, opt m
 }
 
 // ListNodes list nodes put into the channel
-func (c *NodeController) ListNodes(ctx context.Context, ch chan<- string, opt metav1.ListOptions) error {
+func (c *NodeController) ListNodes(ctx context.Context, ch chan<- *corev1.Node, opt metav1.ListOptions) error {
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 		return c.clientSet.CoreV1().Nodes().List(ctx, opts)
 	})
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		node := obj.(*corev1.Node)
-		if c.needHeartbeat(node) {
+		if c.needLockNode(node) {
 			c.nodesSets.Put(node.Name)
-			if c.needLockNode(node) {
-				ch <- node.Name
-			}
+			ch <- node
 		}
 		return nil
 	})
 }
 
 // LockNodes locks a nodes from the channel
-// if they don't exist we create them and then manage them
-// if they exist we manage them
-func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan string) {
-	tasks := newParallelTasks(c.lockNodeParallelism)
+func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan *corev1.Node) {
 	logger := log.FromContext(ctx)
 	for node := range nodes {
-		if node == "" {
-			continue
-		}
 		localNode := node
-		tasks.Add(func() {
+		c.parallelTasks.Add(func() {
 			err := c.LockNode(ctx, localNode)
 			if err != nil {
 				logger.Error("Failed to lock node", err,
-					"node", localNode,
+					"node", localNode.Name,
 				)
 				return
 			}
-			if c.lockPodsOnNodeFunc != nil {
-				err = c.lockPodsOnNodeFunc(ctx, localNode)
-				if err != nil {
-					logger.Error("Failed to lock pods on node", err,
-						"node", localNode,
-					)
-					return
-				}
-			}
 		})
 	}
-	tasks.Wait()
+	c.parallelTasks.Wait()
 }
 
-// LockNode locks a given node
-func (c *NodeController) LockNode(ctx context.Context, nodeName string) error {
-	node, err := c.clientSet.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+func (c *NodeController) FinalizersModify(ctx context.Context, node *corev1.Node, finalizers *internalversion.StageFinalizers) error {
+	ops := finalizersModify(node.Finalizers, finalizers)
+	if len(ops) == 0 {
+		return nil
+	}
+	data, err := json.Marshal(ops)
 	if err != nil {
 		return err
 	}
 
-	patch, err := c.configureNode(node)
-	if err != nil {
-		return err
-	}
-	if patch == nil {
-		return nil
-	}
-	_, err = c.clientSet.CoreV1().Nodes().PatchStatus(ctx, node.Name, patch)
-	if err != nil {
-		return err
-	}
 	logger := log.FromContext(ctx)
-	logger.Info("Lock node",
-		"node", nodeName,
-	)
+	_, err = c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Error("node not found", err,
+				"node", node.Name,
+			)
+			return nil
+		}
+		return err
+	}
 	return nil
 }
 
-func (c *NodeController) configureNode(node *corev1.Node) ([]byte, error) {
-	patch, err := c.renderer.renderToJSON(c.nodeStatusTemplate, node)
+// DeleteNode deletes a node
+func (c *NodeController) DeleteNode(ctx context.Context, node *corev1.Node) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"node", node.Name,
+	)
+	err := c.clientSet.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Error("node not found", err)
+			return nil
+		}
+		return err
+	}
+
+	logger.Info("Delete node")
+	return nil
+}
+
+// LockNode locks a given node
+func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"node", node.Name,
+	)
+	data, err := expression.ToJsonStandard(node)
+	if err != nil {
+		return err
+	}
+	key := node.Name
+
+	_, ok := c.delayJobsCancels.Load(key)
+	if ok {
+		return nil
+	}
+
+	stage, err := c.lifecycle.Match(node.Labels, node.Annotations, data)
+	if err != nil {
+		return fmt.Errorf("stage match: %w", err)
+	}
+	if stage == nil {
+		logger.Info("Skip node",
+			"reason", "not match any stages",
+		)
+		return nil
+	}
+	now := time.Now()
+	delay, _ := stage.Delay(ctx, data, now)
+	stageName := stage.Name()
+	next := stage.Next()
+
+	do := func() {
+		if next.Event != nil && c.recorder != nil {
+			c.recorder.Event(&corev1.ObjectReference{
+				Kind:      "Node",
+				UID:       node.UID,
+				Name:      node.Name,
+				Namespace: "",
+			}, next.Event.Type, next.Event.Reason, next.Event.Message)
+		}
+		if next.Finalizers != nil {
+			err = c.FinalizersModify(ctx, node, next.Finalizers)
+			if err != nil {
+				logger.Error("Failed to finalizers of node", err)
+			}
+		}
+		if next.Delete {
+			err = c.DeleteNode(ctx, node)
+			if err != nil {
+				logger.Error("Failed to delete node", err)
+			}
+		} else if next.StatusTemplate != "" {
+			patch, err := c.computePatchNode(node, next.StatusTemplate)
+			if err != nil {
+				logger.Error("Failed to configure node", err)
+				return
+			}
+			if patch == nil {
+				logger.Info("Skip node",
+					"reason", "do not need to modify",
+				)
+			} else {
+				err = c.lockNode(ctx, node, patch)
+				if err != nil {
+					logger.Error("Failed to lock node", err)
+				}
+			}
+		}
+	}
+
+	if delay == 0 {
+		do()
+		return nil
+	}
+
+	logger.Info("Delayed play stage",
+		"delay", delay,
+		"stage", stageName,
+	)
+	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(time.Now().Add(delay)), func() {
+		c.parallelTasks.Add(func() {
+			old, ok := c.delayJobsCancels.LoadAndDelete(key)
+			if ok {
+				old.(cron.DoFunc)()
+			}
+			do()
+		})
+	})
+	if ok {
+		old, ok := c.delayJobsCancels.LoadOrStore(key, cancelFunc)
+		if ok {
+			old.(cron.DoFunc)()
+		}
+	}
+	return nil
+}
+
+func (c *NodeController) lockNode(ctx context.Context, node *corev1.Node, patch []byte) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"node", node.Name,
+	)
+	_, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Error("node not found", err)
+			return nil
+		}
+		return err
+	}
+	logger.Info("Lock node")
+	return nil
+}
+
+func (c *NodeController) computePatchNode(node *corev1.Node, tpl string) ([]byte, error) {
+	patch, err := c.renderer.renderToJSON(tpl, node)
 	if err != nil {
 		return nil, err
 	}
@@ -374,7 +447,6 @@ func (c *NodeController) configureNode(node *corev1.Node) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	nodeStatus.Conditions = node.Status.Conditions
 
 	dist, err := json.Marshal(nodeStatus)
 	if err != nil {
@@ -385,16 +457,6 @@ func (c *NodeController) configureNode(node *corev1.Node) ([]byte, error) {
 		return nil, nil
 	}
 
-	return json.Marshal(map[string]json.RawMessage{
-		"status": patch,
-	})
-}
-
-func (c *NodeController) configureHeartbeatNode(node *corev1.Node) ([]byte, error) {
-	patch, err := c.renderer.renderToJSON(c.nodeHeartbeatTemplate, node)
-	if err != nil {
-		return nil, err
-	}
 	return json.Marshal(map[string]json.RawMessage{
 		"status": patch,
 	})

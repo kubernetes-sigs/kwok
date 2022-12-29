@@ -1,0 +1,135 @@
+kind: Stage
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: node-initialize
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Node
+  selector:
+    matchExpressions:
+      - key: '.status.conditions'
+        operator: 'DoesNotExist'
+  next:
+    statusTemplate: |
+      {{ $now := Now }}
+      conditions:
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: kubelet is posting ready status
+          reason: KubeletReady
+          status: "True"
+          type: Ready
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: kubelet has sufficient disk space available
+          reason: KubeletHasSufficientDisk
+          status: "False"
+          type: OutOfDisk
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: kubelet has sufficient memory available
+          reason: KubeletHasSufficientMemory
+          status: "False"
+          type: MemoryPressure
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: kubelet has no disk pressure
+          reason: KubeletHasNoDiskPressure
+          status: "False"
+          type: DiskPressure
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: RouteController created a route
+          reason: RouteCreated
+          status: "False"
+          type: NetworkUnavailable
+      addresses:
+      {{ with .status.addresses }}
+      {{ YAML . 1 }}
+      {{ else }}
+        - address: {{ NodeIP }}
+          type: InternalIP
+      {{ end }}
+      allocatable:
+      {{ with .status.allocatable }}
+      {{ YAML . 1 }}
+      {{ else }}
+        cpu: 1k
+        memory: 1Ti
+        pods: 1M
+      {{ end }}
+      capacity:
+      {{ with .status.capacity }}
+      {{ YAML . 1 }}
+      {{ else }}
+        cpu: 1k
+        memory: 1Ti
+        pods: 1M
+      {{ end }}
+      {{ with .status.nodeInfo }}
+      nodeInfo:
+        architecture: {{ with .architecture }} {{ . }} {{ else }} "amd64" {{ end }}
+        bootID: {{ with .bootID }} {{ . }} {{ else }} "" {{ end }}
+        containerRuntimeVersion: {{ with .containerRuntimeVersion }} {{ . }} {{ else }} "" {{ end }}
+        kernelVersion: {{ with .kernelVersion }} {{ . }} {{ else }} "" {{ end }}
+        kubeProxyVersion: {{ with .kubeProxyVersion }} {{ . }} {{ else }} "fake" {{ end }}
+        kubeletVersion: {{ with .kubeletVersion }} {{ . }} {{ else }} "fake" {{ end }}
+        machineID: {{ with .machineID }} {{ . }} {{ else }} "" {{ end }}
+        operatingSystem: {{ with .operatingSystem }} {{ . }} {{ else }} "linux" {{ end }}
+        osImage: {{ with .osImage }} {{ . }} {{ else }} "" {{ end }}
+        systemUUID: {{ with .osImage }} {{ . }} {{ else }} "" {{ end }}
+      {{ end }}
+      phase: Running
+---
+kind: Stage
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: node-heartbeat
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Node
+  selector:
+    matchExpressions:
+      - key: '.status.phase'
+        operator: 'In'
+        values:
+          - Running
+  delay:
+    duration: 20s
+    jitterDuration: 25s
+  next:
+    statusTemplate: |
+      {{ $now := Now }}
+      conditions:
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: kubelet is posting ready status
+          reason: KubeletReady
+          status: "True"
+          type: Ready
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: kubelet has sufficient disk space available
+          reason: KubeletHasSufficientDisk
+          status: "False"
+          type: OutOfDisk
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: kubelet has sufficient memory available
+          reason: KubeletHasSufficientMemory
+          status: "False"
+          type: MemoryPressure
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: kubelet has no disk pressure
+          reason: KubeletHasNoDiskPressure
+          status: "False"
+          type: DiskPressure
+        - lastHeartbeatTime: {{ $now }}
+          lastTransitionTime: {{ StartTime }}
+          message: RouteController created a route
+          reason: RouteCreated
+          status: "False"
+          type: NetworkUnavailable

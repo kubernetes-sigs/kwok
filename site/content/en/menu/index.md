@@ -11,7 +11,9 @@ headless: true
     - [Manage Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}})
   - [Kwokctl Snapshot Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}})
   - [Kwokctl Auditing]({{< relref "/docs/user/kwokctl-auditing" >}})
-  - [Configuration]({{< relref "/docs/user/configuration" >}})
+  - **Configuration**
+    - [Options]({{< relref "/docs/user/configuration" >}})
+    - [Stages]({{< relref "/docs/user/stages-configuration" >}})
 - **Contributing**
   - [Development]({{< relref "/docs/contributing/development" >}})
   - [Roadmap ⛓](https://github.com/orgs/kubernetes-sigs/projects/21)
