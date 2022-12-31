@@ -344,9 +344,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	images := []string{
 		conf.EtcdImage,
 		conf.KubeApiserverImage,
-		conf.KubeControllerManagerImage,
-		conf.KubeSchedulerImage,
 		conf.KwokControllerImage,
+	}
+	if !conf.DisableKubeControllerManager {
+		images = append(images, conf.KubeControllerManagerImage)
+	}
+	if !conf.DisableKubeScheduler {
+		images = append(images, conf.KubeSchedulerImage)
 	}
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
