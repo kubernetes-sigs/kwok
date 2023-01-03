@@ -142,7 +142,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			)
 		} else {
 			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--insecure-bind-address"+conf.Address,
+				"--insecure-bind-address="+conf.Address,
 				"--insecure-port="+format.String(conf.Port),
 			)
 		}
