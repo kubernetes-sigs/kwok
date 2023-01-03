@@ -57,13 +57,11 @@ func (c *Cluster) setup(ctx context.Context) error {
 	}
 	conf := &config.Options
 
-	if conf.SecurePort {
-		pkiPath := c.GetWorkdirPath(runtime.PkiName)
-		if !file.Exists(pkiPath) {
-			err = pki.GeneratePki(pkiPath)
-			if err != nil {
-				return fmt.Errorf("failed to generate pki: %w", err)
-			}
+	pkiPath := c.GetWorkdirPath(runtime.PkiName)
+	if !file.Exists(pkiPath) {
+		err = pki.GeneratePki(pkiPath)
+		if err != nil {
+			return fmt.Errorf("failed to generate pki: %w", err)
 		}
 	}
 
@@ -132,19 +130,16 @@ func (c *Cluster) Install(ctx context.Context) error {
 	adminKeyPath := ""
 	adminCertPath := ""
 	caCertPath := ""
-	inClusterAdminKeyPath := ""
-	inClusterAdminCertPath := ""
+	caCertPath = path.Join(pkiPath, "ca.crt")
+	adminKeyPath = path.Join(pkiPath, "admin.key")
+	adminCertPath = path.Join(pkiPath, "admin.crt")
+	inClusterPkiPath := "/etc/kubernetes/pki/"
+	inClusterAdminKeyPath := path.Join(inClusterPkiPath, "admin.key")
+	inClusterAdminCertPath := path.Join(inClusterPkiPath, "admin.crt")
+
 	inClusterPort := uint32(8080)
 	scheme := "http"
-
-	// generate ca cert
 	if conf.SecurePort {
-		caCertPath = path.Join(pkiPath, "ca.crt")
-		adminKeyPath = path.Join(pkiPath, "admin.key")
-		adminCertPath = path.Join(pkiPath, "admin.crt")
-		inClusterPkiPath := "/etc/kubernetes/pki/"
-		inClusterAdminKeyPath = path.Join(inClusterPkiPath, "admin.key")
-		inClusterAdminCertPath = path.Join(inClusterPkiPath, "admin.crt")
 		scheme = "https"
 		inClusterPort = 6443
 	}

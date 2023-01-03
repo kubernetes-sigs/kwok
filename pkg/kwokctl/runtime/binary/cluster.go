@@ -121,13 +121,11 @@ func (c *Cluster) setup(ctx context.Context) error {
 	}
 	conf := &config.Options
 
-	if conf.SecurePort {
-		pkiPath := c.GetWorkdirPath(runtime.PkiName)
-		if !file.Exists(pkiPath) {
-			err = pki.GeneratePki(pkiPath)
-			if err != nil {
-				return fmt.Errorf("failed to generate pki: %w", err)
-			}
+	pkiPath := c.GetWorkdirPath(runtime.PkiName)
+	if !file.Exists(pkiPath) {
+		err = pki.GeneratePki(pkiPath)
+		if err != nil {
+			return fmt.Errorf("failed to generate pki: %w", err)
 		}
 	}
 
