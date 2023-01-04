@@ -141,6 +141,7 @@ func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, 
 	} else {
 		out.Volumes = nil
 	}
+	out.Version = in.Version
 	return nil
 }
 
@@ -170,6 +171,7 @@ func autoConvert_v1alpha1_Component_To_internalversion_Component(in *v1alpha1.Co
 	} else {
 		out.Volumes = nil
 	}
+	out.Version = in.Version
 	return nil
 }
 

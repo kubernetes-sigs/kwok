@@ -19,11 +19,13 @@ package components
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 type BuildKubeApiserverComponentConfig struct {
 	Binary            string
 	Image             string
+	Version           version.Version
 	Workdir           string
 	Address           string
 	Port              uint32
@@ -175,7 +177,8 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	return internalversion.Component{
-		Name: "kube-apiserver",
+		Name:    "kube-apiserver",
+		Version: conf.Version.String(),
 		Links: []string{
 			"etcd",
 		},

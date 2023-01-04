@@ -19,11 +19,13 @@ package components
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 type BuildKwokControllerComponentConfig struct {
 	Binary         string
 	Image          string
+	Version        version.Version
 	Workdir        string
 	Address        string
 	Port           uint32
@@ -82,7 +84,8 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	}
 
 	return internalversion.Component{
-		Name: "kwok-controller",
+		Name:    "kwok-controller",
+		Version: conf.Version.String(),
 		Links: []string{
 			"kube-apiserver",
 		},

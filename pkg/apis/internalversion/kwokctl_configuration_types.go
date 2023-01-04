@@ -199,6 +199,9 @@ type Component struct {
 
 	// Volumes is a list of named volumes that can be mounted by containers belonging to the component.
 	Volumes []Volume
+
+	// Version is the version of the component.
+	Version string
 }
 
 // Env represents an environment variable present in a Container.

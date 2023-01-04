@@ -301,6 +301,10 @@ type Component struct {
 	// Volumes is a list of named volumes that can be mounted by containers belonging to the component.
 	// +optional
 	Volumes []Volume `json:"volumes,omitempty"`
+
+	// Version is the version of the component.
+	// +optional
+	Version string `json:"version,omitempty"`
 }
 
 // Env represents an environment variable present in a Container.

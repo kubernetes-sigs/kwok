@@ -40,6 +40,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 type Cluster struct {
@@ -220,9 +221,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Configure the etcd
+	etcdVersion, err := version.ParseFromBinary(ctx, etcdPath)
+	if err != nil {
+		return err
+	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
 		Workdir:  workdir,
 		Binary:   etcdPath,
+		Version:  etcdVersion,
 		Address:  localAddress,
 		DataPath: etcdDataPath,
 		Port:     conf.EtcdPort,
@@ -234,9 +240,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 	config.Components = append(config.Components, etcdComponent)
 
 	// Configure the kube-apiserver
+	kubeApiserverVersion, err := version.ParseFromBinary(ctx, kubeApiserverPath)
+	if err != nil {
+		return err
+	}
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Workdir:           workdir,
 		Binary:            kubeApiserverPath,
+		Version:           kubeApiserverVersion,
 		Port:              conf.KubeApiserverPort,
 		EtcdAddress:       localAddress,
 		EtcdPort:          conf.EtcdPort,
@@ -264,9 +275,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
+		kubeControllerManagerVersion, err := version.ParseFromBinary(ctx, kubeControllerManagerPath)
+		if err != nil {
+			return err
+		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
-			Binary:            kubeControllerManagerPath,
 			Workdir:           workdir,
+			Binary:            kubeControllerManagerPath,
+			Version:           kubeControllerManagerVersion,
 			Address:           localAddress,
 			Port:              conf.KubeControllerManagerPort,
 			SecurePort:        conf.SecurePort,
@@ -291,9 +307,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
+		kubeSchedulerVersion, err := version.ParseFromBinary(ctx, kubeSchedulerPath)
+		if err != nil {
+			return err
+		}
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
-			Binary:           kubeSchedulerPath,
 			Workdir:          workdir,
+			Binary:           kubeSchedulerPath,
+			Version:          kubeSchedulerVersion,
 			Address:          localAddress,
 			Port:             conf.KubeSchedulerPort,
 			SecurePort:       conf.SecurePort,
@@ -309,9 +330,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Configure the kwok-controller
+	kwokControllerVersion, err := version.ParseFromBinary(ctx, kwokControllerPath)
+	if err != nil {
+		return err
+	}
 	kwokControllerComponent, err := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
-		Binary:         kwokControllerPath,
 		Workdir:        workdir,
+		Binary:         kwokControllerPath,
+		Version:        kwokControllerVersion,
 		Address:        localAddress,
 		Port:           conf.KwokControllerPort,
 		ConfigPath:     kwokConfigPath,
@@ -347,9 +373,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
 
+		prometheusVersion, err := version.ParseFromBinary(ctx, prometheusPath)
+		if err != nil {
+			return err
+		}
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
-			Binary:     prometheusPath,
 			Workdir:    workdir,
+			Binary:     prometheusPath,
+			Version:    prometheusVersion,
 			Address:    localAddress,
 			Port:       conf.PrometheusPort,
 			ConfigPath: prometheusConfigPath,
