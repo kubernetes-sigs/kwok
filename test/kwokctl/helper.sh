@@ -19,17 +19,26 @@ DIR="$(realpath "${DIR}")"
 
 ROOT_DIR="$(realpath "${DIR}/../..")"
 
+VERSION="$("${ROOT_DIR}/hack/get-version.sh")"
+
+GOOS="$(go env GOOS)"
+GOARCH="$(go env GOARCH)"
+
+LOCAL_PATH="${ROOT_DIR}/bin/${GOOS}/${GOARCH}"
+
+export KWOK_CONTROLLER_BINARY="${LOCAL_PATH}/kwok"
+export KWOKCTL_CONTROLLER_BINARY="${LOCAL_PATH}/kwokctl"
+export KWOK_CONTROLLER_IMAGE="local/kwok:${VERSION}"
+export PATH="${LOCAL_PATH}:${PATH}"
+
 function test_all() {
   local runtime="${1}"
   local cases="${2}"
   local releases=("${@:3}")
 
   echo "Test ${cases} on ${runtime} for ${releases[*]}"
-  KWOK_RUNTIME="${runtime}" PATH="${DIR}/bin:${PATH}" "${DIR}/kwokctl_${cases}_test.sh" "${releases[@]}"
+  KWOK_RUNTIME="${runtime}" "${DIR}/kwokctl_${cases}_test.sh" "${releases[@]}"
 }
-
-export KWOK_CONTROLLER_BINARY="${DIR}/bin/kwok"
-export KWOK_CONTROLLER_IMAGE=local/kwok:test
 
 # Test only the latest releases of Kubernetes
 LAST_RELEASE_SIZE="${LAST_RELEASE_SIZE:-6}"
@@ -39,25 +48,25 @@ function supported_releases() {
 }
 
 function build_kwokctl() {
-  if [[ -f "${DIR}/bin/kwokctl" ]]; then
+  if [[ -f "${KWOKCTL_CONTROLLER_BINARY}" ]]; then
     return
   fi
-  go build -o "${DIR}/bin/kwokctl" "${ROOT_DIR}/cmd/kwokctl"
+  "${ROOT_DIR}/hack/releases.sh" --bin kwokctl --version "${VERSION}" --platform "${GOOS}/${GOARCH}"
 }
 
 function build_kwok() {
   if [[ -f "${KWOK_CONTROLLER_BINARY}" ]]; then
     return
   fi
-  go build -o "${KWOK_CONTROLLER_BINARY}" "${ROOT_DIR}/cmd/kwok"
+  "${ROOT_DIR}/hack/releases.sh" --bin kwok --version "${VERSION}" --platform "${GOOS}/${GOARCH}"
 }
 
 function build_image() {
   if docker image inspect "${KWOK_CONTROLLER_IMAGE}" >/dev/null 2>&1; then
     return
   fi
-  "${ROOT_DIR}/hack/releases.sh" --bin kwok
-  "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version="${KWOK_CONTROLLER_IMAGE##*:}"
+  "${ROOT_DIR}/hack/releases.sh" --bin kwok --version "${KWOK_CONTROLLER_IMAGE##*:}" --platform "linux/${GOARCH}"
+  "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version "${VERSION}"
 }
 
 function build_image_for_nerdctl() {
