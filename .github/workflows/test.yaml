@@ -142,6 +142,13 @@ jobs:
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
 
+      - name: Make pki directory
+        if: ${{ matrix.kwokctl-runtime == 'binary' }}
+        shell: bash
+        run: |
+          sudo mkdir -p /var/run/kubernetes
+          sudo chmod 777 /var/run/kubernetes
+
       - name: Install kubectl
         shell: bash
         run: |
@@ -151,6 +158,9 @@ jobs:
       - name: Test Workable
         shell: bash
         run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" && ( "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" || "${{ matrix.kwokctl-runtime }}" == "nerdctl" ) ]]; then
+            export LAST_RELEASE_SIZE=20
+          fi
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
       - name: Test Snapshot

@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/image"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 type Cluster struct {
@@ -151,10 +152,34 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	images := []string{
+		conf.EtcdImage,
+		conf.KubeApiserverImage,
+		conf.KwokControllerImage,
+	}
+	if !conf.DisableKubeControllerManager {
+		images = append(images, conf.KubeControllerManagerImage)
+	}
+	if !conf.DisableKubeScheduler {
+		images = append(images, conf.KubeSchedulerImage)
+	}
+	if conf.PrometheusPort != 0 {
+		images = append(images, conf.PrometheusImage)
+	}
+	err = image.PullImages(ctx, conf.Runtime, images, conf.QuietPull)
+	if err != nil {
+		return err
+	}
+
 	// Configure the etcd
+	etcdVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.EtcdImage, "etcd")
+	if err != nil {
+		return err
+	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
 		Workdir:  workdir,
 		Image:    conf.EtcdImage,
+		Version:  etcdVersion,
 		Port:     conf.EtcdPort,
 		DataPath: etcdDataPath,
 	})
@@ -164,9 +189,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 	config.Components = append(config.Components, etcdComponent)
 
 	// Configure the kube-apiserver
+	kubeApiserverVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KubeApiserverImage, "kube-apiserver")
+	if err != nil {
+		return err
+	}
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Workdir:           workdir,
 		Image:             conf.KubeApiserverImage,
+		Version:           kubeApiserverVersion,
 		Port:              conf.KubeApiserverPort,
 		KubeRuntimeConfig: conf.KubeRuntimeConfig,
 		KubeFeatureGates:  conf.KubeFeatureGates,
@@ -187,9 +217,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// Configure the kube-controller-manager
 	if !conf.DisableKubeControllerManager {
+		kubeControllerManagerVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KubeControllerManagerImage, "kube-controller-manager")
+		if err != nil {
+			return err
+		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
-			Image:             conf.KubeControllerManagerImage,
 			Workdir:           workdir,
+			Image:             conf.KubeControllerManagerImage,
+			Version:           kubeControllerManagerVersion,
 			Port:              conf.KubeControllerManagerPort,
 			SecurePort:        conf.SecurePort,
 			CaCertPath:        caCertPath,
@@ -207,9 +242,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// Configure the kube-scheduler
 	if !conf.DisableKubeScheduler {
+		kubeSchedulerVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KubeSchedulerImage, "kube-scheduler")
+		if err != nil {
+			return err
+		}
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
-			Image:            conf.KubeSchedulerImage,
 			Workdir:          workdir,
+			Image:            conf.KubeSchedulerImage,
+			Version:          kubeSchedulerVersion,
 			Port:             conf.KubeSchedulerPort,
 			SecurePort:       conf.SecurePort,
 			CaCertPath:       caCertPath,
@@ -225,9 +265,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Configure the kwok-controller
+	kwokControllerVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KwokControllerImage, "kwok")
+	if err != nil {
+		return err
+	}
 	kwokControllerComponent, err := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
-		Image:          conf.KwokControllerImage,
 		Workdir:        workdir,
+		Image:          conf.KwokControllerImage,
+		Version:        kwokControllerVersion,
 		Port:           conf.KwokControllerPort,
 		ConfigPath:     kwokConfigPath,
 		KubeconfigPath: inClusterOnHostKubeconfigPath,
@@ -256,9 +301,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
 
+		prometheusVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.PrometheusImage, "")
+		if err != nil {
+			return err
+		}
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
-			Image:         conf.PrometheusImage,
 			Workdir:       workdir,
+			Image:         conf.PrometheusImage,
+			Version:       prometheusVersion,
 			Port:          conf.PrometheusPort,
 			ConfigPath:    prometheusConfigPath,
 			AdminCertPath: adminCertPath,
@@ -334,25 +384,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 	err = c.Save(ctx)
 	if err != nil {
 		logger.Error("Failed to update cluster", err)
-	}
-
-	images := []string{
-		conf.EtcdImage,
-		conf.KubeApiserverImage,
-		conf.KwokControllerImage,
-	}
-	if !conf.DisableKubeControllerManager {
-		images = append(images, conf.KubeControllerManagerImage)
-	}
-	if !conf.DisableKubeScheduler {
-		images = append(images, conf.KubeSchedulerImage)
-	}
-	if conf.PrometheusPort != 0 {
-		images = append(images, conf.PrometheusImage)
-	}
-	err = image.PullImages(ctx, conf.Runtime, images, conf.QuietPull)
-	if err != nil {
-		return err
 	}
 
 	return nil

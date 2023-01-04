@@ -19,11 +19,13 @@ package components
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 type BuildKubeSchedulerComponentConfig struct {
 	Binary           string
 	Image            string
+	Version          version.Version
 	Workdir          string
 	Address          string
 	Port             uint32
@@ -79,9 +81,11 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	if conf.SecurePort {
-		kubeSchedulerArgs = append(kubeSchedulerArgs,
-			"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
-		)
+		if conf.Version.GE(version.NewVersion(1, 12, 0)) {
+			kubeSchedulerArgs = append(kubeSchedulerArgs,
+				"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
+			)
+		}
 
 		if inContainer {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
@@ -119,7 +123,8 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	return internalversion.Component{
-		Name: "kube-scheduler",
+		Name:    "kube-scheduler",
+		Version: conf.Version.String(),
 		Links: []string{
 			"kube-apiserver",
 		},

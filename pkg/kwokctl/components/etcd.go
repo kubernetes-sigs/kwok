@@ -19,11 +19,13 @@ package components
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 type BuildEtcdComponentConfig struct {
 	Binary   string
 	Image    string
+	Version  version.Version
 	DataPath string
 	Workdir  string
 	Address  string
@@ -77,6 +79,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 
 	return internalversion.Component{
 		Name:    "etcd",
+		Version: conf.Version.String(),
 		Volumes: volumes,
 		Command: []string{"etcd"},
 		Args:    etcdArgs,

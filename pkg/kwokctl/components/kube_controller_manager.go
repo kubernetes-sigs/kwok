@@ -19,11 +19,13 @@ package components
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 type BuildKubeControllerManagerComponentConfig struct {
 	Binary            string
 	Image             string
+	Version           version.Version
 	Workdir           string
 	Address           string
 	Port              uint32
@@ -80,9 +82,11 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	if conf.SecurePort {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-			"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
-		)
+		if conf.Version.GE(version.NewVersion(1, 12, 0)) {
+			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+				"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
+			)
+		}
 
 		if inContainer {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
@@ -140,7 +144,8 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	return internalversion.Component{
-		Name: "kube-controller-manager",
+		Name:    "kube-controller-manager",
+		Version: conf.Version.String(),
 		Links: []string{
 			"kube-apiserver",
 		},

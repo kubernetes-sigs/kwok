@@ -1,3 +1,4 @@
+# https://golangci-lint.run/usage/linters
 linters:
   disable-all: true
   enable:
@@ -68,6 +69,8 @@ linters-settings:
     include-go-root: true
     packages:
       - io/ioutil # https://go.dev/doc/go1.16#ioutil
+  gocyclo:
+    min-complexity: 40
 
 issues:
   max-same-issues: 0

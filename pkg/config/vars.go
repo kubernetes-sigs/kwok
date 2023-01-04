@@ -124,7 +124,7 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	conf.KubeVersion = addPrefixV(envs.GetEnvWithPrefix("KUBE_VERSION", conf.KubeVersion))
 
 	if conf.SecurePort == nil {
-		conf.SecurePort = format.Ptr(parseRelease(conf.KubeVersion) > 19)
+		conf.SecurePort = format.Ptr(parseRelease(conf.KubeVersion) > 12)
 	}
 	conf.SecurePort = format.Ptr(envs.GetEnvWithPrefix("SECURE_PORT", *conf.SecurePort))
 

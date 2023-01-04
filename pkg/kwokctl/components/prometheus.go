@@ -19,11 +19,13 @@ package components
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 type BuildPrometheusComponentConfig struct {
 	Binary        string
 	Image         string
+	Version       version.Version
 	Workdir       string
 	Address       string
 	Port          uint32
@@ -78,7 +80,8 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 	}
 
 	return internalversion.Component{
-		Name: "prometheus",
+		Name:    "prometheus",
+		Version: conf.Version.String(),
 		Links: []string{
 			"etcd",
 			"kube-apiserver",

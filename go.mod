@@ -3,6 +3,7 @@ module sigs.k8s.io/kwok
 go 1.19
 
 require (
+	github.com/blang/semver/v4 v4.0.0
 	github.com/compose-spec/compose-go v1.8.0
 	github.com/containerd/go-cni v1.1.7
 	github.com/containernetworking/plugins v1.1.1
