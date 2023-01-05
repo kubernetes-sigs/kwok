@@ -19,12 +19,14 @@ package kind
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -34,6 +36,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/image"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type Cluster struct {
@@ -336,15 +339,29 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	out := bytes.NewBuffer(nil)
 	err = c.KubectlInCluster(ctx, exec.IOStreams{
 		Out: out,
-	}, "get", "pod", "--namespace=kube-system", "--field-selector=status.phase!=Running")
+	}, "get", "pod", "--namespace=kube-system", "--field-selector=status.phase!=Running", "--output=json")
 	if err != nil {
 		return false, err
 	}
-	if out.Len() != 0 {
+
+	var data corev1.PodList
+	err = json.Unmarshal(out.Bytes(), &data)
+	if err != nil {
+		return false, err
+	}
+
+	if len(data.Items) != 0 {
 		logger := log.FromContext(ctx)
-		logger.Debug("Check Ready",
-			"method", "get pod",
-			"response", out,
+		logger.Debug("Components not all running",
+			"components", slices.Map(data.Items, func(item corev1.Pod) interface{} {
+				return struct {
+					Pod   string
+					Phase string
+				}{
+					Pod:   log.KObj(&item).String(),
+					Phase: string(item.Status.Phase),
+				}
+			}),
 		)
 		return false, nil
 	}
