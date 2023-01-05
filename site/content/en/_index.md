@@ -38,7 +38,7 @@ Runtime indicates which medium kwokctl will use to start the cluster
 
 |         | binary | docker | kind | nerdctl | podman |
 | ------- | ------ | ------ | ---- | ------- | ------ |
-| Linux   | 🟢      | 🟢      | 🟢    | 🔵       | ⚫      |
+| Linux   | 🟢      | 🟢      | 🟢    | 🟢       | ⚫      |
 | Darwin  | 🟠      | 🟢      | 🟢    | 🔴       | 🔴      |
 | Windows | 🟠/🔵    | 🔵      | 🔵    | 🔴       | 🔴      |
 
