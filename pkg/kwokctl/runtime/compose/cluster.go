@@ -19,10 +19,10 @@ package compose
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"sigs.k8s.io/yaml"
@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/image"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -456,13 +457,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return false, err
-	}
+type statusItem struct {
+	Service string
+	State   string
+}
 
-	commands, err := c.buildComposeCommands(ctx, "ps")
+func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
+	commands, err := c.buildComposeCommands(ctx, "ps", "--format=json")
 	if err != nil {
 		return false, err
 	}
@@ -473,13 +474,26 @@ func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	i := strings.Count(out.String(), "running")
-	if i != len(config.Components) {
+
+	var data []statusItem
+	err = json.Unmarshal(out.Bytes(), &data)
+	if err != nil {
+		return false, err
+	}
+
+	if len(data) == 0 {
+		logger := log.FromContext(ctx)
+		logger.Debug("No components found")
+		return false, nil
+	}
+
+	components, ok := slices.Find(data, func(i statusItem) bool {
+		return i.State != "running"
+	})
+	if ok {
 		logger := log.FromContext(ctx)
 		logger.Debug("Components not all running",
-			"running", i,
-			"total", len(config.Components),
-			"output", out.String(),
+			"components", components,
 		)
 		return false, nil
 	}
