@@ -1,0 +1,11 @@
+# Let's getting started with kwokctl!
+kwokctl --name demo create cluster --kube-audit-policy ./test/kwokctl/audit-policy.yaml
+
+# Get audit logs.
+kwokctl --name demo logs audit | head -n 1 | jq .
+
+# Delete the cluster.
+kwokctl --name demo delete cluster
+
+# That's all, enjoy it!
+clear
