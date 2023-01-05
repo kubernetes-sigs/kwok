@@ -69,17 +69,6 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	logger := log.FromContext(ctx)
 
-	err = c.Stop(ctx, "etcd")
-	if err != nil {
-		logger.Error("Failed to stop etcd", err)
-	}
-	defer func() {
-		err = c.Start(ctx, "etcd")
-		if err != nil {
-			logger.Error("Failed to start etcd", err)
-		}
-	}()
-
 	// Restore snapshot to host temporary directory
 	etcdDataTmp := c.GetWorkdirPath("etcd-data")
 	err = exec.Exec(ctx, "", exec.IOStreams{}, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
@@ -93,10 +82,58 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}
 	}()
 
-	// Copy to container from host temporary directory
-	err = exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
-	if err != nil {
-		return err
+	if conf.Runtime != "nerdctl" {
+		// Restart etcd container
+		err = c.Stop(ctx, "etcd")
+		if err != nil {
+			logger.Error("Failed to stop etcd", err)
+		}
+		defer func() {
+			err = c.Start(ctx, "etcd")
+			if err != nil {
+				logger.Error("Failed to start etcd", err)
+			}
+		}()
+
+		// Copy to container from host temporary directory
+		err = exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
+		if err != nil {
+			return err
+		}
+	} else {
+		// TODO: remove this when `nerdctl cp` supports work on stopped containers
+		// https://github.com/containerd/nerdctl/issues/1812
+
+		// Stop the kube-apiserver container to avoid data modification by etcd during restore.
+		err = c.Stop(ctx, "kube-apiserver")
+		if err != nil {
+			logger.Error("Failed to stop kube-apiserver", err)
+		}
+		defer func() {
+			err = c.Start(ctx, "kube-apiserver")
+			if err != nil {
+				logger.Error("Failed to start kube-apiserver", err)
+			}
+		}()
+
+		// Copy to container from host temporary directory
+		err = exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
+		if err != nil {
+			return err
+		}
+
+		// Restart etcd container
+		err = c.Stop(ctx, "etcd")
+		if err != nil {
+			logger.Error("Failed to stop etcd", err)
+		}
+		defer func() {
+			err = c.Start(ctx, "etcd")
+			if err != nil {
+				logger.Error("Failed to start etcd", err)
+			}
+		}()
 	}
+
 	return nil
 }
