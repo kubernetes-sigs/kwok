@@ -12,6 +12,7 @@ env:
 jobs:
   bump:
     runs-on: ubuntu-latest
+    if: ${{ github.repository == 'kubernetes-sigs/kwok' }}
     steps:
       - uses: actions/checkout@v3
       - name: Update

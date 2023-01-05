@@ -29,7 +29,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build binary for registry.k8s.io
-        if: github.repository == 'kubernetes-sigs/kwok'
+        if: ${{ github.repository == 'kubernetes-sigs/kwok' }}
         env:
           GH_RELEASE: ${{ github.repository }}
           IMAGE_PREFIX: registry.k8s.io/kwok
@@ -38,7 +38,7 @@ jobs:
           REF=${{ github.ref }}
           GIT_TAG="${REF##*/}" make cross-build
       - name: Build binary for ghcr.io
-        if: github.repository != 'kubernetes-sigs/kwok'
+        if: ${{ github.repository != 'kubernetes-sigs/kwok' }}
         env:
           GH_RELEASE: ${{ github.repository }}
           IMAGE_PREFIX: ghcr.io/${{ github.repository }}
