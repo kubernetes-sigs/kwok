@@ -37,7 +37,7 @@ var (
 	KindVersion      = "0.17.0"
 	KindBinaryPrefix = "https://github.com/kubernetes-sigs/kind/releases/download"
 
-	PrometheusVersion      = "2.35.0"
+	PrometheusVersion      = "2.41.0"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
 
