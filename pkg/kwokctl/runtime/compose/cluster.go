@@ -27,6 +27,7 @@ import (
 
 	"sigs.k8s.io/yaml"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
@@ -504,7 +505,85 @@ func (c *Cluster) Down(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) Start(ctx context.Context, name string) error {
+func (c *Cluster) Start(ctx context.Context) error {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	// TODO: nerdctl does not support 'compose start' in v1.1.0 or earlier
+	// Support in https://github.com/containerd/nerdctl/pull/1656 merge into the main branch, but there is no release
+	subcommand := []string{"start"}
+	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+		subcommand = []string{"up", "-d"}
+	}
+
+	commands, err := c.buildComposeCommands(ctx, subcommand...)
+	if err != nil {
+		return err
+	}
+
+	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
+		ErrOut: os.Stderr,
+		Out:    os.Stderr,
+	}, commands[0], commands[1:]...)
+	if err != nil {
+		return fmt.Errorf("failed to start cluster: %w", err)
+	}
+
+	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+		backupFilename := c.GetWorkdirPath("restart.db")
+		fi, err := os.Stat(backupFilename)
+		if err == nil {
+			if fi.IsDir() {
+				return fmt.Errorf("wrong backup file %s, it cannot be a directory, please remove it", backupFilename)
+			}
+			if err := c.SnapshotRestore(ctx, backupFilename); err != nil {
+				return fmt.Errorf("failed to restore cluster data: %w", err)
+			}
+			if err := os.Remove(backupFilename); err != nil {
+				return fmt.Errorf("failed to remove backup file: %w", err)
+			}
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Cluster) Stop(ctx context.Context) error {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	// TODO: nerdctl does not support 'compose stop' in v1.0.0 or earlier
+	subcommand := "stop"
+	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+		subcommand = "down"
+		err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
+		if err != nil {
+			return fmt.Errorf("failed to snapshot cluster data: %w", err)
+		}
+	}
+
+	commands, err := c.buildComposeCommands(ctx, subcommand)
+	if err != nil {
+		return err
+	}
+
+	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
+		ErrOut: os.Stderr,
+		Out:    os.Stderr,
+	}, commands[0], commands[1:]...)
+	if err != nil {
+		return fmt.Errorf("failed to stop cluster: %w", err)
+	}
+	return nil
+}
+
+func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -518,7 +597,7 @@ func (c *Cluster) Start(ctx context.Context, name string) error {
 	return nil
 }
 
-func (c *Cluster) Stop(ctx context.Context, name string) error {
+func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -601,9 +680,8 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 	}
 	conf := &config.Options
 
-	runtime := conf.Runtime
-	if runtime == "docker" {
-		err := exec.Exec(ctx, "", exec.IOStreams{}, runtime, "compose", "version")
+	if conf.Runtime == consts.RuntimeTypeDocker {
+		err := exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "compose", "version")
 		if err != nil {
 			// docker compose subcommand does not exist, try to download it
 			dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
@@ -614,7 +692,7 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 			return append([]string{dockerComposePath}, args...), nil
 		}
 	}
-	return append([]string{runtime, "compose"}, args...), nil
+	return append([]string{conf.Runtime, "compose"}, args...), nil
 }
 
 // EtcdctlInCluster implements the ectdctl subcommand

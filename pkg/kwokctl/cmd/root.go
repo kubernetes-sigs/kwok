@@ -31,6 +31,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/kubectl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/logs"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/start"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/stop"
 )
 
 // NewCommand returns a new cobra.Command for root
@@ -55,6 +57,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		create.NewCommand(ctx),
 		del.NewCommand(ctx),
 		get.NewCommand(ctx),
+		start.NewCommand(ctx),
+		stop.NewCommand(ctx),
 		kubectl.NewCommand(ctx),
 		etcdctl.NewCommand(ctx),
 		logs.NewCommand(ctx),

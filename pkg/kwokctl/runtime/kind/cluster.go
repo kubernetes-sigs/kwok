@@ -242,7 +242,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	if conf.DisableKubeScheduler {
-		err := c.Stop(ctx, "kube-scheduler")
+		err := c.StopComponent(ctx, "kube-scheduler")
 		if err != nil {
 			logger.Error("Failed to disable kube-scheduler", err)
 		}
@@ -255,7 +255,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	if conf.DisableKubeControllerManager {
-		err := c.Stop(ctx, "kube-controller-manager")
+		err := c.StopComponent(ctx, "kube-controller-manager")
 		if err != nil {
 			logger.Error("Failed to disable kube-controller-manager", err)
 		}
@@ -373,7 +373,23 @@ func (c *Cluster) Down(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) Start(ctx context.Context, name string) error {
+func (c *Cluster) Start(ctx context.Context) error {
+	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "start", c.getClusterName())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Cluster) Stop(ctx context.Context) error {
+	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "stop", c.getClusterName())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
 		return err
@@ -381,7 +397,7 @@ func (c *Cluster) Start(ctx context.Context, name string) error {
 	return nil
 }
 
-func (c *Cluster) Stop(ctx context.Context, name string) error {
+func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
 		return err

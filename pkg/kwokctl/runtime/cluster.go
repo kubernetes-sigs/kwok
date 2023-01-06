@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 var (
@@ -203,6 +204,21 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		return waitErr
 	}
 	return nil
+}
+
+func (c *Cluster) GetComponent(ctx context.Context, name string) (internalversion.Component, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return internalversion.Component{}, err
+	}
+	component, ok := slices.Find(config.Components, func(component internalversion.Component) bool {
+		return component.Name == name
+	})
+	if !ok {
+		return internalversion.Component{}, fmt.Errorf("%w: %s", ErrComponentNotFound, name)
+	}
+
+	return component, nil
 }
 
 func (c *Cluster) Kubectl(ctx context.Context, stm exec.IOStreams, args ...string) error {

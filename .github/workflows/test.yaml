@@ -178,6 +178,11 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_authorization
 
+      - name: Test Restart
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
+
       - name: Test Benchmark
         shell: bash
         continue-on-error: true

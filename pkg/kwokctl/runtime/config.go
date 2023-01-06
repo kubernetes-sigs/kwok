@@ -47,11 +47,20 @@ type Runtime interface {
 	// Down stop the cluster
 	Down(ctx context.Context) error
 
-	// Start start a container
-	Start(ctx context.Context, name string) error
+	// Start a cluster
+	Start(ctx context.Context) error
 
-	// Stop stop a container
-	Stop(ctx context.Context, name string) error
+	// Stop a cluster
+	Stop(ctx context.Context) error
+
+	// StartComponent start cluster component
+	StartComponent(ctx context.Context, name string) error
+
+	// StopComponent stop cluster component
+	StopComponent(ctx context.Context, name string) error
+
+	// GetComponent return the component if it exists
+	GetComponent(ctx context.Context, name string) (internalversion.Component, error)
 
 	// Ready check the cluster is ready
 	Ready(ctx context.Context) (bool, error)

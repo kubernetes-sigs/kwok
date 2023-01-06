@@ -17,9 +17,10 @@ limitations under the License.
 package kind
 
 import (
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 )
 
 func init() {
-	runtime.DefaultRegistry.Register("kind", NewCluster)
+	runtime.DefaultRegistry.Register(consts.RuntimeTypeKind, NewCluster)
 }

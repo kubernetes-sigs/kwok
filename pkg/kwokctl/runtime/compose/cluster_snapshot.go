@@ -20,6 +20,7 @@ import (
 	"context"
 	"os"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -82,14 +83,14 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}
 	}()
 
-	if conf.Runtime != "nerdctl" {
+	if conf.Runtime != consts.RuntimeTypeNerdctl {
 		// Restart etcd container
-		err = c.Stop(ctx, "etcd")
+		err = c.StopComponent(ctx, "etcd")
 		if err != nil {
 			logger.Error("Failed to stop etcd", err)
 		}
 		defer func() {
-			err = c.Start(ctx, "etcd")
+			err = c.StartComponent(ctx, "etcd")
 			if err != nil {
 				logger.Error("Failed to start etcd", err)
 			}
@@ -105,12 +106,12 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		// https://github.com/containerd/nerdctl/issues/1812
 
 		// Stop the kube-apiserver container to avoid data modification by etcd during restore.
-		err = c.Stop(ctx, "kube-apiserver")
+		err = c.StopComponent(ctx, "kube-apiserver")
 		if err != nil {
 			logger.Error("Failed to stop kube-apiserver", err)
 		}
 		defer func() {
-			err = c.Start(ctx, "kube-apiserver")
+			err = c.StartComponent(ctx, "kube-apiserver")
 			if err != nil {
 				logger.Error("Failed to start kube-apiserver", err)
 			}
@@ -123,12 +124,12 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}
 
 		// Restart etcd container
-		err = c.Stop(ctx, "etcd")
+		err = c.StopComponent(ctx, "etcd")
 		if err != nil {
 			logger.Error("Failed to stop etcd", err)
 		}
 		defer func() {
-			err = c.Start(ctx, "etcd")
+			err = c.StartComponent(ctx, "etcd")
 			if err != nil {
 				logger.Error("Failed to start etcd", err)
 			}

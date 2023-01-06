@@ -14,13 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package binary
+package start
 
 import (
-	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"context"
+
+	"github.com/spf13/cobra"
+
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/start/cluster"
 )
 
-func init() {
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeBinary, NewCluster)
+// NewCommand returns a new cobra.Command for start cluster
+func NewCommand(ctx context.Context) *cobra.Command {
+	cmd := &cobra.Command{
+		Args:  cobra.NoArgs,
+		Use:   "start",
+		Short: "Start one of [cluster]",
+		Long:  "Start one of [cluster]",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
+	}
+	cmd.AddCommand(cluster.NewCommand(ctx))
+	return cmd
 }
