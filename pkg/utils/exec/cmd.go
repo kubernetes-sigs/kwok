@@ -49,27 +49,27 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 	logPath := path.Join(dir, "logs", filepath.Base(name)+".log")
 	cmdlinePath := path.Join(dir, "cmdline", filepath.Base(name))
 
-	err = os.MkdirAll(filepath.Dir(pidPath), 0755)
+	err = os.MkdirAll(filepath.Dir(pidPath), 0750)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Dir(logPath), 0755)
+	err = os.MkdirAll(filepath.Dir(logPath), 0750)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Dir(cmdlinePath), 0755)
+	err = os.MkdirAll(filepath.Dir(cmdlinePath), 0750)
 	if err != nil {
 		return err
 	}
 
-	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
 	if err != nil {
 		return fmt.Errorf("open log file %s: %w", logPath, err)
 	}
 
 	args := append([]string{name}, arg...)
 
-	err = os.WriteFile(cmdlinePath, []byte(strings.Join(args, "\x00")), 0644)
+	err = os.WriteFile(cmdlinePath, []byte(strings.Join(args, "\x00")), 0640)
 	if err != nil {
 		return fmt.Errorf("write cmdline file %s: %w", cmdlinePath, err)
 	}
@@ -84,7 +84,7 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 		return err
 	}
 
-	err = os.WriteFile(pidPath, []byte(strconv.Itoa(cmd.Process.Pid)), 0644)
+	err = os.WriteFile(pidPath, []byte(strconv.Itoa(cmd.Process.Pid)), 0640)
 	if err != nil {
 		return fmt.Errorf("write pid file %s: %w", pidPath, err)
 	}

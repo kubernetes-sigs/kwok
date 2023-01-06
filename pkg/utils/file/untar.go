@@ -69,7 +69,7 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 				return nil
 			}
 
-			err = os.MkdirAll(filepath.Dir(name), 0755)
+			err = os.MkdirAll(filepath.Dir(name), 0750)
 			if err != nil {
 				return err
 			}
@@ -154,7 +154,7 @@ func untargz(ctx context.Context, src string, filter func(file string) (string, 
 				return nil
 			}
 
-			err = os.MkdirAll(filepath.Dir(name), 0755)
+			err = os.MkdirAll(filepath.Dir(name), 0750)
 			if err != nil {
 				return err
 			}

@@ -227,7 +227,7 @@ func (c *Cluster) KubectlInCluster(ctx context.Context, stm exec.IOStreams, args
 func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 	logs := c.GetLogPath(AuditLogName)
 
-	f, err := os.OpenFile(logs, os.O_RDONLY, 0644)
+	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
 	if err != nil {
 		return err
 	}

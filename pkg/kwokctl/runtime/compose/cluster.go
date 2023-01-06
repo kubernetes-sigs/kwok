@@ -69,7 +69,7 @@ func (c *Cluster) setup(ctx context.Context) error {
 
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath := c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0644)
+		err = file.Create(auditLogPath, 0640)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func (c *Cluster) setup(ctx context.Context) error {
 	}
 
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
-	err = os.MkdirAll(etcdDataPath, 0755)
+	err = os.MkdirAll(etcdDataPath, 0750)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
@@ -297,6 +297,9 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
 		}
 		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
+		//nolint:gosec
+		// We don't need to check the permissions of the prometheus config file,
+		// because it's working in a non-root container.
 		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
@@ -352,17 +355,17 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Save config
-	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0644)
+	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0640)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0644)
+	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0640)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(composePath, composeData, 0644)
+	err = os.WriteFile(composePath, composeData, 0640)
 	if err != nil {
 		return err
 	}

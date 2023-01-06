@@ -16,7 +16,7 @@ linters:
     - gofmt
     - goimports
     - goprintffuncname
-    # - gosec
+    - gosec
     - gosimple
     - govet
     - importas
@@ -71,6 +71,14 @@ linters-settings:
       - io/ioutil # https://go.dev/doc/go1.16#ioutil
   gocyclo:
     min-complexity: 40
+  gosec:
+    excludes:
+      - G110
+      - G304
+    config:
+      G301: "0750"
+      G302: "0640"
+      G306: "0640"
 
 issues:
   max-same-issues: 0

@@ -174,6 +174,7 @@ func Serve(ctx context.Context, address string) {
 	logger := log.FromContext(ctx)
 	promHandler := promhttp.Handler()
 	svc := &http.Server{
+		ReadHeaderTimeout: 5 * time.Second,
 		BaseContext: func(_ net.Listener) context.Context {
 			return ctx
 		},
