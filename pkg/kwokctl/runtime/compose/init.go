@@ -17,10 +17,11 @@ limitations under the License.
 package compose
 
 import (
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 )
 
 func init() {
-	runtime.DefaultRegistry.Register("docker", NewCluster)
-	runtime.DefaultRegistry.Register("nerdctl", NewCluster)
+	runtime.DefaultRegistry.Register(consts.RuntimeTypeDocker, NewCluster)
+	runtime.DefaultRegistry.Register(consts.RuntimeTypeNerdctl, NewCluster)
 }

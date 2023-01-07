@@ -572,23 +572,36 @@ func (c *Cluster) Down(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) getComponent(ctx context.Context, name string) (internalversion.Component, error) {
+func (c *Cluster) Start(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
-		return internalversion.Component{}, err
-	}
-	component, ok := slices.Find(config.Components, func(component internalversion.Component) bool {
-		return component.Name == name
-	})
-	if !ok {
-		return internalversion.Component{}, fmt.Errorf("%w: %s", runtime.ErrComponentNotFound, name)
+		return err
 	}
 
-	return component, nil
+	err = c.startComponents(ctx, config.Components)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (c *Cluster) Start(ctx context.Context, name string) error {
-	component, err := c.getComponent(ctx, name)
+func (c *Cluster) Stop(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = c.stopComponents(ctx, config.Components)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Cluster) StartComponent(ctx context.Context, name string) error {
+	component, err := c.GetComponent(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -600,8 +613,8 @@ func (c *Cluster) Start(ctx context.Context, name string) error {
 	return nil
 }
 
-func (c *Cluster) Stop(ctx context.Context, name string) error {
-	component, err := c.getComponent(ctx, name)
+func (c *Cluster) StopComponent(ctx context.Context, name string) error {
+	component, err := c.GetComponent(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -614,7 +627,7 @@ func (c *Cluster) Stop(ctx context.Context, name string) error {
 }
 
 func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
-	_, err := c.getComponent(ctx, name)
+	_, err := c.GetComponent(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -642,7 +655,7 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 }
 
 func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) error {
-	_, err := c.getComponent(ctx, name)
+	_, err := c.GetComponent(ctx, name)
 	if err != nil {
 		return err
 	}

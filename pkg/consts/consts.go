@@ -43,3 +43,10 @@ var (
 
 	KindNodeImagePrefix = "docker.io/kindest"
 )
+
+const (
+	RuntimeTypeKind    = "kind"
+	RuntimeTypeDocker  = "docker"
+	RuntimeTypeNerdctl = "nerdctl"
+	RuntimeTypeBinary  = "binary"
+)
