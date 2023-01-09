@@ -3,7 +3,7 @@
 <img align="right" width="180px" src="./logo/kwok.svg"/>
 
 [kwok](https://sigs.k8s.io/kwok) is a toolkit that enables setting up a cluster of thousands of Nodes in seconds.
-Under the scene, all Nodes are simulated to behave like real ones, so the overall approach employes
+Under the scene, all Nodes are simulated to behave like real ones, so the overall approach employs
 a pretty low resource footprint that you can easily play around on your laptop.
 
 So far we provide two tools:
