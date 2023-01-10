@@ -27,19 +27,15 @@ type BuildKwokControllerComponentConfig struct {
 	Image          string
 	Version        version.Version
 	Workdir        string
-	Address        string
 	Port           uint32
 	ConfigPath     string
 	KubeconfigPath string
 	AdminCertPath  string
 	AdminKeyPath   string
+	NodeName       string
 }
 
 func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (component internalversion.Component, err error) {
-	if conf.Address == "" {
-		conf.Address = publicAddress
-	}
-
 	kwokControllerArgs := []string{
 		"--manage-all-nodes=true",
 	}
@@ -73,13 +69,19 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		kwokControllerArgs = append(kwokControllerArgs,
 			"--kubeconfig=/root/.kube/config",
 			"--config=/root/.kwok/kwok.yaml",
-			"--server-address="+publicAddress+":8080",
+			"--tls-cert-file=/etc/kubernetes/pki/admin.crt",
+			"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
+			"--node-name="+conf.NodeName,
+			"--node-port=10247",
 		)
 	} else {
 		kwokControllerArgs = append(kwokControllerArgs,
 			"--kubeconfig="+conf.KubeconfigPath,
 			"--config="+conf.ConfigPath,
-			"--server-address="+conf.Address+":"+format.String(conf.Port),
+			"--tls-cert-file="+conf.AdminCertPath,
+			"--tls-private-key-file="+conf.AdminKeyPath,
+			"--node-name=localhost",
+			"--node-port="+format.String(conf.Port),
 		)
 	}
 

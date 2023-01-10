@@ -47,6 +47,8 @@ import (
 type NodeController struct {
 	clientSet                             kubernetes.Interface
 	nodeIP                                string
+	nodeName                              string
+	nodePort                              int
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
 	manageNodesWithAnnotationSelector     string
@@ -73,6 +75,8 @@ type NodeControllerConfig struct {
 	ManageNodesWithAnnotationSelector     string
 	ManageNodesWithLabelSelector          string
 	NodeIP                                string
+	NodeName                              string
+	NodePort                              int
 	Stages                                []*internalversion.Stage
 	LockNodeParallelism                   int
 	FuncMap                               template.FuncMap
@@ -105,6 +109,8 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		manageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
 		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
 		nodeIP:                                conf.NodeIP,
+		nodeName:                              conf.NodeName,
+		nodePort:                              conf.NodePort,
 		nodesSets:                             newStringSets(),
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
@@ -115,6 +121,12 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 	funcMap = template.FuncMap{
 		"NodeIP": func() string {
 			return n.nodeIP
+		},
+		"NodeName": func() string {
+			return n.nodeName
+		},
+		"NodePort": func() int {
+			return n.nodePort
 		},
 	}
 	for k, v := range conf.FuncMap {

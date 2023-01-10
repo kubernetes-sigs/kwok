@@ -39,6 +39,18 @@ type KwokConfigurationOptions struct {
 	// The ip of all nodes maintained by the Kwok
 	NodeIP string
 
+	// The name of all nodes maintained by the Kwok
+	NodeName string
+
+	// The port of all nodes maintained by the Kwok
+	NodePort int
+
+	// TLSCertFile is the file containing x509 Certificate
+	TLSCertFile string
+
+	// TLSPrivateKeyFile is the ile containing x509 private key
+	TLSPrivateKeyFile string
+
 	// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
 	ManageAllNodes bool
 
@@ -59,4 +71,14 @@ type KwokConfigurationOptions struct {
 
 	// Experimental support for getting pod ip from CNI, for CNI-related components
 	EnableCNI bool
+
+	// enableDebuggingHandlers enables server endpoints for log collection
+	// and local running of containers and commands
+	EnableDebuggingHandlers bool
+
+	// enableContentionProfiling enables lock contention profiling, if enableDebuggingHandlers is true.
+	EnableContentionProfiling bool
+
+	// EnableProfiling enables /debug/pprof handler.
+	EnableProfilingHandler bool
 }

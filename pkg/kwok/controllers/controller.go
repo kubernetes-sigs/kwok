@@ -78,6 +78,8 @@ type Config struct {
 	DisregardStatusWithLabelSelector      string
 	CIDR                                  string
 	NodeIP                                string
+	NodeName                              string
+	NodePort                              int
 	PodStages                             []*internalversion.Stage
 	NodeStages                            []*internalversion.Stage
 }
@@ -114,6 +116,8 @@ func NewController(conf Config) (*Controller, error) {
 	nodes, err := NewNodeController(NodeControllerConfig{
 		ClientSet:                             conf.ClientSet,
 		NodeIP:                                conf.NodeIP,
+		NodeName:                              conf.NodeName,
+		NodePort:                              conf.NodePort,
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
 		ManageNodesWithAnnotationSelector:     conf.ManageNodesWithAnnotationSelector,

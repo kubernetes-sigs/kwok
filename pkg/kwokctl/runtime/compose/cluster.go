@@ -280,6 +280,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		KubeconfigPath: inClusterOnHostKubeconfigPath,
 		AdminCertPath:  adminCertPath,
 		AdminKeyPath:   adminKeyPath,
+		NodeName:       c.Name() + "-kwok-controller",
 	})
 	if err != nil {
 		return err

@@ -38,7 +38,7 @@ scrape_configs:
   enable_http2: true
   static_configs:
   - targets:
-    - "{{ .ProjectName }}-kwok-controller:8080"
+    - "{{ .ProjectName }}-kwok-controller:10247"
 
 {{ if .SecurePort }}
 - job_name: "kube-apiserver"

@@ -162,6 +162,21 @@ func (in *KwokConfigurationOptions) DeepCopyInto(out *KwokConfigurationOptions) 
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableDebuggingHandlers != nil {
+		in, out := &in.EnableDebuggingHandlers, &out.EnableDebuggingHandlers
+		*out = new(bool)
+		**out = **in
+	}
+	if in.EnableContentionProfiling != nil {
+		in, out := &in.EnableContentionProfiling, &out.EnableContentionProfiling
+		*out = new(bool)
+		**out = **in
+	}
+	if in.EnableProfilingHandler != nil {
+		in, out := &in.EnableProfilingHandler, &out.EnableProfilingHandler
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

@@ -19,12 +19,9 @@ package cmd
 
 import (
 	"context"
-	"net"
-	"net/http"
 	"os"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -39,8 +36,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
+	"sigs.k8s.io/kwok/pkg/kwok/server"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/stages"
@@ -147,6 +146,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				DisregardStatusWithLabelSelector:      flags.Options.DisregardStatusWithLabelSelector,
 				CIDR:                                  flags.Options.CIDR,
 				NodeIP:                                flags.Options.NodeIP,
+				NodeName:                              flags.Options.NodeName,
+				NodePort:                              flags.Options.NodePort,
 				NodeStages:                            nodeStages,
 				PodStages:                             podStages,
 			})
@@ -154,8 +155,29 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return err
 			}
 
-			if flags.Options.ServerAddress != "" {
-				go Serve(ctx, flags.Options.ServerAddress)
+			serverAddress := flags.Options.ServerAddress
+			if serverAddress == "" && flags.Options.NodePort != 0 {
+				serverAddress = "0.0.0.0:" + format.String(flags.Options.NodePort)
+			}
+
+			if serverAddress != "" {
+				svc := server.NewServer()
+				svc.InstallMetrics()
+				svc.InstallHealthz()
+
+				if flags.Options.EnableDebuggingHandlers {
+					svc.InstallDebuggingHandlers()
+					svc.InstallProfilingHandler(flags.Options.EnableProfilingHandler, flags.Options.EnableContentionProfiling)
+				} else {
+					svc.InstallDebuggingDisabledHandlers()
+				}
+				go func() {
+					err := svc.Run(ctx, serverAddress, flags.Options.TLSCertFile, flags.Options.TLSPrivateKeyFile)
+					if err != nil {
+						logger.Error("Failed to run server", err)
+						os.Exit(1)
+					}
+				}()
 			}
 
 			err = ctr.Start(ctx)
@@ -172,6 +194,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 	cmd.Flags().StringVar(&flags.Options.CIDR, "cidr", flags.Options.CIDR, "CIDR of the pod ip")
 	cmd.Flags().StringVar(&flags.Options.NodeIP, "node-ip", flags.Options.NodeIP, "IP of the node")
+	cmd.Flags().StringVar(&flags.Options.NodeName, "node-name", flags.Options.NodeName, "Name of the node")
+	cmd.Flags().IntVar(&flags.Options.NodePort, "node-port", flags.Options.NodePort, "Port of the node")
+	cmd.Flags().StringVar(&flags.Options.TLSCertFile, "tls-cert-file", flags.Options.TLSCertFile, "File containing the default x509 Certificate for HTTPS")
+	cmd.Flags().StringVar(&flags.Options.TLSPrivateKeyFile, "tls-private-key-file", flags.Options.TLSPrivateKeyFile, "File containing the default x509 private key matching --tls-cert-file")
 	cmd.Flags().BoolVar(&flags.Options.ManageAllNodes, "manage-all-nodes", flags.Options.ManageAllNodes, "All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.")
 	cmd.Flags().StringVar(&flags.Options.ManageNodesWithAnnotationSelector, "manage-nodes-with-annotation-selector", flags.Options.ManageNodesWithAnnotationSelector, "Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes.")
 	cmd.Flags().StringVar(&flags.Options.ManageNodesWithLabelSelector, "manage-nodes-with-label-selector", flags.Options.ManageNodesWithLabelSelector, "Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes.")
@@ -185,37 +211,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components")
 	}
 	return cmd
-}
-
-func Serve(ctx context.Context, address string) {
-	logger := log.FromContext(ctx)
-	promHandler := promhttp.Handler()
-	svc := &http.Server{
-		ReadHeaderTimeout: 5 * time.Second,
-		BaseContext: func(_ net.Listener) context.Context {
-			return ctx
-		},
-		Addr: address,
-		Handler: http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			switch r.URL.Path {
-			case "/healthz", "/readyz", "/livez":
-				_, err := rw.Write([]byte("ok"))
-				if err != nil {
-					logger.Error("Failed to write", err)
-				}
-			case "/metrics":
-				promHandler.ServeHTTP(rw, r)
-			default:
-				http.NotFound(rw, r)
-			}
-		}),
-	}
-
-	err := svc.ListenAndServe()
-	if err != nil {
-		logger.Error("Fatal start server", err)
-		os.Exit(1)
-	}
 }
 
 // buildConfigFromFlags is a helper function that builds configs from a master url or a kubeconfig filepath.

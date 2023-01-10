@@ -76,7 +76,7 @@ data:
         enable_http2: true
         static_configs:
           - targets:
-              - "localhost:8080"
+              - "localhost:10247"
       - job_name: "kube-apiserver"
         scheme: https
         honor_timestamps: true

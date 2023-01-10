@@ -14,9 +14,12 @@ spec:
     - --manage-nodes-with-label-selector=
     - --disregard-status-with-annotation-selector=kwok.x-k8s.io/status=custom
     - --disregard-status-with-label-selector=
-    - --server-address=0.0.0.0:8080
     - --kubeconfig=/etc/kubernetes/admin.conf
+    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
     - --node-ip=$(POD_IP)
+    - --node-name=kwok-controller.kube-system.svc
+    - --node-port=10247
     env:
     - name: POD_IP
       valueFrom:
@@ -28,7 +31,7 @@ spec:
       failureThreshold: 3
       httpGet:
         path: /healthz
-        port: 8080
+        port: 10247
         scheme: HTTP
       initialDelaySeconds: 2
       periodSeconds: 10
@@ -38,7 +41,7 @@ spec:
       failureThreshold: 5
       httpGet:
         path: /healthz
-        port: 8080
+        port: 10247
         scheme: HTTP
       initialDelaySeconds: 2
       periodSeconds: 20
@@ -49,6 +52,9 @@ spec:
       readOnly: true
     - mountPath: /etc/kwok/kwok.yaml
       name: config
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki
+      name: k8s-certs
       readOnly: true
   hostNetwork: true
   restartPolicy: Always
@@ -61,3 +67,7 @@ spec:
       path: /etc/kwok/kwok.yaml
       type: FileOrCreate
     name: config
+  - hostPath:
+      path: /etc/kubernetes/pki
+      type: DirectoryOrCreate
+    name: k8s-certs
