@@ -24,7 +24,7 @@ function main() {
   build_kwokctl
   build_image_for_nerdctl
 
-  test_all "nerdctl" "benchmark" "${all_releases[0]}" || exit 1
+  test_all "nerdctl" "benchmark" "${all_releases[@]}" || exit 1
 }
 
 main $(supported_releases)

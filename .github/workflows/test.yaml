@@ -158,8 +158,12 @@ jobs:
       - name: Test Workable
         shell: bash
         run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" && ( "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" || "${{ matrix.kwokctl-runtime }}" == "nerdctl" ) ]]; then
+          if [[ "${{ matrix.kwokctl-runtime }}" == "kind" ]]; then
+            export LAST_RELEASE_SIZE=1
+          elif [[ "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" ]]; then
             export LAST_RELEASE_SIZE=20
+          else
+            export LAST_RELEASE_SIZE=6
           fi
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
