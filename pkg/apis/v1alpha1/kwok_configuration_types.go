@@ -44,8 +44,24 @@ type KwokConfigurationOptions struct {
 
 	// The ip of all nodes maintained by the Kwok
 	// is the default value for flag --node-ip
-	// +default="196.168.0.1"
 	NodeIP string `json:"nodeIP,omitempty"`
+
+	// The name of all nodes maintained by the Kwok
+	// is the default value for flag --node-name
+	NodeName string `json:"nodeName,omitempty"`
+
+	// The port of all nodes maintained by the Kwok
+	// is the default value for flag --node-port
+	NodePort int `json:"nodePort,omitempty"`
+
+	// TLSCertFile is the file containing x509 Certificate for HTTPS.
+	// If HTTPS serving is enabled, and --tls-cert-file and --tls-private-key-file
+	// is the default value for flag --tls-cert-file
+	TLSCertFile string `json:"tlsCertFile,omitempty"`
+
+	// TLSPrivateKeyFile is the ile containing x509 private key matching --tls-cert-file.
+	// is the default value for flag --tls-private-key-file
+	TLSPrivateKeyFile string `json:"tlsPrivateKeyFile,omitempty"`
 
 	// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
 	// is the default value for flag --manage-all-nodes
@@ -78,4 +94,17 @@ type KwokConfigurationOptions struct {
 	// is the default value for flag --experimental-enable-cni
 	// +default=false
 	EnableCNI *bool `json:"experimentalEnableCNI,omitempty"`
+
+	// enableDebuggingHandlers enables server endpoints for log collection
+	// and local running of containers and commands
+	// +default=true
+	EnableDebuggingHandlers *bool `json:"enableDebuggingHandlers,omitempty"`
+
+	// enableContentionProfiling enables lock contention profiling, if enableDebuggingHandlers is true.
+	// +default=false
+	EnableContentionProfiling *bool `json:"enableContentionProfiling,omitempty"`
+
+	// EnableProfiling enables /debug/pprof handler, if enableDebuggingHandlers is true.
+	// +default=true
+	EnableProfilingHandler *bool `json:"enableProfilingHandler,omitempty"`
 }

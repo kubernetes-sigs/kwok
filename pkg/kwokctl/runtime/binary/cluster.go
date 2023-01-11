@@ -338,10 +338,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Workdir:        workdir,
 		Binary:         kwokControllerPath,
 		Version:        kwokControllerVersion,
-		Address:        localAddress,
 		Port:           conf.KwokControllerPort,
 		ConfigPath:     kwokConfigPath,
 		KubeconfigPath: kubeconfigPath,
+		AdminCertPath:  adminCertPath,
+		AdminKeyPath:   adminKeyPath,
+		NodeName:       "localhost",
 	})
 	if err != nil {
 		return err

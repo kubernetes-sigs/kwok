@@ -381,6 +381,10 @@ func Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(in 
 func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in *KwokConfigurationOptions, out *v1alpha1.KwokConfigurationOptions, s conversion.Scope) error {
 	out.CIDR = in.CIDR
 	out.NodeIP = in.NodeIP
+	out.NodeName = in.NodeName
+	out.NodePort = in.NodePort
+	out.TLSCertFile = in.TLSCertFile
+	out.TLSPrivateKeyFile = in.TLSPrivateKeyFile
 	if err := v1.Convert_bool_To_Pointer_bool(&in.ManageAllNodes, &out.ManageAllNodes, s); err != nil {
 		return err
 	}
@@ -390,6 +394,15 @@ func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfig
 	out.DisregardStatusWithLabelSelector = in.DisregardStatusWithLabelSelector
 	out.ServerAddress = in.ServerAddress
 	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableCNI, &out.EnableCNI, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableDebuggingHandlers, &out.EnableDebuggingHandlers, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableContentionProfiling, &out.EnableContentionProfiling, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableProfilingHandler, &out.EnableProfilingHandler, s); err != nil {
 		return err
 	}
 	return nil
@@ -403,6 +416,10 @@ func Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurat
 func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(in *v1alpha1.KwokConfigurationOptions, out *KwokConfigurationOptions, s conversion.Scope) error {
 	out.CIDR = in.CIDR
 	out.NodeIP = in.NodeIP
+	out.NodeName = in.NodeName
+	out.NodePort = in.NodePort
+	out.TLSCertFile = in.TLSCertFile
+	out.TLSPrivateKeyFile = in.TLSPrivateKeyFile
 	if err := v1.Convert_Pointer_bool_To_bool(&in.ManageAllNodes, &out.ManageAllNodes, s); err != nil {
 		return err
 	}
@@ -412,6 +429,15 @@ func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfig
 	out.DisregardStatusWithLabelSelector = in.DisregardStatusWithLabelSelector
 	out.ServerAddress = in.ServerAddress
 	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableCNI, &out.EnableCNI, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableDebuggingHandlers, &out.EnableDebuggingHandlers, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableContentionProfiling, &out.EnableContentionProfiling, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableProfilingHandler, &out.EnableProfilingHandler, s); err != nil {
 		return err
 	}
 	return nil

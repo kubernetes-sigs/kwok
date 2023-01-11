@@ -111,7 +111,9 @@ func setKwokConfigurationDefaults(config *v1alpha1.KwokConfiguration) *v1alpha1.
 	if config == nil {
 		config = &v1alpha1.KwokConfiguration{}
 	}
+
 	v1alpha1.SetObjectDefaults_KwokConfiguration(config)
+
 	return config
 }
 

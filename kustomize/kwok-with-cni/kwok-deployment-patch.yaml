@@ -26,8 +26,8 @@ spec:
             - --manage-nodes-with-label-selector=
             - --disregard-status-with-annotation-selector=kwok.x-k8s.io/status=custom
             - --disregard-status-with-label-selector=
-            - --server-address=0.0.0.0:8080
             - --node-ip=$(POD_IP)
+            - --node-port=10247
             - --experimental-enable-cni=true
           volumeMounts:
             - name: etc-cni

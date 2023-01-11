@@ -39,9 +39,6 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 	if in.Options.CIDR == "" {
 		in.Options.CIDR = "10.0.0.1/24"
 	}
-	if in.Options.NodeIP == "" {
-		in.Options.NodeIP = "196.168.0.1"
-	}
 	if in.Options.ManageAllNodes == nil {
 		var ptrVar1 bool = false
 		in.Options.ManageAllNodes = &ptrVar1
@@ -49,6 +46,18 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 	if in.Options.EnableCNI == nil {
 		var ptrVar1 bool = false
 		in.Options.EnableCNI = &ptrVar1
+	}
+	if in.Options.EnableDebuggingHandlers == nil {
+		var ptrVar1 bool = true
+		in.Options.EnableDebuggingHandlers = &ptrVar1
+	}
+	if in.Options.EnableContentionProfiling == nil {
+		var ptrVar1 bool = false
+		in.Options.EnableContentionProfiling = &ptrVar1
+	}
+	if in.Options.EnableProfilingHandler == nil {
+		var ptrVar1 bool = true
+		in.Options.EnableProfilingHandler = &ptrVar1
 	}
 }
 

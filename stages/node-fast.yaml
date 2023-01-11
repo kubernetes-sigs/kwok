@@ -48,9 +48,22 @@ spec:
       {{ with .status.addresses }}
       {{ YAML . 1 }}
       {{ else }}
-        - address: {{ NodeIP }}
+      {{ with NodeIP }}
+        - address: {{ . }}
           type: InternalIP
       {{ end }}
+      {{ with NodeName }}
+        - address: {{ . }}
+          type: Hostname
+      {{ end }}
+      {{ end }}
+
+      {{ with NodePort }}
+      daemonEndpoints:
+        kubeletEndpoint:
+          Port: {{ . }}
+      {{ end }}
+
       allocatable:
       {{ with .status.allocatable }}
       {{ YAML . 1 }}
