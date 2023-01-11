@@ -41,7 +41,7 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/cni"
+	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 )

@@ -90,7 +90,7 @@ type KwokConfigurationOptions struct {
 	// is the default value for flag --server-address
 	ServerAddress string `json:"serverAddress,omitempty"`
 
-	// Experimental support for getting pod ip from CNI, for CNI-related components
+	// Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux.
 	// is the default value for flag --experimental-enable-cni
 	// +default=false
 	EnableCNI *bool `json:"experimentalEnableCNI,omitempty"`

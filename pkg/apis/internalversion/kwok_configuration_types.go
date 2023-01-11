@@ -69,7 +69,7 @@ type KwokConfigurationOptions struct {
 	// ServerAddress is server address of the Kwok.
 	ServerAddress string
 
-	// Experimental support for getting pod ip from CNI, for CNI-related components
+	// Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux.
 	EnableCNI bool
 
 	// enableDebuggingHandlers enables server endpoints for log collection
