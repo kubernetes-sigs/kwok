@@ -1,0 +1,20 @@
+# Let's getting started with kwokctl!
+kwokctl --name demo create cluster
+
+# Switch to the cluster context with kubectl.
+kubectl config use-context kwok-demo
+
+# Create a node.
+kubectl apply -f ./test/lifecycle/fake-node.yaml
+
+# Apply a deployment and watch.
+kubectl apply -f ./test/lifecycle/fake-pod-stages.yaml && timeout 20 kubectl get pod -w
+
+# Get all pods.
+kubectl get pod
+
+# Delete the cluster.
+kwokctl --name demo delete cluster
+
+# That's all, enjoy it!
+clear

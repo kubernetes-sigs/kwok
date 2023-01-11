@@ -1,0 +1,89 @@
+/*
+Copyright 2022 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package expression
+
+import (
+	"context"
+	"time"
+)
+
+type DurationGetter interface {
+	Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool)
+}
+
+type DurationFrom struct {
+	value *time.Duration
+	query *Query
+}
+
+func NewDurationFrom(value *time.Duration, src *string) (DurationGetter, error) {
+	if value == nil && src == nil {
+		return durationNoop{}, nil
+	}
+	if src == nil {
+		return duration(*value), nil
+	}
+	query, err := NewQuery(*src)
+	if err != nil {
+		return nil, err
+	}
+	return &DurationFrom{
+		value: value,
+		query: query,
+	}, nil
+}
+
+func (d *DurationFrom) Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
+	out, err := d.query.Execute(ctx, v)
+	if err != nil {
+		return 0, false
+	}
+	if len(out) == 0 {
+		if d.value != nil {
+			return *d.value, true
+		}
+		return 0, false
+	}
+	if t, ok := out[0].(string); ok {
+		if t == "" {
+			return 0, false
+		}
+		ti, err := time.Parse(time.RFC3339Nano, t)
+		if err == nil {
+			d := ti.Sub(now)
+			return d, true
+		}
+		du, err := time.ParseDuration(t)
+		if err == nil {
+			return du, true
+		}
+	}
+	return 0, false
+}
+
+type durationNoop struct {
+}
+
+func (durationNoop) Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
+	return 0, false
+}
+
+type duration int64
+
+func (i duration) Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
+	return time.Duration(i), true
+}

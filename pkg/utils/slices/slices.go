@@ -34,3 +34,14 @@ func Find[S ~[]T, T any](s S, f func(T) bool) (t T, ok bool) {
 	}
 	return t, false
 }
+
+// Filter returns a new slice containing all elements in the slice that satisfy the predicate f.
+func Filter[S ~[]T, T any](s S, f func(T) bool) []T {
+	out := make([]T, 0, len(s))
+	for _, v := range s {
+		if f(v) {
+			out = append(out, v)
+		}
+	}
+	return out
+}

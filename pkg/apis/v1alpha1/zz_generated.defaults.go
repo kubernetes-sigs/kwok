@@ -31,6 +31,7 @@ import (
 func RegisterDefaults(scheme *runtime.Scheme) error {
 	scheme.AddTypeDefaultingFunc(&KwokConfiguration{}, func(obj interface{}) { SetObjectDefaults_KwokConfiguration(obj.(*KwokConfiguration)) })
 	scheme.AddTypeDefaultingFunc(&KwokctlConfiguration{}, func(obj interface{}) { SetObjectDefaults_KwokctlConfiguration(obj.(*KwokctlConfiguration)) })
+	scheme.AddTypeDefaultingFunc(&Stage{}, func(obj interface{}) { SetObjectDefaults_Stage(obj.(*Stage)) })
 	return nil
 }
 
@@ -89,5 +90,14 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 				b.Value = ""
 			}
 		}
+	}
+}
+
+func SetObjectDefaults_Stage(in *Stage) {
+	if in.Spec.ResourceRef.APIGroup == "" {
+		in.Spec.ResourceRef.APIGroup = "v1"
+	}
+	if in.Spec.Weight == 0 {
+		in.Spec.Weight = 0
 	}
 }

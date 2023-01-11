@@ -39,10 +39,11 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
-	"sigs.k8s.io/kwok/pkg/kwok/controllers/templates"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/stages"
 )
 
 type flagpole struct {
@@ -119,6 +120,23 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return err
 			}
 
+			stagesData := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
+
+			nodeStages := filterStages(stagesData, "v1", "Node")
+			if len(nodeStages) == 0 {
+				nodeStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+				if err != nil {
+					return err
+				}
+			}
+			podStages := filterStages(stagesData, "v1", "Pod")
+			if len(podStages) == 0 {
+				podStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultPodStages))
+				if err != nil {
+					return err
+				}
+			}
+
 			ctr, err := controllers.NewController(controllers.Config{
 				ClientSet:                             clientset,
 				EnableCNI:                             flags.Options.EnableCNI,
@@ -129,9 +147,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				DisregardStatusWithLabelSelector:      flags.Options.DisregardStatusWithLabelSelector,
 				CIDR:                                  flags.Options.CIDR,
 				NodeIP:                                flags.Options.NodeIP,
-				PodStatusTemplate:                     templates.DefaultPodStatusTemplate,
-				NodeHeartbeatTemplate:                 templates.DefaultNodeHeartbeatTemplate,
-				NodeInitializationTemplate:            templates.DefaultNodeStatusTemplate,
+				NodeStages:                            nodeStages,
+				PodStages:                             podStages,
 			})
 			if err != nil {
 				return err
@@ -234,4 +251,10 @@ func newClientset(ctx context.Context, master, kubeconfig string) (kubernetes.In
 func setConfigDefaults(config *rest.Config) error {
 	config.RateLimiter = flowcontrol.NewFakeAlwaysRateLimiter()
 	return rest.SetKubernetesDefaults(config)
+}
+
+func filterStages(stages []*internalversion.Stage, apiGroup, kind string) []*internalversion.Stage {
+	return slices.Filter(stages, func(stage *internalversion.Stage) bool {
+		return stage.Spec.ResourceRef.APIGroup == apiGroup && stage.Spec.ResourceRef.Kind == kind
+	})
 }

@@ -99,6 +99,14 @@ func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfig
 	return conf
 }
 
+func setStageDefaults(config *v1alpha1.Stage) *v1alpha1.Stage {
+	if config == nil {
+		config = &v1alpha1.Stage{}
+	}
+	v1alpha1.SetObjectDefaults_Stage(config)
+	return config
+}
+
 func setKwokConfigurationDefaults(config *v1alpha1.KwokConfiguration) *v1alpha1.KwokConfiguration {
 	if config == nil {
 		config = &v1alpha1.KwokConfiguration{}

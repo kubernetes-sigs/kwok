@@ -26,15 +26,20 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/yaml"
+
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
 
 var (
-	startTime = time.Now().Format(time.RFC3339)
+	startTime = time.Now().Format(time.RFC3339Nano)
 
 	funcMap = template.FuncMap{
 		"Now": func() string {
-			return time.Now().Format(time.RFC3339)
+			return time.Now().Format(time.RFC3339Nano)
 		},
 		"StartTime": func() string {
 			return startTime
@@ -57,8 +62,10 @@ var (
 
 // Controller is a fake kubelet implementation that can be used to test
 type Controller struct {
-	nodes *NodeController
-	pods  *PodController
+	nodes       *NodeController
+	pods        *PodController
+	broadcaster record.EventBroadcaster
+	clientSet   kubernetes.Interface
 }
 
 type Config struct {
@@ -71,9 +78,8 @@ type Config struct {
 	DisregardStatusWithLabelSelector      string
 	CIDR                                  string
 	NodeIP                                string
-	PodStatusTemplate                     string
-	NodeInitializationTemplate            string
-	NodeHeartbeatTemplate                 string
+	PodStages                             []*internalversion.Stage
+	NodeStages                            []*internalversion.Stage
 }
 
 // NewController creates a new fake kubelet controller
@@ -100,6 +106,9 @@ func NewController(conf Config) (*Controller, error) {
 		return nil, fmt.Errorf("no nodes are managed")
 	}
 
+	eventBroadcaster := record.NewBroadcaster()
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "kwok_controller"})
+
 	var lockPodsOnNodeFunc func(ctx context.Context, nodeName string) error
 
 	nodes, err := NewNodeController(NodeControllerConfig{
@@ -113,12 +122,10 @@ func NewController(conf Config) (*Controller, error) {
 		LockPodsOnNodeFunc: func(ctx context.Context, nodeName string) error {
 			return lockPodsOnNodeFunc(ctx, nodeName)
 		},
-		NodeStatusTemplate:       conf.NodeInitializationTemplate,
-		NodeHeartbeatTemplate:    conf.NodeHeartbeatTemplate,
-		NodeHeartbeatInterval:    30 * time.Second,
-		NodeHeartbeatParallelism: 16,
-		LockNodeParallelism:      16,
-		FuncMap:                  funcMap,
+		Stages:              conf.NodeStages,
+		LockNodeParallelism: 16,
+		FuncMap:             funcMap,
+		Recorder:            recorder,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create nodes controller: %w", err)
@@ -131,11 +138,11 @@ func NewController(conf Config) (*Controller, error) {
 		CIDR:                                  conf.CIDR,
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
-		PodStatusTemplate:                     conf.PodStatusTemplate,
+		Stages:                                conf.PodStages,
 		LockPodParallelism:                    16,
-		DeletePodParallelism:                  16,
 		NodeHasFunc:                           nodes.Has, // just handle pods that are on nodes we have
 		FuncMap:                               funcMap,
+		Recorder:                              recorder,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pods controller: %w", err)
@@ -144,14 +151,18 @@ func NewController(conf Config) (*Controller, error) {
 	lockPodsOnNodeFunc = pods.LockPodsOnNode
 
 	n := &Controller{
-		pods:  pods,
-		nodes: nodes,
+		pods:        pods,
+		nodes:       nodes,
+		broadcaster: eventBroadcaster,
+		clientSet:   conf.ClientSet,
 	}
 
 	return n, nil
 }
 
 func (c *Controller) Start(ctx context.Context) error {
+	c.broadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{Interface: c.clientSet.CoreV1().Events("")})
+
 	err := c.pods.Start(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start pods controller: %w", err)
