@@ -300,6 +300,15 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// Configure the kube-scheduler
 	if !conf.DisableKubeScheduler {
+		schedulerConfigPath := ""
+		if conf.KubeSchedulerConfig != "" {
+			schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
+			err = k8s.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, kubeconfigPath)
+			if err != nil {
+				return err
+			}
+		}
+
 		err = c.setupPorts(ctx,
 			&conf.KubeSchedulerPort,
 		)
@@ -320,6 +329,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			SecurePort:       conf.SecurePort,
 			CaCertPath:       caCertPath,
 			AdminKeyPath:     adminKeyPath,
+			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   kubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
 		})

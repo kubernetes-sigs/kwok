@@ -17,8 +17,8 @@ nodes:
     protocol: TCP
 {{ end }}
 
-{{ if .AuditPolicy }}
   kubeadmConfigPatches:
+{{ if .AuditPolicy }}
   - |
     kind: ClusterConfiguration
     apiServer:
@@ -28,15 +28,29 @@ nodes:
         audit-policy-file: /etc/kubernetes/audit/audit.yaml
       # mount new files / directories on the control plane
       extraVolumes:
-      - name: audit-policies
-        hostPath: /etc/kubernetes/audit
-        mountPath: /etc/kubernetes/audit
+      - name: kubernetes
+        hostPath: /etc/kubernetes
+        mountPath: /etc/kubernetes
         readOnly: true
-        pathType: "DirectoryOrCreate"
-      - name: "audit-logs"
-        hostPath: "/var/log/kubernetes"
-        mountPath: "/var/log/kubernetes"
+        pathType: DirectoryOrCreate
+      - name: logs
+        hostPath: /var/log/kubernetes
+        mountPath: /var/log/kubernetes
         readOnly: false
+        pathType: DirectoryOrCreate
+{{ end }}
+
+{{ if .SchedulerConfig }}
+  - |
+    kind: ClusterConfiguration
+    scheduler:
+      extraArgs:
+        config: /etc/kubernetes/scheduler/scheduler.yaml
+      extraVolumes:
+      - name: kubernetes
+        hostPath: /etc/kubernetes
+        mountPath: /etc/kubernetes
+        readOnly: true
         pathType: DirectoryOrCreate
 {{ end }}
 
@@ -45,6 +59,7 @@ nodes:
   - hostPath: {{ .ConfigPath }}
     containerPath: /etc/kwok/kwok.yaml
     readOnly: true
+
 {{ if .AuditPolicy }}
   - hostPath: {{ .AuditPolicy }}
     containerPath: /etc/kubernetes/audit/audit.yaml
@@ -52,6 +67,11 @@ nodes:
   - hostPath: {{ .AuditLog }}
     containerPath: /var/log/kubernetes/audit.log
     readOnly: false
+{{ end }}
+{{ if .SchedulerConfig }}
+  - hostPath: {{ .SchedulerConfig }}
+    containerPath: /etc/kubernetes/scheduler/scheduler.yaml
+    readOnly: true
 {{ end }}
 
 {{ if .FeatureGates }}

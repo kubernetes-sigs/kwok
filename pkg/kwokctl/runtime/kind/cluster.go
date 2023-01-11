@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
@@ -56,6 +57,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 	conf := &config.Options
 
+	inClusterKubeconfig := "/etc/kubernetes/scheduler.conf"
+
 	var featureGates []string
 	var runtimeConfig []string
 	if conf.KubeFeatureGates != "" {
@@ -81,6 +84,15 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 	}
 
+	schedulerConfigPath := ""
+	if !conf.DisableKubeScheduler && conf.KubeSchedulerConfig != "" {
+		schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
+		err = k8s.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, inClusterKubeconfig)
+		if err != nil {
+			return err
+		}
+	}
+
 	configPath := c.GetWorkdirPath(runtime.ConfigName)
 	kindYaml, err := BuildKind(BuildKindConfig{
 		KubeApiserverPort: conf.KubeApiserverPort,
@@ -89,6 +101,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		RuntimeConfig:     runtimeConfig,
 		AuditPolicy:       auditPolicyPath,
 		AuditLog:          auditLogPath,
+		SchedulerConfig:   schedulerConfigPath,
 		ConfigPath:        configPath,
 	})
 	if err != nil {

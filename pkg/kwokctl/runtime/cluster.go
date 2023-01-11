@@ -51,6 +51,7 @@ var (
 	PrometheusDeploy        = "prometheus-deployment.yaml"
 	AuditPolicyName         = "audit.yaml"
 	AuditLogName            = "audit.log"
+	SchedulerConfigName     = "scheduler.yaml"
 )
 
 type Cluster struct {

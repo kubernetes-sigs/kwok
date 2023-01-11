@@ -69,6 +69,9 @@ type KwokctlConfigurationOptions struct {
 	// QuietPull is the flag to quiet the pull.
 	QuietPull bool
 
+	// KubeSchedulerConfig is the configuration path for kube-scheduler.
+	KubeSchedulerConfig string
+
 	// DisableKubeScheduler is the flag to disable kube-scheduler.
 	DisableKubeScheduler bool
 
