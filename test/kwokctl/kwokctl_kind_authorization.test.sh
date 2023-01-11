@@ -32,7 +32,7 @@ function main() {
   build_kwokctl
   build_image
 
-  test_all "kind" "authorization" "${all_releases[0]}" || exit 1
+  test_all "kind" "authorization" "${all_releases[@]}" || exit 1
 }
 
 requirements

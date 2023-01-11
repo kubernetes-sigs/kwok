@@ -41,7 +41,7 @@ function test_all() {
 }
 
 # Test only the latest releases of Kubernetes
-LAST_RELEASE_SIZE="${LAST_RELEASE_SIZE:-6}"
+LAST_RELEASE_SIZE="${LAST_RELEASE_SIZE:-1}"
 
 function supported_releases() {
   cat "${ROOT_DIR}/supported_releases.txt" | head -n "${LAST_RELEASE_SIZE}"

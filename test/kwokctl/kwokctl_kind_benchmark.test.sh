@@ -24,7 +24,7 @@ function main() {
   build_kwokctl
   build_image
 
-  test_all "kind" "benchmark" "${all_releases[0]}" || exit 1
+  test_all "kind" "benchmark" "${all_releases[@]}" || exit 1
 }
 
 main $(supported_releases)
