@@ -82,19 +82,6 @@ unit-test: vendor
 verify:
 	@./hack/verify-all.sh
 
-## build-image: Build binary and image 
-.PHONY: build-image
-build-image:
-ifeq ($(GOOS),linux)
-	@make BINARY=kwok build && \
-		make image
-else ifeq ($(GOOS),darwin)
-	@make BINARY=kwok BINARY_PLATFORMS=linux/$(GOARCH) cross-build && \
-		make IMAGE_PLATFORMS=linux/$(GOARCH) cross-image
-else 
-	@echo "Unsupported OS: $(GOOS)"
-endif
-
 ## build: Build binary
 .PHONY: build
 build: vendor
@@ -112,6 +99,31 @@ build: vendor
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
+
+## build-image: Build binary and image
+.PHONY: build-image
+build-image:
+ifeq ($(GOOS),linux)
+	@make BINARY=kwok build && \
+		make image
+else ifeq ($(GOOS),darwin)
+	@make BINARY=kwok BINARY_PLATFORMS=linux/$(GOARCH) cross-build && \
+		make IMAGE_PLATFORMS=linux/$(GOARCH) cross-image
+else
+	@echo "Unsupported OS: $(GOOS)"
+endif
+
+## build-cluster-image: Build cluster image
+.PHONY: build-cluster-image
+build-cluster-image:
+ifeq ($(GOOS),linux)
+	@make build image cluster-image
+else ifeq ($(GOOS),darwin)
+	@make BINARY=kwok BINARY_PLATFORMS=linux/$(GOARCH) cross-build && \
+		make IMAGE_PLATFORMS=linux/$(GOARCH) cross-image cross-cluster-image
+else
+	@echo "Unsupported OS: $(GOOS)"
+endif
 
 ## cross-build: Build kwok and kwokctl for all supported platforms
 .PHONY: cross-build
@@ -149,6 +161,18 @@ cross-image:
 		$(addprefix --platform=, $(IMAGE_PLATFORMS))  \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${KWOK_IMAGE} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
+
+## cluster-image: Build cluster image
+.PHONY: cluster-image
+cluster-image:
+	@./images/cluster/build.sh \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
+		--kube-version=v$(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n 1 ) \
+		--image=${CLUSTER_IMAGE} \
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
