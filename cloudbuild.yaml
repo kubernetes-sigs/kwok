@@ -19,7 +19,7 @@ steps:
       - -c
       - |
         ./hack/requirements.sh gsutil buildx
-        make cross-build cross-image
+        make cross-build cross-image cross-cluster-image
 
 substitutions:
   # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and
