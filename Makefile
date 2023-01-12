@@ -159,7 +159,7 @@ cross-image:
 cross-cluster-image:
 	@./images/cluster/build.sh \
 		$(addprefix --platform=, $(IMAGE_PLATFORMS)) \
-		$(addprefix --kube-version=v, $(SUPPORTED_RELEASES)) \
+		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n 6 )) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${CLUSTER_IMAGE} \
 		--version=${VERSION} \
