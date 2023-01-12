@@ -117,6 +117,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	inClusterOnHostKubeconfigPath := c.GetWorkdirPath(runtime.InClusterKubeconfigName)
+	inClusterKubeconfig := "/root/.kube/config"
 	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
 	kwokConfigPath := c.GetWorkdirPath(runtime.ConfigName)
@@ -244,6 +245,15 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// Configure the kube-scheduler
 	if !conf.DisableKubeScheduler {
+		schedulerConfigPath := ""
+		if conf.KubeSchedulerConfig != "" {
+			schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
+			err = k8s.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, inClusterKubeconfig)
+			if err != nil {
+				return err
+			}
+		}
+
 		kubeSchedulerVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KubeSchedulerImage, "kube-scheduler")
 		if err != nil {
 			return err
@@ -257,6 +267,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			CaCertPath:       caCertPath,
 			AdminCertPath:    adminCertPath,
 			AdminKeyPath:     adminKeyPath,
+			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   inClusterOnHostKubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
 		})

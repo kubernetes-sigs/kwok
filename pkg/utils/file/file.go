@@ -74,6 +74,23 @@ func Copy(oldpath, newpath string) error {
 	return nil
 }
 
+// Append appends content to a file.
+func Append(name string, content []byte) error {
+	file, err := os.OpenFile(name, os.O_WRONLY|os.O_APPEND, 0)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+
+	_, err = file.Write(content)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Exists checks if a file exists.
 func Exists(name string) bool {
 	_, err := os.Stat(name)

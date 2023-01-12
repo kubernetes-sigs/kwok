@@ -33,6 +33,7 @@ type BuildKubeSchedulerComponentConfig struct {
 	CaCertPath       string
 	AdminCertPath    string
 	AdminKeyPath     string
+	ConfigPath       string
 	KubeconfigPath   string
 	KubeFeatureGates string
 }
@@ -71,13 +72,33 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				ReadOnly:  true,
 			},
 		)
-		kubeSchedulerArgs = append(kubeSchedulerArgs,
-			"--kubeconfig=/root/.kube/config",
-		)
+
+		if conf.ConfigPath != "" {
+			volumes = append(volumes,
+				internalversion.Volume{
+					HostPath:  conf.ConfigPath,
+					MountPath: "/etc/kubernetes/scheduler.yaml",
+					ReadOnly:  true,
+				},
+			)
+			kubeSchedulerArgs = append(kubeSchedulerArgs,
+				"--config=/etc/kubernetes/scheduler.yaml",
+			)
+		} else {
+			kubeSchedulerArgs = append(kubeSchedulerArgs,
+				"--kubeconfig=/root/.kube/config",
+			)
+		}
 	} else {
-		kubeSchedulerArgs = append(kubeSchedulerArgs,
-			"--kubeconfig="+conf.KubeconfigPath,
-		)
+		if conf.ConfigPath != "" {
+			kubeSchedulerArgs = append(kubeSchedulerArgs,
+				"--config="+conf.ConfigPath,
+			)
+		} else {
+			kubeSchedulerArgs = append(kubeSchedulerArgs,
+				"--kubeconfig="+conf.KubeconfigPath,
+			)
+		}
 	}
 
 	if conf.SecurePort {

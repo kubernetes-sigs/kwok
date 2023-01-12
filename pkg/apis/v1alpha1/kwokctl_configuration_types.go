@@ -90,6 +90,10 @@ type KwokctlConfigurationOptions struct {
 	// +default=false
 	QuietPull *bool `json:"quietPull,omitempty"`
 
+	// KubeSchedulerConfig is the configuration path for kube-scheduler.
+	// is the default value for flag --kube-scheduler-config and env KWOK_KUBE_SCHEDULER_CONFIG
+	KubeSchedulerConfig string `json:"kubeSchedulerConfig,omitempty"`
+
 	// DisableKubeScheduler is the flag to disable kube-scheduler.
 	// is the default value for flag --disable-kube-scheduler and env KWOK_DISABLE_KUBE_SCHEDULER
 	// +default=false

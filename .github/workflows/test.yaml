@@ -177,6 +177,11 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_audit
 
+      - name: Test Scheduler
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_scheduler
+
       - name: Test Authorization
         shell: bash
         run: |
