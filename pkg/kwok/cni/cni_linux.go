@@ -33,13 +33,13 @@ func Setup(ctx context.Context, id, name, namespace string) (ip []string, err er
 		return nil, err
 	}
 
-	// Initializes library
+	// Initialize library
 	l, err := gocni.New(gocni.WithDefaultConf)
 	if err != nil {
 		return nil, err
 	}
 
-	// Setup network
+	// Set up network
 	result, err := l.Setup(ctx, id, netns.Path(), getOpts(id, name, namespace))
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func Remove(ctx context.Context, id, name, namespace string) (err error) {
 		return err
 	}
 
-	// Initializes library
+	// Initialize library
 	l, err := gocni.New(gocni.WithDefaultConf)
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func Remove(ctx context.Context, id, name, namespace string) (err error) {
 }
 
 func getOpts(id, name, namespace string) gocni.NamespaceOpts {
-	// Setup network for namespace.
+	// Set up network for namespace
 	labels := map[string]string{
 		"K8S_POD_NAMESPACE":          namespace,
 		"K8S_POD_NAME":               name,
