@@ -110,8 +110,8 @@ spec:
         values:
           - Running
   delay:
-    duration: 20s
-    jitterDuration: 25s
+    durationMilliseconds: 20000
+    jitterDurationMilliseconds: 25000
   next:
     statusTemplate: |
       {{ $now := Now }}

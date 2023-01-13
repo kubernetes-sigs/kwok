@@ -63,19 +63,19 @@ type StageResourceRef struct {
 
 // StageDelay describes the delay time before going to next.
 type StageDelay struct {
-	// Duration indicates the stage delay time.
-	// If JitterDuration is less than Duration, then JitterDuration is used.
-	Duration metav1.Duration `json:"duration"`
+	// DurationMilliseconds indicates the stage delay time.
+	// If JitterDurationMilliseconds is less than DurationMilliseconds, then JitterDurationMilliseconds is used.
+	DurationMilliseconds *int64 `json:"durationMilliseconds,omitempty"`
 	// DurationFrom is the expression used to get the value.
-	// If it is a time.Time type, getting the value will be minus time.Now() to get Duration
+	// If it is a time.Time type, getting the value will be minus time.Now() to get DurationMilliseconds
 	// If it is a string type, the value get will be parsed by time.ParseDuration.
 	DurationFrom *ExpressionFromSource `json:"durationFrom,omitempty"`
 
-	// JitterDuration is the duration plus an additional amount chosen uniformly
-	// at random from the interval between Duration and JitterDuration.
-	JitterDuration *metav1.Duration `json:"jitterDuration,omitempty"`
+	// JitterDurationMilliseconds is the duration plus an additional amount chosen uniformly
+	// at random from the interval between DurationMilliseconds and JitterDurationMilliseconds.
+	JitterDurationMilliseconds *int64 `json:"jitterDurationMilliseconds,omitempty"`
 	// JitterDurationFrom is the expression used to get the value.
-	// If it is a time.Time type, getting the value will be minus time.Now() to get JitterDuration
+	// If it is a time.Time type, getting the value will be minus time.Now() to get JitterDurationMilliseconds
 	// If it is a string type, the value get will be parsed by time.ParseDuration.
 	JitterDurationFrom *ExpressionFromSource `json:"jitterDurationFrom,omitempty"`
 }

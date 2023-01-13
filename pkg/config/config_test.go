@@ -44,6 +44,12 @@ func TestConfig(t *testing.T) {
 				APIVersion: v1alpha1.GroupVersion.String(),
 			},
 		},
+		&internalversion.Stage{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       v1alpha1.StageKind,
+				APIVersion: v1alpha1.GroupVersion.String(),
+			},
+		},
 	}
 	err := Save(ctx, config, data)
 	if err != nil {

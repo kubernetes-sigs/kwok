@@ -33,10 +33,10 @@ spec:
         values:
           - <string>
   delay:
-    duration: <duration-string>
+    durationMilliseconds: <int>
     durationFrom:
       expressionFrom: <expressions-string>
-    jitterDuration: <duration-string>
+    jitterDurationMilliseconds: <int>
     jitterDurationFrom:
       expressionFrom: <expressions-string>
   next:

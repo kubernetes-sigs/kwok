@@ -14,8 +14,8 @@ spec:
         operator: 'DoesNotExist'
   weight: 1
   delay:
-    duration: 1s
-    jitterDuration: 5s
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
   next:
     event:
       type: Normal
@@ -122,8 +122,8 @@ spec:
         operator: 'Exists'
   weight: 1
   delay:
-    duration: 1s
-    jitterDuration: 5s
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
   next:
     statusTemplate: |
       {{ $now := Now }}
@@ -165,8 +165,8 @@ spec:
         operator: 'Exists'
   weight: 1
   delay:
-    duration: 1s
-    jitterDuration: 5s
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
   next:
     statusTemplate: |
       {{ $now := Now }}
@@ -229,8 +229,8 @@ spec:
           - 'True'
   weight: 1
   delay:
-    duration: 1s
-    jitterDuration: 5s
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
   next:
     delete: false
     statusTemplate: |
@@ -289,8 +289,8 @@ spec:
           - 'Job'
   weight: 1
   delay:
-    duration: 1s
-    jitterDuration: 5s
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
   next:
     delete: false
     statusTemplate: |
@@ -331,8 +331,8 @@ spec:
           - 'kwok.x-k8s.io/fake'
   weight: 1
   delay:
-    duration: 1s
-    jitterDuration: 5s
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
   next:
     finalizers:
       remove:
@@ -358,7 +358,7 @@ spec:
         operator: 'DoesNotExist'
   weight: 1
   delay:
-    duration: 1s
+    durationMilliseconds: 1000
     jitterDurationFrom:
       expressionFrom: '.metadata.deletionTimestamp'
   next:
