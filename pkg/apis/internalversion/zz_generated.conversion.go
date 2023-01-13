@@ -705,9 +705,9 @@ func Convert_v1alpha1_Stage_To_internalversion_Stage(in *v1alpha1.Stage, out *St
 }
 
 func autoConvert_internalversion_StageDelay_To_v1alpha1_StageDelay(in *StageDelay, out *v1alpha1.StageDelay, s conversion.Scope) error {
-	out.Duration = in.Duration
+	out.DurationMilliseconds = (*int64)(unsafe.Pointer(in.DurationMilliseconds))
 	out.DurationFrom = (*v1alpha1.ExpressionFromSource)(unsafe.Pointer(in.DurationFrom))
-	out.JitterDuration = (*v1.Duration)(unsafe.Pointer(in.JitterDuration))
+	out.JitterDurationMilliseconds = (*int64)(unsafe.Pointer(in.JitterDurationMilliseconds))
 	out.JitterDurationFrom = (*v1alpha1.ExpressionFromSource)(unsafe.Pointer(in.JitterDurationFrom))
 	return nil
 }
@@ -718,9 +718,9 @@ func Convert_internalversion_StageDelay_To_v1alpha1_StageDelay(in *StageDelay, o
 }
 
 func autoConvert_v1alpha1_StageDelay_To_internalversion_StageDelay(in *v1alpha1.StageDelay, out *StageDelay, s conversion.Scope) error {
-	out.Duration = in.Duration
+	out.DurationMilliseconds = (*int64)(unsafe.Pointer(in.DurationMilliseconds))
 	out.DurationFrom = (*ExpressionFromSource)(unsafe.Pointer(in.DurationFrom))
-	out.JitterDuration = (*v1.Duration)(unsafe.Pointer(in.JitterDuration))
+	out.JitterDurationMilliseconds = (*int64)(unsafe.Pointer(in.JitterDurationMilliseconds))
 	out.JitterDurationFrom = (*ExpressionFromSource)(unsafe.Pointer(in.JitterDurationFrom))
 	return nil
 }

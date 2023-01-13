@@ -30,6 +30,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func NewStagesFromYaml(data []byte) ([]*internalversion.Stage, error) {
@@ -146,19 +147,24 @@ func newLifecycleFromStage(s *internalversion.Stage) (*LifecycleStage, error) {
 		if delay.DurationFrom != nil {
 			durationFrom = &delay.DurationFrom.ExpressionFrom
 		}
-		duration, err := expression.NewDurationFrom(&delay.Duration.Duration, durationFrom)
+		var delayDuration time.Duration
+		if delay.DurationMilliseconds != nil {
+			delayDuration = time.Duration(*delay.DurationMilliseconds) * time.Millisecond
+		}
+		duration, err := expression.NewDurationFrom(&delayDuration, durationFrom)
 		if err != nil {
 			return nil, err
 		}
 		stage.duration = duration
-		if delay.JitterDuration != nil || delay.JitterDurationFrom != nil {
+
+		if delay.JitterDurationMilliseconds != nil || delay.JitterDurationFrom != nil {
 			var jitterDurationFrom *string
 			if delay.JitterDurationFrom != nil {
 				jitterDurationFrom = &delay.JitterDurationFrom.ExpressionFrom
 			}
 			var jitterDuration *time.Duration
-			if delay.JitterDuration != nil {
-				jitterDuration = &delay.JitterDuration.Duration
+			if delay.JitterDurationMilliseconds != nil {
+				jitterDuration = format.Ptr(time.Duration(*delay.JitterDurationMilliseconds) * time.Millisecond)
 			}
 			jitterDurationGetter, err := expression.NewDurationFrom(jitterDuration, jitterDurationFrom)
 			if err != nil {
