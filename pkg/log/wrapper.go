@@ -59,7 +59,7 @@ func (l *Logger) Warn(msg string, args ...any) {
 
 func (l *Logger) Error(msg string, err error, args ...any) {
 	if err != nil {
-		args = append(args[:len(args):len(args)], slog.Any(slog.ErrorKey, err))
+		args = append(args[:len(args):len(args)], slog.String(slog.ErrorKey, err.Error()))
 	}
 	l.log.LogDepth(0, ErrorLevel, msg, args...)
 }
