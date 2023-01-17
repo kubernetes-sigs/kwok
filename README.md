@@ -11,8 +11,7 @@ So far we provide two tools:
 - **Kwok:** Core of this repo. It simulates thousands of fake Nodes.
 - **Kwokctl:** A CLI to facilitate creating and managing clusters simulated by Kwok.
 
-Please see [https://kwok-demo.netlify.app](https://kwok-demo.netlify.app) for more in-depth information.
-But it will be replaced in the future when [https://kwok.sigs.k8s.io](https://kwok.sigs.k8s.io) is available.
+Please see [https://kwok.sigs.k8s.io](https://kwok.sigs.k8s.io) for more in-depth information.
 
 <img width="700px" src="./demo/manage-clusters.svg">
 
