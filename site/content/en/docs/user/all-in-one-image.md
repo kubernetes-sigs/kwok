@@ -2,7 +2,7 @@
 
 {{< hint "info" >}}
 
-This document walks you through how to create a cluster with all-in-one image.
+This document walks through the steps to create a cluster with the all-in-one image.
 
 {{< /hint >}}
 
