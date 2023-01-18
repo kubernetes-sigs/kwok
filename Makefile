@@ -82,6 +82,11 @@ unit-test: vendor
 verify:
 	@./hack/verify-all.sh
 
+## generate: Generate deepcopy,default,conversion
+.PHONY: generate
+generate:
+	$(GO_CMD) generate ./pkg/...
+
 ## build: Build binary
 .PHONY: build
 build: vendor

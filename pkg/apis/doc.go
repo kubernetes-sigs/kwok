@@ -16,7 +16,7 @@ limitations under the License.
 
 package apis
 
-//go:generate go run k8s.io/code-generator/cmd/deepcopy-gen@latest -i ./v1alpha1/ --trim-path-prefix sigs.k8s.io/kwok/pkg/apis -o ./ -O zz_generated.deepcopy --go-header-file ../../hack/tools/boilerplate.go.txt
-//go:generate go run k8s.io/code-generator/cmd/defaulter-gen@latest -i ./v1alpha1/ --trim-path-prefix sigs.k8s.io/kwok/pkg/apis -o ./ -O zz_generated.defaults --go-header-file ../../hack/tools/boilerplate.go.txt
-//go:generate go run k8s.io/code-generator/cmd/deepcopy-gen@latest -i ./internalversion/ --trim-path-prefix sigs.k8s.io/kwok/pkg/apis -o ./ -O zz_generated.deepcopy --go-header-file ../../hack/tools/boilerplate.go.txt
-//go:generate go run k8s.io/code-generator/cmd/conversion-gen@latest -i ./internalversion/ --trim-path-prefix sigs.k8s.io/kwok/pkg/apis -o ./ -O zz_generated.conversion --go-header-file ../../hack/tools/boilerplate.go.txt
+//go:generate go run k8s.io/code-generator/cmd/deepcopy-gen@latest --input-dirs sigs.k8s.io/kwok/pkg/apis/v1alpha1/ --trim-path-prefix sigs.k8s.io/kwok/pkg/apis -o ./ -O zz_generated.deepcopy --go-header-file ../../hack/tools/boilerplate.go.txt
+//go:generate go run k8s.io/code-generator/cmd/defaulter-gen@latest --input-dirs sigs.k8s.io/kwok/pkg/apis/v1alpha1/ --trim-path-prefix sigs.k8s.io/kwok/pkg/apis -o ./ -O zz_generated.defaults --go-header-file ../../hack/tools/boilerplate.go.txt
+//go:generate go run k8s.io/code-generator/cmd/deepcopy-gen@latest --input-dirs sigs.k8s.io/kwok/pkg/apis/internalversion/ --trim-path-prefix sigs.k8s.io/kwok/pkg/apis -o ./ -O zz_generated.deepcopy --go-header-file ../../hack/tools/boilerplate.go.txt
+//go:generate go run k8s.io/code-generator/cmd/conversion-gen@latest --input-dirs sigs.k8s.io/kwok/pkg/apis/internalversion/ --trim-path-prefix sigs.k8s.io/kwok/pkg/apis -o ./ -O zz_generated.conversion --go-header-file ../../hack/tools/boilerplate.go.txt
