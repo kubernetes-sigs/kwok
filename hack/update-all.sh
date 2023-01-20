@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright 2022 The Kubernetes Authors.
+# Copyright 2023 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,14 +17,15 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
+ROOT_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)
 
-function check() {
-    echo "Generate"
-    go generate ./pkg/...
-    git --no-pager diff --exit-code ./pkg/
-}
+failed=()
 
-cd "${ROOT_DIR}"
+if [[ "${UPDATE_CODEGEN:-true}" == "true" ]]; then
+    "${ROOT_DIR}"/hack/update-codegen.sh || failed+=(codegen)
+fi
 
-check || exit 1
+if [[ "${#failed[@]}" != 0 ]]; then
+    echo "Update failed for: ${failed[*]}"
+    exit 1
+fi
