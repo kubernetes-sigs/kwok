@@ -1,5 +1,8 @@
+//go:build tools
+// +build tools
+
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,4 +17,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package apis
+// Copied from https://github.com/kubernetes/sample-controller/blob/master/hack/tools.go
+
+// This package imports things required by build scripts, to force `go mod` to see them as dependencies
+package tools
+
+import _ "k8s.io/code-generator"

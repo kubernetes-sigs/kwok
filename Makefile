@@ -82,6 +82,11 @@ unit-test: vendor
 verify:
 	@./hack/verify-all.sh
 
+## update: Update all the generated
+.PHONY: update
+update:
+	@./hack/update-all.sh
+
 ## build: Build binary
 .PHONY: build
 build: vendor
