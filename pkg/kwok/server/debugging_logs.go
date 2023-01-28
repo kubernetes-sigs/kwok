@@ -17,6 +17,7 @@ limitations under the License.
 package server
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -31,9 +32,9 @@ import (
 
 // GetContainerLogs returns logs for a container in a pod.
 // If follow is true, it streams the logs until the connection is closed by the client.
-func (s *Server) GetContainerLogs(name, container string, logOptions *corev1.PodLogOptions, stdout, stderr io.Writer) error {
+func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace string, container string, logOptions *corev1.PodLogOptions, stdout, stderr io.Writer) error {
 	// TODO: Configure and implement the log streamer
-	msg := fmt.Sprintf("TODO: GetContainerLogs(%q, %q)", name, container)
+	msg := fmt.Sprintf("TODO: GetContainerLogs(%q, %q)", podName+"/"+podNamespace, container)
 	_, _ = stdout.Write([]byte(msg))
 	return nil
 }
@@ -83,7 +84,7 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 	}
 	fw := flushwriter.Wrap(response.ResponseWriter)
 	response.Header().Set("Transfer-Encoding", "chunked")
-	if err := s.GetContainerLogs(podNamespace+"/"+podName, containerName, logOptions, fw, fw); err != nil {
+	if err := s.GetContainerLogs(request.Request.Context(), podName, podNamespace, containerName, logOptions, fw, fw); err != nil {
 		_ = response.WriteError(http.StatusBadRequest, err)
 		return
 	}

@@ -17,6 +17,7 @@ limitations under the License.
 package remotecommand
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -37,28 +38,28 @@ import (
 type Executor interface {
 	// ExecInContainer executes a command in a container in the pod, copying data
 	// between in/out/err and the container's stdin/stdout/stderr.
-	ExecInContainer(name string, uid types.UID, container string, cmd []string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize, timeout time.Duration) error
+	ExecInContainer(ctx context.Context, podName, podNamespace string, uid types.UID, container string, cmd []string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize, timeout time.Duration) error
 }
 
 // ServeExec handles requests to execute a command in a container. After
 // creating/receiving the required streams, it delegates the actual execution
 // to the executor.
-func ServeExec(w http.ResponseWriter, req *http.Request, executor Executor, podName string, uid types.UID, container string, cmd []string, streamOpts *Options, idleTimeout, streamCreationTimeout time.Duration, supportedProtocols []string) {
-	ctx, ok := createStreams(req, w, streamOpts, supportedProtocols, idleTimeout, streamCreationTimeout)
+func ServeExec(ctx context.Context, w http.ResponseWriter, req *http.Request, executor Executor, podName, podNamespace string, uid types.UID, container string, cmd []string, streamOpts *Options, idleTimeout, streamCreationTimeout time.Duration, supportedProtocols []string) {
+	stmCtx, ok := createStreams(req, w, streamOpts, supportedProtocols, idleTimeout, streamCreationTimeout)
 	if !ok {
 		// error is handled by createStreams
 		return
 	}
 	defer func() {
-		_ = ctx.conn.Close()
+		_ = stmCtx.conn.Close()
 	}()
 
-	err := executor.ExecInContainer(podName, uid, container, cmd, ctx.stdinStream, ctx.stdoutStream, ctx.stderrStream, ctx.tty, ctx.resizeChan, 0)
+	err := executor.ExecInContainer(ctx, podName, podNamespace, uid, container, cmd, stmCtx.stdinStream, stmCtx.stdoutStream, stmCtx.stderrStream, stmCtx.tty, stmCtx.resizeChan, 0)
 	if err != nil {
 		var exitErr utilexec.ExitError
 		if errors.As(err, &exitErr) && exitErr.Exited() {
 			rc := exitErr.ExitStatus()
-			_ = ctx.writeStatus(&apierrors.StatusError{ErrStatus: metav1.Status{
+			_ = stmCtx.writeStatus(&apierrors.StatusError{ErrStatus: metav1.Status{
 				Status: metav1.StatusFailure,
 				Reason: remotecommandconsts.NonZeroExitCodeReason,
 				Details: &metav1.StatusDetails{
@@ -75,10 +76,10 @@ func ServeExec(w http.ResponseWriter, req *http.Request, executor Executor, podN
 			err = fmt.Errorf("error executing command in container: %w", err)
 			logger := log.FromContext(req.Context())
 			logger.Error("ExecInContainer", err)
-			_ = ctx.writeStatus(apierrors.NewInternalError(err))
+			_ = stmCtx.writeStatus(apierrors.NewInternalError(err))
 		}
 	} else {
-		_ = ctx.writeStatus(&apierrors.StatusError{ErrStatus: metav1.Status{
+		_ = stmCtx.writeStatus(&apierrors.StatusError{ErrStatus: metav1.Status{
 			Status: metav1.StatusSuccess,
 		}})
 	}

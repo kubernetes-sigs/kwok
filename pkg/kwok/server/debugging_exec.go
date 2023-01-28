@@ -17,6 +17,7 @@ limitations under the License.
 package server
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,9 +31,9 @@ import (
 )
 
 // ExecInContainer executes a command in a container.
-func (s *Server) ExecInContainer(name string, uid types.UID, container string, cmd []string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize, timeout time.Duration) error {
+func (s *Server) ExecInContainer(ctx context.Context, podName, podNamespace string, uid types.UID, container string, cmd []string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize, timeout time.Duration) error {
 	// TODO: Configure and implement the exec streamer
-	msg := fmt.Sprintf("TODO: ExecInContainer(%q, %q, %q)", name, container, cmd)
+	msg := fmt.Sprintf("TODO: ExecInContainer(%q, %q, %q)", podName+"/"+podNamespace, container, cmd)
 	_, _ = out.Write([]byte(msg))
 	return nil
 }
@@ -47,10 +48,12 @@ func (s *Server) getExec(req *restful.Request, resp *restful.Response) {
 	}
 
 	remotecommand.ServeExec(
+		req.Request.Context(),
 		resp.ResponseWriter,
 		req.Request,
 		s,
-		params.podNamespace+"/"+params.podName,
+		params.podName,
+		params.podNamespace,
 		params.podUID,
 		params.containerName,
 		params.cmd,
