@@ -21,10 +21,10 @@ source "${DIR}/helper.sh"
 
 function main() {
   local all_releases=("${@}")
-  build_kwokctl
-  build_kwok
 
   test_all "binary" "benchmark" "${all_releases[@]}" || exit 1
 }
+
+requirements_for_binary
 
 main $(supported_releases)

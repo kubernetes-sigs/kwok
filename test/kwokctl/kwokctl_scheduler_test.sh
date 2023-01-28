@@ -35,7 +35,6 @@ function args() {
   done
 }
 
-
 function show_info() {
     local name="${1}"
     echo kwokctl get clusters
