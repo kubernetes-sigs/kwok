@@ -17,6 +17,7 @@ limitations under the License.
 package remotecommand
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,29 +35,29 @@ import (
 type Attacher interface {
 	// AttachContainer attaches to the running container in the pod, copying data between in/out/err
 	// and the container's stdin/stdout/stderr.
-	AttachContainer(name string, uid types.UID, container string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error
+	AttachContainer(ctx context.Context, podName, podNamespace string, uid types.UID, container string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error
 }
 
 // ServeAttach handles requests to attach to a container. After creating/receiving the required
 // streams, it delegates the actual attaching to attacher.
-func ServeAttach(w http.ResponseWriter, req *http.Request, attacher Attacher, podName string, uid types.UID, container string, streamOpts *Options, idleTimeout, streamCreationTimeout time.Duration, supportedProtocols []string) {
-	ctx, ok := createStreams(req, w, streamOpts, supportedProtocols, idleTimeout, streamCreationTimeout)
+func ServeAttach(ctx context.Context, w http.ResponseWriter, req *http.Request, attacher Attacher, podName, podNamespace string, uid types.UID, container string, streamOpts *Options, idleTimeout, streamCreationTimeout time.Duration, supportedProtocols []string) {
+	stmCtx, ok := createStreams(req, w, streamOpts, supportedProtocols, idleTimeout, streamCreationTimeout)
 	if !ok {
 		// error is handled by createStreams
 		return
 	}
 	defer func() {
-		_ = ctx.conn.Close()
+		_ = stmCtx.conn.Close()
 	}()
 
-	err := attacher.AttachContainer(podName, uid, container, ctx.stdinStream, ctx.stdoutStream, ctx.stderrStream, ctx.tty, ctx.resizeChan)
+	err := attacher.AttachContainer(ctx, podName, podNamespace, uid, container, stmCtx.stdinStream, stmCtx.stdoutStream, stmCtx.stderrStream, stmCtx.tty, stmCtx.resizeChan)
 	if err != nil {
 		err = fmt.Errorf("error attaching to container: %w", err)
 		logger := log.FromContext(req.Context())
 		logger.Error("AttachContainer", err)
-		_ = ctx.writeStatus(apierrors.NewInternalError(err))
+		_ = stmCtx.writeStatus(apierrors.NewInternalError(err))
 	} else {
-		_ = ctx.writeStatus(&apierrors.StatusError{ErrStatus: metav1.Status{
+		_ = stmCtx.writeStatus(&apierrors.StatusError{ErrStatus: metav1.Status{
 			Status: metav1.StatusSuccess,
 		}})
 	}

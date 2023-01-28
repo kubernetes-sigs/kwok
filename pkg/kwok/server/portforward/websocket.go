@@ -88,7 +88,7 @@ func NewV4Options(req *http.Request) (*V4Options, error) {
 // a PortForwarder. A pair of streams are created per port (DATA n,
 // ERROR n+1). The associated port is written to each stream as a unsigned 16
 // bit integer in little endian format.
-func handleWebSocketStreams(req *http.Request, w http.ResponseWriter, portForwarder PortForwarder, podName string, uid types.UID, opts *V4Options, idleTimeout time.Duration) error {
+func handleWebSocketStreams(ctx context.Context, req *http.Request, w http.ResponseWriter, portForwarder PortForwarder, podName, podNamespace string, uid types.UID, opts *V4Options, idleTimeout time.Duration) error {
 	channels := make([]wsstream.ChannelType, 0, len(opts.Ports)*2)
 	for i := 0; i < len(opts.Ports); i++ {
 		channels = append(channels, wsstream.ReadWriteChannel, wsstream.WriteChannel)
@@ -131,16 +131,17 @@ func handleWebSocketStreams(req *http.Request, w http.ResponseWriter, portForwar
 		_, _ = streamPair.errorStream.Write(portBytes)
 	}
 
-	logger := log.FromContext(req.Context())
+	logger := log.FromContext(ctx)
 	h := &websocketStreamHandler{
-		logger:      logger,
-		conn:        conn,
-		streamPairs: streamPairs,
-		pod:         podName,
-		uid:         uid,
-		forwarder:   portForwarder,
+		logger:       logger,
+		conn:         conn,
+		streamPairs:  streamPairs,
+		podName:      podName,
+		podNamespace: podNamespace,
+		uid:          uid,
+		forwarder:    portForwarder,
 	}
-	h.run(req.Context())
+	h.run(ctx)
 
 	return nil
 }
@@ -156,12 +157,13 @@ type websocketStreamPair struct {
 // websocketStreamHandler is capable of processing a single port forward
 // request over a websocket connection
 type websocketStreamHandler struct {
-	logger      *log.Logger
-	conn        *wsstream.Conn
-	streamPairs []*websocketStreamPair
-	pod         string
-	uid         types.UID
-	forwarder   PortForwarder
+	logger       *log.Logger
+	conn         *wsstream.Conn
+	streamPairs  []*websocketStreamPair
+	podName      string
+	podNamespace string
+	uid          types.UID
+	forwarder    PortForwarder
 }
 
 // run invokes the websocketStreamHandler's forwarder.PortForward
@@ -188,11 +190,11 @@ func (h *websocketStreamHandler) portForward(ctx context.Context, p *websocketSt
 	}()
 
 	h.logger.Debug("Connection invoking forwarder.PortForward for port", "connection", h.conn, "port", p.port)
-	err := h.forwarder.PortForward(h.pod, h.uid, p.port, p.dataStream)
+	err := h.forwarder.PortForward(ctx, h.podName, h.podNamespace, h.uid, p.port, p.dataStream)
 	h.logger.Debug("Connection done invoking forwarder.PortForward for port", "connection", h.conn, "port", p.port)
 
 	if err != nil {
-		err := fmt.Errorf("error forwarding port %d to pod %s, uid %v: %w", p.port, h.pod, h.uid, err)
+		err := fmt.Errorf("error forwarding port %d to pod %s/%s, uid %v: %w", p.port, h.podNamespace, h.podName, h.uid, err)
 		logger := log.FromContext(ctx)
 		logger.Error("PortForward", err)
 		fmt.Fprint(p.errorStream, err.Error())

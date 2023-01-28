@@ -17,6 +17,7 @@ limitations under the License.
 package server
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,9 +31,9 @@ import (
 
 // AttachContainer attaches to a container in a pod,
 // copying data between in/out/err and the container's stdin/stdout/stderr.
-func (s *Server) AttachContainer(name string, uid types.UID, container string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize) error {
+func (s *Server) AttachContainer(ctx context.Context, podName, podNamespace string, uid types.UID, container string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize) error {
 	// TODO: Configure and implement the attach streamer
-	msg := fmt.Sprintf("TODO: AttachContainer(%q, %q)", name, container)
+	msg := fmt.Sprintf("TODO: AttachContainer(%q, %q)", podNamespace+"/"+podName, container)
 	_, _ = out.Write([]byte(msg))
 	return nil
 }
@@ -47,10 +48,12 @@ func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
 	}
 
 	remotecommand.ServeAttach(
+		req.Request.Context(),
 		resp.ResponseWriter,
 		req.Request,
 		s,
-		params.podNamespace+"/"+params.podName,
+		params.podName,
+		params.podNamespace,
 		params.podUID,
 		params.containerName,
 		streamOpts,

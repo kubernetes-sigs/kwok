@@ -17,6 +17,7 @@ limitations under the License.
 package server
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -29,9 +30,9 @@ import (
 )
 
 // PortForward handles a port forwarding request.
-func (s *Server) PortForward(name string, uid types.UID, port int32, stream io.ReadWriteCloser) error {
+func (s *Server) PortForward(ctx context.Context, podName, podNamespace string, uid types.UID, port int32, stream io.ReadWriteCloser) error {
 	// TODO: Configure and implement the port forward streamer
-	msg := fmt.Sprintf("TODO: PortForward(%q, %q)", name, port)
+	msg := fmt.Sprintf("TODO: PortForward(%q, %q)", podName+"/"+podNamespace, port)
 	_, _ = stream.Write([]byte(msg))
 	return nil
 }
@@ -50,10 +51,12 @@ func (s *Server) getPortForward(req *restful.Request, resp *restful.Response) {
 	}
 
 	portforward.ServePortForward(
+		req.Request.Context(),
 		resp.ResponseWriter,
 		req.Request,
 		s,
-		params.podNamespace+"/"+params.podName,
+		params.podName,
+		params.podNamespace,
 		params.podUID,
 		portForwardOptions,
 		s.idleTimeout,
