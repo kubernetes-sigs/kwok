@@ -24,10 +24,12 @@ import (
 	"github.com/itchyny/gojq"
 )
 
+// Query is wrapper of gojq.Query.
 type Query struct {
 	jq *gojq.Query
 }
 
+// NewQuery returns a new Query.
 func NewQuery(src string) (*Query, error) {
 	q, err := gojq.Parse(src)
 	if err != nil {
@@ -38,8 +40,9 @@ func NewQuery(src string) (*Query, error) {
 	}, nil
 }
 
+// Execute executes the query with the given value.
 func (q *Query) Execute(ctx context.Context, v interface{}) ([]interface{}, error) {
-	v, err := ToJsonStandard(v)
+	v, err := ToJSONStandard(v)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +61,8 @@ func (q *Query) Execute(ctx context.Context, v interface{}) ([]interface{}, erro
 	return out, nil
 }
 
-func ToJsonStandard(v interface{}) (interface{}, error) {
+// ToJSONStandard converts the given value to a value that used by gojq.
+func ToJSONStandard(v interface{}) (interface{}, error) {
 	switch v.(type) {
 	case nil, bool, int, float64, *big.Int, string, []interface{}, map[string]interface{}:
 		return v, nil

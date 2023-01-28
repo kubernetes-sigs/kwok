@@ -22,14 +22,18 @@ import (
 	"sort"
 )
 
+// BuildRuntime is a function to build a runtime
 type BuildRuntime func(name, workdir string) (Runtime, error)
 
+// DefaultRegistry is the default registry
 var DefaultRegistry = NewRegistry()
 
+// Registry is a registry of runtime
 type Registry struct {
 	items map[string]BuildRuntime
 }
 
+// NewRegistry create a new registry
 func NewRegistry() *Registry {
 	return &Registry{
 		items: map[string]BuildRuntime{},

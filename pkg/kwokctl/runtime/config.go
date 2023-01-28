@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
+// Runtime is the interface for a runtime.
 type Runtime interface {
 	// SetConfig sets the config of cluster
 	SetConfig(ctx context.Context, conf *internalversion.KwokctlConfiguration) error

@@ -51,10 +51,12 @@ var (
 	ClustersDir = path.Join(WorkDir, "clusters")
 )
 
+// ClusterName returns the cluster name.
 func ClusterName(name string) string {
 	return fmt.Sprintf("%s-%s", consts.ProjectName, name)
 }
 
+// GetKwokctlConfiguration get the configuration of the kwokctl.
 func GetKwokctlConfiguration(ctx context.Context) (conf *internalversion.KwokctlConfiguration) {
 	configs := FilterWithTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
 	if len(configs) != 0 {
@@ -77,6 +79,7 @@ func GetKwokctlConfiguration(ctx context.Context) (conf *internalversion.Kwokctl
 	return conf
 }
 
+// GetKwokConfiguration get the configuration of the kwok.
 func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfiguration) {
 	configs := FilterWithTypeFromContext[*internalversion.KwokConfiguration](ctx)
 	if len(configs) != 0 {

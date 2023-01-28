@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// BuildKubeControllerManagerComponentConfig is the configuration for building a kube-controller-manager component.
 type BuildKubeControllerManagerComponentConfig struct {
 	Binary            string
 	Image             string
@@ -38,6 +39,7 @@ type BuildKubeControllerManagerComponentConfig struct {
 	KubeFeatureGates  string
 }
 
+// BuildKubeControllerManagerComponent builds a kube-controller-manager component.
 func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponentConfig) (component internalversion.Component, err error) {
 	if conf.Address == "" {
 		conf.Address = publicAddress

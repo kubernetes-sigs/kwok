@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// BuildKwokControllerComponentConfig is the configuration for building a kwok controller component.
 type BuildKwokControllerComponentConfig struct {
 	Binary         string
 	Image          string
@@ -35,6 +36,7 @@ type BuildKwokControllerComponentConfig struct {
 	NodeName       string
 }
 
+// BuildKwokControllerComponent builds a kwok controller component.
 func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (component internalversion.Component, err error) {
 	kwokControllerArgs := []string{
 		"--manage-all-nodes=true",

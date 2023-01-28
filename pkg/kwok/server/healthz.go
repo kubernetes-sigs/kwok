@@ -30,6 +30,7 @@ func (s *Server) healthzCheck(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// InstallHealthz installs the healthz handler.
 func (s *Server) InstallHealthz() {
 	s.restfulCont.Handle("/healthz", http.HandlerFunc(s.healthzCheck))
 	s.restfulCont.Handle("/readyz", http.HandlerFunc(s.healthzCheck))

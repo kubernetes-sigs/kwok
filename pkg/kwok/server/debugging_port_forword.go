@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
+// PortForward handles a port forwarding request.
 func (s *Server) PortForward(name string, uid types.UID, port int32, stream io.ReadWriteCloser) error {
 	// TODO: Configure and implement the port forward streamer
 	msg := fmt.Sprintf("TODO: PortForward(%q, %q)", name, port)

@@ -40,16 +40,19 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
+// Cluster is a implementation of Runtime for kind
 type Cluster struct {
 	*runtime.Cluster
 }
 
+// NewCluster creates a new Runtime for kind
 func NewCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir),
 	}, nil
 }
 
+// Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -153,6 +156,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	return nil
 }
 
+// Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -315,6 +319,7 @@ func loadImages(ctx context.Context, command, kindCluster string, images []strin
 	return nil
 }
 
+// WaitReady waits for the cluster to be ready.
 func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 	var (
 		err     error
@@ -340,6 +345,7 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 	return nil
 }
 
+// Ready returns true if the cluster is ready
 func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	ok, err := c.Cluster.Ready(ctx)
 	if err != nil {
@@ -381,6 +387,7 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+// Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
 	// unset the context in default kubeconfig
 	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name()+".cluster")
@@ -403,6 +410,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 	return nil
 }
 
+// Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
 	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "start", c.getClusterName())
 	if err != nil {
@@ -411,6 +419,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 	return nil
 }
 
+// Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
 	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "stop", c.getClusterName())
 	if err != nil {
@@ -419,6 +428,7 @@ func (c *Cluster) Stop(ctx context.Context) error {
 	return nil
 }
 
+// StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
@@ -427,6 +437,7 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	return nil
 }
 
+// StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
@@ -468,10 +479,12 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	return nil
 }
 
+// Logs returns the logs of the specified component.
 func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	return c.logs(ctx, name, out, false)
 }
 
+// LogsFollow follows the logs of the component
 func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) error {
 	return c.logs(ctx, name, out, true)
 }

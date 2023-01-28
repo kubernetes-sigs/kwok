@@ -16,6 +16,7 @@ limitations under the License.
 
 package k8s
 
+// GetRuntimeConfig returns the runtime configuration of the Kubernetes cluster.
 func GetRuntimeConfig(version int) string {
 	if version < 17 {
 		return ""

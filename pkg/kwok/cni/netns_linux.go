@@ -48,6 +48,7 @@ func getNsRunDir() string {
 	return "/var/run/netns"
 }
 
+// GetNS returns the netns object for the current thread
 func GetNS(name string) (ns.NetNS, error) {
 	nsRunDir := getNsRunDir()
 

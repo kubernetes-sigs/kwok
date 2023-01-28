@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
+// The following functions are used to get the path of the cluster
 var (
 	ConfigName              = consts.ConfigName
 	InHostKubeconfigName    = "kubeconfig.yaml"
@@ -54,12 +55,14 @@ var (
 	SchedulerConfigName     = "scheduler.yaml"
 )
 
+// Cluster is the cluster
 type Cluster struct {
 	workdir string
 	name    string
 	conf    *internalversion.KwokctlConfiguration
 }
 
+// NewCluster creates a new cluster
 func NewCluster(name, workdir string) *Cluster {
 	return &Cluster{
 		name:    name,
@@ -67,6 +70,7 @@ func NewCluster(name, workdir string) *Cluster {
 	}
 }
 
+// Config returns the cluster config
 func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfiguration, error) {
 	if c.conf != nil {
 		return c.conf, nil
@@ -79,14 +83,17 @@ func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfigura
 	return conf, nil
 }
 
+// Name returns the cluster name
 func (c *Cluster) Name() string {
 	return c.name
 }
 
+// Workdir returns the cluster workdir
 func (c *Cluster) Workdir() string {
 	return c.workdir
 }
 
+// Load loads the cluster config
 func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfiguration, error) {
 	objs, err := config.Load(ctx, c.GetWorkdirPath(ConfigName))
 	if err != nil {
@@ -100,15 +107,18 @@ func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfigurati
 	return configs[0], nil
 }
 
+// InHostKubeconfig returns the kubeconfig path for in-host components
 func (c *Cluster) InHostKubeconfig() (string, error) {
 	return c.GetWorkdirPath(InHostKubeconfigName), nil
 }
 
+// SetConfig sets the cluster config
 func (c *Cluster) SetConfig(ctx context.Context, conf *internalversion.KwokctlConfiguration) error {
 	c.conf = conf
 	return nil
 }
 
+// Save saves the cluster config
 func (c *Cluster) Save(ctx context.Context) error {
 	if c.conf == nil {
 		return nil
@@ -149,6 +159,7 @@ func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
 	return kubectlPath, nil
 }
 
+// Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
 	_, err := c.kubectlPath(ctx)
 	if err != nil {
@@ -157,11 +168,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	return nil
 }
 
+// Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
 	// cleanup workdir
 	return os.RemoveAll(c.Workdir())
 }
 
+// Ready returns true if the cluster is ready
 func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	out := bytes.NewBuffer(nil)
 	err := c.KubectlInCluster(ctx, exec.IOStreams{
@@ -182,6 +195,7 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+// WaitReady waits for the cluster to be ready.
 func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 	var (
 		err     error
@@ -207,6 +221,7 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 	return nil
 }
 
+// GetComponent returns the component by name
 func (c *Cluster) GetComponent(ctx context.Context, name string) (internalversion.Component, error) {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -222,6 +237,7 @@ func (c *Cluster) GetComponent(ctx context.Context, name string) (internalversio
 	return component, nil
 }
 
+// Kubectl runs kubectl.
 func (c *Cluster) Kubectl(ctx context.Context, stm exec.IOStreams, args ...string) error {
 	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
@@ -231,6 +247,7 @@ func (c *Cluster) Kubectl(ctx context.Context, stm exec.IOStreams, args ...strin
 	return exec.Exec(ctx, "", stm, kubectlPath, args...)
 }
 
+// KubectlInCluster runs kubectl in the cluster.
 func (c *Cluster) KubectlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error {
 	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
@@ -241,6 +258,7 @@ func (c *Cluster) KubectlInCluster(ctx context.Context, stm exec.IOStreams, args
 		append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
 }
 
+// AuditLogs returns the audit logs of the cluster.
 func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 	logs := c.GetLogPath(AuditLogName)
 
@@ -263,6 +281,7 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 	return nil
 }
 
+// AuditLogsFollow follows the audit logs of the cluster.
 func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 	logs := c.GetLogPath(AuditLogName)
 
@@ -290,14 +309,17 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 	return nil
 }
 
+// GetWorkdirPath returns the path to the file in the workdir.
 func (c *Cluster) GetWorkdirPath(name string) string {
 	return path.Join(c.workdir, name)
 }
 
+// GetBinPath returns the path to the given binary name.
 func (c *Cluster) GetBinPath(name string) string {
 	return path.Join(c.workdir, "bin", name)
 }
 
+// GetLogPath returns the path of the given log name.
 func (c *Cluster) GetLogPath(name string) string {
 	return path.Join(c.workdir, "logs", name)
 }

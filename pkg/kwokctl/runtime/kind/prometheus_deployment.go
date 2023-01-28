@@ -29,6 +29,7 @@ var prometheusDeploymentYamlTpl string
 
 var prometheusDeploymentYamlTemplate = template.Must(template.New("_").Parse(prometheusDeploymentYamlTpl))
 
+// BuildPrometheusDeployment builds the prometheus deployment yaml content.
 func BuildPrometheusDeployment(conf BuildPrometheusDeploymentConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	err := prometheusDeploymentYamlTemplate.Execute(buf, conf)
@@ -38,6 +39,7 @@ func BuildPrometheusDeployment(conf BuildPrometheusDeploymentConfig) (string, er
 	return buf.String(), nil
 }
 
+// BuildPrometheusDeploymentConfig is the configuration for building the prometheus deployment
 type BuildPrometheusDeploymentConfig struct {
 	PrometheusImage string
 	Name            string

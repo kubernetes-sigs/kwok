@@ -22,9 +22,11 @@ import (
 )
 
 var (
+	// DefaultNodeStages is the default node stages.
 	//go:embed node-fast.yaml
 	DefaultNodeStages string
 
+	// DefaultPodStages is the default pod stages.
 	//go:embed pod-fast.yaml
 	DefaultPodStages string
 )

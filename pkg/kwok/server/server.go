@@ -35,6 +35,7 @@ const (
 	pprofBasePath = "/debug/pprof/"
 )
 
+// Server is a server that can serve HTTP/HTTPS requests.
 type Server struct {
 	restfulCont *restful.Container
 
@@ -42,6 +43,7 @@ type Server struct {
 	streamCreationTimeout time.Duration
 }
 
+// NewServer creates a new Server.
 func NewServer() *Server {
 	container := restful.NewContainer()
 	return &Server{
@@ -57,6 +59,8 @@ func getHandlerForDisabledEndpoint(errorMessage string) http.HandlerFunc {
 	}
 }
 
+// Run runs the specified Server.
+// This should never exit.
 func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFile string) error {
 	logger := log.FromContext(ctx)
 	listener, err := net.Listen("tcp", address)

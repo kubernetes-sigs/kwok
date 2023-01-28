@@ -21,15 +21,18 @@ import (
 	"time"
 )
 
+// DurationGetter is a interface that can be used to get a time.Duration value.
 type DurationGetter interface {
+	// Get returns a duration value.
 	Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool)
 }
 
-type DurationFrom struct {
+type durationFrom struct {
 	value *time.Duration
 	query *Query
 }
 
+// NewDurationFrom returns a new DurationGetter.
 func NewDurationFrom(value *time.Duration, src *string) (DurationGetter, error) {
 	if value == nil && src == nil {
 		return durationNoop{}, nil
@@ -41,13 +44,13 @@ func NewDurationFrom(value *time.Duration, src *string) (DurationGetter, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &DurationFrom{
+	return &durationFrom{
 		value: value,
 		query: query,
 	}, nil
 }
 
-func (d *DurationFrom) Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
+func (d *durationFrom) Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
 	out, err := d.query.Execute(ctx, v)
 	if err != nil {
 		return 0, false

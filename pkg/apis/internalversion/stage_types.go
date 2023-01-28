@@ -143,6 +143,7 @@ type SelectorRequirement struct {
 // SelectorOperator is a label selector operator is the set of operators that can be used in a selector requirement.
 type SelectorOperator string
 
+// The following are valid selector operators.
 var (
 	SelectorOpIn           SelectorOperator = "In"
 	SelectorOpNotIn        SelectorOperator = "NotIn"

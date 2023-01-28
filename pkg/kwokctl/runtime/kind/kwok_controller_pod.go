@@ -30,6 +30,7 @@ var kwokControllerPodYamlTpl string
 
 var kwokControllerPodYamlTemplate = template.Must(template.New("_").Parse(kwokControllerPodYamlTpl))
 
+// BuildKwokControllerPod builds the kwok controller pod yaml content.
 func BuildKwokControllerPod(conf BuildKwokControllerPodConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	split := strings.SplitN(conf.KwokControllerImage, ":", 2)
@@ -42,6 +43,7 @@ func BuildKwokControllerPod(conf BuildKwokControllerPodConfig) (string, error) {
 	return buf.String(), nil
 }
 
+// BuildKwokControllerPodConfig is the configuration for building the kwok controller pod
 type BuildKwokControllerPodConfig struct {
 	KwokControllerImage     string
 	KwokControllerImageName string

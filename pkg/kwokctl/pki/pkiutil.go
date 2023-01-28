@@ -44,6 +44,7 @@ const (
 	// RSAPrivateKeyBlockType is a possible value for pem.Block.Type.
 	RSAPrivateKeyBlockType = "RSA PRIVATE KEY"
 
+	// CertificateValidity is the validity period of a certificate.
 	CertificateValidity = 100 * 365 * 24 * time.Hour
 
 	rsaKeySize = 2048

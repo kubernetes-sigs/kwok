@@ -160,6 +160,7 @@ func (c *PodController) Start(ctx context.Context) error {
 	return nil
 }
 
+// FinalizersModify modify the finalizers of the pod
 func (c *PodController) FinalizersModify(ctx context.Context, pod *corev1.Pod, finalizers *internalversion.StageFinalizers) error {
 	ops := finalizersModify(pod.Finalizers, finalizers)
 	if len(ops) == 0 {
@@ -208,7 +209,7 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
-	data, err := expression.ToJsonStandard(pod)
+	data, err := expression.ToJSONStandard(pod)
 	if err != nil {
 		return err
 	}

@@ -29,6 +29,7 @@ var kindYamlTpl string
 
 var kindYamlTemplate = template.Must(template.New("_").Parse(kindYamlTpl))
 
+// BuildKind builds the kind yaml content.
 func BuildKind(conf BuildKindConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	err := kindYamlTemplate.Execute(buf, conf)
@@ -38,6 +39,7 @@ func BuildKind(conf BuildKindConfig) (string, error) {
 	return buf.String(), nil
 }
 
+// BuildKindConfig is the configuration for building the kind config
 type BuildKindConfig struct {
 	KubeApiserverPort uint32
 	PrometheusPort    uint32
