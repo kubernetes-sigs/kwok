@@ -26,9 +26,11 @@ import (
 )
 
 var (
+	// ErrBrokenLinks is returned when there are broken links.
 	ErrBrokenLinks = fmt.Errorf("broken links dependency detected")
 )
 
+// GroupByLinks groups stages by links.
 func GroupByLinks(components []internalversion.Component) ([][]internalversion.Component, error) {
 	had := sets.NewString()
 	next := slices.Clone(components)

@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// BuildEtcdComponentConfig is the configuration for building an etcd component.
 type BuildEtcdComponentConfig struct {
 	Binary   string
 	Image    string
@@ -33,6 +34,7 @@ type BuildEtcdComponentConfig struct {
 	PeerPort uint32
 }
 
+// BuildEtcdComponent builds an etcd component.
 func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversion.Component, err error) {
 	if conf.PeerPort == 0 {
 		conf.PeerPort = 2380

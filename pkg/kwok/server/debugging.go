@@ -32,6 +32,7 @@ func (s *Server) InstallDebuggingDisabledHandlers() {
 	}
 }
 
+// InstallDebuggingHandlers registers the HTTP request patterns that provide debugging functionality
 func (s *Server) InstallDebuggingHandlers() {
 	// TODO: These interface control planes are not used for now, so don't implement them first
 	paths := []string{

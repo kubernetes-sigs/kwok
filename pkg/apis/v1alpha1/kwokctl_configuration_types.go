@@ -21,6 +21,7 @@ import (
 )
 
 const (
+	// KwokctlConfigurationKind is the kind of the kwokctl configuration.
 	KwokctlConfigurationKind = "KwokctlConfiguration"
 
 	// ModeStableFeatureGateAndAPI is intended to reduce cluster configuration requirements
@@ -42,6 +43,7 @@ type KwokctlConfiguration struct {
 	Components []Component `json:"components,omitempty"`
 }
 
+// KwokctlConfigurationOptions holds information about the options.
 type KwokctlConfigurationOptions struct {
 	// KubeApiserverPort is the port to expose apiserver.
 	// is the default value for flag --kube-apiserver-port and env KWOK_KUBE_APISERVER_PORT
@@ -264,6 +266,7 @@ type KwokctlConfigurationOptions struct {
 	CacheDir string `json:"cacheDir,omitempty"`
 }
 
+// Component is a component of the cluster.
 type Component struct {
 	// Name of the component specified as a DNS_LABEL.
 	// Each component must have a unique name (DNS_LABEL).
@@ -353,6 +356,7 @@ const (
 	ProtocolSCTP Protocol = "SCTP"
 )
 
+// Volume represents a volume that is accessible to the containers running in a component.
 type Volume struct {
 	// Name of the volume specified.
 	// +optional

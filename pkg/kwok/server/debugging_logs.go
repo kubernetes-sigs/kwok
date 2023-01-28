@@ -29,6 +29,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
+// GetContainerLogs returns logs for a container in a pod.
+// If follow is true, it streams the logs until the connection is closed by the client.
 func (s *Server) GetContainerLogs(name, container string, logOptions *corev1.PodLogOptions, stdout, stderr io.Writer) error {
 	// TODO: Configure and implement the log streamer
 	msg := fmt.Sprintf("TODO: GetContainerLogs(%q, %q)", name, container)

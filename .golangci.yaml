@@ -26,7 +26,7 @@ linters:
     - nilerr
     - nolintlint
     - prealloc
-    # - revive
+    - revive
     # - rowserrcheck
     - staticcheck
     - stylecheck

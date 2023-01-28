@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 /*
 Copyright 2022 The Kubernetes Authors.
 
@@ -14,6 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package main implements a simple boilerplate checker.
 package main
 
 import (

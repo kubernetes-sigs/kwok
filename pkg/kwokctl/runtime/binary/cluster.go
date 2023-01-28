@@ -43,10 +43,12 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// Cluster is a implementation of Runtime for binary
 type Cluster struct {
 	*runtime.Cluster
 }
 
+// NewCluster creates a new Runtime for binary
 func NewCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir),
@@ -166,6 +168,7 @@ func (c *Cluster) setupPorts(ctx context.Context, ports ...*uint32) error {
 	return nil
 }
 
+// Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -442,6 +445,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	return nil
 }
 
+// Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
 	// unset the context in default kubeconfig
 	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "clusters."+c.Name())
@@ -556,6 +560,7 @@ func (c *Cluster) stopComponents(ctx context.Context, cs []internalversion.Compo
 	return nil
 }
 
+// Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -570,6 +575,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	return nil
 }
 
+// Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -584,6 +590,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 	return nil
 }
 
+// Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -598,6 +605,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 	return nil
 }
 
+// Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -612,6 +620,7 @@ func (c *Cluster) Stop(ctx context.Context) error {
 	return nil
 }
 
+// StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	component, err := c.GetComponent(ctx, name)
 	if err != nil {
@@ -625,6 +634,7 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	return nil
 }
 
+// StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 	component, err := c.GetComponent(ctx, name)
 	if err != nil {
@@ -638,6 +648,7 @@ func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 	return nil
 }
 
+// Logs returns the logs of the specified component.
 func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	_, err := c.GetComponent(ctx, name)
 	if err != nil {
@@ -666,6 +677,7 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	return nil
 }
 
+// LogsFollow follows the logs of the component
 func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) error {
 	_, err := c.GetComponent(ctx, name)
 	if err != nil {

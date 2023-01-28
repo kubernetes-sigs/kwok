@@ -25,6 +25,7 @@ import (
 
 var lockEnabled = map[string]bool{}
 
+// GetFeatureGates returns the feature gates for the given version
 func GetFeatureGates(version int) string {
 	if version < 0 {
 		return ""
@@ -59,6 +60,7 @@ func GetFeatureGates(version int) string {
 	return strings.Join(gates, ",")
 }
 
+// FeatureSpec is the specification of a feature
 type FeatureSpec struct {
 	Name  string
 	Stage Stage
@@ -66,11 +68,13 @@ type FeatureSpec struct {
 	Until int
 }
 
+// Contain returns true if the version is in the range of the feature
 func (f *FeatureSpec) Contain(v int) bool {
 	return f.Since <= v &&
 		(f.Until < 0 || v <= f.Until)
 }
 
+// Verification of the data
 func (f *FeatureSpec) Verification() error {
 	if f.Since < 0 {
 		return fmt.Errorf("invalid since: %d", f.Since)
@@ -81,8 +85,10 @@ func (f *FeatureSpec) Verification() error {
 	return nil
 }
 
+// Stage is the stage of a feature.
 type Stage string
 
+// The following stages are defined in https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
 const (
 	Alpha = Stage("ALPHA")
 	Beta  = Stage("BETA")

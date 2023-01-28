@@ -21,5 +21,6 @@ import (
 )
 
 var (
+	// ErrComponentNotFound is returned when a component is not found
 	ErrComponentNotFound = fmt.Errorf("component not found")
 )

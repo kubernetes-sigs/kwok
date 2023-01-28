@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
+// Load loads the given path into the context.
 func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 	var raws []json.RawMessage
 
@@ -147,6 +148,7 @@ func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 	return objs, nil
 }
 
+// Save saves the given objects to the given path.
 func Save(ctx context.Context, path string, objs []metav1.Object) error {
 	err := os.MkdirAll(filepath.Dir(path), 0750)
 	if err != nil {
@@ -208,6 +210,7 @@ func Save(ctx context.Context, path string, objs []metav1.Object) error {
 	return nil
 }
 
+// FilterWithType returns a list of objects with the given type.
 func FilterWithType[T metav1.Object](objs []metav1.Object) (out []T) {
 	for _, obj := range objs {
 		o, ok := obj.(T)
@@ -218,6 +221,7 @@ func FilterWithType[T metav1.Object](objs []metav1.Object) (out []T) {
 	return out
 }
 
+// FilterWithoutType filters out objects of the given type.
 func FilterWithoutType[T metav1.Object](objs []metav1.Object) (out []metav1.Object) {
 	for _, obj := range objs {
 		_, ok := obj.(T)
@@ -228,6 +232,7 @@ func FilterWithoutType[T metav1.Object](objs []metav1.Object) (out []metav1.Obje
 	return out
 }
 
+// FilterWithTypeFromContext returns all objects of the given type from the context.
 func FilterWithTypeFromContext[T metav1.Object](ctx context.Context) (out []T) {
 	v := ctx.Value(configCtx(0))
 	objs, ok := v.([]metav1.Object)
@@ -237,6 +242,7 @@ func FilterWithTypeFromContext[T metav1.Object](ctx context.Context) (out []T) {
 	return FilterWithType[T](objs)
 }
 
+// FilterWithoutTypeFromContext returns all objects from the context that are not of the given type.
 func FilterWithoutTypeFromContext[T metav1.Object](ctx context.Context) (out []metav1.Object) {
 	v := ctx.Value(configCtx(0))
 	objs, ok := v.([]metav1.Object)

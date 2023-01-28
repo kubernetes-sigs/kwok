@@ -29,12 +29,15 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
+// Version represents a semver compatible version
 type Version = semver.Version
 
 var versionRegexp = regexp.MustCompile(`(kubernetes|version):? v?(\d+\.\d+\.\d+\S*)`)
 
+// Unknown is the unknown version.
 var Unknown = Version{}
 
+// NewVersion creates a new version.
 func NewVersion(major, minor, patch uint64) Version {
 	return semver.Version{
 		Major: major,
@@ -43,6 +46,7 @@ func NewVersion(major, minor, patch uint64) Version {
 	}
 }
 
+// ParseFromOutput parses the version from the output.
 func ParseFromOutput(s string) (Version, error) {
 	s = strings.ToLower(s)
 	matches := versionRegexp.FindStringSubmatch(s)
@@ -52,6 +56,7 @@ func ParseFromOutput(s string) (Version, error) {
 	return semver.Parse(matches[2])
 }
 
+// ParseFromBinary parses the version from the binary.
 func ParseFromBinary(ctx context.Context, path string) (Version, error) {
 	out := bytes.NewBuffer(nil)
 	err := exec.Exec(ctx, "", exec.IOStreams{
@@ -79,6 +84,7 @@ func ParseFromBinary(ctx context.Context, path string) (Version, error) {
 	return ver, nil
 }
 
+// ParseFromImage parses the version from the image tag.
 func ParseFromImage(ctx context.Context, runtime string, image string, command string) (Version, error) {
 	args := []string{"run", "--rm", image}
 	if command != "" {

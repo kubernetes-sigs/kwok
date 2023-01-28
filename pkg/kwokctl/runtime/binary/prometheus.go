@@ -29,6 +29,7 @@ var prometheusYamlTpl string
 
 var prometheusYamlTemplate = template.Must(template.New("_").Parse(prometheusYamlTpl))
 
+// BuildPrometheus builds the prometheus yaml content.
 func BuildPrometheus(conf BuildPrometheusConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	err := prometheusYamlTemplate.Execute(buf, conf)
@@ -38,6 +39,7 @@ func BuildPrometheus(conf BuildPrometheusConfig) (string, error) {
 	return buf.String(), nil
 }
 
+// BuildPrometheusConfig is the configuration for building the prometheus config
 type BuildPrometheusConfig struct {
 	ProjectName               string
 	SecurePort                bool

@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// BuildPrometheusComponentConfig is the configuration for building a prometheus component.
 type BuildPrometheusComponentConfig struct {
 	Binary        string
 	Image         string
@@ -34,6 +35,7 @@ type BuildPrometheusComponentConfig struct {
 	AdminKeyPath  string
 }
 
+// BuildPrometheusComponent builds a prometheus component.
 func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component internalversion.Component, err error) {
 	if conf.Address == "" {
 		conf.Address = publicAddress

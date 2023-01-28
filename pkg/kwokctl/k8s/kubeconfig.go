@@ -29,6 +29,7 @@ var kubeconfigYamlTpl string
 
 var kubeconfigYamlTemplate = template.Must(template.New("_").Parse(kubeconfigYamlTpl))
 
+// BuildKubeconfig builds a kubeconfig file from the given parameters.
 func BuildKubeconfig(conf BuildKubeconfigConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	err := kubeconfigYamlTemplate.Execute(buf, conf)
@@ -38,6 +39,7 @@ func BuildKubeconfig(conf BuildKubeconfigConfig) (string, error) {
 	return buf.String(), nil
 }
 
+// BuildKubeconfigConfig is the configuration for BuildKubeconfig.
 type BuildKubeconfigConfig struct {
 	ProjectName  string
 	SecurePort   bool

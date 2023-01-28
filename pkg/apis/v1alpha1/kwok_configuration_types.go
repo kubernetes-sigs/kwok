@@ -21,6 +21,7 @@ import (
 )
 
 const (
+	// KwokConfigurationKind is the kind of the KwokConfiguration.
 	KwokConfigurationKind = "KwokConfiguration"
 )
 
@@ -36,6 +37,7 @@ type KwokConfiguration struct {
 	Options KwokConfigurationOptions `json:"options,omitempty"`
 }
 
+// KwokConfigurationOptions holds information about the options.
 type KwokConfigurationOptions struct {
 	// The default IP assigned to the Pod on maintained Nodes.
 	// is the default value for flag --cidr

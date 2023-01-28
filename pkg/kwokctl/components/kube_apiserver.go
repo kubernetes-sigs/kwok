@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// BuildKubeApiserverComponentConfig is the configuration for building a kube-apiserver component.
 type BuildKubeApiserverComponentConfig struct {
 	Binary            string
 	Image             string
@@ -42,6 +43,7 @@ type BuildKubeApiserverComponentConfig struct {
 	AdminKeyPath      string
 }
 
+// BuildKubeApiserverComponent builds a kube-apiserver component.
 func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (component internalversion.Component, err error) {
 	if conf.EtcdPort == 0 {
 		conf.EtcdPort = 2379

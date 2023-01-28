@@ -32,6 +32,7 @@ type KwokConfiguration struct {
 	Options KwokConfigurationOptions
 }
 
+// KwokConfigurationOptions holds information about the options.
 type KwokConfigurationOptions struct {
 	// The default IP assigned to the Pod on maintained Nodes.
 	CIDR string

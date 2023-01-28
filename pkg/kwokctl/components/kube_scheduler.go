@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// BuildKubeSchedulerComponentConfig is the configuration for building a kube-scheduler component.
 type BuildKubeSchedulerComponentConfig struct {
 	Binary           string
 	Image            string
@@ -38,6 +39,7 @@ type BuildKubeSchedulerComponentConfig struct {
 	KubeFeatureGates string
 }
 
+// BuildKubeSchedulerComponent builds a kube-scheduler component.
 func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (component internalversion.Component, err error) {
 	if conf.Address == "" {
 		conf.Address = publicAddress

@@ -15,5 +15,4 @@ limitations under the License.
 */
 
 // Package kind implements the runtime.Runtime interface using the kind.
-
 package kind

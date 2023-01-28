@@ -68,6 +68,7 @@ type Controller struct {
 	clientSet   kubernetes.Interface
 }
 
+// Config is the configuration for the controller
 type Config struct {
 	EnableCNI                             bool
 	ClientSet                             kubernetes.Interface
@@ -164,6 +165,7 @@ func NewController(conf Config) (*Controller, error) {
 	return n, nil
 }
 
+// Start starts the controller
 func (c *Controller) Start(ctx context.Context) error {
 	c.broadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{Interface: c.clientSet.CoreV1().Events("")})
 

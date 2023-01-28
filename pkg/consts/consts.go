@@ -17,6 +17,7 @@ limitations under the License.
 // Package consts defines the constants for building the project.
 package consts
 
+// The following constants are used to build the project.
 var (
 	ProjectName = "kwok"
 	ConfigName  = "kwok.yaml"
@@ -44,6 +45,7 @@ var (
 	KindNodeImagePrefix = "docker.io/kindest"
 )
 
+// The following runtime is provided.
 const (
 	RuntimeTypeKind    = "kind"
 	RuntimeTypeDocker  = "docker"

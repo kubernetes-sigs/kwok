@@ -20,4 +20,5 @@ import (
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 )
 
+// SupportedStreamingProtocols is a list of supported streaming protocols.
 var SupportedStreamingProtocols = remotecommandconsts.SupportedStreamingProtocols

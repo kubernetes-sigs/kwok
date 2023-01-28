@@ -280,6 +280,7 @@ func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan *corev1.Nod
 	c.parallelTasks.Wait()
 }
 
+// FinalizersModify modify finalizers of node
 func (c *NodeController) FinalizersModify(ctx context.Context, node *corev1.Node, finalizers *internalversion.StageFinalizers) error {
 	ops := finalizersModify(node.Finalizers, finalizers)
 	if len(ops) == 0 {
@@ -329,7 +330,7 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 	logger = logger.With(
 		"node", node.Name,
 	)
-	data, err := expression.ToJsonStandard(node)
+	data, err := expression.ToJSONStandard(node)
 	if err != nil {
 		return err
 	}
@@ -474,10 +475,12 @@ func (c *NodeController) computePatchNode(node *corev1.Node, tpl string) ([]byte
 	})
 }
 
+// Has returns true if the node is existed
 func (c *NodeController) Has(nodeName string) bool {
 	return c.nodesSets.Has(nodeName)
 }
 
+// Size returns the number of nodes
 func (c *NodeController) Size() int {
 	return c.nodesSets.Size()
 }

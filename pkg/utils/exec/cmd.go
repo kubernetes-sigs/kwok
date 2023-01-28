@@ -159,6 +159,7 @@ func Exec(ctx context.Context, dir string, stm IOStreams, name string, arg ...st
 	return nil
 }
 
+// IOStreams contains the standard streams.
 type IOStreams struct {
 	// In think, os.Stdin
 	In io.Reader
@@ -190,6 +191,7 @@ func killProcess(pid int) error {
 	return nil
 }
 
+// IsRunning returns true if the process is running.
 func IsRunning(ctx context.Context, dir string, name string) bool {
 	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
 	pidData, err := os.ReadFile(pidPath)

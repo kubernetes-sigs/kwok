@@ -28,6 +28,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/server/remotecommand"
 )
 
+// AttachContainer attaches to a container in a pod,
+// copying data between in/out/err and the container's stdin/stdout/stderr.
 func (s *Server) AttachContainer(name string, uid types.UID, container string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize) error {
 	// TODO: Configure and implement the attach streamer
 	msg := fmt.Sprintf("TODO: AttachContainer(%q, %q)", name, container)

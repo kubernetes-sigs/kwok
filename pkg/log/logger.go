@@ -26,16 +26,20 @@ import (
 	"golang.org/x/term"
 )
 
+// IsTerminal returns true if the given file descriptor is a terminal.
 var IsTerminal = term.IsTerminal
 
+// FromContext returns the Logger associated with ctx, or the default logger.
 func FromContext(ctx context.Context) *Logger {
 	return wrapSlog(slog.FromContext(ctx))
 }
 
+// NewContext returns a new context with the given logger.
 func NewContext(ctx context.Context, logger *Logger) context.Context {
 	return slog.NewContext(ctx, logger.log)
 }
 
+// NewLogger returns a new Logger that writes to w.
 func NewLogger(w io.Writer, level slog.Level) *Logger {
 	if w == nil {
 		return noop

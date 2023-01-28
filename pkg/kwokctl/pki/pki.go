@@ -74,6 +74,7 @@ func generatePki() (*pkiSuite, error) {
 	}, nil
 }
 
+// GeneratePki generates a new PKI suite for the cluster.
 func GeneratePki(dir string) error {
 	p, err := generatePki()
 	if err != nil {

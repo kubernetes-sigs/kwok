@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package compatibility provides compatible for old version of kwokctl.
 package compatibility
 
 import (
@@ -21,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 )
 
+// Config is the old configuration for kwokctl.
 type Config struct {
 	Name                      string `json:"name,omitempty"`
 	Workdir                   string `json:"workdir,omitempty"`
@@ -82,6 +84,9 @@ type Config struct {
 	RuntimeConfig string `json:"kube_runtime_config,omitempty"`
 }
 
+// Convert_Config_To_internalversion_KwokctlConfiguration converts a Config to an internalversion.KwokctlConfiguration.
+//
+//nolint:revive
 func Convert_Config_To_internalversion_KwokctlConfiguration(in *Config) (*internalversion.KwokctlConfiguration, bool) {
 	if in.Name == "" || in.Workdir == "" || in.Runtime == "" {
 		return nil, false

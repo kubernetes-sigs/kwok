@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
+// CopySchedulerConfig copies the scheduler configuration file to the given path.
 func CopySchedulerConfig(oldpath, newpath, kubeconfig string) error {
 	err := file.Copy(oldpath, newpath)
 	if err != nil {

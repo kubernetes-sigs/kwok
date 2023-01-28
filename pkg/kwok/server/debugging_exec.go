@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/server/remotecommand"
 )
 
+// ExecInContainer executes a command in a container.
 func (s *Server) ExecInContainer(name string, uid types.UID, container string, cmd []string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize, timeout time.Duration) error {
 	// TODO: Configure and implement the exec streamer
 	msg := fmt.Sprintf("TODO: ExecInContainer(%q, %q, %q)", name, container, cmd)

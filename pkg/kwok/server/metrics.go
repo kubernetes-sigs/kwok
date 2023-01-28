@@ -20,6 +20,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// InstallMetrics registers the metrics handler on the given mux.
 func (s *Server) InstallMetrics() {
 	promHandler := promhttp.Handler()
 	s.restfulCont.Handle("/metrics", promHandler)
