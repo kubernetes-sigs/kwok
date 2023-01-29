@@ -22,7 +22,13 @@ ROOT_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)
 failed=()
 
 if [[ "${UPDATE_CODEGEN:-true}" == "true" ]]; then
+    echo "[*] Update codegen..."
     "${ROOT_DIR}"/hack/update-codegen.sh || failed+=(codegen)
+fi
+
+if [[ "${UPDATE_GO_FORMAT:-true}" == "true" ]]; then
+    echo "[*] Update go format..."
+    "${ROOT_DIR}"/hack/update-go-format.sh || failed+=(go-format)
 fi
 
 if [[ "${#failed[@]}" != 0 ]]; then
