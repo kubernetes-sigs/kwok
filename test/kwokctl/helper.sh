@@ -19,6 +19,8 @@ DIR="$(realpath "${DIR}")"
 
 ROOT_DIR="$(realpath "${DIR}/../..")"
 
+source "${ROOT_DIR}/hack/requirements.sh"
+
 VERSION="$("${ROOT_DIR}/hack/get-version.sh")"
 
 GOOS="$(go env GOOS)"
@@ -74,4 +76,24 @@ function build_image_for_nerdctl() {
   mkdir "tmp"
   docker save -o "tmp/kwok.tar" "${KWOK_CONTROLLER_IMAGE}"
   nerdctl load -i "tmp/kwok.tar"
+}
+
+function requirements() {
+  install_kubectl
+  install_buildx
+  build_kwokctl
+  build_image
+}
+
+function requirements_for_nerdctl() {
+  install_kubectl
+  install_buildx
+  build_kwokctl
+  build_image_for_nerdctl
+}
+
+function requirements_for_binary() {
+  install_kubectl
+  build_kwokctl
+  build_kwok
 }

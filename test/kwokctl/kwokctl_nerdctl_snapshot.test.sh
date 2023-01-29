@@ -17,24 +17,14 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
-ROOT_DIR="$(realpath "${DIR}/../..")"
-
 source "${DIR}/helper.sh"
-source "${ROOT_DIR}/hack/requirements.sh"
-
-function requirements() {
-  install_kubectl
-  install_buildx
-}
 
 function main() {
   local all_releases=("${@}")
-  build_kwokctl
-  build_image_for_nerdctl
 
   test_all "nerdctl" "snapshot" "${all_releases[@]}" || exit 1
 }
 
-requirements
+requirements_for_nerdctl
 
 main $(supported_releases)
