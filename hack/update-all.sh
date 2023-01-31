@@ -36,6 +36,11 @@ if [[ "${UPDATE_GO_MOD:-true}" == "true" ]]; then
     "${ROOT_DIR}"/hack/update-go-mod.sh || failed+=(go-mod)
 fi
 
+if [[ "${UPDATE_ENDS_NEWLINE:-true}" == "true" ]]; then
+    echo "[*] Update ends newline..."
+    "${ROOT_DIR}"/hack/update-ends-newline.sh || failed+=(ends-newline)
+fi
+
 if [[ "${#failed[@]}" != 0 ]]; then
     echo "Update failed for: ${failed[*]}"
     exit 1
