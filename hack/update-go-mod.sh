@@ -17,26 +17,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)
+REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
-failed=()
+cd "${REPO_ROOT}"
 
-if [[ "${UPDATE_CODEGEN:-true}" == "true" ]]; then
-    echo "[*] Update codegen..."
-    "${ROOT_DIR}"/hack/update-codegen.sh || failed+=(codegen)
-fi
-
-if [[ "${UPDATE_GO_FORMAT:-true}" == "true" ]]; then
-    echo "[*] Update go format..."
-    "${ROOT_DIR}"/hack/update-go-format.sh || failed+=(go-format)
-fi
-
-if [[ "${UPDATE_GO_MOD:-true}" == "true" ]]; then
-    echo "[*] Update go mod..."
-    "${ROOT_DIR}"/hack/update-go-mod.sh || failed+=(go-mod)
-fi
-
-if [[ "${#failed[@]}" != 0 ]]; then
-    echo "Update failed for: ${failed[*]}"
-    exit 1
-fi
+go mod tidy
