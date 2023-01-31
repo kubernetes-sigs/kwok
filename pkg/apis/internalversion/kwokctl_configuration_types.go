@@ -42,6 +42,11 @@ type KwokctlConfigurationOptions struct {
 	// Runtime is the runtime to use.
 	Runtime string
 
+	// Runtimes is a list of alternate runtimes. When Runtime is empty,
+	// the availability of the runtimes in the list is checked one by one
+	// and set to Runtime
+	Runtimes []string
+
 	// PrometheusPort is the port to expose Prometheus metrics.
 	PrometheusPort uint32
 

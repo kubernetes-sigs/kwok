@@ -51,8 +51,12 @@ type KwokctlConfigurationOptions struct {
 
 	// Runtime is the runtime to use.
 	// is the default value for flag --runtime and env KWOK_RUNTIME
-	// +default="docker"
 	Runtime string `json:"runtime,omitempty"`
+
+	// Runtimes is a list of alternate runtimes. When Runtime is empty,
+	// the availability of the runtimes in the list is checked one by one
+	// and set to Runtime
+	Runtimes []string `json:"runtimes,omitempty"`
 
 	// PrometheusPort is the port to expose Prometheus metrics.
 	// is the default value for flag --prometheus-port and env KWOK_PROMETHEUS_PORT

@@ -46,13 +46,29 @@ import (
 // Cluster is a implementation of Runtime for docker-compose.
 type Cluster struct {
 	*runtime.Cluster
+
+	runtime string
 }
 
-// NewCluster creates a new Runtime for docker-compose.
-func NewCluster(name, workdir string) (runtime.Runtime, error) {
+// NewNerdctlCluster creates a new Runtime for nerdctl compose.
+func NewNerdctlCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypeNerdctl,
 	}, nil
+}
+
+// NewDockerCluster creates a new Runtime for docker-compose.
+func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypeDocker,
+	}, nil
+}
+
+// Available  checks whether the runtime is available.
+func (c *Cluster) Available(ctx context.Context) error {
+	return exec.Exec(ctx, "", exec.IOStreams{}, c.runtime, "version")
 }
 
 func (c *Cluster) setup(ctx context.Context) error {
@@ -172,13 +188,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	err = image.PullImages(ctx, conf.Runtime, images, conf.QuietPull)
+	err = image.PullImages(ctx, c.runtime, images, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
 	// Configure the etcd
-	etcdVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.EtcdImage, "etcd")
+	etcdVersion, err := version.ParseFromImage(ctx, c.runtime, conf.EtcdImage, "etcd")
 	if err != nil {
 		return err
 	}
@@ -195,7 +211,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	config.Components = append(config.Components, etcdComponent)
 
 	// Configure the kube-apiserver
-	kubeApiserverVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KubeApiserverImage, "kube-apiserver")
+	kubeApiserverVersion, err := version.ParseFromImage(ctx, c.runtime, conf.KubeApiserverImage, "kube-apiserver")
 	if err != nil {
 		return err
 	}
@@ -223,7 +239,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	// Configure the kube-controller-manager
 	if !conf.DisableKubeControllerManager {
-		kubeControllerManagerVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KubeControllerManagerImage, "kube-controller-manager")
+		kubeControllerManagerVersion, err := version.ParseFromImage(ctx, c.runtime, conf.KubeControllerManagerImage, "kube-controller-manager")
 		if err != nil {
 			return err
 		}
@@ -257,7 +273,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			}
 		}
 
-		kubeSchedulerVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KubeSchedulerImage, "kube-scheduler")
+		kubeSchedulerVersion, err := version.ParseFromImage(ctx, c.runtime, conf.KubeSchedulerImage, "kube-scheduler")
 		if err != nil {
 			return err
 		}
@@ -281,7 +297,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Configure the kwok-controller
-	kwokControllerVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.KwokControllerImage, "kwok")
+	kwokControllerVersion, err := version.ParseFromImage(ctx, c.runtime, conf.KwokControllerImage, "kwok")
 	if err != nil {
 		return err
 	}
@@ -321,7 +337,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
 
-		prometheusVersion, err := version.ParseFromImage(ctx, conf.Runtime, conf.PrometheusImage, "")
+		prometheusVersion, err := version.ParseFromImage(ctx, c.runtime, conf.PrometheusImage, "")
 		if err != nil {
 			return err
 		}
@@ -542,15 +558,10 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
-	conf, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
 	// TODO: nerdctl does not support 'compose start' in v1.1.0 or earlier
 	// Support in https://github.com/containerd/nerdctl/pull/1656 merge into the main branch, but there is no release
 	subcommand := []string{"start"}
-	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+	if c.runtime == consts.RuntimeTypeNerdctl {
 		subcommand = []string{"up", "-d"}
 	}
 
@@ -567,7 +578,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to start cluster: %w", err)
 	}
 
-	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+	if c.runtime == consts.RuntimeTypeNerdctl {
 		backupFilename := c.GetWorkdirPath("restart.db")
 		fi, err := os.Stat(backupFilename)
 		if err == nil {
@@ -590,14 +601,9 @@ func (c *Cluster) Start(ctx context.Context) error {
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
-	conf, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
 	// TODO: nerdctl does not support 'compose stop' in v1.0.0 or earlier
 	subcommand := "stop"
-	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+	if c.runtime == consts.RuntimeTypeNerdctl {
 		subcommand = "down"
 		err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
 		if err != nil {
@@ -622,50 +628,24 @@ func (c *Cluster) Stop(ctx context.Context) error {
 
 // StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
-	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{}, conf.Runtime, "start", c.Name()+"-"+name)
-	if err != nil {
-		return err
-	}
-	return nil
+	return exec.Exec(ctx, c.Workdir(), exec.IOStreams{}, c.runtime, "start", c.Name()+"-"+name)
 }
 
 // StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
-	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{}, conf.Runtime, "stop", c.Name()+"-"+name)
-	if err != nil {
-		return err
-	}
-	return nil
+	return exec.Exec(ctx, c.Workdir(), exec.IOStreams{}, c.runtime, "stop", c.Name()+"-"+name)
 }
 
 func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow bool) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
 	args := []string{"logs"}
 	if follow {
 		args = append(args, "-f")
 	}
 	args = append(args, c.Name()+"-"+name)
-	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
+	err := exec.Exec(ctx, c.Workdir(), exec.IOStreams{
 		ErrOut: out,
 		Out:    out,
-	}, conf.Runtime, args...)
+	}, c.runtime, args...)
 	if err != nil {
 		return err
 	}
@@ -721,8 +701,8 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 	}
 	conf := &config.Options
 
-	if conf.Runtime == consts.RuntimeTypeDocker {
-		err := exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "compose", "version")
+	if c.runtime == consts.RuntimeTypeDocker {
+		err := exec.Exec(ctx, "", exec.IOStreams{}, c.runtime, "compose", "version")
 		if err != nil {
 			// docker compose subcommand does not exist, try to download it
 			dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
@@ -733,18 +713,12 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 			return append([]string{dockerComposePath}, args...), nil
 		}
 	}
-	return append([]string{conf.Runtime, "compose"}, args...), nil
+	return append([]string{c.runtime, "compose"}, args...), nil
 }
 
 // EtcdctlInCluster implements the ectdctl subcommand
 func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
 	etcdContainerName := c.Name() + "-etcd"
-
-	return exec.Exec(ctx, "", stm, conf.Runtime, append([]string{"exec", "-i", etcdContainerName, "etcdctl"}, args...)...)
+	return exec.Exec(ctx, "", stm, c.runtime,
+		append([]string{"exec", "-i", etcdContainerName, "etcdctl"}, args...)...)
 }

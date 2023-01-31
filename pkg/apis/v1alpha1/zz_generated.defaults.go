@@ -62,9 +62,6 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 }
 
 func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
-	if in.Options.Runtime == "" {
-		in.Options.Runtime = "docker"
-	}
 	if in.Options.SecurePort == nil {
 		var ptrVar1 bool = false
 		in.Options.SecurePort = &ptrVar1

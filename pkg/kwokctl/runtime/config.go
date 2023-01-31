@@ -27,6 +27,9 @@ import (
 
 // Runtime is the interface for a runtime.
 type Runtime interface {
+	// Available checks whether the runtime is available.
+	Available(ctx context.Context) error
+
 	// SetConfig sets the config of cluster
 	SetConfig(ctx context.Context, conf *internalversion.KwokctlConfiguration) error
 
