@@ -114,11 +114,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func runE(ctx context.Context, flags *flagpole) error {
-	name := config.ClusterName(flags.Name)
-	workdir := path.Join(config.ClustersDir, flags.Name)
-
-	logger := log.FromContext(ctx)
-	logger = logger.With("cluster", flags.Name)
+	logger := log.FromContext(ctx).With("cluster", flags.Name)
 	ctx = log.NewContext(ctx, logger)
 
 	if flags.Timeout > 0 {
@@ -127,97 +123,32 @@ func runE(ctx context.Context, flags *flagpole) error {
 		defer cancel()
 	}
 
-	buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Options.Runtime)
-	if !ok {
-		return fmt.Errorf("runtime %q not found", flags.Options.Runtime)
-	}
-
-	rt, err := buildRuntime(name, workdir)
+	rt, err := getRuntime(flags)
 	if err != nil {
 		return err
 	}
 
-	_, err = rt.Config(ctx)
-	if err == nil {
-		logger.Info("Cluster already exists")
-
-		if ready, err := rt.Ready(ctx); err == nil && ready {
+	if isClusterExists(ctx, rt) {
+		if isClusterReady(ctx, rt) {
 			logger.Info("Cluster is already ready")
 			return nil
 		}
-
-		logger.Info("Cluster is not ready yet, will be restarted")
-		err = rt.Install(ctx)
-		if err != nil {
-			logger.Error("Failed to continue install cluster", err)
+		if err := restartCluster(ctx, flags, rt); err != nil {
 			return err
-		}
-
-		// Down the cluster for restart
-		err = rt.Down(ctx)
-		if err != nil {
-			logger.Error("Failed to down cluster", err)
 		}
 	} else {
-		logger.Info("Creating cluster")
-		err = rt.SetConfig(ctx, flags.KwokctlConfiguration)
-		if err != nil {
-			logger.Error("Failed to set config", err)
-			err0 := rt.Uninstall(ctx)
-			if err0 != nil {
-				logger.Error("Failed to clean up cluster", err0)
-			} else {
-				logger.Info("Cluster is cleaned up")
-			}
-			return err
-		}
-		err = rt.Save(ctx)
-		if err != nil {
-			logger.Error("Failed to save config", err)
-			err0 := rt.Uninstall(ctx)
-			if err0 != nil {
-				logger.Error("Failed to clean up cluster", err0)
-			} else {
-				logger.Info("Cluster is cleaned up")
-			}
-			return err
-		}
-
-		err = rt.Install(ctx)
-		if err != nil {
-			logger.Error("Failed to setup config", err)
-			err0 := rt.Uninstall(ctx)
-			if err0 != nil {
-				logger.Error("Failed to uninstall cluster", err0)
-			} else {
-				logger.Info("Cluster is cleaned up")
-			}
+		if err := createCluster(ctx, flags, rt); err != nil {
 			return err
 		}
 	}
 
-	start := time.Now()
-	logger.Info("Starting cluster")
-	err = rt.Up(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to start cluster %q: %w", name, err)
+	if err := startCluster(ctx, flags, rt); err != nil {
+		return err
 	}
-	logger.Info("Cluster is created",
-		"elapsed", time.Since(start),
-	)
 
 	if flags.Wait > 0 {
-		start := time.Now()
-		logger.Info("Waiting for cluster to be ready")
-		err = rt.WaitReady(context.Background(), flags.Wait)
-		if err != nil {
-			logger.Error("Failed to wait for cluster to be ready", err,
-				"elapsed", time.Since(start),
-			)
-		} else {
-			logger.Info("Cluster is ready",
-				"elapsed", time.Since(start),
-			)
+		if err := waitForCluster(ctx, flags, rt); err != nil {
+			return err
 		}
 	}
 
@@ -226,6 +157,119 @@ func runE(ctx context.Context, flags *flagpole) error {
     kubectl config use-context %s
 
 Thanks for using kwok!
-`, name)
+`, flags.Name)
+
 	return nil
+}
+
+func getRuntime(flags *flagpole) (runtime.Runtime, error) {
+	buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Options.Runtime)
+	if !ok {
+		return nil, fmt.Errorf("runtime %q not found", flags.Options.Runtime)
+	}
+
+	name := config.ClusterName(flags.Name)
+	workdir := path.Join(config.ClustersDir, flags.Name)
+
+	return buildRuntime(name, workdir)
+}
+
+func isClusterExists(ctx context.Context, rt runtime.Runtime) bool {
+	_, err := rt.Config(ctx)
+	return err == nil
+}
+
+func isClusterReady(ctx context.Context, rt runtime.Runtime) bool {
+	ready, err := rt.Ready(ctx)
+	if err != nil {
+		return false
+	}
+	return ready
+}
+
+func restartCluster(ctx context.Context, flags *flagpole, rt runtime.Runtime) error {
+	logger := log.FromContext(ctx).With("cluster", flags.Name)
+
+	logger.Info("Cluster is not ready yet, will be restarted")
+
+	if err := rt.Install(ctx); err != nil {
+		logger.Error("Failed to continue install cluster", err)
+		return err
+	}
+
+	// Down the cluster for restart
+	if err := rt.Down(ctx); err != nil {
+		logger.Error("Failed to down cluster", err)
+		return err
+	}
+
+	return nil
+}
+
+func createCluster(ctx context.Context, flags *flagpole, rt runtime.Runtime) error {
+	logger := log.FromContext(ctx).With("cluster", flags.Name)
+	logger.Info("Creating cluster")
+
+	if err := rt.SetConfig(ctx, flags.KwokctlConfiguration); err != nil {
+		logger.Error("Failed to set config", err)
+		cleanupCluster(ctx, flags, rt)
+		return err
+	}
+
+	if err := rt.Save(ctx); err != nil {
+		logger.Error("Failed to save config", err)
+		cleanupCluster(ctx, flags, rt)
+		return err
+	}
+
+	if err := rt.Install(ctx); err != nil {
+		logger.Error("Failed to setup config", err)
+		cleanupCluster(ctx, flags, rt)
+		return err
+	}
+	return nil
+}
+
+func startCluster(ctx context.Context, flags *flagpole, rt runtime.Runtime) error {
+	logger := log.FromContext(ctx).With("cluster", flags.Name)
+
+	name := config.ClusterName(flags.Name)
+	start := time.Now()
+	logger.Info("Starting cluster")
+
+	if err := rt.Up(ctx); err != nil {
+		return fmt.Errorf("failed to start cluster %q: %w", name, err)
+	}
+	logger.Info("Cluster is created",
+		"elapsed", time.Since(start),
+	)
+	return nil
+}
+
+func waitForCluster(ctx context.Context, flags *flagpole, rt runtime.Runtime) error {
+	logger := log.FromContext(ctx).With("cluster", flags.Name)
+
+	start := time.Now()
+	logger.Info("Waiting for cluster to be ready")
+
+	if err := rt.WaitReady(context.Background(), flags.Wait); err != nil {
+		logger.Error("Failed to wait for cluster to be ready", err,
+			"elapsed", time.Since(start),
+		)
+		return err
+	}
+	logger.Info("Cluster is ready",
+		"elapsed", time.Since(start),
+	)
+	return nil
+}
+
+func cleanupCluster(ctx context.Context, flags *flagpole, rt runtime.Runtime) {
+	logger := log.FromContext(ctx).With("cluster", flags.Name)
+
+	if err := rt.Uninstall(ctx); err != nil {
+		logger.Error("Failed to clean up cluster", err)
+	} else {
+		logger.Info("Cluster is cleaned up")
+	}
 }
