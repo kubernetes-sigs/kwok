@@ -17,11 +17,9 @@ limitations under the License.
 package server
 
 import (
+	"net/http"
 	"net/http/pprof"
-	goruntime "runtime"
-	"strings"
-
-	"github.com/emicklei/go-restful/v3"
+	"runtime"
 )
 
 // InstallProfilingHandler registers the HTTP request patterns for /debug/pprof endpoint.
@@ -31,28 +29,9 @@ func (s *Server) InstallProfilingHandler(enableProfilingLogHandler bool, enableC
 		return
 	}
 
-	handlePprofEndpoint := func(req *restful.Request, resp *restful.Response) {
-		name := strings.TrimPrefix(req.Request.URL.Path, pprofBasePath)
-		switch name {
-		case "profile":
-			pprof.Profile(resp, req.Request)
-		case "symbol":
-			pprof.Symbol(resp, req.Request)
-		case "cmdline":
-			pprof.Cmdline(resp, req.Request)
-		case "trace":
-			pprof.Trace(resp, req.Request)
-		default:
-			pprof.Index(resp, req.Request)
-		}
-	}
-
 	// Setup pprof handlers.
-	ws := new(restful.WebService).Path(pprofBasePath)
-	ws.Route(ws.GET("/{subpath:*}").To(handlePprofEndpoint)).Doc("pprof endpoint")
-	s.restfulCont.Add(ws)
-
+	s.restfulCont.Handle(pprofBasePath, http.HandlerFunc(pprof.Index))
 	if enableContentionProfiling {
-		goruntime.SetBlockProfileRate(1)
+		runtime.SetBlockProfileRate(1)
 	}
 }
