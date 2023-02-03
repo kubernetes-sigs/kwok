@@ -540,6 +540,9 @@ func (c *Cluster) Down(ctx context.Context) error {
 	return nil
 }
 
+// minNerdctlRestartSupportVersion is the start/stop feature added to nerdctl in 1.2
+var minNerdctlRestartSupportVersion = version.NewVersion(1, 2, 0)
+
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
 	conf, err := c.Config(ctx)
@@ -547,10 +550,20 @@ func (c *Cluster) Start(ctx context.Context) error {
 		return err
 	}
 
-	// TODO: nerdctl does not support 'compose start' in v1.1.0 or earlier
-	// Support in https://github.com/containerd/nerdctl/pull/1656 merge into the main branch, but there is no release
-	subcommand := []string{"start"}
+	// nerdctl does not support 'compose start' in v1.1.0 or earlier
+	isOldNerdctl := false
 	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+		nerdctlVersion, err := version.ParseFromBinary(ctx, consts.RuntimeTypeNerdctl)
+		if err != nil {
+			return err
+		}
+		if nerdctlVersion.LT(minNerdctlRestartSupportVersion) {
+			isOldNerdctl = true
+		}
+	}
+
+	subcommand := []string{"start"}
+	if isOldNerdctl {
 		subcommand = []string{"up", "-d"}
 	}
 
@@ -567,7 +580,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to start cluster: %w", err)
 	}
 
-	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+	if isOldNerdctl {
 		backupFilename := c.GetWorkdirPath("restart.db")
 		fi, err := os.Stat(backupFilename)
 		if err == nil {
@@ -595,9 +608,20 @@ func (c *Cluster) Stop(ctx context.Context) error {
 		return err
 	}
 
-	// TODO: nerdctl does not support 'compose stop' in v1.0.0 or earlier
-	subcommand := "stop"
+	// nerdctl does not support 'compose stop' in v1.0.0 or earlier
+	isOldNerdctl := false
 	if conf.Options.Runtime == consts.RuntimeTypeNerdctl {
+		nerdctlVersion, err := version.ParseFromBinary(ctx, consts.RuntimeTypeNerdctl)
+		if err != nil {
+			return err
+		}
+		if nerdctlVersion.LT(minNerdctlRestartSupportVersion) {
+			isOldNerdctl = true
+		}
+	}
+
+	subcommand := "stop"
+	if isOldNerdctl {
 		subcommand = "down"
 		err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
 		if err != nil {
