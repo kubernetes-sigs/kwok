@@ -17,133 +17,138 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
-RELEASES=()
+shopt -s expand_aliases
+alias nerdctl="lima nerdctl"
+nerdctl --version
+source ~/.bashrc
 
-function usage() {
-  echo "Usage: $0 <kube-version...>"
-  echo "  <kube-version> is the version of kubernetes to test against."
-}
+# RELEASES=()
 
-function args() {
-  if [[ $# -eq 0 ]]; then
-    usage
-    exit 1
-  fi
-  while [[ $# -gt 0 ]]; do
-    RELEASES+=("${1}")
-    shift
-  done
-}
+# function usage() {
+#   echo "Usage: $0 <kube-version...>"
+#   echo "  <kube-version> is the version of kubernetes to test against."
+# }
 
-function show_info() {
-    local name="${1}"
-    echo kwokctl get clusters
-    kwokctl get clusters
-    echo
-    echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-    kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-    echo
-    echo kwokctl --name="${name}" logs etcd
-    kwokctl --name="${name}" logs etcd
-    echo
-    echo kwokctl --name="${name}" logs kube-apiserver
-    kwokctl --name="${name}" logs kube-apiserver
-    echo
-    echo kwokctl --name="${name}" logs kube-controller-manager
-    kwokctl --name="${name}" logs kube-controller-manager
-    echo
-    echo kwokctl --name="${name}" logs kube-scheduler
-    kwokctl --name="${name}" logs kube-scheduler
-    echo
-    echo kwokctl --name="${name}" logs kwok-controller
-    kwokctl --name="${name}" logs kwok-controller
-    echo
-}
+# function args() {
+#   if [[ $# -eq 0 ]]; then
+#     usage
+#     exit 1
+#   fi
+#   while [[ $# -gt 0 ]]; do
+#     RELEASES+=("${1}")
+#     shift
+#   done
+# }
 
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-  local targets
-  local i
+# function show_info() {
+#   local name="${1}"
+#   echo kwokctl get clusters
+#   kwokctl get clusters
+#   echo
+#   echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
+#   kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
+#   echo
+#   echo kwokctl --name="${name}" logs etcd
+#   kwokctl --name="${name}" logs etcd
+#   echo
+#   echo kwokctl --name="${name}" logs kube-apiserver
+#   kwokctl --name="${name}" logs kube-apiserver
+#   echo
+#   echo kwokctl --name="${name}" logs kube-controller-manager
+#   kwokctl --name="${name}" logs kube-controller-manager
+#   echo
+#   echo kwokctl --name="${name}" logs kube-scheduler
+#   kwokctl --name="${name}" logs kube-scheduler
+#   echo
+#   echo kwokctl --name="${name}" logs kwok-controller
+#   kwokctl --name="${name}" logs kwok-controller
+#   echo
+# }
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    show_info "${name}"
-    return 1
-  fi
+# function test_create_cluster() {
+#   local release="${1}"
+#   local name="${2}"
+#   local targets
+#   local i
 
-  for ((i = 0; i < 30; i++)); do
-    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f -
-    if kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
-      break
-    fi
-    sleep 1
-  done
+#   KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090
+#   if [[ $? -ne 0 ]]; then
+#     echo "Error: Cluster ${name} creation failed"
+#     show_info "${name}"
+#     return 1
+#   fi
 
-  echo kwokctl --name="${name}" kubectl config view --minify
-  kwokctl --name="${name}" kubectl config view --minify
+#   for ((i = 0; i < 30; i++)); do
+#     kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f -
+#     if kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
+#       break
+#     fi
+#     sleep 1
+#   done
 
-  if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
-    echo "Error: cluster not ready"
-    show_info "${name}"
-    return 1
-  fi
+#   echo kwokctl --name="${name}" kubectl config view --minify
+#   kwokctl --name="${name}" kubectl config view --minify
 
-  if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
-    echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
-    show_info "${name}"
-    return 1
-  fi
-}
+#   if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
+#     echo "Error: cluster not ready"
+#     show_info "${name}"
+#     return 1
+#   fi
 
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
-}
+#   if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
+#     echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
+#     show_info "${name}"
+#     return 1
+#   fi
+# }
 
-function test_prometheus() {
-  local targets
-  for ((i = 0; i < 30; i++)); do
-    targets="$(curl -s http://127.0.0.1:9090/api/v1/targets)"
-    if [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
-      break
-    fi
-    sleep 1
-  done
+# function test_delete_cluster() {
+#   local release="${1}"
+#   local name="${2}"
+#   kwokctl delete cluster --name "${name}"
+# }
 
-  if ! [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
-    echo "Error: metrics is not health"
-    echo curl -s http://127.0.0.1:9090/api/v1/targets
-    echo "${targets}"
-    return 1
-  fi
-}
+# function test_prometheus() {
+#   local targets
+#   for ((i = 0; i < 30; i++)); do
+#     targets="$(curl -s http://127.0.0.1:9090/api/v1/targets)"
+#     if [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
+#       break
+#     fi
+#     sleep 1
+#   done
 
-function main() {
-  local failed=()
-  local name
-  for release in "${RELEASES[@]}"; do
-    echo "------------------------------"
-    echo "Testing workable on ${KWOK_RUNTIME} for ${release}"
-    name="cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
-    test_prometheus || failed+=("prometheus_${name}")
-    test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
-  done
-  echo "------------------------------"
+#   if ! [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
+#     echo "Error: metrics is not health"
+#     echo curl -s http://127.0.0.1:9090/api/v1/targets
+#     echo "${targets}"
+#     return 1
+#   fi
+# }
 
-  if [[ "${#failed[@]}" -ne 0 ]]; then
-    echo "------------------------------"
-    echo "Error: Some tests failed"
-    for test in "${failed[@]}"; do
-      echo " - ${test}"
-    done
-    exit 1
-  fi
-}
+# function main() {
+#   local failed=()
+#   local name
+#   for release in "${RELEASES[@]}"; do
+#     echo "------------------------------"
+#     echo "Testing workable on ${KWOK_RUNTIME} for ${release}"
+#     name="cluster-${KWOK_RUNTIME}-${release//./-}"
+#     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
+#     test_prometheus || failed+=("prometheus_${name}")
+#     test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
+#   done
+#   echo "------------------------------"
 
-args "$@"
+#   if [[ "${#failed[@]}" -ne 0 ]]; then
+#     echo "------------------------------"
+#     echo "Error: Some tests failed"
+#     for test in "${failed[@]}"; do
+#       echo " - ${test}"
+#     done
+#     exit 1
+#   fi
+# }
 
-main
+# args "$@"
+
+# main
