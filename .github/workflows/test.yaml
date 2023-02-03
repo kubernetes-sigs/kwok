@@ -195,10 +195,11 @@ jobs:
           fi
           shopt -s expand_aliases
           alias nerdctl="lima nerdctl"
+          nerdctl --version
           echo "list alias"
           alias
           echo 'alias nerdctl="lima nerdctl"' >> ~/.bashrc
-          source ~/.bashrc
+          # source ~/.bashrc
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
       - name: Test Snapshot
