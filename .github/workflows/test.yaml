@@ -140,9 +140,6 @@ jobs:
         run: |
           brew install lima
           limactl start
-          shopt -s expand_aliases
-          echo 'alias nerdctl="lima nerdctl"' >> ~/.bashrc
-          source ~/.bashrc
 
       - name: Install Buildx
         if: ${{ matrix.kwokctl-runtime != 'binary' }}
@@ -196,6 +193,12 @@ jobs:
           else
             export LAST_RELEASE_SIZE=6
           fi
+          shopt -s expand_aliases
+          alias nerdctl="lima nerdctl"
+          echo "list alias"
+          alias
+          echo 'alias nerdctl="lima nerdctl"' >> ~/.bashrc
+          source ~/.bashrc
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
       - name: Test Snapshot
