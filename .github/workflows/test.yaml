@@ -156,6 +156,13 @@ jobs:
         run: |
           docker info
 
+      - name: Install Kind
+        if: ${{ matrix.kwokctl-runtime == 'kind' }}
+        shell: bash
+        run: |
+          ./hack/requirements.sh kind
+          kind version
+
       - name: Install Nerdctl and Start Containerd
         if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
         shell: bash
