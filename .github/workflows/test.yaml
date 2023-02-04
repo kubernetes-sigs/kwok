@@ -143,8 +143,11 @@ jobs:
           brew install lima
           limactl start
           nerdctl=/tmp/nerdctl
-          echo '#!/usr/bin/env bash' >> nerdctl
-          echo 'lima nerdctl "$@"' >> nerdctl
+          echo '#!/bin/bash' >> nerdctl
+          echo 'set -x' >> nerdctl
+          echo 'args="$@"' >> nerdctl
+          echo 'echo "$@"' >> nerdctl
+          echo 'bash -c "lima nerdctl $args"' >> nerdctl
           chmod +x nerdctl
           sudo mv nerdctl /usr/local/bin/nerdctl
 
