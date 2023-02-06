@@ -5,8 +5,8 @@ on:
   push:
 
 env:
-  DOCKER_CLI_EXPERIMENTAL: "enabled"
-  CGO_ENABLED: "0"
+  DOCKER_CLI_EXPERIMENTAL: 'enabled'
+  CGO_ENABLED: '0'
 
 jobs:
   test-build:
@@ -146,7 +146,6 @@ jobs:
           echo '#!/bin/bash' >> nerdctl
           echo 'set -x' >> nerdctl
           echo 'args="$@"' >> nerdctl
-          echo 'echo "$@"' >> nerdctl
           echo 'bash -c "lima nerdctl $args"' >> nerdctl
           chmod +x nerdctl
           sudo mv nerdctl /usr/local/bin/nerdctl
