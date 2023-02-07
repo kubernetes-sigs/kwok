@@ -41,8 +41,9 @@ func BuildKind(conf BuildKindConfig) (string, error) {
 
 // BuildKindConfig is the configuration for building the kind config
 type BuildKindConfig struct {
-	KubeApiserverPort uint32
-	PrometheusPort    uint32
+	KubeApiserverPort  uint32
+	PrometheusPort     uint32
+	KwokControllerPort uint32
 
 	RuntimeConfig []string
 	FeatureGates  []string

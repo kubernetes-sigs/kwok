@@ -259,7 +259,8 @@ type KwokctlConfigurationOptions struct {
 	// KubeSchedulerPort is kube-scheduler port in the binary runtime
 	KubeSchedulerPort uint32 `json:"kubeSchedulerPort,omitempty"`
 
-	// KwokControllerPort is kube-controller port in the binary runtime
+	// KwokControllerPort is kwok-controller port that is exposed to the host.
+	// is the default value for flag --controller-port and env KWOK_CONTROLLER_PORT
 	KwokControllerPort uint32 `json:"kwokControllerPort,omitempty"`
 
 	// CacheDir is the directory of the cache.

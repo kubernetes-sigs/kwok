@@ -9,12 +9,20 @@ networking:
 nodes:
 - role: control-plane
 
-{{ if .PrometheusPort }}
+{{ if or .PrometheusPort .KwokControllerPort }}
   extraPortMappings:
+  {{ if .PrometheusPort }}
   - containerPort: 9090
     hostPort: {{ .PrometheusPort }}
     listenAddress: "0.0.0.0"
     protocol: TCP
+  {{ end }}
+  {{ if .KwokControllerPort }}
+  - containerPort: 10247
+    hostPort: {{ .KwokControllerPort }}
+    listenAddress: "0.0.0.0"
+    protocol: TCP
+  {{ end }}
 {{ end }}
 
   kubeadmConfigPatches:
