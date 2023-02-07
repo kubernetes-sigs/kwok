@@ -11,9 +11,9 @@ This document walks you through how to deploy `kwok` in a Kubernetes cluster.
 ``` bash
 # Temporary directory
 KWOK_WORK_DIR=$(mktemp -d)
-# Kwok repository to download image from
+# Kwok repository
 KWOK_REPO=kubernetes-sigs/kwok
-# Get latest Kwok image
+# Get latest
 KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
 ```
 

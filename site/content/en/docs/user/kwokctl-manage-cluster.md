@@ -6,24 +6,9 @@ This document walks you through how to run `kwokctl` to manage fake clusters.
 
 {{< /hint >}}
 
-## Variables preparation
-
-``` bash
-# Kwok repository to download image from
-KWOK_REPO=kubernetes-sigs/kwok
-# Get latest Kwok binary
-KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
-```
-
 ## Install Kwokctl
 
-Firstly, we download and install Kwokctl
-
-``` bash
-wget -O kwokctl -c "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/kwokctl-$(go env GOOS)-$(go env GOARCH)"
-chmod +x kwokctl
-sudo mv kwokctl /usr/local/bin/kwokctl
-```
+[Install Kwokctl]({{< relref "/docs/user/install" >}}) in the local.
 
 ## Create a Cluster
 

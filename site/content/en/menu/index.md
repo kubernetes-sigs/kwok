@@ -6,6 +6,7 @@ headless: true
 - **User Guide**
   - **Quick Start**
     - [All in One Image]({{< relref "/docs/user/all-in-one-image" >}})
+    - [Install]({{< relref "/docs/user/install" >}})
     - [Kwok in Cluster]({{< relref "/docs/user/kwok-in-cluster" >}})
     - [Kwok in Local]({{< relref "/docs/user/kwok-in-local" >}})
     - [Kwokctl Manage Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}})
