@@ -99,6 +99,8 @@ function test_restart() {
       echo "Error: cluster ${name} stop error"
       return 1
   fi
+  sleep 5
+
   kwokctl --name "${name}" kubectl get no
   if [[ $? -eq 0 ]]; then
     echo "Error: cluster ${name} do not stop"
