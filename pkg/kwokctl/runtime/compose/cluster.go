@@ -441,6 +441,9 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
+	fmt.Println("c.Workdir()", c.Workdir())
+	fmt.Println("commands", commands)
+
 	logger := log.FromContext(ctx)
 	for i := 0; ctx.Err() == nil; i++ {
 		err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
@@ -452,7 +455,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 				"times", i,
 				"err", err,
 			)
-			time.Sleep(time.Second)
+			time.Sleep(3 * time.Second)
 			continue
 		}
 		ready, err := c.isRunning(ctx)
@@ -509,6 +512,7 @@ func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
 	}
 
 	components, ok := slices.Find(data, func(i statusItem) bool {
+		fmt.Println("component i :", i)
 		return i.State != "running"
 	})
 	if ok {
