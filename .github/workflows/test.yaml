@@ -186,6 +186,12 @@ jobs:
           fi
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
+      - name: Test Multi Cluster
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_multi_cluster
+
       - name: Test Snapshot
         shell: bash
         run: |
