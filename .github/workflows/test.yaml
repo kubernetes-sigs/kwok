@@ -160,11 +160,10 @@ jobs:
         if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
         shell: bash
         run: |
-          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.2.0/nerdctl-full-1.2.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.1.0/nerdctl-full-1.1.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
           sudo systemctl daemon-reload
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
-          sudo chmod 0755 /etc/cni
 
       - name: Make pki directory
         if: ${{ matrix.kwokctl-runtime == 'binary' }}
