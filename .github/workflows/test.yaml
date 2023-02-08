@@ -216,7 +216,7 @@ jobs:
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
 
       - name: Test Benchmark
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime != 'kind' }}
         shell: bash
-        continue-on-error: true
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark
