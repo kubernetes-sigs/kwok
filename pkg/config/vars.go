@@ -277,6 +277,7 @@ func setKwokctlKwokConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 		conf.KwokControllerImage = joinImageURI(conf.KwokImagePrefix, "kwok", conf.KwokVersion)
 	}
 	conf.KwokControllerImage = envs.GetEnvWithPrefix("CONTROLLER_IMAGE", conf.KwokControllerImage)
+	conf.KwokControllerPort = envs.GetEnvWithPrefix("CONTROLLER_PORT", conf.KwokControllerPort)
 }
 
 func setKwokctlEtcdConfig(conf *v1alpha1.KwokctlConfigurationOptions) {

@@ -44,6 +44,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 
 	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume
+	var ports []internalversion.Port
 
 	if inContainer {
 		volumes = append(volumes,
@@ -68,6 +69,14 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 				ReadOnly:  true,
 			},
 		)
+		if conf.Port != 0 {
+			ports = append(ports,
+				internalversion.Port{
+					HostPort: conf.Port,
+					Port:     10247,
+				},
+			)
+		}
 		kwokControllerArgs = append(kwokControllerArgs,
 			"--kubeconfig=/root/.kube/config",
 			"--config=/root/.kwok/kwok.yaml",
@@ -93,6 +102,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		Links: []string{
 			"kube-apiserver",
 		},
+		Ports:   ports,
 		Command: []string{"kwok"},
 		Volumes: volumes,
 		Args:    kwokControllerArgs,

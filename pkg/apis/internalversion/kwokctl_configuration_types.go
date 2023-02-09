@@ -36,7 +36,6 @@ type KwokctlConfiguration struct {
 
 // KwokctlConfigurationOptions holds information about the options.
 type KwokctlConfigurationOptions struct {
-
 	// KubeApiserverPort is the port to expose apiserver.
 	KubeApiserverPort uint32
 
@@ -164,7 +163,7 @@ type KwokctlConfigurationOptions struct {
 	// KubeSchedulerPort is kube-scheduler port in the binary runtime
 	KubeSchedulerPort uint32
 
-	// KwokControllerPort is kube-controller port in the binary runtime
+	// KwokControllerPort is kwok-controller port that is exposed to the host.
 	KwokControllerPort uint32
 
 	// CacheDir is the directory of the cache.

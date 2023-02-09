@@ -98,14 +98,15 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	configPath := c.GetWorkdirPath(runtime.ConfigName)
 	kindYaml, err := BuildKind(BuildKindConfig{
-		KubeApiserverPort: conf.KubeApiserverPort,
-		PrometheusPort:    conf.PrometheusPort,
-		FeatureGates:      featureGates,
-		RuntimeConfig:     runtimeConfig,
-		AuditPolicy:       auditPolicyPath,
-		AuditLog:          auditLogPath,
-		SchedulerConfig:   schedulerConfigPath,
-		ConfigPath:        configPath,
+		KubeApiserverPort:  conf.KubeApiserverPort,
+		PrometheusPort:     conf.PrometheusPort,
+		KwokControllerPort: conf.KwokControllerPort,
+		FeatureGates:       featureGates,
+		RuntimeConfig:      runtimeConfig,
+		AuditPolicy:        auditPolicyPath,
+		AuditLog:           auditLogPath,
+		SchedulerConfig:    schedulerConfigPath,
+		ConfigPath:         configPath,
 	})
 	if err != nil {
 		return err

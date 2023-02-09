@@ -66,7 +66,7 @@ function test_create_cluster() {
   local targets
   local i
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     show_info "${name}"
@@ -121,6 +121,17 @@ function test_prometheus() {
   fi
 }
 
+function test_kwok_controller_port() {
+    local result
+    result="$(curl http://127.0.0.1:10247/healthz)"
+    if [[ ! $result == "ok" ]]; then
+        echo "Error: controller healthz is not ok"
+        echo curl -s http://127.0.0.1:10247/healthz
+        echo "${result}"
+        return 1
+    fi
+}
+
 function main() {
   local failed=()
   local name
@@ -130,6 +141,7 @@ function main() {
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
     test_prometheus || failed+=("prometheus_${name}")
+    test_kwok_controller_port || failed+=("kwok_controller_port_${name}")
     test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
   done
   echo "------------------------------"
