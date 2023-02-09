@@ -52,6 +52,16 @@ func NewCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
+// Available  checks whether the runtime is available.
+func (c *Cluster) Available(ctx context.Context) error {
+	// kind depends on docker or podman
+	// kwokctl will download kind binary if it is not available
+	// TODO: nerdctl kind provider support is discussing in
+	// https://github.com/kubernetes-sigs/kind/issues/2317 and
+	// https://github.com/containerd/nerdctl/issues/349
+	return nil
+}
+
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
 	config, err := c.Config(ctx)

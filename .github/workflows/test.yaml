@@ -222,3 +222,9 @@ jobs:
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark
+
+      - name: Test Auto Detect
+        if: ${{ matrix.kwokctl-runtime == 'binary' }}
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_auto_detect

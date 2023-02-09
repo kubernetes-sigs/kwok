@@ -55,6 +55,11 @@ func NewCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
+// Available  checks whether the runtime is available.
+func (c *Cluster) Available(ctx context.Context) error {
+	return nil
+}
+
 func (c *Cluster) download(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {

@@ -128,14 +128,41 @@ func runE(ctx context.Context, flags *flagpole) error {
 		defer cancel()
 	}
 
-	buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Options.Runtime)
-	if !ok {
-		return fmt.Errorf("runtime %q not found", flags.Options.Runtime)
-	}
-
-	rt, err := buildRuntime(name, workdir)
-	if err != nil {
-		return err
+	var rt runtime.Runtime
+	var err error
+	if flags.Options.Runtime == "" {
+		errs := make([]error, 0, len(flags.Options.Runtimes))
+		for _, r := range flags.Options.Runtimes {
+			buildRuntime, ok := runtime.DefaultRegistry.Get(r)
+			if !ok {
+				err = fmt.Errorf("runtime %q not found", flags.Options.Runtime)
+				errs = append(errs, err)
+				continue
+			}
+			if rt, err = buildRuntime(name, workdir); err != nil {
+				errs = append(errs, err)
+				continue
+			}
+			if err = rt.Available(ctx); err != nil {
+				errs = append(errs, err)
+				continue
+			}
+			flags.Options.Runtime = r
+			logger.Debug("Detected runtime available", "runtime", flags.Options.Runtime)
+			break
+		}
+		if flags.Options.Runtime == "" {
+			return fmt.Errorf("runtime %v not available: %v", flags.Options.Runtimes, errs)
+		}
+	} else {
+		buildRuntime, ok := runtime.DefaultRegistry.Get(flags.Options.Runtime)
+		if !ok {
+			return fmt.Errorf("runtime %q not found", flags.Options.Runtime)
+		}
+		rt, err = buildRuntime(name, workdir)
+		if err != nil {
+			return fmt.Errorf("runtime %v not available: %w", flags.Options.Runtime, err)
+		}
 	}
 
 	_, err = rt.Config(ctx)
