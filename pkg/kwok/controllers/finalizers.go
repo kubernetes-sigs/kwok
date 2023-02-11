@@ -100,7 +100,10 @@ func finalizersModify(metaFinalizers []string, finalizers *internalversion.Stage
 			ops = append(ops, finalizersAdd(metaFinalizers, finalizers.Add)...)
 		}
 	} else {
-		ops = append(ops, finalizersEmpty)
+		if len(metaFinalizers) != 0 {
+			ops = append(ops, finalizersEmpty)
+		}
+
 		if len(finalizers.Add) != 0 {
 			ops = append(ops, finalizersAdd(nil, finalizers.Add)...)
 		}
