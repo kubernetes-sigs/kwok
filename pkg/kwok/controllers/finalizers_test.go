@@ -121,3 +121,76 @@ func Test_finalizersRemove(t *testing.T) {
 		})
 	}
 }
+
+func Test_finalizersModify(t *testing.T) {
+	type args struct {
+		metaFinalizers []string
+		finalizers     *internalversion.StageFinalizers
+	}
+	tests := []struct {
+		name string
+		args args
+		want []jsonpathOperation
+	}{
+		{
+			args: args{
+				metaFinalizers: nil,
+				finalizers: &internalversion.StageFinalizers{
+					Empty: true,
+				},
+			},
+			want: nil,
+		},
+		{
+			args: args{
+				metaFinalizers: []string{"a"},
+				finalizers: &internalversion.StageFinalizers{
+					Empty: true,
+				},
+			},
+			want: []jsonpathOperation{
+				{Op: "remove", Path: "/metadata/finalizers", Value: nil},
+			},
+		},
+		{
+			args: args{
+				metaFinalizers: []string{"a"},
+				finalizers: &internalversion.StageFinalizers{
+					Empty: true,
+					Add: []internalversion.FinalizerItem{
+						{
+							Value: "b",
+						},
+					},
+				},
+			},
+			want: []jsonpathOperation{
+				{Op: "remove", Path: "/metadata/finalizers", Value: nil},
+				{Op: "add", Path: "/metadata/finalizers", Value: []string{"b"}},
+			},
+		},
+		{
+			args: args{
+				metaFinalizers: nil,
+				finalizers: &internalversion.StageFinalizers{
+					Empty: true,
+					Add: []internalversion.FinalizerItem{
+						{
+							Value: "b",
+						},
+					},
+				},
+			},
+			want: []jsonpathOperation{
+				{Op: "add", Path: "/metadata/finalizers", Value: []string{"b"}},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := finalizersModify(tt.args.metaFinalizers, tt.args.finalizers); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("finalizersModify() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
