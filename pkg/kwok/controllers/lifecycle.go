@@ -29,22 +29,27 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func NewStagesFromYaml(data []byte) ([]*internalversion.Stage, error) {
-	var podStageStatus []*internalversion.Stage
+	var stages []*internalversion.Stage
 	decoder := yaml.NewYAMLToJSONDecoder(bytes.NewBuffer(data))
 	for {
-		var stage internalversion.Stage
+		var stage v1alpha1.Stage
 		err := decoder.Decode(&stage)
 		if errors.Is(err, io.EOF) {
 			break
 		}
-		podStageStatus = append(podStageStatus, &stage)
+		internalStage, err := internalversion.ConvertToInternalVersionStage(&stage)
+		if err != nil {
+			return nil, err
+		}
+		stages = append(stages, internalStage)
 	}
-	return podStageStatus, nil
+	return stages, nil
 }
 
 func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {
