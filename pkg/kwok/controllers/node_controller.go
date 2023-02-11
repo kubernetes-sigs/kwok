@@ -291,16 +291,20 @@ func (c *NodeController) FinalizersModify(ctx context.Context, node *corev1.Node
 	}
 
 	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"node", node.Name,
+	)
 	_, err = c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Error("node not found", err,
-				"node", node.Name,
+			logger.Warn("Patch node finalizers",
+				"err", err,
 			)
 			return nil
 		}
 		return err
 	}
+	logger.Info("Patch node finalizers")
 	return nil
 }
 
@@ -313,7 +317,9 @@ func (c *NodeController) DeleteNode(ctx context.Context, node *corev1.Node) erro
 	err := c.clientSet.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Error("node not found", err)
+			logger.Warn("Delete node",
+				"err", err,
+			)
 			return nil
 		}
 		return err
@@ -429,7 +435,9 @@ func (c *NodeController) lockNode(ctx context.Context, node *corev1.Node, patch 
 	_, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Error("node not found", err)
+			logger.Warn("Patch node",
+				"err", err,
+			)
 			return nil
 		}
 		return err

@@ -169,15 +169,23 @@ func (c *PodController) FinalizersModify(ctx context.Context, pod *corev1.Pod, f
 	if err != nil {
 		return err
 	}
+
 	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"pod", log.KObj(pod),
+		"node", pod.Spec.NodeName,
+	)
 	_, err = c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Error("pod not found", err, "node", pod.Name)
+			logger.Warn("Patch pod finalizers",
+				"err", err,
+			)
 			return nil
 		}
 		return err
 	}
+	logger.Info("Patch pod finalizers")
 	return nil
 }
 
@@ -191,7 +199,9 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 	err := c.clientSet.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Warn("Delete pod", err)
+			logger.Warn("Delete pod",
+				"err", err,
+			)
 			return nil
 		}
 		return err
@@ -310,7 +320,9 @@ func (c *PodController) lockPod(ctx context.Context, pod *corev1.Pod, patch []by
 	_, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Warn("Patch pod", err)
+			logger.Warn("Patch pod",
+				"err", err,
+			)
 			return nil
 		}
 		return err
