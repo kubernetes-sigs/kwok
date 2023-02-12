@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.19
 
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.19
 
@@ -63,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.19
 
@@ -119,7 +119,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.19
 
@@ -181,12 +181,8 @@ jobs:
       - name: Test Workable
         shell: bash
         run: |
-          if [[ "${{ matrix.kwokctl-runtime }}" == "kind" ]]; then
-            export LAST_RELEASE_SIZE=1
-          elif [[ "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" ]]; then
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" && ( "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" ) ]]; then
             export LAST_RELEASE_SIZE=20
-          else
-            export LAST_RELEASE_SIZE=6
           fi
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
@@ -216,7 +212,7 @@ jobs:
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
 
       - name: Test Benchmark
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime != 'kind' }}
         shell: bash
-        continue-on-error: true
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark
