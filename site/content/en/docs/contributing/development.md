@@ -6,6 +6,19 @@ This document provides details on how to build and run `kwok` and `kwokctl` loca
 
 {{< /hint >}}
 
+## Directory Structure
+
+- cmd
+  - kwok - Main entry point for `kwok`
+  - kwokctl - Main entry point for `kwokctl`
+- pkg
+  - apis - API definitions
+    - internalversion - For all internal use only
+    - v1alpha1 - For parsing and converting configurations only
+  - config - Configuration utilities
+  - kwok - `kwok` implementation
+  - kwokctl - `kwokctl` implementation
+
 ## Building
 
 ### Building `kwok` and `kwokctl`

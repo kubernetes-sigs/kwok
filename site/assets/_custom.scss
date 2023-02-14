@@ -1,2 +1,13 @@
 
 @import "plugins/_numbered.scss";
+
+
+.gh-label {
+    display: inline-block;
+    padding: 0 10px;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 18px;
+    border: 1px solid transparent;
+    border-radius: 2em;
+}

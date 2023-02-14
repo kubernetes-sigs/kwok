@@ -7,14 +7,14 @@ type: docs
 
 <img align="right" width="180px" src="/favicon.svg">
 
-[kwok](https://sigs.k8s.io/kwok) is a toolkit that enables setting up a cluster of thousands of Nodes in seconds.
+[KWOK] is a toolkit that enables setting up a cluster of thousands of Nodes in seconds.
 Under the scene, all Nodes are simulated to behave like real ones, so the overall approach employs
 a pretty low resource footprint that you can easily play around on your laptop.
 
 So far we provide two tools:
 
-- **Kwok:** Core of this repo. It simulates thousands of fake Nodes.
-- **Kwokctl:** A CLI to facilitate creating and managing clusters simulated by Kwok.
+- **kwok:** Core of this repo. It simulates thousands of fake Nodes.
+- **kwokctl:** A CLI to facilitate creating and managing clusters simulated by Kwok.
 
 ## Getting Started
 
@@ -48,15 +48,15 @@ Runtime indicates which medium kwokctl will use to start the cluster
 - 🔵 Expected support but not fully tested
 - ⚫ TODO
 
-## Community, discussion, contribution, and support
+## Community
 
-Learn how to engage with the Kubernetes community on the [community page](http://kubernetes.io/community/).
-
-You can reach the maintainers of this project at:
-
-- [Slack](https://kubernetes.slack.com/messages/sig-scheduling)
-- [Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-scheduling)
+See our own [contributor guide] and the Kubernetes [community page].
 
 ### Code of conduct
 
-Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](https://github.com/kubernetes-sigs/kwok/blob/main/code-of-conduct.md).
+Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct][code of conduct].
+
+[KWOK]: https://sigs.k8s.io/kwok
+[community page]: https://kubernetes.io/community/
+[contributor guide]: {{< relref "/docs/contributing/getting-started" >}}
+[code of conduct]: https://github.com/kubernetes-sigs/kwok/blob/main/code-of-conduct.md
