@@ -459,6 +459,15 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	logger := log.FromContext(ctx)
 	for i := 0; ctx.Err() == nil; i++ {
+		err = c.Down(ctx)
+		if err != nil {
+			logger.Debug("Failed to stop cluster",
+				"times", i,
+				"err", err,
+			)
+			time.Sleep(time.Second)
+			continue
+		}
 		err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
 			ErrOut: os.Stderr,
 			Out:    os.Stderr,
