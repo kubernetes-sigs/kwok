@@ -1,0 +1,16 @@
+{{ $ref := "" }}
+{{ $target := "" }}
+{{ $background := "" }}
+{{ with .Get "href" }}
+  {{ $ref = . }}
+  {{ $target = "_blank" }}
+{{ end }}
+{{ with .Get "relref" }}
+  {{ $ref = relref $ . }}
+{{ end }}
+{{ with .Get "background" }}
+  {{ $background = . }}
+{{ end }}
+<a {{ with $ref }} href="{{.}}" {{ end }} {{ with $target }} target="{{.}}" {{ end }} class="gh-label{{ with .Get "class" }} {{ . }}{{ end }}" style="background: {{ with $background }}{{ . }}{{ end }}; color: white">
+  {{ $.Inner | markdownify }}
+</a>

@@ -16,7 +16,11 @@ headless: true
   - **Configuration**
     - [Options]({{< relref "/docs/user/configuration" >}})
     - [Stages]({{< relref "/docs/user/stages-configuration" >}})
+- **Design**
+  - [Introduction]({{< relref "/docs/design/introduction" >}})
 - **Contributing**
+  - [Getting Started]({{< relref "/docs/contributing/getting-started" >}})
+  - [Documentation]({{< relref "/docs/contributing/documentation" >}})
   - [Development]({{< relref "/docs/contributing/development" >}})
   - [Roadmap ⛓](https://github.com/orgs/kubernetes-sigs/projects/21)
   - [Source Code ⛓](https://github.com/kubernetes-sigs/kwok)

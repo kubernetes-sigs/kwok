@@ -1,0 +1,20 @@
+$startLevel: 2;
+$endLevel: 6;
+
+.book-page .markdown {
+  @for $currentLevel from $startLevel through $endLevel {
+    > h#{$currentLevel} {
+      counter-increment: h#{$currentLevel};
+      counter-reset: h#{$currentLevel + 1};
+
+      $content: "";
+      @for $n from $startLevel through $currentLevel {
+        $content: $content + 'counter(h#{$n})"."';
+      }
+
+      &::before {
+        content: unquote($content) " ";
+      }
+    }
+  }
+}

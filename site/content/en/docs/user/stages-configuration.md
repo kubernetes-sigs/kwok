@@ -75,6 +75,19 @@ This example shows how to configure the simplest and fastest stages of Node reso
 
 [Default Node Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/node-fast.yaml)
 
+{{< mermaid >}}
+
+stateDiagram-v2
+
+    state "node-initialize" as node_initialize
+    state "node-heartbeat" as node_heartbeat
+
+    [*] --> node_initialize: Node be created that managed by kwok
+    node_initialize --> node_heartbeat: Update heartbeat
+    node_heartbeat --> node_heartbeat: Update heartbeat
+
+{{< /mermaid >}}
+
 The `node-initialize` Stage will be applied to nodes that do not have any conditions set in their `status.conditions` field.
 When applied, this Stage will set the `status.conditions` field for the node, as well as the `status.addresses`, `status.allocatable`,
 and `status.capacity` fields.
@@ -87,6 +100,22 @@ When applied, maintain the `status.conditions` field for the node.
 This example shows how to configure the simplest and fastest stages of Pod resource, which is also the default Pod stages for Kwok.
 
 [Default Pod Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-fast.yaml)
+
+{{< mermaid >}}
+
+stateDiagram-v2
+
+    state "pod-create-and-ready" as pod_create_and_ready
+    state "pod-completed-for-job" as pod_completed_for_job
+    state "pod-delete" as pod_delete
+    
+    [*] --> pod_create_and_ready: Pod scheduled to Node that managed by kwok
+    pod_create_and_ready --> pod_completed_for_job: If pod create by job
+    pod_create_and_ready --> pod_delete: .metadata.deletionTimestamp be set
+    pod_completed_for_job --> pod_delete: .metadata.deletionTimestamp be set
+    pod_delete --> [*] : Pod be deleted
+
+{{< /mermaid >}}
 
 The `pod-create-and-ready` Stage will be applied to pods that do not have a `status.podIP` set and do not have a `metadata.deletionTimestamp` set.
 When applied, this Stage will set the `status.conditions`, `status.containerStatuses`, and `status.initContainerStatuses` fields for the pod,
