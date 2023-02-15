@@ -64,6 +64,7 @@ IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
 
 BINARY_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
 
+BUILDER ?= docker
 DOCKER_CLI_EXPERIMENTAL ?= enabled
 
 .PHONY: default
@@ -157,6 +158,7 @@ image:
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
+		--builder=${BUILDER} \
 		--push=${PUSH}
 
 ## cross-image: Build kwok images for all supported platforms
@@ -169,6 +171,7 @@ cross-image:
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
+		--builder=${BUILDER} \
 		--push=${PUSH}
 
 ## cluster-image: Build cluster image
@@ -181,6 +184,7 @@ cluster-image:
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
+		--builder=${BUILDER} \
 		--push=${PUSH}
 
 ## cross-cluster-image: Build cluster images for all supported platforms and all supported Kubernetes versions.
@@ -194,6 +198,7 @@ cross-cluster-image:
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
+		--builder=${BUILDER} \
 		--push=${PUSH}
 
 ## integration-tests: Run integration tests

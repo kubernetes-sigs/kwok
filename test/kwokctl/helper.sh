@@ -64,18 +64,12 @@ function build_kwok() {
 }
 
 function build_image() {
-  if docker image inspect "${KWOK_CONTROLLER_IMAGE}" >/dev/null 2>&1; then
+  builder=${1:-"docker"}
+  if ${builder} image inspect "${KWOK_CONTROLLER_IMAGE}" >/dev/null 2>&1; then
     return
   fi
   "${ROOT_DIR}/hack/releases.sh" --bin kwok --version "${KWOK_CONTROLLER_IMAGE##*:}" --platform "linux/${GOARCH}"
-  "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version "${VERSION}"
-}
-
-function build_image_for_nerdctl() {
-  build_image
-  mkdir "tmp"
-  docker save -o "tmp/kwok.tar" "${KWOK_CONTROLLER_IMAGE}"
-  nerdctl load -i "tmp/kwok.tar"
+  "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version "${VERSION}" --builder ${builder}
 }
 
 function requirements() {
@@ -87,9 +81,8 @@ function requirements() {
 
 function requirements_for_nerdctl() {
   install_kubectl
-  install_buildx
   build_kwokctl
-  build_image_for_nerdctl
+  build_image nerdctl
 }
 
 function requirements_for_binary() {
