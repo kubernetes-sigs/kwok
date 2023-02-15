@@ -234,9 +234,8 @@ func FilterWithoutType[T metav1.Object](objs []metav1.Object) (out []metav1.Obje
 
 // FilterWithTypeFromContext returns all objects of the given type from the context.
 func FilterWithTypeFromContext[T metav1.Object](ctx context.Context) (out []T) {
-	v := ctx.Value(configCtx(0))
-	objs, ok := v.([]metav1.Object)
-	if !ok {
+	objs := getFromContext(ctx)
+	if len(objs) == 0 {
 		return nil
 	}
 	return FilterWithType[T](objs)
@@ -244,9 +243,8 @@ func FilterWithTypeFromContext[T metav1.Object](ctx context.Context) (out []T) {
 
 // FilterWithoutTypeFromContext returns all objects from the context that are not of the given type.
 func FilterWithoutTypeFromContext[T metav1.Object](ctx context.Context) (out []metav1.Object) {
-	v := ctx.Value(configCtx(0))
-	objs, ok := v.([]metav1.Object)
-	if !ok {
+	objs := getFromContext(ctx)
+	if len(objs) == 0 {
 		return nil
 	}
 	return FilterWithoutType[T](objs)

@@ -73,7 +73,12 @@ func GetKwokctlConfiguration(ctx context.Context) (conf *internalversion.Kwokctl
 		logger.Debug("No configuration",
 			"kind", v1alpha1.KwokctlConfigurationKind,
 		)
-		conf, _ := internalversion.ConvertToInternalVersionKwokctlConfiguration(setKwokctlConfigurationDefaults(&v1alpha1.KwokctlConfiguration{}))
+		conf, err := internalversion.ConvertToInternalVersionKwokctlConfiguration(setKwokctlConfigurationDefaults(&v1alpha1.KwokctlConfiguration{}))
+		if err != nil {
+			logger.Error("Get kwokctl configuration failed", err)
+			return &internalversion.KwokctlConfiguration{}
+		}
+		addToContext(ctx, conf)
 		return conf
 	}
 	return conf
@@ -96,7 +101,12 @@ func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfig
 		logger.Debug("No configuration",
 			"kind", v1alpha1.KwokConfigurationKind,
 		)
-		conf, _ := internalversion.ConvertToInternalVersionKwokConfiguration(setKwokConfigurationDefaults(&v1alpha1.KwokConfiguration{}))
+		conf, err := internalversion.ConvertToInternalVersionKwokConfiguration(setKwokConfigurationDefaults(&v1alpha1.KwokConfiguration{}))
+		if err != nil {
+			logger.Error("Get kwok configuration failed", err)
+			return &internalversion.KwokConfiguration{}
+		}
+		addToContext(ctx, conf)
 		return conf
 	}
 	return conf
