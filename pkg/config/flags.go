@@ -28,8 +28,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
-type configCtx int
-
 // InitFlags initializes the flags for the configuration.
 func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, error) {
 	defaultConfigPath := path.Join(WorkDir, consts.ConfigName)
@@ -44,7 +42,7 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 				"path", *config,
 				"err", err,
 			)
-			return ctx, nil
+			return setupContext(ctx, objs), nil
 		}
 		return nil, err
 	}
@@ -54,11 +52,11 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 			"path", *config,
 			"err", "empty config",
 		)
-		return ctx, nil
+	} else {
+		logger.Debug("Load config",
+			"path", *config,
+		)
 	}
 
-	logger.Debug("Load config",
-		"path", *config,
-	)
-	return context.WithValue(ctx, configCtx(0), objs), nil
+	return setupContext(ctx, objs), nil
 }
