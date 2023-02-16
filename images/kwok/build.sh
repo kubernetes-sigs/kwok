@@ -159,6 +159,11 @@ function main() {
       done
     fi
   else
+    if [[ "${PUSH}" == "true" ]]; then
+      extra_args+=("--push")
+    else
+      extra_args+=("--load")
+    fi
     build_with_docker "${extra_args[@]}"
   fi
 }
@@ -166,11 +171,6 @@ function main() {
 function build_with_docker() {
   local extra_args
   extra_args=("$@")
-  if [[ "${PUSH}" == "true" ]]; then
-    extra_args+=("--push")
-  else
-    extra_args+=("--load")
-  fi
   dry_run docker buildx build \
     "${extra_args[@]}" \
     -f "${DOCKERFILE}" \
