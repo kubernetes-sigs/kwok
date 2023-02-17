@@ -61,6 +61,7 @@ body:
     validations:
       required: true
 
+  - type: textarea
     id: osVersion
     attributes:
       label: OS version
