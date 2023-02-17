@@ -23,7 +23,13 @@ jobs:
         with:
           go-version: 1.19
 
+      - name: Test
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh release/build
+
       - name: Build
+        shell: bash
         run: |
           make build
 

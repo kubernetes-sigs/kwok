@@ -70,12 +70,12 @@ DOCKER_CLI_EXPERIMENTAL ?= enabled
 default: help
 
 vendor:
-	$(GO_CMD) mod vendor
+	@$(GO_CMD) mod vendor
 
 ## unit-test: Run unit tests
 .PHONY: unit-test
 unit-test: vendor
-	$(GO_CMD) test ./pkg/...
+	@$(GO_CMD) test ./pkg/...
 
 ## verify: Verify code
 .PHONY: verify
