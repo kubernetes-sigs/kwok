@@ -188,38 +188,31 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	} else {
 		logger.Info("Creating cluster")
-		err = rt.SetConfig(ctx, flags.KwokctlConfiguration)
-		if err != nil {
-			logger.Error("Failed to set config", err)
-			err0 := rt.Uninstall(ctx)
-			if err0 != nil {
-				logger.Error("Failed to clean up cluster", err0)
+		cleanUp := func() {
+			err := rt.Uninstall(ctx)
+			if err != nil {
+				logger.Error("Failed to clean up cluster", err)
 			} else {
 				logger.Info("Cluster is cleaned up")
 			}
+		}
+		err = rt.SetConfig(ctx, flags.KwokctlConfiguration)
+		if err != nil {
+			logger.Error("Failed to set config", err)
+			cleanUp()
 			return err
 		}
 		err = rt.Save(ctx)
 		if err != nil {
 			logger.Error("Failed to save config", err)
-			err0 := rt.Uninstall(ctx)
-			if err0 != nil {
-				logger.Error("Failed to clean up cluster", err0)
-			} else {
-				logger.Info("Cluster is cleaned up")
-			}
+			cleanUp()
 			return err
 		}
 
 		err = rt.Install(ctx)
 		if err != nil {
 			logger.Error("Failed to setup config", err)
-			err0 := rt.Uninstall(ctx)
-			if err0 != nil {
-				logger.Error("Failed to uninstall cluster", err0)
-			} else {
-				logger.Info("Cluster is cleaned up")
-			}
+			cleanUp()
 			return err
 		}
 	}
