@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-HUGO_VERSION = 0.107.0
+HUGO_VERSION = 0.110.0
 HUGO_IMAGE = docker.io/klakegg/hugo:$(HUGO_VERSION)-ext
 HUGO_BINARY  = $(shell which hugo)
 HUGO_DOCKER  = docker run --rm -it --volume $(realpath $(CURDIR)/..):/src -p 1313:1313 --workdir /src/site --entrypoint=hugo $(HUGO_IMAGE)
