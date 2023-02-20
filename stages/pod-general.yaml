@@ -26,6 +26,7 @@ spec:
         - value: 'kwok.x-k8s.io/fake'
     statusTemplate: |
       {{ $now := Now }}
+      {{ $nodeName := .spec.nodeName }}
       conditions:
       {{ if .spec.initContainers }}
         - lastProbeTime: null
@@ -94,8 +95,23 @@ spec:
               reason: ContainerCreating
         {{ end }}
       {{ end }}
-      hostIP: {{ with .status.hostIP }} {{ . }} {{ else }} {{ NodeIP }} {{ end }}
-      podIP: {{ with .status.podIP }} {{ . }} {{ else }} {{ PodIP }} {{ end }}
+      {{ with .status }}
+      hostIP: {{ with .hostIP -}} 
+        {{- . -}}
+      {{- else -}}
+        {{- NodeIP $nodeName -}}
+      {{- end }}
+      podIP: {{ with .podIP -}}
+        {{- . -}}
+      {{- else -}}
+        {{- if .spec.hostNetwork -}}
+          {{- NodeIP $nodeName -}}
+        {{- else -}}
+          {{- PodIP -}}
+        {{- end -}}
+      {{- end }}
+      {{- end }}
+
       phase: Pending
 ---
 kind: Stage

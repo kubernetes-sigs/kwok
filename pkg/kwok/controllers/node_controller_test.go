@@ -74,7 +74,7 @@ func TestNodeController(t *testing.T) {
 		NodeIP:              "10.0.0.1",
 		NodeSelectorFunc:    nodeSelectorFunc,
 		Stages:              nodeStageStatus,
-		FuncMap:             funcMap,
+		FuncMap:             defaultFuncMap,
 		LockNodeParallelism: 2,
 	})
 	if err != nil {

@@ -34,6 +34,10 @@ import (
 	"sigs.k8s.io/kwok/stages"
 )
 
+const (
+	defaultNodeIP = "10.0.0.0"
+)
+
 func TestPodController(t *testing.T) {
 	clientset := fake.NewSimpleClientset(
 		&corev1.Pod{
@@ -68,21 +72,43 @@ func TestPodController(t *testing.T) {
 				NodeName: "xxxx",
 			},
 		},
+		&corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:              "pod-with-hostNetwork",
+				Namespace:         "default",
+				CreationTimestamp: metav1.Now(),
+			},
+			Spec: corev1.PodSpec{
+				HostNetwork: true,
+				Containers: []corev1.Container{
+					{
+						Name:  "test-container",
+						Image: "test-image",
+					},
+				},
+				NodeName: "node0",
+			},
+		},
 	)
 
 	nodeHasFunc := func(nodeName string) bool {
 		return strings.HasPrefix(nodeName, "node")
 	}
+	nodeGetFunc := func(nodeName string) (NodeInfo, bool) {
+		node := NodeInfo{HostIPs: []string{defaultNodeIP}}
+		return node, nodeHasFunc(nodeName)
+	}
 	podStageStatus, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
 		ClientSet:                             clientset,
-		NodeIP:                                "10.0.0.1",
+		NodeIP:                                defaultNodeIP,
 		CIDR:                                  "10.0.0.1/24",
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
 		Stages:                                podStageStatus,
 		NodeHasFunc:                           nodeHasFunc,
-		FuncMap:                               funcMap,
+		NodeGetFunc:                           nodeGetFunc,
+		FuncMap:                               defaultFuncMap,
 		LockPodParallelism:                    2,
 	})
 	if err != nil {
@@ -149,8 +175,8 @@ func TestPodController(t *testing.T) {
 		if err != nil {
 			return false, fmt.Errorf("list pods error: %w", err)
 		}
-		if len(list.Items) != 3 {
-			return false, fmt.Errorf("want 3 pods, got %d", len(list.Items))
+		if len(list.Items) != 4 {
+			return false, fmt.Errorf("want 4 pods, got %d", len(list.Items))
 		}
 		return true, nil
 	})
@@ -171,8 +197,8 @@ func TestPodController(t *testing.T) {
 		if err != nil {
 			return false, fmt.Errorf("list pods error: %w", err)
 		}
-		if len(list.Items) != 2 {
-			return false, fmt.Errorf("want 2 pods, got %d", len(list.Items))
+		if len(list.Items) != 3 {
+			return false, fmt.Errorf("want 3 pods, got %d", len(list.Items))
 		}
 		return true, nil
 	})
@@ -180,15 +206,25 @@ func TestPodController(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, pod := range list.Items {
+	for index, pod := range list.Items {
 		if nodeHasFunc(pod.Spec.NodeName) {
 			if pod.Status.Phase != corev1.PodRunning {
 				t.Fatal(fmt.Errorf("want pod %s phase is running, got %s", pod.Name, pod.Status.Phase))
 			}
-		} else {
-			if pod.Status.Phase == corev1.PodRunning {
-				t.Fatal(fmt.Errorf("want pod %s phase is not running, got %s", pod.Name, pod.Status.Phase))
+			if pods.needLockPod(&list.Items[index]) {
+				if pod.Status.HostIP != defaultNodeIP {
+					t.Fatal(fmt.Errorf("want pod %s to have hostIP=%s, got %s (nodeName=%s)", pod.Name, defaultNodeIP, pod.Status.HostIP, pod.Spec.NodeName))
+				}
+				if pod.Spec.HostNetwork {
+					if pod.Status.PodIP != defaultNodeIP {
+						t.Fatal(fmt.Errorf("want pod %s to have podIP=%s, got %s (HostNetwork)", pod.Name, defaultNodeIP, pod.Status.PodIP))
+					}
+				} else if pod.Status.PodIP == defaultNodeIP {
+					t.Fatal(fmt.Errorf("want pod %s to not have podIP=%s (non-HostNetwork)", pod.Name, defaultNodeIP))
+				}
 			}
+		} else if pod.Status.Phase == corev1.PodRunning {
+			t.Fatal(fmt.Errorf("want pod %s phase is not running, got %s", pod.Name, pod.Status.Phase))
 		}
 	}
 }

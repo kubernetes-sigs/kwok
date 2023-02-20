@@ -37,7 +37,7 @@ import (
 var (
 	startTime = time.Now().Format(time.RFC3339Nano)
 
-	funcMap = template.FuncMap{
+	defaultFuncMap = template.FuncMap{
 		"Now": func() string {
 			return time.Now().Format(time.RFC3339Nano)
 		},
@@ -129,7 +129,7 @@ func NewController(conf Config) (*Controller, error) {
 		},
 		Stages:              conf.NodeStages,
 		LockNodeParallelism: 16,
-		FuncMap:             funcMap,
+		FuncMap:             defaultFuncMap,
 		Recorder:            recorder,
 	})
 	if err != nil {
@@ -146,7 +146,8 @@ func NewController(conf Config) (*Controller, error) {
 		Stages:                                conf.PodStages,
 		LockPodParallelism:                    16,
 		NodeHasFunc:                           nodes.Has, // just handle pods that are on nodes we have
-		FuncMap:                               funcMap,
+		NodeGetFunc:                           nodes.Get,
+		FuncMap:                               defaultFuncMap,
 		Recorder:                              recorder,
 	})
 	if err != nil {
