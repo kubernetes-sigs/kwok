@@ -17,25 +17,28 @@ limitations under the License.
 package path
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 )
 
-// ExpandHome expands home directory in file paths.
-func ExpandHome(path string) string {
-	if len(path) == 0 {
-		return path
-	}
-	if path[0] != '~' {
-		return path
-	}
-	if len(path) > 1 && path[1] != '/' && path[1] != '\\' {
-		return path
+// Expand expands absolute directory in file paths.
+func Expand(path string) (string, error) {
+	if path == "" {
+		return "", fmt.Errorf("empty path")
 	}
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return path
+	if path[0] == '~' {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		if len(path) == 1 {
+			path = home
+		} else if path[1] == '/' || path[1] == '\\' {
+			path = Join(home, path[2:])
+		}
 	}
 
-	return Join(home, path[1:])
+	return filepath.Abs(path)
 }
