@@ -117,6 +117,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AuditLog:           auditLogPath,
 		SchedulerConfig:    schedulerConfigPath,
 		ConfigPath:         configPath,
+		Verbosity:          conf.Verbosity,
+		HumanVerbosity:     format.StringifyLevel(conf.Verbosity),
 	})
 	if err != nil {
 		return err
@@ -142,6 +144,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		prometheusDeploy, err := BuildPrometheusDeployment(BuildPrometheusDeploymentConfig{
 			PrometheusImage: conf.PrometheusImage,
 			Name:            c.Name(),
+			Verbosity:       conf.Verbosity,
+			HumanVerbosity:  format.StringifyLevel(conf.Verbosity),
 		})
 		if err != nil {
 			return err

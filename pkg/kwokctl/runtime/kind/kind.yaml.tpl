@@ -47,7 +47,23 @@ nodes:
         readOnly: false
         pathType: DirectoryOrCreate
 {{ end }}
-
+{{- if .Verbosity }}
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      extraArgs:
+        v: '{{ .Verbosity }}'
+    scheduler:
+      extraArgs:
+        v: '{{ .Verbosity }}'
+    controllerManager:
+      extraArgs:
+        v: '{{ .Verbosity }}'
+    etcd:
+      local:
+        extraArgs:
+          log-level: '{{ .HumanVerbosity }}'
+{{- end -}}
 {{ if .SchedulerConfig }}
   - |
     kind: ClusterConfiguration

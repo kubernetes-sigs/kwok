@@ -17,6 +17,7 @@ limitations under the License.
 package components
 
 import (
+	"golang.org/x/exp/slog"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -24,14 +25,15 @@ import (
 
 // BuildEtcdComponentConfig is the configuration for building an etcd component.
 type BuildEtcdComponentConfig struct {
-	Binary   string
-	Image    string
-	Version  version.Version
-	DataPath string
-	Workdir  string
-	Address  string
-	Port     uint32
-	PeerPort uint32
+	Binary    string
+	Image     string
+	Version   version.Version
+	DataPath  string
+	Workdir   string
+	Address   string
+	Port      uint32
+	PeerPort  uint32
+	Verbosity int
 }
 
 // BuildEtcdComponent builds an etcd component.
@@ -77,6 +79,10 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		etcdArgs = append(etcdArgs,
 			"--data-dir="+conf.DataPath,
 		)
+	}
+
+	if conf.Verbosity != int(slog.InfoLevel) {
+		etcdArgs = append(etcdArgs, "--log-level="+format.StringifyLevel(conf.Verbosity))
 	}
 
 	return internalversion.Component{

@@ -17,6 +17,7 @@ limitations under the License.
 package components
 
 import (
+	"golang.org/x/exp/slog"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -37,6 +38,7 @@ type BuildKubeSchedulerComponentConfig struct {
 	ConfigPath       string
 	KubeconfigPath   string
 	KubeFeatureGates string
+	Verbosity        int
 }
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
@@ -143,6 +145,10 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		//	kubeSchedulerArgs = append(kubeSchedulerArgs,
 		//		"--secure-port=0",
 		//	)
+	}
+
+	if conf.Verbosity != int(slog.InfoLevel) {
+		kubeSchedulerArgs = append(kubeSchedulerArgs, "--v="+format.AbsStringifyLevel(conf.Verbosity))
 	}
 
 	return internalversion.Component{

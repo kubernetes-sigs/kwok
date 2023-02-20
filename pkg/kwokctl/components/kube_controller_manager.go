@@ -17,6 +17,7 @@ limitations under the License.
 package components
 
 import (
+	"golang.org/x/exp/slog"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -37,6 +38,7 @@ type BuildKubeControllerManagerComponentConfig struct {
 	KubeAuthorization bool
 	KubeconfigPath    string
 	KubeFeatureGates  string
+	Verbosity         int
 }
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
@@ -143,6 +145,10 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				"--service-account-private-key-file="+conf.AdminKeyPath,
 			)
 		}
+	}
+
+	if conf.Verbosity != int(slog.InfoLevel) {
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs, "--v="+format.AbsStringifyLevel(conf.Verbosity))
 	}
 
 	return internalversion.Component{

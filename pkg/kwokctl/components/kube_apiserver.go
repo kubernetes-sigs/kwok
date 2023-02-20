@@ -17,6 +17,7 @@ limitations under the License.
 package components
 
 import (
+	"golang.org/x/exp/slog"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -41,6 +42,7 @@ type BuildKubeApiserverComponentConfig struct {
 	CaCertPath        string
 	AdminCertPath     string
 	AdminKeyPath      string
+	Verbosity         int
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -176,6 +178,10 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--audit-log-path="+conf.AuditLogPath,
 			)
 		}
+	}
+
+	if conf.Verbosity != int(slog.InfoLevel) {
+		kubeApiserverArgs = append(kubeApiserverArgs, "--v="+format.AbsStringifyLevel(conf.Verbosity))
 	}
 
 	return internalversion.Component{

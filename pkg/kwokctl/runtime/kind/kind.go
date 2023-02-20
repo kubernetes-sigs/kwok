@@ -54,4 +54,6 @@ type BuildKindConfig struct {
 	KubeconfigPath  string
 	SchedulerConfig string
 	ConfigPath      string
+	Verbosity       int
+	HumanVerbosity  string
 }

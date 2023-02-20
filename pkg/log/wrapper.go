@@ -31,13 +31,14 @@ const (
 	ErrorLevel Level = slog.ErrorLevel
 )
 
-func wrapSlog(log *slog.Logger) *Logger {
-	return &Logger{log}
+func wrapSlog(log *slog.Logger, level slog.Level) *Logger {
+	return &Logger{log, level}
 }
 
 // Logger is a wrapper around slog.Logger.
 type Logger struct {
-	log *slog.Logger
+	log   *slog.Logger
+	level slog.Level // Level specifies a level of verbosity for V logs.
 }
 
 // LogDepth logs a message with the given level and depth.
@@ -75,11 +76,15 @@ func (l *Logger) Error(msg string, err error, args ...any) {
 
 // With returns a new Logger that includes the given arguments.
 func (l *Logger) With(args ...any) *Logger {
-	return wrapSlog(l.log.With(args...))
+	return wrapSlog(l.log.With(args...), l.level)
 }
 
 // WithGroup returns a new Logger that starts a group. The keys of all
 // attributes added to the Logger will be qualified by the given name.
 func (l *Logger) WithGroup(name string) *Logger {
-	return wrapSlog(l.log.WithGroup(name))
+	return wrapSlog(l.log.WithGroup(name), l.level)
 }
+
+// Level returns the receiver.
+// It implements Leveler.
+func (l *Logger) Level() slog.Level { return l.level }

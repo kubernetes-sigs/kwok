@@ -234,13 +234,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Workdir:  workdir,
-		Binary:   etcdPath,
-		Version:  etcdVersion,
-		Address:  localAddress,
-		DataPath: etcdDataPath,
-		Port:     conf.EtcdPort,
-		PeerPort: conf.EtcdPeerPort,
+		Workdir:   workdir,
+		Binary:    etcdPath,
+		Version:   etcdVersion,
+		Address:   localAddress,
+		DataPath:  etcdDataPath,
+		Port:      conf.EtcdPort,
+		PeerPort:  conf.EtcdPeerPort,
+		Verbosity: conf.Verbosity,
 	})
 	if err != nil {
 		return err
@@ -268,6 +269,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		CaCertPath:        caCertPath,
 		AdminCertPath:     adminCertPath,
 		AdminKeyPath:      adminKeyPath,
+		Verbosity:         conf.Verbosity,
 	})
 	if err != nil {
 		return err
@@ -299,6 +301,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeAuthorization: conf.KubeAuthorization,
 			KubeconfigPath:    kubeconfigPath,
 			KubeFeatureGates:  conf.KubeFeatureGates,
+			Verbosity:         conf.Verbosity,
 		})
 		if err != nil {
 			return err
@@ -340,6 +343,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   kubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
+			Verbosity:        conf.Verbosity,
 		})
 		if err != nil {
 			return err
@@ -404,6 +408,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Address:    localAddress,
 			Port:       conf.PrometheusPort,
 			ConfigPath: prometheusConfigPath,
+			Verbosity:  conf.Verbosity,
 		})
 		if err != nil {
 			return err

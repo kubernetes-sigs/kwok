@@ -17,6 +17,7 @@ limitations under the License.
 package components
 
 import (
+	"golang.org/x/exp/slog"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -33,6 +34,7 @@ type BuildPrometheusComponentConfig struct {
 	ConfigPath    string
 	AdminCertPath string
 	AdminKeyPath  string
+	Verbosity     int
 }
 
 // BuildPrometheusComponent builds a prometheus component.
@@ -79,6 +81,10 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			"--config.file="+conf.ConfigPath,
 			"--web.listen-address="+conf.Address+":"+format.String(conf.Port),
 		)
+	}
+
+	if conf.Verbosity != int(slog.InfoLevel) {
+		prometheusArgs = append(prometheusArgs, "--log.level="+format.StringifyLevel(conf.Verbosity))
 	}
 
 	return internalversion.Component{

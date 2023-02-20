@@ -43,8 +43,10 @@ type flagpole struct {
 
 // NewCommand returns a new cobra.Command for cluster creation
 func NewCommand(ctx context.Context) *cobra.Command {
+	logger := log.FromContext(ctx)
 	flags := &flagpole{}
 	flags.KwokctlConfiguration = config.GetKwokctlConfiguration(ctx)
+	flags.Options.Verbosity = int(logger.Level())
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,

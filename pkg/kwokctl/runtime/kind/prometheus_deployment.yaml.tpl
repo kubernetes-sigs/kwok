@@ -126,6 +126,10 @@ spec:
       args:
         - --config.file
         - /etc/prometheus/prometheus.yaml
+{{- if .Verbosity }}
+        - --log.level
+        - {{ .HumanVerbosity }}
+{{- end }}
       ports:
         - name: web
           containerPort: 9090

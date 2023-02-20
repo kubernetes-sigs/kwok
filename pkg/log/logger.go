@@ -28,14 +28,20 @@ import (
 
 // IsTerminal returns true if the given file descriptor is a terminal.
 var IsTerminal = term.IsTerminal
+var log_level = "log_level"
 
 // FromContext returns the Logger associated with ctx, or the default logger.
 func FromContext(ctx context.Context) *Logger {
-	return wrapSlog(slog.FromContext(ctx))
+	level, ok := ctx.Value(log_level).(slog.Level)
+	if !ok {
+		level = InfoLevel
+	}
+	return wrapSlog(slog.FromContext(ctx), slog.Level(level))
 }
 
 // NewContext returns a new context with the given logger.
 func NewContext(ctx context.Context, logger *Logger) context.Context {
+	ctx = context.WithValue(ctx, log_level, logger.level)
 	return slog.NewContext(ctx, logger.log)
 }
 
@@ -48,7 +54,7 @@ func NewLogger(w io.Writer, level slog.Level) *Logger {
 	if file, ok := w.(*os.File); ok {
 		fd := int(file.Fd())
 		if IsTerminal(fd) {
-			return wrapSlog(slog.New(newCtlHandler(w, fd, level)))
+			return wrapSlog(slog.New(newCtlHandler(w, fd, level)), level)
 		}
 	}
 
@@ -67,5 +73,5 @@ func NewLogger(w io.Writer, level slog.Level) *Logger {
 			return a
 		},
 	}
-	return wrapSlog(slog.New(handler.NewJSONHandler(w)))
+	return wrapSlog(slog.New(handler.NewJSONHandler(w)), level)
 }

@@ -173,6 +173,9 @@ type KwokctlConfigurationOptions struct {
 
 	// CacheDir is the directory of the cache.
 	CacheDir string
+
+	// Verbosity is logging level, the value of the -v flag
+	Verbosity int
 }
 
 // Component is a component of the cluster.
