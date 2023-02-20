@@ -28,6 +28,11 @@ jobs:
         run: |
           ./hack/e2e-test.sh release/build
 
+      - name: Check site
+        shell: bash
+        run: |
+          make -C site check
+
       - name: Build
         shell: bash
         run: |
