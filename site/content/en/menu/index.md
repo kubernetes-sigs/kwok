@@ -24,3 +24,4 @@ headless: true
   - [Development]({{< relref "/docs/contributing/development" >}})
   - [Roadmap ⛓](https://github.com/orgs/kubernetes-sigs/projects/21)
   - [Source Code ⛓](https://github.com/kubernetes-sigs/kwok)
+- [Adopters]({{< relref "/docs/adopters" >}})
