@@ -114,7 +114,14 @@ func getCachePath(cacheDir, src string) (string, error) {
 	case "http", "https":
 		return path.Join(cacheDir, u.Scheme, u.Host, u.Path), nil
 	default:
-		return src, nil
+		src, err = path.Expand(src)
+		if err != nil {
+			return "", err
+		}
+		if _, err := os.Stat(src); err != nil {
+			return "", err
+		}
+		return src, err
 	}
 }
 

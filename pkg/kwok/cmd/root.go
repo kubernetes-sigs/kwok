@@ -70,7 +70,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			logger := log.FromContext(ctx)
 
 			if flags.Kubeconfig != "" {
-				flags.Kubeconfig = path.ExpandHome(flags.Kubeconfig)
+				var err error
+				flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
+				if err != nil {
+					return err
+				}
 				f, err := os.Stat(flags.Kubeconfig)
 				if err != nil || f.IsDir() {
 					logger.Warn("Failed to get kubeconfig file or it is a directory", "kubeconfig", flags.Kubeconfig)
