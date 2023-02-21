@@ -41,6 +41,7 @@ type BuildKubeControllerManagerComponentConfig struct {
 	KubeFeatureGates                   string
 	NodeMonitorPeriodMilliseconds      int64
 	NodeMonitorGracePeriodMilliseconds int64
+	ExtraArgs                          []string
 }
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
@@ -50,6 +51,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	kubeControllerManagerArgs := []string{}
+	kubeControllerManagerArgs = append(kubeControllerManagerArgs, conf.ExtraArgs...)
 
 	if conf.KubeFeatureGates != "" {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,

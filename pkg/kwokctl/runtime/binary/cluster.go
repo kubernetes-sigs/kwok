@@ -234,13 +234,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Workdir:  workdir,
-		Binary:   etcdPath,
-		Version:  etcdVersion,
-		Address:  localAddress,
-		DataPath: etcdDataPath,
-		Port:     conf.EtcdPort,
-		PeerPort: conf.EtcdPeerPort,
+		Workdir:   workdir,
+		Binary:    etcdPath,
+		Version:   etcdVersion,
+		Address:   localAddress,
+		DataPath:  etcdDataPath,
+		Port:      conf.EtcdPort,
+		PeerPort:  conf.EtcdPeerPort,
+		ExtraArgs: runtime.GetComponentExtraArgs(config, "etcd"),
 	})
 	if err != nil {
 		return err
@@ -268,6 +269,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		CaCertPath:        caCertPath,
 		AdminCertPath:     adminCertPath,
 		AdminKeyPath:      adminKeyPath,
+		ExtraArgs:         runtime.GetComponentExtraArgs(config, "kube-apiserver"),
 	})
 	if err != nil {
 		return err
@@ -301,6 +303,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeFeatureGates:                   conf.KubeFeatureGates,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
+			ExtraArgs:                          runtime.GetComponentExtraArgs(config, "kube-controller-manager"),
 		})
 		if err != nil {
 			return err
@@ -342,6 +345,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   kubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
+			ExtraArgs:        runtime.GetComponentExtraArgs(config, "kube-scheduler"),
 		})
 		if err != nil {
 			return err
@@ -364,6 +368,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminCertPath:  adminCertPath,
 		AdminKeyPath:   adminKeyPath,
 		NodeName:       "localhost",
+		ExtraArgs:      runtime.GetComponentExtraArgs(config, "kwok-controller"),
 	})
 	if err != nil {
 		return err
@@ -406,6 +411,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Address:    localAddress,
 			Port:       conf.PrometheusPort,
 			ConfigPath: prometheusConfigPath,
+			ExtraArgs:  runtime.GetComponentExtraArgs(config, "prometheus"),
 		})
 		if err != nil {
 			return err

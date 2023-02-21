@@ -41,6 +41,7 @@ type BuildKubeApiserverComponentConfig struct {
 	CaCertPath        string
 	AdminCertPath     string
 	AdminKeyPath      string
+	ExtraArgs         []string
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -63,6 +64,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		"--allow-privileged=true",
 	}
 
+	kubeApiserverArgs = append(kubeApiserverArgs, conf.ExtraArgs...)
 	if conf.KubeRuntimeConfig != "" {
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--runtime-config="+conf.KubeRuntimeConfig,

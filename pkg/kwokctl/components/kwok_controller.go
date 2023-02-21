@@ -34,6 +34,7 @@ type BuildKwokControllerComponentConfig struct {
 	AdminCertPath  string
 	AdminKeyPath   string
 	NodeName       string
+	ExtraArgs      []string
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
@@ -41,6 +42,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	kwokControllerArgs := []string{
 		"--manage-all-nodes=true",
 	}
+	kwokControllerArgs = append(kwokControllerArgs, conf.ExtraArgs...)
 
 	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume

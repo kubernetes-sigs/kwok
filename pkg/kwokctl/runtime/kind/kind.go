@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"text/template"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+
 	_ "embed"
 )
 
@@ -52,7 +54,11 @@ type BuildKindConfig struct {
 	AuditPolicy string
 	AuditLog    string
 
-	KubeconfigPath  string
-	SchedulerConfig string
-	ConfigPath      string
+	KubeconfigPath             string
+	SchedulerConfig            string
+	ConfigPath                 string
+	EtcdExtraArgs              []internalversion.ExtraArgs
+	APIServerExtraArgs         []internalversion.ExtraArgs
+	SchedulerExtraArgs         []internalversion.ExtraArgs
+	ControllerManagerExtraArgs []internalversion.ExtraArgs
 }
