@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"sync"
 	"text/template"
 	"time"
@@ -37,6 +38,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/pager"
 	"k8s.io/client-go/tools/record"
+	netutils "k8s.io/utils/net"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -83,6 +85,11 @@ type NodeControllerConfig struct {
 	Recorder                              record.EventRecorder
 }
 
+// NodeInfo is the collection of necessary node information
+type NodeInfo struct {
+	HostIPs []string
+}
+
 // NewNodeController creates a new fake nodes controller
 func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 	disregardStatusWithAnnotationSelector, err := labelsParse(conf.DisregardStatusWithAnnotationSelector)
@@ -118,7 +125,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		nodeChan:                              make(chan *corev1.Node),
 		recorder:                              conf.Recorder,
 	}
-	funcMap = template.FuncMap{
+	funcMap := template.FuncMap{
 		"NodeIP": func() string {
 			return n.nodeIP
 		},
@@ -213,7 +220,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 				case watch.Added:
 					node := event.Object.(*corev1.Node)
 					if c.needLockNode(node) {
-						c.nodesSets.Put(node.Name)
+						c.putNodeInfo(node)
 						ch <- node
 						if c.lockPodsOnNodeFunc != nil {
 							err = c.lockPodsOnNodeFunc(ctx, node.Name)
@@ -228,7 +235,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 				case watch.Modified:
 					node := event.Object.(*corev1.Node)
 					if c.needLockNode(node) {
-						c.nodesSets.Put(node.Name)
+						c.putNodeInfo(node)
 						ch <- node
 					}
 				case watch.Deleted:
@@ -255,7 +262,7 @@ func (c *NodeController) ListNodes(ctx context.Context, ch chan<- *corev1.Node, 
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		node := obj.(*corev1.Node)
 		if c.needLockNode(node) {
-			c.nodesSets.Put(node.Name)
+			c.putNodeInfo(node)
 			ch <- node
 		}
 		return nil
@@ -483,6 +490,48 @@ func (c *NodeController) computePatchNode(node *corev1.Node, tpl string) ([]byte
 	})
 }
 
+// putNodeInfo puts node info (HostIPs)
+func (c *NodeController) putNodeInfo(node *corev1.Node) {
+	nodeIPs := []string{}
+	// Re-sort the addresses with InternalIPs first and then ExternalIPs
+	allIPs := make([]net.IP, 0, len(node.Status.Addresses))
+	for _, addr := range node.Status.Addresses {
+		if addr.Type == corev1.NodeInternalIP {
+			ip := netutils.ParseIPSloppy(addr.Address)
+			if ip != nil {
+				allIPs = append(allIPs, ip)
+			}
+		}
+	}
+	for _, addr := range node.Status.Addresses {
+		if addr.Type == corev1.NodeExternalIP {
+			ip := netutils.ParseIPSloppy(addr.Address)
+			if ip != nil {
+				allIPs = append(allIPs, ip)
+			}
+		}
+	}
+	if len(allIPs) > 0 {
+		// ipv4 then ipv6
+		for _, ip := range allIPs {
+			if netutils.IsIPv4(ip) {
+				nodeIPs = append(nodeIPs, ip.To4().String())
+				break
+			}
+		}
+		for _, ip := range allIPs {
+			if netutils.IsIPv6(ip) {
+				nodeIPs = append(nodeIPs, ip.To16().String())
+				break
+			}
+		}
+	}
+	nodeInfo := NodeInfo{
+		HostIPs: nodeIPs,
+	}
+	c.nodesSets.Put(node.Name, nodeInfo)
+}
+
 // Has returns true if the node is existed
 func (c *NodeController) Has(nodeName string) bool {
 	return c.nodesSets.Has(nodeName)
@@ -491,4 +540,13 @@ func (c *NodeController) Has(nodeName string) bool {
 // Size returns the number of nodes
 func (c *NodeController) Size() int {
 	return c.nodesSets.Size()
+}
+
+// Get returns Has bool and corev1.Node if the node is existed
+func (c *NodeController) Get(nodeName string) (NodeInfo, bool) {
+	value, has := c.nodesSets.Get(nodeName)
+	if nodeInfo, converted := value.(NodeInfo); has && converted {
+		return nodeInfo, has
+	}
+	return NodeInfo{}, has
 }

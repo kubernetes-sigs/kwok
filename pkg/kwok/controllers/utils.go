@@ -162,12 +162,12 @@ func (p *parallelTasks) Wait() {
 
 type stringSets struct {
 	mut  sync.RWMutex
-	sets map[string]struct{}
+	sets map[string]any
 }
 
 func newStringSets() *stringSets {
 	return &stringSets{
-		sets: make(map[string]struct{}),
+		sets: make(map[string]any),
 	}
 }
 
@@ -177,10 +177,10 @@ func (s *stringSets) Size() int {
 	return len(s.sets)
 }
 
-func (s *stringSets) Put(key string) {
+func (s *stringSets) Put(key string, value any) {
 	s.mut.Lock()
 	defer s.mut.Unlock()
-	s.sets[key] = struct{}{}
+	s.sets[key] = value
 }
 
 func (s *stringSets) Delete(key string) {
@@ -202,6 +202,13 @@ func (s *stringSets) Foreach(f func(string)) {
 	for k := range s.sets {
 		f(k)
 	}
+}
+
+func (s *stringSets) Get(key string) (any, bool) {
+	s.mut.RLock()
+	defer s.mut.RUnlock()
+	value, ok := s.sets[key]
+	return value, ok
 }
 
 func labelsParse(selector string) (labels.Selector, error) {

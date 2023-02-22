@@ -54,6 +54,32 @@ function test_node_ready() {
   fi
 }
 
+# Check pod status
+function test_check_pod_status() {
+  _jq() {
+    echo ${row} | base64 --decode | jq -r ${1}
+  }
+  for row in $(kubectl get po -ojson | jq -r '.items[] | @base64'); do
+    pod_name=$(_jq '.metadata.name')
+    node_name=$(_jq '.spec.nodeName')
+    host_network=$(_jq '.spec.hostNetwork')
+    host_ip=$(_jq '.status.hostIP')
+    pod_ip=$(_jq '.status.podIP')
+    node_ip=$(kubectl get nodes ${node_name} -ojson | jq -r '.status.addresses[] | select( .type == "InternalIP" ) | .address')
+    if [[ $host_ip != $node_ip ]]; then
+        echo "Error: ${pod_name} Pod: HostIP (${host_ip}) is not equal to the IP on its Node (${node_ip})"
+        return 1
+    fi
+    if [[ $host_network == "true" ]]; then
+      if [[ $pod_ip != $node_ip ]]; then
+        echo "Error: ${pod_name} Pod with hostNetwork=${host_network}: PodIP (${pod_ip}) and HostIP (${host_ip}) are not equal"
+        return 1
+      fi
+    fi
+  done
+  echo "Pod's status checked"
+}
+
 # Check for the Pod is running
 function test_pod_running() {
   for i in {1..30}; do
@@ -118,6 +144,7 @@ function main() {
 
   test_node_ready || failed+=("node_ready")
   test_pod_running || failed+=("pod_running")
+  test_check_pod_status || failed+=("check_pod_status")
 
   test_modify_node_status || failed+=("modify_node_status")
   test_modify_pod_status || failed+=("modify_pod_status")

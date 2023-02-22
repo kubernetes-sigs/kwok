@@ -60,6 +60,7 @@ type PodController struct {
 	nodeIP                                string
 	cidrIPNet                             *net.IPNet
 	nodeHasFunc                           func(nodeName string) bool
+	nodeGetFunc                           func(nodeName string) (NodeInfo, bool)
 	ipPool                                *ipPool
 	renderer                              *renderer
 	lockPodChan                           chan *corev1.Pod
@@ -79,6 +80,7 @@ type PodControllerConfig struct {
 	NodeIP                                string
 	CIDR                                  string
 	NodeHasFunc                           func(nodeName string) bool
+	NodeGetFunc                           func(nodeName string) (NodeInfo, bool)
 	Stages                                []*internalversion.Stage
 	LockPodParallelism                    int
 	FuncMap                               template.FuncMap
@@ -116,14 +118,22 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		cidrIPNet:                             cidrIPNet,
 		ipPool:                                newIPPool(cidrIPNet),
 		nodeHasFunc:                           conf.NodeHasFunc,
+		nodeGetFunc:                           conf.NodeGetFunc,
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
 		parallelTasks:                         newParallelTasks(conf.LockPodParallelism),
 		lockPodChan:                           make(chan *corev1.Pod),
 		recorder:                              conf.Recorder,
 	}
-	funcMap = template.FuncMap{
-		"NodeIP": func() string {
+	funcMap := template.FuncMap{
+		"NodeIP": func(nodeName string) string {
+			nodeInfo, has := n.nodeGetFunc(nodeName)
+			if has && len(nodeInfo.HostIPs) > 0 {
+				hostIP := nodeInfo.HostIPs[0]
+				if hostIP != "" {
+					return hostIP
+				}
+			}
 			return n.nodeIP
 		},
 		"PodIP": func() string {
@@ -416,7 +426,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
-					if c.nodeHasFunc(pod.Spec.NodeName) {
+					if c.nodeHasFunc(pod.Spec.NodeName) && !pod.Spec.HostNetwork {
 						if !c.enableCNI {
 							// Recycling PodIP
 							if pod.Status.PodIP != "" && c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
