@@ -238,7 +238,7 @@ func writeKey(pkiPath, name string, key crypto.Signer) error {
 	return nil
 }
 
-// encodeCertPEM returns PEM-endcoded certificate data
+// encodeCertPEM returns PEM-encoded certificate data
 func encodeCertPEM(cert *x509.Certificate) []byte {
 	block := pem.Block{
 		Type:  CertificateBlockType,
