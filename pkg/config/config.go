@@ -136,6 +136,28 @@ func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 				return nil, err
 			}
 			objs = append(objs, out)
+		case v1alpha1.ClusterPortForwardKind:
+			obj := &v1alpha1.ClusterPortForward{}
+			err = json.Unmarshal(raw, &obj)
+			if err != nil {
+				return nil, err
+			}
+			out, err := internalversion.ConvertToInternalClusterPortForward(obj)
+			if err != nil {
+				return nil, err
+			}
+			objs = append(objs, out)
+		case v1alpha1.PortForwardKind:
+			obj := &v1alpha1.PortForward{}
+			err = json.Unmarshal(raw, &obj)
+			if err != nil {
+				return nil, err
+			}
+			out, err := internalversion.ConvertToInternalPortForward(obj)
+			if err != nil {
+				return nil, err
+			}
+			objs = append(objs, out)
 		}
 	}
 
@@ -193,6 +215,16 @@ func Save(ctx context.Context, path string, objs []metav1.Object) error {
 			}
 		case *internalversion.Stage:
 			obj, err = internalversion.ConvertToV1alpha1Stage(o)
+			if err != nil {
+				return err
+			}
+		case *internalversion.ClusterPortForward:
+			obj, err = internalversion.ConvertToV1Alpha1ClusterPortForward(o)
+			if err != nil {
+				return err
+			}
+		case *internalversion.PortForward:
+			obj, err = internalversion.ConvertToV1Alpha1PortForward(o)
 			if err != nil {
 				return err
 			}

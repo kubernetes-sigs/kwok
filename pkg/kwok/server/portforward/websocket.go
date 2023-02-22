@@ -194,7 +194,7 @@ func (h *websocketStreamHandler) portForward(ctx context.Context, p *websocketSt
 	h.logger.Debug("Connection done invoking forwarder.PortForward for port", "connection", h.conn, "port", p.port)
 
 	if err != nil {
-		err := fmt.Errorf("error forwarding port %d to pod %s/%s, uid %v: %w", p.port, h.podNamespace, h.podName, h.uid, err)
+		err := fmt.Errorf("error forwarding port %d to pod %s/%s: %w", p.port, h.podNamespace, h.podName, err)
 		logger := log.FromContext(ctx)
 		logger.Error("PortForward", err)
 		fmt.Fprint(p.errorStream, err.Error())
