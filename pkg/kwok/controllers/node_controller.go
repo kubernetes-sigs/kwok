@@ -359,7 +359,7 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 		return fmt.Errorf("stage match: %w", err)
 	}
 	if stage == nil {
-		logger.Info("Skip node",
+		logger.Debug("Skip node",
 			"reason", "not match any stages",
 		)
 		return nil
@@ -396,7 +396,7 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 				return
 			}
 			if patch == nil {
-				logger.Info("Skip node",
+				logger.Debug("Skip node",
 					"reason", "do not need to modify",
 				)
 			} else {
@@ -413,7 +413,7 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 		return nil
 	}
 
-	logger.Info("Delayed play stage",
+	logger.Debug("Delayed play stage",
 		"delay", delay,
 		"stage", stageName,
 	)

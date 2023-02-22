@@ -245,7 +245,7 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 		return fmt.Errorf("stage match: %w", err)
 	}
 	if stage == nil {
-		logger.Info("Skip pod",
+		logger.Debug("Skip pod",
 			"reason", "not match any stages",
 		)
 		return nil
@@ -282,7 +282,7 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 				return
 			}
 			if patch == nil {
-				logger.Info("Skip pod",
+				logger.Debug("Skip pod",
 					"reason", "do not need to modify",
 				)
 			} else {
@@ -299,7 +299,7 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 		return nil
 	}
 
-	logger.Info("Delayed play stage",
+	logger.Debug("Delayed play stage",
 		"delay", delay,
 		"stage", stageName,
 	)
@@ -416,8 +416,8 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 					if c.needLockPod(pod) {
 						lockChan <- pod.DeepCopy()
 					} else {
-						logger.Info("Skip pod",
-							"reason", "not manage",
+						logger.Debug("Skip pod",
+							"reason", "not managed",
 							"event", event.Type,
 							"pod", log.KObj(pod),
 							"node", pod.Spec.NodeName,
