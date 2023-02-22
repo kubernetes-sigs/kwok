@@ -1,0 +1,9 @@
+name: Multi-NIC CNI
+description: We leverage kwok to perform scalability test on a kind cluster and push to GitHub CI Actions for Multi-NIC operator
+contacts:
+  - sunya-ch
+links:
+  - name: Multi-NIC CNI E2E Test
+    url: https://github.com/foundation-model-stack/multi-nic-cni/tree/main/e2e-test
+  - name: Blog post
+    url: https://medium.com/@sunyanan.choochotkaew1/going-beyond-limits-scalability-test-ci-for-kubernetes-cni-operator-with-simulated-cluster-ed53e772dfa5
