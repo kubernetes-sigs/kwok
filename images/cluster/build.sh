@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 DIR="$(dirname "${BASH_SOURCE[0]}")"
 DIR="$(realpath "${DIR}")"
 ROOT_DIR="$(realpath "${DIR}/../..")"
@@ -26,6 +30,7 @@ PLATFORMS=()
 VERSION=""
 STAGING_PREFIX=""
 KUBE_VERSIONS=()
+BUILDER="docker"
 
 function usage() {
   echo "Usage: ${0} [--help] [--version <version>] [--kube-version <kube-version> ...] [--image <image> ...] [--extra-tag <extra-tag> ...] [--staging-prefix <staging-prefix>] [--platform <platform> ...] [--push] [--dry-run]"
@@ -37,6 +42,7 @@ function usage() {
   echo "  --platform <platform> is multi-platform capable for image"
   echo "  --push will push image to registry"
   echo "  --dry-run just show what would be done"
+  echo "  --builder <builder> specify image builder, default: docker. available options: docker, nerdctl"
 }
 
 function args() {
@@ -76,6 +82,10 @@ function args() {
       [[ "${arg#*=}" != "${arg}" ]] && DRY_RUN="${arg#*=}" || DRY_RUN="true"
       shift
       ;;
+    --builder | --builder=*)
+      [[ "${arg#*=}" != "${arg}" ]] && BUILDER="${arg#*=}" || { BUILDER="${2}" && shift; }
+      shift
+      ;;
     --help)
       usage
       exit 0
@@ -106,7 +116,7 @@ function args() {
     exit 1
   fi
 
-  if [[ "${#PLATFORMS}" -eq 0 ]]; then
+  if [[ "${#PLATFORMS[*]}" -eq 0 ]]; then
     PLATFORMS+=(
       linux/amd64
     )
@@ -122,13 +132,17 @@ function dry_run() {
 
 function main() {
   local extra_args
+  local platform_args
+  local images
   local suffix
   local tag
 
   for kube_version in "${KUBE_VERSIONS[@]}"; do
+    images=()
     extra_args=(
       "--build-arg=kube_version=${kube_version}"
     )
+    platform_args=()
 
     suffix="-k8s.${kube_version}"
 
@@ -137,37 +151,60 @@ function main() {
       if [[ "${STAGING_PREFIX}" != "" ]]; then
         tag="${STAGING_PREFIX}-${VERSION}${suffix}"
       fi
-      extra_args+=(
-        "--tag=${image}:${tag}"
-      )
+      extra_args+=("--tag=${image}:${tag}")
+      images+=("${image}:${tag}")
+
       if [[ "${#EXTRA_TAGS[@]}" -ne 0 ]]; then
         for extra_tag in "${EXTRA_TAGS[@]}"; do
           tag="${extra_tag}${suffix}"
           if [[ "${STAGING_PREFIX}" != "" ]]; then
             tag="${STAGING_PREFIX}-${extra_tag}${suffix}"
           fi
-          extra_args+=(
-            "--tag=${image}:${tag}"
-          )
+          extra_args+=("--tag=${image}:${tag}")
+          images+=("${image}:${tag}")
         done
       fi
     done
 
     for platform in "${PLATFORMS[@]}"; do
-      extra_args+=(
-        "--platform=${platform}"
-      )
+      extra_args+=("--platform=${platform}")
+      platform_args+=("--platform=${platform}")
     done
-    if [[ "${PUSH}" == "true" ]]; then
-      extra_args+=("--push")
+
+    if [[ "${BUILDER}" == "nerdctl" ]]; then
+      build_with_nerdctl "${extra_args[@]}"
+      if [[ "${PUSH}" == "true" ]]; then
+        for image in "${images[@]}"; do
+          dry_run nerdctl push "${platform_args[@]}" "${image}"
+        done
+      fi
     else
-      extra_args+=("--load")
+      if [[ "${PUSH}" == "true" ]]; then
+        extra_args+=("--push")
+      else
+        extra_args+=("--load")
+      fi
+      build_with_docker "${extra_args[@]}"
     fi
-    dry_run docker buildx build \
-      "${extra_args[@]}" \
-      -f "${DOCKERFILE}" \
-      .
   done
+}
+
+function build_with_docker() {
+  local extra_args
+  extra_args=("$@")
+  dry_run docker buildx build \
+    "${extra_args[@]}" \
+    -f "${DOCKERFILE}" \
+    .
+}
+
+function build_with_nerdctl() {
+  local extra_args
+  extra_args=("$@")
+  dry_run nerdctl build \
+    "${extra_args[@]}" \
+    -f "${DOCKERFILE}" \
+    .
 }
 
 args "$@"

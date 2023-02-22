@@ -16,6 +16,11 @@ concurrency:
 jobs:
   test-build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        builder:
+          - docker
+          - nerdctl
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
@@ -38,15 +43,25 @@ jobs:
         run: |
           make build
 
+      - name: Install Nerdctl and Start Containerd
+        if: ${{ matrix.builder == 'nerdctl' }}
+        shell: bash
+        run: |
+          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.1.0/nerdctl-full-1.1.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+          sudo systemctl daemon-reload
+          sudo systemctl enable --now containerd
+          containerd-rootless-setuptool.sh install
+          containerd-rootless-setuptool.sh install-buildkit-containerd
+
       - name: Build Image
         shell: bash
         run: |
-          make build-image
+          BUILDER=${{ matrix.builder }} make build-image
 
       - name: Build Cluster Image
         shell: bash
         run: |
-          make build-cluster-image
+          BUILDER=${{ matrix.builder }} make build-cluster-image
 
   test-kwok:
     runs-on: ubuntu-latest
@@ -175,6 +190,7 @@ jobs:
           sudo systemctl daemon-reload
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
+          containerd-rootless-setuptool.sh install-buildkit-containerd
 
       - name: Make pki directory
         if: ${{ matrix.kwokctl-runtime == 'binary' }}
