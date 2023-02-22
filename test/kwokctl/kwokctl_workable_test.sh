@@ -66,7 +66,7 @@ function test_create_cluster() {
   local targets
   local i
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     show_info "${name}"
@@ -132,6 +132,18 @@ function test_kwok_controller_port() {
     fi
 }
 
+function test_etcd_port() {
+    local result
+    result=$(curl -s http://127.0.0.1:2400/health)
+
+    if [[ "$(echo "${result}" | grep -o '"health"' | wc -c)" = 0 ]]; then
+      echo "Error: etcd connection"
+      echo curl -s http://127.0.0.1:2400/health
+      echo "${result}"
+      return 1
+    fi
+}
+
 function main() {
   local failed=()
   local name
@@ -140,6 +152,9 @@ function main() {
     echo "Testing workable on ${KWOK_RUNTIME} for ${release}"
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
+    if [[ "${KWOK_RUNTIME}" != "kind" ]]; then
+        test_etcd_port "${release}" "${name}" || failed+=("etcd_port_${name}")
+    fi
     test_prometheus || failed+=("prometheus_${name}")
     test_kwok_controller_port || failed+=("kwok_controller_port_${name}")
     test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")

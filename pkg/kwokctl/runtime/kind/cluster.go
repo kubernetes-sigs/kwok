@@ -109,6 +109,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	configPath := c.GetWorkdirPath(runtime.ConfigName)
 	kindYaml, err := BuildKind(BuildKindConfig{
 		KubeApiserverPort:  conf.KubeApiserverPort,
+		EtcdPort:           conf.EtcdPort,
 		PrometheusPort:     conf.PrometheusPort,
 		KwokControllerPort: conf.KwokControllerPort,
 		FeatureGates:       featureGates,
