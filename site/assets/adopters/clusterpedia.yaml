@@ -1,0 +1,7 @@
+name: Clusterpedia
+description: We import different versions of the kwok simulation cluster into clusterpedia for e2e testing
+contacts:
+  - Iceber
+links:
+  - name: Clusterpedia E2E Test
+    url: https://github.com/clusterpedia-io/clusterpedia/tree/main/test
