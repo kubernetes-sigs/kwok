@@ -145,7 +145,6 @@ func NewController(conf Config) (*Controller, error) {
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
 		Stages:                                conf.PodStages,
 		LockPodParallelism:                    16,
-		NodeHasFunc:                           nodes.Has, // just handle pods that are on nodes we have
 		NodeGetFunc:                           nodes.Get,
 		FuncMap:                               defaultFuncMap,
 		Recorder:                              recorder,

@@ -94,8 +94,8 @@ func TestPodController(t *testing.T) {
 	nodeHasFunc := func(nodeName string) bool {
 		return strings.HasPrefix(nodeName, "node")
 	}
-	nodeGetFunc := func(nodeName string) (NodeInfo, bool) {
-		node := NodeInfo{HostIPs: []string{defaultNodeIP}}
+	nodeGetFunc := func(nodeName string) (*NodeInfo, bool) {
+		node := &NodeInfo{HostIPs: []string{defaultNodeIP}}
 		return node, nodeHasFunc(nodeName)
 	}
 	podStageStatus, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
@@ -106,7 +106,6 @@ func TestPodController(t *testing.T) {
 		CIDR:                                  "10.0.0.1/24",
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
 		Stages:                                podStageStatus,
-		NodeHasFunc:                           nodeHasFunc,
 		NodeGetFunc:                           nodeGetFunc,
 		FuncMap:                               defaultFuncMap,
 		LockPodParallelism:                    2,
