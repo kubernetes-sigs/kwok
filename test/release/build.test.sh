@@ -69,76 +69,76 @@ EOF
 
 function want_image() {
   cat <<EOF
-docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --load -f images/kwok/Dockerfile .
+docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --load -f ./images/kwok/Dockerfile .
 EOF
 }
 
 function want_image_nerdctl() {
   cat <<EOF
-nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 -f images/kwok/Dockerfile .
+nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 -f ./images/kwok/Dockerfile .
 EOF
 }
 
 function want_image_with_push() {
   cat <<EOF
-docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --push -f images/kwok/Dockerfile .
+docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --push -f ./images/kwok/Dockerfile .
 EOF
 }
 
 function want_image_nerdctl_with_push() {
   cat <<EOF
-nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 -f images/kwok/Dockerfile .
+nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 -f ./images/kwok/Dockerfile .
 nerdctl push --platform=linux/amd64 kwok:${VERSION}
 EOF
 }
 
 function want_image_with_push_staging() {
   cat <<EOF
-docker buildx build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 --push -f images/kwok/Dockerfile .
+docker buildx build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 --push -f ./images/kwok/Dockerfile .
 EOF
 }
 
 function want_image_nerdctl_with_push_staging() {
   cat <<EOF
-nerdctl build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 -f images/kwok/Dockerfile .
+nerdctl build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 -f ./images/kwok/Dockerfile .
 nerdctl push --platform=linux/amd64 ${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION}
 EOF
 }
 
 function want_cluster_image() {
   cat <<EOF
-docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --load -f images/cluster/Dockerfile .
+docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --load -f ./images/cluster/Dockerfile .
 EOF
 }
 
 function want_cluster_image_nerdctl() {
   cat <<EOF
-nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f images/cluster/Dockerfile .
+nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f ./images/cluster/Dockerfile .
 EOF
 }
 
 function want_cluster_image_with_push() {
   cat <<EOF
-docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --push -f images/cluster/Dockerfile .
+docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile .
 EOF
 }
 
 function want_cluster_image_nerdctl_with_push() {
   cat <<EOF
-nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f images/cluster/Dockerfile .
+nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f ./images/cluster/Dockerfile .
 nerdctl push --platform=linux/amd64 cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE}
 EOF
 }
 
 function want_cluster_image_with_push_staging() {
   cat <<EOF
-docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --push -f images/cluster/Dockerfile .
+docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile .
 EOF
 }
 
 function want_cluster_image_nerdctl_with_push_staging() {
   cat <<EOF
-nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f images/cluster/Dockerfile .
+nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f ./images/cluster/Dockerfile .
 nerdctl push --platform=linux/amd64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${LAST_KUBE_RELEASE}
 EOF
 }
@@ -261,76 +261,76 @@ EOF
 
 function want_cross_image() {
   cat <<EOF
-docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 --load -f images/kwok/Dockerfile .
+docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 --load -f ./images/kwok/Dockerfile .
 EOF
 }
 
 function want_cross_image_nerdctl() {
   cat <<EOF
-nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f images/kwok/Dockerfile .
+nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f ./images/kwok/Dockerfile .
 EOF
 }
 
 function want_cross_image_with_push() {
   cat <<EOF
-docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 --push -f images/kwok/Dockerfile .
+docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/kwok/Dockerfile .
 EOF
 }
 
 function want_cross_image_nerdctl_with_push() {
   cat <<EOF
-nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f images/kwok/Dockerfile .
+nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f ./images/kwok/Dockerfile .
 nerdctl push --platform=linux/amd64 --platform=linux/arm64 kwok:${VERSION}
 EOF
 }
 
 function want_cross_image_with_push_staging() {
   cat <<EOF
-docker buildx build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 --platform=linux/arm64 --push -f images/kwok/Dockerfile .
+docker buildx build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/kwok/Dockerfile .
 EOF
 }
 
 function want_cross_image_nerdctl_with_push_staging() {
   cat <<EOF
-nerdctl build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f images/kwok/Dockerfile .
+nerdctl build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f ./images/kwok/Dockerfile .
 nerdctl push --platform=linux/amd64 --platform=linux/arm64 ${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION}
 EOF
 }
 
 function want_cross_cluster_image() {
   for v in ${SUPPORTED_RELEASES} ; do
-    echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --load -f images/cluster/Dockerfile ."
+    echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --load -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl() {
   for v in ${SUPPORTED_RELEASES} ; do
-    echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f images/cluster/Dockerfile ."
+    echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_with_push() {
   for v in ${SUPPORTED_RELEASES} ; do
-    echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f images/cluster/Dockerfile ."
+    echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl_with_push() {
   for v in ${SUPPORTED_RELEASES} ; do
-    echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f images/cluster/Dockerfile ."
+    echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 --platform=linux/arm64 cluster:${VERSION}-k8s.v${v}"
   done
 }
 
 function want_cross_cluster_image_with_push_staging() {
   for v in ${SUPPORTED_RELEASES} ; do
-    echo "docker buildx build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f images/cluster/Dockerfile ."
+    echo "docker buildx build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl_with_push_staging() {
   for v in ${SUPPORTED_RELEASES} ; do
-    echo "nerdctl build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f images/cluster/Dockerfile ."
+    echo "nerdctl build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 --platform=linux/arm64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
   done
 }
