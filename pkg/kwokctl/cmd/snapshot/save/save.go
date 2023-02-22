@@ -70,13 +70,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	if flags.Format == "etcd" {
-		err = rt.SnapshotSave(ctx, flags.Path)
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("unsupport format %q", flags.Format)
+	if flags.Format != "etcd" {
+		return fmt.Errorf("unsupported format %q", flags.Format)
 	}
-	return nil
+	return rt.SnapshotSave(ctx, flags.Path)
 }

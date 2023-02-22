@@ -143,7 +143,7 @@ type KwokctlConfigurationOptions struct {
 	KubeSchedulerImage string `json:"kubeSchedulerImage,omitempty"`
 
 	// KwokControllerImage is the image of Kwok.
-	// is the default value for flag --contoller-image and env KWOK_CONTROLLER_IMAGE
+	// is the default value for flag --controller-image and env KWOK_CONTROLLER_IMAGE
 	KwokControllerImage string `json:"kwokControllerImage,omitempty"`
 
 	// PrometheusImage is the image of Prometheus.

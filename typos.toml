@@ -1,0 +1,7 @@
+# See https://github.com/crate-ci/typos/blob/master/docs/reference.md to configure typos
+[default.extend-words]
+ubernetes = "ubernetes"
+Ded = "Ded"
+[files]
+extend-exclude = ["*.svg", "go.mod"]
+
