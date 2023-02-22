@@ -25,31 +25,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 )
 
 func TestConfig(t *testing.T) {
 	ctx := context.Background()
 	config := filepath.Join(t.TempDir(), "config.yaml")
 	data := []metav1.Object{
-		&internalversion.KwokConfiguration{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       v1alpha1.KwokConfigurationKind,
-				APIVersion: v1alpha1.GroupVersion.String(),
-			},
-		},
-		&internalversion.KwokctlConfiguration{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       v1alpha1.KwokctlConfigurationKind,
-				APIVersion: v1alpha1.GroupVersion.String(),
-			},
-		},
-		&internalversion.Stage{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       v1alpha1.StageKind,
-				APIVersion: v1alpha1.GroupVersion.String(),
-			},
-		},
+		&internalversion.KwokConfiguration{},
+		&internalversion.KwokctlConfiguration{},
+		&internalversion.Stage{},
 	}
 	err := Save(ctx, config, data)
 	if err != nil {
