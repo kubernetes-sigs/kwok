@@ -1,0 +1,42 @@
+<dl>
+  <table>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Contacts</th>
+      <th>Links</th>
+      <th>Edit</th>
+    </tr>
+
+    {{ $root := . }}
+    {{ $adopters := resources.Match "adopters/*.yaml" }}
+    {{ range $adopters }}
+    {{ $params := .Content | transform.Unmarshal }}
+    <tr>
+      <td>
+        {{ $params.name }}
+      </td>
+      <td>
+        {{ $params.description }}
+      </td>
+      <td>
+        {{ range $index, $value := $params.contacts -}}
+        {{- if $index }}, {{ end }}
+        <a href="https://github.com/{{ $value }}">@{{ $value }}</a>
+        {{- end }}
+      </td>
+      <td>
+        {{ range $index, $value := $params.links -}}
+        {{- if $index }},{{ end }}
+        <a href="{{ $value.url }}">{{ $value.name }}</a>
+        {{- end }}
+      </td>
+      <td>
+        <a class="flex align-center" href="{{ $root.Site.Params.BookRepo }}/{{ $root.Site.Params.BookEditPath }}/assets/{{ .Name }}" target="_blank" rel="noopener">
+          <img src="{{ "svg/edit.svg" | relURL }}" class="book-icon" alt="Edit" />
+        </a>
+      </td>
+    </tr>
+    {{ end }}
+  </table>
+</dl>
