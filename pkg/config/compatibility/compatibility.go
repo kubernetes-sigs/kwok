@@ -19,7 +19,6 @@ package compatibility
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 )
 
 // Config is the old configuration for kwokctl.
@@ -93,8 +92,6 @@ func Convert_Config_To_internalversion_KwokctlConfiguration(in *Config) (*intern
 	}
 
 	out := internalversion.KwokctlConfiguration{}
-	out.APIVersion = v1alpha1.GroupVersion.String()
-	out.Kind = v1alpha1.KwokctlConfigurationKind
 	out.Options.Runtime = in.Runtime
 	out.Options.EtcdPort = in.EtcdPort
 	out.Options.EtcdPeerPort = in.EtcdPeerPort
