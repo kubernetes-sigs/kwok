@@ -20,7 +20,7 @@ set -o pipefail
 DIR="$(dirname "${BASH_SOURCE[0]}")"
 DIR="$(realpath "${DIR}")"
 ROOT_DIR="$(realpath "${DIR}/../..")"
-DOCKERFILE="$(realpath "${DIR}/Dockerfile" --relative-to="${ROOT_DIR}")"
+DOCKERFILE="$(echo "${DIR}/Dockerfile" | sed "s|^${ROOT_DIR}/|./|")"
 
 DRY_RUN=false
 PUSH=false
