@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KIND_VERSION=0.14.0
+KIND_VERSION=0.17.0
 
-KUBE_VERSION=1.24.2
+KUBE_VERSION=1.26.0
 
-BUILDX_VERSION=0.8.2
+BUILDX_VERSION=0.10.3
 
-COMPOSE_VERSION=2.10.1
+COMPOSE_VERSION=2.13.0
 
-NERDCTL_VERSION=1.0.0
+NERDCTL_VERSION=1.6.0
 
 function command_exist() {
   local command="${1}"
