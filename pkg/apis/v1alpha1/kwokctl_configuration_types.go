@@ -269,6 +269,9 @@ type KwokctlConfigurationOptions struct {
 
 	// CacheDir is the directory of the cache.
 	CacheDir string `json:"cacheDir,omitempty"`
+
+	// DisableContextAutoSwitch is the flag to disable context auto switch.
+	DisableContextAutoSwitch *bool `json:"disableContextAutoSwitch,omitempty"`
 }
 
 // Component is a component of the cluster.

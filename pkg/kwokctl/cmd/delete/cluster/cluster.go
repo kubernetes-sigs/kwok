@@ -19,6 +19,9 @@ package cluster
 
 import (
 	"context"
+	"fmt"
+	"k8s.io/client-go/tools/clientcmd"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -73,5 +76,20 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 	logger.Info("Cluster deleted")
+
+	// load kubeconfig file
+	kubeconfig, err := clientcmd.LoadFromFile(os.Getenv("KUBECONFIG"))
+	if err != nil {
+		fmt.Errorf("failed to load kubeconfig file: %w", err)
+	}
+	// switch back to the previous context using a defer statement
+	defer func() {
+		kubeconfig.CurrentContext = config.OriginCluster
+		if err := clientcmd.ModifyConfig(clientcmd.NewDefaultPathOptions(), *kubeconfig, false); err != nil {
+			fmt.Println("failed to switch back to the previous context")
+		}
+		fmt.Println("Switched back to the previous context")
+	}()
+
 	return nil
 }

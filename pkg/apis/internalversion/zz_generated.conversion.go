@@ -512,6 +512,9 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	if err := v1.Convert_bool_To_Pointer_bool(&in.DisableKubeControllerManager, &out.DisableKubeControllerManager, s); err != nil {
 		return err
 	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.DisableContextAutoSwitch, &out.DisableContextAutoSwitch, s); err != nil {
+		return err
+	}
 	out.EtcdImage = in.EtcdImage
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
@@ -574,6 +577,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 		return err
 	}
 	if err := v1.Convert_Pointer_bool_To_bool(&in.DisableKubeControllerManager, &out.DisableKubeControllerManager, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.DisableContextAutoSwitch, &out.DisableContextAutoSwitch, s); err != nil {
 		return err
 	}
 	// WARNING: in.KubeImagePrefix requires manual conversion: does not exist in peer-type

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
+	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
@@ -53,6 +53,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Long:  "Creates a cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
+
 			return runE(cmd.Context(), flags)
 		},
 	}
@@ -111,6 +112,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
 	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 0, "Timeout for waiting for the cluster to be created")
 	cmd.Flags().DurationVar(&flags.Wait, "wait", 0, "Wait for the cluster to be ready")
+	cmd.Flags().BoolVar(&flags.Options.DisableContextAutoSwitch, "disable-context-auto-switch", flags.Options.DisableKubeScheduler, `Disable the context auto switch`)
 	return cmd
 }
 
@@ -241,6 +243,13 @@ func runE(ctx context.Context, flags *flagpole) error {
 			)
 		}
 	}
+	if !flags.Options.DisableContextAutoSwitch {
+		if switchContext(os.Getenv("KUBECONFIG"), name) != nil {
+			return fmt.Errorf("failed to switch context to %q", name)
+		}
+		fmt.Printf("Switched to context %q automatically, Thanks for using kwok!", name)
+		return nil
+	}
 
 	fmt.Fprintf(os.Stderr, `You can now use your cluster with:
 
@@ -248,5 +257,26 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 Thanks for using kwok!
 `, name)
+	return nil
+}
+
+func switchContext(kubeconfigPath, newContextName string) error {
+	// load kubeconfig file
+	kubeconfig, err := clientcmd.LoadFromFile(kubeconfigPath)
+	if err != nil {
+		return fmt.Errorf("failed to load kubeconfig file: %w", err)
+	}
+
+	// get current context
+	currentContext := kubeconfig.CurrentContext
+	config.OriginCluster = currentContext
+	// switch context
+	kubeconfig.CurrentContext = newContextName
+
+	// write config file
+	if err := clientcmd.ModifyConfig(clientcmd.NewDefaultPathOptions(), *kubeconfig, false); err != nil {
+		return fmt.Errorf("failed to modify kubeconfig file: %w", err)
+	}
+
 	return nil
 }

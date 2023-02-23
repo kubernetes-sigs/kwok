@@ -37,6 +37,7 @@ import (
 var (
 	// DefaultCluster the default cluster name
 	DefaultCluster = "kwok"
+	OriginCluster  = "origin"
 
 	// WorkDir is the directory of the work spaces.
 	WorkDir = envs.GetEnvWithPrefix("WORKDIR", func() string {

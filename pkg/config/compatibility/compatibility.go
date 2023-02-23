@@ -81,6 +81,9 @@ type Config struct {
 
 	// Runtime config of Kubernetes
 	RuntimeConfig string `json:"kube_runtime_config,omitempty"`
+
+	// DisableContextAutoSwitch is the flag to disable context auto switch.
+	DisableContextAutoSwitch bool
 }
 
 // Convert_Config_To_internalversion_KwokctlConfiguration converts a Config to an internalversion.KwokctlConfiguration.
@@ -126,6 +129,7 @@ func Convert_Config_To_internalversion_KwokctlConfiguration(in *Config) (*intern
 	out.Options.KubeAuditPolicy = in.AuditPolicy
 	out.Options.KubeAuthorization = in.Authorization
 	out.Options.KubeRuntimeConfig = in.RuntimeConfig
+	out.Options.DisableContextAutoSwitch = in.DisableContextAutoSwitch
 
 	return &out, true
 }
