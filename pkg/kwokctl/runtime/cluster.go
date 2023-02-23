@@ -177,10 +177,7 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 // Ready returns true if the cluster is ready
 func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	out := bytes.NewBuffer(nil)
-	err := c.KubectlInCluster(ctx, exec.IOStreams{
-		Out:    out,
-		ErrOut: out,
-	}, "get", "--raw", "/healthz")
+	err := c.KubectlInCluster(exec.WithAllWriteTo(ctx, out), "get", "--raw", "/healthz")
 	if err != nil {
 		return false, err
 	}
@@ -238,24 +235,23 @@ func (c *Cluster) GetComponent(ctx context.Context, name string) (internalversio
 }
 
 // Kubectl runs kubectl.
-func (c *Cluster) Kubectl(ctx context.Context, stm exec.IOStreams, args ...string) error {
+func (c *Cluster) Kubectl(ctx context.Context, args ...string) error {
 	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
 		return err
 	}
 
-	return exec.Exec(ctx, "", stm, kubectlPath, args...)
+	return exec.Exec(ctx, kubectlPath, args...)
 }
 
 // KubectlInCluster runs kubectl in the cluster.
-func (c *Cluster) KubectlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error {
+func (c *Cluster) KubectlInCluster(ctx context.Context, args ...string) error {
 	kubectlPath, err := c.kubectlPath(ctx)
 	if err != nil {
 		return err
 	}
 
-	return exec.Exec(ctx, "", stm, kubectlPath,
-		append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
+	return exec.Exec(ctx, kubectlPath, append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
 }
 
 // AuditLogs returns the audit logs of the cluster.

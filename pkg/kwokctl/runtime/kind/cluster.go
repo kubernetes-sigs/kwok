@@ -200,10 +200,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		args = append(args, "--wait", "1m")
 	}
 
-	err = exec.Exec(ctx, "", exec.IOStreams{
-		ErrOut: os.Stderr,
-		Out:    os.Stderr,
-	}, kindPath, args...)
+	err = exec.Exec(exec.WithAllWriteToErrOut(ctx), kindPath, args...)
 	if err != nil {
 		return err
 	}
@@ -223,9 +220,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	kubeconfigBuf := bytes.NewBuffer(nil)
-	err = c.Kubectl(ctx, exec.IOStreams{
-		Out: kubeconfigBuf,
-	}, "config", "view", "--minify=true", "--raw=true")
+	err = c.Kubectl(exec.WithWriteTo(ctx, kubeconfigBuf), "config", "view", "--minify=true", "--raw=true")
 	if err != nil {
 		return err
 	}
@@ -235,7 +230,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, "", exec.IOStreams{}, "docker", "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
+	err = exec.Exec(ctx, "docker", "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
 	if err != nil {
 		return err
 	}
@@ -253,9 +248,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	)
 
 	if conf.PrometheusPort != 0 {
-		err = c.Kubectl(ctx, exec.IOStreams{
-			ErrOut: os.Stderr,
-		}, "apply", "-f", c.GetWorkdirPath(runtime.PrometheusDeploy))
+		err = c.Kubectl(exec.WithAllWriteToErrOut(ctx), "apply", "-f", c.GetWorkdirPath(runtime.PrometheusDeploy))
 		if err != nil {
 			return err
 		}
@@ -267,7 +260,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		)
 	}
 
-	err = c.Kubectl(ctx, exec.IOStreams{}, "cordon", c.Name()+"-control-plane")
+	err = c.Kubectl(ctx, "cordon", c.Name()+"-control-plane")
 	if err != nil {
 		logger.Error("Failed cordon node", err)
 	}
@@ -308,8 +301,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", "kind-"+c.Name())
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", "kind-"+c.Name())
+	_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".cluster", "kind-"+c.Name())
+	_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".user", "kind-"+c.Name())
 
 	return nil
 }
@@ -317,7 +310,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 func loadImages(ctx context.Context, command, kindCluster string, images []string) error {
 	logger := log.FromContext(ctx)
 	for _, image := range images {
-		err := exec.Exec(ctx, "", exec.IOStreams{},
+		err := exec.Exec(ctx,
 			command, "load", "docker-image",
 			image,
 			"--name", kindCluster,
@@ -367,9 +360,7 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	}
 
 	out := bytes.NewBuffer(nil)
-	err = c.KubectlInCluster(ctx, exec.IOStreams{
-		Out: out,
-	}, "get", "pod", "--namespace=kube-system", "--field-selector=status.phase!=Running", "--output=json")
+	err = c.KubectlInCluster(exec.WithWriteTo(ctx, out), "get", "pod", "--namespace=kube-system", "--field-selector=status.phase!=Running", "--output=json")
 	if err != nil {
 		return false, err
 	}
@@ -401,8 +392,8 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
 	// unset the context in default kubeconfig
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name()+".cluster")
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name()+".user")
+	_ = c.Kubectl(ctx, "config", "unset", "contexts."+c.Name()+".cluster")
+	_ = c.Kubectl(ctx, "config", "unset", "contexts."+c.Name()+".user")
 
 	kindPath, err := c.preDownloadKind(ctx)
 	if err != nil {
@@ -410,10 +401,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 	}
 
 	logger := log.FromContext(ctx)
-	err = exec.Exec(ctx, "", exec.IOStreams{
-		ErrOut: os.Stderr,
-		Out:    os.Stderr,
-	}, kindPath, "delete", "cluster", "--name", c.Name())
+	err = exec.Exec(exec.WithAllWriteToErrOut(ctx), kindPath, "delete", "cluster", "--name", c.Name())
 	if err != nil {
 		logger.Error("Failed to delete cluster", err)
 	}
@@ -423,7 +411,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
-	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "start", c.getClusterName())
+	err := exec.Exec(ctx, "docker", "start", c.getClusterName())
 	if err != nil {
 		return err
 	}
@@ -432,7 +420,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
-	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "stop", c.getClusterName())
+	err := exec.Exec(ctx, "docker", "stop", c.getClusterName())
 	if err != nil {
 		return err
 	}
@@ -441,7 +429,7 @@ func (c *Cluster) Stop(ctx context.Context) error {
 
 // StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
-	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
+	err := exec.Exec(ctx, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
 		return err
 	}
@@ -450,7 +438,7 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 
 // StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
-	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
+	err := exec.Exec(ctx, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
 		return err
 	}
@@ -480,10 +468,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	}
 	args = append(args, componentName)
 
-	err := c.Kubectl(ctx, exec.IOStreams{
-		ErrOut: out,
-		Out:    out,
-	}, args...)
+	err := c.Kubectl(exec.WithAllWriteTo(ctx, out), args...)
 	if err != nil {
 		return err
 	}
@@ -529,11 +514,10 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 }
 
 // EtcdctlInCluster implements the ectdctl subcommand
-func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error {
+func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	etcdContainerName := c.getComponentName("etcd")
 
-	return c.KubectlInCluster(ctx, stm,
-		append([]string{"exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "--endpoints=127.0.0.1:2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt"}, args...)...)
+	return c.KubectlInCluster(ctx, append([]string{"exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "--endpoints=127.0.0.1:2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt"}, args...)...)
 }
 
 // preDownloadKind pre-download and cache kind

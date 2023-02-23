@@ -19,7 +19,6 @@ package kubeconfig
 
 import (
 	"context"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -64,10 +63,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	err = rt.KubectlInCluster(ctx, exec.IOStreams{
-		Out:    os.Stdout,
-		ErrOut: os.Stderr,
-	}, "config", "view", "--minify", "--flatten", "--raw")
+	err = rt.KubectlInCluster(exec.WithStdIO(ctx), "config", "view", "--minify", "--flatten", "--raw")
 
 	return err
 }

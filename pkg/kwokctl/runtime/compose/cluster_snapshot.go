@@ -38,13 +38,13 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 	// Save to /snapshot.db on container
 	tmpFile := "/snapshot.db"
-	err = exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "exec", "-i", etcdContainerName, "etcdctl", "snapshot", "save", tmpFile)
+	err = exec.Exec(ctx, conf.Runtime, "exec", "-i", etcdContainerName, "etcdctl", "snapshot", "save", tmpFile)
 	if err != nil {
 		return err
 	}
 
 	// Copy to host path from container
-	err = exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "cp", etcdContainerName+":"+tmpFile, path)
+	err = exec.Exec(ctx, conf.Runtime, "cp", etcdContainerName+":"+tmpFile, path)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	// Restore snapshot to host temporary directory
 	etcdDataTmp := c.GetWorkdirPath("etcd-data")
-	err = exec.Exec(ctx, "", exec.IOStreams{}, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
+	err = exec.Exec(ctx, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}()
 
 		// Copy to container from host temporary directory
-		err = exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
+		err = exec.Exec(ctx, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
 		if err != nil {
 			return err
 		}
@@ -118,7 +118,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}()
 
 		// Copy to container from host temporary directory
-		err = exec.Exec(ctx, "", exec.IOStreams{}, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
+		err = exec.Exec(ctx, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
 		if err != nil {
 			return err
 		}

@@ -17,11 +17,9 @@ limitations under the License.
 package exec
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -135,38 +133,6 @@ func ForkExecKill(ctx context.Context, dir string, name string) error {
 		return err
 	}
 	return nil
-}
-
-// Exec executes the given command and returns the output.
-func Exec(ctx context.Context, dir string, stm IOStreams, name string, arg ...string) error {
-	cmd := command(ctx, name, arg...)
-	cmd.Dir = dir
-	cmd.Stdin = stm.In
-	cmd.Stdout = stm.Out
-	cmd.Stderr = stm.ErrOut
-
-	if cmd.Stderr == nil {
-		buf := bytes.NewBuffer(nil)
-		cmd.Stderr = buf
-	}
-	err := cmd.Run()
-	if err != nil {
-		if buf, ok := cmd.Stderr.(*bytes.Buffer); ok {
-			return fmt.Errorf("%s %s: %w\n%s", name, strings.Join(arg, " "), err, buf.String())
-		}
-		return fmt.Errorf("%s %s: %w", name, strings.Join(arg, " "), err)
-	}
-	return nil
-}
-
-// IOStreams contains the standard streams.
-type IOStreams struct {
-	// In think, os.Stdin
-	In io.Reader
-	// Out think, os.Stdout
-	Out io.Writer
-	// ErrOut think, os.Stderr
-	ErrOut io.Writer
 }
 
 func killProcess(pid int) error {

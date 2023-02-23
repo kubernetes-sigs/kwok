@@ -20,7 +20,6 @@ package kubectl
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -69,11 +68,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return err
 	}
 
-	err = rt.KubectlInCluster(ctx, exec.IOStreams{
-		In:     os.Stdin,
-		Out:    os.Stdout,
-		ErrOut: os.Stderr,
-	}, args...)
+	err = rt.KubectlInCluster(exec.WithStdIO(ctx), args...)
 
 	if err != nil {
 		return err

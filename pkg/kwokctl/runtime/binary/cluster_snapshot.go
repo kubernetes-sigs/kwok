@@ -42,7 +42,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, "", exec.IOStreams{}, etcdctlPath, "snapshot", "save", path, "--endpoints=127.0.0.1:"+format.String(conf.EtcdPort))
+	err = exec.Exec(ctx, etcdctlPath, "snapshot", "save", path, "--endpoints=127.0.0.1:"+format.String(conf.EtcdPort))
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,8 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	if err != nil {
 		return err
 	}
-	err = exec.Exec(ctx, "", exec.IOStreams{}, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
+
+	err = exec.Exec(ctx, etcdctlPath, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err
 	}

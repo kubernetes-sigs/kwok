@@ -68,7 +68,7 @@ func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
 
 // Available  checks whether the runtime is available.
 func (c *Cluster) Available(ctx context.Context) error {
-	return exec.Exec(ctx, "", exec.IOStreams{}, c.runtime, "version")
+	return exec.Exec(ctx, c.runtime, "version")
 }
 
 func (c *Cluster) setup(ctx context.Context) error {
@@ -403,13 +403,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "clusters."+c.Name()+".server", scheme+"://127.0.0.1:"+format.String(conf.KubeApiserverPort))
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
+	_ = c.Kubectl(ctx, "config", "set", "clusters."+c.Name()+".server", scheme+"://127.0.0.1:"+format.String(conf.KubeApiserverPort))
+	_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
 	if conf.SecurePort {
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", c.Name())
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
+		_ = c.Kubectl(ctx, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
+		_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".user", c.Name())
+		_ = c.Kubectl(ctx, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
+		_ = c.Kubectl(ctx, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
 	}
 
 	logger := log.FromContext(ctx)
@@ -428,9 +428,9 @@ func (c *Cluster) Install(ctx context.Context) error {
 // Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
 	// unset the context in default kubeconfig
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "clusters."+c.Name())
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "users."+c.Name())
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name())
+	_ = c.Kubectl(ctx, "config", "unset", "clusters."+c.Name())
+	_ = c.Kubectl(ctx, "config", "unset", "users."+c.Name())
+	_ = c.Kubectl(ctx, "config", "unset", "contexts."+c.Name())
 
 	err := c.Cluster.Uninstall(ctx)
 	if err != nil {
@@ -459,10 +459,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	logger := log.FromContext(ctx)
 	for i := 0; ctx.Err() == nil; i++ {
-		err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
-			ErrOut: os.Stderr,
-			Out:    os.Stderr,
-		}, commands[0], commands[1:]...)
+		err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 		if err != nil {
 			logger.Debug("Failed to start cluster",
 				"times", i,
@@ -505,9 +502,7 @@ func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	out := bytes.NewBuffer(nil)
-	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
-		Out: out,
-	}, commands[0], commands[1:]...)
+	err = exec.Exec(exec.WithWriteTo(exec.WithDir(ctx, c.Workdir()), out), commands[0], commands[1:]...)
 	if err != nil {
 		return false, err
 	}
@@ -546,10 +541,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
-		ErrOut: os.Stderr,
-		Out:    os.Stderr,
-	}, commands[0], commands[1:]...)
+	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 	if err != nil {
 		logger.Error("Failed to down cluster", err)
 	}
@@ -570,10 +562,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
-		ErrOut: os.Stderr,
-		Out:    os.Stderr,
-	}, commands[0], commands[1:]...)
+	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 	if err != nil {
 		return fmt.Errorf("failed to start cluster: %w", err)
 	}
@@ -616,10 +605,7 @@ func (c *Cluster) Stop(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, c.Workdir(), exec.IOStreams{
-		ErrOut: os.Stderr,
-		Out:    os.Stderr,
-	}, commands[0], commands[1:]...)
+	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 	if err != nil {
 		return fmt.Errorf("failed to stop cluster: %w", err)
 	}
@@ -628,12 +614,12 @@ func (c *Cluster) Stop(ctx context.Context) error {
 
 // StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
-	return exec.Exec(ctx, c.Workdir(), exec.IOStreams{}, c.runtime, "start", c.Name()+"-"+name)
+	return exec.Exec(exec.WithDir(ctx, c.Workdir()), c.runtime, "start", c.Name()+"-"+name)
 }
 
 // StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
-	return exec.Exec(ctx, c.Workdir(), exec.IOStreams{}, c.runtime, "stop", c.Name()+"-"+name)
+	return exec.Exec(exec.WithDir(ctx, c.Workdir()), c.runtime, "stop", c.Name()+"-"+name)
 }
 
 func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow bool) error {
@@ -642,10 +628,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 		args = append(args, "-f")
 	}
 	args = append(args, c.Name()+"-"+name)
-	err := exec.Exec(ctx, c.Workdir(), exec.IOStreams{
-		ErrOut: out,
-		Out:    out,
-	}, c.runtime, args...)
+	err := exec.Exec(exec.WithAllWriteTo(exec.WithDir(ctx, c.Workdir()), out), c.runtime, args...)
 	if err != nil {
 		return err
 	}
@@ -702,7 +685,7 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 	conf := &config.Options
 
 	if c.runtime == consts.RuntimeTypeDocker {
-		err := exec.Exec(ctx, "", exec.IOStreams{}, c.runtime, "compose", "version")
+		err := exec.Exec(ctx, c.runtime, "compose", "version")
 		if err != nil {
 			// docker compose subcommand does not exist, try to download it
 			dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
@@ -717,8 +700,7 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 }
 
 // EtcdctlInCluster implements the ectdctl subcommand
-func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error {
+func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	etcdContainerName := c.Name() + "-etcd"
-	return exec.Exec(ctx, "", stm, c.runtime,
-		append([]string{"exec", "-i", etcdContainerName, "etcdctl"}, args...)...)
+	return exec.Exec(ctx, c.runtime, append([]string{"exec", "-i", etcdContainerName, "etcdctl"}, args...)...)
 }
