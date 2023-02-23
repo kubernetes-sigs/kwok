@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"golang.org/x/exp/slog"
 	"golang.org/x/term"
@@ -28,6 +29,12 @@ import (
 
 // IsTerminal returns true if the given file descriptor is a terminal.
 var IsTerminal = term.IsTerminal
+
+// DurationFormat is the format used to print time.Duration in both nanosecond and string.
+type DurationFormat struct {
+	Nanosecond int64  `json:"nanosecond"`
+	Human      string `json:"human"`
+}
 
 // FromContext returns the Logger associated with ctx, or the default logger.
 func FromContext(ctx context.Context) *Logger {
@@ -56,6 +63,14 @@ func NewLogger(w io.Writer, level slog.Level) *Logger {
 		AddSource: true,
 		Level:     level,
 		ReplaceAttr: func(a slog.Attr) slog.Attr {
+			if a.Value.Kind() == slog.DurationKind {
+				if t, ok := a.Value.Any().(time.Duration); ok {
+					return slog.Any(a.Key, DurationFormat{
+						Nanosecond: int64(t),
+						Human:      t.String(),
+					})
+				}
+			}
 			if a.Value.Kind() == slog.AnyKind {
 				if t, ok := a.Value.Any().(fmt.Stringer); ok {
 					return slog.Attr{
