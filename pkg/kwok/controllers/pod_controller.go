@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"sync"
 	"text/template"
 	"time"
 
@@ -44,6 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
+	"sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 var (
@@ -59,15 +59,14 @@ type PodController struct {
 	disregardStatusWithLabelSelector      labels.Selector
 	nodeIP                                string
 	cidrIPNet                             *net.IPNet
-	nodeHasFunc                           func(nodeName string) bool
-	nodeGetFunc                           func(nodeName string) (NodeInfo, bool)
+	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	ipPool                                *ipPool
 	renderer                              *renderer
 	lockPodChan                           chan *corev1.Pod
 	parallelTasks                         *parallelTasks
 	lifecycle                             Lifecycle
 	cronjob                               *cron.Cron
-	delayJobsCancels                      sync.Map
+	delayJobsCancels                      maps.SyncMap[string, cron.DoFunc]
 	recorder                              record.EventRecorder
 }
 
@@ -79,8 +78,7 @@ type PodControllerConfig struct {
 	DisregardStatusWithLabelSelector      string
 	NodeIP                                string
 	CIDR                                  string
-	NodeHasFunc                           func(nodeName string) bool
-	NodeGetFunc                           func(nodeName string) (NodeInfo, bool)
+	NodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	Stages                                []*internalversion.Stage
 	LockPodParallelism                    int
 	FuncMap                               template.FuncMap
@@ -117,7 +115,6 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		nodeIP:                                conf.NodeIP,
 		cidrIPNet:                             cidrIPNet,
 		ipPool:                                newIPPool(cidrIPNet),
-		nodeHasFunc:                           conf.NodeHasFunc,
 		nodeGetFunc:                           conf.NodeGetFunc,
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
@@ -305,17 +302,17 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 	)
 	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(time.Now().Add(delay)), func() {
 		c.parallelTasks.Add(func() {
-			old, ok := c.delayJobsCancels.LoadAndDelete(key)
+			cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
 			if ok {
-				old.(cron.DoFunc)()
+				cancelOld()
 			}
 			do()
 		})
 	})
 	if ok {
-		old, ok := c.delayJobsCancels.LoadOrStore(key, cancelFunc)
+		cancelOld, ok := c.delayJobsCancels.LoadOrStore(key, cancelFunc)
 		if ok {
-			old.(cron.DoFunc)()
+			cancelOld()
 		}
 	}
 
@@ -361,7 +358,7 @@ func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
 }
 
 func (c *PodController) needLockPod(pod *corev1.Pod) bool {
-	if !c.nodeHasFunc(pod.Spec.NodeName) {
+	if _, has := c.nodeGetFunc(pod.Spec.NodeName); !has {
 		return false
 	}
 
@@ -426,16 +423,18 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
-					if c.nodeHasFunc(pod.Spec.NodeName) && !pod.Spec.HostNetwork {
-						if !c.enableCNI {
-							// Recycling PodIP
-							if pod.Status.PodIP != "" && c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
-								c.ipPool.Put(pod.Status.PodIP)
-							}
-						} else {
-							err := cni.Remove(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
-							if err != nil {
-								logger.Error("cni remove", err)
+					// Recycling PodIP
+					if !pod.Spec.HostNetwork {
+						if _, has := c.nodeGetFunc(pod.Spec.NodeName); has {
+							if !c.enableCNI {
+								if pod.Status.PodIP != "" && c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
+									c.ipPool.Put(pod.Status.PodIP)
+								}
+							} else {
+								err := cni.Remove(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
+								if err != nil {
+									logger.Error("cni remove", err)
+								}
 							}
 						}
 					}

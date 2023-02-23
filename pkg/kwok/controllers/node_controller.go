@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"sync"
 	"text/template"
 	"time"
 
@@ -43,6 +42,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
+	"sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 // NodeController is a fake nodes implementation that can be used to test
@@ -57,13 +57,13 @@ type NodeController struct {
 	manageNodesWithLabelSelector          string
 	nodeSelectorFunc                      func(node *corev1.Node) bool
 	lockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
-	nodesSets                             *stringSets
+	nodesSets                             maps.SyncMap[string, *NodeInfo]
 	renderer                              *renderer
 	nodeChan                              chan *corev1.Node
 	parallelTasks                         *parallelTasks
 	lifecycle                             Lifecycle
 	cronjob                               *cron.Cron
-	delayJobsCancels                      sync.Map
+	delayJobsCancels                      maps.SyncMap[string, cron.DoFunc]
 	recorder                              record.EventRecorder
 }
 
@@ -118,7 +118,6 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		nodeIP:                                conf.NodeIP,
 		nodeName:                              conf.NodeName,
 		nodePort:                              conf.NodePort,
-		nodesSets:                             newStringSets(),
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
 		parallelTasks:                         newParallelTasks(conf.LockNodeParallelism),
@@ -240,7 +239,7 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 					}
 				case watch.Deleted:
 					node := event.Object.(*corev1.Node)
-					if c.nodesSets.Has(node.Name) {
+					if _, has := c.nodesSets.Load(node.Name); has {
 						c.nodesSets.Delete(node.Name)
 					}
 				}
@@ -419,17 +418,17 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 	)
 	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(time.Now().Add(delay)), func() {
 		c.parallelTasks.Add(func() {
-			old, ok := c.delayJobsCancels.LoadAndDelete(key)
+			cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
 			if ok {
-				old.(cron.DoFunc)()
+				cancelOld()
 			}
 			do()
 		})
 	})
 	if ok {
-		old, ok := c.delayJobsCancels.LoadOrStore(key, cancelFunc)
+		cancelOld, ok := c.delayJobsCancels.LoadOrStore(key, cancelFunc)
 		if ok {
-			old.(cron.DoFunc)()
+			cancelOld()
 		}
 	}
 	return nil
@@ -526,15 +525,16 @@ func (c *NodeController) putNodeInfo(node *corev1.Node) {
 			}
 		}
 	}
-	nodeInfo := NodeInfo{
+	nodeInfo := &NodeInfo{
 		HostIPs: nodeIPs,
 	}
-	c.nodesSets.Put(node.Name, nodeInfo)
+	c.nodesSets.Store(node.Name, nodeInfo)
 }
 
 // Has returns true if the node is existed
 func (c *NodeController) Has(nodeName string) bool {
-	return c.nodesSets.Has(nodeName)
+	_, has := c.nodesSets.Load(nodeName)
+	return has
 }
 
 // Size returns the number of nodes
@@ -543,10 +543,10 @@ func (c *NodeController) Size() int {
 }
 
 // Get returns Has bool and corev1.Node if the node is existed
-func (c *NodeController) Get(nodeName string) (NodeInfo, bool) {
-	value, has := c.nodesSets.Get(nodeName)
-	if nodeInfo, converted := value.(NodeInfo); has && converted {
+func (c *NodeController) Get(nodeName string) (*NodeInfo, bool) {
+	nodeInfo, has := c.nodesSets.Load(nodeName)
+	if has {
 		return nodeInfo, has
 	}
-	return NodeInfo{}, has
+	return nil, has
 }
