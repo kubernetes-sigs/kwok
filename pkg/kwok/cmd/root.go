@@ -165,7 +165,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			}
 
 			if serverAddress != "" {
-				svc := server.NewServer()
+				clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
+				portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
+				config := server.Config{
+					ClusterPortForwards: clusterPortForwards,
+					PortForwards:        portForwards,
+				}
+				svc := server.NewServer(config)
 				svc.InstallMetrics()
 				svc.InstallHealthz()
 

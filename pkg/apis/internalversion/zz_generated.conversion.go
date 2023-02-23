@@ -37,6 +37,21 @@ func init() {
 // RegisterConversions adds conversion functions to the given scheme.
 // Public to allow building arbitrary schemes.
 func RegisterConversions(s *runtime.Scheme) error {
+	if err := s.AddGeneratedConversionFunc((*ClusterPortForward)(nil), (*v1alpha1.ClusterPortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward(a.(*ClusterPortForward), b.(*v1alpha1.ClusterPortForward), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ClusterPortForwardSpec)(nil), (*v1alpha1.ClusterPortForwardSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwardSpec(a.(*ClusterPortForwardSpec), b.(*v1alpha1.ClusterPortForwardSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ClusterPortForwardSpec)(nil), (*ClusterPortForwardSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(a.(*v1alpha1.ClusterPortForwardSpec), b.(*ClusterPortForwardSpec), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*Component)(nil), (*v1alpha1.Component)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_Component_To_v1alpha1_Component(a.(*Component), b.(*v1alpha1.Component), scope)
 	}); err != nil {
@@ -77,6 +92,26 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*Forward)(nil), (*v1alpha1.Forward)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_Forward_To_v1alpha1_Forward(a.(*Forward), b.(*v1alpha1.Forward), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.Forward)(nil), (*Forward)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Forward_To_internalversion_Forward(a.(*v1alpha1.Forward), b.(*Forward), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ForwardTarget)(nil), (*v1alpha1.ForwardTarget)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ForwardTarget_To_v1alpha1_ForwardTarget(a.(*ForwardTarget), b.(*v1alpha1.ForwardTarget), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ForwardTarget)(nil), (*ForwardTarget)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget(a.(*v1alpha1.ForwardTarget), b.(*ForwardTarget), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*KwokConfiguration)(nil), (*v1alpha1.KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(a.(*KwokConfiguration), b.(*v1alpha1.KwokConfiguration), scope)
 	}); err != nil {
@@ -102,6 +137,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*ObjectSelector)(nil), (*v1alpha1.ObjectSelector)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ObjectSelector_To_v1alpha1_ObjectSelector(a.(*ObjectSelector), b.(*v1alpha1.ObjectSelector), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ObjectSelector)(nil), (*ObjectSelector)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector(a.(*v1alpha1.ObjectSelector), b.(*ObjectSelector), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*Port)(nil), (*v1alpha1.Port)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_Port_To_v1alpha1_Port(a.(*Port), b.(*v1alpha1.Port), scope)
 	}); err != nil {
@@ -109,6 +154,21 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.Port)(nil), (*Port)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_Port_To_internalversion_Port(a.(*v1alpha1.Port), b.(*Port), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*PortForward)(nil), (*v1alpha1.PortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_PortForward_To_v1alpha1_PortForward(a.(*PortForward), b.(*v1alpha1.PortForward), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*PortForwardSpec)(nil), (*v1alpha1.PortForwardSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(a.(*PortForwardSpec), b.(*v1alpha1.PortForwardSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.PortForwardSpec)(nil), (*PortForwardSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(a.(*v1alpha1.PortForwardSpec), b.(*PortForwardSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -207,6 +267,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*v1alpha1.ClusterPortForward)(nil), (*ClusterPortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(a.(*v1alpha1.ClusterPortForward), b.(*ClusterPortForward), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*v1alpha1.KwokConfiguration)(nil), (*KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(a.(*v1alpha1.KwokConfiguration), b.(*KwokConfiguration), scope)
 	}); err != nil {
@@ -222,12 +287,61 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*v1alpha1.PortForward)(nil), (*PortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_PortForward_To_internalversion_PortForward(a.(*v1alpha1.PortForward), b.(*PortForward), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*v1alpha1.Stage)(nil), (*Stage)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_Stage_To_internalversion_Stage(a.(*v1alpha1.Stage), b.(*Stage), scope)
 	}); err != nil {
 		return err
 	}
 	return nil
+}
+
+func autoConvert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward(in *ClusterPortForward, out *v1alpha1.ClusterPortForward, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwardSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward is an autogenerated conversion function.
+func Convert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward(in *ClusterPortForward, out *v1alpha1.ClusterPortForward, s conversion.Scope) error {
+	return autoConvert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward(in, out, s)
+}
+
+func autoConvert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(in *v1alpha1.ClusterPortForward, out *ClusterPortForward, s conversion.Scope) error {
+	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func autoConvert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwardSpec(in *ClusterPortForwardSpec, out *v1alpha1.ClusterPortForwardSpec, s conversion.Scope) error {
+	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
+	out.Forwards = *(*[]v1alpha1.Forward)(unsafe.Pointer(&in.Forwards))
+	return nil
+}
+
+// Convert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwardSpec is an autogenerated conversion function.
+func Convert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwardSpec(in *ClusterPortForwardSpec, out *v1alpha1.ClusterPortForwardSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwardSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(in *v1alpha1.ClusterPortForwardSpec, out *ClusterPortForwardSpec, s conversion.Scope) error {
+	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
+	out.Forwards = *(*[]Forward)(unsafe.Pointer(&in.Forwards))
+	return nil
+}
+
+// Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec is an autogenerated conversion function.
+func Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(in *v1alpha1.ClusterPortForwardSpec, out *ClusterPortForwardSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(in, out, s)
 }
 
 func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, out *v1alpha1.Component, s conversion.Scope) error {
@@ -350,6 +464,52 @@ func autoConvert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(in *v1a
 // Convert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem is an autogenerated conversion function.
 func Convert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(in *v1alpha1.FinalizerItem, out *FinalizerItem, s conversion.Scope) error {
 	return autoConvert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(in, out, s)
+}
+
+func autoConvert_internalversion_Forward_To_v1alpha1_Forward(in *Forward, out *v1alpha1.Forward, s conversion.Scope) error {
+	out.Ports = *(*[]int32)(unsafe.Pointer(&in.Ports))
+	out.Target = (*v1alpha1.ForwardTarget)(unsafe.Pointer(in.Target))
+	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
+	return nil
+}
+
+// Convert_internalversion_Forward_To_v1alpha1_Forward is an autogenerated conversion function.
+func Convert_internalversion_Forward_To_v1alpha1_Forward(in *Forward, out *v1alpha1.Forward, s conversion.Scope) error {
+	return autoConvert_internalversion_Forward_To_v1alpha1_Forward(in, out, s)
+}
+
+func autoConvert_v1alpha1_Forward_To_internalversion_Forward(in *v1alpha1.Forward, out *Forward, s conversion.Scope) error {
+	out.Ports = *(*[]int32)(unsafe.Pointer(&in.Ports))
+	out.Target = (*ForwardTarget)(unsafe.Pointer(in.Target))
+	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
+	return nil
+}
+
+// Convert_v1alpha1_Forward_To_internalversion_Forward is an autogenerated conversion function.
+func Convert_v1alpha1_Forward_To_internalversion_Forward(in *v1alpha1.Forward, out *Forward, s conversion.Scope) error {
+	return autoConvert_v1alpha1_Forward_To_internalversion_Forward(in, out, s)
+}
+
+func autoConvert_internalversion_ForwardTarget_To_v1alpha1_ForwardTarget(in *ForwardTarget, out *v1alpha1.ForwardTarget, s conversion.Scope) error {
+	out.Port = in.Port
+	out.Address = in.Address
+	return nil
+}
+
+// Convert_internalversion_ForwardTarget_To_v1alpha1_ForwardTarget is an autogenerated conversion function.
+func Convert_internalversion_ForwardTarget_To_v1alpha1_ForwardTarget(in *ForwardTarget, out *v1alpha1.ForwardTarget, s conversion.Scope) error {
+	return autoConvert_internalversion_ForwardTarget_To_v1alpha1_ForwardTarget(in, out, s)
+}
+
+func autoConvert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget(in *v1alpha1.ForwardTarget, out *ForwardTarget, s conversion.Scope) error {
+	out.Port = in.Port
+	out.Address = in.Address
+	return nil
+}
+
+// Convert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget is an autogenerated conversion function.
+func Convert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget(in *v1alpha1.ForwardTarget, out *ForwardTarget, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget(in, out, s)
 }
 
 func autoConvert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(in *KwokConfiguration, out *v1alpha1.KwokConfiguration, s conversion.Scope) error {
@@ -622,6 +782,28 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	return nil
 }
 
+func autoConvert_internalversion_ObjectSelector_To_v1alpha1_ObjectSelector(in *ObjectSelector, out *v1alpha1.ObjectSelector, s conversion.Scope) error {
+	out.MatchNamespaces = *(*[]string)(unsafe.Pointer(&in.MatchNamespaces))
+	out.MatchNames = *(*[]string)(unsafe.Pointer(&in.MatchNames))
+	return nil
+}
+
+// Convert_internalversion_ObjectSelector_To_v1alpha1_ObjectSelector is an autogenerated conversion function.
+func Convert_internalversion_ObjectSelector_To_v1alpha1_ObjectSelector(in *ObjectSelector, out *v1alpha1.ObjectSelector, s conversion.Scope) error {
+	return autoConvert_internalversion_ObjectSelector_To_v1alpha1_ObjectSelector(in, out, s)
+}
+
+func autoConvert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector(in *v1alpha1.ObjectSelector, out *ObjectSelector, s conversion.Scope) error {
+	out.MatchNamespaces = *(*[]string)(unsafe.Pointer(&in.MatchNamespaces))
+	out.MatchNames = *(*[]string)(unsafe.Pointer(&in.MatchNames))
+	return nil
+}
+
+// Convert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector is an autogenerated conversion function.
+func Convert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector(in *v1alpha1.ObjectSelector, out *ObjectSelector, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector(in, out, s)
+}
+
 func autoConvert_internalversion_Port_To_v1alpha1_Port(in *Port, out *v1alpha1.Port, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Port = in.Port
@@ -646,6 +828,48 @@ func autoConvert_v1alpha1_Port_To_internalversion_Port(in *v1alpha1.Port, out *P
 // Convert_v1alpha1_Port_To_internalversion_Port is an autogenerated conversion function.
 func Convert_v1alpha1_Port_To_internalversion_Port(in *v1alpha1.Port, out *Port, s conversion.Scope) error {
 	return autoConvert_v1alpha1_Port_To_internalversion_Port(in, out, s)
+}
+
+func autoConvert_internalversion_PortForward_To_v1alpha1_PortForward(in *PortForward, out *v1alpha1.PortForward, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_PortForward_To_v1alpha1_PortForward is an autogenerated conversion function.
+func Convert_internalversion_PortForward_To_v1alpha1_PortForward(in *PortForward, out *v1alpha1.PortForward, s conversion.Scope) error {
+	return autoConvert_internalversion_PortForward_To_v1alpha1_PortForward(in, out, s)
+}
+
+func autoConvert_v1alpha1_PortForward_To_internalversion_PortForward(in *v1alpha1.PortForward, out *PortForward, s conversion.Scope) error {
+	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func autoConvert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(in *PortForwardSpec, out *v1alpha1.PortForwardSpec, s conversion.Scope) error {
+	out.Forwards = *(*[]v1alpha1.Forward)(unsafe.Pointer(&in.Forwards))
+	return nil
+}
+
+// Convert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec is an autogenerated conversion function.
+func Convert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(in *PortForwardSpec, out *v1alpha1.PortForwardSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in *v1alpha1.PortForwardSpec, out *PortForwardSpec, s conversion.Scope) error {
+	out.Forwards = *(*[]Forward)(unsafe.Pointer(&in.Forwards))
+	return nil
+}
+
+// Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec is an autogenerated conversion function.
+func Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in *v1alpha1.PortForwardSpec, out *PortForwardSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in, out, s)
 }
 
 func autoConvert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(in *SelectorRequirement, out *v1alpha1.SelectorRequirement, s conversion.Scope) error {

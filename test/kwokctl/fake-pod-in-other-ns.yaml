@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: other
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fake-pod
+  namespace: other
+spec:
+  containers:
+    - name: fake-pod
+      image: fake

@@ -45,3 +45,13 @@ func Filter[S ~[]T, T any](s S, f func(T) bool) []T {
 	}
 	return out
 }
+
+// Contains returns true if the slice contains the given element.
+func Contains[S ~[]T, T comparable](s S, t T) bool {
+	for _, v := range s {
+		if v == t {
+			return true
+		}
+	}
+	return false
+}

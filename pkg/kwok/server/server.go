@@ -28,6 +28,7 @@ import (
 	"github.com/wzshiming/cmux/pattern"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
@@ -41,15 +42,23 @@ type Server struct {
 
 	idleTimeout           time.Duration
 	streamCreationTimeout time.Duration
+	config                Config
+}
+
+// Config holds configurations needed by the server handlers.
+type Config struct {
+	ClusterPortForwards []*internalversion.ClusterPortForward
+	PortForwards        []*internalversion.PortForward
 }
 
 // NewServer creates a new Server.
-func NewServer() *Server {
+func NewServer(config Config) *Server {
 	container := restful.NewContainer()
 	return &Server{
 		restfulCont:           container,
 		idleTimeout:           1 * time.Hour,
 		streamCreationTimeout: remotecommandconsts.DefaultStreamCreationTimeout,
+		config:                config,
 	}
 }
 

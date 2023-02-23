@@ -263,7 +263,7 @@ func (h *httpStreamHandler) portForward(ctx context.Context, p *httpStreamPair) 
 	h.logger.Debug("Connection request done invoking forwarder.PortForward for port", "connection", h.conn, "request", p.requestID, "port", portString)
 
 	if err != nil {
-		err := fmt.Errorf("error forwarding port %d to pod %s/%s, uid %v: %w", port, h.podNamespace, h.podName, h.uid, err)
+		err := fmt.Errorf("error forwarding port %d to pod %s/%s: %w", port, h.podNamespace, h.podName, err)
 		logger := log.FromContext(ctx)
 		logger.Error("PortForward", err)
 		fmt.Fprint(p.errorStream, err.Error())
