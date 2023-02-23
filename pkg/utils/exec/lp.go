@@ -17,10 +17,17 @@ limitations under the License.
 package exec
 
 import (
+	"errors"
 	"os/exec"
 )
 
 // LookPath is a wrapper around exec.LookPath.
 func LookPath(file string) (string, error) {
 	return exec.LookPath(file)
+}
+
+// IsNotFound returns true if the specified error was created by NewNotFound.
+// It supports wrapped errors and returns false when the error is nil.
+func IsNotFound(err error) bool {
+	return errors.Is(err, exec.ErrNotFound)
 }

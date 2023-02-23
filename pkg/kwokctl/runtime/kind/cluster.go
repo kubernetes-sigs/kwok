@@ -159,7 +159,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	err = image.PullImages(ctx, "docker", images, conf.QuietPull)
+
+	err = image.PullImages(ctx, runtimeBinary, images, conf.QuietPull)
 	if err != nil {
 		return err
 	}
@@ -212,9 +213,17 @@ func (c *Cluster) Up(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	err = loadImages(ctx, kindPath, c.Name(), images)
-	if err != nil {
-		return err
+
+	if runtimeBinary == "docker" {
+		err = loadImagesFormDocker(ctx, kindPath, c.Name(), images)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = loadImages(ctx, kindPath, c.Name(), images)
+		if err != nil {
+			return err
+		}
 	}
 
 	kubeconfig, err := c.InHostKubeconfig()
@@ -235,7 +244,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, "", exec.IOStreams{}, "docker", "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
+	err = exec.Exec(ctx, "", exec.IOStreams{}, runtimeBinary, "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
 	if err != nil {
 		return err
 	}
@@ -315,6 +324,22 @@ func (c *Cluster) Up(ctx context.Context) error {
 }
 
 func loadImages(ctx context.Context, command, kindCluster string, images []string) error {
+	logger := log.FromContext(ctx)
+	for _, image := range images {
+		err := exec.Exec(ctx, "", exec.IOStreams{},
+			command, "load", "image-load",
+			image,
+			"--name", kindCluster,
+		)
+		if err != nil {
+			return err
+		}
+		logger.Info("Loaded image", "image", image)
+	}
+	return nil
+}
+
+func loadImagesFormDocker(ctx context.Context, command, kindCluster string, images []string) error {
 	logger := log.FromContext(ctx)
 	for _, image := range images {
 		err := exec.Exec(ctx, "", exec.IOStreams{},
@@ -423,7 +448,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
-	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "start", c.getClusterName())
+	err := exec.Exec(ctx, "", exec.IOStreams{}, runtimeBinary, "start", c.getClusterName())
 	if err != nil {
 		return err
 	}
@@ -432,7 +457,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
-	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "stop", c.getClusterName())
+	err := exec.Exec(ctx, "", exec.IOStreams{}, runtimeBinary, "stop", c.getClusterName())
 	if err != nil {
 		return err
 	}
@@ -441,7 +466,7 @@ func (c *Cluster) Stop(ctx context.Context) error {
 
 // StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
-	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
+	err := exec.Exec(ctx, "", exec.IOStreams{}, runtimeBinary, "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
 		return err
 	}
@@ -450,7 +475,7 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 
 // StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
-	err := exec.Exec(ctx, "", exec.IOStreams{}, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
+	err := exec.Exec(ctx, "", exec.IOStreams{}, runtimeBinary, "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
 		return err
 	}
