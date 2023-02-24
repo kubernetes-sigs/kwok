@@ -8,6 +8,9 @@ theme: hugo-book
 disablePathToLower: false
 enableGitInfo: true
 
+# Enable Google Analytics
+googleAnalytics: G-CSMX6Y0L3Z #UA-258265780-1
+
 # Needed for mermaid/katex shortcodes
 markup:
   goldmark:
