@@ -175,6 +175,53 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 	conf := &config.Options
 
+	config.Components = append(config.Components,
+		internalversion.Component{
+			Name: "etcd",
+		},
+		internalversion.Component{
+			Name: "kube-apiserver",
+		},
+		internalversion.Component{
+			Name: "kwok-controller",
+		},
+	)
+
+	if conf.PrometheusPort != 0 {
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "prometheus",
+			},
+		)
+	}
+
+	if !conf.DisableKubeScheduler {
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "kube-scheduler",
+			},
+		)
+	}
+
+	if !conf.DisableKubeControllerManager {
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "kube-controller-manager",
+			},
+		)
+	}
+
+	err = c.SetConfig(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to set config: %w", err)
+	}
+
+	// This needs to be done before starting the cluster
+	err = c.Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+
 	logger := log.FromContext(ctx)
 
 	kindPath, err := c.preDownloadKind(ctx)
@@ -240,18 +287,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	config.Components = append(config.Components,
-		internalversion.Component{
-			Name: "etcd",
-		},
-		internalversion.Component{
-			Name: "kube-apiserver",
-		},
-		internalversion.Component{
-			Name: "kwok-controller",
-		},
-	)
-
 	if conf.PrometheusPort != 0 {
 		err = c.Kubectl(ctx, exec.IOStreams{
 			ErrOut: os.Stderr,
@@ -259,12 +294,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-
-		config.Components = append(config.Components,
-			internalversion.Component{
-				Name: "prometheus",
-			},
-		)
 	}
 
 	err = c.Kubectl(ctx, exec.IOStreams{}, "cordon", c.Name()+"-control-plane")
@@ -277,12 +306,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 		if err != nil {
 			logger.Error("Failed to disable kube-scheduler", err)
 		}
-	} else {
-		config.Components = append(config.Components,
-			internalversion.Component{
-				Name: "kube-scheduler",
-			},
-		)
 	}
 
 	if conf.DisableKubeControllerManager {
@@ -290,21 +313,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 		if err != nil {
 			logger.Error("Failed to disable kube-controller-manager", err)
 		}
-	} else {
-		config.Components = append(config.Components,
-			internalversion.Component{
-				Name: "kube-controller-manager",
-			},
-		)
-	}
-
-	err = c.SetConfig(ctx, config)
-	if err != nil {
-		logger.Error("Failed to set config", err)
-	}
-	err = c.Save(ctx)
-	if err != nil {
-		logger.Error("Failed to update cluster", err)
 	}
 
 	// set the context in default kubeconfig

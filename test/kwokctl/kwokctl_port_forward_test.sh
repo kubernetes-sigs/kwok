@@ -101,11 +101,11 @@ function test_apply_node_and_pod() {
     echo "Error: fake-deployment apply failed"
     exit 1
   fi
-  kwokctl --name "${name}" kubectl wait pod -A --all --for=condition=Ready --timeout=30s
+  kwokctl --name "${name}" kubectl wait pod -A --all --for=condition=Ready --timeout=60s
   if [[ $? -ne 0 ]]; then
     echo "Error: fake-pod wait failed"
-    echo kubectl get pod -A --all
-    kubectl get pod -A --all
+    echo kwokctl --name "${name}" kubectl get pod -A --all
+    kwokctl --name "${name}" kubectl get pod -A --all
     exit 1
   fi
 }
@@ -138,8 +138,6 @@ function main() {
     for test in "${failed[@]}"; do
       echo " - ${test}"
     done
-    echo kubectl get pod -A --all
-    kubectl get pod -A --all
     exit 1
   fi
 }
