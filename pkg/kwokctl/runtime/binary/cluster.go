@@ -439,13 +439,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "clusters."+c.Name()+".server", scheme+"://"+localAddress+":"+format.String(conf.KubeApiserverPort))
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
+	_ = c.Kubectl(ctx, "config", "set", "clusters."+c.Name()+".server", scheme+"://"+localAddress+":"+format.String(conf.KubeApiserverPort))
+	_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
 	if conf.SecurePort {
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "contexts."+c.Name()+".user", c.Name())
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
-		_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
+		_ = c.Kubectl(ctx, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
+		_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".user", c.Name())
+		_ = c.Kubectl(ctx, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
+		_ = c.Kubectl(ctx, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
 	}
 	return nil
 }
@@ -453,9 +453,9 @@ func (c *Cluster) Install(ctx context.Context) error {
 // Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
 	// unset the context in default kubeconfig
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "clusters."+c.Name())
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "users."+c.Name())
-	_ = c.Kubectl(ctx, exec.IOStreams{}, "config", "unset", "contexts."+c.Name())
+	_ = c.Kubectl(ctx, "config", "unset", "clusters."+c.Name())
+	_ = c.Kubectl(ctx, "config", "unset", "users."+c.Name())
+	_ = c.Kubectl(ctx, "config", "unset", "contexts."+c.Name())
 
 	err := c.Cluster.Uninstall(ctx)
 	if err != nil {
@@ -741,7 +741,7 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 }
 
 // EtcdctlInCluster implements the ectdctl subcommand
-func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args ...string) error {
+func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -754,5 +754,5 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, stm exec.IOStreams, args
 		return err
 	}
 
-	return exec.Exec(ctx, "", stm, etcdctlPath, append([]string{"--endpoints", "127.0.0.1:" + format.String(conf.EtcdPort)}, args...)...)
+	return exec.Exec(ctx, etcdctlPath, append([]string{"--endpoints", "127.0.0.1:" + format.String(conf.EtcdPort)}, args...)...)
 }

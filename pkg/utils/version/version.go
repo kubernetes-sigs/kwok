@@ -59,10 +59,7 @@ func ParseFromOutput(s string) (Version, error) {
 // ParseFromBinary parses the version from the binary.
 func ParseFromBinary(ctx context.Context, path string) (Version, error) {
 	out := bytes.NewBuffer(nil)
-	err := exec.Exec(ctx, "", exec.IOStreams{
-		Out:    out,
-		ErrOut: out,
-	}, path, "--version")
+	err := exec.Exec(exec.WithAllWriteTo(ctx, out), path, "--version")
 	if err != nil {
 		return Version{}, err
 	}
@@ -92,10 +89,7 @@ func ParseFromImage(ctx context.Context, runtime string, image string, command s
 	}
 	args = append(args, "--version")
 	out := bytes.NewBuffer(nil)
-	err := exec.Exec(context.Background(), "", exec.IOStreams{
-		Out:    out,
-		ErrOut: out,
-	}, runtime, args...)
+	err := exec.Exec(exec.WithAllWriteTo(ctx, out), runtime, args...)
 	if err != nil {
 		return Version{}, err
 	}

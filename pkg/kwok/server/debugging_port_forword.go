@@ -47,11 +47,7 @@ func (s *Server) PortForward(ctx context.Context, podName, podNamespace string, 
 	}
 
 	if len(forward.Command) > 0 {
-		cmdStream := exec.IOStreams{
-			In:  stream,
-			Out: stream,
-		}
-		return exec.Exec(ctx, "", cmdStream, forward.Command[0], forward.Command[1:]...)
+		return exec.Exec(exec.WithReadWriter(ctx, stream), forward.Command[0], forward.Command[1:]...)
 	}
 
 	if forward.Target != nil {

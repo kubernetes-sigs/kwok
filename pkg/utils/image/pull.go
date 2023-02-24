@@ -35,16 +35,13 @@ func PullImages(ctx context.Context, command string, images []string, quiet bool
 	logger := log.FromContext(ctx)
 
 	for _, image := range images {
-		err := exec.Exec(ctx, "", exec.IOStreams{},
+		err := exec.Exec(ctx,
 			command, "inspect",
 			image,
 		)
 		if err != nil {
 			logger.Info("Pull image", "image", image)
-			err = exec.Exec(ctx, "", exec.IOStreams{
-				Out:    out,
-				ErrOut: out,
-			}, command, "pull",
+			err = exec.Exec(exec.WithAllWriteTo(ctx, out), command, "pull",
 				image,
 			)
 			if err != nil {
