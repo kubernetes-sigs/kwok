@@ -17,7 +17,9 @@ KIND_VERSION=0.17.0
 
 KUBE_VERSION=1.26.0
 
-BUILDX_VERSION=0.10.3
+# TODO: Stay at 0.9 in figuring out the Attestations of buildx.
+# https://github.com/docker/buildx/pull/1412
+BUILDX_VERSION=0.9.1
 
 COMPOSE_VERSION=2.13.0
 
