@@ -33,6 +33,7 @@ function clear_testdata() {
     clear_testdata_goarch "${kind}"
 }
 
+
 function clear_testdata_goos() {
   local kind="${1}"
   if [[ "${kind}" == *"GOOS"* ]]; then
@@ -58,6 +59,8 @@ function main() {
   export PREFIX=prefix
   export STAGING_PREFIX=staging-prefix
   export NUMBER_SUPPORTED_KUBE_RELEASES="${NUMBER_SUPPORTED_KUBE_RELEASES:-3}"
+  export BUILD_DATE=date
+
 
   while read -r line; do
     local args="${line}"
@@ -73,7 +76,7 @@ function main() {
 
     IFS=' ' read -r -a argsArray <<<"${args}"
 
-    got="$(make --no-print-directory -C "${ROOT_DIR}" "${argsArray[@]}" | clear_testdata "${kind}")"
+    got="$(make --no-print-directory -C "${ROOT_DIR}" "${argsArray[@]}" |clear_testdata "${kind}")"
     if [[ "${got}" != "${want}" ]]; then
       diff -u <(echo "${want}") <(echo "${got}")
       failed+=("${name}")

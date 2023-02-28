@@ -22,6 +22,7 @@ BUCKET ?=
 GH_RELEASE ?=
 
 VERSION ?= $(shell ./hack/get-version.sh)
+BUILD_DATE:=$(if $(BUILD_DATE),$(BUILD_DATE),$(shell date -u +'%Y-%m-%dT%H:%M:%SZ'))
 
 BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 
@@ -115,6 +116,7 @@ build:
 		--kube-version=v${LATEST_KUBE_RELEASE} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--pre-release=${PRE_RELEASE} \
+		--build-date=${BUILD_DATE} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
@@ -159,6 +161,7 @@ cross-build:
 		--kube-version=v${LATEST_KUBE_RELEASE} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--pre-release=${PRE_RELEASE} \
+		--build-date=${BUILD_DATE} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 

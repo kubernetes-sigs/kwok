@@ -45,6 +45,10 @@ function usage() {
   echo "  --binary-name <binary-name> is kwok binary name"
   echo "  --version <version> is version of binary"
   echo "  --kube-version <kube-version> is default version of Kubernetes"
+  echo "  --git-commit <git-commit> is the workspace git commit"
+  echo "  --git-tag <git-tag> is the tag build"
+  echo "  --git-tree-state <git-tree-state> is the tree state"
+  echo "  --build-date <build-date> is the build date"
   echo "  --staging-prefix <staging-prefix> is staging prefix for bucket"
   echo "  --push will push binary to bucket"
   echo "  --dry-run just show what would be done"
@@ -99,6 +103,10 @@ function args() {
       [[ "${arg#*=}" != "${arg}" ]] && STAGING_PREFIX="${arg#*=}" || { STAGING_PREFIX="${2}" && shift; } || :
       shift
       ;;
+    --build-date | --build-date=*)
+      [[ "${arg#*=}" != "${arg}" ]] && BUILD_DATE="${arg#*=}" || { BUILD_DATE="${2}" && shift; } || :
+      shift
+      ;;
     --pre-release | --pre-release=*)
       [[ "${arg#*=}" != "${arg}" ]] && PRE_RELEASE="${arg#*=}" || { PRE_RELEASE="${2}" && shift; } || :
       shift
@@ -151,24 +159,28 @@ function main() {
   local tmp_bin
   local extra_args=()
   local prefix
+  PACKAGE="sigs.k8s.io/kwok/pkg/consts"
 
   if [[ "${VERSION}" != "" ]]; then
-    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.Version=${VERSION}")
+    LDFLAGS+=("-X ${PACKAGE}.version=${VERSION}")
   fi
   if [[ "${KUBE_VERSION}" != "" ]]; then
-    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.KubeVersion=${KUBE_VERSION}")
+    LDFLAGS+=("-X ${PACKAGE}.KubeVersion=${KUBE_VERSION}")
   fi
   if [[ "${IMAGE_PREFIX}" != "" ]]; then
-    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=${IMAGE_PREFIX}")
+    LDFLAGS+=("-X ${PACKAGE}.ImagePrefix=${IMAGE_PREFIX}")
   fi
   if [[ "${BINARY_PREFIX}" != "" ]]; then
-    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.BinaryPrefix=${BINARY_PREFIX}")
+    LDFLAGS+=("-X ${PACKAGE}.BinaryPrefix=${BINARY_PREFIX}")
   fi
   if [[ "${BINARY_NAME}" != "" ]]; then
-    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.BinaryName=${BINARY_NAME}")
+    LDFLAGS+=("-X ${PACKAGE}.BinaryName=${BINARY_NAME}")
+  fi
+  if [[ "${BUILD_DATE}" != "" ]]; then
+    LDFLAGS+=("-X ${PACKAGE}.buildDate=${BUILD_DATE}")
   fi
   if [[ "${PRE_RELEASE}" != "" ]]; then
-    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.PreRelease=${PRE_RELEASE}")
+    LDFLAGS+=("-X ${PACKAGE}.PreRelease=${PRE_RELEASE}")
   fi
   if [[ "${#LDFLAGS}" -gt 0 ]]; then
     extra_args+=("-ldflags" "'${LDFLAGS[*]}'")

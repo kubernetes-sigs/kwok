@@ -167,7 +167,7 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 	conf := &config.Options
 
 	if conf.KwokVersion == "" {
-		conf.KwokVersion = consts.Version
+		conf.KwokVersion = consts.GetVersion().String()
 	}
 	conf.KwokVersion = version.AddPrefixV(envs.GetEnvWithPrefix("VERSION", conf.KwokVersion))
 

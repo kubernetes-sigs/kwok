@@ -48,7 +48,7 @@ func DisplayVersion() string {
 
 // DefaultUserAgent returns a User-Agent string built from static global vars.
 func DefaultUserAgent() string {
-	return fmt.Sprintf("%s/%s (%s/%s)", adjustCommand(os.Args[0]), AddPrefixV(versionInfo(consts.Version, consts.PreRelease)), runtime.GOOS, runtime.GOARCH)
+	return fmt.Sprintf("%s/%s (%s/%s)", adjustCommand(os.Args[0]), AddPrefixV(versionInfo(consts.GetVersion().String(), consts.PreRelease)), runtime.GOOS, runtime.GOARCH)
 }
 
 // adjustCommand returns the last component of the

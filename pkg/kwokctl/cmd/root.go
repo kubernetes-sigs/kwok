@@ -35,8 +35,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/start"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/stop"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/version"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
-	"sigs.k8s.io/kwok/pkg/utils/version"
+	versionutil "sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // NewCommand returns a new cobra.Command for root
@@ -45,7 +46,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Args:          cobra.NoArgs,
 		Use:           "kwokctl [command]",
 		Short:         "kwokctl is a tool to streamline the creation and management of clusters, with nodes simulated by kwok",
-		Version:       version.DisplayVersion(),
+		Version:       versionutil.DisplayVersion(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -70,6 +71,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		scale.NewCommand(ctx),
 		snapshot.NewCommand(ctx),
 		export.NewCommand(ctx),
+		version.NewCommand(ctx),
 	)
 	return cmd
 }
