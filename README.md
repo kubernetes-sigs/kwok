@@ -6,10 +6,12 @@
 Under the scene, all Nodes are simulated to behave like real ones, so the overall approach employs
 a pretty low resource footprint that you can easily play around on your laptop.
 
-So far we provide two tools:
+## What is KWOK?
 
-- **kwok:** Core of this repo. It simulates thousands of fake Nodes.
-- **kwokctl:** A CLI to facilitate creating and managing clusters simulated by Kwok.
+KWOK stands for Kubernetes WithOut Kubelet. So far, it provides two tools:
+
+- `kwok` is the cornerstone of this project, responsible for simulating the lifecycle of fake nodes, pods, and other Kubernetes API resources.
+- `kwokctl` is a CLI tool designed to streamline the creation and management of clusters, with nodes simulated by `kwok`.
 
 Please see [our website] for more in-depth information.
 
@@ -18,6 +20,13 @@ Please see [our website] for more in-depth information.
 ## Community
 
 See our own [contributor guide] and the Kubernetes [community page].
+
+### Getting Involved
+
+If you're interested in participating in future discussions or development related to KWOK, there are several ways to get involved:
+
+- Slack: [#kwok] for general usage discussion, [#kwok-dev] for development discussion. (visit [slack.k8s.io] for a workspace invitation)
+- Open Issues/PRs/Discussions in [sigs.k8s.io/kwok]
 
 ### Code of conduct
 
@@ -28,3 +37,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 [community page]: https://kubernetes.io/community/
 [contributor guide]: https://kwok.sigs.k8s.io/docs/contributing/getting-started
 [code of conduct]: https://github.com/kubernetes-sigs/kwok/blob/main/code-of-conduct.md
+[sigs.k8s.io/kwok]: https://sigs.k8s.io/kwok/
+[#kwok]: https://kubernetes.slack.com/messages/kwok/
+[#kwok-dev]: https://kubernetes.slack.com/messages/kwok-dev/
+[slack.k8s.io]: https://slack.k8s.io/

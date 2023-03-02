@@ -39,7 +39,6 @@ If you do not see anything, please file a [new issue] or [new discussion].
 
 The maintainers of this project are reachable via:
 
-- [Kubernetes Slack] in [#kwok], [#kwok-dev] or [#sig-scheduling] channel
 - The issue tracker by [filing an issue][new issue]
 - The discussion tracker by [filing a discussion][new discussion]
 - The Kubernetes [SIG-Scheduling] [Mailing List]
@@ -59,10 +58,6 @@ If you're looking to contribute documentation improvements, you'll want to read 
 [new discussion]: https://github.com/kubernetes-sigs/kwok/discussions/new/choose
 [golang]: https://golang.org/doc/install
 [install docker]: https://docs.docker.com/install/#supported-platforms
-[Kubernetes Slack]: https://slack.k8s.io/
-[#sig-scheduling]: https://kubernetes.slack.com/messages/sig-scheduling/
-[#kwok]: https://kubernetes.slack.com/messages/kwok/
-[#kwok-dev]: https://kubernetes.slack.com/messages/kwok-dev/
 [SIG-Scheduling]: https://github.com/kubernetes/community/blob/master/sig-scheduling/README.md
 [Mailing List]: https://groups.google.com/forum/#!forum/kubernetes-sig-scheduling
 [Kubernetes Contributor Guide]: https://git.k8s.io/community/contributors/guide
