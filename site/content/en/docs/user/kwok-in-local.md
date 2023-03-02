@@ -1,18 +1,13 @@
-# Run `kwok` in the Local
+# Run `kwok` in Your Local
 
 {{< hint "info" >}}
 
-This document walks you through how to run `kwok` in the local.
+This document walks you through how to run `kwok` in your local.
 
 {{< /hint >}}
 
-## Install `kwok`
-
-[Install `kwok`]({{< relref "/docs/user/install" >}}) in the local.
-
-## Run `kwok` in the local
-
-Finally, we're able to run `kwok` in the local for a cluster and maintain their heartbeats:
+After you have [`kwok` installed]({{< relref "/docs/user/install" >}}) in a local computer,
+you can run `kwok` immediately for clusters and maintain their heartbeats:
 
 ``` bash
 kwok \

@@ -20,23 +20,12 @@ KWOK stands for Kubernetes WithOut Kubelet. So far, it provides two tools:
 
 ## Getting Started
 
-The following examples are tested to work with the latest version of `kwok`/`kwokctl`.
+The animation below shows a test process to work with the latest version of `kwok`/`kwokctl`.
 
 <img width="700px" src="/manage-clusters.svg">
 
-### Basic Usage
-
-- [`kwok` Manages Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}) - Basic operations of `kwok` to manage Nodes and Pods
-- `kwok` - maintain Nodes heartbeat and Pods status.
-    - [`kwok` in Cluster]({{< relref "/docs/user/kwok-in-cluster" >}}) - Installing `kwok` in a cluster
-    - [`kwok` in Local]({{< relref "/docs/user/kwok-in-local" >}}) - Run `kwok` in the local for a cluster
-- `kwokctl` - cluster creation, etcd snapshot, etc.
-    - [`kwokctl` Manages Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}}) - Create/Delete a cluster in local where all nodes are managed by `kwok`
-    - [`kwokctl` Snapshots Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}}) - Save/Restore the Etcd data of a cluster created by `kwokctl`
-
-### Contributing
-
-- [Contributing]({{< relref "/docs/contributing/getting-started" >}}) - How to contribute to KWOK
+Welcome to [get started]({{< relref "/docs/user/getting-started" >}}) with the installation, basic usage, custom configuration,
+and [contribution to KWOK]({{< relref "/docs/contributing/getting-started" >}}).
 
 ## `kwokctl` Runtime and OS Support
 
