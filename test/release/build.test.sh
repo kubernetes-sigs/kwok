@@ -24,9 +24,13 @@ VERSION="$("${ROOT_DIR}/hack/get-version.sh")"
 GOOS="$(go env GOOS)"
 GOARCH="$(go env GOARCH)"
 
-SUPPORTED_RELEASES="$(cat "${ROOT_DIR}/supported_releases.txt" | head -n 6)"
+SUPPORTED_KUBE_RELEASES=$(cat "${ROOT_DIR}/supported_releases.txt")
 
-LAST_KUBE_RELEASE="$(cat "${ROOT_DIR}/supported_releases.txt" | head -n 1)"
+NUMBER_SUPPORTED_KUBE_RELEASES=3
+
+KUBE_RELEASES="$(echo "${SUPPORTED_KUBE_RELEASES}" | head -n "${NUMBER_SUPPORTED_KUBE_RELEASES}")"
+
+LAST_KUBE_RELEASE="$(echo "${SUPPORTED_KUBE_RELEASES}" | head -n 1)"
 
 IMAGE_PREFIX=image-prefix
 PREFIX=prefix
@@ -106,41 +110,41 @@ EOF
 }
 
 function want_cluster_image() {
-  cat <<EOF
-docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --load -f ./images/cluster/Dockerfile .
-EOF
+  for v in ${KUBE_RELEASES} ; do
+    echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --load -f ./images/cluster/Dockerfile ."
+  done
 }
 
 function want_cluster_image_nerdctl() {
-  cat <<EOF
-nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f ./images/cluster/Dockerfile .
-EOF
+  for v in ${KUBE_RELEASES} ; do
+    echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
+  done
 }
 
 function want_cluster_image_with_push() {
-  cat <<EOF
-docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile .
-EOF
+  for v in ${KUBE_RELEASES} ; do
+    echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile ."
+  done
 }
 
 function want_cluster_image_nerdctl_with_push() {
-  cat <<EOF
-nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f ./images/cluster/Dockerfile .
-nerdctl push --platform=linux/amd64 cluster:${VERSION}-k8s.v${LAST_KUBE_RELEASE}
-EOF
+  for v in ${KUBE_RELEASES} ; do
+    echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
+    echo "nerdctl push --platform=linux/amd64 cluster:${VERSION}-k8s.v${v}"
+  done
 }
 
 function want_cluster_image_with_push_staging() {
-  cat <<EOF
-docker buildx build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile .
-EOF
+  for v in ${KUBE_RELEASES} ; do
+    echo "docker buildx build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile ."
+  done
 }
 
 function want_cluster_image_nerdctl_with_push_staging() {
-  cat <<EOF
-nerdctl build --build-arg=kube_version=v${LAST_KUBE_RELEASE} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${LAST_KUBE_RELEASE} --platform=linux/amd64 -f ./images/cluster/Dockerfile .
-nerdctl push --platform=linux/amd64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${LAST_KUBE_RELEASE}
-EOF
+  for v in ${KUBE_RELEASES} ; do
+    echo "nerdctl build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
+    echo "nerdctl push --platform=linux/amd64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
+  done
 }
 
 function want_cross_build() {
@@ -298,38 +302,38 @@ EOF
 }
 
 function want_cross_cluster_image() {
-  for v in ${SUPPORTED_RELEASES} ; do
+  for v in ${KUBE_RELEASES} ; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --load -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl() {
-  for v in ${SUPPORTED_RELEASES} ; do
+  for v in ${KUBE_RELEASES} ; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_with_push() {
-  for v in ${SUPPORTED_RELEASES} ; do
+  for v in ${KUBE_RELEASES} ; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl_with_push() {
-  for v in ${SUPPORTED_RELEASES} ; do
+  for v in ${KUBE_RELEASES} ; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 --platform=linux/arm64 cluster:${VERSION}-k8s.v${v}"
   done
 }
 
 function want_cross_cluster_image_with_push_staging() {
-  for v in ${SUPPORTED_RELEASES} ; do
+  for v in ${KUBE_RELEASES} ; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl_with_push_staging() {
-  for v in ${SUPPORTED_RELEASES} ; do
+  for v in ${KUBE_RELEASES} ; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 --platform=linux/arm64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
   done
@@ -338,6 +342,7 @@ function want_cross_cluster_image_nerdctl_with_push_staging() {
 function main() {
   failed=()
   export DRY_RUN=true
+  export NUMBER_SUPPORTED_KUBE_RELEASES="${NUMBER_SUPPORTED_KUBE_RELEASES}"
   make --no-print-directory -C "${ROOT_DIR}" build | diff -u <(want_build) - || failed+=("build")
   make --no-print-directory -C "${ROOT_DIR}" PUSH=true BUCKET=bucket build | diff -u <(want_build_with_push_bucket) - || failed+=("build-with-push-bucket")
   make --no-print-directory -C "${ROOT_DIR}" PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} build | diff -u <(want_build_with_push_bucket_staging) - || failed+=("build-with-push-bucket-staging")

@@ -27,7 +27,17 @@ BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 EXTRA_TAGS ?=
 
-SUPPORTED_RELEASES ?= $(shell cat ./supported_releases.txt)
+# The list of supported kube releases
+SUPPORTED_KUBE_RELEASES ?= $(shell cat ./supported_releases.txt)
+
+# The number of supported kube releases
+NUMBER_SUPPORTED_KUBE_RELEASES ?= 1
+
+# Get the first N kube releases
+KUBE_RELEASES ?= $(shell echo $(SUPPORTED_KUBE_RELEASES) | cut -d ' ' -f 1-$(NUMBER_SUPPORTED_KUBE_RELEASES))
+
+# The latest kube release
+LATEST_KUBE_RELEASE ?= $(shell echo $(SUPPORTED_KUBE_RELEASES) | cut -d ' ' -f 1)
 
 BINARY ?= kwok kwokctl
 
@@ -101,7 +111,7 @@ build: vendor
 		--binary-prefix=${BINARY_PREFIX} \
 		--binary-name=${BINARY_NAME} \
 		--version=${VERSION} \
-		--kube-version=v$(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n 1 ) \
+		--kube-version=v${LATEST_KUBE_RELEASE} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
@@ -125,7 +135,7 @@ build-cluster-image:
 ifeq ($(GOOS),linux)
 	@make build image cluster-image
 else ifeq ($(GOOS),darwin)
-	@make BINARY=kwok BINARY_PLATFORMS=linux/$(GOARCH) cross-build && \
+	@make BINARY_PLATFORMS=linux/$(GOARCH) cross-build && \
 		make IMAGE_PLATFORMS=linux/$(GOARCH) cross-image cross-cluster-image
 else
 	@echo "Unsupported OS: $(GOOS)"
@@ -144,7 +154,7 @@ cross-build: vendor
 		--binary-prefix=${BINARY_PREFIX} \
 		--binary-name=${BINARY_NAME} \
 		--version=${VERSION} \
-		--kube-version=v$(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n 1 ) \
+		--kube-version=v${LATEST_KUBE_RELEASE} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
@@ -178,8 +188,8 @@ cross-image:
 .PHONY: cluster-image
 cluster-image:
 	@./images/cluster/build.sh \
+		$(addprefix --kube-version=v, $(KUBE_RELEASES)) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
-		--kube-version=v$(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n 1 ) \
 		--image=${CLUSTER_IMAGE} \
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
@@ -192,7 +202,7 @@ cluster-image:
 cross-cluster-image:
 	@./images/cluster/build.sh \
 		$(addprefix --platform=, $(IMAGE_PLATFORMS)) \
-		$(addprefix --kube-version=v, $(shell echo $(SUPPORTED_RELEASES) | tr ' ' '\n' | head -n 6 )) \
+		$(addprefix --kube-version=v, $(KUBE_RELEASES)) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${CLUSTER_IMAGE} \
 		--version=${VERSION} \
