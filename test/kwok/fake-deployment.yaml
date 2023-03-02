@@ -23,9 +23,9 @@ spec:
                     values:
                       - kwok-controller
       tolerations:
-        - key: "kwok-controller/provider"
-          operator: "Exists"
-          effect: "NoSchedule"
+        - key: kwok-controller/provider
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: fake-container
           image: fake

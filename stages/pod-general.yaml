@@ -8,10 +8,10 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'DoesNotExist'
-      - key: '.status.podIP'
-        operator: 'DoesNotExist'
+      - key: .metadata.deletionTimestamp
+        operator: DoesNotExist
+      - key: .status.podIP
+        operator: DoesNotExist
   weight: 1
   delay:
     durationMilliseconds: 1000
@@ -23,7 +23,7 @@ spec:
       message: Created container
     finalizers:
       add:
-        - value: 'kwok.x-k8s.io/fake'
+        - value: kwok.x-k8s.io/fake
     statusTemplate: |
       {{ $now := Now }}
       {{ $nodeName := .spec.nodeName }}
@@ -96,7 +96,7 @@ spec:
         {{ end }}
       {{ end }}
       {{ with .status }}
-      hostIP: {{ with .hostIP -}} 
+      hostIP: {{ with .hostIP -}}
         {{- . -}}
       {{- else -}}
         {{- NodeIP $nodeName -}}
@@ -124,18 +124,18 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'DoesNotExist'
-      - key: '.status.phase'
-        operator: 'In'
+      - key: .metadata.deletionTimestamp
+        operator: DoesNotExist
+      - key: .status.phase
+        operator: In
         values:
-          - 'Pending'
-      - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
-        operator: 'NotIn'
+          - Pending
+      - key: .status.conditions.[] | select( .type == "Initialized" ) | .status
+        operator: NotIn
         values:
-          - 'True'
-      - key: '.status.initContainerStatuses.[].state.waiting.reason'
-        operator: 'Exists'
+          - "True"
+      - key: .status.initContainerStatuses.[].state.waiting.reason
+        operator: Exists
   weight: 1
   delay:
     durationMilliseconds: 1000
@@ -167,18 +167,18 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'DoesNotExist'
-      - key: '.status.phase'
-        operator: 'In'
+      - key: .metadata.deletionTimestamp
+        operator: DoesNotExist
+      - key: .status.phase
+        operator: In
         values:
-          - 'Pending'
-      - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
-        operator: 'NotIn'
+          - Pending
+      - key: .status.conditions.[] | select( .type == "Initialized" ) | .status
+        operator: NotIn
         values:
-          - 'True'
-      - key: '.status.initContainerStatuses.[].state.running.startedAt'
-        operator: 'Exists'
+          - "True"
+      - key: .status.initContainerStatuses.[].state.running.startedAt
+        operator: Exists
   weight: 1
   delay:
     durationMilliseconds: 1000
@@ -229,20 +229,20 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'DoesNotExist'
-      - key: '.status.phase'
-        operator: 'In'
+      - key: .metadata.deletionTimestamp
+        operator: DoesNotExist
+      - key: .status.phase
+        operator: In
         values:
-          - 'Pending'
-      - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
-        operator: 'In'
+          - Pending
+      - key: .status.conditions.[] | select( .type == "Initialized" ) | .status
+        operator: In
         values:
-          - 'True'
-      - key: '.status.conditions.[] | select( .type == "ContainersReady" ) | .status'
-        operator: 'NotIn'
+          - "True"
+      - key: .status.conditions.[] | select( .type == "ContainersReady" ) | .status
+        operator: NotIn
         values:
-          - 'True'
+          - "True"
   weight: 1
   delay:
     durationMilliseconds: 1000
@@ -289,20 +289,20 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'DoesNotExist'
-      - key: '.status.phase'
-        operator: 'In'
+      - key: .metadata.deletionTimestamp
+        operator: DoesNotExist
+      - key: .status.phase
+        operator: In
         values:
-          - 'Running'
-      - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
-        operator: 'In'
+          - Running
+      - key: .status.conditions.[] | select( .type == "Ready" ) | .status
+        operator: In
         values:
-          - 'True'
-      - key: '.metadata.ownerReferences.[].kind'
-        operator: 'In'
+          - "True"
+      - key: .metadata.ownerReferences.[].kind
+        operator: In
         values:
-          - 'Job'
+          - Job
   weight: 1
   delay:
     durationMilliseconds: 1000
@@ -339,12 +339,12 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'Exists'
-      - key: '.metadata.finalizers.[]'
-        operator: 'In'
+      - key: .metadata.deletionTimestamp
+        operator: Exists
+      - key: .metadata.finalizers.[]
+        operator: In
         values:
-          - 'kwok.x-k8s.io/fake'
+          - kwok.x-k8s.io/fake
   weight: 1
   delay:
     durationMilliseconds: 1000
@@ -352,7 +352,7 @@ spec:
   next:
     finalizers:
       remove:
-        - value: 'kwok.x-k8s.io/fake'
+        - value: kwok.x-k8s.io/fake
     event:
       type: Normal
       reason: Killing
@@ -368,14 +368,14 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'Exists'
-      - key: '.metadata.finalizers'
-        operator: 'DoesNotExist'
+      - key: .metadata.deletionTimestamp
+        operator: Exists
+      - key: .metadata.finalizers
+        operator: DoesNotExist
   weight: 1
   delay:
     durationMilliseconds: 1000
     jitterDurationFrom:
-      expressionFrom: '.metadata.deletionTimestamp'
+      expressionFrom: .metadata.deletionTimestamp
   next:
     delete: true

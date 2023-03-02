@@ -7,7 +7,8 @@ body:
     attributes:
       label: What would you like to be added?
       description: |
-        Feature requests are unlikely to make progress as issues. Please consider engaging with SIGs on slack and mailing lists, instead.
+        Feature requests are unlikely to make progress as issues.
+        Please consider engaging with SIGs on slack and mailing lists, instead.
         A proposal that works through the design along with the implications of the change can be opened as a KEP.
         See https://git.k8s.io/enhancements/keps#kubernetes-enhancement-proposals-keps
     validations:

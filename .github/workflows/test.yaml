@@ -5,7 +5,7 @@ on:
   push:
 
 env:
-  DOCKER_CLI_EXPERIMENTAL: "enabled"
+  DOCKER_CLI_EXPERIMENTAL: enabled
   CGO_ENABLED: "0"
 
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#concurrency

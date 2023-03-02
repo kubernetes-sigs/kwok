@@ -5,7 +5,7 @@ on:
       - v*
 
 env:
-  PUSH: 'true'
+  PUSH: "true"
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:

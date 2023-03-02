@@ -64,11 +64,11 @@ linters-settings:
   stylecheck:
     go: "1.19"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
-    checks: [ "all", "-ST1000", "-ST1003" ]
+    checks: [all, -ST1000, -ST1003]
   depguard:
     include-go-root: true
     packages:
-      - io/ioutil # https://go.dev/doc/go1.16#ioutil
+      - io/ioutil  # https://go.dev/doc/go1.16#ioutil
   gocyclo:
     min-complexity: 40
   gosec:
@@ -83,11 +83,11 @@ linters-settings:
 issues:
   max-same-issues: 0
   max-issues-per-linter: 0
-  # We are disabling default golangci exclusions because we want to help reviewers to focus on reviewing the most relevant
-  # changes in PRs and avoid nitpicking.
+  # We are disabling default golangci exclusions because we want to help reviewers to
+  # focus on reviewing the most relevant changes in PRs and avoid nitpicking.
   exclude-use-default: false
   # List of regexps of issue texts to exclude, empty list by default.
-  exclude: []
+  exclude: [ ]
   exclude-rules:
     # With Go 1.16, the new embed directive can be used with an un-named import,
     # revive (previously, golint) only allows these to be imported in a main.go, which wouldn't work for us.

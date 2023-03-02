@@ -17,8 +17,9 @@ body:
     id: problem
     attributes:
       label: What happened?
-      description: |
-        Please provide as much info as possible. Not doing so may result in your bug not being addressed in a timely manner.
+      description: >
+        Please provide as much info as possible.
+        Not doing so may result in your bug not being addressed in a timely manner.
         If this matter is security related, please disclose it privately via https://kubernetes.io/security
     validations:
       required: true
@@ -67,7 +68,7 @@ body:
       label: OS version
       value: |
         <details>
-        ```console        
+        ```console
         # On Linux:
         $ cat /etc/os-release
         # paste output here

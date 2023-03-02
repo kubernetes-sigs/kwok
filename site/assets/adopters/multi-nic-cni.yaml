@@ -1,5 +1,7 @@
 name: Multi-NIC CNI
-description: We leverage kwok to perform scalability test on a kind cluster and push to GitHub CI Actions for Multi-NIC operator
+description: >-
+  We leverage kwok to perform scalability test on
+  a kind cluster and push to GitHub CI Actions for Multi-NIC operator
 contacts:
   - sunya-ch
 links:
