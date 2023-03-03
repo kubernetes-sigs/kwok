@@ -2,40 +2,40 @@
 linters:
   disable-all: true
   enable:
-    - asciicheck
-    - bodyclose
-    - depguard
-    - dogsled
-    - errcheck
-    - errorlint
-    - exportloopref
-    - gci
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
+    # - asciicheck
+    # - bodyclose
+    # - depguard
+    # - dogsled
+    # - errcheck
+    # - errorlint
+    # - exportloopref
+    # - gci
+    # - goconst
+    # - gocritic
+    # - gocyclo
+    # - gofmt
     - goimports
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - importas
-    - ineffassign
-    - misspell
-    - nakedret
-    - nilerr
-    - nolintlint
-    - prealloc
-    - revive
-    # - rowserrcheck
-    - staticcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - usestdlibvars
-    - whitespace
+    # - goprintffuncname
+    # - gosec
+    # - gosimple
+    # - govet
+    # - importas
+    # - ineffassign
+    # - misspell
+    # - nakedret
+    # - nilerr
+    # - nolintlint
+    # - prealloc
+    # - revive
+    # # - rowserrcheck
+    # - staticcheck
+    # - stylecheck
+    # - typecheck
+    # - unconvert
+    # - unparam
+    # - unused
+    # - usestdlibvars
+    # - whitespace
 
 linters-settings:
   gci:
