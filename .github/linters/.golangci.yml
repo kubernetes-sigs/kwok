@@ -1,0 +1,97 @@
+# https://golangci-lint.run/usage/linters
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - depguard
+    - dogsled
+    - errcheck
+    - errorlint
+    - exportloopref
+    - gci
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - misspell
+    - nakedret
+    - nilerr
+    - nolintlint
+    - prealloc
+    - revive
+    # - rowserrcheck
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - whitespace
+
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(sigs.k8s.io/kwok)
+      - blank
+      - dot
+    skip-generated: true
+    custom-order: true
+  importas:
+    no-unaliased: true
+    alias:
+      # Kubernetes
+      - pkg: k8s.io/api/core/v1
+        alias: corev1
+      - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
+        alias: apiextensionsv1
+      - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+        alias: metav1
+      - pkg: k8s.io/apimachinery/pkg/api/errors
+        alias: apierrors
+  staticcheck:
+    go: "1.19"
+  stylecheck:
+    go: "1.19"
+    # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
+    checks: [all, -ST1000, -ST1003]
+  depguard:
+    include-go-root: true
+    packages:
+      - io/ioutil  # https://go.dev/doc/go1.16#ioutil
+  gocyclo:
+    min-complexity: 40
+  gosec:
+    excludes:
+      - G110
+      - G304
+    config:
+      G301: "0750"
+      G302: "0640"
+      G306: "0640"
+
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0
+  # We are disabling default golangci exclusions because we want to help reviewers to
+  # focus on reviewing the most relevant changes in PRs and avoid nitpicking.
+  exclude-use-default: false
+  # List of regexps of issue texts to exclude, empty list by default.
+  exclude: [ ]
+  exclude-rules:
+    # With Go 1.16, the new embed directive can be used with an un-named import,
+    # revive (previously, golint) only allows these to be imported in a main.go, which wouldn't work for us.
+    # This directive allows the embed package to be imported with an underscore everywhere.
+    - linters:
+        - revive
+      source: _ "embed"
