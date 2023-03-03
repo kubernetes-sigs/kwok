@@ -26,6 +26,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/wzshiming/ctc"
+	//nolint:depguard
 	"golang.org/x/exp/slog"
 	"golang.org/x/term"
 

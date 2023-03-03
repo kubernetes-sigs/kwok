@@ -17,6 +17,7 @@ limitations under the License.
 package log
 
 import (
+	//nolint:depguard
 	"golang.org/x/exp/slog"
 )
 

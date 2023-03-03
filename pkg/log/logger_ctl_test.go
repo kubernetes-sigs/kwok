@@ -20,6 +20,7 @@ import (
 	"errors"
 	"testing"
 
+	//nolint:depguard
 	"golang.org/x/exp/slog"
 )
 
