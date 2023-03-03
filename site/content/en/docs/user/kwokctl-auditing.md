@@ -1,4 +1,4 @@
-# Kwokctl Auditing
+# `kwokctl` Auditing
 
 {{< hint "info" >}}
 

@@ -2,7 +2,7 @@
 
 {{< hint "info" >}}
 
-This document walks you through how to configure Kwok/Kwokctl options.
+This document walks you through how to configure `kwok`/`kwokctl` options.
 
 {{< /hint >}}
 
@@ -23,7 +23,7 @@ apiVersion: kwok.x-k8s.io/v1alpha1
 options:
 ```
 
-This config specifies that we are configuring Kwok/Kwokctl and that the version of the config we are using is `v1alpha1` (`apiVersion: kwok.x-k8s.io/v1alpha1`).
+This config specifies that we are configuring `kwok`/`kwokctl` and that the version of the config we are using is `v1alpha1` (`apiVersion: kwok.x-k8s.io/v1alpha1`).
 
 Different versions may support different options and behaviors, which is why we must always specify the version. This mechanism is inspired by Kubernetes resources and component config.
 
@@ -40,10 +40,10 @@ Uses the following precedence order. Each item takes precedence over the item be
 3. values specified in the configuration file (`--config=` or `~/.kwok/kwok.yaml`)
 4. default values
 
-## Using Kwok
+## Using `kwok`
 
-When using Kwok, it takes the configuration about itself from the configuration file and ignores all other configurations.
+When using `kwok`, it takes the configuration about itself from the configuration file and ignores all other configurations.
 
-## Using Kwokctl
+## Using `kwokctl`
 
-When using Kwokctl, it takes the configuration about itself from the configuration file and passes the configuration file to Kwok.
+When using `kwokctl`, it takes the configuration about itself from the configuration file and passes the configuration file to `kwok`.

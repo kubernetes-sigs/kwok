@@ -1,4 +1,4 @@
-# Deploy Kwok in a Cluster
+# Deploy `kwok` in a Cluster
 
 {{< hint "info" >}}
 
@@ -11,7 +11,7 @@ This document walks you through how to deploy `kwok` in a Kubernetes cluster.
 ``` bash
 # Temporary directory
 KWOK_WORK_DIR=$(mktemp -d)
-# Kwok repository
+# KWOK repository
 KWOK_REPO=kubernetes-sigs/kwok
 # Get latest
 KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
@@ -39,7 +39,7 @@ Next, render it with the prepared variables.
 kubectl kustomize "${KWOK_WORK_DIR}" > "${KWOK_WORK_DIR}/kwok.yaml"
 ```
 
-## Kwok deployment
+## `kwok` deployment
 
 Finally, we're able to deploy `kwok`:
 
