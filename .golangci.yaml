@@ -69,6 +69,12 @@ linters-settings:
     include-go-root: true
     packages:
       - io/ioutil # https://go.dev/doc/go1.16#ioutil
+    packages-with-error-message:
+      # Use sigs.k8s.io/kwok/pkg/log, which is a wrapper around slog
+      - k8s.io/klog/v2: "please use `sigs.k8s.io/kwok/pkg/log`instead"
+      - k8s.io/klog: "please use `sigs.k8s.io/kwok/pkg/log instead"
+      - golang.org/x/exp/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+      - log: "please use `sigs.k8s.io/kwok/pkg/log` instead"
   gocyclo:
     min-complexity: 40
   gosec:
