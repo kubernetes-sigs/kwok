@@ -19,13 +19,13 @@ brew install kwok
 ### Variables preparation
 
 ``` bash
-# Kwok repository
+# KWOK repository
 KWOK_REPO=kubernetes-sigs/kwok
 # Get latest
 KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
 ```
 
-### Install Kwokctl
+### Install `kwokctl`
 
 ``` bash
 wget -O kwokctl -c "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/kwokctl-$(go env GOOS)-$(go env GOARCH)"
@@ -33,7 +33,7 @@ chmod +x kwokctl
 sudo mv kwokctl /usr/local/bin/kwokctl
 ```
 
-### Install Kwok
+### Install `kwok`
 
 ``` bash
 wget -O kwok -c "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/kwok-$(go env GOOS)-$(go env GOARCH)"

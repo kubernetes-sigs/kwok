@@ -8,7 +8,7 @@ This document walks you through how to configure the Stages of Lifecycle
 
 ## What is a Stage?
 
-The Stage API is a [Kwok Configuration](./configuration) that allows users to define and simulate different stages in the lifecycle of Kubernetes resources, such as nodes and pods.
+The Stage API is a [`kwok` Configuration](./configuration) that allows users to define and simulate different stages in the lifecycle of Kubernetes resources, such as nodes and pods.
 Each Stage resource specifies a resourceRef field that identifies the type of resource that the stage applies to, and a selector field that determines when the stage should be executed.
 
 A Stage resource has the following fields:
@@ -71,7 +71,7 @@ The `<expressions-string>` is provided by the [Go Implementation](https://github
 
 ### Node Stages
 
-This example shows how to configure the simplest and fastest stages of Node resource, which is also the default Node stages for Kwok.
+This example shows how to configure the simplest and fastest stages of Node resource, which is also the default Node stages for `kwok`.
 
 [Default Node Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/node-fast.yaml)
 
@@ -97,7 +97,7 @@ When applied, maintain the `status.conditions` field for the node.
 
 ### Pod Stages
 
-This example shows how to configure the simplest and fastest stages of Pod resource, which is also the default Pod stages for Kwok.
+This example shows how to configure the simplest and fastest stages of Pod resource, which is also the default Pod stages for `kwok`.
 
 [Default Pod Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-fast.yaml)
 

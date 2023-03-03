@@ -7,12 +7,12 @@ headless: true
   - **Quick Start**
     - [All in One Image]({{< relref "/docs/user/all-in-one-image" >}})
     - [Install]({{< relref "/docs/user/install" >}})
-    - [Kwok in Cluster]({{< relref "/docs/user/kwok-in-cluster" >}})
-    - [Kwok in Local]({{< relref "/docs/user/kwok-in-local" >}})
-    - [Kwokctl Manage Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}})
+    - [`kwok` in Cluster]({{< relref "/docs/user/kwok-in-cluster" >}})
+    - [`kwok` in Local]({{< relref "/docs/user/kwok-in-local" >}})
+    - [`kwokctl` Manages Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}})
     - [Manage Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}})
-  - [Kwokctl Snapshot Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}})
-  - [Kwokctl Auditing]({{< relref "/docs/user/kwokctl-auditing" >}})
+  - [`kwokctl` Snapshots Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}})
+  - [`kwokctl` Auditing]({{< relref "/docs/user/kwokctl-auditing" >}})
   - **Configuration**
     - [Options]({{< relref "/docs/user/configuration" >}})
     - [Stages]({{< relref "/docs/user/stages-configuration" >}})

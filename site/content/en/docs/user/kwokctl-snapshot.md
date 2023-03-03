@@ -1,4 +1,4 @@
-# Kwokctl Save/Restore a Cluster
+# Save/Restore a Cluster with `kwokctl`
 
 {{< hint "info" >}}
 

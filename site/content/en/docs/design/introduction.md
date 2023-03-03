@@ -2,7 +2,7 @@
 
 {{< hint "info" >}}
 
-This document will introduce the design of Kwok.
+This document will introduce the design of KWOK.
 
 {{< /hint >}}
 

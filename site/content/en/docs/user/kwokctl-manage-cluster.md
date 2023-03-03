@@ -1,4 +1,4 @@
-# Use Kwokctl Create a Cluster
+# Create a Cluster with `kwokctl`
 
 {{< hint "info" >}}
 
@@ -6,9 +6,9 @@ This document walks you through how to run `kwokctl` to manage fake clusters.
 
 {{< /hint >}}
 
-## Install Kwokctl
+## Install `kwokctl`
 
-[Install Kwokctl]({{< relref "/docs/user/install" >}}) in the local.
+[Install `kwokctl`]({{< relref "/docs/user/install" >}}) in the local.
 
 ## Create a Cluster
 
