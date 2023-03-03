@@ -1,0 +1,28 @@
+name: Lint Code Base
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # https://github.com/github/super-linter
+      - name: Lint Code Base
+        uses: github/super-linter/slim@v4
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: "true" # TODO: remove this once all linters are enabled
+          VALIDATE_GO: "false"
+          VALIDATE_NATURAL_LANGUAGE: "false"
+          VALIDATE_JSCPD: "false"
+          VALIDATE_GITHUB_ACTIONS: "false"
+          VALIDATE_YAML: "false"
+          VALIDATE_JSON: "false"
+          VALIDATE_MARKDOWN: "false"
+          VALIDATE_BASH: "false"
+          VALIDATE_SHELL_SHFMT: "false"
+          VALIDATE_CSS: "false"
