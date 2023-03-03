@@ -17,3 +17,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_GO: "true"
           IGNORE_GITIGNORED_FILES: "true"
+          GO_LINTER_RULES: ".github/linters/.golangci.yml"
