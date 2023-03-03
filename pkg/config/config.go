@@ -265,6 +265,10 @@ func loadRawConfig(p string) ([]json.RawMessage, error) {
 			}
 			return nil, err
 		}
+		if len(raw) == 0 {
+			// Ignore empty documents
+			continue
+		}
 		raws = append(raws, raw)
 	}
 	return raws, nil
