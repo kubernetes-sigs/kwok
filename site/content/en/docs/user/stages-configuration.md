@@ -2,7 +2,7 @@
 
 {{< hint "info" >}}
 
-This document walks you through how to configure the Stages of Lifecycle
+This document walks you through how to configure the Stages of Lifecycle.
 
 {{< /hint >}}
 
@@ -62,6 +62,8 @@ This can be useful for simulating real-world scenarios where events do not alway
 
 By configuring the `delay`, `selector`, and `next` fields in a Stage, you can control when and how the stage is applied,
 providing a flexible and scalable way to simulate real-world scenarios in your Kubernetes cluster.
+This allows you to create complex and realistic simulations for testing, validation, and experimentation,
+and gain insights into the behavior and performance of your applications and infrastructure.
 
 ## Expressions string
 
@@ -88,12 +90,12 @@ stateDiagram-v2
 
 {{< /mermaid >}}
 
-The `node-initialize` Stage will be applied to nodes that do not have any conditions set in their `status.conditions` field.
-When applied, this Stage will set the `status.conditions` field for the node, as well as the `status.addresses`, `status.allocatable`,
+The `node-initialize` Stage is applied to nodes that do not have any conditions set in their `status.conditions` field.
+When applied, this Stage sets the `status.conditions` field for the node, as well as the `status.addresses`, `status.allocatable`,
 and `status.capacity` fields.
 
-The `node-heartbeat` Stage will be applied to nodes that have the `Ready` condition set to `True` in their `status.conditions` field.
-When applied, maintain the `status.conditions` field for the node.
+The `node-heartbeat` Stage is applied to nodes that have the `Ready` condition set to `True` in their `status.conditions` field.
+When applied, this Stage maintains the `status.conditions` field for the node.
 
 ### Pod Stages
 
@@ -117,17 +119,17 @@ stateDiagram-v2
 
 {{< /mermaid >}}
 
-The `pod-create-and-ready` Stage will be applied to pods that do not have a `status.podIP` set and do not have a `metadata.deletionTimestamp` set.
-When applied, this Stage will set the `status.conditions`, `status.containerStatuses`, and `status.initContainerStatuses` fields for the pod,
+The `pod-create-and-ready` Stage is applied to pods that do not have a `status.podIP` set and do not have a `metadata.deletionTimestamp` set.
+When applied, this Stage sets the `status.conditions`, `status.containerStatuses`, and `status.initContainerStatuses` fields for the pod,
 as well as the `status.hostIP` and `status.podIP` fields. It will also set the phase and startTime fields, indicating that the pod is running and has been started.
 
-The `pod-completed-for-job` Stage will be applied to pods that are running, do not have a `metadata.deletionTimestamp` set,
-and are owned by a Job. When applied, this Stage will update the `status.containerStatuses` field for the pod,
+The `pod-completed-for-job` Stage is applied to pods that are running, do not have a `metadata.deletionTimestamp` set,
+and are owned by a Job. When applied, this Stage updates the `status.containerStatuses` field for the pod,
 setting the ready and started fields to true and the `state.terminated` field to indicate that the pod has completed.
-It will also set the phase field to Succeeded, indicating that the pod has completed successfully.
+It also sets the phase field to Succeeded, indicating that the pod has completed successfully.
 
-The `pod-delete` Stage will be applied to pods that have a `metadata.deletionTimestamp` set.
-When applied, this Stage will empty the `metadata.finalizers` field for the pod, allowing it to be deleted, and then delete the pod.
+The `pod-delete` Stage is applied to pods that have a `metadata.deletionTimestamp` set.
+When applied, this Stage empties the `metadata.finalizers` field for the pod, allowing it to be deleted, and then delete the pod.
 
 <img width="700px" src="/stages-pod-fast.svg">
 
@@ -135,7 +137,7 @@ When applied, this Stage will empty the `metadata.finalizers` field for the pod,
 
 [General Pod Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-general.yaml)
 
-This Stages will simulate real Pod behavior as closely as possible in the future,
+These Stages simulate real Pod behavior as closely as possible in the future,
 which is not perfect at the moment, so the refinement of this configuration is still a **Work In Progress**.
 
 <img width="700px" src="/stages-pod-general.svg">

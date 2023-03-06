@@ -18,9 +18,9 @@ This document will introduce the design of KWOK.
 
 ### Scheduler
 
-As a scheduler developer, I want to test the scheduler with a large number of Nodes and Pods,
+As a scheduler developer, I want to test the scheduler with a large number of Nodes and Pods.
 
-### CRD Controller 
+### CRD Controller
 
 As a CRD controller developer, I want to test the controller without fake clients.
 
