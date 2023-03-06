@@ -4,6 +4,7 @@ headless: true
 
 - [Home]({{< relref "/" >}})
 - **User Guide**
+  - [Getting Started]({{< relref "/docs/user/getting-started" >}})
   - **Quick Start**
     - [All in One Image]({{< relref "/docs/user/all-in-one-image" >}})
     - [Install]({{< relref "/docs/user/install" >}})
