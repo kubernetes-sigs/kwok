@@ -27,7 +27,7 @@ This config specifies that we are configuring `kwok`/`kwokctl` and that the vers
 
 Different versions may support different options and behaviors, which is why we must always specify the version. This mechanism is inspired by Kubernetes resources and component config.
 
-To use this config, place the contents in a file `~/.kwok/kwok.yaml` or run command with `--config=kwok.yaml` from the same directory.
+To use this config, place the contents in a file `~/.kwok/kwok.yaml` or run the command with `--config=kwok.yaml` from the same directory.
 
 The structure of the Configuration type is defined by a Go struct, which is described [here](https://pkg.go.dev/sigs.k8s.io/kwok/pkg/apis/v1alpha1).
 
@@ -42,8 +42,8 @@ Uses the following precedence order. Each item takes precedence over the item be
 
 ## Using `kwok`
 
-When using `kwok`, it takes the configuration about itself from the configuration file and ignores all other configurations.
+When using `kwok`, it takes its configuration from the configuration file and ignores all other configurations.
 
 ## Using `kwokctl`
 
-When using `kwokctl`, it takes the configuration about itself from the configuration file and passes the configuration file to `kwok`.
+When using `kwokctl`, it takes its configuration from the configuration file and passes the configuration file to `kwok`.

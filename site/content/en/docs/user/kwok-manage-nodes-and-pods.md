@@ -8,15 +8,19 @@ This document walks you through how to manage nodes and pods with `kwok`.
 
 ## kwok with args `--manage-all-nodes=true`
 
-`kwok` will be in charge of all nodes in the cluster and maintain their heartbeats to API Server. In this way, all nodes will behave like real nodes and stay in `Ready` state.
+With the `--manage-all-nodes=true` argument, `kwok` will be in charge of all nodes
+in the cluster and maintain their heartbeats to the API Server.
+In this way, all nodes will behave like real nodes and stay in the `Ready` state.
 
 ## kwok with args `--manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake`
 
-`kwok` will be in charge of all Pods with annotation `kwok.x-k8s.io/node=fake`. If they carry an accurate `.spec.nodeName` filed, `kwok` will ensure they stay in the `Running` state.
+With the `--manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake` argument,
+`kwok` will be in charge of all pods with the annotation `kwok.x-k8s.io/node=fake`.
+If they carry an accurate `.spec.nodeName` field, `kwok` will ensure they stay in the `Running` state.
 
 ## Create a Node
 
-With `kwok`, you can join arbitrary Node(s) just by simply creating `v1.Node` object(s):
+With `kwok`, you can join arbitrary Node(s) simply by creating `v1.Node` object(s):
 
 > The status can be any value.
 

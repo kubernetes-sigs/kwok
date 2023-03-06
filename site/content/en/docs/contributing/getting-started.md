@@ -15,19 +15,19 @@ This document provides details on how to contribute to the project.
 
 Our source code is written in [golang] and managed with [git].
 
-On create clusters and builds you will need to [install docker].
+To create clusters and builds you will need to [install docker].
 
 ## Reaching out
 
-Please check [the issues] or [the discussions] to see if there is any existing discussion or work related to your interests.
+Please check [the issues] or [the discussions] to see if there are any existing discussions or work related to your interests.
 
 In particular, if you're just getting started, you may want to look for issues labeled
 {{< ghlabel background="#7057ff" href="https://github.com/kubernetes-sigs/kwok/labels/good first issue" >}}good first issue{{< /ghlabel >}}
 or
-{{< ghlabel background="#006b75" href="https://github.com/kubernetes-sigs/kwok/labels/help wanted" >}}help wanted{{< /ghlabel >}}
+{{< ghlabel background="#006b75" href="https://github.com/kubernetes-sigs/kwok/labels/help wanted" >}}help wanted{{< /ghlabel >}},
 which are standard labels in the Kubernetes project.
 
-If you're interested in working on any of these, leave a comment to let us know!
+If you're interested in working on any of these, please leave a comment to let us know!
 
 If you do not see anything, please file a [new issue] or [new discussion].
 
