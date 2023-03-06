@@ -19,7 +19,6 @@ package config
 import (
 	"context"
 	"fmt"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -39,13 +38,7 @@ var (
 	DefaultCluster = "kwok"
 
 	// WorkDir is the directory of the work spaces.
-	WorkDir = envs.GetEnvWithPrefix("WORKDIR", func() string {
-		dir, err := os.UserHomeDir()
-		if err != nil || dir == "" {
-			return path.Join(os.TempDir(), consts.ProjectName)
-		}
-		return path.Join(dir, "."+consts.ProjectName)
-	}())
+	WorkDir = envs.GetEnvWithPrefix("WORKDIR", path.WorkDir())
 
 	// ClustersDir is the directory of the clusters.
 	ClustersDir = path.Join(WorkDir, "clusters")

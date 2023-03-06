@@ -33,13 +33,18 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config/compatibility"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // Load loads the given path into the context.
-func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
+func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 	var raws []json.RawMessage
 
-	for _, p := range path {
+	for _, p := range src {
+		p, err := path.Expand(p)
+		if err != nil {
+			return nil, err
+		}
 		r, err := loadRawConfig(p)
 		if err != nil {
 			return nil, err
@@ -57,7 +62,7 @@ func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 		err := json.Unmarshal(raw, &meta)
 		if err != nil {
 			logger.Error("Unsupported config", err,
-				"path", path,
+				"src", src,
 			)
 			continue
 		}
@@ -70,14 +75,14 @@ func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 			err = json.Unmarshal(raw, &conf)
 			if err != nil {
 				logger.Error("Unsupported config", err,
-					"path", path,
+					"src", src,
 				)
 				continue
 			}
 			obj, ok := compatibility.Convert_Config_To_internalversion_KwokctlConfiguration(&conf)
 			if ok {
 				logger.Debug("Convert old config",
-					"path", path,
+					"src", src,
 				)
 				objs = append(objs, obj)
 				continue
@@ -89,7 +94,7 @@ func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 			logger.Warn("Unsupported type",
 				"apiVersion", meta.APIVersion,
 				"kind", meta.Kind,
-				"path", path,
+				"src", src,
 			)
 			continue
 		}
@@ -98,7 +103,7 @@ func Load(ctx context.Context, path ...string) ([]metav1.Object, error) {
 			logger.Warn("Unsupported type",
 				"apiVersion", meta.APIVersion,
 				"kind", meta.Kind,
-				"path", path,
+				"src", src,
 			)
 		case v1alpha1.KwokConfigurationKind:
 			obj := &v1alpha1.KwokConfiguration{}
