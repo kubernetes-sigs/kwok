@@ -9,7 +9,7 @@ networking:
 nodes:
 - role: control-plane
 
-{{ if or .PrometheusPort .KwokControllerPort }}
+{{ if or .PrometheusPort .KwokControllerPort .EtcdPort }}
   extraPortMappings:
   {{ if .PrometheusPort }}
   - containerPort: 9090
@@ -20,6 +20,12 @@ nodes:
   {{ if .KwokControllerPort }}
   - containerPort: 10247
     hostPort: {{ .KwokControllerPort }}
+    listenAddress: "0.0.0.0"
+    protocol: TCP
+  {{ end }}
+  {{ if .EtcdPort }}
+  - containerPort: 2379
+    hostPort: {{ .EtcdPort }}
     listenAddress: "0.0.0.0"
     protocol: TCP
   {{ end }}

@@ -59,10 +59,10 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 
 	kubeApiserverArgs := []string{
 		"--admission-control=",
-		"--etcd-servers=http://" + conf.EtcdAddress + ":" + format.String(conf.EtcdPort),
 		"--etcd-prefix=/registry",
 		"--allow-privileged=true",
 	}
+
 	if conf.KubeRuntimeConfig != "" {
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--runtime-config="+conf.KubeRuntimeConfig,
@@ -74,9 +74,19 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		)
 	}
 
-	inContainer := conf.Image != ""
 	var ports []internalversion.Port
 	var volumes []internalversion.Volume
+
+	inContainer := conf.Image != ""
+	if inContainer {
+		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--etcd-servers=http://"+conf.EtcdAddress+":2379",
+		)
+	} else {
+		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--etcd-servers=http://"+conf.EtcdAddress+":"+format.String(conf.EtcdPort),
+		)
+	}
 
 	if conf.SecurePort {
 		if conf.KubeAuthorization {

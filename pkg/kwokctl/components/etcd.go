@@ -36,32 +36,30 @@ type BuildEtcdComponentConfig struct {
 
 // BuildEtcdComponent builds an etcd component.
 func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversion.Component, err error) {
+	exposePeerPort := true
 	if conf.PeerPort == 0 {
 		conf.PeerPort = 2380
+		exposePeerPort = false
 	}
+	exposePort := true
 	if conf.Port == 0 {
 		conf.Port = 2379
+		exposePort = false
 	}
 	if conf.Address == "" {
 		conf.Address = publicAddress
 	}
-	etcdPeerPortStr := format.String(conf.PeerPort)
-	etcdClientPortStr := format.String(conf.Port)
+
+	var volumes []internalversion.Volume
+	var ports []internalversion.Port
 
 	etcdArgs := []string{
 		"--name=node0",
-		"--initial-advertise-peer-urls=http://" + conf.Address + ":" + etcdPeerPortStr,
-		"--listen-peer-urls=http://" + conf.Address + ":" + etcdPeerPortStr,
-		"--advertise-client-urls=http://" + conf.Address + ":" + etcdClientPortStr,
-		"--listen-client-urls=http://" + conf.Address + ":" + etcdClientPortStr,
-		"--initial-cluster=node0=http://" + conf.Address + ":" + etcdPeerPortStr,
 		"--auto-compaction-retention=1",
 		"--quota-backend-bytes=8589934592",
 	}
 
 	inContainer := conf.Image != ""
-	var volumes []internalversion.Volume
-
 	if inContainer {
 		// TODO: use a volume for the data path
 		// volumes = append(volumes,
@@ -73,9 +71,42 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		etcdArgs = append(etcdArgs,
 			"--data-dir=/etcd-data",
 		)
+
+		if exposePeerPort {
+			ports = append(
+				ports,
+				internalversion.Port{
+					HostPort: conf.PeerPort,
+					Port:     2380,
+				},
+			)
+		}
+		if exposePort {
+			ports = append(
+				ports,
+				internalversion.Port{
+					HostPort: conf.Port,
+					Port:     2379,
+				},
+			)
+		}
+		etcdArgs = append(etcdArgs,
+			"--initial-advertise-peer-urls=http://"+conf.Address+":2380",
+			"--listen-peer-urls=http://"+conf.Address+":2380",
+			"--advertise-client-urls=http://"+conf.Address+":2379",
+			"--listen-client-urls=http://"+conf.Address+":2379",
+			"--initial-cluster=node0=http://"+conf.Address+":2380",
+		)
 	} else {
+		etcdPeerPortStr := format.String(conf.PeerPort)
+		etcdClientPortStr := format.String(conf.Port)
 		etcdArgs = append(etcdArgs,
 			"--data-dir="+conf.DataPath,
+			"--initial-advertise-peer-urls=http://"+conf.Address+":"+etcdPeerPortStr,
+			"--listen-peer-urls=http://"+conf.Address+":"+etcdPeerPortStr,
+			"--advertise-client-urls=http://"+conf.Address+":"+etcdClientPortStr,
+			"--listen-client-urls=http://"+conf.Address+":"+etcdClientPortStr,
+			"--initial-cluster=node0=http://"+conf.Address+":"+etcdPeerPortStr,
 		)
 	}
 
@@ -86,6 +117,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		Command: []string{"etcd"},
 		Args:    etcdArgs,
 		Binary:  conf.Binary,
+		Ports:   ports,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
 	}, nil
