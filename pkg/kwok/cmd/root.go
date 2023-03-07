@@ -58,9 +58,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Args:          cobra.NoArgs,
-		Use:           "kwok [command]",
-		Short:         "Kwok is a tool for simulate thousands of Nodes",
-		Long:          "Kwok is a tool for simulate thousands of Nodes",
+		Use:           "kwok",
+		Short:         "kwok is a tool for simulating the lifecycle of fake nodes, pods, and other Kubernetes API resources.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Version:       consts.Version,

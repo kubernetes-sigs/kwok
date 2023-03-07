@@ -48,7 +48,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "artifacts",
 		Short: "Lists binaries or images used by cluster",
-		Long:  "Lists binaries or images used by cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)

@@ -41,7 +41,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "kubeconfig",
 		Short: "Prints cluster kubeconfig",
-		Long:  "Prints cluster kubeconfig",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)

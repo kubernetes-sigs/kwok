@@ -43,7 +43,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "restore",
 		Short: "Restore the snapshot of the cluster",
-		Long:  "Restore the snapshot of the cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)

@@ -32,9 +32,8 @@ import (
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "get",
+		Use:   "get [command]",
 		Short: "Gets one of [artifacts, clusters, kubeconfig]",
-		Long:  "Gets one of [artifacts, clusters, kubeconfig]",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
