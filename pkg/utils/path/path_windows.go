@@ -23,8 +23,8 @@ import (
 	"strings"
 )
 
-// Join is a wrapper around filepath.Join that converts all path separators to
+// Clean is a wrapper around filepath.Clean that converts all path separators to
 // forward slashes. This is useful for Windows paths that are used in URLs.
-func Join(elem ...string) string {
-	return strings.Replace(filepath.Join(elem...), `\`, `/`, -1)
+func Clean(p string) string {
+	return strings.Replace(filepath.Clean(p), `\`, `/`, -1)
 }

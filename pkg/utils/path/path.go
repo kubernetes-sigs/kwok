@@ -20,7 +20,36 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"sigs.k8s.io/kwok/pkg/consts"
 )
+
+var (
+	homeDir string
+	workDir string
+)
+
+func init() {
+	dir, err := os.UserHomeDir()
+	if err != nil || dir == "" {
+		homeDir = os.TempDir()
+		workDir = Join(homeDir, consts.ProjectName)
+	} else {
+		homeDir = dir
+		workDir = Join(homeDir, "."+consts.ProjectName)
+	}
+}
+
+// Home returns the home directory of the current user or a temporary directory.
+func Home() string {
+	return homeDir
+}
+
+// WorkDir returns the current working directory.
+func WorkDir() string {
+	return workDir
+}
 
 // Expand expands absolute directory in file paths.
 func Expand(path string) (string, error) {
@@ -29,10 +58,7 @@ func Expand(path string) (string, error) {
 	}
 
 	if path[0] == '~' {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
+		home := Home()
 		if len(path) == 1 {
 			path = home
 		} else if path[1] == '/' || path[1] == '\\' {
@@ -41,4 +67,22 @@ func Expand(path string) (string, error) {
 	}
 
 	return filepath.Abs(path)
+}
+
+// RelFromHome returns a path relative to the home directory.
+// If the path is not relative to the home directory, the original path is returned.
+func RelFromHome(target string) string {
+	rel, err := filepath.Rel(Home(), target)
+	if err != nil {
+		return target
+	}
+	if strings.HasPrefix(rel, "..") {
+		return target
+	}
+	return Join("~", rel)
+}
+
+// Join is a wrapper around filepath.Join.
+func Join(elem ...string) string {
+	return Clean(filepath.Join(elem...))
 }

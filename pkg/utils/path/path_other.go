@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 )
 
-// Join is a wrapper around filepath.Join.
-func Join(elem ...string) string {
-	return filepath.Join(elem...)
+// Clean is a wrapper around filepath.Clean.
+func Clean(p string) string {
+	return filepath.Clean(p)
 }
