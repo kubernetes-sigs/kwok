@@ -13,13 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KWOK_KUBE_APISERVER_PORT=0 kwokctl create cluster "$@" || exit 1
-echo "###############################################################################"
-echo "> kubectl -s :${KWOK_KUBE_APISERVER_PORT} version"
-kwokctl kubectl version
-echo "###############################################################################"
-echo "# The following kubeconfig can be used to connect to the Kubernetes API server"
-cat <<EOF
+usage() {
+  sleep 1
+  echo "###############################################################################"
+  echo "> kubectl -s :${KWOK_KUBE_APISERVER_PORT} version"
+  kwokctl kubectl version
+  echo "###############################################################################"
+  echo "# The following kubeconfig can be used to connect to the Kubernetes API server"
+  cat <<EOF
 apiVersion: v1
 clusters:
 - cluster:
@@ -34,10 +35,14 @@ kind: Config
 preferences: {}
 users: null
 EOF
-echo "###############################################################################"
-echo "> kubectl -s :${KWOK_KUBE_APISERVER_PORT} get ns"
-kwokctl kubectl get ns
-echo "###############################################################################"
-echo "# The above example works if your host's port is the same as the container's,"
-echo "# otherwise, change it to your host's port"
+  echo "###############################################################################"
+  echo "> kubectl -s :${KWOK_KUBE_APISERVER_PORT} get ns"
+  kwokctl kubectl get ns
+  echo "###############################################################################"
+  echo "# The above example works if your host's port is the same as the container's,"
+  echo "# otherwise, change it to your host's port"
+}
+
+KWOK_KUBE_APISERVER_PORT=0 kwokctl create cluster "$@" || exit 1
+usage &
 kwokctl kubectl proxy --port="${KWOK_KUBE_APISERVER_PORT}" --accept-hosts='^*$' --address="0.0.0.0"

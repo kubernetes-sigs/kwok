@@ -71,6 +71,9 @@ type KwokctlConfigurationOptions struct {
 	// QuietPull is the flag to quiet the pull.
 	QuietPull bool
 
+	// Quick is the flag to quick start.
+	Quick bool
+
 	// KubeSchedulerConfig is the configuration path for kube-scheduler.
 	KubeSchedulerConfig string
 

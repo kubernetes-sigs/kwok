@@ -229,7 +229,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Configure the etcd
-	etcdVersion, err := version.ParseFromBinary(ctx, etcdPath)
+	var etcdVersion version.Version
+	if conf.Quick {
+		etcdVersion, err = version.Parse(conf.EtcdVersion)
+	} else {
+		etcdVersion, err = version.ParseFromBinary(ctx, etcdPath)
+	}
 	if err != nil {
 		return err
 	}
@@ -247,10 +252,18 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 	config.Components = append(config.Components, etcdComponent)
 
-	// Configure the kube-apiserver
-	kubeApiserverVersion, err := version.ParseFromBinary(ctx, kubeApiserverPath)
+	kubeVersion, err := version.Parse(conf.KubeVersion)
 	if err != nil {
 		return err
+	}
+
+	// Configure the kube-apiserver
+	kubeApiserverVersion := kubeVersion
+	if !conf.Quick {
+		kubeApiserverVersion, err = version.ParseFromBinary(ctx, kubeApiserverPath)
+		if err != nil {
+			return err
+		}
 	}
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Workdir:           workdir,
@@ -283,9 +296,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
-		kubeControllerManagerVersion, err := version.ParseFromBinary(ctx, kubeControllerManagerPath)
-		if err != nil {
-			return err
+		kubeControllerManagerVersion := kubeVersion
+		if !conf.Quick {
+			kubeControllerManagerVersion, err = version.ParseFromBinary(ctx, kubeControllerManagerPath)
+			if err != nil {
+				return err
+			}
 		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
 			Workdir:           workdir,
@@ -324,9 +340,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
-		kubeSchedulerVersion, err := version.ParseFromBinary(ctx, kubeSchedulerPath)
-		if err != nil {
-			return err
+		kubeSchedulerVersion := kubeVersion
+		if !conf.Quick {
+			kubeSchedulerVersion, err = version.ParseFromBinary(ctx, kubeSchedulerPath)
+			if err != nil {
+				return err
+			}
 		}
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
 			Workdir:          workdir,
@@ -348,7 +367,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Configure the kwok-controller
-	kwokControllerVersion, err := version.ParseFromBinary(ctx, kwokControllerPath)
+	var kwokControllerVersion version.Version
+	if conf.Quick {
+		kwokControllerVersion, err = version.Parse(conf.KwokVersion)
+	} else {
+		kwokControllerVersion, err = version.ParseFromBinary(ctx, kwokControllerPath)
+	}
 	if err != nil {
 		return err
 	}
@@ -393,7 +417,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
 
-		prometheusVersion, err := version.ParseFromBinary(ctx, prometheusPath)
+		var prometheusVersion version.Version
+		if conf.Quick {
+			prometheusVersion, err = version.Parse(conf.PrometheusVersion)
+		} else {
+			prometheusVersion, err = version.ParseFromBinary(ctx, prometheusPath)
+		}
 		if err != nil {
 			return err
 		}
@@ -438,14 +467,16 @@ func (c *Cluster) Install(ctx context.Context) error {
 		logger.Error("Failed to update cluster", err)
 	}
 
-	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, "config", "set", "clusters."+c.Name()+".server", scheme+"://"+localAddress+":"+format.String(conf.KubeApiserverPort))
-	_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
-	if conf.SecurePort {
-		_ = c.Kubectl(ctx, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
-		_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".user", c.Name())
-		_ = c.Kubectl(ctx, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
-		_ = c.Kubectl(ctx, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
+	if !conf.Quick {
+		// set the context in default kubeconfig
+		_ = c.Kubectl(ctx, "config", "set", "clusters."+c.Name()+".server", scheme+"://"+localAddress+":"+format.String(conf.KubeApiserverPort))
+		_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".cluster", c.Name())
+		if conf.SecurePort {
+			_ = c.Kubectl(ctx, "config", "set", "clusters."+c.Name()+".insecure-skip-tls-verify", "true")
+			_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".user", c.Name())
+			_ = c.Kubectl(ctx, "config", "set", "users."+c.Name()+".client-certificate", adminCertPath)
+			_ = c.Kubectl(ctx, "config", "set", "users."+c.Name()+".client-key", adminKeyPath)
+		}
 	}
 	return nil
 }
@@ -479,6 +510,10 @@ func (c *Cluster) startComponents(ctx context.Context, cs []internalversion.Comp
 		return err
 	}
 
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
 	logger := log.FromContext(ctx)
 
 	err = wait.PollImmediateUntilWithContext(ctx, 1*time.Second, func(ctx context.Context) (bool, error) {
@@ -503,6 +538,10 @@ func (c *Cluster) startComponents(ctx context.Context, cs []internalversion.Comp
 					return false, err
 				}
 			}
+		}
+
+		if config.Options.Quick {
+			return true, nil
 		}
 
 		// check apiserver is ready

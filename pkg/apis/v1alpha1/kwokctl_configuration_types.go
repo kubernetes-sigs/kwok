@@ -96,6 +96,11 @@ type KwokctlConfigurationOptions struct {
 	// +default=false
 	QuietPull *bool `json:"quietPull,omitempty"`
 
+	// Quick is the flag to quick start.
+	// is the default value for flag --quick and env KWOK_QUICK
+	// +default=false
+	Quick *bool `json:"quick,omitempty"`
+
 	// KubeSchedulerConfig is the configuration path for kube-scheduler.
 	// is the default value for flag --kube-scheduler-config and env KWOK_KUBE_SCHEDULER_CONFIG
 	KubeSchedulerConfig string `json:"kubeSchedulerConfig,omitempty"`

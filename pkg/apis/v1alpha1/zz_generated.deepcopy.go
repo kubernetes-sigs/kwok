@@ -343,6 +343,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Quick != nil {
+		in, out := &in.Quick, &out.Quick
+		*out = new(bool)
+		**out = **in
+	}
 	if in.DisableKubeScheduler != nil {
 		in, out := &in.DisableKubeScheduler, &out.DisableKubeScheduler
 		*out = new(bool)

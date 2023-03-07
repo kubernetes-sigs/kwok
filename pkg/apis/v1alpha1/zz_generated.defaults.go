@@ -70,6 +70,10 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		var ptrVar1 bool = false
 		in.Options.QuietPull = &ptrVar1
 	}
+	if in.Options.Quick == nil {
+		var ptrVar1 bool = false
+		in.Options.Quick = &ptrVar1
+	}
 	if in.Options.DisableKubeScheduler == nil {
 		var ptrVar1 bool = false
 		in.Options.DisableKubeScheduler = &ptrVar1

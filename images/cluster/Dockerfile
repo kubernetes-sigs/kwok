@@ -42,6 +42,8 @@ COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
 
 ENV KWOK_CONTROLLER_BINARY /usr/local/bin/kwok
 ENV KWOK_KUBE_APISERVER_PORT 8080
+ENV KWOK_QUICK true
+ENV KWOK_MODE StableFeatureGateAndAPI
 
 ARG kube_version
 ENV KWOK_KUBE_VERSION $kube_version

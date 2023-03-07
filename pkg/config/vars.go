@@ -172,6 +172,11 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 		}
 	}
 
+	if conf.Quick == nil {
+		conf.Quick = format.Ptr(false)
+	}
+	conf.Quick = format.Ptr(envs.GetEnvWithPrefix("QUICK", *conf.Quick))
+
 	setKwokctlKubernetesConfig(conf)
 
 	setKwokctlKwokConfig(conf)

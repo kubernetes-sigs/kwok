@@ -665,6 +665,9 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	if err := v1.Convert_bool_To_Pointer_bool(&in.QuietPull, &out.QuietPull, s); err != nil {
 		return err
 	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.Quick, &out.Quick, s); err != nil {
+		return err
+	}
 	out.KubeSchedulerConfig = in.KubeSchedulerConfig
 	if err := v1.Convert_bool_To_Pointer_bool(&in.DisableKubeScheduler, &out.DisableKubeScheduler, s); err != nil {
 		return err
@@ -727,6 +730,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 		return err
 	}
 	if err := v1.Convert_Pointer_bool_To_bool(&in.QuietPull, &out.QuietPull, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.Quick, &out.Quick, s); err != nil {
 		return err
 	}
 	out.KubeSchedulerConfig = in.KubeSchedulerConfig
