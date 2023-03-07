@@ -66,137 +66,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		SilenceErrors: true,
 		Version:       consts.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
-			logger := log.FromContext(ctx)
-
-			if flags.Kubeconfig != "" {
-				var err error
-				flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
-				if err != nil {
-					return err
-				}
-				f, err := os.Stat(flags.Kubeconfig)
-				if err != nil || f.IsDir() {
-					logger.Warn("Failed to get kubeconfig file or it is a directory", "kubeconfig", flags.Kubeconfig)
-					flags.Kubeconfig = ""
-				}
-			}
-
-			clientset, err := newClientset(ctx, flags.Master, flags.Kubeconfig)
-			if err != nil {
-				return err
-			}
-
-			if flags.Options.ManageAllNodes {
-				if flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "" {
-					logger.Error("manage-all-nodes is conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.", nil)
-					os.Exit(1)
-				}
-				logger.Info("Watch all nodes")
-			} else if flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "" {
-				logger.Info("Watch nodes",
-					"annotation", flags.Options.ManageNodesWithAnnotationSelector,
-					"label", flags.Options.ManageNodesWithLabelSelector,
-				)
-			}
-
-			backoff := wait.Backoff{
-				Duration: 1 * time.Second,
-				Factor:   2,
-				Jitter:   0.1,
-				Steps:    5,
-			}
-			err = wait.ExponentialBackoffWithContext(ctx, backoff,
-				func() (bool, error) {
-					_, err := clientset.CoreV1().Nodes().List(ctx,
-						metav1.ListOptions{
-							Limit: 1,
-						})
-					if err != nil {
-						logger.Error("Failed to list nodes", err)
-						return false, nil
-					}
-					return true, nil
-				},
-			)
-			if err != nil {
-				return err
-			}
-
-			stagesData := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
-
-			nodeStages := filterStages(stagesData, "v1", "Node")
-			if len(nodeStages) == 0 {
-				nodeStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
-				if err != nil {
-					return err
-				}
-			}
-			podStages := filterStages(stagesData, "v1", "Pod")
-			if len(podStages) == 0 {
-				podStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultPodStages))
-				if err != nil {
-					return err
-				}
-			}
-
-			ctr, err := controllers.NewController(controllers.Config{
-				ClientSet:                             clientset,
-				EnableCNI:                             flags.Options.EnableCNI && cni.SupportedCNI(),
-				ManageAllNodes:                        flags.Options.ManageAllNodes,
-				ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
-				ManageNodesWithLabelSelector:          flags.Options.ManageNodesWithLabelSelector,
-				DisregardStatusWithAnnotationSelector: flags.Options.DisregardStatusWithAnnotationSelector,
-				DisregardStatusWithLabelSelector:      flags.Options.DisregardStatusWithLabelSelector,
-				CIDR:                                  flags.Options.CIDR,
-				NodeIP:                                flags.Options.NodeIP,
-				NodeName:                              flags.Options.NodeName,
-				NodePort:                              flags.Options.NodePort,
-				NodeStages:                            nodeStages,
-				PodStages:                             podStages,
-			})
-			if err != nil {
-				return err
-			}
-
-			serverAddress := flags.Options.ServerAddress
-			if serverAddress == "" && flags.Options.NodePort != 0 {
-				serverAddress = "0.0.0.0:" + format.String(flags.Options.NodePort)
-			}
-
-			if serverAddress != "" {
-				clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
-				portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
-				config := server.Config{
-					ClusterPortForwards: clusterPortForwards,
-					PortForwards:        portForwards,
-				}
-				svc := server.NewServer(config)
-				svc.InstallMetrics()
-				svc.InstallHealthz()
-
-				if flags.Options.EnableDebuggingHandlers {
-					svc.InstallDebuggingHandlers()
-					svc.InstallProfilingHandler(flags.Options.EnableProfilingHandler, flags.Options.EnableContentionProfiling)
-				} else {
-					svc.InstallDebuggingDisabledHandlers()
-				}
-				go func() {
-					err := svc.Run(ctx, serverAddress, flags.Options.TLSCertFile, flags.Options.TLSPrivateKeyFile)
-					if err != nil {
-						logger.Error("Failed to run server", err)
-						os.Exit(1)
-					}
-				}()
-			}
-
-			err = ctr.Start(ctx)
-			if err != nil {
-				return err
-			}
-
-			<-ctx.Done()
-			return nil
+			return runE(cmd.Context(), flags)
 		},
 	}
 
@@ -222,6 +92,139 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		_ = cmd.Flags().MarkHidden("experimental-enable-cni")
 	}
 	return cmd
+}
+
+func runE(ctx context.Context, flags *flagpole) error {
+	logger := log.FromContext(ctx)
+
+	if flags.Kubeconfig != "" {
+		var err error
+		flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
+		if err != nil {
+			return err
+		}
+		f, err := os.Stat(flags.Kubeconfig)
+		if err != nil || f.IsDir() {
+			logger.Warn("Failed to get kubeconfig file or it is a directory", "kubeconfig", flags.Kubeconfig)
+			flags.Kubeconfig = ""
+		}
+	}
+
+	clientset, err := newClientset(ctx, flags.Master, flags.Kubeconfig)
+	if err != nil {
+		return err
+	}
+
+	if flags.Options.ManageAllNodes {
+		if flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "" {
+			logger.Error("manage-all-nodes is conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.", nil)
+			os.Exit(1)
+		}
+		logger.Info("Watch all nodes")
+	} else if flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "" {
+		logger.Info("Watch nodes",
+			"annotation", flags.Options.ManageNodesWithAnnotationSelector,
+			"label", flags.Options.ManageNodesWithLabelSelector,
+		)
+	}
+
+	backoff := wait.Backoff{
+		Duration: 1 * time.Second,
+		Factor:   2,
+		Jitter:   0.1,
+		Steps:    5,
+	}
+	err = wait.ExponentialBackoffWithContext(ctx, backoff,
+		func() (bool, error) {
+			_, err := clientset.CoreV1().Nodes().List(ctx,
+				metav1.ListOptions{
+					Limit: 1,
+				})
+			if err != nil {
+				logger.Error("Failed to list nodes", err)
+				return false, nil
+			}
+			return true, nil
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	stagesData := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
+
+	nodeStages := filterStages(stagesData, "v1", "Node")
+	if len(nodeStages) == 0 {
+		nodeStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+		if err != nil {
+			return err
+		}
+	}
+	podStages := filterStages(stagesData, "v1", "Pod")
+	if len(podStages) == 0 {
+		podStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultPodStages))
+		if err != nil {
+			return err
+		}
+	}
+
+	ctr, err := controllers.NewController(controllers.Config{
+		ClientSet:                             clientset,
+		EnableCNI:                             flags.Options.EnableCNI && cni.SupportedCNI(),
+		ManageAllNodes:                        flags.Options.ManageAllNodes,
+		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
+		ManageNodesWithLabelSelector:          flags.Options.ManageNodesWithLabelSelector,
+		DisregardStatusWithAnnotationSelector: flags.Options.DisregardStatusWithAnnotationSelector,
+		DisregardStatusWithLabelSelector:      flags.Options.DisregardStatusWithLabelSelector,
+		CIDR:                                  flags.Options.CIDR,
+		NodeIP:                                flags.Options.NodeIP,
+		NodeName:                              flags.Options.NodeName,
+		NodePort:                              flags.Options.NodePort,
+		NodeStages:                            nodeStages,
+		PodStages:                             podStages,
+	})
+	if err != nil {
+		return err
+	}
+
+	serverAddress := flags.Options.ServerAddress
+	if serverAddress == "" && flags.Options.NodePort != 0 {
+		serverAddress = "0.0.0.0:" + format.String(flags.Options.NodePort)
+	}
+
+	if serverAddress != "" {
+		clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
+		portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
+		config := server.Config{
+			ClusterPortForwards: clusterPortForwards,
+			PortForwards:        portForwards,
+		}
+		svc := server.NewServer(config)
+		svc.InstallMetrics()
+		svc.InstallHealthz()
+
+		if flags.Options.EnableDebuggingHandlers {
+			svc.InstallDebuggingHandlers()
+			svc.InstallProfilingHandler(flags.Options.EnableProfilingHandler, flags.Options.EnableContentionProfiling)
+		} else {
+			svc.InstallDebuggingDisabledHandlers()
+		}
+		go func() {
+			err := svc.Run(ctx, serverAddress, flags.Options.TLSCertFile, flags.Options.TLSPrivateKeyFile)
+			if err != nil {
+				logger.Error("Failed to run server", err)
+				os.Exit(1)
+			}
+		}()
+	}
+
+	err = ctr.Start(ctx)
+	if err != nil {
+		return err
+	}
+
+	<-ctx.Done()
+	return nil
 }
 
 // buildConfigFromFlags is a helper function that builds configs from a master url or a kubeconfig filepath.
