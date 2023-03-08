@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // NodeController is a fake nodes implementation that can be used to test
@@ -484,9 +485,33 @@ func (c *NodeController) computePatch(node *corev1.Node, tpl string) ([]byte, er
 	})
 }
 
-// putNodeInfo puts node info (HostIPs)
+// putNodeInfo puts node info (HostIPs and PodCIDRs)
 func (c *NodeController) putNodeInfo(node *corev1.Node) {
-	nodeIPs := []string{}
+	nodeIPs := getNodeHostIPs(node)
+	hostIps := slices.Map(nodeIPs, func(ip net.IP) string {
+		return ip.String()
+	})
+
+	podCIDRs := node.Spec.PodCIDRs
+	if len(podCIDRs) == 0 && node.Spec.PodCIDR != "" {
+		podCIDRs = []string{node.Spec.PodCIDR}
+	}
+
+	nodeInfo := &NodeInfo{
+		HostIPs:  hostIps,
+		PodCIDRs: podCIDRs,
+	}
+	c.nodesSets.Store(node.Name, nodeInfo)
+}
+
+// getNodeHostIPs returns the provided node's IP(s); either a single "primary IP" for the
+// node in a single-stack cluster, or a dual-stack pair of IPs in a dual-stack cluster
+// (for nodes that actually have dual-stack IPs). Among other things, the IPs returned
+// from this function are used as the `.status.PodIPs` values for host-network pods on the
+// node, and the first IP is used as the `.status.HostIP` for all pods on the node.
+// Copy from https://github.com/kubernetes/kubernetes/blob/1d02d014e8c1f0de84b0b58b2165548182815320/pkg/util/node/node.go#L67-L104
+func getNodeHostIPs(node *corev1.Node) []net.IP {
+	nodeIPs := []net.IP{}
 	// Re-sort the addresses with InternalIPs first and then ExternalIPs
 	allIPs := make([]net.IP, 0, len(node.Status.Addresses))
 	for _, addr := range node.Status.Addresses {
@@ -505,31 +530,20 @@ func (c *NodeController) putNodeInfo(node *corev1.Node) {
 			}
 		}
 	}
+
 	if len(allIPs) > 0 {
-		// ipv4 then ipv6
-		for _, ip := range allIPs {
-			if netutils.IsIPv4(ip) {
-				nodeIPs = append(nodeIPs, ip.To4().String())
-				break
-			}
-		}
-		for _, ip := range allIPs {
-			if netutils.IsIPv6(ip) {
-				nodeIPs = append(nodeIPs, ip.To16().String())
-				break
+		nodeIPs = append(nodeIPs, allIPs[0])
+		if len(allIPs) > 1 {
+			for i := 1; i < len(allIPs); i++ {
+				if netutils.IsIPv6(allIPs[i]) != netutils.IsIPv6(allIPs[0]) {
+					nodeIPs = append(nodeIPs, allIPs[i])
+					break
+				}
 			}
 		}
 	}
 
-	podCIDRs := node.Spec.PodCIDRs
-	if len(podCIDRs) == 0 && node.Spec.PodCIDR != "" {
-		podCIDRs = []string{node.Spec.PodCIDR}
-	}
-	nodeInfo := &NodeInfo{
-		HostIPs:  nodeIPs,
-		PodCIDRs: podCIDRs,
-	}
-	c.nodesSets.Store(node.Name, nodeInfo)
+	return nodeIPs
 }
 
 // Has returns true if the node is existed
