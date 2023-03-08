@@ -87,7 +87,8 @@ type NodeControllerConfig struct {
 
 // NodeInfo is the collection of necessary node information
 type NodeInfo struct {
-	HostIPs []string
+	HostIPs  []string
+	PodCIDRs []string
 }
 
 // NewNodeController creates a new fake nodes controller
@@ -107,7 +108,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		return nil, err
 	}
 
-	n := &NodeController{
+	c := &NodeController{
 		clientSet:                             conf.ClientSet,
 		nodeSelectorFunc:                      conf.NodeSelectorFunc,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
@@ -125,21 +126,15 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		recorder:                              conf.Recorder,
 	}
 	funcMap := template.FuncMap{
-		"NodeIP": func() string {
-			return n.nodeIP
-		},
-		"NodeName": func() string {
-			return n.nodeName
-		},
-		"NodePort": func() int {
-			return n.nodePort
-		},
+		"NodeIP":   c.funcNodeIP,
+		"NodeName": c.funcNodeName,
+		"NodePort": c.funcNodePort,
 	}
 	for k, v := range conf.FuncMap {
 		funcMap[k] = v
 	}
-	n.renderer = newRenderer(funcMap)
-	return n, nil
+	c.renderer = newRenderer(funcMap)
+	return c, nil
 }
 
 // Start starts the fake nodes controller
@@ -389,7 +384,7 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 				logger.Error("Failed to delete node", err)
 			}
 		} else if next.StatusTemplate != "" {
-			patch, err := c.computePatchNode(node, next.StatusTemplate)
+			patch, err := c.computePatch(node, next.StatusTemplate)
 			if err != nil {
 				logger.Error("Failed to configure node", err)
 				return
@@ -453,7 +448,7 @@ func (c *NodeController) lockNode(ctx context.Context, node *corev1.Node, patch 
 	return nil
 }
 
-func (c *NodeController) computePatchNode(node *corev1.Node, tpl string) ([]byte, error) {
+func (c *NodeController) computePatch(node *corev1.Node, tpl string) ([]byte, error) {
 	patch, err := c.renderer.renderToJSON(tpl, node)
 	if err != nil {
 		return nil, err
@@ -525,8 +520,14 @@ func (c *NodeController) putNodeInfo(node *corev1.Node) {
 			}
 		}
 	}
+
+	podCIDRs := node.Spec.PodCIDRs
+	if len(podCIDRs) == 0 && node.Spec.PodCIDR != "" {
+		podCIDRs = []string{node.Spec.PodCIDR}
+	}
 	nodeInfo := &NodeInfo{
-		HostIPs: nodeIPs,
+		HostIPs:  nodeIPs,
+		PodCIDRs: podCIDRs,
 	}
 	c.nodesSets.Store(node.Name, nodeInfo)
 }
@@ -549,4 +550,16 @@ func (c *NodeController) Get(nodeName string) (*NodeInfo, bool) {
 		return nodeInfo, has
 	}
 	return nil, has
+}
+
+func (c *NodeController) funcNodeIP(args ...string) string {
+	return c.nodeIP
+}
+
+func (c *NodeController) funcNodeName(args ...string) string {
+	return c.nodeName
+}
+
+func (c *NodeController) funcNodePort(args ...string) int {
+	return c.nodePort
 }

@@ -107,7 +107,7 @@ spec:
         {{- if .spec.hostNetwork -}}
           {{- NodeIP $nodeName -}}
         {{- else -}}
-          {{- PodIP -}}
+          {{- PodIP $nodeName -}}
         {{- end -}}
       {{- end }}
       {{- end }}
