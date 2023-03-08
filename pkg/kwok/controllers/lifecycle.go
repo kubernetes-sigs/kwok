@@ -40,9 +40,13 @@ func NewStagesFromYaml(data []byte) ([]*internalversion.Stage, error) {
 	for {
 		var stage v1alpha1.Stage
 		err := decoder.Decode(&stage)
-		if errors.Is(err, io.EOF) {
-			break
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return nil, err
 		}
+
 		internalStage, err := internalversion.ConvertToInternalVersionStage(&stage)
 		if err != nil {
 			return nil, err
