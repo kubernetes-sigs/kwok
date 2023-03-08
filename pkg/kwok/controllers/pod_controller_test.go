@@ -35,11 +35,11 @@ import (
 )
 
 const (
-	defaultNodeIP  = "10.0.0.0"
-	defaultPodCIDR = "10.0.0.1/24"
+	defaultNodeIP  = "10.0.0.1"
+	defaultPodCIDR = "10.100.0.1/24"
 
-	secondNodeIP  = "172.0.0.0"
-	secondPodCIDR = "172.0.0.1/24"
+	secondNodeIP  = "172.0.0.1"
+	secondPodCIDR = "172.100.0.1/24"
 )
 
 func TestPodController(t *testing.T) {
@@ -273,6 +273,31 @@ func TestPodController(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	for index, pod := range list.Items {
+		if nodeInfo, ok := nodeGetFunc(pod.Spec.NodeName); ok {
+			if pod.Status.Phase != corev1.PodRunning {
+				t.Fatal(fmt.Errorf("want pod %s phase is running, got %s", pod.Name, pod.Status.Phase))
+			}
+			if pods.needLockPod(&list.Items[index]) {
+				if pod.Status.HostIP != nodeInfo.HostIPs[0] {
+					t.Fatal(fmt.Errorf("want pod %s hostIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.HostIP))
+				}
+				if pod.Spec.HostNetwork {
+					if pod.Status.PodIP != nodeInfo.HostIPs[0] {
+						t.Fatal(fmt.Errorf("want pod %s podIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.PodIP))
+					}
+				} else {
+					cidr, _ := parseCIDR(nodeInfo.PodCIDRs[0])
+					if !cidr.Contains(net.ParseIP(pod.Status.PodIP)) {
+						t.Fatal(fmt.Errorf("want pod %s podIP=%s in %s, got not", pod.Name, pod.Status.PodIP, nodeInfo.PodCIDRs[0]))
+					}
+				}
+			}
+		} else if pod.Status.Phase == corev1.PodRunning {
+			t.Fatal(fmt.Errorf("want pod %s phase is not running, got %s", pod.Name, pod.Status.Phase))
+		}
+	}
+
 	pod := list.Items[0]
 	now := metav1.Now()
 	pod.DeletionTimestamp = &now
@@ -293,30 +318,5 @@ func TestPodController(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	for index, pod := range list.Items {
-		if nodeInfo, ok := nodeGetFunc(pod.Spec.NodeName); ok {
-			if pod.Status.Phase != corev1.PodRunning {
-				t.Fatal(fmt.Errorf("want pod %s phase is running, got %s", pod.Name, pod.Status.Phase))
-			}
-			if pods.needLockPod(&list.Items[index]) {
-				if pod.Status.HostIP != nodeInfo.HostIPs[0] {
-					t.Fatal(fmt.Errorf("want pod %s to have hostIP=%s, got %s (nodeName=%s)", pod.Name, nodeInfo.HostIPs[0], pod.Status.HostIP, pod.Spec.NodeName))
-				}
-				if pod.Spec.HostNetwork {
-					if pod.Status.PodIP != nodeInfo.HostIPs[0] {
-						t.Fatal(fmt.Errorf("want pod %s to have podIP=%s, got %s (HostNetwork)", pod.Name, nodeInfo.HostIPs[0], pod.Status.PodIP))
-					}
-				} else {
-					cidr, _ := parseCIDR(nodeInfo.PodCIDRs[0])
-					if !cidr.Contains(net.ParseIP(pod.Status.PodIP)) {
-						t.Fatal(fmt.Errorf("want pod %s to not have podIP=%s (non-HostNetwork)", pod.Name, pod.Status.PodIP))
-					}
-				}
-			}
-		} else if pod.Status.Phase == corev1.PodRunning {
-			t.Fatal(fmt.Errorf("want pod %s phase is not running, got %s", pod.Name, pod.Status.Phase))
-		}
 	}
 }

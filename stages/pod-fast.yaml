@@ -15,6 +15,7 @@ spec:
   next:
     statusTemplate: |
       {{ $now := Now }}
+      {{ $spec := .spec }}
       {{ $nodeName := .spec.nodeName }}
       conditions:
         - lastTransitionTime: {{ $now }}
@@ -67,7 +68,7 @@ spec:
       podIP: {{ with .podIP -}}
         {{- . -}}
       {{- else -}}
-        {{- if .spec.hostNetwork -}}
+        {{- if $spec.hostNetwork -}}
           {{- NodeIP $nodeName -}}
         {{- else -}}
           {{- PodIP $nodeName -}}
