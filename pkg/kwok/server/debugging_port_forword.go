@@ -23,7 +23,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"sync"
 
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/apimachinery/pkg/types"
@@ -62,23 +61,16 @@ func (s *Server) PortForward(ctx context.Context, podName, podNamespace string, 
 		}()
 
 		// TODO: remove this when upgrade to go 1.21 upgrade takes place
-		buf1 := bufPool.Get().(*[]byte)
-		buf2 := bufPool.Get().(*[]byte)
+		buf1 := s.bufPool.Get()
+		buf2 := s.bufPool.Get()
 		defer func() {
-			bufPool.Put(buf1)
-			bufPool.Put(buf2)
+			s.bufPool.Put(buf1)
+			s.bufPool.Put(buf2)
 		}()
-		return tunnel(ctx, stream, dial, *buf1, *buf2)
+		return tunnel(ctx, stream, dial, buf1, buf2)
 	}
 
 	return errors.New("no target or command")
-}
-
-var bufPool = sync.Pool{
-	New: func() any {
-		buf := make([]byte, 32*1024)
-		return &buf
-	},
 }
 
 // getPortForward handles a new restful port forward request. It determines the

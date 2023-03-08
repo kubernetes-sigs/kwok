@@ -21,28 +21,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"sync"
 	"text/template"
 
 	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kwok/pkg/utils/maps"
+	"sigs.k8s.io/kwok/pkg/utils/pools"
 )
 
 type renderer struct {
 	cache      maps.SyncMap[string, *template.Template]
-	bufferPool sync.Pool
+	bufferPool *pools.Pool[*bytes.Buffer]
 	funcMap    template.FuncMap
 }
 
 func newRenderer(funcMap template.FuncMap) *renderer {
 	return &renderer{
 		funcMap: funcMap,
-		bufferPool: sync.Pool{
-			New: func() interface{} {
-				return bytes.NewBuffer(make([]byte, 4*1024))
-			},
-		},
+		bufferPool: pools.NewPool(func() *bytes.Buffer {
+			return bytes.NewBuffer(make([]byte, 4*1024))
+		}),
 	}
 }
 
@@ -58,7 +56,7 @@ func (r *renderer) renderToJSON(text string, original interface{}) ([]byte, erro
 		}
 		r.cache.Store(text, temp)
 	}
-	buf := r.bufferPool.Get().(*bytes.Buffer)
+	buf := r.bufferPool.Get()
 	defer r.bufferPool.Put(buf)
 
 	buf.Reset()
