@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"text/template"
 	"time"
 
@@ -58,9 +57,9 @@ type PodController struct {
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
 	nodeIP                                string
-	cidrIPNet                             *net.IPNet
+	defaultCIDR                           string
 	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
-	ipPool                                *ipPool
+	ipPools                               maps.SyncMap[string, *ipPool]
 	renderer                              *renderer
 	lockPodChan                           chan *corev1.Pod
 	parallelTasks                         *parallelTasks
@@ -87,11 +86,6 @@ type PodControllerConfig struct {
 
 // NewPodController creates a new fake pods controller
 func NewPodController(conf PodControllerConfig) (*PodController, error) {
-	cidrIPNet, err := parseCIDR(conf.CIDR)
-	if err != nil {
-		return nil, err
-	}
-
 	disregardStatusWithAnnotationSelector, err := labelsParse(conf.DisregardStatusWithAnnotationSelector)
 	if err != nil {
 		return nil, err
@@ -107,14 +101,13 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		return nil, err
 	}
 
-	n := &PodController{
+	c := &PodController{
 		enableCNI:                             conf.EnableCNI,
 		clientSet:                             conf.ClientSet,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		nodeIP:                                conf.NodeIP,
-		cidrIPNet:                             cidrIPNet,
-		ipPool:                                newIPPool(cidrIPNet),
+		defaultCIDR:                           conf.CIDR,
 		nodeGetFunc:                           conf.NodeGetFunc,
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
@@ -123,25 +116,14 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		recorder:                              conf.Recorder,
 	}
 	funcMap := template.FuncMap{
-		"NodeIP": func(nodeName string) string {
-			nodeInfo, has := n.nodeGetFunc(nodeName)
-			if has && len(nodeInfo.HostIPs) > 0 {
-				hostIP := nodeInfo.HostIPs[0]
-				if hostIP != "" {
-					return hostIP
-				}
-			}
-			return n.nodeIP
-		},
-		"PodIP": func() string {
-			return n.ipPool.Get()
-		},
+		"NodeIP": c.funcNodeIP,
+		"PodIP":  c.funcPodIP,
 	}
 	for k, v := range conf.FuncMap {
 		funcMap[k] = v
 	}
-	n.renderer = newRenderer(funcMap)
-	return n, nil
+	c.renderer = newRenderer(funcMap)
+	return c, nil
 }
 
 // Start starts the fake pod controller
@@ -424,20 +406,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
 					// Recycling PodIP
-					if !pod.Spec.HostNetwork {
-						if _, has := c.nodeGetFunc(pod.Spec.NodeName); has {
-							if !c.enableCNI {
-								if pod.Status.PodIP != "" && c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
-									c.ipPool.Put(pod.Status.PodIP)
-								}
-							} else {
-								err := cni.Remove(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
-								if err != nil {
-									logger.Error("cni remove", err)
-								}
-							}
-						}
-					}
+					c.recyclingPodIP(ctx, pod)
 				}
 			case <-ctx.Done():
 				watcher.Stop()
@@ -471,11 +440,74 @@ func (c *PodController) LockPodsOnNode(ctx context.Context, nodeName string) err
 	})
 }
 
+// ipPool returns the ipPool for the given cidr
+func (c *PodController) ipPool(cidr string) (*ipPool, error) {
+	pool, ok := c.ipPools.Load(cidr)
+	if ok {
+		return pool, nil
+	}
+	ipnet, err := parseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+
+	pool = newIPPool(ipnet)
+	c.ipPools.Store(cidr, pool)
+	return pool, nil
+}
+
+// recyclingPodIP recycling pod ip
+func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
+	// Skip host network
+	if pod.Spec.HostNetwork {
+		return
+	}
+
+	// Skip not managed node
+	nodeInfo, ok := c.nodeGetFunc(pod.Spec.NodeName)
+	if !ok {
+		return
+	}
+
+	logger := log.FromContext(ctx)
+	if !c.enableCNI {
+		if pod.Status.PodIP != "" {
+			cidr := c.defaultCIDR
+			if len(nodeInfo.PodCIDRs) > 0 {
+				cidr = nodeInfo.PodCIDRs[0]
+			}
+			pool, err := c.ipPool(cidr)
+			if err != nil {
+				logger.Error("Failed to get ip pool", err,
+					"pod", log.KObj(pod),
+					"node", pod.Spec.NodeName,
+				)
+			} else {
+				pool.Put(pod.Status.PodIP)
+			}
+		}
+	} else {
+		err := cni.Remove(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
+		if err != nil {
+			logger.Error("cni remove", err)
+		}
+	}
+}
+
 func (c *PodController) configurePod(pod *corev1.Pod, template string) ([]byte, error) {
 	if !c.enableCNI {
 		// Mark the pod IP that existed before the kubelet was started
-		if c.cidrIPNet.Contains(net.ParseIP(pod.Status.PodIP)) {
-			c.ipPool.Use(pod.Status.PodIP)
+		if nodeInfo, has := c.nodeGetFunc(pod.Spec.NodeName); has {
+			if pod.Status.PodIP != "" {
+				cidr := c.defaultCIDR
+				if len(nodeInfo.PodCIDRs) > 0 {
+					cidr = nodeInfo.PodCIDRs[0]
+				}
+				pool, err := c.ipPool(cidr)
+				if err == nil {
+					pool.Use(pod.Status.PodIP)
+				}
+			}
 		}
 	} else if pod.Status.PodIP == "" {
 		ips, err := cni.Setup(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
@@ -485,7 +517,7 @@ func (c *PodController) configurePod(pod *corev1.Pod, template string) ([]byte, 
 		pod.Status.PodIP = ips[0]
 	}
 
-	patch, err := c.computePatchData(pod, template)
+	patch, err := c.computePatch(pod, template)
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +530,7 @@ func (c *PodController) configurePod(pod *corev1.Pod, template string) ([]byte, 
 	})
 }
 
-func (c *PodController) computePatchData(pod *corev1.Pod, tpl string) ([]byte, error) {
+func (c *PodController) computePatch(pod *corev1.Pod, tpl string) ([]byte, error) {
 	patch, err := c.renderer.renderToJSON(tpl, pod)
 	if err != nil {
 		return nil, err
@@ -530,4 +562,42 @@ func (c *PodController) computePatchData(pod *corev1.Pod, tpl string) ([]byte, e
 	}
 
 	return patch, nil
+}
+
+func (c *PodController) funcNodeIP(args ...string) string {
+	if len(args) == 0 {
+		return c.nodeIP
+	}
+	nodeName := args[0]
+	nodeInfo, has := c.nodeGetFunc(nodeName)
+	if has && len(nodeInfo.HostIPs) > 0 {
+		hostIP := nodeInfo.HostIPs[0]
+		if hostIP != "" {
+			return hostIP
+		}
+	}
+	return c.nodeIP
+}
+
+func (c *PodController) funcPodIP(args ...string) string {
+	if len(args) == 0 {
+		podCIDR := c.defaultCIDR
+		pool, err := c.ipPool(podCIDR)
+		if err == nil {
+			return pool.Get()
+		}
+		return c.nodeIP
+	}
+	nodeName := args[0]
+	podCIDR := c.defaultCIDR
+	nodeInfo, has := c.nodeGetFunc(nodeName)
+	if has && len(nodeInfo.PodCIDRs) > 0 {
+		podCIDR = nodeInfo.PodCIDRs[0]
+	}
+
+	pool, err := c.ipPool(podCIDR)
+	if err == nil {
+		return pool.Get()
+	}
+	return c.nodeIP
 }
