@@ -30,6 +30,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/pools"
 )
 
 const (
@@ -43,6 +44,7 @@ type Server struct {
 	idleTimeout           time.Duration
 	streamCreationTimeout time.Duration
 	config                Config
+	bufPool               *pools.Pool[[]byte]
 }
 
 // Config holds configurations needed by the server handlers.
@@ -59,6 +61,9 @@ func NewServer(config Config) *Server {
 		idleTimeout:           1 * time.Hour,
 		streamCreationTimeout: remotecommandconsts.DefaultStreamCreationTimeout,
 		config:                config,
+		bufPool: pools.NewPool(func() []byte {
+			return make([]byte, 32*1024)
+		}),
 	}
 }
 
