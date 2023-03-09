@@ -84,7 +84,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.DisregardStatusWithAnnotationSelector, "disregard-status-with-annotation-selector", flags.Options.DisregardStatusWithAnnotationSelector, "All node/pod status excluding the ones that match the annotation selector will be watched and managed.")
 	cmd.Flags().StringVar(&flags.Options.DisregardStatusWithLabelSelector, "disregard-status-with-label-selector", flags.Options.DisregardStatusWithLabelSelector, "All node/pod status excluding the ones that match the label selector will be watched and managed.")
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "Path to the kubeconfig file to use")
-	cmd.Flags().StringVar(&flags.Master, "master", flags.Master, "Server is the address of the kubernetes cluster")
+	cmd.Flags().StringVar(&flags.Master, "master", flags.Master, "The address of the Kubernetes API server (overrides any value in kubeconfig).")
 	cmd.Flags().StringVar(&flags.Options.ServerAddress, "server-address", flags.Options.ServerAddress, "Address to expose health and metrics on")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
@@ -128,25 +128,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		)
 	}
 
-	backoff := wait.Backoff{
-		Duration: 1 * time.Second,
-		Factor:   2,
-		Jitter:   0.1,
-		Steps:    5,
-	}
-	err = wait.ExponentialBackoffWithContext(ctx, backoff,
-		func() (bool, error) {
-			_, err := clientset.CoreV1().Nodes().List(ctx,
-				metav1.ListOptions{
-					Limit: 1,
-				})
-			if err != nil {
-				logger.Error("Failed to list nodes", err)
-				return false, nil
-			}
-			return true, nil
-		},
-	)
+	err = waitForReady(ctx, clientset)
 	if err != nil {
 		return err
 	}
@@ -266,4 +248,31 @@ func filterStages(stages []*internalversion.Stage, apiGroup, kind string) []*int
 	return slices.Filter(stages, func(stage *internalversion.Stage) bool {
 		return stage.Spec.ResourceRef.APIGroup == apiGroup && stage.Spec.ResourceRef.Kind == kind
 	})
+}
+
+func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
+	logger := log.FromContext(ctx)
+	backoff := wait.Backoff{
+		Duration: 1 * time.Second,
+		Factor:   2,
+		Jitter:   0.1,
+		Steps:    5,
+	}
+	err := wait.ExponentialBackoffWithContext(ctx, backoff,
+		func() (bool, error) {
+			_, err := clientset.CoreV1().Nodes().List(ctx,
+				metav1.ListOptions{
+					Limit: 1,
+				})
+			if err != nil {
+				logger.Error("Failed to list nodes", err)
+				return false, nil
+			}
+			return true, nil
+		},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
