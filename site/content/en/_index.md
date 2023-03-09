@@ -7,6 +7,8 @@ type: docs
 
 <img align="right" width="180px" src="/favicon.svg">
 
+[KWOK] is pronounced as `/kwɔk/`.
+
 [KWOK] is a toolkit that enables setting up a cluster of thousands of Nodes in seconds.
 Under the scene, all Nodes are simulated to behave like real ones, so the overall approach employs
 a pretty low resource footprint that you can easily play around on your laptop.
