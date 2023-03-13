@@ -116,8 +116,10 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		recorder:                              conf.Recorder,
 	}
 	funcMap := template.FuncMap{
-		"NodeIP": c.funcNodeIP,
-		"PodIP":  c.funcPodIP,
+		"NodeIP":     c.funcNodeIP,
+		"PodIP":      c.funcPodIP,
+		"NodeIPWith": c.funcNodeIPWith,
+		"PodIPWith":  c.funcPodIPWith,
 	}
 	for k, v := range conf.FuncMap {
 		funcMap[k] = v
@@ -509,12 +511,6 @@ func (c *PodController) configurePod(pod *corev1.Pod, template string) ([]byte, 
 				}
 			}
 		}
-	} else if pod.Status.PodIP == "" {
-		ips, err := cni.Setup(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
-		if err != nil {
-			return nil, err
-		}
-		pod.Status.PodIP = ips[0]
 	}
 
 	patch, err := c.computePatch(pod, template)
@@ -564,11 +560,11 @@ func (c *PodController) computePatch(pod *corev1.Pod, tpl string) ([]byte, error
 	return patch, nil
 }
 
-func (c *PodController) funcNodeIP(args ...string) string {
-	if len(args) == 0 {
-		return c.nodeIP
-	}
-	nodeName := args[0]
+func (c *PodController) funcNodeIP() string {
+	return c.nodeIP
+}
+
+func (c *PodController) funcNodeIPWith(nodeName string) string {
 	nodeInfo, has := c.nodeGetFunc(nodeName)
 	if has && len(nodeInfo.HostIPs) > 0 {
 		hostIP := nodeInfo.HostIPs[0]
@@ -579,16 +575,28 @@ func (c *PodController) funcNodeIP(args ...string) string {
 	return c.nodeIP
 }
 
-func (c *PodController) funcPodIP(args ...string) string {
-	if len(args) == 0 {
-		podCIDR := c.defaultCIDR
-		pool, err := c.ipPool(podCIDR)
-		if err == nil {
-			return pool.Get()
-		}
-		return c.nodeIP
+func (c *PodController) funcPodIP() string {
+	podCIDR := c.defaultCIDR
+	pool, err := c.ipPool(podCIDR)
+	if err == nil {
+		return pool.Get()
 	}
-	nodeName := args[0]
+	return c.nodeIP
+}
+
+func (c *PodController) funcPodIPWith(nodeName string, hostNetwork bool, uid, name, namespace string) (string, error) {
+	if hostNetwork {
+		return c.funcNodeIPWith(nodeName), nil
+	}
+
+	if c.enableCNI {
+		ips, err := cni.Setup(context.Background(), uid, name, namespace)
+		if err != nil {
+			return "", err
+		}
+		return ips[0], nil
+	}
+
 	podCIDR := c.defaultCIDR
 	nodeInfo, has := c.nodeGetFunc(nodeName)
 	if has && len(nodeInfo.PodCIDRs) > 0 {
@@ -597,7 +605,7 @@ func (c *PodController) funcPodIP(args ...string) string {
 
 	pool, err := c.ipPool(podCIDR)
 	if err == nil {
-		return pool.Get()
+		return pool.Get(), nil
 	}
-	return c.nodeIP
+	return c.nodeIP, nil
 }

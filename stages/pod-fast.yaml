@@ -15,7 +15,7 @@ spec:
   next:
     statusTemplate: |
       {{ $now := Now }}
-      {{ $nodeName := .spec.nodeName }}
+
       conditions:
         - lastTransitionTime: {{ $now }}
           status: "True"
@@ -57,24 +57,8 @@ spec:
               startedAt: {{ $now }}
         {{ end }}
 
-      {{ with .status }}
-      hostIP: {{ with .hostIP -}} 
-        {{- . -}}
-      {{- else -}}
-        {{- NodeIP $nodeName -}}
-      {{- end }}
-
-      podIP: {{ with .podIP -}}
-        {{- . -}}
-      {{- else -}}
-        {{- if .spec.hostNetwork -}}
-          {{- NodeIP $nodeName -}}
-        {{- else -}}
-          {{- PodIP $nodeName -}}
-        {{- end -}}
-      {{- end }}
-      {{ end }}
-
+      hostIP: {{ NodeIPWith .spec.nodeName }}
+      podIP: {{ PodIPWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) }}
       phase: Running
       startTime: {{ $now }}
 ---

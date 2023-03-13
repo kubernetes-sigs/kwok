@@ -552,14 +552,14 @@ func (c *NodeController) Get(nodeName string) (*NodeInfo, bool) {
 	return nil, has
 }
 
-func (c *NodeController) funcNodeIP(args ...string) string {
+func (c *NodeController) funcNodeIP() string {
 	return c.nodeIP
 }
 
-func (c *NodeController) funcNodeName(args ...string) string {
+func (c *NodeController) funcNodeName() string {
 	return c.nodeName
 }
 
-func (c *NodeController) funcNodePort(args ...string) int {
+func (c *NodeController) funcNodePort() int {
 	return c.nodePort
 }
