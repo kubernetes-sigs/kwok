@@ -19,6 +19,7 @@ headless: true
     - [Stages]({{< relref "/docs/user/stages-configuration" >}})
 - **Design**
   - [Introduction]({{< relref "/docs/design/introduction" >}})
+  - [Architecture]({{< relref "/docs/design/architecture" >}})
 - **Contributing**
   - [Getting Started]({{< relref "/docs/contributing/getting-started" >}})
   - [Documentation]({{< relref "/docs/contributing/documentation" >}})

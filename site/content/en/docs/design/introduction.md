@@ -41,7 +41,12 @@ As a control plane performance tester, I want to test the performance of the con
 
 This project was originally a migration of [fake-kubelet] and [fake-k8s] projects.
 
+## Next Steps
+
+Learn more about the [architecture] of KWOK.
+
 [fake-kubelet]: https://github.com/wzshiming/fake-kubelet
 [fake-k8s]: https://github.com/wzshiming/fake-k8s
 [kind]: https://github.com/kubernetes-sigs/kind
 [kubemark]: https://github.com/kubernetes/kubernetes/tree/master/test/kubemark
+[architecture]: {{< relref "/docs/design/architecture" >}}
