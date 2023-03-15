@@ -30,9 +30,9 @@ Use the runtime to start the control plane component, and then access it from `k
 We now provide some runtime to simulate the cluster, such as:
 
 - `binary` - It will download required binaries of control plane components and start them directly.
-- `docker` - It wiil use `docker compose` to start the control plane components.
-- `nerdctl` - It wiil use `nerdctl compose` to start the control plane components.
-- `kind` - It wiil use `kind` to start a cluster and deploy the `kwok` into it.
+- `docker` - It will use `docker compose` to start the control plane components.
+- `nerdctl` - It will use `nerdctl compose` to start the control plane components.
+- `kind` - It will use `kind` to start a cluster and deploy the `kwok` into it.
 
 ### Control Plane Components
 
@@ -43,7 +43,7 @@ This is a list of control plane components that `kwokctl` will start:
 - `kube-controller-manager`
 - `kube-scheduler`
 - `kwok-controller` (as `kwok`)
-- `promehteus` (optional, for metrics)
+- `prometheus` (optional, for metrics)
 
 ### Tools
 
