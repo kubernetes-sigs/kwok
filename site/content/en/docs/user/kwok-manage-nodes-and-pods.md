@@ -15,7 +15,7 @@ In this way, all nodes will behave like real nodes and stay in the `Ready` state
 ## kwok with args `--manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake`
 
 With the `--manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake` argument,
-`kwok` will be in charge of all pods with the annotation `kwok.x-k8s.io/node=fake`.
+`kwok` will be in charge of all nodes with the annotation `kwok.x-k8s.io/node=fake`.
 If they carry an accurate `.spec.nodeName` field, `kwok` will ensure they stay in the `Running` state.
 
 ## Create a Node
