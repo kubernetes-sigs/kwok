@@ -27,6 +27,8 @@ import (
 	"github.com/nxadm/tail"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	kubectl "k8s.io/kubectl/pkg/cmd"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -246,12 +248,16 @@ func (c *Cluster) Kubectl(ctx context.Context, args ...string) error {
 
 // KubectlInCluster runs kubectl in the cluster.
 func (c *Cluster) KubectlInCluster(ctx context.Context, args ...string) error {
-	kubectlPath, err := c.kubectlPath(ctx)
-	if err != nil {
-		return err
-	}
+	var defaultConfigFlags = genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag().WithDiscoveryBurst(300).WithDiscoveryQPS(50.0)
 
-	return exec.Exec(ctx, kubectlPath, append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
+	kubeconfig := c.GetWorkdirPath(InHostKubeconfigName)
+	defaultConfigFlags.KubeConfig = &kubeconfig
+	cmd := kubectl.NewKubectlCommand(kubectl.KubectlOptions{
+		ConfigFlags: defaultConfigFlags,
+		IOStreams:   genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr},
+	})
+	cmd.SetArgs(args)
+	return cmd.ExecuteContext(ctx)
 }
 
 // AuditLogs returns the audit logs of the cluster.
