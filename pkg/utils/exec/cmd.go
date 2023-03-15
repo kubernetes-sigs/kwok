@@ -72,8 +72,7 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 		return fmt.Errorf("write cmdline file %s: %w", cmdlinePath, err)
 	}
 
-	subCtx := context.Background()
-	cmd := startProcess(subCtx, args[0], args[1:]...)
+	cmd := startProcess(ctx, args[0], args[1:]...)
 	cmd.Dir = dir
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
