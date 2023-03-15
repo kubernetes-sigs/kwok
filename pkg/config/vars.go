@@ -267,6 +267,8 @@ func setKwokctlKubernetesConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 		conf.KubeSchedulerImage = joinImageURI(conf.KubeImagePrefix, "kube-scheduler", conf.KubeVersion)
 	}
 	conf.KubeSchedulerImage = envs.GetEnvWithPrefix("KUBE_SCHEDULER_IMAGE", conf.KubeSchedulerImage)
+
+	conf.KubeSchedulerPort = envs.GetEnvWithPrefix("KUBE_SCHEDULER_PORT", conf.KubeSchedulerPort)
 }
 
 func setKwokctlKwokConfig(conf *v1alpha1.KwokctlConfigurationOptions) {

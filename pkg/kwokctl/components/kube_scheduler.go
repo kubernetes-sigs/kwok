@@ -55,6 +55,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 
 	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume
+	var ports []internalversion.Port
 
 	if inContainer {
 		volumes = append(volumes,
@@ -115,13 +116,21 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				"--bind-address="+publicAddress,
 				"--secure-port=10259",
 			)
+			if conf.Port != 0 {
+				ports = append(
+					ports,
+					internalversion.Port{
+						HostPort: conf.Port,
+						Port:     10259,
+					},
+				)
+			}
 		} else {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
 				"--bind-address="+conf.Address,
 				"--secure-port="+format.String(conf.Port),
 			)
 		}
-
 		// TODO: Support disable insecure port
 		//	kubeSchedulerArgs = append(kubeSchedulerArgs,
 		//		"--port=0",
@@ -132,6 +141,15 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				"--address="+publicAddress,
 				"--port=10251",
 			)
+			if conf.Port != 0 {
+				ports = append(
+					ports,
+					internalversion.Port{
+						HostPort: conf.Port,
+						Port:     10251,
+					},
+				)
+			}
 		} else {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
 				"--address="+conf.Address,
@@ -156,6 +174,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		Args:    kubeSchedulerArgs,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
+		Ports:   ports,
 		WorkDir: conf.Workdir,
 	}, nil
 }
