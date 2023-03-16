@@ -269,6 +269,8 @@ func setKwokctlKubernetesConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	}
 	conf.KubeControllerManagerImage = envs.GetEnvWithPrefix("KUBE_CONTROLLER_MANAGER_IMAGE", conf.KubeControllerManagerImage)
 
+	conf.KubeControllerManagerPort = envs.GetEnvWithPrefix("KUBE_CONTROLLER_MANAGER_PORT", conf.KubeControllerManagerPort)
+
 	if conf.KubeSchedulerImage == "" {
 		conf.KubeSchedulerImage = joinImageURI(conf.KubeImagePrefix, "kube-scheduler", conf.KubeVersion)
 	}

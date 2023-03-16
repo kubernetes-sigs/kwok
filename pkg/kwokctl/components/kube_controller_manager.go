@@ -55,6 +55,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 
 	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume
+	var ports []internalversion.Port
 
 	if inContainer {
 		volumes = append(volumes,
@@ -95,6 +96,15 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				"--bind-address="+publicAddress,
 				"--secure-port=10257",
 			)
+			if conf.Port > 0 {
+				ports = append(
+					ports,
+					internalversion.Port{
+						HostPort: conf.Port,
+						Port:     10257,
+					},
+				)
+			}
 		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--bind-address="+conf.Address,
@@ -112,6 +122,15 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				"--address="+publicAddress,
 				"--port=10252",
 			)
+			if conf.Port > 0 {
+				ports = append(
+					ports,
+					internalversion.Port{
+						HostPort: conf.Port,
+						Port:     10252,
+					},
+				)
+			}
 		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--address="+conf.Address,
@@ -154,6 +173,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		Command: []string{"kube-controller-manager"},
 		Volumes: volumes,
 		Args:    kubeControllerManagerArgs,
+		Ports:   ports,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,

@@ -66,7 +66,7 @@ function test_create_cluster() {
   local targets
   local i
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     show_info "${name}"
@@ -166,6 +166,28 @@ function test_kube_scheduler_port() {
     fi
 }
 
+function test_kube_controller_manager_port() {
+    local result
+
+    local version="${1}"
+    local minor="${version#*.}"
+    minor="${minor%.*}"
+
+    local proto="https"
+    if [[  $minor -le 12 ]]; then
+        proto="http"
+    fi
+
+    result=$(curl -s -k "${proto}://127.0.0.1:10260/healthz")
+
+    if [[ "${result}" != "ok" ]]; then
+      echo "Error: kube controller manager connection"
+      echo "curl -s ${proto}://127.0.0.1:10260/healthz"
+      echo "${result}"
+      return 1
+    fi
+}
+
 function main() {
   local failed=()
   local name
@@ -175,6 +197,7 @@ function main() {
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
     if [[ "${KWOK_RUNTIME}" != "kind" ]]; then
+      test_kube_controller_manager_port "${release}" "${name}" || failed+=("kube_controller_manager_port_${name}")
       test_kube_scheduler_port "${release}" "${name}" || failed+=("kube_scheduler_port_${name}")
       test_etcd_port "${release}" "${name}" || failed+=("etcd_port_${name}")
     fi

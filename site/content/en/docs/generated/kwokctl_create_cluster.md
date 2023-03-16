@@ -40,6 +40,7 @@ kwokctl create cluster [flags]
       --kube-controller-manager-image string    Image of kube-controller-manager, only for docker/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/kube-controller-manager:${KWOK_KUBE_VERSION}'
                                                  (default "registry.k8s.io/kube-controller-manager:unknown")
+      --kube-controller-manager-port uint32     Port of kube-controller-manager given to the host, only for binary and docker/nerdctl runtime
       --kube-feature-gates string               A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes
       --kube-runtime-config string              A set of key=value pairs that enable or disable built-in APIs
       --kube-scheduler-binary string            Binary of kube-scheduler, only for binary runtime
