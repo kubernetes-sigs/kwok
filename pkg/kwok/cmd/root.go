@@ -34,7 +34,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/server"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -88,7 +87,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.ServerAddress, "server-address", flags.Options.ServerAddress, "Address to expose health and metrics on")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
-	if !cni.SupportedCNI() {
+	if config.GOOS != "linux" {
 		_ = cmd.Flags().MarkHidden("experimental-enable-cni")
 	}
 	return cmd
@@ -152,7 +151,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	ctr, err := controllers.NewController(controllers.Config{
 		ClientSet:                             clientset,
-		EnableCNI:                             flags.Options.EnableCNI && cni.SupportedCNI(),
+		EnableCNI:                             flags.Options.EnableCNI,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
 		ManageNodesWithLabelSelector:          flags.Options.ManageNodesWithLabelSelector,

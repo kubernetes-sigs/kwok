@@ -23,11 +23,6 @@ import (
 	gocni "github.com/containerd/go-cni"
 )
 
-// SupportedCNI returns true if the CNI plugin is supported on the current platform.
-func SupportedCNI() bool {
-	return true
-}
-
 // Setup sets up the CNI network for the given container.
 func Setup(ctx context.Context, id, name, namespace string) (ip []string, err error) {
 	netns, err := NewNS(id)
