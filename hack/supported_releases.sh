@@ -143,6 +143,9 @@ function main() {
   # Update feature gate data
   "${ROOT_DIR}/pkg/kwokctl/k8s/feature_gates_data.sh" "$(echo "${out}" | head -n 1 | awk -F. '{print $2}')"
 
+  # Update the generated files
+  make -C "${ROOT_DIR}" update
+
   if [[ "${SEND_PR}" == "true" ]]; then
     send_pr
   fi
