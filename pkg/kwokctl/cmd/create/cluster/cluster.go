@@ -77,6 +77,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.KubeSchedulerImage, "kube-scheduler-image", flags.Options.KubeSchedulerImage, `Image of kube-scheduler, only for docker/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/kube-scheduler:${KWOK_KUBE_VERSION}'
 `)
+	cmd.Flags().Uint32Var(&flags.Options.KubeSchedulerPort, "kube-scheduler-port", flags.Options.KubeSchedulerPort, `Port of kube-scheduler given to the host, only for binary and docker/nerdctl runtime`)
 	cmd.Flags().StringVar(&flags.Options.KwokControllerImage, "kwok-controller-image", flags.Options.KwokControllerImage, `Image of kwok-controller, only for docker/nerdctl/kind runtime
 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
 `)

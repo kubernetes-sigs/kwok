@@ -66,7 +66,7 @@ function test_create_cluster() {
   local targets
   local i
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     show_info "${name}"
@@ -123,7 +123,7 @@ function test_prometheus() {
 
 function test_kwok_controller_port() {
     local result
-    result="$(curl http://127.0.0.1:10247/healthz)"
+    result="$(curl -s http://127.0.0.1:10247/healthz)"
     if [[ ! $result == "ok" ]]; then
         echo "Error: controller healthz is not ok"
         echo curl -s http://127.0.0.1:10247/healthz
@@ -144,6 +144,28 @@ function test_etcd_port() {
     fi
 }
 
+function test_kube_scheduler_port() {
+    local result
+
+    local version="${1}"
+    local minor="${version#*.}"
+    minor="${minor%.*}"
+
+    local proto="https"
+    if [[  $minor -le 12 ]]; then
+        proto="http"
+    fi
+
+    result=$(curl -s -k "${proto}://127.0.0.1:10250/healthz")
+
+    if [[ "${result}" != "ok" ]]; then
+      echo "Error: kube scheduler connection"
+      echo "curl -s ${proto}://127.0.0.1:10250/healthz"
+      echo "${result}"
+      return 1
+    fi
+}
+
 function main() {
   local failed=()
   local name
@@ -153,7 +175,8 @@ function main() {
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
     if [[ "${KWOK_RUNTIME}" != "kind" ]]; then
-        test_etcd_port "${release}" "${name}" || failed+=("etcd_port_${name}")
+      test_kube_scheduler_port "${release}" "${name}" || failed+=("kube_scheduler_port_${name}")
+      test_etcd_port "${release}" "${name}" || failed+=("etcd_port_${name}")
     fi
     test_prometheus || failed+=("prometheus_${name}")
     test_kwok_controller_port || failed+=("kwok_controller_port_${name}")
