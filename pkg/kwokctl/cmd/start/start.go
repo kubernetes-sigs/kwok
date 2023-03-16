@@ -29,9 +29,8 @@ import (
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "start",
+		Use:   "start [command]",
 		Short: "Start one of [cluster]",
-		Long:  "Start one of [cluster]",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},

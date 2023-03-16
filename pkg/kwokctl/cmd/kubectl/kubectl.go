@@ -39,9 +39,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 
 	cmd := &cobra.Command{
-		Use:   "kubectl",
+		Use:   "kubectl [command]",
 		Short: "kubectl in cluster",
-		Long:  "kubectl in cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			err := runE(cmd.Context(), flags, args)

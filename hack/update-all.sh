@@ -41,6 +41,11 @@ if [[ "${UPDATE_ENDS_NEWLINE:-true}" == "true" ]]; then
     "${ROOT_DIR}"/hack/update-ends-newline.sh || failed+=(ends-newline)
 fi
 
+if [[ "${UPDATE_CMD_DOCS:-true}" == "true" ]]; then
+    echo "[*] Update cmd docs..."
+    "${ROOT_DIR}"/hack/update-cmd-docs.sh || failed+=(cmd-docs)
+fi
+
 if [[ "${#failed[@]}" != 0 ]]; then
     echo "Update failed for: ${failed[*]}"
     exit 1

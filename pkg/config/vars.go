@@ -42,6 +42,12 @@ var (
 
 	// ClustersDir is the directory of the clusters.
 	ClustersDir = path.Join(WorkDir, "clusters")
+
+	// GOOS is the operating system target for which the code is compiled.
+	GOOS = runtime.GOOS
+
+	// GOARCH is the architecture target for which the code is compiled.
+	GOARCH = runtime.GOARCH
 )
 
 // ClusterName returns the cluster name.
@@ -155,7 +161,7 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 			consts.RuntimeTypeDocker,
 			consts.RuntimeTypeNerdctl,
 		}
-		if runtime.GOOS == "linux" {
+		if GOOS == "linux" {
 			conf.Runtimes = append(conf.Runtimes, consts.RuntimeTypeBinary)
 		}
 	}
@@ -167,7 +173,7 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	}
 
 	if conf.BinSuffix == "" {
-		if runtime.GOOS == "windows" {
+		if GOOS == "windows" {
 			conf.BinSuffix = ".exe"
 		}
 	}
@@ -224,7 +230,7 @@ func setKwokctlKubernetesConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.KubeAuditPolicy = envs.GetEnvWithPrefix("KUBE_AUDIT_POLICY", conf.KubeAuditPolicy)
 
 	if conf.KubeBinaryPrefix == "" {
-		conf.KubeBinaryPrefix = consts.KubeBinaryPrefix + "/" + conf.KubeVersion + "/bin/" + runtime.GOOS + "/" + runtime.GOARCH
+		conf.KubeBinaryPrefix = consts.KubeBinaryPrefix + "/" + conf.KubeVersion + "/bin/" + GOOS + "/" + GOARCH
 	}
 	conf.KubeBinaryPrefix = envs.GetEnvWithPrefix("KUBE_BINARY_PREFIX", conf.KubeBinaryPrefix)
 
@@ -278,7 +284,7 @@ func setKwokctlKwokConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.KwokBinaryPrefix = envs.GetEnvWithPrefix("BINARY_PREFIX", conf.KwokBinaryPrefix+"/"+conf.KwokVersion)
 
 	if conf.KwokControllerBinary == "" {
-		conf.KwokControllerBinary = conf.KwokBinaryPrefix + "/kwok-" + runtime.GOOS + "-" + runtime.GOARCH + conf.BinSuffix
+		conf.KwokControllerBinary = conf.KwokBinaryPrefix + "/kwok-" + GOOS + "-" + GOARCH + conf.BinSuffix
 	}
 	conf.KwokControllerBinary = envs.GetEnvWithPrefix("CONTROLLER_BINARY", conf.KwokControllerBinary)
 
@@ -308,8 +314,8 @@ func setKwokctlEtcdConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.EtcdBinary = envs.GetEnvWithPrefix("ETCD_BINARY", conf.EtcdBinary)
 
 	if conf.EtcdBinaryTar == "" {
-		conf.EtcdBinaryTar = conf.EtcdBinaryPrefix + "/etcd-v" + strings.TrimSuffix(conf.EtcdVersion, "-0") + "-" + runtime.GOOS + "-" + runtime.GOARCH + "." + func() string {
-			if runtime.GOOS == "linux" {
+		conf.EtcdBinaryTar = conf.EtcdBinaryPrefix + "/etcd-v" + strings.TrimSuffix(conf.EtcdVersion, "-0") + "-" + GOOS + "-" + GOARCH + "." + func() string {
+			if GOOS == "linux" {
 				return "tar.gz"
 			}
 			return "zip"
@@ -352,7 +358,7 @@ func setKwokctlKindConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.KindBinaryPrefix = envs.GetEnvWithPrefix("KIND_BINARY_PREFIX", conf.KindBinaryPrefix)
 
 	if conf.KindBinary == "" {
-		conf.KindBinary = conf.KindBinaryPrefix + "/kind-" + runtime.GOOS + "-" + runtime.GOARCH + conf.BinSuffix
+		conf.KindBinary = conf.KindBinaryPrefix + "/kind-" + GOOS + "-" + GOARCH + conf.BinSuffix
 	}
 	conf.KindBinary = envs.GetEnvWithPrefix("KIND_BINARY", conf.KindBinary)
 }
@@ -369,7 +375,7 @@ func setKwokctlDockerConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.DockerComposeBinaryPrefix = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY_PREFIX", conf.DockerComposeBinaryPrefix)
 
 	if conf.DockerComposeBinary == "" {
-		conf.DockerComposeBinary = conf.DockerComposeBinaryPrefix + "/docker-compose-" + runtime.GOOS + "-" + archAlias(runtime.GOARCH) + conf.BinSuffix
+		conf.DockerComposeBinary = conf.DockerComposeBinaryPrefix + "/docker-compose-" + GOOS + "-" + archAlias(GOARCH) + conf.BinSuffix
 	}
 	conf.DockerComposeBinary = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY", conf.DockerComposeBinary)
 }
@@ -400,8 +406,8 @@ func setKwokctlPrometheusConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.PrometheusBinary = envs.GetEnvWithPrefix("PROMETHEUS_BINARY", conf.PrometheusBinary)
 
 	if conf.PrometheusBinaryTar == "" {
-		conf.PrometheusBinaryTar = conf.PrometheusBinaryPrefix + "/prometheus-" + strings.TrimPrefix(conf.PrometheusVersion, "v") + "." + runtime.GOOS + "-" + runtime.GOARCH + "." + func() string {
-			if runtime.GOOS == "windows" {
+		conf.PrometheusBinaryTar = conf.PrometheusBinaryPrefix + "/prometheus-" + strings.TrimPrefix(conf.PrometheusVersion, "v") + "." + GOOS + "-" + GOARCH + "." + func() string {
+			if GOOS == "windows" {
 				return "zip"
 			}
 			return "tar.gz"

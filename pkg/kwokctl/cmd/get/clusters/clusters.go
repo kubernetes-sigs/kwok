@@ -34,7 +34,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "clusters",
 		Short: "Lists existing clusters by their name",
-		Long:  "Lists existing clusters by their name",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context())
 		},

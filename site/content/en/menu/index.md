@@ -17,6 +17,9 @@ headless: true
   - **Configuration**
     - [Options]({{< relref "/docs/user/configuration" >}})
     - [Stages]({{< relref "/docs/user/stages-configuration" >}})
+- **Tools**
+  - [`kwok`]({{< relref "/docs/generated/kwok" >}})
+  - [`kwokctl`]({{< relref "/docs/generated/kwokctl" >}})
 - **Design**
   - [Introduction]({{< relref "/docs/design/introduction" >}})
   - [Architecture]({{< relref "/docs/design/architecture" >}})

@@ -40,8 +40,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:          cobra.NoArgs,
 		Use:           "kwokctl [command]",
-		Short:         "Kwokctl is a Kwok cluster management tool",
-		Long:          "Kwokctl is a Kwok cluster management tool",
+		Short:         "kwokctl is a tool to streamline the creation and management of clusters, with nodes simulated by kwok",
 		Version:       consts.Version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
