@@ -9,9 +9,10 @@ kwokctl snapshot restore [flags]
 ### Options
 
 ```
-      --format string   Format of the snapshot file (etcd) (default "etcd")
-  -h, --help            help for restore
-      --path string     Path to the snapshot
+      --filter strings   Filter the resources to restore, only support for k8s format (default [configmap,endpoints,namespace,node,persistentvolumeclaim,persistentvolume,pod,secret,serviceaccount,service,daemonset.apps,deployment.apps,replicaset.apps,statefulset.apps,cronjob.batch,job.batch])
+      --format string    Format of the snapshot file (etcd, k8s) (default "etcd")
+  -h, --help             help for restore
+      --path string      Path to the snapshot
 ```
 
 ### Options inherited from parent commands

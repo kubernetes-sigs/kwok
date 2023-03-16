@@ -138,3 +138,33 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	return nil
 }
+
+// SnapshotSaveWithYAML save the snapshot of cluster
+func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters []string) error {
+	err := c.Cluster.SnapshotSaveWithYAML(ctx, path, filters)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SnapshotRestoreWithYAML restore the snapshot of cluster
+func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error {
+	logger := log.FromContext(ctx)
+	err := c.StopComponent(ctx, "kube-controller-manager")
+	if err != nil {
+		logger.Error("Failed to stop kube-controller-manager", err)
+	}
+	defer func() {
+		err = c.StartComponent(ctx, "kube-controller-manager")
+		if err != nil {
+			logger.Error("Failed to start kube-controller-manager", err)
+		}
+	}()
+
+	err = c.Cluster.SnapshotRestoreWithYAML(ctx, path, filters)
+	if err != nil {
+		return err
+	}
+	return nil
+}
