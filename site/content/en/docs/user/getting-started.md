@@ -23,6 +23,7 @@ about Kubernetes. Here are some tips to help you get started.
 - `kwokctl` - cluster creation, etcd snapshot, etc.
     - [`kwokctl` Manages Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}}) - Create/Delete a cluster where all nodes are managed by `kwok`
     - [`kwokctl` Snapshots Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}}) - Save/Restore the Etcd data of a cluster created by `kwokctl`
+- [All in One Image]({{< relref "/docs/user/all-in-one-image" >}}) - Create a cluster with an all-in-one image easily
 
 ## Configuration
 

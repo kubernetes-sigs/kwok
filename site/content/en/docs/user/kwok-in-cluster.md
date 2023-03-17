@@ -46,3 +46,9 @@ Finally, we're able to deploy `kwok`:
 ``` bash
 kubectl apply -f "${KWOK_WORK_DIR}/kwok.yaml"
 ```
+
+## Next steps
+
+Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
+
+[manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
