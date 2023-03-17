@@ -54,3 +54,9 @@ kube-system       Active   1s
 # otherwise, change it to your host's port
 Starting to serve on [::]:8080
 ```
+
+## Next steps
+
+Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
+
+[manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
