@@ -8,7 +8,7 @@ This document walks you through how to run `kwokctl` to manage fake clusters.
 
 ## Install `kwokctl`
 
-[Install `kwokctl`]({{< relref "/docs/user/install" >}}) in the local.
+[Install `kwokctl`]({{< relref "/docs/user/install" >}}) in your environment.
 
 ## Create a Cluster
 

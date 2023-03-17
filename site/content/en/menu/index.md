@@ -9,7 +9,7 @@ headless: true
     - [All in One Image]({{< relref "/docs/user/all-in-one-image" >}})
     - [Install]({{< relref "/docs/user/install" >}})
     - [`kwok` in Cluster]({{< relref "/docs/user/kwok-in-cluster" >}})
-    - [`kwok` in Local]({{< relref "/docs/user/kwok-in-local" >}})
+    - [`kwok` out of Cluster]({{< relref "/docs/user/kwok-out-cluster" >}})
     - [`kwokctl` Manages Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}})
     - [Manage Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}})
   - [`kwokctl` Snapshots Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}})
