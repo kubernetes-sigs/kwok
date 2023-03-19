@@ -9,7 +9,8 @@ kwokctl delete cluster [flags]
 ### Options
 
 ```
-  -h, --help   help for cluster
+  -h, --help                help for cluster
+      --kubeconfig string   The path to the kubeconfig file that will remove the deleted cluster (default "~/.kube/config")
 ```
 
 ### Options inherited from parent commands

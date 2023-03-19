@@ -71,8 +71,11 @@ type Runtime interface {
 	// WaitReady wait the cluster is ready
 	WaitReady(ctx context.Context, timeout time.Duration) error
 
-	// InHostKubeconfig return the kubeconfig in host
-	InHostKubeconfig() (string, error)
+	// AddContext add the context of cluster to kubeconfig
+	AddContext(ctx context.Context, kubeconfigPath string) error
+
+	// RemoveContext remove the context of cluster from kubeconfig
+	RemoveContext(ctx context.Context, kubeconfigPath string) error
 
 	// Kubectl command
 	Kubectl(ctx context.Context, args ...string) error

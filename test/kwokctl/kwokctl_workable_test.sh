@@ -64,12 +64,19 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
   local targets
+  local current_context
   local i
 
   KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     show_info "${name}"
+    return 1
+  fi
+
+  current_context="$(kubectl config current-context)"
+  if [[ "${current_context}" != "kwok-${name}" ]]; then
+    echo "Error: Current context is ${current_context}, expected kwok-${name}"
     return 1
   fi
 

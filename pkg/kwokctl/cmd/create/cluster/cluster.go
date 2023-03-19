@@ -28,15 +28,18 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type flagpole struct {
-	Name    string
-	Timeout time.Duration
-	Wait    time.Duration
+	Name       string
+	Timeout    time.Duration
+	Wait       time.Duration
+	Kubeconfig string
 
 	*internalversion.KwokctlConfiguration
 }
@@ -45,6 +48,7 @@ type flagpole struct {
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 	flags.KwokctlConfiguration = config.GetKwokctlConfiguration(ctx)
+	flags.Kubeconfig = path.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -113,6 +117,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
 	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 0, "Timeout for waiting for the cluster to be created")
 	cmd.Flags().DurationVar(&flags.Wait, "wait", 0, "Wait for the cluster to be ready")
+	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "The path to the kubeconfig file will be added to the newly created cluster and set to current-context")
 	return cmd
 }
 
@@ -124,6 +129,12 @@ func runE(ctx context.Context, flags *flagpole) error {
 	logger = logger.With("cluster", flags.Name)
 	ctx = log.NewContext(ctx, logger)
 
+	var err error
+	flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
+	if err != nil {
+		return err
+	}
+
 	if flags.Timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, flags.Timeout)
@@ -131,7 +142,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	var rt runtime.Runtime
-	var err error
 	if flags.Options.Runtime == "" {
 		errs := make([]error, 0, len(flags.Options.Runtimes))
 		for _, r := range flags.Options.Runtimes {
@@ -189,7 +199,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 			logger.Error("Failed to down cluster", err)
 		}
 	} else {
-		logger.Info("Creating cluster")
+		start := time.Now()
+		logger.Info("Cluster is creating")
 		cleanUp := func() {
 			err := rt.Uninstall(ctx)
 			if err != nil {
@@ -217,15 +228,40 @@ func runE(ctx context.Context, flags *flagpole) error {
 			cleanUp()
 			return err
 		}
+		logger.Info("Cluster is created",
+			"elapsed", time.Since(start),
+		)
+
+		if flags.Kubeconfig != "" {
+			setContext := func() {
+				err = rt.AddContext(ctx, flags.Kubeconfig)
+				if err != nil {
+					logger.Error("Failed to add context to kubeconfig", err,
+						"kubeconfig", flags.Kubeconfig,
+					)
+				} else {
+					logger.Debug("Added context to kubeconfig",
+						"kubeconfig", flags.Kubeconfig,
+					)
+				}
+			}
+
+			if flags.Options.Runtime == consts.RuntimeTypeKind {
+				// override kubeconfig for kind
+				defer setContext()
+			} else {
+				setContext()
+			}
+		}
 	}
 
 	start := time.Now()
-	logger.Info("Starting cluster")
+	logger.Info("Cluster is starting")
 	err = rt.Up(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start cluster %q: %w", name, err)
 	}
-	logger.Info("Cluster is created",
+	logger.Info("Cluster is started",
 		"elapsed", time.Since(start),
 	)
 
@@ -244,11 +280,13 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, `You can now use your cluster with:
+	if log.IsTerminal(int(os.Stdout.Fd())) {
+		fmt.Fprintf(os.Stderr, `You can now use your cluster with:
 
-    kubectl config use-context %s
+	kubectl cluster-info --context %s
 
 Thanks for using kwok!
 `, name)
+	}
 	return nil
 }

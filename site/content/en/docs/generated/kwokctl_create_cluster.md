@@ -50,6 +50,7 @@ kwokctl create cluster [flags]
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/kube-scheduler:${KWOK_KUBE_VERSION}'
                                                  (default "registry.k8s.io/kube-scheduler:unknown")
       --kube-scheduler-port uint32              Port of kube-scheduler given to the host, only for binary and docker/nerdctl runtime
+      --kubeconfig string                       The path to the kubeconfig file will be added to the newly created cluster and set to current-context (default "~/.kube/config")
       --kwok-controller-binary string           Binary of kwok-controller, only for binary runtime
                                                  (default "https://github.com/kubernetes-sigs/kwok/releases/download/unknown/kwok-linux-amd64")
       --kwok-controller-image string            Image of kwok-controller, only for docker/nerdctl/kind runtime

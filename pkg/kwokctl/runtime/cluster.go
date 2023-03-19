@@ -107,11 +107,6 @@ func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfigurati
 	return configs[0], nil
 }
 
-// InHostKubeconfig returns the kubeconfig path for in-host components
-func (c *Cluster) InHostKubeconfig() (string, error) {
-	return c.GetWorkdirPath(InHostKubeconfigName), nil
-}
-
 // SetConfig sets the cluster config
 func (c *Cluster) SetConfig(ctx context.Context, conf *internalversion.KwokctlConfiguration) error {
 	c.conf = conf

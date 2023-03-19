@@ -262,10 +262,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	kubeconfig, err := c.InHostKubeconfig()
-	if err != nil {
-		return err
-	}
+	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
 
 	kubeconfigBuf := bytes.NewBuffer(nil)
 	err = c.Kubectl(exec.WithWriteTo(ctx, kubeconfigBuf), "config", "view", "--minify=true", "--raw=true")
@@ -273,7 +270,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = os.WriteFile(kubeconfig, kubeconfigBuf.Bytes(), 0640)
+	err = os.WriteFile(kubeconfigPath, kubeconfigBuf.Bytes(), 0640)
 	if err != nil {
 		return err
 	}
@@ -308,10 +305,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 			logger.Error("Failed to disable kube-controller-manager", err)
 		}
 	}
-
-	// set the context in default kubeconfig
-	_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".cluster", "kind-"+c.Name())
-	_ = c.Kubectl(ctx, "config", "set", "contexts."+c.Name()+".user", "kind-"+c.Name())
 
 	return nil
 }
@@ -400,10 +393,6 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
-	// unset the context in default kubeconfig
-	_ = c.Kubectl(ctx, "config", "unset", "contexts."+c.Name()+".cluster")
-	_ = c.Kubectl(ctx, "config", "unset", "contexts."+c.Name()+".user")
-
 	kindPath, err := c.preDownloadKind(ctx)
 	if err != nil {
 		return err
