@@ -36,7 +36,7 @@ function codegen() {
         "${KWOK_API_PACKAGE}" \
         "${KWOK_API_PACKAGE}" \
         "${KWOK_API_PACKAGE}" \
-        ":v1alpha1,internalversion" \
+        ":v1alpha1,config/v1alpha1,internalversion" \
         --trim-path-prefix "${KWOK_PROJECT}" \
         --output-base "./" \
         --go-header-file "${ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt

@@ -20,7 +20,7 @@ set -o pipefail
 ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
 function clean() {
-    rm -rf "${ROOT_DIR}/pkg/apis/*/zz_generated.*.go"
+    rm -rf "${ROOT_DIR}/pkg/apis/**/zz_generated.*.go"
 }
 
 function check() {

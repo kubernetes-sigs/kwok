@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,10 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:deepcopy-gen=package
-// +k8s:defaulter-gen=TypeMeta
-// +k8s:conversion-gen=sigs.k8s.io/kwok/pkg/apis/v1alpha1
-// +k8s:conversion-gen=sigs.k8s.io/kwok/pkg/apis/config/v1alpha1
+package v1alpha1
 
-// Package internalversion implements the internal apiVersion of kwok's configuration
-package internalversion
+import (
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
+
+var (
+	// GroupVersion is group version used to register these objects
+	GroupVersion = schema.GroupVersion{
+		Group:   "config.kwok.x-k8s.io",
+		Version: "v1alpha1",
+	}
+)
