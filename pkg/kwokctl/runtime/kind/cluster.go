@@ -40,7 +40,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
-// Cluster is a implementation of Runtime for kind
+// Cluster is an implementation of Runtime for kind
 type Cluster struct {
 	*runtime.Cluster
 }
