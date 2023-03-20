@@ -166,6 +166,17 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 				return nil, err
 			}
 			objs = append(objs, out)
+		case v1alpha1.ClusterLogsKind:
+			obj := &v1alpha1.ClusterLogs{}
+			err = json.Unmarshal(raw, &obj)
+			if err != nil {
+				return nil, err
+			}
+			out, err := internalversion.ConvertToInternalClusterLogs(obj)
+			if err != nil {
+				return nil, err
+			}
+			objs = append(objs, out)
 		case v1alpha1.ExecKind:
 			obj := &v1alpha1.Exec{}
 			err = json.Unmarshal(raw, &obj)
@@ -173,6 +184,17 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 				return nil, err
 			}
 			out, err := internalversion.ConvertToInternalExec(obj)
+			if err != nil {
+				return nil, err
+			}
+			objs = append(objs, out)
+		case v1alpha1.LogsKind:
+			obj := &v1alpha1.Logs{}
+			err = json.Unmarshal(raw, &obj)
+			if err != nil {
+				return nil, err
+			}
+			out, err := internalversion.ConvertToInternalLogs(obj)
 			if err != nil {
 				return nil, err
 			}
@@ -191,12 +213,12 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 
 // Save saves the given objects to the given path.
 func Save(ctx context.Context, path string, objs []metav1.Object) error {
-	err := os.MkdirAll(filepath.Dir(path), 0750)
+	err := os.MkdirAll(filepath.Dir(path), 0o750)
 	if err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
+	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o640)
 	if err != nil {
 		return err
 	}
@@ -254,6 +276,16 @@ func Save(ctx context.Context, path string, objs []metav1.Object) error {
 			}
 		case *internalversion.Exec:
 			obj, err = internalversion.ConvertToV1Alpha1Exec(o)
+			if err != nil {
+				return err
+			}
+		case *internalversion.ClusterLogs:
+			obj, err = internalversion.ConvertToV1Alpha1ClusterLogs(o)
+			if err != nil {
+				return err
+			}
+		case *internalversion.Logs:
+			obj, err = internalversion.ConvertToV1Alpha1Logs(o)
 			if err != nil {
 				return err
 			}

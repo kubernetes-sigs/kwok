@@ -53,6 +53,8 @@ type Config struct {
 	PortForwards        []*internalversion.PortForward
 	ClusterExecs        []*internalversion.ClusterExec
 	Execs               []*internalversion.Exec
+	ClusterLogs         []*internalversion.ClusterLogs
+	Logs                []*internalversion.Logs
 }
 
 // NewServer creates a new Server.

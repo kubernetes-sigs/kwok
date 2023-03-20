@@ -211,6 +211,16 @@ func ConvertToInternalClusterExec(in *v1alpha1.ClusterExec) (*ClusterExec, error
 	return &out, nil
 }
 
+// ConvertToInternalClusterLogs converts a v1alpha1.ConvertToInternalClusterLogs to an internal version.
+func ConvertToInternalClusterLogs(in *v1alpha1.ClusterLogs) (*ClusterLogs, error) {
+	var out ClusterLogs
+	err := Convert_v1alpha1_ClusterLogs_To_internalversion_ClusterLogs(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ConvertToV1Alpha1Exec converts an internal version ConvertToV1Alpha1Exec to a v1alpha1.ConvertToV1Alpha1Exec.
 func ConvertToV1Alpha1Exec(in *Exec) (*v1alpha1.Exec, error) {
 	var out v1alpha1.Exec
@@ -227,6 +237,40 @@ func ConvertToV1Alpha1Exec(in *Exec) (*v1alpha1.Exec, error) {
 func ConvertToInternalExec(in *v1alpha1.Exec) (*Exec, error) {
 	var out Exec
 	err := Convert_v1alpha1_Exec_To_internalversion_Exec(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToV1Alpha1Logs converts an internal version ConvertToV1Alpha1Logs to a v1alpha1.ConvertToV1Alpha1Logs.
+func ConvertToV1Alpha1Logs(in *Logs) (*v1alpha1.Logs, error) {
+	var out v1alpha1.Logs
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.LogsKind
+	err := Convert_internalversion_Logs_To_v1alpha1_Logs(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToV1Alpha1ClusterLogs converts an internal version ConvertToV1Alpha1ClusterLogs to a v1alpha1.ConvertToV1Alpha1ClusterLogs.
+func ConvertToV1Alpha1ClusterLogs(in *ClusterLogs) (*v1alpha1.ClusterLogs, error) {
+	var out v1alpha1.ClusterLogs
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.ClusterLogsKind
+	err := Convert_internalversion_ClusterLogs_To_v1alpha1_ClusterLogs(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalLogs converts a v1alpha1.ConvertToInternalVersionKwokctlConfiguration to an internal version.
+func ConvertToInternalLogs(in *v1alpha1.Logs) (*Logs, error) {
+	var out Logs
+	err := Convert_v1alpha1_Logs_To_internalversion_Logs(in, &out, nil)
 	if err != nil {
 		return nil, err
 	}

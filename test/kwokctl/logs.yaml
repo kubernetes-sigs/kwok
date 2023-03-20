@@ -1,0 +1,26 @@
+kind: Logs
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: fake-pod
+  namespace: other
+spec:
+  logs:
+    - containers:
+      - fake-pod
+      logsFile: /tmp/kwok.log
+      follow: true
+---
+
+kind: ClusterLogs
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: cluster-port-forward-rules
+spec:
+  selector:
+    matchNamespaces:
+      - default
+  logs:
+    - containers:
+      - fake-pod
+      logsFile: /tmp/kwok.log
+      follow: true

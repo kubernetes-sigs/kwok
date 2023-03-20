@@ -27,14 +27,22 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/util/flushwriter"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // GetContainerLogs returns logs for a container in a pod.
 // If follow is true, it streams the logs until the connection is closed by the client.
-func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace string, container string, logOptions *corev1.PodLogOptions, stdout, stderr io.Writer) error {
+func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, container string, logOptions *corev1.PodLogOptions, stdout, stderr io.Writer) error {
 	// TODO: Configure and implement the log streamer
 	msg := fmt.Sprintf("TODO: GetContainerLogs(%q, %q)", podName+"/"+podNamespace, container)
+
+	log, err := s.getPodLogs(podName, podNamespace, container)
+	if err != nil {
+		return err
+	}
+	_ = log
 	_, _ = stdout.Write([]byte(msg))
 	return nil
 }
@@ -88,4 +96,44 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 		_ = response.WriteError(http.StatusBadRequest, err)
 		return
 	}
+}
+
+func (s *Server) getPodLogs(podName, podNamespace, container string) (*internalversion.Log, error) {
+	l, has := slices.Find(s.config.Logs, func(l *internalversion.Logs) bool {
+		return l.Name == podName && l.Namespace == podNamespace
+	})
+	if has {
+		log, found := findLogInLogs(container, l.Spec.Logs)
+		if found {
+			return log, nil
+		}
+	} else {
+		for _, cl := range s.config.ClusterLogs {
+			if !cl.Spec.Selector.Match(podName, podNamespace) {
+				continue
+			}
+
+			log, found := findLogInLogs(container, cl.Spec.Logs)
+			if found {
+				return log, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("Failed to find pod with container name %q", container)
+}
+
+func findLogInLogs(container string, logs []internalversion.Log) (*internalversion.Log, bool) {
+	var defaultLog *internalversion.Log
+	for i, l := range logs {
+		if len(l.Containers) == 0 && defaultLog == nil {
+			defaultLog = &logs[i]
+			continue
+		}
+		if len(container) != 0 {
+			if slices.Contains(l.Containers, container) {
+				return &l, true
+			}
+		}
+	}
+	return defaultLog, defaultLog != nil
 }
