@@ -1,7 +1,7 @@
 kind: Stage
 apiVersion: kwok.x-k8s.io/v1alpha1
 metadata:
-  name: pod-create-and-ready
+  name: pod-ready
 spec:
   resourceRef:
     apiGroup: v1
@@ -65,7 +65,7 @@ spec:
 kind: Stage
 apiVersion: kwok.x-k8s.io/v1alpha1
 metadata:
-  name: pod-completed-for-job
+  name: pod-complete
 spec:
   resourceRef:
     apiGroup: v1
