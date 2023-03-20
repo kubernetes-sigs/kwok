@@ -77,18 +77,24 @@ This example shows how to configure the simplest and fastest stages of Node reso
 
 [Default Node Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/node-fast.yaml)
 
-{{< mermaid >}}
-
-stateDiagram-v2
-
-    state "node-initialize" as node_initialize
-    state "node-heartbeat" as node_heartbeat
-
-    [*] --> node_initialize: Node be created that managed by kwok
-    node_initialize --> node_heartbeat: Update heartbeat
-    node_heartbeat --> node_heartbeat: Update heartbeat
-
-{{< /mermaid >}}
+``` goat { height=300 width=400 }
+         o
+         |
+         | Node be created that managed by kwok
+         v
+ .---------------.
+| node-initialize |
+ '-------+-------'
+         |
+         | Update heartbeat
+         v
+ .---------------.
+|  node-heartbeat |
+ '-------+-------'
+         |    ^
+         |    | Update heartbeat
+          '--'
+```
 
 The `node-initialize` Stage is applied to nodes that do not have any conditions set in their `status.conditions` field.
 When applied, this Stage sets the `status.conditions` field for the node, as well as the `status.addresses`, `status.allocatable`,
@@ -103,27 +109,45 @@ This example shows how to configure the simplest and fastest stages of Pod resou
 
 [Default Pod Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-fast.yaml)
 
-{{< mermaid >}}
+``` goat { height=510 width=550 }
+      o
+      |
+      | Pod scheduled to Node that managed by kwok
+      v
+ .---------.
+| pod-ready |
+ '----+----'
+      |
+      +
+     / \
+ No /   \ Yes
+ .-+ Job?+-.
+|   \   /   |
+|    \ /    |
+|     +     |
+|           v
+|     .------------.
+|    | pod-complete |
+|     '-----+------'
+|           |
+ '---. .---'
+      |
+      | .metadata.deletionTimestamp be set
+      v
+ .----------.
+| pod-delete |
+ '----+-----'
+      |
+      | Pod be deleted
+      v
+      o
+```
 
-stateDiagram-v2
-
-    state "pod-create-and-ready" as pod_create_and_ready
-    state "pod-completed-for-job" as pod_completed_for_job
-    state "pod-delete" as pod_delete
-    
-    [*] --> pod_create_and_ready: Pod scheduled to Node that managed by kwok
-    pod_create_and_ready --> pod_completed_for_job: If pod create by job
-    pod_create_and_ready --> pod_delete: .metadata.deletionTimestamp be set
-    pod_completed_for_job --> pod_delete: .metadata.deletionTimestamp be set
-    pod_delete --> [*] : Pod be deleted
-
-{{< /mermaid >}}
-
-The `pod-create-and-ready` Stage is applied to pods that do not have a `status.podIP` set and do not have a `metadata.deletionTimestamp` set.
+The `pod-ready` Stage is applied to pods that do not have a `status.podIP` set and do not have a `metadata.deletionTimestamp` set.
 When applied, this Stage sets the `status.conditions`, `status.containerStatuses`, and `status.initContainerStatuses` fields for the pod,
 as well as the `status.hostIP` and `status.podIP` fields. It will also set the phase and startTime fields, indicating that the pod is running and has been started.
 
-The `pod-completed-for-job` Stage is applied to pods that are running, do not have a `metadata.deletionTimestamp` set,
+The `pod-complete` Stage is applied to pods that are running, do not have a `metadata.deletionTimestamp` set,
 and are owned by a Job. When applied, this Stage updates the `status.containerStatuses` field for the pod,
 setting the ready and started fields to true and the `state.terminated` field to indicate that the pod has completed.
 It also sets the phase field to Succeeded, indicating that the pod has completed successfully.

@@ -17,6 +17,8 @@ So far, `kwok` has implemented the following controllers:
 - Node Controller - It is responsible for selecting the node to simulate, and then simulating the node's lifecycle, just by updating the heartbeat of the node.
 - Pod Controller - It is responsible for pod that is on selected node, and plays the stage of pod's lifecycle.
 
+See [Stages Configuration] for more details.
+
 ## `kwokctl`
 
 `kwokctl` is a CLI tool designed to streamline the creation and management of clusters, with nodes simulated by `kwok`.
@@ -25,16 +27,35 @@ It creates the cluster with the `kwokctl create cluster` command.
 
 Use the runtime to start the control plane component, and then access it from `kube-apiserver` as if it was a real cluster.
 
-### Runtime
+``` goat { height=250 width=750 }
+                                        Components
+                                             |
+        +--------------+---------------------------------------------------------------+
+        |   etcdctl ---)--->  etcd                                       ⎫             |
+        |              |       |                                         ⎪             |
+        | ------------ |       |             +- kube-controller-manager  ⎪             |
+        |              |       |            /                            ⎬ prometheus  |
+Tools - |   kubectl ---)-> kube-apiserver -+--- kube-scheduler           ⎪             |
+        |              |                    \                            ⎪             |
+        | ------------ |                     +- kwok-controller          ⎭             |
+        |              +---------------------------------------------------------------+
+        |   kwokctl -->|   Binary   |   Docker   |   Nerdctl   |   Podman   |   Kind   |
+        +--------------+---------------------------------------------------------------+
+                                             |
+                                         Runtimes
+```
+
+### Runtimes
 
 We now provide some runtime to simulate the cluster, such as:
 
 - `binary` - It will download required binaries of control plane components and start them directly.
 - `docker` - It will use `docker compose` to start the control plane components.
 - `nerdctl` - It will use `nerdctl compose` to start the control plane components.
+- `Podman` - **TODO**
 - `kind` - It will use `kind` to start a cluster and deploy the `kwok` into it.
 
-### Control Plane Components
+### Components
 
 This is a list of control plane components that `kwokctl` will start:
 
@@ -51,3 +72,5 @@ This is a list of control plane components that `kwokctl` will start:
 
 - `kwokctl kubectl`
 - `kwokctl etcdctl`
+
+[Stages Configuration]: {{< relref "/docs/user/stages-configuration" >}}
