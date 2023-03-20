@@ -156,14 +156,20 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 	conf.QuietPull = format.Ptr(envs.GetEnvWithPrefix("QUIET_PULL", *conf.QuietPull))
 
 	conf.Runtime = envs.GetEnvWithPrefix("RUNTIME", conf.Runtime)
-	if len(conf.Runtimes) == 0 {
+	if conf.Runtime == "" && len(conf.Runtimes) == 0 {
 		conf.Runtimes = []string{
 			consts.RuntimeTypeDocker,
-			consts.RuntimeTypeNerdctl,
 		}
 		if GOOS == "linux" {
-			conf.Runtimes = append(conf.Runtimes, consts.RuntimeTypeBinary)
+			// TODO: Move to above after test coverage
+			conf.Runtimes = append(conf.Runtimes,
+				consts.RuntimeTypeNerdctl,
+				consts.RuntimeTypeBinary,
+			)
 		}
+	}
+	if conf.Runtime == "" && len(conf.Runtimes) == 1 {
+		conf.Runtime = conf.Runtimes[0]
 	}
 
 	conf.Mode = envs.GetEnvWithPrefix("MODE", conf.Mode)
