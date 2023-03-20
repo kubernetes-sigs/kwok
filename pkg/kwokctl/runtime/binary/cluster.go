@@ -43,7 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
-// Cluster is a implementation of Runtime for binary
+// Cluster is an implementation of Runtime for binary
 type Cluster struct {
 	*runtime.Cluster
 }
