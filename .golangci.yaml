@@ -64,7 +64,7 @@ linters-settings:
   stylecheck:
     go: "1.19"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
-    checks: [ "all", "-ST1000", "-ST1003" ]
+    checks: ["all", "-ST1000", "-ST1003"]
   depguard:
     include-go-root: true
     packages:
