@@ -8,42 +8,24 @@ spec:
     kind: Node
   selector:
     matchExpressions:
-      - key: '.status.conditions'
-        operator: 'DoesNotExist'
+      - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+        operator: 'NotIn'
+        values:
+          - 'True'
   next:
     statusTemplate: |
       {{ $now := Now }}
+      {{ $lastTransitionTime := or .creationTimestamp $now }}
       conditions:
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: kubelet is posting ready status
-          reason: KubeletReady
-          status: "True"
-          type: Ready
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: kubelet has sufficient disk space available
-          reason: KubeletHasSufficientDisk
-          status: "False"
-          type: OutOfDisk
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: kubelet has sufficient memory available
-          reason: KubeletHasSufficientMemory
-          status: "False"
-          type: MemoryPressure
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: kubelet has no disk pressure
-          reason: KubeletHasNoDiskPressure
-          status: "False"
-          type: DiskPressure
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: RouteController created a route
-          reason: RouteCreated
-          status: "False"
-          type: NetworkUnavailable
+        {{ range NodeConditions }}
+        - lastHeartbeatTime: "{{ $now }}"
+          lastTransitionTime: "{{ $lastTransitionTime }}"
+          message: "{{ .message }}"
+          reason: "{{ .reason }}"
+          status: "{{ .status }}"
+          type: "{{ .type }}"
+        {{ end }}
+
       addresses:
       {{ with .status.addresses }}
       {{ YAML . 1 }}
@@ -109,42 +91,23 @@ spec:
         operator: 'In'
         values:
           - Running
-      - key: '.status.conditions'
-        operator: 'Exists'
+      - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+        operator: 'In'
+        values:
+          - 'True'
   delay:
     durationMilliseconds: 20000
     jitterDurationMilliseconds: 25000
   next:
     statusTemplate: |
       {{ $now := Now }}
+      {{ $lastTransitionTime := or .creationTimestamp $now }}
       conditions:
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: kubelet is posting ready status
-          reason: KubeletReady
-          status: "True"
-          type: Ready
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: kubelet has sufficient disk space available
-          reason: KubeletHasSufficientDisk
-          status: "False"
-          type: OutOfDisk
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: kubelet has sufficient memory available
-          reason: KubeletHasSufficientMemory
-          status: "False"
-          type: MemoryPressure
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: kubelet has no disk pressure
-          reason: KubeletHasNoDiskPressure
-          status: "False"
-          type: DiskPressure
-        - lastHeartbeatTime: {{ $now }}
-          lastTransitionTime: {{ StartTime }}
-          message: RouteController created a route
-          reason: RouteCreated
-          status: "False"
-          type: NetworkUnavailable
+        {{ range NodeConditions }}
+        - lastHeartbeatTime: "{{ $now }}"
+          lastTransitionTime: "{{ $lastTransitionTime }}"
+          message: "{{ .message }}"
+          reason: "{{ .reason }}"
+          status: "{{ .status }}"
+          type: "{{ .type }}"
+        {{ end }}
