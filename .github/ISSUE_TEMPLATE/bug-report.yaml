@@ -67,7 +67,7 @@ body:
       label: OS version
       value: |
         <details>
-        ```console        
+        ```console
         # On Linux:
         $ cat /etc/os-release
         # paste output here

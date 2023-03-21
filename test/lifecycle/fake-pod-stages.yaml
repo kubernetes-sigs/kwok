@@ -56,7 +56,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name:  test-pod-for-job
+  name: test-pod-for-job
 spec:
   template:
     spec:

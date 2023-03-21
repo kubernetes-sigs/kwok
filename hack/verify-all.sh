@@ -51,6 +51,11 @@ if [[ "${VERIFY_CMD_DOCS:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-cmd-docs.sh || failed+=(cmd-docs)
 fi
 
+if [[ "${VERIFY_YAMLLINT:-true}" == "true" ]]; then
+  echo "[*] Verifying YAML lint..."
+  "${ROOT_DIR}"/hack/verify-yamllint.sh || failed+=(yamllint)
+fi
+
 # exit based on verify scripts
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Verify failed for: ${failed[*]}"
