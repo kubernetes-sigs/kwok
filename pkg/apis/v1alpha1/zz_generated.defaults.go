@@ -82,6 +82,15 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		var ptrVar1 bool = false
 		in.Options.KubeAuthorization = &ptrVar1
 	}
+	if in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds == 0 {
+		in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds = 600000
+	}
+	if in.Options.KubeControllerManagerNodeMonitorGracePeriodMilliseconds == 0 {
+		in.Options.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = 3600000
+	}
+	if in.Options.NodeStatusUpdateFrequencyMilliseconds == 0 {
+		in.Options.NodeStatusUpdateFrequencyMilliseconds = 1200000
+	}
 	for i := range in.Components {
 		a := &in.Components[i]
 		for j := range a.Ports {
