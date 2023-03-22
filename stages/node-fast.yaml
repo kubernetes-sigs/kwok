@@ -109,6 +109,8 @@ spec:
         operator: 'In'
         values:
           - Running
+      - key: '.status.conditions'
+        operator: 'Exists'
   delay:
     durationMilliseconds: 20000
     jitterDurationMilliseconds: 25000
