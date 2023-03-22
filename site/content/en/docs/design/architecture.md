@@ -27,22 +27,24 @@ It creates the cluster with the `kwokctl create cluster` command.
 
 Use the runtime to start the control plane component, and then access it from `kube-apiserver` as if it was a real cluster.
 
-``` goat { height=250 width=750 }
-                                        Components
-                                             |
-        +--------------+---------------------------------------------------------------+
-        |   etcdctl ---)--->  etcd                                       ⎫             |
-        |              |       |                                         ⎪             |
-        | ------------ |       |             +- kube-controller-manager  ⎪             |
-        |              |       |            /                            ⎬ prometheus  |
-Tools - |   kubectl ---)-> kube-apiserver -+--- kube-scheduler           ⎪             |
-        |              |                    \                            ⎪             |
-        | ------------ |                     +- kwok-controller          ⎭             |
-        |              +---------------------------------------------------------------+
-        |   kwokctl -->|   Binary   |   Docker   |   Nerdctl   |   Podman   |   Kind   |
-        +--------------+---------------------------------------------------------------+
-                                             |
-                                         Runtimes
+``` goat { height=280 width=750 }
+                                          Components
+
+                                               |
+          +--------------+---------------------------------------------------------------+
+          |   etcdctl ---)--->  etcd                                       ⎫             |
+          |              |       |                                         ⎪             |
+          | ------------ |       |             +- kube-controller-manager  ⎪             |
+          |              |       |            /                            ⎬ prometheus  |
+Tools --- |   kubectl ---)-> kube-apiserver -+--- kube-scheduler           ⎪             |
+          |              |                    \                            ⎪             |
+          | ------------ |                     +- kwok-controller          ⎭             |
+          |              +---------------------------------------------------------------+
+          |   kwokctl -->|   binary   |   docker   |   nerdctl   |   podman   |   kind   |
+          +--------------+---------------------------------------------------------------+
+                                               |
+
+                                           Runtimes
 ```
 
 ### Runtimes
@@ -52,7 +54,7 @@ We now provide some runtime to simulate the cluster, such as:
 - `binary` - It will download required binaries of control plane components and start them directly.
 - `docker` - It will use `docker compose` to start the control plane components.
 - `nerdctl` - It will use `nerdctl compose` to start the control plane components.
-- `Podman` - **TODO**
+- `podman` - **TODO**
 - `kind` - It will use `kind` to start a cluster and deploy the `kwok` into it.
 
 ### Components
