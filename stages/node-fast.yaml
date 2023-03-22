@@ -86,6 +86,7 @@ spec:
         bootID: {{ with .bootID }} {{ . }} {{ else }} "" {{ end }}
         containerRuntimeVersion: {{ with .containerRuntimeVersion }} {{ . }} {{ else }} "" {{ end }}
         kernelVersion: {{ with .kernelVersion }} {{ . }} {{ else }} "" {{ end }}
+        kwokVersion: {{ with .kwokVersion }} {{ . }} {{ else }} "fake" {{ end }}
         kubeProxyVersion: {{ with .kubeProxyVersion }} {{ . }} {{ else }} "fake" {{ end }}
         kubeletVersion: {{ with .kubeletVersion }} {{ . }} {{ else }} "fake" {{ end }}
         machineID: {{ with .machineID }} {{ . }} {{ else }} "" {{ end }}

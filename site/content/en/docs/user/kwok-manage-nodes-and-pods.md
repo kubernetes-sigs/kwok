@@ -61,6 +61,7 @@ status:
     bootID: ""
     containerRuntimeVersion: ""
     kernelVersion: ""
+    kwokVersion: ""
     kubeProxyVersion: fake
     kubeletVersion: fake
     machineID: ""
