@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
+	"sigs.k8s.io/kwok/pkg/utils/tasks"
 )
 
 var (
@@ -56,13 +57,15 @@ type PodController struct {
 	clientSet                             kubernetes.Interface
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
+	parallelPriority                      int
+	delayParallelPriority                 int
 	nodeIP                                string
 	defaultCIDR                           string
 	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	ipPools                               maps.SyncMap[string, *ipPool]
 	renderer                              *renderer
 	lockPodChan                           chan *corev1.Pod
-	parallelTasks                         *parallelTasks
+	tasks                                 *tasks.ParallelPriorityTasks
 	lifecycle                             Lifecycle
 	cronjob                               *cron.Cron
 	delayJobsCancels                      maps.SyncMap[string, cron.DoFunc]
@@ -75,11 +78,13 @@ type PodControllerConfig struct {
 	ClientSet                             kubernetes.Interface
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
+	ParallelPriority                      int
+	DelayParallelPriority                 int
 	NodeIP                                string
 	CIDR                                  string
 	NodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	Stages                                []*internalversion.Stage
-	LockPodParallelism                    int
+	Tasks                                 *tasks.ParallelPriorityTasks
 	FuncMap                               template.FuncMap
 	Recorder                              record.EventRecorder
 }
@@ -106,12 +111,14 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		clientSet:                             conf.ClientSet,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
+		parallelPriority:                      conf.ParallelPriority,
+		delayParallelPriority:                 conf.DelayParallelPriority,
 		nodeIP:                                conf.NodeIP,
 		defaultCIDR:                           conf.CIDR,
 		nodeGetFunc:                           conf.NodeGetFunc,
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
-		parallelTasks:                         newParallelTasks(conf.LockPodParallelism),
+		tasks:                                 conf.Tasks,
 		lockPodChan:                           make(chan *corev1.Pod),
 		recorder:                              conf.Recorder,
 	}
@@ -285,7 +292,7 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 		"stage", stageName,
 	)
 	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(time.Now().Add(delay)), func() {
-		c.parallelTasks.Add(func() {
+		c.tasks.Add(c.delayParallelPriority, func() {
 			cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
 			if ok {
 				cancelOld()
@@ -328,7 +335,7 @@ func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
 	logger := log.FromContext(ctx)
 	for pod := range pods {
 		localPod := pod
-		c.parallelTasks.Add(func() {
+		c.tasks.Add(c.parallelPriority, func() {
 			err := c.LockPod(ctx, localPod)
 			if err != nil {
 				logger.Error("Failed to lock pod", err,
@@ -338,7 +345,6 @@ func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
 			}
 		})
 	}
-	c.parallelTasks.Wait()
 }
 
 func (c *PodController) needLockPod(pod *corev1.Pod) bool {

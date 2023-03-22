@@ -44,6 +44,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/tasks"
 )
 
 // NodeController is a fake nodes implementation that can be used to test
@@ -56,12 +57,14 @@ type NodeController struct {
 	disregardStatusWithLabelSelector      labels.Selector
 	manageNodesWithAnnotationSelector     string
 	manageNodesWithLabelSelector          string
+	parallelPriority                      int
+	delayParallelPriority                 int
 	nodeSelectorFunc                      func(node *corev1.Node) bool
 	lockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
 	nodesSets                             maps.SyncMap[string, *NodeInfo]
 	renderer                              *renderer
 	nodeChan                              chan *corev1.Node
-	parallelTasks                         *parallelTasks
+	tasks                                 *tasks.ParallelPriorityTasks
 	lifecycle                             Lifecycle
 	cronjob                               *cron.Cron
 	delayJobsCancels                      maps.SyncMap[string, cron.DoFunc]
@@ -77,11 +80,13 @@ type NodeControllerConfig struct {
 	DisregardStatusWithLabelSelector      string
 	ManageNodesWithAnnotationSelector     string
 	ManageNodesWithLabelSelector          string
+	ParallelPriority                      int
+	DelayParallelPriority                 int
 	NodeIP                                string
 	NodeName                              string
 	NodePort                              int
 	Stages                                []*internalversion.Stage
-	LockNodeParallelism                   int
+	Tasks                                 *tasks.ParallelPriorityTasks
 	FuncMap                               template.FuncMap
 	Recorder                              record.EventRecorder
 }
@@ -116,13 +121,15 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		manageNodesWithAnnotationSelector:     conf.ManageNodesWithAnnotationSelector,
 		manageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
+		parallelPriority:                      conf.ParallelPriority,
+		delayParallelPriority:                 conf.DelayParallelPriority,
 		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
 		nodeIP:                                conf.NodeIP,
 		nodeName:                              conf.NodeName,
 		nodePort:                              conf.NodePort,
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
-		parallelTasks:                         newParallelTasks(conf.LockNodeParallelism),
+		tasks:                                 conf.Tasks,
 		nodeChan:                              make(chan *corev1.Node),
 		recorder:                              conf.Recorder,
 	}
@@ -269,7 +276,7 @@ func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan *corev1.Nod
 	logger := log.FromContext(ctx)
 	for node := range nodes {
 		localNode := node
-		c.parallelTasks.Add(func() {
+		c.tasks.Add(c.parallelPriority, func() {
 			err := c.LockNode(ctx, localNode)
 			if err != nil {
 				logger.Error("Failed to lock node", err,
@@ -279,7 +286,6 @@ func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan *corev1.Nod
 			}
 		})
 	}
-	c.parallelTasks.Wait()
 }
 
 // FinalizersModify modify finalizers of node
@@ -413,7 +419,7 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 		"stage", stageName,
 	)
 	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(time.Now().Add(delay)), func() {
-		c.parallelTasks.Add(func() {
+		c.tasks.Add(c.delayParallelPriority, func() {
 			cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
 			if ok {
 				cancelOld()

@@ -17,6 +17,7 @@ require (
 	github.com/wzshiming/cmux v0.3.2
 	github.com/wzshiming/cron v0.2.1
 	github.com/wzshiming/ctc v1.2.3
+	github.com/wzshiming/llrb v0.2.1
 	golang.org/x/exp v0.0.0-20221126150942-6ab00d035af9
 	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.5.0
@@ -68,7 +69,6 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/wzshiming/llrb v0.2.1 // indirect
 	github.com/wzshiming/trie v0.1.1 // indirect
 	github.com/wzshiming/winseq v0.0.0-20200112104235-db357dc107ae // indirect
 	golang.org/x/mod v0.6.0 // indirect

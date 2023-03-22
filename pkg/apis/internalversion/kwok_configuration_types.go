@@ -79,4 +79,19 @@ type KwokConfigurationOptions struct {
 
 	// EnableProfiling enables /debug/pprof handler.
 	EnableProfilingHandler bool
+
+	// TotalParallel is the total number of parallel tasks.
+	TotalParallel int
+
+	// NodeParallelPriority is the priority of parallel tasks for Node.
+	NodeParallelPriority int
+
+	// NodeDelayParallelPriority is the priority of parallel delay tasks for Node.
+	NodeDelayParallelPriority int
+
+	// PodParallelPriority is the priority of parallel tasks for Pod.
+	PodParallelPriority int
+
+	// PodDelayParallelPriority is the priority of parallel delay tasks for Pod.
+	PodDelayParallelPriority int
 }

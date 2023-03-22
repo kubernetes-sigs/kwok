@@ -59,6 +59,21 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 		var ptrVar1 bool = true
 		in.Options.EnableProfilingHandler = &ptrVar1
 	}
+	if in.Options.TotalParallel == 0 {
+		in.Options.TotalParallel = 32
+	}
+	if in.Options.NodeParallelPriority == 0 {
+		in.Options.NodeParallelPriority = 8
+	}
+	if in.Options.NodeDelayParallelPriority == 0 {
+		in.Options.NodeDelayParallelPriority = 16
+	}
+	if in.Options.PodParallelPriority == 0 {
+		in.Options.PodParallelPriority = 2
+	}
+	if in.Options.PodDelayParallelPriority == 0 {
+		in.Options.PodDelayParallelPriority = 2
+	}
 }
 
 func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {

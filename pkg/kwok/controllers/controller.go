@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/tasks"
 )
 
 var (
@@ -77,6 +78,11 @@ type Config struct {
 	ManageNodesWithLabelSelector          string
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
+	TotalParallel                         int
+	NodeParallelPriority                  int
+	NodeDelayParallelPriority             int
+	PodParallelPriority                   int
+	PodDelayParallelPriority              int
 	CIDR                                  string
 	NodeIP                                string
 	NodeName                              string
@@ -117,6 +123,8 @@ func NewController(conf Config) (*Controller, error) {
 
 	var lockPodsOnNodeFunc func(ctx context.Context, nodeName string) error
 
+	tasks := tasks.NewParallelPriorityTasks(conf.TotalParallel)
+
 	nodes, err := NewNodeController(NodeControllerConfig{
 		ClientSet:                             conf.ClientSet,
 		NodeIP:                                conf.NodeIP,
@@ -126,14 +134,16 @@ func NewController(conf Config) (*Controller, error) {
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
 		ManageNodesWithAnnotationSelector:     conf.ManageNodesWithAnnotationSelector,
 		ManageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
+		ParallelPriority:                      conf.NodeParallelPriority,
+		DelayParallelPriority:                 conf.NodeDelayParallelPriority,
 		NodeSelectorFunc:                      nodeSelectorFunc,
 		LockPodsOnNodeFunc: func(ctx context.Context, nodeName string) error {
 			return lockPodsOnNodeFunc(ctx, nodeName)
 		},
-		Stages:              conf.NodeStages,
-		LockNodeParallelism: 16,
-		FuncMap:             defaultFuncMap,
-		Recorder:            recorder,
+		Stages:   conf.NodeStages,
+		Tasks:    tasks,
+		FuncMap:  defaultFuncMap,
+		Recorder: recorder,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create nodes controller: %w", err)
@@ -146,8 +156,10 @@ func NewController(conf Config) (*Controller, error) {
 		CIDR:                                  conf.CIDR,
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
+		ParallelPriority:                      conf.PodParallelPriority,
+		DelayParallelPriority:                 conf.PodDelayParallelPriority,
 		Stages:                                conf.PodStages,
-		LockPodParallelism:                    16,
+		Tasks:                                 tasks,
 		NodeGetFunc:                           nodes.Get,
 		FuncMap:                               defaultFuncMap,
 		Recorder:                              recorder,

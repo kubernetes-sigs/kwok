@@ -109,4 +109,24 @@ type KwokConfigurationOptions struct {
 	// EnableProfiling enables /debug/pprof handler, if enableDebuggingHandlers is true.
 	// +default=true
 	EnableProfilingHandler *bool `json:"enableProfilingHandler,omitempty"`
+
+	// TotalParallel is the total number of parallel tasks.
+	// +default=32
+	TotalParallel int `json:"totalParallel,omitempty"`
+
+	// NodeParallelPriority is the priority of parallel tasks for Node.
+	// +default=8
+	NodeParallelPriority int `json:"nodeParallelPriority,omitempty"`
+
+	// NodeDelayParallelPriority is the priority of parallel delay tasks for Node.
+	// +default=16
+	NodeDelayParallelPriority int `json:"nodeDelayParallelPriority,omitempty"`
+
+	// PodParallelPriority is the priority of parallel tasks for Pod.
+	// +default=2
+	PodParallelPriority int `json:"podParallelPriority,omitempty"`
+
+	// PodDelayParallelPriority is the priority of parallel delay tasks for Pod.
+	// +default=2
+	PodDelayParallelPriority int `json:"podDelayParallelPriority,omitempty"`
 }

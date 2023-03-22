@@ -561,6 +561,11 @@ func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfig
 	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableProfilingHandler, &out.EnableProfilingHandler, s); err != nil {
 		return err
 	}
+	out.TotalParallel = in.TotalParallel
+	out.NodeParallelPriority = in.NodeParallelPriority
+	out.NodeDelayParallelPriority = in.NodeDelayParallelPriority
+	out.PodParallelPriority = in.PodParallelPriority
+	out.PodDelayParallelPriority = in.PodDelayParallelPriority
 	return nil
 }
 
@@ -596,6 +601,11 @@ func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfig
 	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableProfilingHandler, &out.EnableProfilingHandler, s); err != nil {
 		return err
 	}
+	out.TotalParallel = in.TotalParallel
+	out.NodeParallelPriority = in.NodeParallelPriority
+	out.NodeDelayParallelPriority = in.NodeDelayParallelPriority
+	out.PodParallelPriority = in.PodParallelPriority
+	out.PodDelayParallelPriority = in.PodDelayParallelPriority
 	return nil
 }
 

@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/tasks"
 	"sigs.k8s.io/kwok/stages"
 )
 
@@ -70,12 +71,12 @@ func TestNodeController(t *testing.T) {
 	}
 	nodeStageStatus, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
 	nodes, err := NewNodeController(NodeControllerConfig{
-		ClientSet:           clientset,
-		NodeIP:              "10.0.0.1",
-		NodeSelectorFunc:    nodeSelectorFunc,
-		Stages:              nodeStageStatus,
-		FuncMap:             defaultFuncMap,
-		LockNodeParallelism: 2,
+		ClientSet:        clientset,
+		NodeIP:           "10.0.0.1",
+		NodeSelectorFunc: nodeSelectorFunc,
+		Stages:           nodeStageStatus,
+		FuncMap:          defaultFuncMap,
+		Tasks:            tasks.NewParallelPriorityTasks(2),
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new nodes controller error: %w", err))

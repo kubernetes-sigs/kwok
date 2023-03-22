@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/tasks"
 	"sigs.k8s.io/kwok/stages"
 )
 
@@ -170,7 +171,7 @@ func TestPodController(t *testing.T) {
 		Stages:                                podStageStatus,
 		NodeGetFunc:                           nodeGetFunc,
 		FuncMap:                               defaultFuncMap,
-		LockPodParallelism:                    2,
+		Tasks:                                 tasks.NewParallelPriorityTasks(2),
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new pods controller error: %w", err))
