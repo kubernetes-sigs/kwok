@@ -19,22 +19,26 @@ package cluster
 
 import (
 	"context"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type flagpole struct {
-	Name string
+	Name       string
+	Kubeconfig string
 }
 
 // NewCommand returns a new cobra.Command for cluster creation
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
+	flags.Kubeconfig = path.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -45,6 +49,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			return runE(cmd.Context(), flags)
 		},
 	}
+	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "The path to the kubeconfig file that will remove the deleted cluster")
 	return cmd
 }
 
@@ -56,21 +61,47 @@ func runE(ctx context.Context, flags *flagpole) error {
 	logger = logger.With("cluster", flags.Name)
 	ctx = log.NewContext(ctx, logger)
 
+	var err error
+	flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
+	if err != nil {
+		return err
+	}
+
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 	if err != nil {
 		return err
 	}
-	logger.Info("Stopping cluster")
-	err = rt.Down(ctx)
-	if err != nil {
-		logger.Error("Stopping cluster", err)
+	logger.Info("Cluster is stopping")
+
+	start := time.Now()
+	if flags.Kubeconfig != "" {
+		err = rt.RemoveContext(ctx, flags.Kubeconfig)
+		if err != nil {
+			logger.Error("Failed to remove context from kubeconfig", err,
+				"kubeconfig", flags.Kubeconfig,
+			)
+		}
+		logger.Debug("Remove context from kubeconfig",
+			"kubeconfig", flags.Kubeconfig,
+		)
 	}
 
-	logger.Info("Deleting cluster")
+	err = rt.Down(ctx)
+	if err != nil {
+		return err
+	}
+	logger.Info("Cluster is stopped",
+		"elapsed", time.Since(start),
+	)
+
+	start = time.Now()
+	logger.Info("Cluster is deleting")
 	err = rt.Uninstall(ctx)
 	if err != nil {
 		return err
 	}
-	logger.Info("Cluster deleted")
+	logger.Info("Cluster is deleted",
+		"elapsed", time.Since(start),
+	)
 	return nil
 }

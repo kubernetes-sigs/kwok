@@ -15,7 +15,7 @@ kwok [flags]
       --disregard-status-with-label-selector string        All node/pod status excluding the ones that match the label selector will be watched and managed.
       --experimental-enable-cni                            Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux
   -h, --help                                               help for kwok
-      --kubeconfig string                                  Path to the kubeconfig file to use
+      --kubeconfig string                                  Path to the kubeconfig file to use (default "~/.kube/config")
       --manage-all-nodes                                   All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.
       --manage-nodes-with-annotation-selector string       Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes.
       --manage-nodes-with-label-selector string            Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes.
