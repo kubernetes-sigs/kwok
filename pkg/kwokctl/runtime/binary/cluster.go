@@ -288,17 +288,19 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
-			Workdir:           workdir,
-			Binary:            kubeControllerManagerPath,
-			Version:           kubeControllerManagerVersion,
-			Address:           localAddress,
-			Port:              conf.KubeControllerManagerPort,
-			SecurePort:        conf.SecurePort,
-			CaCertPath:        caCertPath,
-			AdminKeyPath:      adminKeyPath,
-			KubeAuthorization: conf.KubeAuthorization,
-			KubeconfigPath:    kubeconfigPath,
-			KubeFeatureGates:  conf.KubeFeatureGates,
+			Workdir:                            workdir,
+			Binary:                             kubeControllerManagerPath,
+			Version:                            kubeControllerManagerVersion,
+			Address:                            localAddress,
+			Port:                               conf.KubeControllerManagerPort,
+			SecurePort:                         conf.SecurePort,
+			CaCertPath:                         caCertPath,
+			AdminKeyPath:                       adminKeyPath,
+			KubeAuthorization:                  conf.KubeAuthorization,
+			KubeconfigPath:                     kubeconfigPath,
+			KubeFeatureGates:                   conf.KubeFeatureGates,
+			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
+			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
 		})
 		if err != nil {
 			return err

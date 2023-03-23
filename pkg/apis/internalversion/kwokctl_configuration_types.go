@@ -170,6 +170,15 @@ type KwokctlConfigurationOptions struct {
 
 	// CacheDir is the directory of the cache.
 	CacheDir string
+
+	// KubeControllerManagerNodeMonitorPeriodMilliseconds is --node-monitor-period for kube-controller-manager.
+	KubeControllerManagerNodeMonitorPeriodMilliseconds int64
+
+	// KubeControllerManagerNodeMonitorGracePeriodMilliseconds is --node-monitor-grace-period for kube-controller-manager.
+	KubeControllerManagerNodeMonitorGracePeriodMilliseconds int64
+
+	// NodeStatusUpdateFrequencyMilliseconds is --node-status-update-frequency for kwok like kubelet.
+	NodeStatusUpdateFrequencyMilliseconds int64
 }
 
 // Component is a component of the cluster.

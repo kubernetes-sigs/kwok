@@ -17,6 +17,8 @@ limitations under the License.
 package components
 
 import (
+	"time"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -24,19 +26,21 @@ import (
 
 // BuildKubeControllerManagerComponentConfig is the configuration for building a kube-controller-manager component.
 type BuildKubeControllerManagerComponentConfig struct {
-	Binary            string
-	Image             string
-	Version           version.Version
-	Workdir           string
-	Address           string
-	Port              uint32
-	SecurePort        bool
-	CaCertPath        string
-	AdminCertPath     string
-	AdminKeyPath      string
-	KubeAuthorization bool
-	KubeconfigPath    string
-	KubeFeatureGates  string
+	Binary                             string
+	Image                              string
+	Version                            version.Version
+	Workdir                            string
+	Address                            string
+	Port                               uint32
+	SecurePort                         bool
+	CaCertPath                         string
+	AdminCertPath                      string
+	AdminKeyPath                       string
+	KubeAuthorization                  bool
+	KubeconfigPath                     string
+	KubeFeatureGates                   string
+	NodeMonitorPeriodMilliseconds      int64
+	NodeMonitorGracePeriodMilliseconds int64
 }
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
@@ -50,6 +54,18 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	if conf.KubeFeatureGates != "" {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 			"--feature-gates="+conf.KubeFeatureGates,
+		)
+	}
+
+	if conf.NodeMonitorPeriodMilliseconds > 0 {
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			"--node-monitor-period="+format.String(time.Duration(conf.NodeMonitorPeriodMilliseconds)*time.Millisecond),
+		)
+	}
+
+	if conf.NodeMonitorGracePeriodMilliseconds > 0 {
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			"--node-monitor-grace-period="+format.String(time.Duration(conf.NodeMonitorGracePeriodMilliseconds)*time.Millisecond),
 		)
 	}
 
