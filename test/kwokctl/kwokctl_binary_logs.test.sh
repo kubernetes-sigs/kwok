@@ -22,7 +22,7 @@ source "${DIR}/helper.sh"
 function main() {
   local all_releases=("${@}")
 
-  test_all "docker" "logs" "${all_releases[@]}" || exit 1
+  test_all "binary" "logs" "${all_releases[@]}" || exit 1
 }
 
 requirements_for_binary

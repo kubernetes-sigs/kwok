@@ -18,6 +18,7 @@ package server
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -170,7 +171,7 @@ func findLogInLogs(container string, logs []internalversion.Log) (*internalversi
 // logMessage is the CRI internal log type.
 type logMessage struct {
 	timestamp time.Time
-	stream    string
+	stream    runtimeapi.LogStreamType
 	log       []byte
 }
 
@@ -358,6 +359,15 @@ var parseFuncs = []parseFunc{
 	parseDockerJSONLog, // Docker JSON log format parse function
 }
 
+func getParseFunc(log []byte) (parseFunc, error) {
+	for _, p := range parseFuncs {
+		if err := p(log, &logMessage{}); err == nil {
+			return p, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported log format: %q", log)
+}
+
 // parseCRILog parses logs in CRI log format. CRI Log format example:
 //
 //	2016-10-06T00:17:09.669794202Z stdout P log content 1
@@ -429,18 +439,9 @@ func parseDockerJSONLog(log []byte, msg *logMessage) error {
 		return fmt.Errorf("failed with %v to unmarshal log %q", err, l)
 	}
 	msg.timestamp = l.Created
-	msg.stream = l.Stream
+	msg.stream = runtimeapi.LogStreamType(l.Stream)
 	msg.log = []byte(l.Log)
 	return nil
-}
-
-func getParseFunc(log []byte) (parseFunc, error) {
-	for _, p := range parseFuncs {
-		if err := p(log, &logMessage{}); err == nil {
-			return p, nil
-		}
-	}
-	return nil, fmt.Errorf("unsupported log format: %q", log)
 }
 
 // logWriter controls the writing into the stream based on the log options.
