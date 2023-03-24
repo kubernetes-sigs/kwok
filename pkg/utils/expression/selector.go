@@ -59,26 +59,35 @@ func NewRequirement(key string, op internalversion.SelectorOperator, vals []stri
 
 // Matches returns true if the Requirement matches the input Labels.
 // There is a match in the following cases:
+// - the operator is 'In' and the value is in the set of values
+// - the operator is 'NotIn' and the value is not in the set of values
+// - the operator is 'Exists' and the key is defined and has a non-empty value
+// - the operator is 'DoesNotExist' and the key is either not defined or has an empty value
 func (r *Requirement) Matches(ctx context.Context, matchData interface{}) (bool, error) {
 	data, err := r.query.Execute(ctx, matchData)
 	if err != nil {
 		return false, err
 	}
 	if data == nil {
-		return false, nil
+		switch r.operator {
+		case internalversion.SelectorOpIn, internalversion.SelectorOpExists:
+			return false, nil
+		case internalversion.SelectorOpNotIn, internalversion.SelectorOpDoesNotExist:
+			return true, nil
+		}
+	} else {
+		switch r.operator {
+		case internalversion.SelectorOpIn:
+			return hasValues(data, r.strValues), nil
+		case internalversion.SelectorOpNotIn:
+			return !hasValues(data, r.strValues), nil
+		case internalversion.SelectorOpExists:
+			return existsValue(data), nil
+		case internalversion.SelectorOpDoesNotExist:
+			return !existsValue(data), nil
+		}
 	}
-	switch r.operator {
-	case internalversion.SelectorOpIn:
-		return hasValues(data, r.strValues), nil
-	case internalversion.SelectorOpNotIn:
-		return !hasValues(data, r.strValues), nil
-	case internalversion.SelectorOpExists:
-		return existsValue(data), nil
-	case internalversion.SelectorOpDoesNotExist:
-		return !existsValue(data), nil
-	default:
-		return false, nil
-	}
+	return false, nil
 }
 
 func hasValues(v []interface{}, vs []string) bool {
