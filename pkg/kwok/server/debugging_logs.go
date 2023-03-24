@@ -72,9 +72,8 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 		return err
 	}
 
-	logOpts := newLogOptions(logOptions, time.Now())
-
-	return readLogs(ctx, log, logOpts, stdout, stderr)
+	opts := newLogOptions(logOptions, time.Now())
+	return readLogs(ctx, log, opts, stdout, stderr)
 }
 
 // getContainerLogs handles containerLogs request against the Kubelet
