@@ -214,12 +214,6 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 	if err != nil {
 		return err
 	}
-	key := pod.Name + "." + pod.Namespace
-
-	_, ok := c.delayJobsCancels.Load(key)
-	if ok {
-		return nil
-	}
 
 	stage, err := c.lifecycle.Match(pod.Labels, pod.Annotations, data)
 	if err != nil {
@@ -233,64 +227,23 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 	}
 	now := time.Now()
 	delay, _ := stage.Delay(ctx, data, now)
-	stageName := stage.Name()
-	next := stage.Next()
 
-	do := func() {
-		if next.Event != nil && c.recorder != nil {
-			c.recorder.Event(&corev1.ObjectReference{
-				Kind:      "Pod",
-				UID:       pod.UID,
-				Name:      pod.Name,
-				Namespace: pod.Namespace,
-			}, next.Event.Type, next.Event.Reason, next.Event.Message)
-		}
-		if next.Finalizers != nil {
-			err = c.FinalizersModify(ctx, pod, next.Finalizers)
-			if err != nil {
-				logger.Error("Failed to finalizers", err)
-			}
-		}
-		if next.Delete {
-			err = c.DeletePod(ctx, pod)
-			if err != nil {
-				logger.Error("Failed to delete pod", err)
-			}
-		} else if next.StatusTemplate != "" {
-			patch, err := c.configurePod(pod, next.StatusTemplate)
-			if err != nil {
-				logger.Error("Failed to configure pod", err)
-				return
-			}
-			if patch == nil {
-				logger.Debug("Skip pod",
-					"reason", "do not need to modify",
-				)
-			} else {
-				err = c.lockPod(ctx, pod, patch)
-				if err != nil {
-					logger.Error("Failed to lock pod", err)
-				}
-			}
-		}
+	if delay != 0 {
+		stageName := stage.Name()
+		logger.Debug("Delayed play stage",
+			"delay", delay,
+			"stage", stageName,
+		)
 	}
 
-	if delay == 0 {
-		do()
-		return nil
-	}
-
-	logger.Debug("Delayed play stage",
-		"delay", delay,
-		"stage", stageName,
-	)
-	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(time.Now().Add(delay)), func() {
+	key := log.KObj(pod).String()
+	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(now.Add(delay)), func() {
+		cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
+		if ok {
+			cancelOld()
+		}
 		c.parallelTasks.Add(func() {
-			cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
-			if ok {
-				cancelOld()
-			}
-			do()
+			c.playStage(ctx, pod, stage)
 		})
 	})
 	if ok {
@@ -301,6 +254,47 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 	}
 
 	return nil
+}
+
+func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *LifecycleStage) {
+	next := stage.Next()
+	logger := log.FromContext(ctx)
+	if next.Event != nil && c.recorder != nil {
+		c.recorder.Event(&corev1.ObjectReference{
+			Kind:      "Pod",
+			UID:       pod.UID,
+			Name:      pod.Name,
+			Namespace: pod.Namespace,
+		}, next.Event.Type, next.Event.Reason, next.Event.Message)
+	}
+	if next.Finalizers != nil {
+		err := c.FinalizersModify(ctx, pod, next.Finalizers)
+		if err != nil {
+			logger.Error("Failed to finalizers", err)
+		}
+	}
+	if next.Delete {
+		err := c.DeletePod(ctx, pod)
+		if err != nil {
+			logger.Error("Failed to delete pod", err)
+		}
+	} else if next.StatusTemplate != "" {
+		patch, err := c.configurePod(pod, next.StatusTemplate)
+		if err != nil {
+			logger.Error("Failed to configure pod", err)
+			return
+		}
+		if patch == nil {
+			logger.Debug("Skip pod",
+				"reason", "do not need to modify",
+			)
+		} else {
+			err = c.lockPod(ctx, pod, patch)
+			if err != nil {
+				logger.Error("Failed to lock pod", err)
+			}
+		}
+	}
 }
 
 func (c *PodController) lockPod(ctx context.Context, pod *corev1.Pod, patch []byte) error {
@@ -327,18 +321,14 @@ func (c *PodController) lockPod(ctx context.Context, pod *corev1.Pod, patch []by
 func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
 	logger := log.FromContext(ctx)
 	for pod := range pods {
-		localPod := pod
-		c.parallelTasks.Add(func() {
-			err := c.LockPod(ctx, localPod)
-			if err != nil {
-				logger.Error("Failed to lock pod", err,
-					"pod", log.KObj(localPod),
-					"node", localPod.Spec.NodeName,
-				)
-			}
-		})
+		err := c.LockPod(ctx, pod)
+		if err != nil {
+			logger.Error("Failed to lock pod", err,
+				"pod", log.KObj(pod),
+				"node", pod.Spec.NodeName,
+			)
+		}
 	}
-	c.parallelTasks.Wait()
 }
 
 func (c *PodController) needLockPod(pod *corev1.Pod) bool {

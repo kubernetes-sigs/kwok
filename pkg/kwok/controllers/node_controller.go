@@ -309,18 +309,13 @@ func (c *NodeController) ListNodes(ctx context.Context, ch chan<- *corev1.Node, 
 func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan *corev1.Node) {
 	logger := log.FromContext(ctx)
 	for node := range nodes {
-		localNode := node
-		c.parallelTasks.Add(func() {
-			err := c.LockNode(ctx, localNode)
-			if err != nil {
-				logger.Error("Failed to lock node", err,
-					"node", localNode.Name,
-				)
-				return
-			}
-		})
+		err := c.LockNode(ctx, node)
+		if err != nil {
+			logger.Error("Failed to lock node", err,
+				"node", node.Name,
+			)
+		}
 	}
-	c.parallelTasks.Wait()
 }
 
 // FinalizersModify modify finalizers of node
@@ -383,12 +378,6 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 	if err != nil {
 		return err
 	}
-	key := node.Name
-
-	_, ok := c.delayJobsCancels.Load(key)
-	if ok {
-		return nil
-	}
 
 	stage, err := c.lifecycle.Match(node.Labels, node.Annotations, data)
 	if err != nil {
@@ -402,64 +391,23 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 	}
 	now := time.Now()
 	delay, _ := stage.Delay(ctx, data, now)
-	stageName := stage.Name()
-	next := stage.Next()
 
-	do := func() {
-		if next.Event != nil && c.recorder != nil {
-			c.recorder.Event(&corev1.ObjectReference{
-				Kind:      "Node",
-				UID:       node.UID,
-				Name:      node.Name,
-				Namespace: "",
-			}, next.Event.Type, next.Event.Reason, next.Event.Message)
-		}
-		if next.Finalizers != nil {
-			err = c.FinalizersModify(ctx, node, next.Finalizers)
-			if err != nil {
-				logger.Error("Failed to finalizers of node", err)
-			}
-		}
-		if next.Delete {
-			err = c.DeleteNode(ctx, node)
-			if err != nil {
-				logger.Error("Failed to delete node", err)
-			}
-		} else if next.StatusTemplate != "" {
-			patch, err := c.computePatch(node, next.StatusTemplate)
-			if err != nil {
-				logger.Error("Failed to configure node", err)
-				return
-			}
-			if patch == nil {
-				logger.Debug("Skip node",
-					"reason", "do not need to modify",
-				)
-			} else {
-				err = c.lockNode(ctx, node, patch)
-				if err != nil {
-					logger.Error("Failed to lock node", err)
-				}
-			}
-		}
+	if delay != 0 {
+		stageName := stage.Name()
+		logger.Debug("Delayed play stage",
+			"delay", delay,
+			"stage", stageName,
+		)
 	}
 
-	if delay == 0 {
-		do()
-		return nil
-	}
-
-	logger.Debug("Delayed play stage",
-		"delay", delay,
-		"stage", stageName,
-	)
-	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(time.Now().Add(delay)), func() {
+	key := node.Name
+	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(now.Add(delay)), func() {
+		cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
+		if ok {
+			cancelOld()
+		}
 		c.parallelTasks.Add(func() {
-			cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
-			if ok {
-				cancelOld()
-			}
-			do()
+			c.playStage(ctx, node, stage)
 		})
 	})
 	if ok {
@@ -469,6 +417,47 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 		}
 	}
 	return nil
+}
+
+func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *LifecycleStage) {
+	next := stage.Next()
+	logger := log.FromContext(ctx)
+	if next.Event != nil && c.recorder != nil {
+		c.recorder.Event(&corev1.ObjectReference{
+			Kind:      "Node",
+			UID:       node.UID,
+			Name:      node.Name,
+			Namespace: "",
+		}, next.Event.Type, next.Event.Reason, next.Event.Message)
+	}
+	if next.Finalizers != nil {
+		err := c.FinalizersModify(ctx, node, next.Finalizers)
+		if err != nil {
+			logger.Error("Failed to finalizers of node", err)
+		}
+	}
+	if next.Delete {
+		err := c.DeleteNode(ctx, node)
+		if err != nil {
+			logger.Error("Failed to delete node", err)
+		}
+	} else if next.StatusTemplate != "" {
+		patch, err := c.computePatch(node, next.StatusTemplate)
+		if err != nil {
+			logger.Error("Failed to configure node", err)
+			return
+		}
+		if patch == nil {
+			logger.Debug("Skip node",
+				"reason", "do not need to modify",
+			)
+		} else {
+			err = c.lockNode(ctx, node, patch)
+			if err != nil {
+				logger.Error("Failed to lock node", err)
+			}
+		}
+	}
 }
 
 func (c *NodeController) lockNode(ctx context.Context, node *corev1.Node, patch []byte) error {
