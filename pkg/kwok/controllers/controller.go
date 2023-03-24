@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"sigs.k8s.io/kwok/pkg/consts"
 	"strings"
 	"text/template"
 	"time"
@@ -57,9 +56,6 @@ var (
 				data = strings.ReplaceAll("\n"+data, "\n", "\n"+pad)
 			}
 			return data, nil
-		},
-		"Version": func() string {
-			return consts.Version
 		},
 	}
 )
