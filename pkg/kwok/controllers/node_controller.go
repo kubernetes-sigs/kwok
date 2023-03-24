@@ -264,7 +264,6 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 								logger.Error("Failed to lock pods on node", err,
 									"node", node.Name,
 								)
-								return
 							}
 						}
 					}
