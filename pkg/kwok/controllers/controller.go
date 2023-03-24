@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 )
 
 var (
@@ -56,6 +57,9 @@ var (
 				data = strings.ReplaceAll("\n"+data, "\n", "\n"+pad)
 			}
 			return data, nil
+		},
+		"Version": func() string {
+			return consts.Version
 		},
 	}
 )
