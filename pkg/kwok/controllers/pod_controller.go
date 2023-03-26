@@ -397,8 +397,17 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
-					// Recycling PodIP
-					c.recyclingPodIP(ctx, pod)
+					if c.needLockPod(pod) {
+						// Recycling PodIP
+						c.recyclingPodIP(ctx, pod)
+
+						// Cancel delay job
+						key := log.KObj(pod).String()
+						cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
+						if ok {
+							cancelOld()
+						}
+					}
 				}
 			case <-ctx.Done():
 				watcher.Stop()

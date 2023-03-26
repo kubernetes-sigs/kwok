@@ -277,6 +277,13 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 					node := event.Object.(*corev1.Node)
 					if _, has := c.nodesSets.Load(node.Name); has {
 						c.nodesSets.Delete(node.Name)
+
+						// Cancel delay job
+						key := node.Name
+						cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
+						if ok {
+							cancelOld()
+						}
 					}
 				}
 			case <-ctx.Done():
