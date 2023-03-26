@@ -81,8 +81,24 @@ func ParseFromBinary(ctx context.Context, path string) (Version, error) {
 	return ver, nil
 }
 
-// ParseFromImage parses the version from the image tag.
+// ParseFromImage parses the version from the image.
 func ParseFromImage(ctx context.Context, runtime string, image string, command string) (Version, error) {
+	logger := log.FromContext(ctx)
+
+	// Try to parse the version from the image tag.
+	nameAndTag := strings.SplitN(image, ":", 2)
+	if len(nameAndTag) == 2 {
+		ver, err := semver.ParseTolerant(nameAndTag[1])
+		if err == nil {
+			logger.Debug("Parsed version",
+				"image", image,
+				"version", ver,
+			)
+			return ver, nil
+		}
+	}
+
+	// Try to parse the version from the binary in the image.
 	args := []string{"run", "--rm", image}
 	if command != "" {
 		args = append(args, command)
@@ -93,7 +109,6 @@ func ParseFromImage(ctx context.Context, runtime string, image string, command s
 	if err != nil {
 		return Version{}, err
 	}
-	logger := log.FromContext(ctx)
 	content := out.String()
 	ver, err := ParseFromOutput(content)
 	if err != nil {
