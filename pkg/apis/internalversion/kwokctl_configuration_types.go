@@ -29,6 +29,24 @@ type KwokctlConfiguration struct {
 	Options KwokctlConfigurationOptions
 	// Components holds information about the components.
 	Components []Component
+	// ComponentsPatches holds information about the components patches.
+	ComponentsPatches []ComponentPatches
+}
+
+// ExtraArgs holds information about the extra args.
+type ExtraArgs struct {
+	// Key is the key of the extra args.
+	Key string
+	// Value is the value of the extra args.
+	Value string
+}
+
+// ComponentPatches holds information about the component patches.
+type ComponentPatches struct {
+	// Name is the name of the component.
+	Name string
+	// ExtraArgs is the extra args to be patched on the component.
+	ExtraArgs []ExtraArgs
 }
 
 // KwokctlConfigurationOptions holds information about the options.

@@ -199,11 +199,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Workdir:  workdir,
-		Image:    conf.EtcdImage,
-		Version:  etcdVersion,
-		Port:     conf.EtcdPort,
-		DataPath: etcdDataPath,
+		Workdir:   workdir,
+		Image:     conf.EtcdImage,
+		Version:   etcdVersion,
+		Port:      conf.EtcdPort,
+		DataPath:  etcdDataPath,
+		ExtraArgs: runtime.GetComponentExtraArgs(config, "etcd"),
 	})
 	if err != nil {
 		return err
@@ -231,6 +232,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminKeyPath:      adminKeyPath,
 		EtcdPort:          conf.EtcdPort,
 		EtcdAddress:       c.Name() + "-etcd",
+		ExtraArgs:         runtime.GetComponentExtraArgs(config, "kube-apiserver"),
 	})
 	if err != nil {
 		return err
@@ -257,6 +259,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeFeatureGates:                   conf.KubeFeatureGates,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
+			ExtraArgs:                          runtime.GetComponentExtraArgs(config, "kube-controller-manager"),
 		})
 		if err != nil {
 			return err
@@ -291,6 +294,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   inClusterOnHostKubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
+			ExtraArgs:        runtime.GetComponentExtraArgs(config, "kube-scheduler"),
 		})
 		if err != nil {
 			return err
@@ -313,6 +317,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminCertPath:  adminCertPath,
 		AdminKeyPath:   adminKeyPath,
 		NodeName:       c.Name() + "-kwok-controller",
+		ExtraArgs:      runtime.GetComponentExtraArgs(config, "kwok-controller"),
 	})
 	if err != nil {
 		return err
@@ -351,6 +356,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:    prometheusConfigPath,
 			AdminCertPath: adminCertPath,
 			AdminKeyPath:  adminKeyPath,
+			ExtraArgs:     runtime.GetComponentExtraArgs(config, "prometheus"),
 		})
 		if err != nil {
 			return err

@@ -41,6 +41,24 @@ type KwokctlConfiguration struct {
 	Options KwokctlConfigurationOptions `json:"options,omitempty"`
 	// Components holds information about the components.
 	Components []Component `json:"components,omitempty"`
+	// ComponentsPatches holds information about the components patches.
+	ComponentsPatches []ComponentPatches `json:"componentsPatches,omitempty"`
+}
+
+// ExtraArgs holds information about the extra args.
+type ExtraArgs struct {
+	// Key is the key of the extra args.
+	Key string `json:"key"`
+	// Value is the value of the extra args.
+	Value string `json:"value"`
+}
+
+// ComponentPatches holds information about the component patches.
+type ComponentPatches struct {
+	// Name is the name of the component.
+	Name string `json:"name"`
+	// ExtraArgs is the extra args to be patched on the component.
+	ExtraArgs []ExtraArgs `json:"extraArgs,omitempty"`
 }
 
 // KwokctlConfigurationOptions holds information about the options.

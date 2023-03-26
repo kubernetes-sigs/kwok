@@ -20,6 +20,9 @@ spec:
     - --node-ip=$(POD_IP)
     - --node-name=kwok-controller.kube-system.svc
     - --node-port=10247
+    {{ range .ExtraArgs }}
+    - {{ . }}
+    {{ end }}
     env:
     - name: POD_IP
       valueFrom:

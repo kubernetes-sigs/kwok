@@ -1,0 +1,27 @@
+kind: KwokctlConfiguration
+apiVersion: kwok.x-k8s.io/v1alpha1
+componentsPatches:
+  - name: kube-apiserver
+    extraArgs:
+      - key: v
+        value: "5"
+  - name: kube-controller-manager
+    extraArgs:
+      - key: v
+        value: "5"
+  - name: kube-scheduler
+    extraArgs:
+      - key: v
+        value: "5"
+  - name: kwok-controller
+    extraArgs:
+      - key: v
+        value: "-4"
+  - name: etcd
+    extraArgs:
+      - key: log-level
+        value: "debug"
+  - name: prometheus
+    extraArgs:
+      - key: log.level
+        value: "debug"

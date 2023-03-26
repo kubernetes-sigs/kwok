@@ -49,4 +49,5 @@ type BuildKwokControllerPodConfig struct {
 	KwokControllerImageName string
 	KwokControllerImageTag  string
 	Name                    string
+	ExtraArgs               []string
 }

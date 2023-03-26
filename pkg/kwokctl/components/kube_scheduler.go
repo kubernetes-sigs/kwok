@@ -37,6 +37,7 @@ type BuildKubeSchedulerComponentConfig struct {
 	ConfigPath       string
 	KubeconfigPath   string
 	KubeFeatureGates string
+	ExtraArgs        []string
 }
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
@@ -46,6 +47,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	kubeSchedulerArgs := []string{}
+	kubeSchedulerArgs = append(kubeSchedulerArgs, conf.ExtraArgs...)
 
 	if conf.KubeFeatureGates != "" {
 		kubeSchedulerArgs = append(kubeSchedulerArgs,

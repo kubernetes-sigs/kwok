@@ -32,12 +32,16 @@ nodes:
 {{ end }}
 
   kubeadmConfigPatches:
-{{ if .AuditPolicy }}
+{{ if or .AuditPolicy .APIServerExtraArgs }}
   - |
     kind: ClusterConfiguration
     apiServer:
       # enable auditing flags on the API server
       extraArgs:
+      {{ range .APIServerExtraArgs }}
+        "{{.Key}}": "{{.Value}}"
+      {{ end }}
+      {{ if .AuditPolicy }}
         audit-log-path: /var/log/kubernetes/audit.log
         audit-policy-file: /etc/kubernetes/audit/audit.yaml
       # mount new files / directories on the control plane
@@ -52,13 +56,39 @@ nodes:
         mountPath: /var/log/kubernetes
         readOnly: false
         pathType: DirectoryOrCreate
+      {{ end }}
 {{ end }}
 
-{{ if .SchedulerConfig }}
+{{ if .EtcdExtraArgs }}
+  - |
+    kind: ClusterConfiguration
+    etcd:
+      local:
+        extraArgs:
+        {{ range .EtcdExtraArgs }}
+          "{{.Key}}": "{{.Value}}"
+        {{ end }}
+{{ end }}
+
+{{ if .ControllerManagerExtraArgs }}
+  - |
+    kind: ClusterConfiguration
+    controllerManager:
+      extraArgs:
+      {{ range .ControllerManagerExtraArgs }}
+        "{{.Key}}": "{{.Value}}"
+      {{ end }}
+{{ end }}
+
+{{ if or .SchedulerConfig .SchedulerExtraArgs }}
   - |
     kind: ClusterConfiguration
     scheduler:
       extraArgs:
+      {{ range .SchedulerExtraArgs }}
+        "{{.Key}}": "{{.Value}}"
+      {{ end }}
+      {{ if .SchedulerConfig }}
         config: /etc/kubernetes/scheduler/scheduler.yaml
       extraVolumes:
       - name: kubernetes
@@ -66,6 +96,7 @@ nodes:
         mountPath: /etc/kubernetes
         readOnly: true
         pathType: DirectoryOrCreate
+      {{ end }}
 {{ end }}
 
   # mount the local file on the control plane

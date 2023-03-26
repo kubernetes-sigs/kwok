@@ -124,8 +124,10 @@ spec:
     - name: prometheus
       image: {{ .PrometheusImage }}
       args:
-        - --config.file
-        - /etc/prometheus/prometheus.yaml
+        - --config.file=/etc/prometheus/prometheus.yaml
+        {{ range .ExtraArgs }}
+        - {{ . }}
+        {{ end }}
       ports:
         - name: web
           containerPort: 9090

@@ -33,6 +33,7 @@ type BuildPrometheusComponentConfig struct {
 	ConfigPath    string
 	AdminCertPath string
 	AdminKeyPath  string
+	ExtraArgs     []string
 }
 
 // BuildPrometheusComponent builds a prometheus component.
@@ -42,6 +43,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 	}
 
 	prometheusArgs := []string{}
+	prometheusArgs = append(prometheusArgs, conf.ExtraArgs...)
 
 	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume

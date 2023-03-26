@@ -24,14 +24,15 @@ import (
 
 // BuildEtcdComponentConfig is the configuration for building an etcd component.
 type BuildEtcdComponentConfig struct {
-	Binary   string
-	Image    string
-	Version  version.Version
-	DataPath string
-	Workdir  string
-	Address  string
-	Port     uint32
-	PeerPort uint32
+	Binary    string
+	Image     string
+	Version   version.Version
+	DataPath  string
+	Workdir   string
+	Address   string
+	Port      uint32
+	PeerPort  uint32
+	ExtraArgs []string
 }
 
 // BuildEtcdComponent builds an etcd component.
@@ -58,6 +59,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		"--auto-compaction-retention=1",
 		"--quota-backend-bytes=8589934592",
 	}
+	etcdArgs = append(etcdArgs, conf.ExtraArgs...)
 
 	inContainer := conf.Image != ""
 	if inContainer {
