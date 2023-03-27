@@ -20,6 +20,7 @@ package save
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -58,6 +59,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 	workdir := path.Join(config.ClustersDir, flags.Name)
 	if flags.Path == "" {
 		return fmt.Errorf("path is required")
+	}
+	if _, err := os.Stat(flags.Path); err == nil {
+		return fmt.Errorf("file %q already exists", flags.Path)
 	}
 
 	logger := log.FromContext(ctx)
