@@ -42,6 +42,8 @@ type StageSpec struct {
 	Delay *StageDelay
 	// Next indicates that this stage will be moved to.
 	Next StageNext
+	// ImmediateNextStage means that the next stage of matching is performed immediately, without waiting for the Apiserver to push.
+	ImmediateNextStage bool
 }
 
 // StageResourceRef specifies the kind and version of the resource.

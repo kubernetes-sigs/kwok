@@ -1369,6 +1369,9 @@ func autoConvert_internalversion_StageSpec_To_v1alpha1_StageSpec(in *StageSpec, 
 	if err := Convert_internalversion_StageNext_To_v1alpha1_StageNext(&in.Next, &out.Next, s); err != nil {
 		return err
 	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.ImmediateNextStage, &out.ImmediateNextStage, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1385,6 +1388,9 @@ func autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.St
 	out.Weight = in.Weight
 	out.Delay = (*StageDelay)(unsafe.Pointer(in.Delay))
 	if err := Convert_v1alpha1_StageNext_To_internalversion_StageNext(&in.Next, &out.Next, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.ImmediateNextStage, &out.ImmediateNextStage, s); err != nil {
 		return err
 	}
 	return nil

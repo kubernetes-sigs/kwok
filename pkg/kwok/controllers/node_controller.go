@@ -101,7 +101,7 @@ type NodeController struct {
 	parallelTasks                         *parallelTasks
 	lifecycle                             Lifecycle
 	cronjob                               *cron.Cron
-	delayJobsCancels                      maps.SyncMap[string, cron.DoFunc]
+	delayJobs                             jobInfoMap
 	recorder                              record.EventRecorder
 }
 
@@ -277,9 +277,9 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 
 						// Cancel delay job
 						key := node.Name
-						cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
+						resourceJob, ok := c.delayJobs.LoadAndDelete(key)
 						if ok {
-							cancelOld()
+							resourceJob.Cancel()
 						}
 					}
 				}
@@ -322,32 +322,32 @@ func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan *corev1.Nod
 }
 
 // FinalizersModify modify finalizers of node
-func (c *NodeController) FinalizersModify(ctx context.Context, node *corev1.Node, finalizers *internalversion.StageFinalizers) error {
+func (c *NodeController) FinalizersModify(ctx context.Context, node *corev1.Node, finalizers *internalversion.StageFinalizers) (*corev1.Node, error) {
 	ops := finalizersModify(node.Finalizers, finalizers)
 	if len(ops) == 0 {
-		return nil
+		return nil, nil
 	}
 	data, err := json.Marshal(ops)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
 	)
-	_, err = c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
+	result, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch node finalizers",
 				"err", err,
 			)
-			return nil
+			return nil, nil
 		}
-		return err
+		return nil, err
 	}
 	logger.Info("Patch node finalizers")
-	return nil
+	return result, nil
 }
 
 // DeleteNode deletes a node
@@ -373,6 +373,12 @@ func (c *NodeController) DeleteNode(ctx context.Context, node *corev1.Node) erro
 
 // LockNode locks a given node
 func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error {
+	key := node.Name
+	resourceJob, ok := c.delayJobs.Load(key)
+	if ok && resourceJob.ResourceVersion == node.ResourceVersion {
+		return nil
+	}
+
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
@@ -403,20 +409,22 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 		)
 	}
 
-	key := node.Name
 	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(now.Add(delay)), func() {
-		cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
+		resourceJob, ok := c.delayJobs.LoadAndDelete(key)
 		if ok {
-			cancelOld()
+			resourceJob.Cancel()
 		}
 		c.parallelTasks.Add(func() {
 			c.playStage(ctx, node, stage)
 		})
 	})
 	if ok {
-		cancelOld, ok := c.delayJobsCancels.LoadOrStore(key, cancelFunc)
+		resourceJob, ok := c.delayJobs.LoadOrStore(key, jobInfo{
+			ResourceVersion: node.ResourceVersion,
+			Cancel:          cancelFunc,
+		})
 		if ok {
-			cancelOld()
+			resourceJob.Cancel()
 		}
 	}
 	return nil
@@ -434,9 +442,12 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 		}, next.Event.Type, next.Event.Reason, next.Event.Message)
 	}
 	if next.Finalizers != nil {
-		err := c.FinalizersModify(ctx, node, next.Finalizers)
+		result, err := c.FinalizersModify(ctx, node, next.Finalizers)
 		if err != nil {
 			logger.Error("Failed to finalizers of node", err)
+		}
+		if result != nil && stage.ImmediateNextStage() {
+			c.nodeChan <- result
 		}
 	}
 	if next.Delete {
@@ -455,31 +466,34 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 				"reason", "do not need to modify",
 			)
 		} else {
-			err = c.lockNode(ctx, node, patch)
+			result, err := c.lockNode(ctx, node, patch)
 			if err != nil {
 				logger.Error("Failed to lock node", err)
+			}
+			if result != nil && stage.ImmediateNextStage() {
+				c.nodeChan <- result
 			}
 		}
 	}
 }
 
-func (c *NodeController) lockNode(ctx context.Context, node *corev1.Node, patch []byte) error {
+func (c *NodeController) lockNode(ctx context.Context, node *corev1.Node, patch []byte) (*corev1.Node, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
 	)
-	_, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	result, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch node",
 				"err", err,
 			)
-			return nil
+			return nil, nil
 		}
-		return err
+		return nil, err
 	}
 	logger.Info("Lock node")
-	return nil
+	return result, nil
 }
 
 func (c *NodeController) computePatch(node *corev1.Node, tpl string) ([]byte, error) {

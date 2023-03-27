@@ -193,6 +193,8 @@ func newLifecycleFromStage(s *internalversion.Stage) (*LifecycleStage, error) {
 		stage.weight = 0
 	}
 
+	stage.immediateNextStage = s.Spec.ImmediateNextStage
+
 	return stage, nil
 }
 
@@ -208,6 +210,8 @@ type LifecycleStage struct {
 
 	duration       expression.DurationGetter
 	jitterDuration expression.DurationGetter
+
+	immediateNextStage bool
 }
 
 func (s *LifecycleStage) match(label, annotation labels.Set, jsonStandard interface{}) (bool, error) {
@@ -273,4 +277,9 @@ func (s *LifecycleStage) Next() *internalversion.StageNext {
 // Name returns the name of the stage
 func (s *LifecycleStage) Name() string {
 	return s.name
+}
+
+// ImmediateNextStage returns whether the stage is immediate next stage.
+func (s *LifecycleStage) ImmediateNextStage() bool {
+	return s.immediateNextStage
 }

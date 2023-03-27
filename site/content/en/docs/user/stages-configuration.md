@@ -48,6 +48,7 @@ spec:
         - value: <string>
       empty: <bool>
     delete: <bool>
+  immediateNextStage: <bool>
 ```
 
 By setting the `selector` and `next` fields in the spec section of a Stage resource,
