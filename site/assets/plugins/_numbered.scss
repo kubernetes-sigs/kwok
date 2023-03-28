@@ -1,5 +1,5 @@
 $startLevel: 2;
-$endLevel: 6;
+$endLevel: 4;
 
 .book-page .markdown {
   @for $currentLevel from $startLevel through $endLevel {
