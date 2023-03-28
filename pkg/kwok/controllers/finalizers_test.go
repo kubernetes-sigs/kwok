@@ -189,7 +189,7 @@ func Test_finalizersModify(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := finalizersModify(tt.args.metaFinalizers, tt.args.finalizers); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("finalizersModify() = %v, want %v", got, tt.want)
+				t.Errorf("finalizersModify() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
