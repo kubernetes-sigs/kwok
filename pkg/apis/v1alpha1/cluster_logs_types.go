@@ -21,13 +21,13 @@ import (
 )
 
 const (
-	// ClusterPortForwardKind is the kind of the ClusterPortForward.
+	// ClusterLogsKind is the kind of the ClusterLogsKind.
 	ClusterLogsKind = "ClusterLogs"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ClusterLogs provides cluster-wide port forward configuration.
+// ClusterLogs provides cluster-wide logging configuration
 type ClusterLogs struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
@@ -37,7 +37,7 @@ type ClusterLogs struct {
 	Spec ClusterLogsSpec `json:"spec"`
 }
 
-// ClusterLogs holds spec for cluster port forward.
+// ClusterLogsSpec holds spec for cluster logs.
 type ClusterLogsSpec struct {
 	// Selector is a selector to filter pods to configure.
 	Selector *ObjectSelector `json:"selector,omitempty"`

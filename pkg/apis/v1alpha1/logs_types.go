@@ -27,17 +27,17 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Logs provides port forward configuration for a single pod.
+// Logs provides logging configuration for a single pod.
 type Logs struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata"`
-	// Spec holds spec for port forward.
+	// Spec holds spec for logs
 	Spec LogsSpec `json:"spec"`
 }
 
-// LogsSpec holds spec for port forward.
+// LogsSpec holds spec for logs.
 type LogsSpec struct {
 	// Logs is a list of logs to configure.
 	Logs []Log `json:"logs"`

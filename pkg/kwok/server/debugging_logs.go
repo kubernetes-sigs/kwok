@@ -56,8 +56,6 @@ const (
 )
 
 var (
-	// eol is the end-of-line sign in the log.
-	eol = []byte{'\n'}
 	// delimiter is the delimiter for timestamp and stream type in log line.
 	delimiter = []byte{' '}
 	// tagDelimiter is the delimiter for log tags.
@@ -218,16 +216,19 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 
 	f, err := os.Open(logInfo.LogsFile)
 	if err != nil {
-		return fmt.Errorf("failed to open log file %q: %v", logInfo.LogsFile, err)
+		return fmt.Errorf("failed to open log file %q: %w", logInfo.LogsFile, err)
 	}
-	defer f.Close()
+
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	start, err := tail.FindTailLineStartIndex(f, opts.tail)
 	if err != nil {
-		return fmt.Errorf("failed to tail %d lines of log file %q: %v", opts.tail, logInfo.LogsFile, err)
+		return fmt.Errorf("failed to tail %d lines of log file %q: %w", opts.tail, logInfo.LogsFile, err)
 	}
 	if _, err := f.Seek(start, io.SeekStart); err != nil {
-		return fmt.Errorf("failed to seek %d in log file %q: %v", start, logInfo.LogsFile, err)
+		return fmt.Errorf("failed to seek %d in log file %q: %w", start, logInfo.LogsFile, err)
 	}
 
 	r := bufio.NewReader(f)
@@ -254,7 +255,7 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 
 		l, err := r.ReadBytes('\n')
 		if err != nil {
-			if err != io.EOF {
+			if errors.Is(err, io.EOF) {
 				return fmt.Errorf("failed to read log file: %q: %v", logInfo.LogsFile, err)
 			}
 
@@ -273,7 +274,9 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 					if watcher, err = fsnotify.NewWatcher(); err != nil {
 						return fmt.Errorf("failed to create fsnotify watcher: %v", err)
 					}
-					defer watcher.Close()
+					defer func(watcher *fsnotify.Watcher) {
+						_ = watcher.Close()
+					}(watcher)
 					if err := watcher.Add(f.Name()); err != nil {
 						return fmt.Errorf("failed to watch file %q: %v", f.Name(), err)
 					}
@@ -295,8 +298,12 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 						}
 						return fmt.Errorf("failed to open log file %q: %v", logInfo.LogsFile, err)
 					}
-					defer newF.Close()
-					f.Close()
+
+					defer func(f *os.File) {
+						_ = f.Close()
+					}(newF)
+
+					_ = f.Close()
 					if err := watcher.Remove(f.Name()); err != nil && !os.IsNotExist(err) {
 						logger.Error("Failed to remove file watch", err, "path", f.Name())
 					}
