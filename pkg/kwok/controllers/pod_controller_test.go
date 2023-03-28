@@ -27,10 +27,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
 )
 
@@ -259,44 +259,37 @@ func TestPodController(t *testing.T) {
 	}
 
 	var list *corev1.PodList
-	err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+	err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
 		list, err = clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
 		if err != nil {
-			t.Log(fmt.Errorf("list pods error: %w", err))
-			return false, nil
+			return false, fmt.Errorf("list pods error: %w", err)
 		}
 		if len(list.Items) != 5 {
-			t.Log(fmt.Errorf("want 5 pods, got %d", len(list.Items)))
-			return false, nil
+			return false, fmt.Errorf("want 5 pods, got %d", len(list.Items))
 		}
 
 		for index, pod := range list.Items {
 			if nodeInfo, ok := nodeGetFunc(pod.Spec.NodeName); ok {
 				if pod.Status.Phase != corev1.PodRunning {
-					t.Log(fmt.Errorf("want pod %s phase is running, got %s", pod.Name, pod.Status.Phase))
-					return false, nil
+					return false, fmt.Errorf("want pod %s phase is running, got %s", pod.Name, pod.Status.Phase)
 				}
 				if pods.needLockPod(&list.Items[index]) {
 					if pod.Status.HostIP != nodeInfo.HostIPs[0] {
-						t.Log(fmt.Errorf("want pod %s hostIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.HostIP))
-						return false, nil
+						return false, fmt.Errorf("want pod %s hostIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.HostIP)
 					}
 					if pod.Spec.HostNetwork {
 						if pod.Status.PodIP != nodeInfo.HostIPs[0] {
-							t.Fatal(fmt.Errorf("want pod %s podIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.PodIP))
-							return false, nil
+							return false, fmt.Errorf("want pod %s podIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.PodIP)
 						}
 					} else {
 						cidr, _ := parseCIDR(nodeInfo.PodCIDRs[0])
 						if !cidr.Contains(net.ParseIP(pod.Status.PodIP)) {
-							t.Log(fmt.Errorf("want pod %s podIP=%s in %s, got not", pod.Name, pod.Status.PodIP, nodeInfo.PodCIDRs[0]))
-							return false, nil
+							return false, fmt.Errorf("want pod %s podIP=%s in %s, got not", pod.Name, pod.Status.PodIP, nodeInfo.PodCIDRs[0])
 						}
 					}
 				}
 			} else if pod.Status.Phase == corev1.PodRunning {
-				t.Log(fmt.Errorf("want pod %s phase is not running, got %s", pod.Name, pod.Status.Phase))
-				return false, nil
+				return false, fmt.Errorf("want pod %s phase is not running, got %s", pod.Name, pod.Status.Phase)
 			}
 		}
 		return true, nil
@@ -313,7 +306,7 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("delete pod error: %w", err))
 	}
 
-	err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+	err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
 		list, err = clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
 		if err != nil {
 			return false, fmt.Errorf("list pods error: %w", err)
