@@ -27,10 +27,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
 )
 
@@ -94,7 +94,7 @@ func TestNodeController(t *testing.T) {
 	}
 
 	var node0 *corev1.Node
-	err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+	err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
 		node0, err = clientset.CoreV1().Nodes().Get(ctx, "node0", metav1.GetOptions{})
 		if err != nil {
 			return false, fmt.Errorf("failed to get node0: %w", err)
@@ -116,7 +116,7 @@ func TestNodeController(t *testing.T) {
 		t.Fatal(fmt.Errorf("failed to create node1: %w", err))
 	}
 
-	err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+	err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
 		nodeSize := nodes.Size()
 		if nodeSize != 2 {
 			return false, fmt.Errorf("want 2 nodes, got %d", nodeSize)
@@ -135,19 +135,25 @@ func TestNodeController(t *testing.T) {
 		t.Fatal(fmt.Errorf("node1 want 8 cpu, got %v", node1.Status.Allocatable[corev1.ResourceCPU]))
 	}
 
-	list, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		t.Fatal(fmt.Errorf("failed to list nodes: %w", err))
-	}
-	for i, node := range list.Items {
-		if nodeSelectorFunc(&list.Items[i]) {
-			if node.Status.Phase != corev1.NodeRunning {
-				t.Fatal(fmt.Errorf("want node %s to be running, got %s", node.Name, node.Status.Phase))
-			}
-		} else {
-			if node.Status.Phase == corev1.NodeRunning {
-				t.Fatal(fmt.Errorf("want node %s to be not running, got %s", node.Name, node.Status.Phase))
+	err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
+		list, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return false, fmt.Errorf("failed to list nodes: %w", err)
+		}
+		for i, node := range list.Items {
+			if nodeSelectorFunc(&list.Items[i]) {
+				if node.Status.Phase != corev1.NodeRunning {
+					return false, fmt.Errorf("want node %s to be running, got %s", node.Name, node.Status.Phase)
+				}
+			} else {
+				if node.Status.Phase == corev1.NodeRunning {
+					return false, fmt.Errorf("want node %s to be not running, got %s", node.Name, node.Status.Phase)
+				}
 			}
 		}
+		return true, nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

@@ -124,7 +124,6 @@ func NewController(conf Config) (*Controller, error) {
 		NodePort:                              conf.NodePort,
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
-		ManageNodesWithAnnotationSelector:     conf.ManageNodesWithAnnotationSelector,
 		ManageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
 		NodeSelectorFunc:                      nodeSelectorFunc,
 		LockPodsOnNodeFunc: func(ctx context.Context, nodeName string) error {
