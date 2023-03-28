@@ -1,6 +1,3 @@
-//go:build ignore
-// +build ignore
-
 /*
 Copyright 2022 The Kubernetes Authors.
 

@@ -20,7 +20,7 @@ set -o pipefail
 ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
 function check() {
-  git ls-files | grep -v "vendor\/" | xargs go run "${ROOT_DIR}"/hack/verify-boilerplate.go
+  git ls-files | grep -v "vendor\/" | xargs go run "${ROOT_DIR}"/hack/verify_boilerplate
 }
 
 check || exit 1
