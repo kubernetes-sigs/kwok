@@ -17,9 +17,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Copied from https://github.com/kubernetes/sample-controller/blob/master/hack/tools.go
-
-// This package imports things required by build scripts, to force `go mod` to see them as dependencies
+// Package tools is used to track binary dependencies with go modules
+// https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module
 package tools
 
-import _ "k8s.io/code-generator"
+import (
+	// code-generator
+	_ "k8s.io/code-generator"
+)

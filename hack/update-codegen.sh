@@ -39,7 +39,7 @@ function codegen() {
         ":v1alpha1,internalversion" \
         --trim-path-prefix "${KWOK_PROJECT}" \
         --output-base "./" \
-        --go-header-file "${ROOT_DIR}"/hack/tools/boilerplate.go.txt
+        --go-header-file "${ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 }
 
 cd "${ROOT_DIR}" && codegen || exit 1
