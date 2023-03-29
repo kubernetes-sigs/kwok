@@ -20,17 +20,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Logs provides port forward configuration for a single pod.
+// Logs provides log configuration for a single pod.
 type Logs struct {
 	metav1.TypeMeta
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ObjectMeta
-	// Spec holds spec for port forward.
+	// Spec holds spec for logs.
 	Spec LogsSpec
 }
 
-// LogsSpec holds spec for port forward.
+// LogsSpec holds spec for logs.
 type LogsSpec struct {
 	// Logs is a list of logs to configure.
 	Logs []Log

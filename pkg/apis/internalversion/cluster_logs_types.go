@@ -20,7 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ClusterLogs provides cluster-wide port forward configuration.
+// ClusterLogs provides cluster-wide logs.
 type ClusterLogs struct {
 	metav1.TypeMeta
 	// Standard list metadata.
@@ -30,7 +30,7 @@ type ClusterLogs struct {
 	Spec ClusterLogsSpec
 }
 
-// ClusterLogs holds spec for cluster port forward.
+// ClusterLogsSpec holds spec for cluster logs.
 type ClusterLogsSpec struct {
 	// Selector is a selector to filter pods to configure.
 	Selector *ObjectSelector
