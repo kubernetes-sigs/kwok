@@ -175,9 +175,13 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if serverAddress != "" {
 		clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
 		portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
+		clusterExecs := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
+		execs := config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
 		config := server.Config{
 			ClusterPortForwards: clusterPortForwards,
 			PortForwards:        portForwards,
+			ClusterExecs:        clusterExecs,
+			Execs:               execs,
 		}
 		svc := server.NewServer(config)
 		svc.InstallMetrics()
