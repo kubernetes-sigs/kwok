@@ -206,8 +206,6 @@ function main() {
     echo "Testing workable on ${KWOK_RUNTIME} for ${release}"
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
-    echo "Sleeping 500"
-    sleep 500
     if [[ "${KWOK_RUNTIME}" != "kind" ]]; then
       test_kube_controller_manager_port "${release}" "${name}" || failed+=("kube_controller_manager_port_${name}")
       test_kube_scheduler_port "${release}" "${name}" || failed+=("kube_scheduler_port_${name}")
