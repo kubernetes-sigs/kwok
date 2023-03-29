@@ -25,6 +25,6 @@ function main() {
   test_all "docker" "logs" "${all_releases[@]}" || exit 1
 }
 
-requirements_for_binary
+requirements
 
 main $(supported_releases)

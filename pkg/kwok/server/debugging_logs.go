@@ -125,41 +125,40 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 	}
 }
 
-func (s *Server) getPodLogs(podName, podNamespace, container string) (*internalversion.Log, error) {
+func (s *Server) getPodLogs(podName, podNamespace, containerName string) (*internalversion.Log, error) {
 	l, has := slices.Find(s.config.Logs, func(l *internalversion.Logs) bool {
 		return l.Name == podName && l.Namespace == podNamespace
 	})
 	if has {
-		log, found := findLogInLogs(container, l.Spec.Logs)
+		l, found := findLogInLogs(containerName, l.Spec.Logs)
+		if found {
+			return l, nil
+		}
+		return nil, fmt.Errorf("not found log target for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
+	}
+
+	for _, cl := range s.config.ClusterLogs {
+		if !cl.Spec.Selector.Match(podName, podNamespace) {
+			continue
+		}
+
+		log, found := findLogInLogs(containerName, cl.Spec.Logs)
 		if found {
 			return log, nil
 		}
-	} else {
-		for _, cl := range s.config.ClusterLogs {
-			if !cl.Spec.Selector.Match(podName, podNamespace) {
-				continue
-			}
-
-			log, found := findLogInLogs(container, cl.Spec.Logs)
-			if found {
-				return log, nil
-			}
-		}
 	}
-	return nil, fmt.Errorf("Failed to find pod with container name %q", container)
+	return nil, fmt.Errorf("no logs found for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 }
 
-func findLogInLogs(container string, logs []internalversion.Log) (*internalversion.Log, bool) {
+func findLogInLogs(containerName string, logs []internalversion.Log) (*internalversion.Log, bool) {
 	var defaultLog *internalversion.Log
 	for i, l := range logs {
 		if len(l.Containers) == 0 && defaultLog == nil {
 			defaultLog = &logs[i]
 			continue
 		}
-		if len(container) != 0 {
-			if slices.Contains(l.Containers, container) {
-				return &l, true
-			}
+		if slices.Contains(l.Containers, containerName) {
+			return &l, true
 		}
 	}
 	return defaultLog, defaultLog != nil
@@ -255,7 +254,7 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 
 		l, err := r.ReadBytes('\n')
 		if err != nil {
-			if errors.Is(err, io.EOF) {
+			if !errors.Is(err, io.EOF) {
 				return fmt.Errorf("failed to read log file: %q: %v", logInfo.LogsFile, err)
 			}
 

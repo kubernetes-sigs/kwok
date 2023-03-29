@@ -17,7 +17,12 @@ limitations under the License.
 package components
 
 import (
+	"context"
+	"fmt"
+	"path/filepath"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -73,6 +78,33 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 				ReadOnly:  true,
 			},
 		)
+
+		// Mount log dirs
+		objs, err := config.Load(context.Background(), conf.ConfigPath)
+		if err != nil {
+			return internalversion.Component{}, fmt.Errorf("failed to load config: %w", err)
+		}
+		mountDirs := make(map[string]bool)
+		for _, obj := range objs {
+			switch obj := obj.(type) {
+			case *internalversion.ClusterLogs:
+				for _, log := range obj.Spec.Logs {
+					mountDirs[filepath.Dir(log.LogsFile)] = true
+				}
+			case *internalversion.Logs:
+				for _, log := range obj.Spec.Logs {
+					mountDirs[filepath.Dir(log.LogsFile)] = true
+				}
+			}
+		}
+		for dir := range mountDirs {
+			volumes = append(volumes, internalversion.Volume{
+				HostPath:  dir,
+				MountPath: dir,
+				ReadOnly:  true,
+			})
+		}
+
 		if conf.Port != 0 {
 			ports = append(ports,
 				internalversion.Port{

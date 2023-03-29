@@ -25,10 +25,6 @@ function main() {
   test_all "nerdctl" "logs" "${all_releases[@]}" || exit 1
 }
 
-<<<<<<< HEAD
 requirements_for_nerdctl
-=======
-requirements_for_binary
->>>>>>> c60e854 (Added kind and nerdctl tests just as a setup)
 
 main $(supported_releases)
