@@ -255,7 +255,7 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 		l, err := r.ReadBytes('\n')
 		if err != nil {
 			if !errors.Is(err, io.EOF) {
-				return fmt.Errorf("failed to read log file: %q: %v", logInfo.LogsFile, err)
+				return fmt.Errorf("failed to read log file: %q: %w", logInfo.LogsFile, err)
 			}
 
 			if opts.follow {
@@ -266,36 +266,37 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 				// reset seek so that if this is an incomplete line,
 				// it will be read again
 				if _, err := f.Seek(-int64(len(l)), io.SeekCurrent); err != nil {
-					return fmt.Errorf("failed to reset seek in log file %q: %v", logInfo.LogsFile, err)
+					return fmt.Errorf("failed to reset seek in log file %q: %w", logInfo.LogsFile, err)
 				}
 				if watcher == nil {
 					// Initialize the watcher if it has not been initialized yet.
 					if watcher, err = fsnotify.NewWatcher(); err != nil {
-						return fmt.Errorf("failed to create fsnotify watcher: %v", err)
+						return fmt.Errorf("failed to create fsnotify watcher: %w", err)
 					}
 					defer func(watcher *fsnotify.Watcher) {
 						_ = watcher.Close()
 					}(watcher)
 					if err := watcher.Add(f.Name()); err != nil {
-						return fmt.Errorf("failed to watch file %q: %v", f.Name(), err)
+						return fmt.Errorf("failed to watch file %q: %w", f.Name(), err)
 					}
 					// If we just created the watcher, try again to read as we might have missed
 					// the event
 					continue
-
 				}
+
 				var recreated bool // Wait until the next log change
 				found, recreated, err = waitLogs(ctx, watcher)
 				if err != nil {
 					return err
 				}
+
 				if recreated {
 					newF, err := os.Open(logInfo.LogsFile)
 					if err != nil {
 						if os.IsNotExist(err) {
 							continue
 						}
-						return fmt.Errorf("failed to open log file %q: %v", logInfo.LogsFile, err)
+						return fmt.Errorf("failed to open log file %q: %w", logInfo.LogsFile, err)
 					}
 
 					defer func(f *os.File) {
@@ -308,7 +309,7 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 					}
 					f = newF
 					if err := watcher.Add(f.Name()); err != nil {
-						return fmt.Errorf("failed to watch file %q: %v", f.Name(), err)
+						return fmt.Errorf("failed to watch file %q: %w", f.Name(), err)
 					}
 					r = bufio.NewReader(f)
 				}
@@ -326,6 +327,9 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 		if parse == nil {
 			// Initialize the log parsing function.
 			parse, err = getParseFunc(l)
+			if err != nil {
+				return fmt.Errorf("failed to get parse function: %w", err)
+			}
 		}
 
 		msg.reset()
@@ -336,7 +340,7 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 
 		// Write the log line into the stream.
 		if err := writer.write(msg, isNewLine); err != nil {
-			if err == errMaximumWrite {
+			if errors.Is(err, errMaximumWrite) {
 				logger.Debug("Finished parsing log file, hit bytes limit", "path", logInfo.LogsFile, "limit", opts.bytes)
 				return nil
 			}
@@ -347,6 +351,7 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 		if limitedMode {
 			limitedNum--
 		}
+
 		if len(msg.log) > 0 {
 			isNewLine = msg.log[len(msg.log)-1] == '\n'
 		} else {
@@ -386,7 +391,7 @@ func parseCRILog(log []byte, msg *logMessage) error {
 	}
 	msg.timestamp, err = time.Parse(timeFormatIn, string(log[:idx]))
 	if err != nil {
-		return fmt.Errorf("unexpected timestamp format %q: %v", timeFormatIn, err)
+		return fmt.Errorf("unexpected timestamp format %q: %w", timeFormatIn, err)
 	}
 
 	// Parse stream type
@@ -441,7 +446,7 @@ func parseDockerJSONLog(log []byte, msg *logMessage) error {
 	l := &jsonLog{}
 
 	if err := json.Unmarshal(log, l); err != nil {
-		return fmt.Errorf("failed with %v to unmarshal log %q", err, l)
+		return fmt.Errorf("failed with %w to unmarshal log %q", err, l)
 	}
 	msg.timestamp = l.Created
 	msg.stream = runtimeapi.LogStreamType(l.Stream)
