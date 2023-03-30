@@ -31,4 +31,4 @@ kwokctl logs audit
 
 ## Example audit logs
 
-<img width="700px" src="/audit-log.svg">
+<img width="700px" src="/img/demo/audit-log.svg">

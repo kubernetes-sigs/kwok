@@ -62,7 +62,7 @@ KWOK is not intended to replace others completely. It has some limitations that 
 
 If you are interested in trying out KWOK, please check its [documents] for more details.
 
-{{< figure src="/manage-clusters.svg" alt="Animation of a terminal showing kwokctl in use" caption="Using kwokctl to manage simulated clusters" >}}
+{{< figure src="/img/demo/manage-clusters.svg" alt="Animation of a terminal showing kwokctl in use" caption="Using kwokctl to manage simulated clusters" >}}
 
 ## Getting Involved
 

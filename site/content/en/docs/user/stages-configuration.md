@@ -155,7 +155,7 @@ It also sets the phase field to Succeeded, indicating that the pod has completed
 The `pod-delete` Stage is applied to pods that have a `metadata.deletionTimestamp` set.
 When applied, this Stage empties the `metadata.finalizers` field for the pod, allowing it to be deleted, and then delete the pod.
 
-<img width="700px" src="/stages-pod-fast.svg">
+<img width="700px" src="/img/demo/stages-pod-fast.svg">
 
 ### Pod Stages that simulate real behavior as closely as possible
 
@@ -164,4 +164,4 @@ When applied, this Stage empties the `metadata.finalizers` field for the pod, al
 These Stages simulate real Pod behavior as closely as possible in the future,
 which is not perfect at the moment, so the refinement of this configuration is still a **Work In Progress**.
 
-<img width="700px" src="/stages-pod-general.svg">
+<img width="700px" src="/img/demo/stages-pod-general.svg">

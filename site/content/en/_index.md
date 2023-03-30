@@ -24,7 +24,7 @@ KWOK stands for Kubernetes WithOut Kubelet. So far, it provides two tools:
 
 The animation below shows a test process to work with the latest version of `kwok`/`kwokctl`.
 
-<img width="700px" src="/manage-clusters.svg">
+<img width="700px" src="/img/demo/manage-clusters.svg">
 
 Welcome to [get started]({{< relref "/docs/user/getting-started" >}}) with the installation, basic usage, custom configuration,
 and [contribution to KWOK]({{< relref "/docs/contributing/getting-started" >}}).

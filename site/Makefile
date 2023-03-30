@@ -45,3 +45,13 @@ check-image-version:
 .PHONY: check-binary-version
 check-binary-version:
 	curl -sL https://api.github.com/repos/gohugoio/hugo/releases/tags/v$(HUGO_VERSION)
+
+.PHONY: links
+links:
+	@echo "Creating symlinks"
+	@mkdir -p ./static/img/demo
+	@for f in ../demo/*.svg; do \
+		ln -s ../../../"$$f" ./static/img/demo/; \
+	done
+	@ ln -s ../../logo/kwok.png ./static/favicon.png
+	@ ln -s ../../logo/kwok.svg ./static/favicon.svg
