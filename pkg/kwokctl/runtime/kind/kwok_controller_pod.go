@@ -18,6 +18,7 @@ package kind
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"strings"
 	"text/template"
@@ -26,8 +27,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 
 	_ "embed"
-
-	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
 
 //go:embed kwok_controller_pod.yaml.tpl
