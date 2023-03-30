@@ -6,17 +6,27 @@ This document walks you through how to manage nodes and pods with `kwok`.
 
 {{< /hint >}}
 
-## kwok with args `--manage-all-nodes=true`
+## Node Management
 
-With the `--manage-all-nodes=true` argument, `kwok` will be in charge of all nodes
-in the cluster and maintain their heartbeats to the API Server.
+`--manage-all-nodes` cannot be used together with `--manage-nodes-with-annotation-selector` and `--manage-nodes-with-label-selector`.
+
+### For all nodes
+
+With the `--manage-all-nodes=true` argument,
+`kwok` will be in charge of all nodes in the cluster and maintain their heartbeats to the API Server.
 In this way, all nodes will behave like real nodes and stay in the `Ready` state.
 
-## kwok with args `--manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake`
+### For specific nodes with annotation
 
 With the `--manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake` argument,
-`kwok` will be in charge of all nodes with the annotation `kwok.x-k8s.io/node=fake`.
-If they carry an accurate `.spec.nodeName` field, `kwok` will ensure they stay in the `Running` state.
+`kwok` just manages the nodes with the annotation `kwok.x-k8s.io/node=fake`.
+If the annotation is not present, `kwok` will not manage the node.
+
+### For specific nodes with label
+
+With the `--manage-nodes-with-label-selector=kwok.x-k8s.io/node=fake` argument,
+`kwok` just manages the nodes with the label `kwok.x-k8s.io/node=fake`.
+If the label is not present, `kwok` will not manage the node.
 
 ## Create a Node
 
