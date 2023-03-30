@@ -200,6 +200,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Name:                c.Name(),
 		ExtraArgs:           kwokControllerComponentPatches.ExtraArgs,
 		ExtraVolumes:        kwokControllerComponentPatches.ExtraVolumes,
+		ExtraLogMounts:      extraLogMounts,
 	})
 	if err != nil {
 		return err
