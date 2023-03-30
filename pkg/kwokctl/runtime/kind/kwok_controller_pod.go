@@ -18,7 +18,6 @@ package kind
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"strings"
 	"text/template"
