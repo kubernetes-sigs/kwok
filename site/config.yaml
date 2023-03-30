@@ -7,6 +7,12 @@ theme: hugo-book
 # Book configuration
 disablePathToLower: false
 enableGitInfo: true
+disableKinds:
+  - taxonomy
+  - taxonomyTerm
+
+permalinks:
+  posts: "/:section/:year/:month/:day/:slug/"
 
 # Needed for mermaid/katex shortcodes
 markup:
