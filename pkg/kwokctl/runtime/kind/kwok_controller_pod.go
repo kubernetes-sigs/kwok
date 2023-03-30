@@ -26,6 +26,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 
 	_ "embed"
+
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
 
 //go:embed kwok_controller_pod.yaml.tpl
@@ -61,4 +63,5 @@ type BuildKwokControllerPodConfig struct {
 	Name                    string
 	ExtraArgs               []internalversion.ExtraArgs
 	ExtraVolumes            []internalversion.Volume
+	ExtraLogMounts          []internalversion.Volume
 }

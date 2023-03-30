@@ -64,6 +64,11 @@ spec:
       name: {{ .Name }}
       readOnly: {{ .ReadOnly }}
     {{ end }}
+    {{ range $index, $element := .ExtraLogMounts }}
+    - name: log-mount-{{ $index }}
+      mountPath: {{ $element.MountPath }}
+      readOnly: {{ .ReadOnly }}
+    {{ end }}
   hostNetwork: true
   restartPolicy: Always
   volumes:
@@ -84,4 +89,10 @@ spec:
       path: {{ .HostPath }}
       type: {{ .PathType }}
     name: {{ .Name }}
-  {{ end }}
+{{ end }}
+  {{ range $index, $element := .ExtraLogMounts }}
+  - hostPath:
+      path: {{ $element.HostPath }}
+      type: DirectoryOrCreate
+    name: log-mount-{{ $index }}
+{{ end }}

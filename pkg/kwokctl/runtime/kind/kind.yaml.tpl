@@ -138,6 +138,19 @@ nodes:
     containerPath: /var/components/etcd{{ .MountPath }}
     readOnly: {{ .ReadOnly }}
 {{ end }}
+{{ range .ExtraLogMounts }}
+  - hostPath: {{ .HostPath }}
+    containerPath: {{ .MountPath }}
+    readOnly: {{ .ReadOnly }}
+{{ end }}
+{{ if .AuditPolicy }}
+  - hostPath: {{ .AuditPolicy }}
+    containerPath: /etc/kubernetes/audit/audit.yaml
+    readOnly: true
+  - hostPath: {{ .AuditLog }}
+    containerPath: /var/log/kubernetes/audit.log
+    readOnly: false
+{{ end }}
 
 {{ range .ApiserverExtraVolumes }}
   - hostPath: {{ .HostPath }}

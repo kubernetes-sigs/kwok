@@ -79,11 +79,12 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			},
 		)
 
-		// Mount log dirs
 		objs, err := config.Load(context.Background(), conf.ConfigPath)
 		if err != nil {
 			return internalversion.Component{}, fmt.Errorf("failed to load config: %w", err)
 		}
+
+		// Mount log dirs
 		mountDirs := make(map[string]bool)
 		for _, obj := range objs {
 			switch obj := obj.(type) {

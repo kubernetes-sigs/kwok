@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -62,6 +64,47 @@ func (c *Cluster) Available(ctx context.Context) error {
 	return nil
 }
 
+func getKindRuntimeExtraArgs(config *internalversion.KwokctlConfiguration, s string) []internalversion.ExtraArgs {
+	if patch, ok := slices.Find(config.ComponentsPatches, func(patch internalversion.ComponentPatches) bool {
+		return patch.Name == s
+	}); ok {
+		return patch.ExtraArgs
+	}
+	return []internalversion.ExtraArgs{}
+}
+
+func getKindRuntimeExtaLogMounts(configPath string) ([]internalversion.Volume, error) {
+	objs, err := config.Load(context.Background(), configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+	var volumes []internalversion.Volume
+
+	// Mount log dirs
+	mountDirs := make(map[string]bool)
+	for _, obj := range objs {
+		switch obj := obj.(type) {
+		case *internalversion.ClusterLogs:
+			for _, log := range obj.Spec.Logs {
+				mountDirs[filepath.Dir(log.LogsFile)] = true
+			}
+		case *internalversion.Logs:
+			for _, log := range obj.Spec.Logs {
+				mountDirs[filepath.Dir(log.LogsFile)] = true
+			}
+		}
+	}
+	for dir := range mountDirs {
+		volumes = append(volumes, internalversion.Volume{
+			HostPath:  dir,
+			MountPath: dir,
+			ReadOnly:  true,
+		})
+	}
+
+	return volumes, nil
+}
+
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
 	level := log.FromContext(ctx).Level()
@@ -88,7 +131,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	auditPolicyPath := ""
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath = c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0640)
+		err = file.Create(auditLogPath, 0o640)
 		if err != nil {
 			return err
 		}
@@ -116,6 +159,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
 	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
+	extraLogMounts, err := getKindRuntimeExtaLogMounts(configPath)
+	if err != nil {
+		return err
+	}
+	_ = extraLogMounts
 	kindYaml, err := BuildKind(BuildKindConfig{
 		KubeApiserverPort:             conf.KubeApiserverPort,
 		EtcdPort:                      conf.EtcdPort,
@@ -142,7 +190,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(c.GetWorkdirPath(runtime.KindName), []byte(kindYaml), 0640)
+	err = os.WriteFile(c.GetWorkdirPath(runtime.KindName), []byte(kindYaml), 0o640)
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", runtime.KindName, err)
 	}
@@ -156,7 +204,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(c.GetWorkdirPath(runtime.KwokPod), []byte(kwokControllerPod), 0640)
+	err = os.WriteFile(c.GetWorkdirPath(runtime.KwokPod), []byte(kwokControllerPod), 0o640)
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", runtime.KwokPod, err)
 	}
@@ -176,7 +224,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(c.GetWorkdirPath(runtime.PrometheusDeploy), []byte(prometheusDeploy), 0640)
+		err = os.WriteFile(c.GetWorkdirPath(runtime.PrometheusDeploy), []byte(prometheusDeploy), 0o640)
 		if err != nil {
 			return fmt.Errorf("failed to write %s: %w", runtime.PrometheusDeploy, err)
 		}
@@ -299,7 +347,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = os.WriteFile(kubeconfigPath, kubeconfigBuf.Bytes(), 0640)
+	err = os.WriteFile(kubeconfigPath, kubeconfigBuf.Bytes(), 0o640)
 	if err != nil {
 		return err
 	}
@@ -659,7 +707,7 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	if err != nil {
 		// kind does not exist, try to download it
 		kindPath := c.GetBinPath("kind" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0755, conf.QuietPull)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0o755, conf.QuietPull)
 		if err != nil {
 			return "", err
 		}
