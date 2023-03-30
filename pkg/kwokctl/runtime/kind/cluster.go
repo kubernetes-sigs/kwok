@@ -78,7 +78,6 @@ func getKindRuntimeExtaLogMounts(configPath string) ([]internalversion.Volume, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
-	var volumes []internalversion.Volume
 
 	// Mount log dirs
 	mountDirs := make(map[string]bool)
@@ -94,6 +93,7 @@ func getKindRuntimeExtaLogMounts(configPath string) ([]internalversion.Volume, e
 			}
 		}
 	}
+	volumes := make([]internalversion.Volume, 0, len(mountDirs))
 	for dir := range mountDirs {
 		volumes = append(volumes, internalversion.Volume{
 			HostPath:  dir,
