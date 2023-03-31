@@ -23,8 +23,8 @@ require (
 	golang.org/x/sys v0.5.0
 	golang.org/x/term v0.5.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.26.0
-	k8s.io/apimachinery v0.26.0
+	k8s.io/api v0.26.3
+	k8s.io/apimachinery v0.26.3
 	k8s.io/apiserver v0.26.0
 	k8s.io/client-go v0.26.0
 	k8s.io/code-generator v0.26.0
