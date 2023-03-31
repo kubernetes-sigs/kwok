@@ -60,8 +60,6 @@ function show_info() {
     echo
 }
 
-function version_gt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"; }
-
 function test_create_cluster() {
   local release="${1}"
   local name="${2}"
@@ -69,11 +67,7 @@ function test_create_cluster() {
   local current_context
   local i
 
-  if version_gt $release "1.17.0"; then
-    KWOK_KUBE_VERSION="${release}" kwokctl --config "${DIR}/fake-kwok-config.yaml" -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
-  else
-    KWOK_KUBE_VERSION="${release}" kwokctl --config "${DIR}/fake-kwok-config-le-1-17.yaml" -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
-  fi
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
 
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
