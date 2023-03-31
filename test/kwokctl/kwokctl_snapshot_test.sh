@@ -54,7 +54,7 @@ function test_delete_cluster() {
 
 function get_snapshot_info() {
   local name="${1}"
-  kwokctl --name "${name}" kubectl get pod | awk '{print $1, $2}'
+  kwokctl --name "${name}" kubectl get pod | awk '{print $1}'
   kwokctl --name "${name}" kubectl get node | awk '{print $1}'
 }
 
@@ -183,7 +183,7 @@ function test_snapshot_k8s() {
     return 1
   fi
 
-  rm "${full_path}"
+  rm -rf "${full_path}"
 }
 
 function main() {
