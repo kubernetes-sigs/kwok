@@ -26,6 +26,6 @@ kwok [flags]
       --server-address string                              Address to expose health and metrics on
       --tls-cert-file string                               File containing the default x509 Certificate for HTTPS
       --tls-private-key-file string                        File containing the default x509 private key matching --tls-cert-file
-  -v, --v int                                              number for the log level verbosity
+  -v, --v log-level                                        number for the log level verbosity (DEBUG, INFO, WARN, ERROR) or (-4, 0, 4, 8) (default INFO)
 ```
 

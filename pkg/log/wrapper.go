@@ -17,6 +17,10 @@ limitations under the License.
 package log
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	//nolint:depguard
 	"golang.org/x/exp/slog"
 )
@@ -83,4 +87,42 @@ func (l *Logger) With(args ...any) *Logger {
 // attributes added to the Logger will be qualified by the given name.
 func (l *Logger) WithGroup(name string) *Logger {
 	return wrapSlog(l.log.WithGroup(name))
+}
+
+// ParseLevel parses a level string.
+func ParseLevel(s string) (l Level, err error) {
+	name := s
+	offsetStr := ""
+	i := strings.IndexAny(s, "+-")
+	if i > 0 {
+		name = s[:i]
+		offsetStr = s[i:]
+	} else if i == 0 ||
+		(name[0] >= '0' && name[0] <= '9') {
+		name = "INFO"
+		offsetStr = s
+	}
+
+	switch strings.ToUpper(name) {
+	case "DEBUG":
+		l = DebugLevel
+	case "INFO":
+		l = InfoLevel
+	case "WARN":
+		l = WarnLevel
+	case "ERROR":
+		l = ErrorLevel
+	default:
+		return 0, fmt.Errorf("ParseLevel %q: invalid level name", s)
+	}
+
+	if offsetStr != "" {
+		offset, err := strconv.Atoi(offsetStr)
+		if err != nil {
+			return 0, fmt.Errorf("ParseLevel %q: invalid offset: %w", s, err)
+		}
+		l += Level(offset)
+	}
+
+	return l, nil
 }

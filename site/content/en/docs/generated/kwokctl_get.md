@@ -17,7 +17,7 @@ kwokctl get [command] [flags]
 ```
   -c, --config stringArray   config path (default [~/.kwok/kwok.yaml])
       --name string          cluster name (default "kwok")
-  -v, --v int                number for the log level verbosity
+  -v, --v log-level          number for the log level verbosity (DEBUG, INFO, WARN, ERROR) or (-4, 0, 4, 8) (default INFO)
 ```
 
 ### SEE ALSO
