@@ -77,13 +77,13 @@ nodes:
 {{ if .FeatureGates }}
 featureGates:
 {{ range .FeatureGates }}
-  {{ . }}
+  - {{ . }}
 {{ end }}
 {{ end }}
 
 {{ if .RuntimeConfig }}
 runtimeConfig:
 {{ range .RuntimeConfig }}
-  {{ . }}
+  - {{ . }}
 {{ end }}
 {{ end }}
