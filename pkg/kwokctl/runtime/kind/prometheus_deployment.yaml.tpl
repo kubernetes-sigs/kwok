@@ -126,7 +126,7 @@ spec:
       args:
         - --config.file=/etc/prometheus/prometheus.yaml
         {{ range .ExtraArgs }}
-        - {{ . }}
+        - --{{ .Key }}={{ .Value }}
         {{ end }}
       ports:
         - name: web
@@ -140,6 +140,11 @@ spec:
         - mountPath: /etc/kubernetes/pki
           name: k8s-certs
           readOnly: true
+        {{ range .ExtraVolumes }}
+        - mountPath: {{ .MountPath }}
+          name: {{ .Name }}
+          readOnly: {{ .ReadOnly }}
+        {{ end }}
   volumes:
     - name: config-volume
       configMap:
@@ -148,6 +153,12 @@ spec:
         path: /etc/kubernetes/pki
         type: DirectoryOrCreate
       name: k8s-certs
+    {{ range .ExtraVolumes }}
+    - hostPath:
+        path: {{ .HostPath }}
+        type: {{ .PathType }}
+      name: {{ .Name }}
+    {{ end }}
   serviceAccount: prometheus
   serviceAccountName: prometheus
   restartPolicy: Always

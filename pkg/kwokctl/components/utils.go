@@ -65,3 +65,9 @@ func GroupByLinks(components []internalversion.Component) ([][]internalversion.C
 	}
 	return groups, nil
 }
+
+func extraArgsToStrings(args []internalversion.ExtraArgs) []string {
+	return slices.Map(args, func(arg internalversion.ExtraArgs) string {
+		return fmt.Sprintf("--%s=%s", arg.Key, arg.Value)
+	})
+}
