@@ -37,6 +37,21 @@ func init() {
 // RegisterConversions adds conversion functions to the given scheme.
 // Public to allow building arbitrary schemes.
 func RegisterConversions(s *runtime.Scheme) error {
+	if err := s.AddGeneratedConversionFunc((*ClusterExec)(nil), (*v1alpha1.ClusterExec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ClusterExec_To_v1alpha1_ClusterExec(a.(*ClusterExec), b.(*v1alpha1.ClusterExec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ClusterExecSpec)(nil), (*v1alpha1.ClusterExecSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(a.(*ClusterExecSpec), b.(*v1alpha1.ClusterExecSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ClusterExecSpec)(nil), (*ClusterExecSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(a.(*v1alpha1.ClusterExecSpec), b.(*ClusterExecSpec), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*ClusterPortForward)(nil), (*v1alpha1.ClusterPortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward(a.(*ClusterPortForward), b.(*v1alpha1.ClusterPortForward), scope)
 	}); err != nil {
@@ -79,6 +94,51 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.Env)(nil), (*Env)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_Env_To_internalversion_Env(a.(*v1alpha1.Env), b.(*Env), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*EnvVar)(nil), (*v1alpha1.EnvVar)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_EnvVar_To_v1alpha1_EnvVar(a.(*EnvVar), b.(*v1alpha1.EnvVar), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.EnvVar)(nil), (*EnvVar)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_EnvVar_To_internalversion_EnvVar(a.(*v1alpha1.EnvVar), b.(*EnvVar), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*Exec)(nil), (*v1alpha1.Exec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_Exec_To_v1alpha1_Exec(a.(*Exec), b.(*v1alpha1.Exec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExecSpec)(nil), (*v1alpha1.ExecSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(a.(*ExecSpec), b.(*v1alpha1.ExecSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExecSpec)(nil), (*ExecSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(a.(*v1alpha1.ExecSpec), b.(*ExecSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExecTarget)(nil), (*v1alpha1.ExecTarget)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(a.(*ExecTarget), b.(*v1alpha1.ExecTarget), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExecTarget)(nil), (*ExecTarget)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(a.(*v1alpha1.ExecTarget), b.(*ExecTarget), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExecTargetLocal)(nil), (*v1alpha1.ExecTargetLocal)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExecTargetLocal_To_v1alpha1_ExecTargetLocal(a.(*ExecTargetLocal), b.(*v1alpha1.ExecTargetLocal), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExecTargetLocal)(nil), (*ExecTargetLocal)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal(a.(*v1alpha1.ExecTargetLocal), b.(*ExecTargetLocal), scope)
 	}); err != nil {
 		return err
 	}
@@ -287,8 +347,18 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*v1alpha1.ClusterExec)(nil), (*ClusterExec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(a.(*v1alpha1.ClusterExec), b.(*ClusterExec), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*v1alpha1.ClusterPortForward)(nil), (*ClusterPortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(a.(*v1alpha1.ClusterPortForward), b.(*ClusterPortForward), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha1.Exec)(nil), (*Exec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Exec_To_internalversion_Exec(a.(*v1alpha1.Exec), b.(*Exec), scope)
 	}); err != nil {
 		return err
 	}
@@ -318,6 +388,50 @@ func RegisterConversions(s *runtime.Scheme) error {
 		return err
 	}
 	return nil
+}
+
+func autoConvert_internalversion_ClusterExec_To_v1alpha1_ClusterExec(in *ClusterExec, out *v1alpha1.ClusterExec, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_ClusterExec_To_v1alpha1_ClusterExec is an autogenerated conversion function.
+func Convert_internalversion_ClusterExec_To_v1alpha1_ClusterExec(in *ClusterExec, out *v1alpha1.ClusterExec, s conversion.Scope) error {
+	return autoConvert_internalversion_ClusterExec_To_v1alpha1_ClusterExec(in, out, s)
+}
+
+func autoConvert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(in *v1alpha1.ClusterExec, out *ClusterExec, s conversion.Scope) error {
+	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func autoConvert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(in *ClusterExecSpec, out *v1alpha1.ClusterExecSpec, s conversion.Scope) error {
+	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
+	out.Execs = *(*[]v1alpha1.ExecTarget)(unsafe.Pointer(&in.Execs))
+	return nil
+}
+
+// Convert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec is an autogenerated conversion function.
+func Convert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(in *ClusterExecSpec, out *v1alpha1.ClusterExecSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(in *v1alpha1.ClusterExecSpec, out *ClusterExecSpec, s conversion.Scope) error {
+	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
+	out.Execs = *(*[]ExecTarget)(unsafe.Pointer(&in.Execs))
+	return nil
+}
+
+// Convert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec is an autogenerated conversion function.
+func Convert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(in *v1alpha1.ClusterExecSpec, out *ClusterExecSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(in, out, s)
 }
 
 func autoConvert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward(in *ClusterPortForward, out *v1alpha1.ClusterPortForward, s conversion.Scope) error {
@@ -466,6 +580,114 @@ func autoConvert_v1alpha1_Env_To_internalversion_Env(in *v1alpha1.Env, out *Env,
 // Convert_v1alpha1_Env_To_internalversion_Env is an autogenerated conversion function.
 func Convert_v1alpha1_Env_To_internalversion_Env(in *v1alpha1.Env, out *Env, s conversion.Scope) error {
 	return autoConvert_v1alpha1_Env_To_internalversion_Env(in, out, s)
+}
+
+func autoConvert_internalversion_EnvVar_To_v1alpha1_EnvVar(in *EnvVar, out *v1alpha1.EnvVar, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Value = in.Value
+	return nil
+}
+
+// Convert_internalversion_EnvVar_To_v1alpha1_EnvVar is an autogenerated conversion function.
+func Convert_internalversion_EnvVar_To_v1alpha1_EnvVar(in *EnvVar, out *v1alpha1.EnvVar, s conversion.Scope) error {
+	return autoConvert_internalversion_EnvVar_To_v1alpha1_EnvVar(in, out, s)
+}
+
+func autoConvert_v1alpha1_EnvVar_To_internalversion_EnvVar(in *v1alpha1.EnvVar, out *EnvVar, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Value = in.Value
+	return nil
+}
+
+// Convert_v1alpha1_EnvVar_To_internalversion_EnvVar is an autogenerated conversion function.
+func Convert_v1alpha1_EnvVar_To_internalversion_EnvVar(in *v1alpha1.EnvVar, out *EnvVar, s conversion.Scope) error {
+	return autoConvert_v1alpha1_EnvVar_To_internalversion_EnvVar(in, out, s)
+}
+
+func autoConvert_internalversion_Exec_To_v1alpha1_Exec(in *Exec, out *v1alpha1.Exec, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_Exec_To_v1alpha1_Exec is an autogenerated conversion function.
+func Convert_internalversion_Exec_To_v1alpha1_Exec(in *Exec, out *v1alpha1.Exec, s conversion.Scope) error {
+	return autoConvert_internalversion_Exec_To_v1alpha1_Exec(in, out, s)
+}
+
+func autoConvert_v1alpha1_Exec_To_internalversion_Exec(in *v1alpha1.Exec, out *Exec, s conversion.Scope) error {
+	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func autoConvert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(in *ExecSpec, out *v1alpha1.ExecSpec, s conversion.Scope) error {
+	out.Execs = *(*[]v1alpha1.ExecTarget)(unsafe.Pointer(&in.Execs))
+	return nil
+}
+
+// Convert_internalversion_ExecSpec_To_v1alpha1_ExecSpec is an autogenerated conversion function.
+func Convert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(in *ExecSpec, out *v1alpha1.ExecSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(in *v1alpha1.ExecSpec, out *ExecSpec, s conversion.Scope) error {
+	out.Execs = *(*[]ExecTarget)(unsafe.Pointer(&in.Execs))
+	return nil
+}
+
+// Convert_v1alpha1_ExecSpec_To_internalversion_ExecSpec is an autogenerated conversion function.
+func Convert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(in *v1alpha1.ExecSpec, out *ExecSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(in, out, s)
+}
+
+func autoConvert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(in *ExecTarget, out *v1alpha1.ExecTarget, s conversion.Scope) error {
+	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
+	out.Local = (*v1alpha1.ExecTargetLocal)(unsafe.Pointer(in.Local))
+	return nil
+}
+
+// Convert_internalversion_ExecTarget_To_v1alpha1_ExecTarget is an autogenerated conversion function.
+func Convert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(in *ExecTarget, out *v1alpha1.ExecTarget, s conversion.Scope) error {
+	return autoConvert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(in *v1alpha1.ExecTarget, out *ExecTarget, s conversion.Scope) error {
+	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
+	out.Local = (*ExecTargetLocal)(unsafe.Pointer(in.Local))
+	return nil
+}
+
+// Convert_v1alpha1_ExecTarget_To_internalversion_ExecTarget is an autogenerated conversion function.
+func Convert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(in *v1alpha1.ExecTarget, out *ExecTarget, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(in, out, s)
+}
+
+func autoConvert_internalversion_ExecTargetLocal_To_v1alpha1_ExecTargetLocal(in *ExecTargetLocal, out *v1alpha1.ExecTargetLocal, s conversion.Scope) error {
+	out.WorkDir = in.WorkDir
+	out.Envs = *(*[]v1alpha1.EnvVar)(unsafe.Pointer(&in.Envs))
+	return nil
+}
+
+// Convert_internalversion_ExecTargetLocal_To_v1alpha1_ExecTargetLocal is an autogenerated conversion function.
+func Convert_internalversion_ExecTargetLocal_To_v1alpha1_ExecTargetLocal(in *ExecTargetLocal, out *v1alpha1.ExecTargetLocal, s conversion.Scope) error {
+	return autoConvert_internalversion_ExecTargetLocal_To_v1alpha1_ExecTargetLocal(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal(in *v1alpha1.ExecTargetLocal, out *ExecTargetLocal, s conversion.Scope) error {
+	out.WorkDir = in.WorkDir
+	out.Envs = *(*[]EnvVar)(unsafe.Pointer(&in.Envs))
+	return nil
+}
+
+// Convert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal is an autogenerated conversion function.
+func Convert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal(in *v1alpha1.ExecTargetLocal, out *ExecTargetLocal, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal(in, out, s)
 }
 
 func autoConvert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(in *ExpressionFromSource, out *v1alpha1.ExpressionFromSource, s conversion.Scope) error {

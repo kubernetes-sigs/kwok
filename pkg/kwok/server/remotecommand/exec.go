@@ -38,7 +38,7 @@ import (
 type Executor interface {
 	// ExecInContainer executes a command in a container in the pod, copying data
 	// between in/out/err and the container's stdin/stdout/stderr.
-	ExecInContainer(ctx context.Context, podName, podNamespace string, uid types.UID, container string, cmd []string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize, timeout time.Duration) error
+	ExecInContainer(ctx context.Context, podName, podNamespace string, uid types.UID, container string, cmd []string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error
 }
 
 // ServeExec handles requests to execute a command in a container. After
@@ -54,7 +54,7 @@ func ServeExec(ctx context.Context, w http.ResponseWriter, req *http.Request, ex
 		_ = stmCtx.conn.Close()
 	}()
 
-	err := executor.ExecInContainer(ctx, podName, podNamespace, uid, container, cmd, stmCtx.stdinStream, stmCtx.stdoutStream, stmCtx.stderrStream, stmCtx.tty, stmCtx.resizeChan, 0)
+	err := executor.ExecInContainer(ctx, podName, podNamespace, uid, container, cmd, stmCtx.stdinStream, stmCtx.stdoutStream, stmCtx.stderrStream, stmCtx.tty, stmCtx.resizeChan)
 	if err != nil {
 		var exitErr utilexec.ExitError
 		if errors.As(err, &exitErr) && exitErr.Exited() {

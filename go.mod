@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/compose-spec/compose-go v1.8.2
+	github.com/containerd/console v1.0.3
 	github.com/containerd/go-cni v1.1.7
 	github.com/containernetworking/plugins v1.2.0
 	github.com/emicklei/go-restful/v3 v3.10.1
