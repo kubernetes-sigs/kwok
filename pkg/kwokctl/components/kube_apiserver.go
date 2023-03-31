@@ -17,6 +17,8 @@ limitations under the License.
 package components
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -36,6 +38,7 @@ type BuildKubeApiserverComponentConfig struct {
 	KubeFeatureGates  string
 	SecurePort        bool
 	KubeAuthorization bool
+	KubeAdmission     bool
 	AuditPolicyPath   string
 	AuditLogPath      string
 	CaCertPath        string
@@ -60,9 +63,19 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	kubeApiserverArgs := []string{
-		"--admission-control=",
 		"--etcd-prefix=/registry",
 		"--allow-privileged=true",
+	}
+
+	if conf.KubeAdmission {
+		if conf.Version.LT(version.NewVersion(1, 21, 0)) && !conf.KubeAuthorization {
+			return component, fmt.Errorf("the kube-apiserver version is less than 1.21.0, and the --kube-authorization is not enabled, so the --kube-admission cannot be enabled")
+		}
+	} else {
+		// TODO: use enable-admission-plugins and disable-admission-plugins instead of admission-control
+		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--admission-control=",
+		)
 	}
 
 	kubeApiserverArgs = append(kubeApiserverArgs, extraArgsToStrings(conf.ExtraArgs)...)

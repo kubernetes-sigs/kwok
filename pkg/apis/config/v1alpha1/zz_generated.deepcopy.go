@@ -275,6 +275,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = new(bool)
 		**out = **in
 	}
+	if in.KubeAdmission != nil {
+		in, out := &in.KubeAdmission, &out.KubeAdmission
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

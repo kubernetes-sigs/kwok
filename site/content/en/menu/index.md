@@ -14,6 +14,8 @@ headless: true
     - [Manage Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}})
   - [`kwokctl` Snapshots Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}})
   - [`kwokctl` Auditing]({{< relref "/docs/user/kwokctl-auditing" >}})
+  - [`kwokctl` Authorization]({{< relref "/docs/user/kwokctl-authorization" >}})
+  - [`kwokctl` Admission]({{< relref "/docs/user/kwokctl-admission" >}})
   - **Configuration**
     - [Options]({{< relref "/docs/user/configuration" >}})
     - [Stages]({{< relref "/docs/user/stages-configuration" >}})

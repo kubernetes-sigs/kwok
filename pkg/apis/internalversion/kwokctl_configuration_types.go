@@ -174,6 +174,9 @@ type KwokctlConfigurationOptions struct {
 	// KubeAuthorization is the flag to enable authorization on secure port.
 	KubeAuthorization bool
 
+	// KubeAdmission is the flag to enable admission for kube-apiserver.
+	KubeAdmission bool
+
 	// EtcdPeerPort is etcd peer port in the binary runtime
 	EtcdPeerPort uint32
 
