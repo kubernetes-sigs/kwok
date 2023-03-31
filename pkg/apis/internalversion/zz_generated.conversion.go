@@ -27,6 +27,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 )
 
@@ -67,33 +68,33 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Component)(nil), (*v1alpha1.Component)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_Component_To_v1alpha1_Component(a.(*Component), b.(*v1alpha1.Component), scope)
+	if err := s.AddGeneratedConversionFunc((*Component)(nil), (*configv1alpha1.Component)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_Component_To_v1alpha1_Component(a.(*Component), b.(*configv1alpha1.Component), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.Component)(nil), (*Component)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_Component_To_internalversion_Component(a.(*v1alpha1.Component), b.(*Component), scope)
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.Component)(nil), (*Component)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Component_To_internalversion_Component(a.(*configv1alpha1.Component), b.(*Component), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*ComponentPatches)(nil), (*v1alpha1.ComponentPatches)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(a.(*ComponentPatches), b.(*v1alpha1.ComponentPatches), scope)
+	if err := s.AddGeneratedConversionFunc((*ComponentPatches)(nil), (*configv1alpha1.ComponentPatches)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(a.(*ComponentPatches), b.(*configv1alpha1.ComponentPatches), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.ComponentPatches)(nil), (*ComponentPatches)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(a.(*v1alpha1.ComponentPatches), b.(*ComponentPatches), scope)
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.ComponentPatches)(nil), (*ComponentPatches)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(a.(*configv1alpha1.ComponentPatches), b.(*ComponentPatches), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Env)(nil), (*v1alpha1.Env)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_Env_To_v1alpha1_Env(a.(*Env), b.(*v1alpha1.Env), scope)
+	if err := s.AddGeneratedConversionFunc((*Env)(nil), (*configv1alpha1.Env)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_Env_To_v1alpha1_Env(a.(*Env), b.(*configv1alpha1.Env), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.Env)(nil), (*Env)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_Env_To_internalversion_Env(a.(*v1alpha1.Env), b.(*Env), scope)
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.Env)(nil), (*Env)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Env_To_internalversion_Env(a.(*configv1alpha1.Env), b.(*Env), scope)
 	}); err != nil {
 		return err
 	}
@@ -152,13 +153,13 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*ExtraArgs)(nil), (*v1alpha1.ExtraArgs)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(a.(*ExtraArgs), b.(*v1alpha1.ExtraArgs), scope)
+	if err := s.AddGeneratedConversionFunc((*ExtraArgs)(nil), (*configv1alpha1.ExtraArgs)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(a.(*ExtraArgs), b.(*configv1alpha1.ExtraArgs), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExtraArgs)(nil), (*ExtraArgs)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(a.(*v1alpha1.ExtraArgs), b.(*ExtraArgs), scope)
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.ExtraArgs)(nil), (*ExtraArgs)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(a.(*configv1alpha1.ExtraArgs), b.(*ExtraArgs), scope)
 	}); err != nil {
 		return err
 	}
@@ -192,28 +193,28 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*KwokConfiguration)(nil), (*v1alpha1.KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(a.(*KwokConfiguration), b.(*v1alpha1.KwokConfiguration), scope)
+	if err := s.AddGeneratedConversionFunc((*KwokConfiguration)(nil), (*configv1alpha1.KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(a.(*KwokConfiguration), b.(*configv1alpha1.KwokConfiguration), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*KwokConfigurationOptions)(nil), (*v1alpha1.KwokConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(a.(*KwokConfigurationOptions), b.(*v1alpha1.KwokConfigurationOptions), scope)
+	if err := s.AddGeneratedConversionFunc((*KwokConfigurationOptions)(nil), (*configv1alpha1.KwokConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(a.(*KwokConfigurationOptions), b.(*configv1alpha1.KwokConfigurationOptions), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.KwokConfigurationOptions)(nil), (*KwokConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(a.(*v1alpha1.KwokConfigurationOptions), b.(*KwokConfigurationOptions), scope)
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.KwokConfigurationOptions)(nil), (*KwokConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(a.(*configv1alpha1.KwokConfigurationOptions), b.(*KwokConfigurationOptions), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*KwokctlConfiguration)(nil), (*v1alpha1.KwokctlConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfiguration(a.(*KwokctlConfiguration), b.(*v1alpha1.KwokctlConfiguration), scope)
+	if err := s.AddGeneratedConversionFunc((*KwokctlConfiguration)(nil), (*configv1alpha1.KwokctlConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfiguration(a.(*KwokctlConfiguration), b.(*configv1alpha1.KwokctlConfiguration), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*KwokctlConfigurationOptions)(nil), (*v1alpha1.KwokctlConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(a.(*KwokctlConfigurationOptions), b.(*v1alpha1.KwokctlConfigurationOptions), scope)
+	if err := s.AddGeneratedConversionFunc((*KwokctlConfigurationOptions)(nil), (*configv1alpha1.KwokctlConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(a.(*KwokctlConfigurationOptions), b.(*configv1alpha1.KwokctlConfigurationOptions), scope)
 	}); err != nil {
 		return err
 	}
@@ -227,13 +228,13 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Port)(nil), (*v1alpha1.Port)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_Port_To_v1alpha1_Port(a.(*Port), b.(*v1alpha1.Port), scope)
+	if err := s.AddGeneratedConversionFunc((*Port)(nil), (*configv1alpha1.Port)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_Port_To_v1alpha1_Port(a.(*Port), b.(*configv1alpha1.Port), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.Port)(nil), (*Port)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_Port_To_internalversion_Port(a.(*v1alpha1.Port), b.(*Port), scope)
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.Port)(nil), (*Port)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Port_To_internalversion_Port(a.(*configv1alpha1.Port), b.(*Port), scope)
 	}); err != nil {
 		return err
 	}
@@ -337,13 +338,13 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Volume)(nil), (*v1alpha1.Volume)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_Volume_To_v1alpha1_Volume(a.(*Volume), b.(*v1alpha1.Volume), scope)
+	if err := s.AddGeneratedConversionFunc((*Volume)(nil), (*configv1alpha1.Volume)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_Volume_To_v1alpha1_Volume(a.(*Volume), b.(*configv1alpha1.Volume), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.Volume)(nil), (*Volume)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_Volume_To_internalversion_Volume(a.(*v1alpha1.Volume), b.(*Volume), scope)
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.Volume)(nil), (*Volume)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Volume_To_internalversion_Volume(a.(*configv1alpha1.Volume), b.(*Volume), scope)
 	}); err != nil {
 		return err
 	}
@@ -362,18 +363,18 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha1.KwokConfiguration)(nil), (*KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(a.(*v1alpha1.KwokConfiguration), b.(*KwokConfiguration), scope)
+	if err := s.AddConversionFunc((*configv1alpha1.KwokConfiguration)(nil), (*KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(a.(*configv1alpha1.KwokConfiguration), b.(*KwokConfiguration), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha1.KwokctlConfigurationOptions)(nil), (*KwokctlConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(a.(*v1alpha1.KwokctlConfigurationOptions), b.(*KwokctlConfigurationOptions), scope)
+	if err := s.AddConversionFunc((*configv1alpha1.KwokctlConfigurationOptions)(nil), (*KwokctlConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(a.(*configv1alpha1.KwokctlConfigurationOptions), b.(*KwokctlConfigurationOptions), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha1.KwokctlConfiguration)(nil), (*KwokctlConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(a.(*v1alpha1.KwokctlConfiguration), b.(*KwokctlConfiguration), scope)
+	if err := s.AddConversionFunc((*configv1alpha1.KwokctlConfiguration)(nil), (*KwokctlConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(a.(*configv1alpha1.KwokctlConfiguration), b.(*KwokctlConfiguration), scope)
 	}); err != nil {
 		return err
 	}
@@ -478,7 +479,7 @@ func Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwa
 	return autoConvert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(in, out, s)
 }
 
-func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, out *v1alpha1.Component, s conversion.Scope) error {
+func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, out *configv1alpha1.Component, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Links = *(*[]string)(unsafe.Pointer(&in.Links))
 	out.Binary = in.Binary
@@ -486,11 +487,11 @@ func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, 
 	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
 	out.Args = *(*[]string)(unsafe.Pointer(&in.Args))
 	out.WorkDir = in.WorkDir
-	out.Ports = *(*[]v1alpha1.Port)(unsafe.Pointer(&in.Ports))
-	out.Envs = *(*[]v1alpha1.Env)(unsafe.Pointer(&in.Envs))
+	out.Ports = *(*[]configv1alpha1.Port)(unsafe.Pointer(&in.Ports))
+	out.Envs = *(*[]configv1alpha1.Env)(unsafe.Pointer(&in.Envs))
 	if in.Volumes != nil {
 		in, out := &in.Volumes, &out.Volumes
-		*out = make([]v1alpha1.Volume, len(*in))
+		*out = make([]configv1alpha1.Volume, len(*in))
 		for i := range *in {
 			if err := Convert_internalversion_Volume_To_v1alpha1_Volume(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
@@ -504,11 +505,11 @@ func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, 
 }
 
 // Convert_internalversion_Component_To_v1alpha1_Component is an autogenerated conversion function.
-func Convert_internalversion_Component_To_v1alpha1_Component(in *Component, out *v1alpha1.Component, s conversion.Scope) error {
+func Convert_internalversion_Component_To_v1alpha1_Component(in *Component, out *configv1alpha1.Component, s conversion.Scope) error {
 	return autoConvert_internalversion_Component_To_v1alpha1_Component(in, out, s)
 }
 
-func autoConvert_v1alpha1_Component_To_internalversion_Component(in *v1alpha1.Component, out *Component, s conversion.Scope) error {
+func autoConvert_v1alpha1_Component_To_internalversion_Component(in *configv1alpha1.Component, out *Component, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Links = *(*[]string)(unsafe.Pointer(&in.Links))
 	out.Binary = in.Binary
@@ -534,51 +535,51 @@ func autoConvert_v1alpha1_Component_To_internalversion_Component(in *v1alpha1.Co
 }
 
 // Convert_v1alpha1_Component_To_internalversion_Component is an autogenerated conversion function.
-func Convert_v1alpha1_Component_To_internalversion_Component(in *v1alpha1.Component, out *Component, s conversion.Scope) error {
+func Convert_v1alpha1_Component_To_internalversion_Component(in *configv1alpha1.Component, out *Component, s conversion.Scope) error {
 	return autoConvert_v1alpha1_Component_To_internalversion_Component(in, out, s)
 }
 
-func autoConvert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(in *ComponentPatches, out *v1alpha1.ComponentPatches, s conversion.Scope) error {
+func autoConvert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(in *ComponentPatches, out *configv1alpha1.ComponentPatches, s conversion.Scope) error {
 	out.Name = in.Name
-	out.ExtraArgs = *(*[]v1alpha1.ExtraArgs)(unsafe.Pointer(&in.ExtraArgs))
+	out.ExtraArgs = *(*[]configv1alpha1.ExtraArgs)(unsafe.Pointer(&in.ExtraArgs))
 	return nil
 }
 
 // Convert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches is an autogenerated conversion function.
-func Convert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(in *ComponentPatches, out *v1alpha1.ComponentPatches, s conversion.Scope) error {
+func Convert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(in *ComponentPatches, out *configv1alpha1.ComponentPatches, s conversion.Scope) error {
 	return autoConvert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(in, out, s)
 }
 
-func autoConvert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in *v1alpha1.ComponentPatches, out *ComponentPatches, s conversion.Scope) error {
+func autoConvert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in *configv1alpha1.ComponentPatches, out *ComponentPatches, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ExtraArgs = *(*[]ExtraArgs)(unsafe.Pointer(&in.ExtraArgs))
 	return nil
 }
 
 // Convert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches is an autogenerated conversion function.
-func Convert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in *v1alpha1.ComponentPatches, out *ComponentPatches, s conversion.Scope) error {
+func Convert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in *configv1alpha1.ComponentPatches, out *ComponentPatches, s conversion.Scope) error {
 	return autoConvert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in, out, s)
 }
 
-func autoConvert_internalversion_Env_To_v1alpha1_Env(in *Env, out *v1alpha1.Env, s conversion.Scope) error {
+func autoConvert_internalversion_Env_To_v1alpha1_Env(in *Env, out *configv1alpha1.Env, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Value = in.Value
 	return nil
 }
 
 // Convert_internalversion_Env_To_v1alpha1_Env is an autogenerated conversion function.
-func Convert_internalversion_Env_To_v1alpha1_Env(in *Env, out *v1alpha1.Env, s conversion.Scope) error {
+func Convert_internalversion_Env_To_v1alpha1_Env(in *Env, out *configv1alpha1.Env, s conversion.Scope) error {
 	return autoConvert_internalversion_Env_To_v1alpha1_Env(in, out, s)
 }
 
-func autoConvert_v1alpha1_Env_To_internalversion_Env(in *v1alpha1.Env, out *Env, s conversion.Scope) error {
+func autoConvert_v1alpha1_Env_To_internalversion_Env(in *configv1alpha1.Env, out *Env, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Value = in.Value
 	return nil
 }
 
 // Convert_v1alpha1_Env_To_internalversion_Env is an autogenerated conversion function.
-func Convert_v1alpha1_Env_To_internalversion_Env(in *v1alpha1.Env, out *Env, s conversion.Scope) error {
+func Convert_v1alpha1_Env_To_internalversion_Env(in *configv1alpha1.Env, out *Env, s conversion.Scope) error {
 	return autoConvert_v1alpha1_Env_To_internalversion_Env(in, out, s)
 }
 
@@ -710,25 +711,25 @@ func Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSour
 	return autoConvert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in, out, s)
 }
 
-func autoConvert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out *v1alpha1.ExtraArgs, s conversion.Scope) error {
+func autoConvert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out *configv1alpha1.ExtraArgs, s conversion.Scope) error {
 	out.Key = in.Key
 	out.Value = in.Value
 	return nil
 }
 
 // Convert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs is an autogenerated conversion function.
-func Convert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out *v1alpha1.ExtraArgs, s conversion.Scope) error {
+func Convert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out *configv1alpha1.ExtraArgs, s conversion.Scope) error {
 	return autoConvert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in, out, s)
 }
 
-func autoConvert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(in *v1alpha1.ExtraArgs, out *ExtraArgs, s conversion.Scope) error {
+func autoConvert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(in *configv1alpha1.ExtraArgs, out *ExtraArgs, s conversion.Scope) error {
 	out.Key = in.Key
 	out.Value = in.Value
 	return nil
 }
 
 // Convert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs is an autogenerated conversion function.
-func Convert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(in *v1alpha1.ExtraArgs, out *ExtraArgs, s conversion.Scope) error {
+func Convert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(in *configv1alpha1.ExtraArgs, out *ExtraArgs, s conversion.Scope) error {
 	return autoConvert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(in, out, s)
 }
 
@@ -798,7 +799,7 @@ func Convert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget(in *v1alpha
 	return autoConvert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget(in, out, s)
 }
 
-func autoConvert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(in *KwokConfiguration, out *v1alpha1.KwokConfiguration, s conversion.Scope) error {
+func autoConvert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(in *KwokConfiguration, out *configv1alpha1.KwokConfiguration, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(&in.Options, &out.Options, s); err != nil {
 		return err
@@ -807,11 +808,11 @@ func autoConvert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration
 }
 
 // Convert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration is an autogenerated conversion function.
-func Convert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(in *KwokConfiguration, out *v1alpha1.KwokConfiguration, s conversion.Scope) error {
+func Convert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(in *KwokConfiguration, out *configv1alpha1.KwokConfiguration, s conversion.Scope) error {
 	return autoConvert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(in, out, s)
 }
 
-func autoConvert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(in *v1alpha1.KwokConfiguration, out *KwokConfiguration, s conversion.Scope) error {
+func autoConvert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(in *configv1alpha1.KwokConfiguration, out *KwokConfiguration, s conversion.Scope) error {
 	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(&in.Options, &out.Options, s); err != nil {
@@ -820,7 +821,7 @@ func autoConvert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration
 	return nil
 }
 
-func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in *KwokConfigurationOptions, out *v1alpha1.KwokConfigurationOptions, s conversion.Scope) error {
+func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in *KwokConfigurationOptions, out *configv1alpha1.KwokConfigurationOptions, s conversion.Scope) error {
 	out.CIDR = in.CIDR
 	out.NodeIP = in.NodeIP
 	out.NodeName = in.NodeName
@@ -851,11 +852,11 @@ func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfig
 }
 
 // Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions is an autogenerated conversion function.
-func Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in *KwokConfigurationOptions, out *v1alpha1.KwokConfigurationOptions, s conversion.Scope) error {
+func Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in *KwokConfigurationOptions, out *configv1alpha1.KwokConfigurationOptions, s conversion.Scope) error {
 	return autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in, out, s)
 }
 
-func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(in *v1alpha1.KwokConfigurationOptions, out *KwokConfigurationOptions, s conversion.Scope) error {
+func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(in *configv1alpha1.KwokConfigurationOptions, out *KwokConfigurationOptions, s conversion.Scope) error {
 	out.CIDR = in.CIDR
 	out.NodeIP = in.NodeIP
 	out.NodeName = in.NodeName
@@ -886,18 +887,18 @@ func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfig
 }
 
 // Convert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions is an autogenerated conversion function.
-func Convert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(in *v1alpha1.KwokConfigurationOptions, out *KwokConfigurationOptions, s conversion.Scope) error {
+func Convert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(in *configv1alpha1.KwokConfigurationOptions, out *KwokConfigurationOptions, s conversion.Scope) error {
 	return autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(in, out, s)
 }
 
-func autoConvert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfiguration(in *KwokctlConfiguration, out *v1alpha1.KwokctlConfiguration, s conversion.Scope) error {
+func autoConvert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfiguration(in *KwokctlConfiguration, out *configv1alpha1.KwokctlConfiguration, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(&in.Options, &out.Options, s); err != nil {
 		return err
 	}
 	if in.Components != nil {
 		in, out := &in.Components, &out.Components
-		*out = make([]v1alpha1.Component, len(*in))
+		*out = make([]configv1alpha1.Component, len(*in))
 		for i := range *in {
 			if err := Convert_internalversion_Component_To_v1alpha1_Component(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
@@ -906,16 +907,16 @@ func autoConvert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfigu
 	} else {
 		out.Components = nil
 	}
-	out.ComponentsPatches = *(*[]v1alpha1.ComponentPatches)(unsafe.Pointer(&in.ComponentsPatches))
+	out.ComponentsPatches = *(*[]configv1alpha1.ComponentPatches)(unsafe.Pointer(&in.ComponentsPatches))
 	return nil
 }
 
 // Convert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfiguration is an autogenerated conversion function.
-func Convert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfiguration(in *KwokctlConfiguration, out *v1alpha1.KwokctlConfiguration, s conversion.Scope) error {
+func Convert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfiguration(in *KwokctlConfiguration, out *configv1alpha1.KwokctlConfiguration, s conversion.Scope) error {
 	return autoConvert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfiguration(in, out, s)
 }
 
-func autoConvert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(in *v1alpha1.KwokctlConfiguration, out *KwokctlConfiguration, s conversion.Scope) error {
+func autoConvert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(in *configv1alpha1.KwokctlConfiguration, out *KwokctlConfiguration, s conversion.Scope) error {
 	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(&in.Options, &out.Options, s); err != nil {
@@ -936,7 +937,7 @@ func autoConvert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfigu
 	return nil
 }
 
-func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(in *KwokctlConfigurationOptions, out *v1alpha1.KwokctlConfigurationOptions, s conversion.Scope) error {
+func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(in *KwokctlConfigurationOptions, out *configv1alpha1.KwokctlConfigurationOptions, s conversion.Scope) error {
 	out.KubeApiserverPort = in.KubeApiserverPort
 	out.Runtime = in.Runtime
 	out.Runtimes = *(*[]string)(unsafe.Pointer(&in.Runtimes))
@@ -999,11 +1000,11 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 }
 
 // Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions is an autogenerated conversion function.
-func Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(in *KwokctlConfigurationOptions, out *v1alpha1.KwokctlConfigurationOptions, s conversion.Scope) error {
+func Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(in *KwokctlConfigurationOptions, out *configv1alpha1.KwokctlConfigurationOptions, s conversion.Scope) error {
 	return autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(in, out, s)
 }
 
-func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(in *v1alpha1.KwokctlConfigurationOptions, out *KwokctlConfigurationOptions, s conversion.Scope) error {
+func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(in *configv1alpha1.KwokctlConfigurationOptions, out *KwokctlConfigurationOptions, s conversion.Scope) error {
 	out.KubeApiserverPort = in.KubeApiserverPort
 	out.Runtime = in.Runtime
 	out.Runtimes = *(*[]string)(unsafe.Pointer(&in.Runtimes))
@@ -1098,20 +1099,20 @@ func Convert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector(in *v1alp
 	return autoConvert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector(in, out, s)
 }
 
-func autoConvert_internalversion_Port_To_v1alpha1_Port(in *Port, out *v1alpha1.Port, s conversion.Scope) error {
+func autoConvert_internalversion_Port_To_v1alpha1_Port(in *Port, out *configv1alpha1.Port, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Port = in.Port
 	out.HostPort = in.HostPort
-	out.Protocol = v1alpha1.Protocol(in.Protocol)
+	out.Protocol = configv1alpha1.Protocol(in.Protocol)
 	return nil
 }
 
 // Convert_internalversion_Port_To_v1alpha1_Port is an autogenerated conversion function.
-func Convert_internalversion_Port_To_v1alpha1_Port(in *Port, out *v1alpha1.Port, s conversion.Scope) error {
+func Convert_internalversion_Port_To_v1alpha1_Port(in *Port, out *configv1alpha1.Port, s conversion.Scope) error {
 	return autoConvert_internalversion_Port_To_v1alpha1_Port(in, out, s)
 }
 
-func autoConvert_v1alpha1_Port_To_internalversion_Port(in *v1alpha1.Port, out *Port, s conversion.Scope) error {
+func autoConvert_v1alpha1_Port_To_internalversion_Port(in *configv1alpha1.Port, out *Port, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Port = in.Port
 	out.HostPort = in.HostPort
@@ -1120,7 +1121,7 @@ func autoConvert_v1alpha1_Port_To_internalversion_Port(in *v1alpha1.Port, out *P
 }
 
 // Convert_v1alpha1_Port_To_internalversion_Port is an autogenerated conversion function.
-func Convert_v1alpha1_Port_To_internalversion_Port(in *v1alpha1.Port, out *Port, s conversion.Scope) error {
+func Convert_v1alpha1_Port_To_internalversion_Port(in *configv1alpha1.Port, out *Port, s conversion.Scope) error {
 	return autoConvert_v1alpha1_Port_To_internalversion_Port(in, out, s)
 }
 
@@ -1394,7 +1395,7 @@ func Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.StageS
 	return autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in, out, s)
 }
 
-func autoConvert_internalversion_Volume_To_v1alpha1_Volume(in *Volume, out *v1alpha1.Volume, s conversion.Scope) error {
+func autoConvert_internalversion_Volume_To_v1alpha1_Volume(in *Volume, out *configv1alpha1.Volume, s conversion.Scope) error {
 	out.Name = in.Name
 	if err := v1.Convert_bool_To_Pointer_bool(&in.ReadOnly, &out.ReadOnly, s); err != nil {
 		return err
@@ -1405,11 +1406,11 @@ func autoConvert_internalversion_Volume_To_v1alpha1_Volume(in *Volume, out *v1al
 }
 
 // Convert_internalversion_Volume_To_v1alpha1_Volume is an autogenerated conversion function.
-func Convert_internalversion_Volume_To_v1alpha1_Volume(in *Volume, out *v1alpha1.Volume, s conversion.Scope) error {
+func Convert_internalversion_Volume_To_v1alpha1_Volume(in *Volume, out *configv1alpha1.Volume, s conversion.Scope) error {
 	return autoConvert_internalversion_Volume_To_v1alpha1_Volume(in, out, s)
 }
 
-func autoConvert_v1alpha1_Volume_To_internalversion_Volume(in *v1alpha1.Volume, out *Volume, s conversion.Scope) error {
+func autoConvert_v1alpha1_Volume_To_internalversion_Volume(in *configv1alpha1.Volume, out *Volume, s conversion.Scope) error {
 	out.Name = in.Name
 	if err := v1.Convert_Pointer_bool_To_bool(&in.ReadOnly, &out.ReadOnly, s); err != nil {
 		return err
@@ -1420,6 +1421,6 @@ func autoConvert_v1alpha1_Volume_To_internalversion_Volume(in *v1alpha1.Volume, 
 }
 
 // Convert_v1alpha1_Volume_To_internalversion_Volume is an autogenerated conversion function.
-func Convert_v1alpha1_Volume_To_internalversion_Volume(in *v1alpha1.Volume, out *Volume, s conversion.Scope) error {
+func Convert_v1alpha1_Volume_To_internalversion_Volume(in *configv1alpha1.Volume, out *Volume, s conversion.Scope) error {
 	return autoConvert_v1alpha1_Volume_To_internalversion_Volume(in, out, s)
 }

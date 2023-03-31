@@ -29,6 +29,7 @@ import (
 	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/yaml"
 
+	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config/compatibility"
@@ -89,15 +90,6 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 			}
 		}
 
-		if gvk.Version != v1alpha1.GroupVersion.Version ||
-			gvk.Group != v1alpha1.GroupVersion.Group {
-			logger.Warn("Unsupported type",
-				"apiVersion", meta.APIVersion,
-				"kind", meta.Kind,
-				"src", src,
-			)
-			continue
-		}
 		switch gvk.Kind {
 		default:
 			logger.Warn("Unsupported type",
@@ -105,8 +97,8 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 				"kind", meta.Kind,
 				"src", src,
 			)
-		case v1alpha1.KwokConfigurationKind:
-			obj := &v1alpha1.KwokConfiguration{}
+		case configv1alpha1.KwokConfigurationKind:
+			obj := &configv1alpha1.KwokConfiguration{}
 			err = json.Unmarshal(raw, &obj)
 			if err != nil {
 				return nil, err
@@ -117,8 +109,8 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 				return nil, err
 			}
 			kwokConfiguration = out
-		case v1alpha1.KwokctlConfigurationKind:
-			obj := &v1alpha1.KwokctlConfiguration{}
+		case configv1alpha1.KwokctlConfigurationKind:
+			obj := &configv1alpha1.KwokctlConfiguration{}
 			err = json.Unmarshal(raw, &obj)
 			if err != nil {
 				return nil, err

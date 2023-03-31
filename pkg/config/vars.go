@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -63,16 +64,16 @@ func GetKwokctlConfiguration(ctx context.Context) (conf *internalversion.Kwokctl
 		if len(configs) > 1 {
 			logger := log.FromContext(ctx)
 			logger.Warn("Too many same kind configurations",
-				"kind", v1alpha1.KwokctlConfigurationKind,
+				"kind", configv1alpha1.KwokctlConfigurationKind,
 			)
 		}
 	}
 	if conf == nil {
 		logger := log.FromContext(ctx)
 		logger.Debug("No configuration",
-			"kind", v1alpha1.KwokctlConfigurationKind,
+			"kind", configv1alpha1.KwokctlConfigurationKind,
 		)
-		conf, err := internalversion.ConvertToInternalVersionKwokctlConfiguration(setKwokctlConfigurationDefaults(&v1alpha1.KwokctlConfiguration{}))
+		conf, err := internalversion.ConvertToInternalVersionKwokctlConfiguration(setKwokctlConfigurationDefaults(&configv1alpha1.KwokctlConfiguration{}))
 		if err != nil {
 			logger.Error("Get kwokctl configuration failed", err)
 			return &internalversion.KwokctlConfiguration{}
@@ -91,16 +92,16 @@ func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfig
 		if len(configs) > 1 {
 			logger := log.FromContext(ctx)
 			logger.Warn("Too many same kind configurations",
-				"kind", v1alpha1.KwokConfigurationKind,
+				"kind", configv1alpha1.KwokConfigurationKind,
 			)
 		}
 	}
 	if conf == nil {
 		logger := log.FromContext(ctx)
 		logger.Debug("No configuration",
-			"kind", v1alpha1.KwokConfigurationKind,
+			"kind", configv1alpha1.KwokConfigurationKind,
 		)
-		conf, err := internalversion.ConvertToInternalVersionKwokConfiguration(setKwokConfigurationDefaults(&v1alpha1.KwokConfiguration{}))
+		conf, err := internalversion.ConvertToInternalVersionKwokConfiguration(setKwokConfigurationDefaults(&configv1alpha1.KwokConfiguration{}))
 		if err != nil {
 			logger.Error("Get kwok configuration failed", err)
 			return &internalversion.KwokConfiguration{}
@@ -119,19 +120,19 @@ func setStageDefaults(config *v1alpha1.Stage) *v1alpha1.Stage {
 	return config
 }
 
-func setKwokConfigurationDefaults(config *v1alpha1.KwokConfiguration) *v1alpha1.KwokConfiguration {
+func setKwokConfigurationDefaults(config *configv1alpha1.KwokConfiguration) *configv1alpha1.KwokConfiguration {
 	if config == nil {
-		config = &v1alpha1.KwokConfiguration{}
+		config = &configv1alpha1.KwokConfiguration{}
 	}
 
-	v1alpha1.SetObjectDefaults_KwokConfiguration(config)
+	configv1alpha1.SetObjectDefaults_KwokConfiguration(config)
 
 	return config
 }
 
-func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1alpha1.KwokctlConfiguration {
+func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration) *configv1alpha1.KwokctlConfiguration {
 	if config == nil {
-		config = &v1alpha1.KwokctlConfiguration{}
+		config = &configv1alpha1.KwokctlConfiguration{}
 	}
 	conf := &config.Options
 
@@ -196,12 +197,12 @@ func setKwokctlConfigurationDefaults(config *v1alpha1.KwokctlConfiguration) *v1a
 
 	setKwokctlPrometheusConfig(conf)
 
-	v1alpha1.SetObjectDefaults_KwokctlConfiguration(config)
+	configv1alpha1.SetObjectDefaults_KwokctlConfiguration(config)
 
 	return config
 }
 
-func setKwokctlKubernetesConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
+func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.DisableKubeScheduler == nil {
 		conf.DisableKubeScheduler = format.Ptr(false)
 	}
@@ -220,14 +221,14 @@ func setKwokctlKubernetesConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.KubeApiserverPort = envs.GetEnvWithPrefix("KUBE_APISERVER_PORT", conf.KubeApiserverPort)
 
 	if conf.KubeFeatureGates == "" {
-		if conf.Mode == v1alpha1.ModeStableFeatureGateAndAPI {
+		if conf.Mode == configv1alpha1.ModeStableFeatureGateAndAPI {
 			conf.KubeFeatureGates = k8s.GetFeatureGates(parseRelease(conf.KubeVersion))
 		}
 	}
 	conf.KubeFeatureGates = envs.GetEnvWithPrefix("KUBE_FEATURE_GATES", conf.KubeFeatureGates)
 
 	if conf.KubeRuntimeConfig == "" {
-		if conf.Mode == v1alpha1.ModeStableFeatureGateAndAPI {
+		if conf.Mode == configv1alpha1.ModeStableFeatureGateAndAPI {
 			conf.KubeRuntimeConfig = k8s.GetRuntimeConfig(parseRelease(conf.KubeVersion))
 		}
 	}
@@ -285,7 +286,7 @@ func setKwokctlKubernetesConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.KubeSchedulerPort = envs.GetEnvWithPrefix("KUBE_SCHEDULER_PORT", conf.KubeSchedulerPort)
 }
 
-func setKwokctlKwokConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
+func setKwokctlKwokConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.KwokBinaryPrefix == "" {
 		conf.KwokBinaryPrefix = consts.BinaryPrefix
 	}
@@ -308,7 +309,7 @@ func setKwokctlKwokConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.KwokControllerPort = envs.GetEnvWithPrefix("CONTROLLER_PORT", conf.KwokControllerPort)
 }
 
-func setKwokctlEtcdConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
+func setKwokctlEtcdConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.EtcdVersion == "" {
 		conf.EtcdVersion = k8s.GetEtcdVersion(parseRelease(conf.KubeVersion))
 	}
@@ -344,7 +345,7 @@ func setKwokctlEtcdConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.EtcdPort = envs.GetEnvWithPrefix("ETCD_PORT", conf.EtcdPort)
 }
 
-func setKwokctlKindConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
+func setKwokctlKindConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.KindNodeImagePrefix == "" {
 		conf.KindNodeImagePrefix = consts.KindNodeImagePrefix
 	}
@@ -371,7 +372,7 @@ func setKwokctlKindConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.KindBinary = envs.GetEnvWithPrefix("KIND_BINARY", conf.KindBinary)
 }
 
-func setKwokctlDockerConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
+func setKwokctlDockerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.DockerComposeVersion == "" {
 		conf.DockerComposeVersion = consts.DockerComposeVersion
 	}
@@ -388,7 +389,7 @@ func setKwokctlDockerConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
 	conf.DockerComposeBinary = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY", conf.DockerComposeBinary)
 }
 
-func setKwokctlPrometheusConfig(conf *v1alpha1.KwokctlConfigurationOptions) {
+func setKwokctlPrometheusConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	conf.PrometheusPort = envs.GetEnvWithPrefix("PROMETHEUS_PORT", conf.PrometheusPort)
 
 	if conf.PrometheusVersion == "" {
