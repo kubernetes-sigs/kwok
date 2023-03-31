@@ -109,20 +109,20 @@ func (s *Server) getPodsForward(podName, podNamespace string, port int32) (*inte
 		if found {
 			return forward, nil
 		}
-	} else {
-		for _, cfw := range s.config.ClusterPortForwards {
-			if !cfw.Spec.Selector.Match(podName, podNamespace) {
-				continue
-			}
-
-			forward, found := findPortInForwards(port, cfw.Spec.Forwards)
-			if found {
-				return forward, nil
-			}
-		}
+		return nil, fmt.Errorf("forward not found for port %q in pod %q", port, log.KRef(podNamespace, podName))
 	}
 
-	return nil, fmt.Errorf("forward to port %d is not found", port)
+	for _, cfw := range s.config.ClusterPortForwards {
+		if !cfw.Spec.Selector.Match(podName, podNamespace) {
+			continue
+		}
+
+		forward, found := findPortInForwards(port, cfw.Spec.Forwards)
+		if found {
+			return forward, nil
+		}
+	}
+	return nil, fmt.Errorf("no forward found for port %q in pod %q", port, log.KRef(podNamespace, podName))
 }
 
 func findPortInForwards(port int32, forwards []internalversion.Forward) (*internalversion.Forward, bool) {
