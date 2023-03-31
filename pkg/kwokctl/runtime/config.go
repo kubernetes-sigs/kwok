@@ -109,4 +109,10 @@ type Runtime interface {
 
 	// SnapshotRestore restore the snapshot of cluster
 	SnapshotRestore(ctx context.Context, path string) error
+
+	// SnapshotSaveWithYAML save the snapshot of cluster
+	SnapshotSaveWithYAML(ctx context.Context, path string, filters []string) error
+
+	// SnapshotRestoreWithYAML restore the snapshot of cluster
+	SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error
 }

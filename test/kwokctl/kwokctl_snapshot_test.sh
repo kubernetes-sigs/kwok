@@ -58,7 +58,7 @@ function get_snapshot_info() {
   kwokctl --name "${name}" kubectl get node | awk '{print $1}'
 }
 
-function test_snapshot() {
+function test_snapshot_etcd() {
   local release="${1}"
   local name="${2}"
   local empty_info
@@ -70,7 +70,7 @@ function test_snapshot() {
 
   empty_info="$(get_snapshot_info "${name}")"
 
-  kwokctl snapshot save --name "${name}" --path "${empty_path}"
+  kwokctl snapshot save --name "${name}" --path "${empty_path}" --format etcd
 
   for ((i = 0; i < 30; i++)); do
     kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f - && break
@@ -90,10 +90,10 @@ function test_snapshot() {
     return 1
   fi
 
-  kwokctl snapshot save --name "${name}" --path "${full_path}"
+  kwokctl snapshot save --name "${name}" --path "${full_path}" --format etcd
 
   sleep 1
-  kwokctl snapshot restore --name "${name}" --path "${empty_path}"
+  kwokctl snapshot restore --name "${name}" --path "${empty_path}" --format etcd
   for ((i = 0; i < 30; i++)); do
     restore_empty_info="$(get_snapshot_info "${name}")"
     if [[ "${empty_info}" == "${restore_empty_info}" ]]; then
@@ -111,7 +111,7 @@ function test_snapshot() {
 
   sleep 1
 
-  kwokctl snapshot restore --name "${name}" --path "${full_path}"
+  kwokctl snapshot restore --name "${name}" --path "${full_path}" --format etcd
   for ((i = 0; i < 30; i++)); do
     restore_full_info=$(get_snapshot_info "${name}")
     if [[ "${full_info}" == "${restore_full_info}" ]]; then
@@ -130,15 +130,75 @@ function test_snapshot() {
   rm -rf "${empty_path}" "${full_path}"
 }
 
+function test_snapshot_k8s() {
+  local release="${1}"
+  local name="${2}"
+  local full_info
+  local restore_full_info
+  local full_path="./snapshot-k8s-${name}"
+
+  for ((i = 0; i < 30; i++)); do
+    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f - && break
+    sleep 1
+  done
+
+  for ((i = 0; i < 30; i++)); do
+    full_info="$(get_snapshot_info "${name}")"
+    if [[ "${full_info}" =~ "default pod/" ]]; then
+      break
+    fi
+    sleep 1
+  done
+
+  kwokctl snapshot save --name "${name}" --path "${full_path}" --format k8s
+
+  for ((i = 0; i < 30; i++)); do
+    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl delete -f - && break
+    sleep 1
+  done
+
+  for ((i = 0; i < 30; i++)); do
+    restore_full_info="$(get_snapshot_info "${name}")"
+    if [[ ! "${restore_full_info}" =~ "default pod/" ]]; then
+      break
+    fi
+  done
+
+  sleep 5
+
+  kwokctl snapshot restore --name "${name}" --path "${full_path}" --format k8s
+
+  for ((i = 0; i < 30; i++)); do
+    restore_full_info="$(get_snapshot_info "${name}")"
+    if [[ "${restore_full_info}" =~ "default pod/" ]]; then
+      break
+    fi
+    sleep 1
+  done
+
+  if [[ "${full_info}" != "${restore_full_info}" ]]; then
+    echo "Error: Full snapshot restore failed"
+    echo "Expected: ${full_info}"
+    echo "Actual: ${restore_full_info}"
+    return 1
+  fi
+
+  rm "${full_path}"
+}
+
 function main() {
   local failed=()
   for release in "${RELEASES[@]}"; do
     echo "------------------------------"
     echo "Testing snapshot on ${KWOK_RUNTIME} for ${release}"
     name="snapshot-cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
-    test_snapshot "${release}" "${name}" || failed+=("snapshot_${name}")
-    test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
+    test_create_cluster "${release}" "etcd-${name}" || failed+=("create_cluster_etcd_${name}")
+    test_snapshot_etcd "${release}" "etcd-${name}" || failed+=("snapshot_etcd_${name}")
+    test_delete_cluster "${release}" "etcd-${name}" || failed+=("delete_cluster_etcd_${name}")
+
+    test_create_cluster "${release}" "k8s-${name}" || failed+=("create_cluster_k8s_${name}")
+    test_snapshot_k8s "${release}" "k8s-${name}" || failed+=("snapshot_k8s_${name}")
+    test_delete_cluster "${release}" "k8s-${name}" || failed+=("delete_cluster_k8s_${name}")
   done
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
