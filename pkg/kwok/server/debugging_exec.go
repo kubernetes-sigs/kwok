@@ -63,13 +63,18 @@ func (s *Server) ExecInContainer(ctx context.Context, podName, podNamespace stri
 	defer cancel()
 
 	if tty {
-		return s.execInContainerWithTTY(ctx, cmd, in, out, errOut, resize)
+		return s.execInContainerWithTTY(ctx, cmd, in, out, resize)
 	}
 
 	return s.execInContainer(ctx, cmd, in, out, errOut)
 }
 
 func (s *Server) execInContainer(ctx context.Context, cmd []string, in io.Reader, out, errOut io.WriteCloser) error {
+	// Set the pipe stdin.
+	if in != nil {
+		ctx = exec.WithPipeStdin(ctx, true)
+	}
+
 	// Set the stream as the stdin/stdout/stderr.
 	ctx = exec.WithIOStreams(ctx, exec.IOStreams{
 		In:     in,
