@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -31,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -71,38 +69,6 @@ func getKindRuntimeExtraArgs(config *internalversion.KwokctlConfiguration, s str
 		return patch.ExtraArgs
 	}
 	return []internalversion.ExtraArgs{}
-}
-
-func getKindRuntimeExtaLogMounts(configPath string) ([]internalversion.Volume, error) {
-	objs, err := config.Load(context.Background(), configPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
-	}
-
-	// Mount log dirs
-	mountDirs := make(map[string]bool)
-	for _, obj := range objs {
-		switch obj := obj.(type) {
-		case *internalversion.ClusterLogs:
-			for _, log := range obj.Spec.Logs {
-				mountDirs[filepath.Dir(log.LogsFile)] = true
-			}
-		case *internalversion.Logs:
-			for _, log := range obj.Spec.Logs {
-				mountDirs[filepath.Dir(log.LogsFile)] = true
-			}
-		}
-	}
-	volumes := make([]internalversion.Volume, 0, len(mountDirs))
-	for dir := range mountDirs {
-		volumes = append(volumes, internalversion.Volume{
-			HostPath:  dir,
-			MountPath: dir,
-			ReadOnly:  true,
-		})
-	}
-
-	return volumes, nil
 }
 
 // Install installs the cluster
@@ -159,7 +125,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
 	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
-	extraLogMounts, err := getKindRuntimeExtaLogMounts(configPath)
+	extraLogMounts, err := runtime.GetLogVolumes(ctx)
 	if err != nil {
 		return err
 	}

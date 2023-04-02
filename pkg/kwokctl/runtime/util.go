@@ -17,7 +17,11 @@ limitations under the License.
 package runtime
 
 import (
+	"context"
+	"path/filepath"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
@@ -42,4 +46,34 @@ func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion
 		result = append(result, v)
 	}
 	return result, nil
+}
+
+func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
+	logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
+	clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
+
+	// Mount log dirs
+	mountDirs := make(map[string]struct{})
+	for _, log := range logs {
+		for _, l := range log.Spec.Logs {
+			mountDirs[filepath.Dir(l.LogsFile)] = struct{}{}
+		}
+	}
+
+	for _, cl := range clusterLogs {
+		for _, l := range cl.Spec.Logs {
+			mountDirs[filepath.Dir(l.LogsFile)] = struct{}{}
+		}
+	}
+
+	volumes := make([]internalversion.Volume, 0, len(mountDirs))
+	for dir := range mountDirs {
+		volumes = append(volumes, internalversion.Volume{
+			HostPath:  dir,
+			MountPath: dir,
+			ReadOnly:  true,
+		})
+	}
+
+	return volumes, nil
 }

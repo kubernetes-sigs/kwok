@@ -22,7 +22,7 @@ import (
 
 // Logs provides log configuration for a single pod.
 type Logs struct {
-	metav1.TypeMeta
+	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ObjectMeta
