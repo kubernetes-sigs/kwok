@@ -18,6 +18,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -48,7 +49,7 @@ func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion
 	return result, nil
 }
 
-func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
+func GetLogVolumes(ctx context.Context) []internalversion.Volume {
 	logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
 	clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
 
@@ -67,13 +68,17 @@ func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
 	}
 
 	volumes := make([]internalversion.Volume, 0, len(mountDirs))
+	i := 0
 	for dir := range mountDirs {
 		volumes = append(volumes, internalversion.Volume{
+			Name:      fmt.Sprintf("log-volume-%d", i),
 			HostPath:  dir,
 			MountPath: dir,
+			PathType:  internalversion.HostPathDirectoryOrCreate,
 			ReadOnly:  true,
 		})
+		i++
 	}
 
-	return volumes, nil
+	return volumes
 }

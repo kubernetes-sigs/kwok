@@ -61,5 +61,5 @@ type BuildKwokControllerPodConfig struct {
 	Name                    string
 	ExtraArgs               []internalversion.ExtraArgs
 	ExtraVolumes            []internalversion.Volume
-	ExtraLogMounts          []internalversion.Volume
+	ExtraLogVolumes         []internalversion.Volume
 }

@@ -259,15 +259,15 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_exec
 
-      - name: Test Extra
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_extra
-
       - name: Test Log
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_logs
+
+      - name: Test Extra
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_extra
 
       - name: Test Benchmark
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime != 'kind' }}

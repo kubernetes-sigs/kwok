@@ -125,11 +125,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
 	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
-	extraLogMounts, err := runtime.GetLogVolumes(ctx)
-	if err != nil {
-		return err
-	}
-	_ = extraLogMounts
+	extraLogVolumes := runtime.GetLogVolumes(ctx)
+	_ = extraLogVolumes
 	kindYaml, err := BuildKind(BuildKindConfig{
 		KubeApiserverPort:             conf.KubeApiserverPort,
 		EtcdPort:                      conf.EtcdPort,
@@ -166,7 +163,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Name:                c.Name(),
 		ExtraArgs:           kwokControllerComponentPatches.ExtraArgs,
 		ExtraVolumes:        kwokControllerComponentPatches.ExtraVolumes,
-		ExtraLogMounts:      extraLogMounts,
 	})
 	if err != nil {
 		return err
