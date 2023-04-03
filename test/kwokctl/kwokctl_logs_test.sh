@@ -107,6 +107,10 @@ function test_delete_cluster() {
 function main() {
   local failed=()
   mkdir -p "${LOGDIR}"
+  if [[ $? -ne 0 ]]; then
+      echo "Failed to create LOGDIR ${LOGDIR}"
+  fi
+
   for release in "${RELEASES[@]}"; do
     echo "------------------------------"
     echo "Testing logs on ${KWOK_RUNTIME} for ${release}"
