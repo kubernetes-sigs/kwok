@@ -107,9 +107,8 @@ function test_delete_cluster() {
 function main() {
   local failed=()
   mkdir -p "${LOGDIR}"
-  if [[ $? -ne 0 ]]; then
-      echo "Failed to create LOGDIR ${LOGDIR}"
-  fi
+  ls -la /tmp
+  stat "${LOGDIR}"
 
   for release in "${RELEASES[@]}"; do
     echo "------------------------------"
