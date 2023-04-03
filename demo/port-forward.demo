@@ -1,0 +1,20 @@
+# Let's getting started with kwokctl!
+kwokctl -c ./test/kwokctl/port-forward.yaml create cluster
+
+# Create a node.
+kubectl apply -f ./test/kwok/fake-node.yaml
+
+# Apply a deployment.
+kubectl apply -f ./test/kwok/fake-deployment.yaml
+
+# Forward port to the deployment.
+kubectl port-forward deployment/fake-pod 8080:10247 &
+
+# Check the port forward.
+curl http://localhost:8080/healthz
+
+# Delete the cluster.
+kwokctl delete cluster
+
+# That's all, enjoy it!
+clear
