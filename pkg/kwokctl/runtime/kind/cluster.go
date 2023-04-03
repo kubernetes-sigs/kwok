@@ -62,15 +62,6 @@ func (c *Cluster) Available(ctx context.Context) error {
 	return nil
 }
 
-func getKindRuntimeExtraArgs(config *internalversion.KwokctlConfiguration, s string) []internalversion.ExtraArgs {
-	if patch, ok := slices.Find(config.ComponentsPatches, func(patch internalversion.ComponentPatches) bool {
-		return patch.Name == s
-	}); ok {
-		return patch.ExtraArgs
-	}
-	return []internalversion.ExtraArgs{}
-}
-
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
 	level := log.FromContext(ctx).Level()

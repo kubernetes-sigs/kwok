@@ -49,6 +49,7 @@ func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion
 	return result, nil
 }
 
+// GetLogVolumes returns volumes for Logs and ClusterLogs resource.
 func GetLogVolumes(ctx context.Context) []internalversion.Volume {
 	logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
 	clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
