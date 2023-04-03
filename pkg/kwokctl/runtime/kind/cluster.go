@@ -62,15 +62,6 @@ func (c *Cluster) Available(ctx context.Context) error {
 	return nil
 }
 
-func getKindRuntimeExtraArgs(config *internalversion.KwokctlConfiguration, s string) []internalversion.ExtraArgs {
-	if patch, ok := slices.Find(config.ComponentsPatches, func(patch internalversion.ComponentPatches) bool {
-		return patch.Name == s
-	}); ok {
-		return patch.ExtraArgs
-	}
-	return []internalversion.ExtraArgs{}
-}
-
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
 	config, err := c.Config(ctx)
@@ -116,21 +107,30 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	configPath := c.GetWorkdirPath(runtime.ConfigName)
+
+	etcdComponentPatches := runtime.GetComponentPatches(config, "etcd")
+	kubeApiserverComponentPatches := runtime.GetComponentPatches(config, "kube-apiserver")
+	kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
+	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
 	kindYaml, err := BuildKind(BuildKindConfig{
-		KubeApiserverPort:          conf.KubeApiserverPort,
-		EtcdPort:                   conf.EtcdPort,
-		PrometheusPort:             conf.PrometheusPort,
-		KwokControllerPort:         conf.KwokControllerPort,
-		FeatureGates:               featureGates,
-		RuntimeConfig:              runtimeConfig,
-		AuditPolicy:                auditPolicyPath,
-		AuditLog:                   auditLogPath,
-		SchedulerConfig:            schedulerConfigPath,
-		ConfigPath:                 configPath,
-		EtcdExtraArgs:              getKindRuntimeExtraArgs(config, "etcd"),
-		APIServerExtraArgs:         getKindRuntimeExtraArgs(config, "kube-apiserver"),
-		SchedulerExtraArgs:         getKindRuntimeExtraArgs(config, "kube-scheduler"),
-		ControllerManagerExtraArgs: getKindRuntimeExtraArgs(config, "kube-controller-manager"),
+		KubeApiserverPort:             conf.KubeApiserverPort,
+		EtcdPort:                      conf.EtcdPort,
+		PrometheusPort:                conf.PrometheusPort,
+		KwokControllerPort:            conf.KwokControllerPort,
+		FeatureGates:                  featureGates,
+		RuntimeConfig:                 runtimeConfig,
+		AuditPolicy:                   auditPolicyPath,
+		AuditLog:                      auditLogPath,
+		SchedulerConfig:               schedulerConfigPath,
+		ConfigPath:                    configPath,
+		EtcdExtraArgs:                 etcdComponentPatches.ExtraArgs,
+		EtcdExtraVolumes:              etcdComponentPatches.ExtraVolumes,
+		ApiserverExtraArgs:            kubeApiserverComponentPatches.ExtraArgs,
+		ApiserverExtraVolumes:         kubeApiserverComponentPatches.ExtraVolumes,
+		SchedulerExtraArgs:            kubeSchedulerComponentPatches.ExtraArgs,
+		SchedulerExtraVolumes:         kubeSchedulerComponentPatches.ExtraVolumes,
+		ControllerManagerExtraArgs:    kubeControllerManagerComponentPatches.ExtraArgs,
+		ControllerManagerExtraVolumes: kubeControllerManagerComponentPatches.ExtraVolumes,
 	})
 	if err != nil {
 		return err
@@ -140,10 +140,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return fmt.Errorf("failed to write %s: %w", runtime.KindName, err)
 	}
 
+	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
 	kwokControllerPod, err := BuildKwokControllerPod(BuildKwokControllerPodConfig{
 		KwokControllerImage: conf.KwokControllerImage,
 		Name:                c.Name(),
-		ExtraArgs:           runtime.GetComponentExtraArgs(config, "kwok-controller"),
+		ExtraArgs:           kwokControllerComponentPatches.ExtraArgs,
+		ExtraVolumes:        kwokControllerComponentPatches.ExtraVolumes,
 	})
 	if err != nil {
 		return err
@@ -154,10 +156,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	if conf.PrometheusPort != 0 {
+		prometheusPatches := runtime.GetComponentPatches(config, "prometheus")
 		prometheusDeploy, err := BuildPrometheusDeployment(BuildPrometheusDeploymentConfig{
 			PrometheusImage: conf.PrometheusImage,
 			Name:            c.Name(),
-			ExtraArgs:       runtime.GetComponentExtraArgs(config, "prometheus"),
+			ExtraArgs:       prometheusPatches.ExtraArgs,
+			ExtraVolumes:    prometheusPatches.ExtraVolumes,
 		})
 		if err != nil {
 			return err

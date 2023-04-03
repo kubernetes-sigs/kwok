@@ -17,6 +17,7 @@ limitations under the License.
 package internalversion
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -47,6 +48,8 @@ type ComponentPatches struct {
 	Name string
 	// ExtraArgs is the extra args to be patched on the component.
 	ExtraArgs []ExtraArgs
+	// ExtraVolumes is the extra volumes to be patched on the component.
+	ExtraVolumes []Volume
 }
 
 // KwokctlConfigurationOptions holds information about the options.
@@ -283,4 +286,21 @@ type Volume struct {
 	HostPath string
 	// MountPath within the container at which the volume should be mounted.
 	MountPath string
+	// PathType is the type of the HostPath.
+	PathType HostPathType
 }
+
+// HostPathType represents the type of storage used for HostPath volumes.
+type HostPathType = corev1.HostPathType
+
+// Constants for HostPathType.
+const (
+	HostPathUnset             HostPathType = corev1.HostPathUnset
+	HostPathDirectoryOrCreate HostPathType = corev1.HostPathDirectoryOrCreate
+	HostPathDirectory         HostPathType = corev1.HostPathDirectory
+	HostPathFileOrCreate      HostPathType = corev1.HostPathFileOrCreate
+	HostPathFile              HostPathType = corev1.HostPathFile
+	HostPathSocket            HostPathType = corev1.HostPathSocket
+	HostPathCharDev           HostPathType = corev1.HostPathCharDev
+	HostPathBlockDev          HostPathType = corev1.HostPathBlockDev
+)

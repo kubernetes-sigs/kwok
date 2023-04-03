@@ -22,6 +22,8 @@ import (
 	"strings"
 	"text/template"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+
 	_ "embed"
 )
 
@@ -49,5 +51,6 @@ type BuildKwokControllerPodConfig struct {
 	KwokControllerImageName string
 	KwokControllerImageTag  string
 	Name                    string
-	ExtraArgs               []string
+	ExtraArgs               []internalversion.ExtraArgs
+	ExtraVolumes            []internalversion.Volume
 }

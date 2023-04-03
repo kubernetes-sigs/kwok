@@ -198,13 +198,16 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	etedComponentPatches := runtime.GetComponentPatches(config, "etcd")
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Workdir:   workdir,
-		Image:     conf.EtcdImage,
-		Version:   etcdVersion,
-		Port:      conf.EtcdPort,
-		DataPath:  etcdDataPath,
-		ExtraArgs: runtime.GetComponentExtraArgs(config, "etcd"),
+		Workdir:      workdir,
+		Image:        conf.EtcdImage,
+		Version:      etcdVersion,
+		Port:         conf.EtcdPort,
+		DataPath:     etcdDataPath,
+		ExtraArgs:    etedComponentPatches.ExtraArgs,
+		ExtraVolumes: etedComponentPatches.ExtraVolumes,
 	})
 	if err != nil {
 		return err
@@ -216,6 +219,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	kubeApiserverComponentPatches := runtime.GetComponentPatches(config, "kube-apiserver")
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Workdir:           workdir,
 		Image:             conf.KubeApiserverImage,
@@ -232,7 +237,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminKeyPath:      adminKeyPath,
 		EtcdPort:          conf.EtcdPort,
 		EtcdAddress:       c.Name() + "-etcd",
-		ExtraArgs:         runtime.GetComponentExtraArgs(config, "kube-apiserver"),
+		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
+		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
 	})
 	if err != nil {
 		return err
@@ -245,6 +251,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+
+		kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
 			Workdir:                            workdir,
 			Image:                              conf.KubeControllerManagerImage,
@@ -259,7 +267,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeFeatureGates:                   conf.KubeFeatureGates,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
-			ExtraArgs:                          runtime.GetComponentExtraArgs(config, "kube-controller-manager"),
+			ExtraArgs:                          kubeControllerManagerComponentPatches.ExtraArgs,
+			ExtraVolumes:                       kubeControllerManagerComponentPatches.ExtraVolumes,
 		})
 		if err != nil {
 			return err
@@ -282,6 +291,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+
+		kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
 			Workdir:          workdir,
 			Image:            conf.KubeSchedulerImage,
@@ -294,7 +305,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   inClusterOnHostKubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
-			ExtraArgs:        runtime.GetComponentExtraArgs(config, "kube-scheduler"),
+			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
+			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
 		})
 		if err != nil {
 			return err
@@ -307,6 +319,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
 	kwokControllerComponent, err := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Workdir:        workdir,
 		Image:          conf.KwokControllerImage,
@@ -317,7 +331,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminCertPath:  adminCertPath,
 		AdminKeyPath:   adminKeyPath,
 		NodeName:       c.Name() + "-kwok-controller",
-		ExtraArgs:      runtime.GetComponentExtraArgs(config, "kwok-controller"),
+		ExtraArgs:      kwokControllerComponentPatches.ExtraArgs,
+		ExtraVolumes:   kwokControllerComponentPatches.ExtraVolumes,
 	})
 	if err != nil {
 		return err
@@ -348,6 +363,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+
+		prometheusComponentPatches := runtime.GetComponentPatches(config, "prometheus")
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
 			Workdir:       workdir,
 			Image:         conf.PrometheusImage,
@@ -356,7 +373,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:    prometheusConfigPath,
 			AdminCertPath: adminCertPath,
 			AdminKeyPath:  adminKeyPath,
-			ExtraArgs:     runtime.GetComponentExtraArgs(config, "prometheus"),
+			ExtraArgs:     prometheusComponentPatches.ExtraArgs,
+			ExtraVolumes:  prometheusComponentPatches.ExtraVolumes,
 		})
 		if err != nil {
 			return err

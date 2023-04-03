@@ -37,7 +37,8 @@ type BuildKubeSchedulerComponentConfig struct {
 	ConfigPath       string
 	KubeconfigPath   string
 	KubeFeatureGates string
-	ExtraArgs        []string
+	ExtraArgs        []internalversion.ExtraArgs
+	ExtraVolumes     []internalversion.Volume
 }
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
@@ -47,7 +48,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	kubeSchedulerArgs := []string{}
-	kubeSchedulerArgs = append(kubeSchedulerArgs, conf.ExtraArgs...)
+	kubeSchedulerArgs = append(kubeSchedulerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
 	if conf.KubeFeatureGates != "" {
 		kubeSchedulerArgs = append(kubeSchedulerArgs,
@@ -57,6 +58,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 
 	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume
+	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
 	if inContainer {

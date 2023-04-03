@@ -24,6 +24,7 @@ package internalversion
 import (
 	unsafe "unsafe"
 
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -542,6 +543,17 @@ func Convert_v1alpha1_Component_To_internalversion_Component(in *configv1alpha1.
 func autoConvert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(in *ComponentPatches, out *configv1alpha1.ComponentPatches, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ExtraArgs = *(*[]configv1alpha1.ExtraArgs)(unsafe.Pointer(&in.ExtraArgs))
+	if in.ExtraVolumes != nil {
+		in, out := &in.ExtraVolumes, &out.ExtraVolumes
+		*out = make([]configv1alpha1.Volume, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_Volume_To_v1alpha1_Volume(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ExtraVolumes = nil
+	}
 	return nil
 }
 
@@ -553,6 +565,17 @@ func Convert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(in *C
 func autoConvert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in *configv1alpha1.ComponentPatches, out *ComponentPatches, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ExtraArgs = *(*[]ExtraArgs)(unsafe.Pointer(&in.ExtraArgs))
+	if in.ExtraVolumes != nil {
+		in, out := &in.ExtraVolumes, &out.ExtraVolumes
+		*out = make([]Volume, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_Volume_To_internalversion_Volume(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ExtraVolumes = nil
+	}
 	return nil
 }
 
@@ -907,7 +930,17 @@ func autoConvert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfigu
 	} else {
 		out.Components = nil
 	}
-	out.ComponentsPatches = *(*[]configv1alpha1.ComponentPatches)(unsafe.Pointer(&in.ComponentsPatches))
+	if in.ComponentsPatches != nil {
+		in, out := &in.ComponentsPatches, &out.ComponentsPatches
+		*out = make([]configv1alpha1.ComponentPatches, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ComponentsPatches = nil
+	}
 	return nil
 }
 
@@ -933,7 +966,17 @@ func autoConvert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfigu
 	} else {
 		out.Components = nil
 	}
-	out.ComponentsPatches = *(*[]ComponentPatches)(unsafe.Pointer(&in.ComponentsPatches))
+	if in.ComponentsPatches != nil {
+		in, out := &in.ComponentsPatches, &out.ComponentsPatches
+		*out = make([]ComponentPatches, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ComponentsPatches = nil
+	}
 	return nil
 }
 
@@ -1402,6 +1445,7 @@ func autoConvert_internalversion_Volume_To_v1alpha1_Volume(in *Volume, out *conf
 	}
 	out.HostPath = in.HostPath
 	out.MountPath = in.MountPath
+	out.PathType = corev1.HostPathType(in.PathType)
 	return nil
 }
 
@@ -1417,6 +1461,7 @@ func autoConvert_v1alpha1_Volume_To_internalversion_Volume(in *configv1alpha1.Vo
 	}
 	out.HostPath = in.HostPath
 	out.MountPath = in.MountPath
+	out.PathType = corev1.HostPathType(in.PathType)
 	return nil
 }
 

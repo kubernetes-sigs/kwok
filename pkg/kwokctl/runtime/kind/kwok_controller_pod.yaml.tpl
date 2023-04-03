@@ -21,7 +21,7 @@ spec:
     - --node-name=kwok-controller.kube-system.svc
     - --node-port=10247
     {{ range .ExtraArgs }}
-    - {{ . }}
+    - --{{ .Key }}={{ .Value }}
     {{ end }}
     env:
     - name: POD_IP
@@ -59,6 +59,11 @@ spec:
     - mountPath: /etc/kubernetes/pki
       name: k8s-certs
       readOnly: true
+    {{ range .ExtraVolumes }}
+    - mountPath: {{ .MountPath }}
+      name: {{ .Name }}
+      readOnly: {{ .ReadOnly }}
+    {{ end }}
   hostNetwork: true
   restartPolicy: Always
   volumes:
@@ -74,3 +79,9 @@ spec:
       path: /etc/kubernetes/pki
       type: DirectoryOrCreate
     name: k8s-certs
+  {{ range .ExtraVolumes }}
+  - hostPath:
+      path: {{ .HostPath }}
+      type: {{ .PathType }}
+    name: {{ .Name }}
+  {{ end }}

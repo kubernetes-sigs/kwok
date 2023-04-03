@@ -32,71 +32,99 @@ nodes:
 {{ end }}
 
   kubeadmConfigPatches:
-{{ if or .AuditPolicy .APIServerExtraArgs }}
-  - |
-    kind: ClusterConfiguration
-    apiServer:
-      # enable auditing flags on the API server
-      extraArgs:
-      {{ range .APIServerExtraArgs }}
-        "{{.Key}}": "{{.Value}}"
-      {{ end }}
-      {{ if .AuditPolicy }}
-        audit-log-path: /var/log/kubernetes/audit.log
-        audit-policy-file: /etc/kubernetes/audit/audit.yaml
-      # mount new files / directories on the control plane
-      extraVolumes:
-      - name: kubernetes
-        hostPath: /etc/kubernetes
-        mountPath: /etc/kubernetes
-        readOnly: true
-        pathType: DirectoryOrCreate
-      - name: logs
-        hostPath: /var/log/kubernetes
-        mountPath: /var/log/kubernetes
-        readOnly: false
-        pathType: DirectoryOrCreate
-      {{ end }}
-{{ end }}
 
-{{ if .EtcdExtraArgs }}
+{{ if or .EtcdExtraArgs .EtcdExtraVolumes }}
   - |
     kind: ClusterConfiguration
     etcd:
       local:
+      {{ if .EtcdExtraArgs }}
         extraArgs:
         {{ range .EtcdExtraArgs }}
           "{{.Key}}": "{{.Value}}"
         {{ end }}
+      {{ end }}
+
+      {{ if .EtcdExtraVolumes }}
+        extraVolumes:
+        {{ range .EtcdExtraVolumes }}
+        - name: {{ .Name }}
+          hostPath: /var/components/etcd{{ .MountPath }}
+          mountPath: {{ .MountPath }}
+          readOnly: {{ .ReadOnly }}
+          pathType: {{ .PathType }}
+        {{ end }}
+      {{ end }}
+
 {{ end }}
 
-{{ if .ControllerManagerExtraArgs }}
+{{ if or .ApiserverExtraArgs .ApiserverExtraVolumes }}
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+    {{ if .ApiserverExtraArgs }}
+      extraArgs:
+      {{ range .ApiserverExtraArgs }}
+        "{{.Key}}": "{{.Value}}"
+      {{ end }}
+    {{ end }}
+
+    {{ if .ApiserverExtraVolumes }}
+      extraVolumes:
+      {{ range .ApiserverExtraVolumes }}
+      - name: {{ .Name }}
+        hostPath: /var/components/apiserver{{ .MountPath }}
+        mountPath: {{ .MountPath }}
+        readOnly: {{ .ReadOnly }}
+        pathType: {{ .PathType }}
+      {{ end }}
+    {{ end }}
+{{ end }}
+
+{{ if or .ControllerManagerExtraArgs .ControllerManagerExtraVolumes }}
   - |
     kind: ClusterConfiguration
     controllerManager:
+    {{ if .ControllerManagerExtraArgs }}
       extraArgs:
       {{ range .ControllerManagerExtraArgs }}
         "{{.Key}}": "{{.Value}}"
       {{ end }}
+    {{ end }}
+
+    {{ if .ControllerManagerExtraVolumes }}
+      extraVolumes:
+      {{ range .ControllerManagerExtraVolumes }}
+      - name: {{ .Name }}
+        hostPath: /var/components/controller-manager{{ .MountPath }}
+        mountPath: {{ .MountPath }}
+        readOnly: {{ .ReadOnly }}
+        pathType: {{ .PathType }}
+      {{ end }}
+    {{ end }}
 {{ end }}
 
-{{ if or .SchedulerConfig .SchedulerExtraArgs }}
+{{ if or .SchedulerExtraArgs .SchedulerExtraVolumes }}
   - |
     kind: ClusterConfiguration
     scheduler:
+    {{ if .SchedulerExtraArgs }}
       extraArgs:
       {{ range .SchedulerExtraArgs }}
         "{{.Key}}": "{{.Value}}"
       {{ end }}
-      {{ if .SchedulerConfig }}
-        config: /etc/kubernetes/scheduler/scheduler.yaml
+    {{ end }}
+
+    {{ if .SchedulerExtraVolumes }}
       extraVolumes:
-      - name: kubernetes
-        hostPath: /etc/kubernetes
-        mountPath: /etc/kubernetes
-        readOnly: true
-        pathType: DirectoryOrCreate
+      {{ range .SchedulerExtraVolumes }}
+      - name: {{ .Name }}
+        hostPath: /var/components/scheduler{{ .MountPath }}
+        mountPath: {{ .MountPath }}
+        readOnly: {{ .ReadOnly }}
+        pathType: {{ .PathType }}
       {{ end }}
+    {{ end }}
 {{ end }}
 
   # mount the local file on the control plane
@@ -105,18 +133,28 @@ nodes:
     containerPath: /etc/kwok/kwok.yaml
     readOnly: true
 
-{{ if .AuditPolicy }}
-  - hostPath: {{ .AuditPolicy }}
-    containerPath: /etc/kubernetes/audit/audit.yaml
-    readOnly: true
-  - hostPath: {{ .AuditLog }}
-    containerPath: /var/log/kubernetes/audit.log
-    readOnly: false
+{{ range .EtcdExtraVolumes }}
+  - hostPath: {{ .HostPath }}
+    containerPath: /var/components/etcd{{ .MountPath }}
+    readOnly: {{ .ReadOnly }}
 {{ end }}
-{{ if .SchedulerConfig }}
-  - hostPath: {{ .SchedulerConfig }}
-    containerPath: /etc/kubernetes/scheduler/scheduler.yaml
-    readOnly: true
+
+{{ range .ApiserverExtraVolumes }}
+  - hostPath: {{ .HostPath }}
+    containerPath: /var/components/apiserver{{ .MountPath }}
+    readOnly: {{ .ReadOnly }}
+{{ end }}
+
+{{ range .ControllerManagerExtraVolumes }}
+  - hostPath: {{ .HostPath }}
+    containerPath: /var/components/controller-manager{{ .MountPath }}
+    readOnly: {{ .ReadOnly }}
+{{ end }}
+
+{{ range .SchedulerExtraVolumes }}
+  - hostPath: {{ .HostPath }}
+    containerPath: /var/components/scheduler{{ .MountPath }}
+    readOnly: {{ .ReadOnly }}
 {{ end }}
 
 {{ if .FeatureGates }}

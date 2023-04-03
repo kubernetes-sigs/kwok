@@ -167,6 +167,11 @@ func (in *ComponentPatches) DeepCopyInto(out *ComponentPatches) {
 		*out = make([]ExtraArgs, len(*in))
 		copy(*out, *in)
 	}
+	if in.ExtraVolumes != nil {
+		in, out := &in.ExtraVolumes, &out.ExtraVolumes
+		*out = make([]Volume, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

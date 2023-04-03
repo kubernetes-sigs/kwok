@@ -17,22 +17,14 @@ limitations under the License.
 package runtime
 
 import (
-	"fmt"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
-// GetComponentExtraArgs returns the extra args for a components patches.
-func GetComponentExtraArgs(conf *internalversion.KwokctlConfiguration, componentName string) []string {
-	componentPatches, ok := slices.Find(conf.ComponentsPatches, func(patch internalversion.ComponentPatches) bool {
+// GetComponentPatches returns the patches for a component.
+func GetComponentPatches(conf *internalversion.KwokctlConfiguration, componentName string) internalversion.ComponentPatches {
+	componentPatches, _ := slices.Find(conf.ComponentsPatches, func(patch internalversion.ComponentPatches) bool {
 		return patch.Name == componentName
 	})
-	if !ok {
-		return []string{}
-	}
-	args := slices.Map(componentPatches.ExtraArgs, func(arg internalversion.ExtraArgs) string {
-		return fmt.Sprintf("--%s=%s", arg.Key, arg.Value)
-	})
-	return args
+	return componentPatches
 }

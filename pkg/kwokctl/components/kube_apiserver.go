@@ -41,7 +41,8 @@ type BuildKubeApiserverComponentConfig struct {
 	CaCertPath        string
 	AdminCertPath     string
 	AdminKeyPath      string
-	ExtraArgs         []string
+	ExtraArgs         []internalversion.ExtraArgs
+	ExtraVolumes      []internalversion.Volume
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -64,7 +65,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		"--allow-privileged=true",
 	}
 
-	kubeApiserverArgs = append(kubeApiserverArgs, conf.ExtraArgs...)
+	kubeApiserverArgs = append(kubeApiserverArgs, extraArgsToStrings(conf.ExtraArgs)...)
 	if conf.KubeRuntimeConfig != "" {
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--runtime-config="+conf.KubeRuntimeConfig,
@@ -78,6 +79,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 
 	var ports []internalversion.Port
 	var volumes []internalversion.Volume
+	volumes = append(volumes, conf.ExtraVolumes...)
 
 	inContainer := conf.Image != ""
 	if inContainer {

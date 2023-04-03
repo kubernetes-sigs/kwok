@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"text/template"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+
 	_ "embed"
 )
 
@@ -43,5 +45,6 @@ func BuildPrometheusDeployment(conf BuildPrometheusDeploymentConfig) (string, er
 type BuildPrometheusDeploymentConfig struct {
 	PrometheusImage string
 	Name            string
-	ExtraArgs       []string
+	ExtraArgs       []internalversion.ExtraArgs
+	ExtraVolumes    []internalversion.Volume
 }
