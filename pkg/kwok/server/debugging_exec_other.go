@@ -21,38 +21,25 @@ package server
 import (
 	"context"
 	"io"
-	"os"
 
-	"github.com/containerd/console"
+	cpty "github.com/creack/pty"
 	clientremotecommand "k8s.io/client-go/tools/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
-func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io.Reader, out, errOut io.WriteCloser, resize <-chan clientremotecommand.TerminalSize) error {
+func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io.Reader, out io.WriteCloser, resize <-chan clientremotecommand.TerminalSize) error {
 	logger := log.FromContext(ctx)
 
 	// Create a pty.
-	pty, slavePath, err := console.NewPty()
+	pty, tty, err := cpty.Open()
 	if err != nil {
 		return err
 	}
 	defer func() {
 		_ = pty.Close()
-	}()
-	err = pty.SetRaw()
-	if err != nil {
-		return err
-	}
-
-	// Open the slave side of the pty.
-	slave, err := os.OpenFile(slavePath, os.O_RDWR, 0)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = slave.Close()
+		_ = tty.Close()
 	}()
 
 	// Create a two way tunnel for pty and stream.
@@ -77,10 +64,11 @@ func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io
 	if resize != nil {
 		go func() {
 			for size := range resize {
-				if err := pty.Resize(console.WinSize{
-					Width:  size.Width,
-					Height: size.Height,
-				}); err != nil {
+				err := cpty.Setsize(pty, &cpty.Winsize{
+					Rows: size.Height,
+					Cols: size.Width,
+				})
+				if err != nil {
 					logger.Error("failed to resize pty", err)
 				}
 			}
@@ -89,9 +77,9 @@ func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io
 
 	// Set the stream as the stdin/stdout/stderr.
 	ctx = exec.WithIOStreams(ctx, exec.IOStreams{
-		In:     slave,
-		Out:    slave,
-		ErrOut: slave,
+		In:     tty,
+		Out:    tty,
+		ErrOut: tty,
 	})
 
 	// Execute the command.

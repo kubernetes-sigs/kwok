@@ -44,6 +44,15 @@ type execOptions struct {
 	Env []string
 	// IOStreams contains the standard streams.
 	IOStreams
+	// PipeStdin is true if the command's stdin should be piped.
+	PipeStdin bool
+}
+
+// WithPipeStdin returns a context with the given pipeStdin option.
+func WithPipeStdin(ctx context.Context, pipeStdin bool) context.Context {
+	ctx, opt := withExecOptions(ctx)
+	opt.PipeStdin = pipeStdin
+	return ctx
 }
 
 // WithEnv returns a context with the given environment variables.
@@ -130,7 +139,20 @@ func Exec(ctx context.Context, name string, arg ...string) error {
 		cmd.Env = append(cmd.Env, os.Environ()...)
 	}
 	cmd.Dir = opt.Dir
-	cmd.Stdin = opt.In
+	if opt.In != nil {
+		if opt.PipeStdin {
+			inPipe, err := cmd.StdinPipe()
+			if err != nil {
+				return err
+			}
+			go func() {
+				_, _ = io.Copy(inPipe, opt.In)
+			}()
+		} else {
+			cmd.Stdin = opt.In
+		}
+	}
+
 	cmd.Stdout = opt.Out
 	cmd.Stderr = opt.ErrOut
 
@@ -138,12 +160,18 @@ func Exec(ctx context.Context, name string, arg ...string) error {
 		buf := bytes.NewBuffer(nil)
 		cmd.Stderr = buf
 	}
-	err := cmd.Run()
+
+	err := cmd.Start()
+	if err != nil {
+		return fmt.Errorf("cmd start: %s %s: %w", name, strings.Join(arg, " "), err)
+	}
+
+	err = cmd.Wait()
 	if err != nil {
 		if buf, ok := cmd.Stderr.(*bytes.Buffer); ok {
-			return fmt.Errorf("%s %s: %w\n%s", name, strings.Join(arg, " "), err, buf.String())
+			return fmt.Errorf("cmd wait: %s %s: %w\n%s", name, strings.Join(arg, " "), err, buf.String())
 		}
-		return fmt.Errorf("%s %s: %w", name, strings.Join(arg, " "), err)
+		return fmt.Errorf("cmd wait: %s %s: %w", name, strings.Join(arg, " "), err)
 	}
 	return nil
 }
