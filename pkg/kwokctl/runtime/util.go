@@ -50,7 +50,7 @@ func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion
 }
 
 // GetLogVolumes returns volumes for Logs and ClusterLogs resource.
-func GetLogVolumes(ctx context.Context) []internalversion.Volume {
+func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
 	logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
 	clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
 
@@ -58,13 +58,21 @@ func GetLogVolumes(ctx context.Context) []internalversion.Volume {
 	mountDirs := make(map[string]struct{})
 	for _, log := range logs {
 		for _, l := range log.Spec.Logs {
-			mountDirs[filepath.Dir(l.LogsFile)] = struct{}{}
+			abs, err := filepath.Abs(l.LogsFile)
+			if err != nil {
+				return nil, err
+			}
+			mountDirs[filepath.Dir(abs)] = struct{}{}
 		}
 	}
 
 	for _, cl := range clusterLogs {
 		for _, l := range cl.Spec.Logs {
-			mountDirs[filepath.Dir(l.LogsFile)] = struct{}{}
+			abs, err := filepath.Abs(l.LogsFile)
+			if err != nil {
+				return nil, err
+			}
+			mountDirs[filepath.Dir(abs)] = struct{}{}
 		}
 	}
 
@@ -81,5 +89,5 @@ func GetLogVolumes(ctx context.Context) []internalversion.Volume {
 		i++
 	}
 
-	return volumes
+	return volumes, nil
 }

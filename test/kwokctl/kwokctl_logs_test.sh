@@ -107,8 +107,6 @@ function test_delete_cluster() {
 function main() {
   local failed=()
   mkdir -p "${LOGDIR}"
-  ls -la /tmp
-  stat "${LOGDIR}"
 
   for release in "${RELEASES[@]}"; do
     echo "------------------------------"

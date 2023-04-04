@@ -183,6 +183,12 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 			if err != nil {
 				return nil, err
 			}
+			for i := range obj.Spec.Logs {
+				obj.Spec.Logs[i].LogsFile, err = filepath.Abs(obj.Spec.Logs[i].LogsFile)
+				if err != nil {
+					return nil, err
+				}
+			}
 			out, err := internalversion.ConvertToInternalClusterLogs(obj)
 			if err != nil {
 				return nil, err
@@ -193,6 +199,12 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 			err = json.Unmarshal(raw, &obj)
 			if err != nil {
 				return nil, err
+			}
+			for i := range obj.Spec.Logs {
+				obj.Spec.Logs[i].LogsFile, err = filepath.Abs(obj.Spec.Logs[i].LogsFile)
+				if err != nil {
+					return nil, err
+				}
 			}
 			out, err := internalversion.ConvertToInternalLogs(obj)
 			if err != nil {
