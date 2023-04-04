@@ -62,7 +62,7 @@ function test_check_clusters() {
     echo "Error: Cluster list size does not match"
     echo "Expected: ${#names[@]}"
     echo "Actual: ${#want[@]}"
-    exit 1
+    return 1
   fi
   for name in "${names[@]}"; do
     local found=0
@@ -74,7 +74,7 @@ function test_check_clusters() {
     done
     if [[ "${found}" -ne 1 ]]; then
       echo "Error: Cluster ${name} not found"
-      exit 1
+      return 1
     fi
   done
 }

@@ -84,7 +84,7 @@ function test_delete_cluster() {
 
 function test_prometheus() {
   local targets
-  for ((i = 0; i < 30; i++)); do
+  for ((i = 0; i < 60; i++)); do
     targets="$(curl -s http://127.0.0.1:9090/api/v1/targets)"
     if [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
       break

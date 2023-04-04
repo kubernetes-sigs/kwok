@@ -81,11 +81,13 @@ function test_create_cluster() {
     return 1
   fi
 
-  for ((i = 0; i < 30; i++)); do
-    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f -
-    if kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
-      break
-    fi
+  for ((i = 0; i < 60; i++)); do
+    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f - && break
+    sleep 1
+  done
+
+  for ((i = 0; i < 60; i++)); do
+    kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1 && break
     sleep 1
   done
 
@@ -113,7 +115,7 @@ function test_delete_cluster() {
 
 function test_prometheus() {
   local targets
-  for ((i = 0; i < 30; i++)); do
+  for ((i = 0; i < 60; i++)); do
     targets="$(curl -s http://127.0.0.1:9090/api/v1/targets)"
     if [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
       break

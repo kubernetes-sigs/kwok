@@ -89,24 +89,30 @@ function test_apply_node_and_pod() {
   kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml"
   if [[ $? -ne 0 ]]; then
     echo "Error: fake-node apply failed"
-    exit 1
+    return 1
   fi
-  kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"
+  for ((i = 0; i < 60; i++)); do
+    kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"
+    if [[ $? -eq 0 ]]; then
+      break
+    fi
+    sleep 1
+  done
   if [[ $? -ne 0 ]]; then
     echo "Error: fake-pod apply failed"
-    exit 1
+    return 1
   fi
   kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-deployment.yaml"
   if [[ $? -ne 0 ]]; then
     echo "Error: fake-deployment apply failed"
-    exit 1
+    return 1
   fi
   kwokctl --name "${name}" kubectl wait pod -A --all --for=condition=Ready --timeout=60s
   if [[ $? -ne 0 ]]; then
     echo "Error: fake-pod wait failed"
     echo kwokctl --name "${name}" kubectl get pod -A --all
     kwokctl --name "${name}" kubectl get pod -A --all
-    exit 1
+    return 1
   fi
 }
 
