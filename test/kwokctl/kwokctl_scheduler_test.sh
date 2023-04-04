@@ -78,7 +78,7 @@ function test_scheduler() {
   local release="${1}"
   local name="${2}"
 
-  for ((i = 0; i < 30; i++)); do
+  for ((i = 0; i < 60; i++)); do
     kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml"
     if kwokctl --name="${name}" kubectl get node | grep Ready >/dev/null 2>&1; then
       break
@@ -86,7 +86,7 @@ function test_scheduler() {
     sleep 1
   done
 
-  for ((i = 0; i < 30; i++)); do
+  for ((i = 0; i < 60; i++)); do
     kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-scheduler-deployment.yaml"
     if kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
       break

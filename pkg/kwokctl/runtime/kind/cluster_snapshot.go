@@ -19,7 +19,6 @@ package kind
 import (
 	"context"
 	"os"
-	"time"
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
@@ -131,13 +130,6 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filt
 			logger.Error("Failed to start kube-controller-manager", err)
 		}
 	}()
-
-	// Since `kube-controller-manager` is stopping,
-	// we have to wait for it to finish.
-	err = c.WaitReady(ctx, 30*time.Second)
-	if err != nil {
-		logger.Error("Failed to wait cluster ready", err)
-	}
 
 	err = c.Cluster.SnapshotRestoreWithYAML(ctx, path, filters)
 	if err != nil {
