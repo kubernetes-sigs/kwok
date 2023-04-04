@@ -19,7 +19,7 @@ DIR="$(realpath "${DIR}")"
 
 RELEASES=()
 
-LOGDIR="/tmp/kwok"
+LOGDIR="./logs"
 
 function usage() {
   echo "Usage: $0 <kube-version...>"
