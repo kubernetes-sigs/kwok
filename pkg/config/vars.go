@@ -217,6 +217,7 @@ func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 		conf.KubeAuthorization = format.Ptr(false)
 	}
 	conf.KubeAuthorization = format.Ptr(envs.GetEnvWithPrefix("KUBE_AUTHORIZATION", *conf.KubeAuthorization))
+	conf.KubeAdmission = envs.GetEnvWithPrefix("KUBE_ADMISSION", conf.KubeAdmission)
 
 	conf.KubeApiserverPort = envs.GetEnvWithPrefix("KUBE_APISERVER_PORT", conf.KubeApiserverPort)
 

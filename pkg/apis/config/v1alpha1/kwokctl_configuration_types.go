@@ -272,6 +272,11 @@ type KwokctlConfigurationOptions struct {
 	// +default=false
 	KubeAuthorization *bool `json:"kubeAuthorization,omitempty"`
 
+	// KubeAdmission is the flag to enable admission for kube-apiserver.
+	// is the default value for flag --kube-admission and env KWOK_KUBE_ADMISSION
+	// +default=false
+	KubeAdmission *bool `json:"kubeAdmission,omitempty"`
+
 	// EtcdPeerPort is etcd peer port in the binary runtime
 	EtcdPeerPort uint32 `json:"etcdPeerPort,omitempty"`
 

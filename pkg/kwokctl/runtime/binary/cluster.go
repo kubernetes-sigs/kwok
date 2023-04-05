@@ -269,6 +269,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		KubeFeatureGates:  conf.KubeFeatureGates,
 		SecurePort:        conf.SecurePort,
 		KubeAuthorization: conf.KubeAuthorization,
+		KubeAdmission:     conf.KubeAdmission,
 		AuditPolicyPath:   auditPolicyPath,
 		AuditLogPath:      auditLogPath,
 		CaCertPath:        caCertPath,

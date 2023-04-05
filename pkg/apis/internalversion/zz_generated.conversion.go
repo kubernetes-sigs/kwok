@@ -1030,6 +1030,9 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	if err := v1.Convert_bool_To_Pointer_bool(&in.KubeAuthorization, &out.KubeAuthorization, s); err != nil {
 		return err
 	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.KubeAdmission, &out.KubeAdmission, s); err != nil {
+		return err
+	}
 	out.EtcdPeerPort = in.EtcdPeerPort
 	out.EtcdPort = in.EtcdPort
 	out.KubeControllerManagerPort = in.KubeControllerManagerPort
@@ -1106,6 +1109,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeRuntimeConfig = in.KubeRuntimeConfig
 	out.KubeAuditPolicy = in.KubeAuditPolicy
 	if err := v1.Convert_Pointer_bool_To_bool(&in.KubeAuthorization, &out.KubeAuthorization, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.KubeAdmission, &out.KubeAdmission, s); err != nil {
 		return err
 	}
 	out.EtcdPeerPort = in.EtcdPeerPort
