@@ -120,7 +120,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	kwokControllerExtraVolumes := append(kwokControllerComponentPatches.ExtraVolumes, extraLogVolumes...)
+	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
+	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, extraLogVolumes...)
 	kindYaml, err := BuildKind(BuildKindConfig{
 		KubeApiserverPort:             conf.KubeApiserverPort,
 		EtcdPort:                      conf.EtcdPort,
