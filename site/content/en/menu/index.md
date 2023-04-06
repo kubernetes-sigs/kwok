@@ -13,6 +13,7 @@ headless: true
     - [`kwokctl` Manages Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}})
     - [Manage Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}})
   - [`kwokctl` Snapshots Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}})
+  - [`kwokctl` Metrics]({{< relref "/docs/user/kwokctl-metrics" >}})
   - [`kwokctl` Auditing]({{< relref "/docs/user/kwokctl-auditing" >}})
   - **Configuration**
     - [Options]({{< relref "/docs/user/configuration" >}})
