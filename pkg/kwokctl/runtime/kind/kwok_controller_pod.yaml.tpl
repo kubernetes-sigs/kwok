@@ -64,11 +64,6 @@ spec:
       name: {{ .Name }}
       readOnly: {{ .ReadOnly }}
     {{ end }}
-    {{ range .ExtraLogVolumes }}
-    - name: {{ .Name }}
-      mountPath: {{ .MountPath }}
-      readOnly: {{ .ReadOnly }}
-    {{ end }}
   hostNetwork: true
   restartPolicy: Always
   volumes:
@@ -85,12 +80,6 @@ spec:
       type: DirectoryOrCreate
     name: k8s-certs
   {{ range .ExtraVolumes }}
-  - hostPath:
-      path: {{ .HostPath }}
-      type: {{ .PathType }}
-    name: {{ .Name }}
-  {{ end }}
-  {{ range .ExtraLogVolumes }}
   - hostPath:
       path: {{ .HostPath }}
       type: {{ .PathType }}

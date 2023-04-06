@@ -139,7 +139,7 @@ nodes:
     readOnly: {{ .ReadOnly }}
 {{ end }}
 
-{{ range .ExtraLogVolumes }}
+{{ range .ExtraVolumes }}
   - hostPath: {{ .HostPath }}
     containerPath: {{ .MountPath }}
     readOnly: {{ .ReadOnly }}

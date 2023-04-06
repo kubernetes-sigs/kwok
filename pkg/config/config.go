@@ -225,12 +225,12 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 
 // Save saves the given objects to the given path.
 func Save(ctx context.Context, path string, objs []metav1.Object) error {
-	err := os.MkdirAll(filepath.Dir(path), 0o750)
+	err := os.MkdirAll(filepath.Dir(path), 0750)
 	if err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o640)
+	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
 	if err != nil {
 		return err
 	}

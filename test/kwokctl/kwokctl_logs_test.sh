@@ -65,7 +65,6 @@ function test_logs() {
   fi
 
   if [[ ! "${result}" =~ "${want}" ]]; then
-      rm "${targetLog}"
       echo "Error: log result does not match"
       echo " want: ${want}"
       echo " got: ${result}"
@@ -114,7 +113,7 @@ function main() {
     name="logs-cluster-${KWOK_RUNTIME}-${release//./-}"
     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
     test_apply_node_and_pod || failed+=("apply_node_and_pod")
-    test_logs "${name}" other pod/fake-pod || failed+=("${name}_target_exec")
+    test_logs "${name}" other pod/fake-pod || failed+=("${name}_target_logs")
     test_logs "${name}" default deploy/fake-pod || failed+=("${name}_cluster_default_logs")
     test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
   done

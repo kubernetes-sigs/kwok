@@ -58,7 +58,7 @@ func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
 	mountDirs := make(map[string]struct{})
 	for _, log := range logs {
 		for _, l := range log.Spec.Logs {
-			abs, err := filepath.Abs(l.LogsFile)
+			abs, err := path.Expand(l.LogsFile)
 			if err != nil {
 				return nil, err
 			}
@@ -68,7 +68,7 @@ func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
 
 	for _, cl := range clusterLogs {
 		for _, l := range cl.Spec.Logs {
-			abs, err := filepath.Abs(l.LogsFile)
+			abs, err := path.Expand(l.LogsFile)
 			if err != nil {
 				return nil, err
 			}
