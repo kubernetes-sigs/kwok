@@ -184,7 +184,7 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 				return nil, err
 			}
 			for i := range obj.Spec.Logs {
-				obj.Spec.Logs[i].LogsFile, err = filepath.Abs(obj.Spec.Logs[i].LogsFile)
+				obj.Spec.Logs[i].LogsFile, err = path.Expand(obj.Spec.Logs[i].LogsFile)
 				if err != nil {
 					return nil, err
 				}
@@ -201,7 +201,7 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 				return nil, err
 			}
 			for i := range obj.Spec.Logs {
-				obj.Spec.Logs[i].LogsFile, err = filepath.Abs(obj.Spec.Logs[i].LogsFile)
+				obj.Spec.Logs[i].LogsFile, err = path.Expand(obj.Spec.Logs[i].LogsFile)
 				if err != nil {
 					return nil, err
 				}
