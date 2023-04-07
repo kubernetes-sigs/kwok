@@ -88,7 +88,7 @@ func (c *Cluster) setup(ctx context.Context) error {
 
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath := c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0o640)
+		err = file.Create(auditLogPath, 0640)
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (c *Cluster) setup(ctx context.Context) error {
 	}
 
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
-	err = os.MkdirAll(etcdDataPath, 0o750)
+	err = os.MkdirAll(etcdDataPath, 0750)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
@@ -375,7 +375,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		//nolint:gosec
 		// We don't need to check the permissions of the prometheus config file,
 		// because it's working in a non-root container.
-		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0o644)
+		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
@@ -438,17 +438,17 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Save config
-	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0o640)
+	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0640)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0o640)
+	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0640)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(composePath, composeData, 0o640)
+	err = os.WriteFile(composePath, composeData, 0640)
 	if err != nil {
 		return err
 	}
@@ -725,7 +725,7 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 		if err != nil {
 			// docker compose subcommand does not exist, try to download it
 			dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
-			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0o755, conf.QuietPull)
+			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0755, conf.QuietPull)
 			if err != nil {
 				return nil, err
 			}

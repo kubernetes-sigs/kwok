@@ -85,7 +85,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	auditPolicyPath := ""
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath = c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0o640)
+		err = file.Create(auditLogPath, 0640)
 		if err != nil {
 			return err
 		}
@@ -137,7 +137,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(c.GetWorkdirPath(runtime.KindName), []byte(kindYaml), 0o640)
+	err = os.WriteFile(c.GetWorkdirPath(runtime.KindName), []byte(kindYaml), 0640)
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", runtime.KindName, err)
 	}
@@ -151,7 +151,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(c.GetWorkdirPath(runtime.KwokPod), []byte(kwokControllerPod), 0o640)
+	err = os.WriteFile(c.GetWorkdirPath(runtime.KwokPod), []byte(kwokControllerPod), 0640)
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", runtime.KwokPod, err)
 	}
@@ -167,7 +167,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(c.GetWorkdirPath(runtime.PrometheusDeploy), []byte(prometheusDeploy), 0o640)
+		err = os.WriteFile(c.GetWorkdirPath(runtime.PrometheusDeploy), []byte(prometheusDeploy), 0640)
 		if err != nil {
 			return fmt.Errorf("failed to write %s: %w", runtime.PrometheusDeploy, err)
 		}
@@ -290,7 +290,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = os.WriteFile(kubeconfigPath, kubeconfigBuf.Bytes(), 0o640)
+	err = os.WriteFile(kubeconfigPath, kubeconfigBuf.Bytes(), 0640)
 	if err != nil {
 		return err
 	}
@@ -650,7 +650,7 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	if err != nil {
 		// kind does not exist, try to download it
 		kindPath := c.GetBinPath("kind" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0o755, conf.QuietPull)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0755, conf.QuietPull)
 		if err != nil {
 			return "", err
 		}
