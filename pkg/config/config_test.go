@@ -144,7 +144,7 @@ kind: KwokctlConfiguration
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := filepath.Join(t.TempDir(), "config.yaml")
-			err := os.WriteFile(p, tt.data, 0o640)
+			err := os.WriteFile(p, tt.data, 0640)
 			if err != nil {
 				t.Fatal(err)
 			}

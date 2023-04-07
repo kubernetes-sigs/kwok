@@ -19,6 +19,8 @@ DIR="$(realpath "${DIR}")"
 
 RELEASES=()
 
+EXTRASDIR="./extras"
+
 function usage() {
   echo "Usage: $0 <kube-version...>"
   echo "  <kube-version> is the version of kubernetes to test against."
@@ -100,9 +102,21 @@ function test_prometheus() {
   fi
 }
 
+function prepare_mount_dirs() {
+    mkdir "${EXTRASDIR}/apiserver"
+    mkdir "${EXTRASDIR}/controller-manager"
+    mkdir "${EXTRASDIR}/scheduler"
+    mkdir "${EXTRASDIR}/controller"
+    mkdir "${EXTRASDIR}/etcd"
+    mkdir "${EXTRASDIR}/prometheus"
+}
+
 function main() {
   local failed=()
   local name
+
+  mkdir -p "${EXTRASDIR}"
+  prepare_mount_dirs
   for release in "${RELEASES[@]}"; do
     echo "------------------------------"
     echo "Testing extra on ${KWOK_RUNTIME} for ${release}"
@@ -112,6 +126,7 @@ function main() {
     test_delete_cluster "${release}" "${name}" || failed+=("delete_extra_cluster_${name}")
   done
   echo "------------------------------"
+  rm -rf "${EXTRASDIR}"
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
     echo "------------------------------"

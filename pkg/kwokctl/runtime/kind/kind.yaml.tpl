@@ -157,6 +157,12 @@ nodes:
     readOnly: {{ .ReadOnly }}
 {{ end }}
 
+{{ range .KwokControllerExtraVolumes }}
+  - hostPath: {{ .HostPath }}
+    containerPath: /var/components/controller{{ .MountPath }}
+    readOnly: {{ .ReadOnly }}
+{{ end }}
+
 {{ if .FeatureGates }}
 featureGates:
 {{ range .FeatureGates }}

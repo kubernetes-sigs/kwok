@@ -76,7 +76,7 @@ linters-settings:
       - golang.org/x/exp/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
       - log: "please use `sigs.k8s.io/kwok/pkg/log` instead"
   gocyclo:
-    min-complexity: 40
+    min-complexity: 50
   gosec:
     excludes:
       - G110

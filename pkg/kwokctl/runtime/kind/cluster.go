@@ -112,6 +112,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(config, "kube-apiserver")
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
 	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
+	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
 	kindYaml, err := BuildKind(BuildKindConfig{
 		KubeApiserverPort:             conf.KubeApiserverPort,
 		EtcdPort:                      conf.EtcdPort,
@@ -131,6 +132,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		SchedulerExtraVolumes:         kubeSchedulerComponentPatches.ExtraVolumes,
 		ControllerManagerExtraArgs:    kubeControllerManagerComponentPatches.ExtraArgs,
 		ControllerManagerExtraVolumes: kubeControllerManagerComponentPatches.ExtraVolumes,
+		KwokControllerExtraVolumes:    kwokControllerComponentPatches.ExtraVolumes,
 	})
 	if err != nil {
 		return err
@@ -140,7 +142,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return fmt.Errorf("failed to write %s: %w", runtime.KindName, err)
 	}
 
-	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
 	kwokControllerPod, err := BuildKwokControllerPod(BuildKwokControllerPodConfig{
 		KwokControllerImage: conf.KwokControllerImage,
 		Name:                c.Name(),

@@ -200,6 +200,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	etedComponentPatches := runtime.GetComponentPatches(config, "etcd")
+	etedComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(etedComponentPatches.ExtraVolumes)
+	if err != nil {
+		return fmt.Errorf("failed to expand host volumes for etcd component: %w", err)
+	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
 		Workdir:      workdir,
 		Image:        conf.EtcdImage,
@@ -221,6 +225,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(config, "kube-apiserver")
+	kubeApiserverComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeApiserverComponentPatches.ExtraVolumes)
+	if err != nil {
+		return fmt.Errorf("failed to expand host volumes for kube api server component: %w", err)
+	}
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Workdir:           workdir,
 		Image:             conf.KubeApiserverImage,
@@ -254,6 +262,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 
 		kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
+		kubeControllerManagerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeControllerManagerComponentPatches.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for kube controller manager component: %w", err)
+		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
 			Workdir:                            workdir,
 			Image:                              conf.KubeControllerManagerImage,
@@ -294,6 +306,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 
 		kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
+		kubeSchedulerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeSchedulerComponentPatches.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for kube scheduler component: %w", err)
+		}
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
 			Workdir:          workdir,
 			Image:            conf.KubeSchedulerImage,
@@ -322,6 +338,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
+	kwokControllerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kwokControllerComponentPatches.ExtraVolumes)
+	if err != nil {
+		return fmt.Errorf("failed to expand host volumes for kwok controller component: %w", err)
+	}
 	kwokControllerComponent, err := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Workdir:        workdir,
 		Image:          conf.KwokControllerImage,
@@ -366,6 +386,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 
 		prometheusComponentPatches := runtime.GetComponentPatches(config, "prometheus")
+		prometheusComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(prometheusComponentPatches.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for prometheus component: %w", err)
+		}
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
 			Workdir:       workdir,
 			Image:         conf.PrometheusImage,

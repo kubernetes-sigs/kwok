@@ -23,6 +23,7 @@ import (
 	"text/template"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 
 	_ "embed"
 )
@@ -38,7 +39,14 @@ func BuildKwokControllerPod(conf BuildKwokControllerPodConfig) (string, error) {
 	split := strings.SplitN(conf.KwokControllerImage, ":", 2)
 	conf.KwokControllerImageName = split[0]
 	conf.KwokControllerImageTag = split[1]
-	err := kwokControllerPodYamlTemplate.Execute(buf, conf)
+
+	var err error
+	conf.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(conf.ExtraVolumes)
+	if err != nil {
+		return "", fmt.Errorf("failed to expand host volume paths: %w", err)
+	}
+
+	err = kwokControllerPodYamlTemplate.Execute(buf, conf)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute kwok controller pod yaml template: %w", err)
 	}

@@ -22,6 +22,7 @@ import (
 	"text/template"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 
 	_ "embed"
 )
@@ -34,7 +35,14 @@ var prometheusDeploymentYamlTemplate = template.Must(template.New("_").Parse(pro
 // BuildPrometheusDeployment builds the prometheus deployment yaml content.
 func BuildPrometheusDeployment(conf BuildPrometheusDeploymentConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
-	err := prometheusDeploymentYamlTemplate.Execute(buf, conf)
+
+	var err error
+	conf.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(conf.ExtraVolumes)
+	if err != nil {
+		return "", fmt.Errorf("failed to expand host volume paths: %w", err)
+	}
+
+	err = prometheusDeploymentYamlTemplate.Execute(buf, conf)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute prometheus deployment yaml template: %w", err)
 	}
