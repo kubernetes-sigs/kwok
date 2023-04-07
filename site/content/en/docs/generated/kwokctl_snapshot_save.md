@@ -9,7 +9,7 @@ kwokctl snapshot save [flags]
 ### Options
 
 ```
-      --filter strings   Filter the resources to save, only support for k8s format (default [configmap,endpoints,namespace,node,persistentvolumeclaim,persistentvolume,pod,secret,serviceaccount,service,daemonset.apps,deployment.apps,replicaset.apps,statefulset.apps,cronjob.batch,job.batch])
+      --filter strings   Filter the resources to save, only support for k8s format (default [namespace,node,serviceaccount,configmap,secret,daemonset.apps,deployment.apps,replicaset.apps,statefulset.apps,cronjob.batch,job.batch,persistentvolumeclaim,persistentvolume,pod,service,endpoints])
       --format string    Format of the snapshot file (etcd, k8s) (default "etcd")
   -h, --help             help for save
       --path string      Path to the snapshot
@@ -25,5 +25,5 @@ kwokctl snapshot save [flags]
 
 ### SEE ALSO
 
-* [kwokctl snapshot](kwokctl_snapshot.md)	 - Snapshot [save, restore] one of cluster
+* [kwokctl snapshot](kwokctl_snapshot.md)	 - Snapshot [save, restore, export] one of cluster
 

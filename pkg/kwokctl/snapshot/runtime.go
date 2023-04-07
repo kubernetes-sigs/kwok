@@ -17,31 +17,78 @@ limitations under the License.
 package snapshot
 
 import (
-	"context"
-)
+	"fmt"
 
-// Runtime is the runtime of cluster
-// Sync with runtime.Runtime interface
-type Runtime interface {
-	KubectlInCluster(ctx context.Context, args ...string) error
-}
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
 
 // Resources is the resources of cluster want to save or restore
 var Resources = []string{
-	"configmap",
-	"endpoints",
 	"namespace",
 	"node",
-	"persistentvolumeclaim",
-	"persistentvolume",
-	"pod",
-	"secret",
 	"serviceaccount",
-	"service",
+	"configmap",
+	"secret",
 	"daemonset.apps",
 	"deployment.apps",
 	"replicaset.apps",
 	"statefulset.apps",
 	"cronjob.batch",
 	"job.batch",
+	"persistentvolumeclaim",
+	"persistentvolume",
+	"pod",
+	"service",
+	"endpoints",
+}
+
+func clearUnstructured(obj metav1.Object) {
+	obj.SetResourceVersion("")
+	obj.SetSelfLink("")
+	obj.SetCreationTimestamp(metav1.Time{})
+	obj.SetManagedFields(nil)
+}
+
+func mappingFor(restMapper meta.RESTMapper, resourceOrKindArg string) (*meta.RESTMapping, error) {
+	fullySpecifiedGVR, groupResource := schema.ParseResourceArg(resourceOrKindArg)
+	gvk := schema.GroupVersionKind{}
+
+	if fullySpecifiedGVR != nil {
+		gvk, _ = restMapper.KindFor(*fullySpecifiedGVR)
+	}
+	if gvk.Empty() {
+		gvk, _ = restMapper.KindFor(groupResource.WithVersion(""))
+	}
+	if !gvk.Empty() {
+		return restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+	}
+
+	fullySpecifiedGVK, groupKind := schema.ParseKindArg(resourceOrKindArg)
+	if fullySpecifiedGVK == nil {
+		gvk := groupKind.WithVersion("")
+		fullySpecifiedGVK = &gvk
+	}
+
+	if !fullySpecifiedGVK.Empty() {
+		if mapping, err := restMapper.RESTMapping(fullySpecifiedGVK.GroupKind(), fullySpecifiedGVK.Version); err == nil {
+			return mapping, nil
+		}
+	}
+
+	mapping, err := restMapper.RESTMapping(groupKind, gvk.Version)
+	if err != nil {
+		// if we error out here, it is because we could not match a resource or a kind
+		// for the given argument. To maintain consistency with previous behavior,
+		// announce that a resource type could not be found.
+		// if the error is _not_ a *meta.NoKindMatchError, then we had trouble doing discovery,
+		// so we should return the original error since it may help a user diagnose what is actually wrong
+		if meta.IsNoMatchError(err) {
+			return nil, fmt.Errorf("the server doesn't have a resource type %q", groupResource.Resource)
+		}
+		return nil, err
+	}
+
+	return mapping, nil
 }
