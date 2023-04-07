@@ -33,7 +33,8 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 	defer func() {
 		_ = file.Close()
 	}()
-	err = snapshot.Save(ctx, c, file, filters)
+	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
+	err = snapshot.Save(ctx, kubeconfigPath, file, filters)
 	if err != nil {
 		return err
 	}
@@ -46,7 +47,8 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filt
 	if err != nil {
 		return err
 	}
-	err = snapshot.Load(ctx, c, bytes.NewBuffer(data), filters)
+	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
+	err = snapshot.Load(ctx, kubeconfigPath, bytes.NewBuffer(data), filters)
 	if err != nil {
 		return err
 	}

@@ -17,204 +17,275 @@ limitations under the License.
 package snapshot
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"os"
-	"strings"
 
-	yamlv3 "gopkg.in/yaml.v3"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/yaml"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/dynamic"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // Load loads the resources to cluster from the reader
-// This is a wrapper around `kubectl apply`, which will handle the ownerReference
-// so that the resources remain relative to each other
-func Load(ctx context.Context, rt Runtime, r io.Reader, filters []string) error {
-	objs, err := decodeObjects(r)
+func Load(ctx context.Context, kubeconfigPath string, r io.Reader, filters []string) error {
+	l, err := newLoader(kubeconfigPath, filters)
 	if err != nil {
 		return err
 	}
-
-	// Filter out the resources that are not in the filters
-	filterMap := map[string]struct{}{}
-	for _, filter := range filters {
-		filterMap[filter] = struct{}{}
-	}
-
-	objs = slices.Filter(objs, func(obj *unstructured.Unstructured) bool {
-		gvk := obj.GetObjectKind().GroupVersionKind()
-		// These are built-in resources that do not need to be created
-		//nolint:goconst
-		switch gvk.Kind {
-		case "Namespace":
-			if obj.GetName() == "kube-public" ||
-				obj.GetName() == "kube-node-lease" ||
-				obj.GetName() == "kube-system" ||
-				obj.GetName() == "default" {
-				return false
-			}
-		case "ServiceAccount":
-			if obj.GetName() == "default" {
-				return false
-			}
-		case "Service", "Endpoints":
-			if obj.GetName() == "kubernetes" &&
-				obj.GetNamespace() == "default" {
-				return false
-			}
-		case "Secret":
-			if obj.GetName() == "default-token" {
-				return false
-			}
-		case "ConfigMap":
-			if obj.GetName() == "kube-root-ca.crt" {
-				return false
-			}
-		}
-
-		_, ok := filterMap[strings.ToLower(gvk.GroupKind().String())]
-		return ok
-	})
-
-	inputRaw := bytes.NewBuffer(nil)
-	outputRaw := bytes.NewBuffer(nil)
-	otherResource, err := load(objs, func(objs []*unstructured.Unstructured) ([]*unstructured.Unstructured, error) {
-		inputRaw.Reset()
-		outputRaw.Reset()
-
-		encoder := json.NewEncoder(inputRaw)
-		for _, obj := range objs {
-			err = encoder.Encode(obj)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		err = rt.KubectlInCluster(exec.WithIOStreams(ctx, exec.IOStreams{
-			In:     inputRaw,
-			Out:    outputRaw,
-			ErrOut: os.Stderr,
-		}), "apply", "--validate=false", "-o=json", "-f", "-")
-		if err != nil {
-			for _, obj := range objs {
-				fmt.Fprintf(os.Stderr, "%s/%s failed\n", strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind), obj.GetName())
-			}
-		}
-		newObj, err := decodeObjects(outputRaw)
-		if err != nil {
-			return nil, err
-		}
-		for _, obj := range newObj {
-			fmt.Fprintf(os.Stderr, "%s/%s succeed\n", strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind), obj.GetName())
-		}
-		return newObj, nil
-	})
+	err = l.Load(ctx, r)
 	if err != nil {
 		return err
-	}
-	for _, obj := range otherResource {
-		fmt.Fprintf(os.Stderr, "%s/%s skipped\n", strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind), obj.GetName())
 	}
 	return nil
 }
 
-func decodeObjects(data io.Reader) ([]*unstructured.Unstructured, error) {
-	out := []*unstructured.Unstructured{}
-	tmp := map[string]interface{}{}
-	decoder := yamlv3.NewDecoder(data)
-	for {
-		err := decoder.Decode(&tmp)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return nil, err
-		}
-		data, err := yamlv3.Marshal(tmp)
-		if err != nil {
-			return nil, err
-		}
-		data, err = yaml.YAMLToJSON(data)
-		if err != nil {
-			return nil, err
-		}
-		obj := &unstructured.Unstructured{}
-		err = obj.UnmarshalJSON(data)
-		if err != nil {
-			return nil, err
-		}
-
-		if obj.IsList() {
-			err = obj.EachListItem(func(object runtime.Object) error {
-				out = append(out, object.(*unstructured.Unstructured))
-				return nil
-			})
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			out = append(out, obj)
-		}
-	}
-	return out, nil
+type uniqueKey struct {
+	APIVersion string
+	Kind       string
+	Name       string
+	UID        types.UID
 }
 
-func load(input []*unstructured.Unstructured, apply func([]*unstructured.Unstructured) ([]*unstructured.Unstructured, error)) ([]*unstructured.Unstructured, error) {
-	applyResource := []*unstructured.Unstructured{}
-	otherResource := []*unstructured.Unstructured{}
+// loader loads the resources to cluster
+// This way does not delete existing resources in the cluster,
+// which will handle the ownerReference so that the resources remain relative to each other
+type loader struct {
+	filterMap map[schema.GroupKind]struct{}
 
-	for _, obj := range input {
-		refs := obj.GetOwnerReferences()
-		if len(refs) != 0 && refs[0].Controller != nil && *refs[0].Controller {
-			otherResource = append(otherResource, obj)
-		} else {
-			applyResource = append(applyResource, obj)
-		}
+	exist   map[uniqueKey]types.UID
+	pending map[uniqueKey][]*unstructured.Unstructured
+
+	restMapper meta.RESTMapper
+	dynClient  *dynamic.DynamicClient
+}
+
+func newLoader(kubeconfigPath string, resources []string) (*loader, error) {
+	clientset, err := client.NewClientset("", kubeconfigPath)
+	if err != nil {
+		return nil, err
+	}
+	restConfig, err := clientset.ToRESTConfig()
+	if err != nil {
+		return nil, err
 	}
 
-	for len(applyResource) != 0 {
-		nextApplyResource := []*unstructured.Unstructured{}
-		newResource, err := apply(applyResource)
-		if err != nil {
-			return nil, err
-		}
-		if len(otherResource) == 0 {
-			break
-		}
-		for i, newObj := range newResource {
-			oldUID := applyResource[i].GetUID()
-			newUID := newObj.GetUID()
+	restMapper, err := clientset.ToRESTMapper()
+	if err != nil {
+		return nil, err
+	}
+	dynClient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
 
-			remove := map[*unstructured.Unstructured]struct{}{}
-			nextResource := slices.Filter(otherResource, func(otherObj *unstructured.Unstructured) bool {
-				otherRefs := otherObj.GetOwnerReferences()
-				otherRef := &otherRefs[0]
-				if otherRef.UID != oldUID {
-					return false
-				}
-				otherRef.UID = newUID
-				otherObj.SetOwnerReferences(otherRefs)
-				remove[otherObj] = struct{}{}
-				return true
-			})
-			if len(remove) != 0 {
-				otherResource = slices.Filter(otherResource, func(otherObj *unstructured.Unstructured) bool {
-					_, ok := remove[otherObj]
-					return !ok
-				})
-				nextApplyResource = append(nextApplyResource, nextResource...)
+	filterMap := make(map[schema.GroupKind]struct{})
+	for _, resource := range resources {
+		mapping, err := mappingFor(restMapper, resource)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get mapping for resource %q: %w", resource, err)
+		}
+		filterMap[mapping.GroupVersionKind.GroupKind()] = struct{}{}
+	}
+	return &loader{
+		filterMap:  filterMap,
+		exist:      make(map[uniqueKey]types.UID),
+		pending:    make(map[uniqueKey][]*unstructured.Unstructured),
+		restMapper: restMapper,
+		dynClient:  dynClient,
+	}, nil
+}
+
+func (l *loader) Load(ctx context.Context, r io.Reader) error {
+	logger := log.FromContext(ctx)
+
+	decoder := yaml.NewDecoder(r)
+
+	err := decoder.Decode(func(obj *unstructured.Unstructured) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if !l.filter(obj) {
+			logger.Info("skipped",
+				"resource", "filtered",
+				"kind", obj.GetKind(),
+				"name", log.KObj(obj),
+			)
+			return nil
+		}
+
+		l.load(ctx, obj)
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to decode objects: %w", err)
+	}
+
+	// Print the skipped resources
+	for _, pendingObjs := range l.pending {
+		for _, pendingObj := range pendingObjs {
+			logger.Info("skipped",
+				"resource", "missing owner",
+				"kind", pendingObj.GetKind(),
+				"name", log.KObj(pendingObj),
+			)
+		}
+	}
+	return nil
+}
+
+func (l *loader) load(ctx context.Context, obj *unstructured.Unstructured) {
+	// If the object has owner references, we need to wait until all the owner references are created.
+	if ownerReferences := obj.GetOwnerReferences(); len(ownerReferences) != 0 {
+		allExist := true
+		for _, ownerReference := range ownerReferences {
+			key := uniqueKeyFromOwnerReference(ownerReference)
+			if _, ok := l.exist[key]; !ok {
+				allExist = false
+				l.pending[key] = append(l.pending[key], obj)
 			}
 		}
-		applyResource = nextApplyResource
+		// early return if not all owner references exist
+		if !allExist {
+			return
+		}
+
+		// update owner references
+		l.updateOwnerReferences(obj)
 	}
-	return otherResource, nil
+
+	// apply the object
+	newObj := l.apply(ctx, obj)
+	if newObj == nil {
+		return
+	}
+
+	// Record the new uid
+	key := uniqueKeyFromMetadata(obj)
+	l.exist[key] = newObj.GetUID()
+
+	// If there are pending objects waiting for this object, apply them.
+	if pendingObjs, ok := l.pending[key]; ok {
+		for _, pendingObj := range pendingObjs {
+			// If the pending object has only one owner reference, or all the owner references exist, apply it.
+			if len(pendingObj.GetOwnerReferences()) == 1 || l.hasAllOwnerReferences(pendingObj) {
+				// update owner references
+				l.updateOwnerReferences(pendingObj)
+
+				// apply the object
+				newObj = l.apply(ctx, pendingObj)
+				if newObj != nil {
+					key := uniqueKeyFromMetadata(pendingObj)
+					l.exist[key] = newObj.GetUID()
+				}
+			}
+		}
+		// Remove the pending objects
+		delete(l.pending, key)
+	}
+}
+
+func (l *loader) filter(obj *unstructured.Unstructured) bool {
+	_, ok := l.filterMap[obj.GroupVersionKind().GroupKind()]
+	return ok
+}
+
+func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *unstructured.Unstructured {
+	gvr := obj.GroupVersionKind().GroupVersion().WithResource(obj.GetKind())
+
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"kind", obj.GetKind(),
+		"name", log.KObj(obj),
+	)
+
+	gvr, err := l.restMapper.ResourceFor(gvr)
+	if err != nil {
+		logger.Error("failed to get resource", err)
+		return nil
+	}
+
+	clearUnstructured(obj)
+
+	nri := l.dynClient.
+		Resource(gvr)
+	var ri dynamic.ResourceInterface = nri
+
+	if ns := obj.GetNamespace(); ns != "" {
+		ri = nri.Namespace(ns)
+	}
+	newObj, err := ri.Create(ctx, obj, metav1.CreateOptions{FieldValidation: "Ignore"})
+	if err != nil {
+		if !apierrors.IsAlreadyExists(err) {
+			logger.Error("failed to create resource", err)
+			return nil
+		}
+		newObj, err = ri.Update(ctx, obj, metav1.UpdateOptions{FieldValidation: "Ignore"})
+		if err != nil {
+			if apierrors.IsConflict(err) {
+				logger.Warn("conflict")
+				return nil
+			}
+			logger.Error("failed to update resource", err)
+			return nil
+		}
+		logger.Info("updated")
+	} else {
+		logger.Info("created")
+	}
+	return newObj
+}
+
+func (l *loader) hasAllOwnerReferences(obj *unstructured.Unstructured) bool {
+	ownerReferences := obj.GetOwnerReferences()
+	if len(ownerReferences) == 0 {
+		return true
+	}
+	for _, ownerReference := range ownerReferences {
+		key := uniqueKeyFromOwnerReference(ownerReference)
+		if _, ok := l.exist[key]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func (l *loader) updateOwnerReferences(obj *unstructured.Unstructured) {
+	ownerReferences := obj.GetOwnerReferences()
+	if len(ownerReferences) == 0 {
+		return
+	}
+	for i := range ownerReferences {
+		key := uniqueKeyFromOwnerReference(ownerReferences[i])
+		ownerReference := &ownerReferences[i]
+		if uid, ok := l.exist[key]; ok {
+			ownerReference.UID = uid
+		}
+	}
+	obj.SetOwnerReferences(ownerReferences)
+}
+
+func uniqueKeyFromOwnerReference(ownerReference metav1.OwnerReference) uniqueKey {
+	return uniqueKey{
+		APIVersion: ownerReference.APIVersion,
+		Kind:       ownerReference.Kind,
+		Name:       ownerReference.Name,
+		UID:        ownerReference.UID,
+	}
+}
+
+func uniqueKeyFromMetadata(obj *unstructured.Unstructured) uniqueKey {
+	return uniqueKey{
+		APIVersion: obj.GetAPIVersion(),
+		Kind:       obj.GetKind(),
+		Name:       obj.GetName(),
+		UID:        obj.GetUID(),
+	}
 }
