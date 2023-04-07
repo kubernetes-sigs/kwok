@@ -9,7 +9,7 @@ kwokctl snapshot export [flags]
 ### Options
 
 ```
-      --filter strings      Filter the resources to export (default [namespace,node,serviceaccount,configmap,secret,daemonset.apps,deployment.apps,replicaset.apps,statefulset.apps,cronjob.batch,job.batch,persistentvolumeclaim,persistentvolume,pod,service,endpoints])
+      --filter strings      Filter the resources to export (default [namespace,node,serviceaccount,configmap,secret,limitrange,runtimeclass.node.k8s.io,priorityclass.scheduling.k8s.io,daemonset.apps,deployment.apps,replicaset.apps,statefulset.apps,cronjob.batch,job.batch,persistentvolumeclaim,persistentvolume,pod,service,endpoints])
   -h, --help                help for export
       --kubeconfig string   Path to the kubeconfig file to use
       --path string         Path to the snapshot

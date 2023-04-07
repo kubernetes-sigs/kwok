@@ -25,12 +25,19 @@ import (
 )
 
 // Resources is the resources of cluster want to save or restore
+// The resource string format adheres to a GVR template.
+// - a single string like "node" will be parsed as {resource: node}
+// - a two-section string like "daemonset.apps" will be parsed as {resource: dasemonset, group: apps}
+// - a three-section (or 3+) string like "foo.v1alpha1.example.com" will be parsed as {resource: foo, version: v1alpha1, group: example.com}
 var Resources = []string{
 	"namespace",
 	"node",
 	"serviceaccount",
 	"configmap",
 	"secret",
+	"limitrange",
+	"runtimeclass.node.k8s.io",
+	"priorityclass.scheduling.k8s.io",
 	"daemonset.apps",
 	"deployment.apps",
 	"replicaset.apps",
