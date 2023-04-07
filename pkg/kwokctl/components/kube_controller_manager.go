@@ -17,9 +17,11 @@ limitations under the License.
 package components
 
 import (
+	"strconv"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -41,6 +43,7 @@ type BuildKubeControllerManagerComponentConfig struct {
 	KubeFeatureGates                   string
 	NodeMonitorPeriodMilliseconds      int64
 	NodeMonitorGracePeriodMilliseconds int64
+	Verbosity                          int
 	ExtraArgs                          []internalversion.ExtraArgs
 	ExtraVolumes                       []internalversion.Volume
 }
@@ -182,6 +185,10 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				"--service-account-private-key-file="+conf.AdminKeyPath,
 			)
 		}
+	}
+
+	if conf.Verbosity != int(log.InfoLevel) {
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs, "--v="+strconv.Itoa(conf.Verbosity))
 	}
 
 	return internalversion.Component{

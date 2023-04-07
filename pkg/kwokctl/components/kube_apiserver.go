@@ -18,8 +18,10 @@ package components
 
 import (
 	"fmt"
+	"strconv"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -44,6 +46,7 @@ type BuildKubeApiserverComponentConfig struct {
 	CaCertPath        string
 	AdminCertPath     string
 	AdminKeyPath      string
+	Verbosity         int
 	ExtraArgs         []internalversion.ExtraArgs
 	ExtraVolumes      []internalversion.Volume
 }
@@ -203,6 +206,10 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--audit-log-path="+conf.AuditLogPath,
 			)
 		}
+	}
+
+	if conf.Verbosity != int(log.InfoLevel) {
+		kubeApiserverArgs = append(kubeApiserverArgs, "--v="+strconv.Itoa(conf.Verbosity))
 	}
 
 	return internalversion.Component{

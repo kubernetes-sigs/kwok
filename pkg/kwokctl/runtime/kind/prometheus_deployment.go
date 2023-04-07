@@ -53,6 +53,7 @@ func BuildPrometheusDeployment(conf BuildPrometheusDeploymentConfig) (string, er
 type BuildPrometheusDeploymentConfig struct {
 	PrometheusImage string
 	Name            string
+	LogLevel        string
 	ExtraArgs       []internalversion.ExtraArgs
 	ExtraVolumes    []internalversion.Volume
 }
