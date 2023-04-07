@@ -18,6 +18,7 @@ package runtime
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
@@ -27,4 +28,18 @@ func GetComponentPatches(conf *internalversion.KwokctlConfiguration, componentNa
 		return patch.Name == componentName
 	})
 	return componentPatches
+}
+
+// ExpandVolumesHostPaths expands relative paths specified in volumes to absolute paths
+func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion.Volume, error) {
+	result := make([]internalversion.Volume, 0, len(volumes))
+	for _, v := range volumes {
+		hostPath, err := path.Expand(v.HostPath)
+		if err != nil {
+			return nil, err
+		}
+		v.HostPath = hostPath
+		result = append(result, v)
+	}
+	return result, nil
 }

@@ -22,6 +22,7 @@ import (
 	"text/template"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 
 	_ "embed"
 )
@@ -37,7 +38,13 @@ func BuildKind(conf BuildKindConfig) (string, error) {
 
 	conf = expendExtrasForBuildKind(conf)
 
-	err := kindYamlTemplate.Execute(buf, conf)
+	var err error
+	conf, err = expandHostVolumePaths(conf)
+	if err != nil {
+		return "", fmt.Errorf("failed to expand host volume paths: %w", err)
+	}
+
+	err = kindYamlTemplate.Execute(buf, conf)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute kind yaml template: %w", err)
 	}
@@ -102,6 +109,41 @@ func expendExtrasForBuildKind(conf BuildKindConfig) BuildKindConfig {
 	return conf
 }
 
+func expandHostVolumePaths(conf BuildKindConfig) (BuildKindConfig, error) {
+	var err error
+	conf.EtcdExtraVolumes, err = runtime.ExpandVolumesHostPaths(conf.EtcdExtraVolumes)
+	if err != nil {
+		return conf, err
+	}
+
+	conf.ApiserverExtraVolumes, err = runtime.ExpandVolumesHostPaths(conf.ApiserverExtraVolumes)
+	if err != nil {
+		return conf, err
+	}
+
+	conf.SchedulerExtraVolumes, err = runtime.ExpandVolumesHostPaths(conf.SchedulerExtraVolumes)
+	if err != nil {
+		return conf, err
+	}
+
+	conf.EtcdExtraVolumes, err = runtime.ExpandVolumesHostPaths(conf.EtcdExtraVolumes)
+	if err != nil {
+		return conf, err
+	}
+
+	conf.ControllerManagerExtraVolumes, err = runtime.ExpandVolumesHostPaths(conf.ControllerManagerExtraVolumes)
+	if err != nil {
+		return conf, err
+	}
+
+	conf.KwokControllerExtraVolumes, err = runtime.ExpandVolumesHostPaths(conf.KwokControllerExtraVolumes)
+	if err != nil {
+		return conf, err
+	}
+
+	return conf, nil
+}
+
 // BuildKindConfig is the configuration for building the kind config
 type BuildKindConfig struct {
 	KubeApiserverPort  uint32
@@ -127,4 +169,5 @@ type BuildKindConfig struct {
 	SchedulerExtraVolumes         []internalversion.Volume
 	ControllerManagerExtraArgs    []internalversion.ExtraArgs
 	ControllerManagerExtraVolumes []internalversion.Volume
+	KwokControllerExtraVolumes    []internalversion.Volume
 }

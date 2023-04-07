@@ -160,7 +160,7 @@ jobs:
         shell: bash
         run: |
           brew install colima docker
-          colima start --mount $HOME/.kwok/:w
+          colima start --mount $HOME/.kwok/:w --mount $(pwd):w --mount-type virtiofs
 
       - name: Install Buildx
         if: ${{ matrix.kwokctl-runtime != 'binary' }}

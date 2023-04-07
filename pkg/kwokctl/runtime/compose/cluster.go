@@ -88,7 +88,7 @@ func (c *Cluster) setup(ctx context.Context) error {
 
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath := c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0640)
+		err = file.Create(auditLogPath, 0o640)
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (c *Cluster) setup(ctx context.Context) error {
 	}
 
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
-	err = os.MkdirAll(etcdDataPath, 0750)
+	err = os.MkdirAll(etcdDataPath, 0o750)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
@@ -200,6 +200,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	etedComponentPatches := runtime.GetComponentPatches(config, "etcd")
+	etedComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(etedComponentPatches.ExtraVolumes)
+	if err != nil {
+		return fmt.Errorf("failed to expand host volumes for etcd component: %w", err)
+	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
 		Workdir:      workdir,
 		Image:        conf.EtcdImage,
@@ -221,6 +225,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(config, "kube-apiserver")
+	kubeApiserverComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeApiserverComponentPatches.ExtraVolumes)
+	if err != nil {
+		return fmt.Errorf("failed to expand host volumes for kube api server component: %w", err)
+	}
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Workdir:           workdir,
 		Image:             conf.KubeApiserverImage,
@@ -254,6 +262,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 
 		kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
+		kubeControllerManagerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeControllerManagerComponentPatches.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for kube controller manager component: %w", err)
+		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
 			Workdir:                            workdir,
 			Image:                              conf.KubeControllerManagerImage,
@@ -294,6 +306,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 
 		kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
+		kubeSchedulerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeSchedulerComponentPatches.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for kube scheduler component: %w", err)
+		}
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
 			Workdir:          workdir,
 			Image:            conf.KubeSchedulerImage,
@@ -322,6 +338,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
+	kwokControllerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kwokControllerComponentPatches.ExtraVolumes)
+	if err != nil {
+		return fmt.Errorf("failed to expand host volumes for kwok controller component: %w", err)
+	}
 	kwokControllerComponent, err := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Workdir:        workdir,
 		Image:          conf.KwokControllerImage,
@@ -355,7 +375,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		//nolint:gosec
 		// We don't need to check the permissions of the prometheus config file,
 		// because it's working in a non-root container.
-		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0644)
+		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0o644)
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
@@ -366,6 +386,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 
 		prometheusComponentPatches := runtime.GetComponentPatches(config, "prometheus")
+		prometheusComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(prometheusComponentPatches.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for prometheus component: %w", err)
+		}
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
 			Workdir:       workdir,
 			Image:         conf.PrometheusImage,
@@ -414,17 +438,17 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Save config
-	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0640)
+	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0o640)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0640)
+	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0o640)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(composePath, composeData, 0640)
+	err = os.WriteFile(composePath, composeData, 0o640)
 	if err != nil {
 		return err
 	}
@@ -701,7 +725,7 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 		if err != nil {
 			// docker compose subcommand does not exist, try to download it
 			dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
-			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0755, conf.QuietPull)
+			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0o755, conf.QuietPull)
 			if err != nil {
 				return nil, err
 			}
