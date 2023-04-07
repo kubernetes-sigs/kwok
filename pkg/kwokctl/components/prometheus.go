@@ -18,6 +18,7 @@ package components
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -33,6 +34,7 @@ type BuildPrometheusComponentConfig struct {
 	ConfigPath    string
 	AdminCertPath string
 	AdminKeyPath  string
+	LogLevel      string
 	ExtraArgs     []internalversion.ExtraArgs
 	ExtraVolumes  []internalversion.Volume
 }
@@ -83,6 +85,10 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			"--config.file="+conf.ConfigPath,
 			"--web.listen-address="+conf.Address+":"+format.String(conf.Port),
 		)
+	}
+
+	if conf.LogLevel != log.InfoLevelSecurity {
+		prometheusArgs = append(prometheusArgs, "--log.level="+conf.LogLevel)
 	}
 
 	return internalversion.Component{

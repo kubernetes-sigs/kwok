@@ -19,10 +19,12 @@ package kind
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"text/template"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"sigs.k8s.io/kwok/pkg/log"
 
 	_ "embed"
 )
@@ -106,6 +108,33 @@ func expendExtrasForBuildKind(conf BuildKindConfig) BuildKindConfig {
 			},
 		)
 	}
+
+	if conf.LogLevel != log.InfoLevelSecurity {
+		conf.EtcdExtraArgs = append(conf.EtcdExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "log-level",
+				Value: conf.LogLevel,
+			},
+		)
+		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "v",
+				Value: strconv.Itoa(conf.Verbosity),
+			},
+		)
+		conf.ControllerManagerExtraArgs = append(conf.ControllerManagerExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "v",
+				Value: strconv.Itoa(conf.Verbosity),
+			},
+		)
+		conf.SchedulerExtraArgs = append(conf.SchedulerExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "v",
+				Value: strconv.Itoa(conf.Verbosity),
+			},
+		)
+	}
 	return conf
 }
 
@@ -168,6 +197,8 @@ type BuildKindConfig struct {
 	SchedulerExtraArgs            []internalversion.ExtraArgs
 	SchedulerExtraVolumes         []internalversion.Volume
 	ControllerManagerExtraArgs    []internalversion.ExtraArgs
+	Verbosity                     int
+	LogLevel                      string
 	ControllerManagerExtraVolumes []internalversion.Volume
 	KwokControllerExtraVolumes    []internalversion.Volume
 }

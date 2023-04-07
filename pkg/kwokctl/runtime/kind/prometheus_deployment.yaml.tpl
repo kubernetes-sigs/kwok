@@ -125,6 +125,9 @@ spec:
       image: {{ .PrometheusImage }}
       args:
         - --config.file=/etc/prometheus/prometheus.yaml
+        {{ if .LogLevel }}
+        - --log.level={{ .LogLevel }}
+        {{ end }}
         {{ range .ExtraArgs }}
         - --{{ .Key }}={{ .Value }}
         {{ end }}

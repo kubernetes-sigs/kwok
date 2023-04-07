@@ -21,7 +21,7 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-var noop = wrapSlog(slog.New(noopHandler{}))
+var noop = wrapSlog(slog.New(noopHandler{}), slog.InfoLevel)
 
 type noopHandler struct{}
 

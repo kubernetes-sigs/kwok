@@ -18,6 +18,7 @@ package components
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -32,6 +33,7 @@ type BuildEtcdComponentConfig struct {
 	Address      string
 	Port         uint32
 	PeerPort     uint32
+	LogLevel     string
 	ExtraArgs    []internalversion.ExtraArgs
 	ExtraVolumes []internalversion.Volume
 }
@@ -112,6 +114,16 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			"--listen-client-urls=http://"+conf.Address+":"+etcdClientPortStr,
 			"--initial-cluster=node0=http://"+conf.Address+":"+etcdPeerPortStr,
 		)
+	}
+
+	if conf.Version.GTE(version.NewVersion(3, 4, 0)) {
+		if conf.LogLevel != log.InfoLevelSecurity {
+			etcdArgs = append(etcdArgs, "--log-level="+conf.LogLevel)
+		}
+	} else {
+		if conf.LogLevel == log.DebugLevelSecurity {
+			etcdArgs = append(etcdArgs, "--debug")
+		}
 	}
 
 	return internalversion.Component{

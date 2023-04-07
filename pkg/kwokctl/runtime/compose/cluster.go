@@ -124,6 +124,9 @@ func (c *Cluster) setupPorts(ctx context.Context, ports ...*uint32) error {
 
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
+	level := log.FromContext(ctx).Level()
+	verbosity := log.ToKlogLevel(level)
+	logLevel := log.ToLogSeverityLevel(level)
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -210,6 +213,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Version:      etcdVersion,
 		Port:         conf.EtcdPort,
 		DataPath:     etcdDataPath,
+		LogLevel:     logLevel,
 		ExtraArgs:    etedComponentPatches.ExtraArgs,
 		ExtraVolumes: etedComponentPatches.ExtraVolumes,
 	})
@@ -246,6 +250,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminKeyPath:      adminKeyPath,
 		EtcdPort:          conf.EtcdPort,
 		EtcdAddress:       c.Name() + "-etcd",
+		Verbosity:         verbosity,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
 		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
 	})
@@ -278,6 +283,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeAuthorization:                  conf.KubeAuthorization,
 			KubeconfigPath:                     inClusterOnHostKubeconfigPath,
 			KubeFeatureGates:                   conf.KubeFeatureGates,
+			Verbosity:                          verbosity,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
 			ExtraArgs:                          kubeControllerManagerComponentPatches.ExtraArgs,
@@ -322,6 +328,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   inClusterOnHostKubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
+			Verbosity:        verbosity,
 			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
 			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
 		})
@@ -398,6 +405,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:    prometheusConfigPath,
 			AdminCertPath: adminCertPath,
 			AdminKeyPath:  adminKeyPath,
+			LogLevel:      logLevel,
 			ExtraArgs:     prometheusComponentPatches.ExtraArgs,
 			ExtraVolumes:  prometheusComponentPatches.ExtraVolumes,
 		})

@@ -64,6 +64,9 @@ func (c *Cluster) Available(ctx context.Context) error {
 
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
+	level := log.FromContext(ctx).Level()
+	verbosity := log.ToKlogLevel(level)
+	logLevel := log.ToLogSeverityLevel(level)
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -124,6 +127,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AuditLog:                      auditLogPath,
 		SchedulerConfig:               schedulerConfigPath,
 		ConfigPath:                    configPath,
+		Verbosity:                     verbosity,
+		LogLevel:                      logLevel,
 		EtcdExtraArgs:                 etcdComponentPatches.ExtraArgs,
 		EtcdExtraVolumes:              etcdComponentPatches.ExtraVolumes,
 		ApiserverExtraArgs:            kubeApiserverComponentPatches.ExtraArgs,
@@ -158,12 +163,16 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	if conf.PrometheusPort != 0 {
 		prometheusPatches := runtime.GetComponentPatches(config, "prometheus")
-		prometheusDeploy, err := BuildPrometheusDeployment(BuildPrometheusDeploymentConfig{
+		prometheusConf := BuildPrometheusDeploymentConfig{
 			PrometheusImage: conf.PrometheusImage,
 			Name:            c.Name(),
 			ExtraArgs:       prometheusPatches.ExtraArgs,
 			ExtraVolumes:    prometheusPatches.ExtraVolumes,
-		})
+		}
+		if logLevel != log.InfoLevelSecurity {
+			prometheusConf.LogLevel = logLevel
+		}
+		prometheusDeploy, err := BuildPrometheusDeployment(prometheusConf)
 		if err != nil {
 			return err
 		}

@@ -175,6 +175,9 @@ func (c *Cluster) setupPorts(ctx context.Context, ports ...*uint32) error {
 
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
+	level := log.FromContext(ctx).Level()
+	verbosity := log.ToKlogLevel(level)
+	logLevel := log.ToLogSeverityLevel(level)
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -243,6 +246,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		DataPath:     etcdDataPath,
 		Port:         conf.EtcdPort,
 		PeerPort:     conf.EtcdPeerPort,
+		LogLevel:     logLevel,
 		ExtraArgs:    etcdComponentPatches.ExtraArgs,
 		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
 	})
@@ -275,6 +279,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		CaCertPath:        caCertPath,
 		AdminCertPath:     adminCertPath,
 		AdminKeyPath:      adminKeyPath,
+		Verbosity:         verbosity,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
 		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
 	})
@@ -312,6 +317,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeFeatureGates:                   conf.KubeFeatureGates,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
+			Verbosity:                          verbosity,
 			ExtraArgs:                          kubeControllerManagerPatches.ExtraArgs,
 			ExtraVolumes:                       kubeControllerManagerPatches.ExtraVolumes,
 		})
@@ -357,6 +363,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   kubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
+			Verbosity:        verbosity,
 			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
 			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
 		})
@@ -429,6 +436,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Address:      localAddress,
 			Port:         conf.PrometheusPort,
 			ConfigPath:   prometheusConfigPath,
+			LogLevel:     logLevel,
 			ExtraArgs:    prometheusComponentPatches.ExtraArgs,
 			ExtraVolumes: prometheusComponentPatches.ExtraVolumes,
 		})
