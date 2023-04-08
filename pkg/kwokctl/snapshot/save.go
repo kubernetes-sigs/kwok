@@ -21,11 +21,14 @@ import (
 	"fmt"
 	"io"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/pager"
+	"k8s.io/client-go/util/retry"
 
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
@@ -62,23 +65,36 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 
 	encoder := yaml.NewEncoder(w)
 	for _, gvr := range gvrs {
-		nri := dynClient.
-			Resource(gvr)
+		nri := dynClient.Resource(gvr)
 
 		listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
-			return nri.List(ctx, opts)
+			var list runtime.Object
+			var err error
+			err = retry.OnError(retry.DefaultBackoff, retriable, func() error {
+				list, err = nri.List(ctx, opts)
+				return err
+			})
+			return list, err
 		})
 
-		err = listPager.EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
+		if err := listPager.EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 			if o, ok := obj.(metav1.Object); ok {
 				clearUnstructured(o)
 			}
 			return encoder.Encode(obj)
-		})
-		if err != nil {
+		}); err != nil {
 			return fmt.Errorf("failed to list resource %q: %w", gvr.Resource, err)
 		}
 	}
 
 	return nil
+}
+
+func retriable(err error) bool {
+	return apierrors.IsInternalError(err) ||
+		apierrors.IsServiceUnavailable(err) ||
+		apierrors.IsTooManyRequests(err) ||
+		apierrors.IsTimeout(err) ||
+		apierrors.IsServerTimeout(err) ||
+		net.IsConnectionRefused(err)
 }
