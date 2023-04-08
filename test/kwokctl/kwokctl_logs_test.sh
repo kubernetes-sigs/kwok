@@ -59,7 +59,6 @@ function test_logs() {
 
   result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs "${target}")
   if [[ $? -ne 0 ]]; then
-      rm "${targetLog}"
       echo "Error: logs failed"
       return 1
   fi

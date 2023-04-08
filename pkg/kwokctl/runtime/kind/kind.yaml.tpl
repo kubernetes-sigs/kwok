@@ -139,12 +139,6 @@ nodes:
     readOnly: {{ .ReadOnly }}
 {{ end }}
 
-{{ range .ExtraVolumes }}
-  - hostPath: {{ .HostPath }}
-    containerPath: {{ .MountPath }}
-    readOnly: {{ .ReadOnly }}
-{{ end }}
-
 {{ if .AuditPolicy }}
   - hostPath: {{ .AuditPolicy }}
     containerPath: /etc/kubernetes/audit/audit.yaml
