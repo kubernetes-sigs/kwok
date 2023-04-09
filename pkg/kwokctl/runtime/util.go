@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -79,10 +80,11 @@ func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
 	volumes := make([]internalversion.Volume, 0, len(mountDirs))
 	i := 0
 	for dir := range mountDirs {
+		dirPath := strings.TrimPrefix(dir, "/var/components/controller")
 		volumes = append(volumes, internalversion.Volume{
 			Name:      fmt.Sprintf("log-volume-%d", i),
-			HostPath:  dir,
-			MountPath: dir,
+			HostPath:  dirPath,
+			MountPath: dirPath,
 			PathType:  internalversion.HostPathDirectoryOrCreate,
 			ReadOnly:  true,
 		})

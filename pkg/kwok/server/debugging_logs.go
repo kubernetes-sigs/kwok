@@ -27,7 +27,6 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"path"
 	"reflect"
 	"time"
 
@@ -214,13 +213,9 @@ func newLogOptions(apiOpts *corev1.PodLogOptions, now time.Time) *logOptions {
 func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOptions, stdout, stderr io.Writer) error {
 	logger := log.FromContext(ctx)
 
-	logsFilePath := path.Join("/var/components/controller", logInfo.LogsFile)
-	f, err := os.Open(logsFilePath)
+	f, err := os.Open(logInfo.LogsFile)
 	if err != nil {
-		f, err = os.Open(logInfo.LogsFile)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	if err != nil {
