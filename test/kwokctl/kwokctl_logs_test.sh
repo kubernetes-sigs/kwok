@@ -108,7 +108,7 @@ function test_logs() {
   kwokctl --name "${name}" kubectl -n "${namespace}" logs -f "${target}" > "${followLog}" &
   pid=$!
   echo '2016-10-06T00:20:09.669794202Z stdout F log content 4' >> "${targetLog}"
-  sleep 1
+  sleep 5
   kill -INT "${pid}"
 
   local want=$(cat "${targetLog}" | cut -d " " -f 4-)
