@@ -40,11 +40,7 @@ func Load(ctx context.Context, kubeconfigPath string, r io.Reader, filters []str
 	if err != nil {
 		return err
 	}
-	err = l.Load(ctx, r)
-	if err != nil {
-		return err
-	}
-	return nil
+	return l.Load(ctx, r)
 }
 
 type uniqueKey struct {
@@ -214,8 +210,7 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 
 	clearUnstructured(obj)
 
-	nri := l.dynClient.
-		Resource(gvr)
+	nri := l.dynClient.Resource(gvr)
 	var ri dynamic.ResourceInterface = nri
 
 	if ns := obj.GetNamespace(); ns != "" {

@@ -152,12 +152,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 		}
 	}
 
-	err := config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)
 }
 
 func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
@@ -181,10 +176,7 @@ func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
 	_, err := c.kubectlPath(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Uninstall uninstalls the cluster.
@@ -290,10 +282,7 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 	}()
 
 	_, err = io.Copy(out, f)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // AuditLogsFollow follows the audit logs of the cluster.
