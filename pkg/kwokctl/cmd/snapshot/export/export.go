@@ -23,14 +23,17 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/rest"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 )
 
 type flagpole struct {
-	Path       string
-	Kubeconfig string
-	Filters    []string
+	Path              string
+	Kubeconfig        string
+	Filters           []string
+	ImpersonateUser   string
+	ImpersonateGroups []string
 }
 
 // NewCommand returns a new cobra.Command for cluster exporting.
@@ -48,6 +51,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "Path to the kubeconfig file to use")
 	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the snapshot")
 	cmd.Flags().StringSliceVar(&flags.Filters, "filter", snapshot.Resources, "Filter the resources to export")
+	cmd.Flags().StringVar(&flags.ImpersonateUser, "as", "", "Username to impersonate for the operation. User could be a regular user or a service account in a namespace.")
+	cmd.Flags().StringSliceVar(&flags.ImpersonateGroups, "as-group", nil, "Group to impersonate for the operation, this flag can be repeated to specify multiple groups.")
 	return cmd
 }
 
@@ -67,7 +72,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 		_ = file.Close()
 	}()
 
-	err = snapshot.Save(ctx, flags.Kubeconfig, file, flags.Filters)
+	impersonateConfig := rest.ImpersonationConfig{
+		UserName: flags.ImpersonateUser,
+		Groups:   flags.ImpersonateGroups,
+	}
+	err = snapshot.Save(ctx, flags.Kubeconfig, file, flags.Filters, impersonateConfig)
 	if err != nil {
 		return err
 	}
