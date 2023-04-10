@@ -623,6 +623,11 @@ func (in *StageSpec) DeepCopyInto(out *StageSpec) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.Next.DeepCopyInto(&out.Next)
+	if in.ImmediateNextStage != nil {
+		in, out := &in.ImmediateNextStage, &out.ImmediateNextStage
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

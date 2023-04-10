@@ -65,7 +65,7 @@ type PodController struct {
 	parallelTasks                         *parallelTasks
 	lifecycle                             Lifecycle
 	cronjob                               *cron.Cron
-	delayJobsCancels                      maps.SyncMap[string, cron.DoFunc]
+	delayJobs                             jobInfoMap
 	recorder                              record.EventRecorder
 }
 
@@ -152,14 +152,14 @@ func (c *PodController) Start(ctx context.Context) error {
 }
 
 // FinalizersModify modify the finalizers of the pod
-func (c *PodController) FinalizersModify(ctx context.Context, pod *corev1.Pod, finalizers *internalversion.StageFinalizers) error {
+func (c *PodController) FinalizersModify(ctx context.Context, pod *corev1.Pod, finalizers *internalversion.StageFinalizers) (*corev1.Pod, error) {
 	ops := finalizersModify(pod.Finalizers, finalizers)
 	if len(ops) == 0 {
-		return nil
+		return nil, nil
 	}
 	data, err := json.Marshal(ops)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	logger := log.FromContext(ctx)
@@ -167,18 +167,18 @@ func (c *PodController) FinalizersModify(ctx context.Context, pod *corev1.Pod, f
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
-	_, err = c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
+	result, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch pod finalizers",
 				"err", err,
 			)
-			return nil
+			return nil, nil
 		}
-		return err
+		return nil, err
 	}
 	logger.Info("Patch pod finalizers")
-	return nil
+	return result, nil
 }
 
 // DeletePod deletes a pod
@@ -205,9 +205,16 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 
 // LockPod locks a given pod
 func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
+	key := log.KObj(pod).String()
+
+	resourceJob, ok := c.delayJobs.Load(key)
+	if ok && resourceJob.ResourceVersion == pod.ResourceVersion {
+		return nil
+	}
+
 	logger := log.FromContext(ctx)
 	logger = logger.With(
-		"pod", log.KObj(pod),
+		"pod", key,
 		"node", pod.Spec.NodeName,
 	)
 	data, err := expression.ToJSONStandard(pod)
@@ -236,20 +243,22 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 		)
 	}
 
-	key := log.KObj(pod).String()
 	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(now.Add(delay)), func() {
-		cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
+		resourceJob, ok := c.delayJobs.LoadAndDelete(key)
 		if ok {
-			cancelOld()
+			resourceJob.Cancel()
 		}
 		c.parallelTasks.Add(func() {
 			c.playStage(ctx, pod, stage)
 		})
 	})
 	if ok {
-		cancelOld, ok := c.delayJobsCancels.LoadOrStore(key, cancelFunc)
+		resourceJob, ok := c.delayJobs.LoadOrStore(key, jobInfo{
+			ResourceVersion: pod.ResourceVersion,
+			Cancel:          cancelFunc,
+		})
 		if ok {
-			cancelOld()
+			resourceJob.Cancel()
 		}
 	}
 
@@ -268,9 +277,12 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 		}, next.Event.Type, next.Event.Reason, next.Event.Message)
 	}
 	if next.Finalizers != nil {
-		err := c.FinalizersModify(ctx, pod, next.Finalizers)
+		result, err := c.FinalizersModify(ctx, pod, next.Finalizers)
 		if err != nil {
 			logger.Error("Failed to finalizers", err)
+		}
+		if result != nil && stage.ImmediateNextStage() {
+			c.lockPodChan <- result
 		}
 	}
 	if next.Delete {
@@ -289,32 +301,35 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 				"reason", "do not need to modify",
 			)
 		} else {
-			err = c.lockPod(ctx, pod, patch)
+			result, err := c.lockPod(ctx, pod, patch)
 			if err != nil {
 				logger.Error("Failed to lock pod", err)
+			}
+			if result != nil && stage.ImmediateNextStage() {
+				c.lockPodChan <- result
 			}
 		}
 	}
 }
 
-func (c *PodController) lockPod(ctx context.Context, pod *corev1.Pod, patch []byte) error {
+func (c *PodController) lockPod(ctx context.Context, pod *corev1.Pod, patch []byte) (*corev1.Pod, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
-	_, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	result, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch pod",
 				"err", err,
 			)
-			return nil
+			return nil, nil
 		}
-		return err
+		return nil, err
 	}
 	logger.Info("Lock pod")
-	return nil
+	return result, nil
 }
 
 // LockPods locks a pods from the channel
@@ -403,9 +418,9 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 
 						// Cancel delay job
 						key := log.KObj(pod).String()
-						cancelOld, ok := c.delayJobsCancels.LoadAndDelete(key)
+						resourceJob, ok := c.delayJobs.LoadAndDelete(key)
 						if ok {
-							cancelOld()
+							resourceJob.Cancel()
 						}
 					}
 				}

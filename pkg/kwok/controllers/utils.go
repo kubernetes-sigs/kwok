@@ -22,7 +22,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/wzshiming/cron"
 	"k8s.io/apimachinery/pkg/labels"
+
+	"sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 func parseCIDR(s string) (*net.IPNet, error) {
@@ -165,4 +168,11 @@ func labelsParse(selector string) (labels.Selector, error) {
 		return nil, nil
 	}
 	return labels.Parse(selector)
+}
+
+type jobInfoMap = maps.SyncMap[string, jobInfo]
+
+type jobInfo struct {
+	ResourceVersion string
+	Cancel          cron.DoFunc
 }
