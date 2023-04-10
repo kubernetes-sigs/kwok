@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/pager"
 	"k8s.io/client-go/util/retry"
 
@@ -35,12 +36,13 @@ import (
 )
 
 // Save saves the snapshot of cluster
-func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []string) error {
+func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []string, impersonateConfig rest.ImpersonationConfig) error {
 	clientset, err := client.NewClientset("", kubeconfigPath)
 	if err != nil {
 		return fmt.Errorf("failed to create clientset: %w", err)
 	}
 	restConfig, err := clientset.ToRESTConfig()
+	restConfig.Impersonate = impersonateConfig
 	if err != nil {
 		return fmt.Errorf("failed to get rest config: %w", err)
 	}

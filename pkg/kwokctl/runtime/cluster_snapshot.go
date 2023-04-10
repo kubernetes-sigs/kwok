@@ -21,6 +21,8 @@ import (
 	"context"
 	"os"
 
+	"k8s.io/client-go/rest"
+
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 )
 
@@ -34,7 +36,9 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 		_ = file.Close()
 	}()
 	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
-	return snapshot.Save(ctx, kubeconfigPath, file, filters)
+	// In most cases, the user should have full privileges on the clusters created by kwokctl,
+	// so no need to expose impersonation args to "snapshot save" command.
+	return snapshot.Save(ctx, kubeconfigPath, file, filters, rest.ImpersonationConfig{})
 }
 
 // SnapshotRestoreWithYAML restore the snapshot of cluster
