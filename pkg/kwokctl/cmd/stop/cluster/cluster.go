@@ -19,6 +19,9 @@ package cluster
 
 import (
 	"context"
+	"errors"
+	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -58,15 +61,20 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			logger.Warn("Cluster is not exists")
+		}
 		return err
 	}
 
-	logger.Info("Stopping cluster")
+	start := time.Now()
+	logger.Info("Cluster is stopping")
 	err = rt.Stop(ctx)
 	if err != nil {
 		return err
 	}
-
-	logger.Info("Cluster stopped")
+	logger.Info("Cluster is stopped",
+		"elapsed", time.Since(start),
+	)
 	return nil
 }
