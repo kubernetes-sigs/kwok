@@ -19,6 +19,8 @@ package cluster
 
 import (
 	"context"
+	"errors"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -70,14 +72,26 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			logger.Warn("Cluster is not exists")
+		}
 		return err
 	}
 
-	logger.Info("Starting cluster")
+	if ready, err := rt.Ready(ctx); err == nil && ready {
+		logger.Info("Cluster is already ready")
+		return nil
+	}
+
+	start := time.Now()
+	logger.Info("Cluster is starting")
 	err = rt.Start(ctx)
 	if err != nil {
 		return err
 	}
+	logger.Info("Cluster is started",
+		"elapsed", time.Since(start),
+	)
 
 	if flags.Wait > 0 {
 		start := time.Now()
@@ -94,6 +108,5 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
-	logger.Info("Cluster started")
 	return nil
 }
