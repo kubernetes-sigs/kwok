@@ -131,9 +131,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 	ctx = log.NewContext(ctx, logger)
 
 	var err error
-	flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
-	if err != nil {
-		return err
+	if flags.Kubeconfig != "" {
+		flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
+		if err != nil {
+			return err
+		}
 	}
 
 	if flags.Timeout > 0 {
@@ -281,7 +283,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
-	if log.IsTerminal(int(os.Stdout.Fd())) {
+	if log.IsTerminal(int(os.Stdout.Fd())) && flags.Kubeconfig != "" {
 		fmt.Fprintf(os.Stderr, `You can now use your cluster with:
 
 	kubectl cluster-info --context %s
