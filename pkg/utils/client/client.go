@@ -24,8 +24,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured/unstructuredscheme"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -42,32 +42,56 @@ type Clientset struct {
 	restMapper      meta.RESTMapper
 	restClient      *rest.RESTClient
 	clientConfig    clientcmd.ClientConfig
+	typedClient     *kubernetes.Clientset
+	dynamicClient   *dynamic.DynamicClient
+
+	opts []Option
+}
+
+// Option is a function that configures a Clientset.
+type Option func(*Clientset)
+
+// WithImpersonate sets the impersonation config.
+func WithImpersonate(impersonateConfig rest.ImpersonationConfig) Option {
+	return func(c *Clientset) {
+		c.restConfig.Impersonate = impersonateConfig
+	}
 }
 
 // NewClientset creates a new Clientset.
-func NewClientset(masterURL, kubeconfigPath string) (*Clientset, error) {
+func NewClientset(masterURL, kubeconfigPath string, opts ...Option) (*Clientset, error) {
 	return &Clientset{
 		masterURL:      masterURL,
 		kubeconfigPath: kubeconfigPath,
+		opts:           opts,
 	}, nil
 }
 
 // ToRESTConfig returns a REST config.
 func (g *Clientset) ToRESTConfig() (*rest.Config, error) {
 	if g.restConfig == nil {
-		restConfig, err := g.ToRawKubeConfigLoader().ClientConfig()
-		if err != nil {
-			return nil, fmt.Errorf("could not get Kubernetes config: %w", err)
+		var restConfig *rest.Config
+		if g.kubeconfigPath == "" && g.masterURL == "" {
+			clientConfig, err := rest.InClusterConfig()
+			if err != nil {
+				return nil, fmt.Errorf("could not get in ClusterConfig: %w", err)
+			}
+			restConfig = clientConfig
+		} else {
+			clientConfig, err := g.ToRawKubeConfigLoader().ClientConfig()
+			if err != nil {
+				return nil, fmt.Errorf("could not get Kubernetes config: %w", err)
+			}
+			restConfig = clientConfig
 		}
-		restConfig.APIPath = "/api"
-		restConfig.GroupVersion = &schema.GroupVersion{Group: "", Version: "v1"}
 		restConfig.RateLimiter = flowcontrol.NewFakeAlwaysRateLimiter()
 		restConfig.UserAgent = defaultKubernetesUserAgent()
 		restConfig.NegotiatedSerializer = unstructuredscheme.NewUnstructuredNegotiatedSerializer()
-		if err != nil {
-			return nil, fmt.Errorf("could not get Kubernetes config: %w", err)
-		}
 		g.restConfig = restConfig
+
+		for _, opt := range g.opts {
+			opt(g)
+		}
 	}
 	return g.restConfig, nil
 }
@@ -75,13 +99,9 @@ func (g *Clientset) ToRESTConfig() (*rest.Config, error) {
 // ToDiscoveryClient returns a discovery client.
 func (g *Clientset) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
 	if g.discoveryClient == nil {
-		restConfig, err := g.ToRESTConfig()
+		clientset, err := g.ToTypedClient()
 		if err != nil {
 			return nil, err
-		}
-		clientset, err := kubernetes.NewForConfig(restConfig)
-		if err != nil {
-			return nil, fmt.Errorf("could not get Kubernetes client: %w", err)
 		}
 		discoveryClient := &cachedDiscoveryInterface{clientset.DiscoveryClient}
 		g.discoveryClient = discoveryClient
@@ -128,6 +148,38 @@ func (g *Clientset) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 			&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: g.masterURL}})
 	}
 	return g.clientConfig
+}
+
+// ToTypedClient returns a typed Kubernetes client.
+func (g *Clientset) ToTypedClient() (*kubernetes.Clientset, error) {
+	if g.typedClient == nil {
+		restConfig, err := g.ToRESTConfig()
+		if err != nil {
+			return nil, err
+		}
+		typedClient, err := kubernetes.NewForConfig(restConfig)
+		if err != nil {
+			return nil, fmt.Errorf("could not get Kubernetes typedClient: %w", err)
+		}
+		g.typedClient = typedClient
+	}
+	return g.typedClient, nil
+}
+
+// ToDynamicClient returns a dynamic Kubernetes client.
+func (g *Clientset) ToDynamicClient() (*dynamic.DynamicClient, error) {
+	if g.dynamicClient == nil {
+		restConfig, err := g.ToRESTConfig()
+		if err != nil {
+			return nil, err
+		}
+		dynamicClient, err := dynamic.NewForConfig(restConfig)
+		if err != nil {
+			return nil, fmt.Errorf("could not get Kubernetes dynamicClient: %w", err)
+		}
+		g.dynamicClient = dynamicClient
+	}
+	return g.dynamicClient, nil
 }
 
 type cachedDiscoveryInterface struct {

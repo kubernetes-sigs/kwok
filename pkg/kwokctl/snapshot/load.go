@@ -66,20 +66,16 @@ type loader struct {
 func newLoader(kubeconfigPath string, resources []string) (*loader, error) {
 	clientset, err := client.NewClientset("", kubeconfigPath)
 	if err != nil {
-		return nil, err
-	}
-	restConfig, err := clientset.ToRESTConfig()
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create clientset: %w", err)
 	}
 
 	restMapper, err := clientset.ToRESTMapper()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create rest mapper: %w", err)
 	}
-	dynClient, err := dynamic.NewForConfig(restConfig)
+	dynClient, err := clientset.ToDynamicClient()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create dynamic client: %w", err)
 	}
 
 	filterMap := make(map[schema.GroupKind]struct{})

@@ -26,10 +26,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/client-go/util/flowcontrol"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -37,6 +33,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/server"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/path"
@@ -108,7 +105,16 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
-	clientset, err := newClientset(ctx, flags.Master, flags.Kubeconfig)
+	if flags.Kubeconfig == "" && flags.Master == "" {
+		logger.Warn("Neither --kubeconfig nor --master was specified")
+		logger.Info("Using the inClusterConfig")
+	}
+	clientset, err := client.NewClientset(flags.Master, flags.Kubeconfig)
+	if err != nil {
+		return err
+	}
+
+	typedClient, err := clientset.ToTypedClient()
 	if err != nil {
 		return err
 	}
@@ -126,7 +132,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		)
 	}
 
-	err = waitForReady(ctx, clientset)
+	err = waitForReady(ctx, typedClient)
 	if err != nil {
 		return err
 	}
@@ -149,7 +155,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	ctr, err := controllers.NewController(controllers.Config{
-		ClientSet:                             clientset,
+		ClientSet:                             typedClient,
 		EnableCNI:                             flags.Options.EnableCNI,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
@@ -209,41 +215,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	<-ctx.Done()
 	return nil
-}
-
-// buildConfigFromFlags is a helper function that builds configs from a master url or a kubeconfig filepath.
-func buildConfigFromFlags(ctx context.Context, masterURL, kubeconfigPath string) (*rest.Config, error) {
-	if kubeconfigPath == "" && masterURL == "" {
-		logger := log.FromContext(ctx)
-		logger.Warn("Neither --kubeconfig nor --master was specified")
-		logger.Info("Using the inClusterConfig")
-		kubeconfig, err := rest.InClusterConfig()
-		if err == nil {
-			return kubeconfig, nil
-		}
-		logger.Error("Creating inClusterConfig", err)
-		logger.Info("Falling back to default config")
-	}
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
-		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterURL}}).ClientConfig()
-}
-
-func newClientset(ctx context.Context, master, kubeconfig string) (kubernetes.Interface, error) {
-	cfg, err := buildConfigFromFlags(ctx, master, kubeconfig)
-	if err != nil {
-		return nil, err
-	}
-	err = setConfigDefaults(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return kubernetes.NewForConfig(cfg)
-}
-
-func setConfigDefaults(config *rest.Config) error {
-	config.RateLimiter = flowcontrol.NewFakeAlwaysRateLimiter()
-	return rest.SetKubernetesDefaults(config)
 }
 
 func filterStages(stages []*internalversion.Stage, apiGroup, kind string) []*internalversion.Stage {
