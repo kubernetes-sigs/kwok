@@ -87,6 +87,8 @@ type Config struct {
 	NodePort                              int
 	PodStages                             []*internalversion.Stage
 	NodeStages                            []*internalversion.Stage
+	PodPlayStageParallelism               uint
+	NodePlayStageParallelism              uint
 }
 
 // NewController creates a new fake kubelet controller
@@ -119,7 +121,7 @@ func NewController(conf Config) (*Controller, error) {
 	eventBroadcaster := record.NewBroadcaster()
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "kwok_controller"})
 
-	var lockPodsOnNodeFunc func(ctx context.Context, nodeName string) error
+	var onNodeManagedFunc func(ctx context.Context, nodeName string) error
 
 	nodes, err := NewNodeController(NodeControllerConfig{
 		ClientSet:                             conf.ClientSet,
@@ -130,13 +132,13 @@ func NewController(conf Config) (*Controller, error) {
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
 		ManageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
 		NodeSelectorFunc:                      nodeSelectorFunc,
-		LockPodsOnNodeFunc: func(ctx context.Context, nodeName string) error {
-			return lockPodsOnNodeFunc(ctx, nodeName)
+		OnNodeManagedFunc: func(ctx context.Context, nodeName string) error {
+			return onNodeManagedFunc(ctx, nodeName)
 		},
-		Stages:              conf.NodeStages,
-		LockNodeParallelism: 16,
-		FuncMap:             defaultFuncMap,
-		Recorder:            recorder,
+		Stages:               conf.NodeStages,
+		PlayStageParallelism: conf.NodePlayStageParallelism,
+		FuncMap:              defaultFuncMap,
+		Recorder:             recorder,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create nodes controller: %w", err)
@@ -150,7 +152,7 @@ func NewController(conf Config) (*Controller, error) {
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
 		Stages:                                conf.PodStages,
-		LockPodParallelism:                    16,
+		PlayStageParallelism:                  conf.PodPlayStageParallelism,
 		NodeGetFunc:                           nodes.Get,
 		FuncMap:                               defaultFuncMap,
 		Recorder:                              recorder,
@@ -159,7 +161,7 @@ func NewController(conf Config) (*Controller, error) {
 		return nil, fmt.Errorf("failed to create pods controller: %w", err)
 	}
 
-	lockPodsOnNodeFunc = pods.LockPodsOnNode
+	onNodeManagedFunc = pods.PlayStagePodsOnNode
 
 	n := &Controller{
 		pods:        pods,

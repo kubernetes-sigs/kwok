@@ -79,4 +79,10 @@ type KwokConfigurationOptions struct {
 
 	// EnableProfiling enables /debug/pprof handler.
 	EnableProfilingHandler bool
+
+	// PodPlayStageParallelism is the number of PodPlayStages that are allowed to run in parallel.
+	PodPlayStageParallelism uint
+
+	// NodePlayStageParallelism is the number of NodePlayStages that are allowed to run in parallel.
+	NodePlayStageParallelism uint
 }

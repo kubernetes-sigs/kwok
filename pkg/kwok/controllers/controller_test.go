@@ -79,11 +79,13 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage all nodes",
 			conf: Config{
-				ClientSet:      fake.NewSimpleClientset(nodes...),
-				ManageAllNodes: true,
-				NodeStages:     nodeStages,
-				PodStages:      podStages,
-				CIDR:           "10.0.0.1/24",
+				ClientSet:                fake.NewSimpleClientset(nodes...),
+				ManageAllNodes:           true,
+				NodeStages:               nodeStages,
+				PodStages:                podStages,
+				CIDR:                     "10.0.0.1/24",
+				NodePlayStageParallelism: 1,
+				PodPlayStageParallelism:  1,
 			},
 			wantNodePhase: map[string]corev1.NodePhase{
 				"node-0": corev1.NodeRunning,
@@ -100,6 +102,8 @@ func TestController(t *testing.T) {
 				NodeStages:                   nodeStages,
 				PodStages:                    podStages,
 				CIDR:                         "10.0.0.1/24",
+				NodePlayStageParallelism:     1,
+				PodPlayStageParallelism:      1,
 			},
 			wantNodePhase: map[string]corev1.NodePhase{
 				"node-0": corev1.NodeRunning,
@@ -116,6 +120,8 @@ func TestController(t *testing.T) {
 				NodeStages:                        nodeStages,
 				PodStages:                         podStages,
 				CIDR:                              "10.0.0.1/24",
+				NodePlayStageParallelism:          1,
+				PodPlayStageParallelism:           1,
 			},
 			wantNodePhase: map[string]corev1.NodePhase{
 				"node-0": corev1.NodePending,

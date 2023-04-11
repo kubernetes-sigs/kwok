@@ -166,6 +166,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		NodeIP:                                flags.Options.NodeIP,
 		NodeName:                              flags.Options.NodeName,
 		NodePort:                              flags.Options.NodePort,
+		PodPlayStageParallelism:               flags.Options.PodPlayStageParallelism,
+		NodePlayStageParallelism:              flags.Options.NodePlayStageParallelism,
 		NodeStages:                            nodeStages,
 		PodStages:                             podStages,
 	})
