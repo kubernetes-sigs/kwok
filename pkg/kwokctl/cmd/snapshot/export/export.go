@@ -70,6 +70,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 	defer func() {
 		_ = file.Close()
+		if err != nil {
+			_ = os.Remove(flags.Path)
+		}
 	}()
 
 	impersonateConfig := rest.ImpersonationConfig{
