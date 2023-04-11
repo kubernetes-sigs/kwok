@@ -134,7 +134,7 @@ function args() {
 function dry_run() {
   echo "${@}"
   if [[ "${DRY_RUN}" != "true" ]]; then
-    eval "${@}"
+    "${@}"
   fi
 }
 
