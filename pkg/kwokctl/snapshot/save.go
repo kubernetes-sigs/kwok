@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +31,7 @@ import (
 	"k8s.io/client-go/tools/pager"
 	"k8s.io/client-go/util/retry"
 
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
@@ -61,30 +63,53 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 		gvrs = append(gvrs, mapping.Resource)
 	}
 
+	logger := log.FromContext(ctx)
 	encoder := yaml.NewEncoder(w)
+	totalCount := 0
+	start := time.Now()
 	for _, gvr := range gvrs {
 		nri := dynClient.Resource(gvr)
+		logger := logger.With("resource", gvr.Resource)
 
+		start := time.Now()
+		page := 0
 		listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 			var list runtime.Object
 			var err error
+			page++
+			logger := logger.With("page", page, "limit", opts.Limit)
+			logger.Debug("Listing resource")
 			err = retry.OnError(retry.DefaultBackoff, retriable, func() error {
 				list, err = nri.List(ctx, opts)
+				if err != nil {
+					logger.Error("failed to list resource", err)
+				}
 				return err
 			})
 			return list, err
 		})
 
+		count := 0
 		if err := listPager.EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 			if o, ok := obj.(metav1.Object); ok {
 				clearUnstructured(o)
 			}
+			count++
 			return encoder.Encode(obj)
 		}); err != nil {
 			return fmt.Errorf("failed to list resource %q: %w", gvr.Resource, err)
 		}
+
+		logger.Debug("Listed resource",
+			"count", count,
+			"elapsed", time.Since(start),
+		)
 	}
 
+	logger.Info("Saved snapshot",
+		"count", totalCount,
+		"elapsed", time.Since(start),
+	)
 	return nil
 }
 

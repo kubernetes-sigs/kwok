@@ -29,6 +29,7 @@ import (
 // - a single string like "node" will be parsed as {resource: node}
 // - a two-section string like "daemonset.apps" will be parsed as {resource: dasemonset, group: apps}
 // - a three-section (or 3+) string like "foo.v1alpha1.example.com" will be parsed as {resource: foo, version: v1alpha1, group: example.com}
+// list all resources can use: kubectl api-resources -o name
 var Resources = []string{
 	"namespace",
 	"node",
@@ -38,6 +39,10 @@ var Resources = []string{
 	"limitrange",
 	"runtimeclass.node.k8s.io",
 	"priorityclass.scheduling.k8s.io",
+	"clusterrolebindings.rbac.authorization.k8s.io",
+	"clusterroles.rbac.authorization.k8s.io",
+	"rolebindings.rbac.authorization.k8s.io",
+	"roles.rbac.authorization.k8s.io",
 	"daemonset.apps",
 	"deployment.apps",
 	"replicaset.apps",

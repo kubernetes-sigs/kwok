@@ -80,6 +80,12 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
+	defer func() {
+		if err != nil {
+			_ = os.Remove(flags.Path)
+		}
+	}()
+
 	switch flags.Format {
 	case "etcd":
 		err = rt.SnapshotRestore(ctx, flags.Path)

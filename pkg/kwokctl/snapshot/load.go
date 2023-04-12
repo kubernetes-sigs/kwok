@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sort"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -31,6 +33,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
@@ -40,7 +43,16 @@ func Load(ctx context.Context, kubeconfigPath string, r io.Reader, filters []str
 	if err != nil {
 		return err
 	}
-	return l.Load(ctx, r)
+	logger := log.FromContext(ctx)
+	start := time.Now()
+	err = l.Load(ctx, r)
+	if err != nil {
+		return err
+	}
+	logger.Info("Load Snapshot",
+		"elapsed", time.Since(start),
+	)
+	return nil
 }
 
 type uniqueKey struct {
@@ -105,7 +117,7 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 			return err
 		}
 		if !l.filter(obj) {
-			logger.Info("skipped",
+			logger.Warn("Skipped",
 				"resource", "filtered",
 				"kind", obj.GetKind(),
 				"name", log.KObj(obj),
@@ -121,14 +133,37 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 	}
 
 	// Print the skipped resources
+	pending := []*unstructured.Unstructured{}
+	exist := map[types.UID]struct{}{}
 	for _, pendingObjs := range l.pending {
 		for _, pendingObj := range pendingObjs {
-			logger.Info("skipped",
-				"resource", "missing owner",
-				"kind", pendingObj.GetKind(),
-				"name", log.KObj(pendingObj),
-			)
+			uid := pendingObj.GetUID()
+			if _, ok := exist[uid]; ok {
+				continue
+			}
+			exist[uid] = struct{}{}
+			pending = append(pending, pendingObj)
 		}
+	}
+	sort.Slice(pending, func(i, j int) bool {
+		return pending[i].GetUID() < pending[j].GetUID()
+	})
+
+	for _, pendingObj := range pending {
+		missing := l.getMissingOwnerReferences(pendingObj)
+		missingData := slices.Map(missing, func(or metav1.OwnerReference) ownerReference {
+			return ownerReference{
+				APIVersion: or.APIVersion,
+				Kind:       or.Kind,
+				Name:       or.Name,
+			}
+		})
+		logger.Warn("Skipped",
+			"resource", "missing owner",
+			"missing", missingData,
+			"kind", pendingObj.GetKind(),
+			"name", log.KObj(pendingObj),
+		)
 	}
 	return nil
 }
@@ -200,7 +235,7 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 
 	gvr, err := l.restMapper.ResourceFor(gvr)
 	if err != nil {
-		logger.Error("failed to get resource", err)
+		logger.Error("Failed to get resource", err)
 		return nil
 	}
 
@@ -215,21 +250,21 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 	newObj, err := ri.Create(ctx, obj, metav1.CreateOptions{FieldValidation: "Ignore"})
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
-			logger.Error("failed to create resource", err)
+			logger.Error("Failed to create resource", err)
 			return nil
 		}
 		newObj, err = ri.Update(ctx, obj, metav1.UpdateOptions{FieldValidation: "Ignore"})
 		if err != nil {
 			if apierrors.IsConflict(err) {
-				logger.Warn("conflict")
+				logger.Warn("Conflict")
 				return nil
 			}
-			logger.Error("failed to update resource", err)
+			logger.Error("Failed to update resource", err)
 			return nil
 		}
-		logger.Info("updated")
+		logger.Debug("Updated")
 	} else {
-		logger.Info("created")
+		logger.Debug("Created")
 	}
 	return newObj
 }
@@ -246,6 +281,27 @@ func (l *loader) hasAllOwnerReferences(obj *unstructured.Unstructured) bool {
 		}
 	}
 	return true
+}
+
+type ownerReference struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
+}
+
+func (l *loader) getMissingOwnerReferences(obj *unstructured.Unstructured) []metav1.OwnerReference {
+	ownerReferences := obj.GetOwnerReferences()
+	if len(ownerReferences) == 0 {
+		return nil
+	}
+	var missingOwnerReferences []metav1.OwnerReference
+	for _, ownerReference := range ownerReferences {
+		key := uniqueKeyFromOwnerReference(ownerReference)
+		if _, ok := l.exist[key]; !ok {
+			missingOwnerReferences = append(missingOwnerReferences, ownerReference)
+		}
+	}
+	return missingOwnerReferences
 }
 
 func (l *loader) updateOwnerReferences(obj *unstructured.Unstructured) {
