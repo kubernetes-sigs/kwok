@@ -27,7 +27,6 @@ import (
 
 	"github.com/nxadm/tail"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -39,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
 )
 
@@ -193,7 +193,7 @@ func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
 	kubectlPath, err := exec.LookPath("kubectl")
 	if err != nil {
 		kubectlPath = c.GetBinPath("kubectl" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0755, conf.QuietPull)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0750, conf.QuietPull)
 		if err != nil {
 			return "", err
 		}
@@ -239,7 +239,7 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		ready   bool
 	)
 	logger := log.FromContext(ctx)
-	waitErr = wait.PollImmediateWithContext(ctx, time.Second, timeout, func(ctx context.Context) (bool, error) {
+	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		ready, err = c.Ready(ctx)
 		if err != nil {
 			logger.Debug("Cluster is not ready",
@@ -247,7 +247,7 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 			)
 		}
 		return ready, nil
-	})
+	}, wait.WithTimeout(timeout), wait.WithImmediate())
 	if err != nil {
 		return err
 	}

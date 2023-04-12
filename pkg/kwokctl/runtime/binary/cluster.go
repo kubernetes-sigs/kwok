@@ -26,7 +26,6 @@ import (
 
 	"github.com/nxadm/tail"
 	"golang.org/x/sync/errgroup"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
@@ -41,6 +40,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 // Cluster is an implementation of Runtime for binary
@@ -68,37 +68,37 @@ func (c *Cluster) download(ctx context.Context) error {
 	conf := &config.Options
 
 	kubeApiserverPath := c.GetBinPath("kube-apiserver" + conf.BinSuffix)
-	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeApiserverBinary, kubeApiserverPath, 0755, conf.QuietPull)
+	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeApiserverBinary, kubeApiserverPath, 0750, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
 	kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
-	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeControllerManagerBinary, kubeControllerManagerPath, 0755, conf.QuietPull)
+	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeControllerManagerBinary, kubeControllerManagerPath, 0750, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
 	kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
-	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeSchedulerBinary, kubeSchedulerPath, 0755, conf.QuietPull)
+	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeSchedulerBinary, kubeSchedulerPath, 0750, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
 	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
-	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KwokControllerBinary, kwokControllerPath, 0755, conf.QuietPull)
+	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KwokControllerBinary, kwokControllerPath, 0750, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
 	etcdPath := c.GetBinPath("etcd" + conf.BinSuffix)
 	if conf.EtcdBinary == "" {
-		err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdPath, "etcd"+conf.BinSuffix, 0755, conf.QuietPull, true)
+		err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdPath, "etcd"+conf.BinSuffix, 0750, conf.QuietPull, true)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdBinary, etcdPath, 0755, conf.QuietPull)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdBinary, etcdPath, 0750, conf.QuietPull)
 		if err != nil {
 			return err
 		}
@@ -107,12 +107,12 @@ func (c *Cluster) download(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		prometheusPath := c.GetBinPath("prometheus" + conf.BinSuffix)
 		if conf.PrometheusBinary == "" {
-			err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.PrometheusBinaryTar, prometheusPath, "prometheus"+conf.BinSuffix, 0755, conf.QuietPull, true)
+			err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.PrometheusBinaryTar, prometheusPath, "prometheus"+conf.BinSuffix, 0750, conf.QuietPull, true)
 			if err != nil {
 				return err
 			}
 		} else {
-			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.PrometheusBinary, prometheusPath, 0755, conf.QuietPull)
+			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.PrometheusBinary, prometheusPath, 0750, conf.QuietPull)
 			if err != nil {
 				return err
 			}
@@ -509,7 +509,7 @@ func (c *Cluster) startComponents(ctx context.Context, cs []internalversion.Comp
 
 	logger := log.FromContext(ctx)
 
-	err = wait.PollImmediateUntilWithContext(ctx, 1*time.Second, func(ctx context.Context) (bool, error) {
+	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		for i, group := range groups {
 			if len(group) == 1 {
 				if err = c.startComponent(ctx, group[0]); err != nil {
@@ -560,7 +560,7 @@ func (c *Cluster) startComponents(ctx context.Context, cs []internalversion.Comp
 			}
 		}
 		return true, nil
-	})
+	}, wait.WithTimeout(2*time.Minute), wait.WithImmediate())
 	if err != nil {
 		return err
 	}
@@ -777,7 +777,7 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	conf := &config.Options
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
+	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0750, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}

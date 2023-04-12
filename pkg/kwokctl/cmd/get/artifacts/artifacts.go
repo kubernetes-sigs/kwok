@@ -114,7 +114,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	} else {
 		for _, artifact := range artifacts {
-			fmt.Println(artifact)
+			_, _ = fmt.Println(artifact)
 		}
 	}
 	return nil
