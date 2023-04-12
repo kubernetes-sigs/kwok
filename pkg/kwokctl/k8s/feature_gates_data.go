@@ -32,10 +32,14 @@ var rawData = []FeatureSpec{
 	{"APIResponseCompression", Beta, 16, -1},
 
 	// APISelfSubjectReview
-	{"APISelfSubjectReview", Alpha, 26, -1},
+	{"APISelfSubjectReview", Alpha, 26, 26},
+	{"APISelfSubjectReview", Beta, 27, -1},
 
 	// Accelerators
 	{"Accelerators", Alpha, 6, 10},
+
+	// AdmissionWebhookMatchConditions
+	{"AdmissionWebhookMatchConditions", Alpha, 27, -1},
 
 	// AdvancedAuditing
 	{"AdvancedAuditing", Alpha, 7, 7},
@@ -46,7 +50,8 @@ var rawData = []FeatureSpec{
 	{"AffinityInAnnotations", Alpha, 6, 7},
 
 	// AggregatedDiscoveryEndpoint
-	{"AggregatedDiscoveryEndpoint", Alpha, 26, -1},
+	{"AggregatedDiscoveryEndpoint", Alpha, 26, 26},
+	{"AggregatedDiscoveryEndpoint", Beta, 27, -1},
 
 	// AllowInsecureBackendProxy
 	{"AllowInsecureBackendProxy", Beta, 17, 20},
@@ -113,17 +118,17 @@ var rawData = []FeatureSpec{
 	// CSIInlineVolume
 	{"CSIInlineVolume", Alpha, 14, 15},
 	{"CSIInlineVolume", Beta, 16, 24},
-	{"CSIInlineVolume", GA, 25, -1},
+	{"CSIInlineVolume", GA, 25, 26},
 
 	// CSIMigration
 	{"CSIMigration", Alpha, 14, 16},
 	{"CSIMigration", Beta, 17, 24},
-	{"CSIMigration", GA, 25, -1},
+	{"CSIMigration", GA, 25, 26},
 
 	// CSIMigrationAWS
 	{"CSIMigrationAWS", Alpha, 14, 16},
 	{"CSIMigrationAWS", Beta, 17, 24},
-	{"CSIMigrationAWS", GA, 25, -1},
+	{"CSIMigrationAWS", GA, 25, 26},
 
 	// CSIMigrationAWSComplete
 	{"CSIMigrationAWSComplete", Alpha, 17, 20},
@@ -131,7 +136,7 @@ var rawData = []FeatureSpec{
 	// CSIMigrationAzureDisk
 	{"CSIMigrationAzureDisk", Alpha, 15, 18},
 	{"CSIMigrationAzureDisk", Beta, 19, 23},
-	{"CSIMigrationAzureDisk", GA, 24, -1},
+	{"CSIMigrationAzureDisk", GA, 24, 26},
 
 	// CSIMigrationAzureDiskComplete
 	{"CSIMigrationAzureDiskComplete", Alpha, 17, 20},
@@ -175,7 +180,8 @@ var rawData = []FeatureSpec{
 	{"CSIMigrationvSphereComplete", Beta, 19, 21},
 
 	// CSINodeExpandSecret
-	{"CSINodeExpandSecret", Alpha, 25, -1},
+	{"CSINodeExpandSecret", Alpha, 25, 26},
+	{"CSINodeExpandSecret", Beta, 27, -1},
 
 	// CSINodeInfo
 	{"CSINodeInfo", Alpha, 12, 13},
@@ -209,6 +215,15 @@ var rawData = []FeatureSpec{
 	{"CSRDuration", Beta, 22, 23},
 	{"CSRDuration", GA, 24, 25},
 
+	// CloudControllerManagerWebhook
+	{"CloudControllerManagerWebhook", Alpha, 27, -1},
+
+	// CloudDualStackNodeIPs
+	{"CloudDualStackNodeIPs", Alpha, 27, -1},
+
+	// ClusterTrustBundle
+	{"ClusterTrustBundle", Alpha, 27, -1},
+
 	// ConfigurableFSGroupPolicy
 	{"ConfigurableFSGroupPolicy", Alpha, 18, 19},
 	{"ConfigurableFSGroupPolicy", Beta, 20, 22},
@@ -222,7 +237,7 @@ var rawData = []FeatureSpec{
 
 	// ControllerManagerLeaderMigration
 	{"ControllerManagerLeaderMigration", Beta, 22, 23},
-	{"ControllerManagerLeaderMigration", GA, 24, -1},
+	{"ControllerManagerLeaderMigration", GA, 24, 26},
 
 	// CronJobControllerV2
 	{"CronJobControllerV2", Alpha, 20, 20},
@@ -231,7 +246,8 @@ var rawData = []FeatureSpec{
 
 	// CronJobTimeZone
 	{"CronJobTimeZone", Alpha, 24, 24},
-	{"CronJobTimeZone", Beta, 25, -1},
+	{"CronJobTimeZone", Beta, 25, 26},
+	{"CronJobTimeZone", GA, 27, -1},
 
 	// CrossNamespaceVolumeDataSource
 	{"CrossNamespaceVolumeDataSource", Alpha, 26, -1},
@@ -273,7 +289,7 @@ var rawData = []FeatureSpec{
 	// DaemonSetUpdateSurge
 	{"DaemonSetUpdateSurge", Alpha, 21, 21},
 	{"DaemonSetUpdateSurge", Beta, 22, 24},
-	{"DaemonSetUpdateSurge", GA, 25, -1},
+	{"DaemonSetUpdateSurge", GA, 25, 26},
 
 	// DebugContainers
 	{"DebugContainers", Alpha, 8, 15},
@@ -310,7 +326,8 @@ var rawData = []FeatureSpec{
 
 	// DownwardAPIHugePages
 	{"DownwardAPIHugePages", Alpha, 20, 20},
-	{"DownwardAPIHugePages", Beta, 21, -1},
+	{"DownwardAPIHugePages", Beta, 21, 26},
+	{"DownwardAPIHugePages", GA, 27, -1},
 
 	// DryRun
 	{"DryRun", Alpha, 12, 12},
@@ -333,6 +350,9 @@ var rawData = []FeatureSpec{
 
 	// DynamicVolumeProvisioning
 	{"DynamicVolumeProvisioning", Alpha, 6, 7},
+
+	// ElasticIndexedJob
+	{"ElasticIndexedJob", Beta, 27, -1},
 
 	// EnableAggregatedDiscoveryTimeout
 	{"EnableAggregatedDiscoveryTimeout", Deprecated, 16, 16},
@@ -362,7 +382,7 @@ var rawData = []FeatureSpec{
 	// EphemeralContainers
 	{"EphemeralContainers", Alpha, 16, 22},
 	{"EphemeralContainers", Beta, 23, 24},
-	{"EphemeralContainers", GA, 25, -1},
+	{"EphemeralContainers", GA, 25, 26},
 
 	// EvenPodsSpread
 	{"EvenPodsSpread", Alpha, 16, 17},
@@ -370,7 +390,8 @@ var rawData = []FeatureSpec{
 	{"EvenPodsSpread", GA, 19, 20},
 
 	// EventedPLEG
-	{"EventedPLEG", Alpha, 26, -1},
+	{"EventedPLEG", Alpha, 26, 26},
+	{"EventedPLEG", Beta, 27, -1},
 
 	// ExecProbeTimeout
 	{"ExecProbeTimeout", GA, 20, -1},
@@ -378,17 +399,17 @@ var rawData = []FeatureSpec{
 	// ExpandCSIVolumes
 	{"ExpandCSIVolumes", Alpha, 14, 15},
 	{"ExpandCSIVolumes", Beta, 16, 23},
-	{"ExpandCSIVolumes", GA, 24, -1},
+	{"ExpandCSIVolumes", GA, 24, 26},
 
 	// ExpandInUsePersistentVolumes
 	{"ExpandInUsePersistentVolumes", Alpha, 11, 14},
 	{"ExpandInUsePersistentVolumes", Beta, 15, 23},
-	{"ExpandInUsePersistentVolumes", GA, 24, -1},
+	{"ExpandInUsePersistentVolumes", GA, 24, 26},
 
 	// ExpandPersistentVolumes
 	{"ExpandPersistentVolumes", Alpha, 8, 10},
 	{"ExpandPersistentVolumes", Beta, 11, 23},
-	{"ExpandPersistentVolumes", GA, 24, -1},
+	{"ExpandPersistentVolumes", GA, 24, 26},
 
 	// ExpandedDNSConfig
 	{"ExpandedDNSConfig", Alpha, 22, 25},
@@ -413,7 +434,8 @@ var rawData = []FeatureSpec{
 
 	// GRPCContainerProbe
 	{"GRPCContainerProbe", Alpha, 23, 23},
-	{"GRPCContainerProbe", Beta, 24, -1},
+	{"GRPCContainerProbe", Beta, 24, 26},
+	{"GRPCContainerProbe", GA, 27, -1},
 
 	// GenericEphemeralVolume
 	{"GenericEphemeralVolume", Alpha, 19, 20},
@@ -429,7 +451,8 @@ var rawData = []FeatureSpec{
 	{"GracefulNodeShutdownBasedOnPodPriority", Beta, 24, -1},
 
 	// HPAContainerMetrics
-	{"HPAContainerMetrics", Alpha, 20, -1},
+	{"HPAContainerMetrics", Alpha, 20, 26},
+	{"HPAContainerMetrics", Beta, 27, -1},
 
 	// HPAScaleToZero
 	{"HPAScaleToZero", Alpha, 16, -1},
@@ -452,7 +475,8 @@ var rawData = []FeatureSpec{
 	{"HyperVContainer", Deprecated, 20, 20},
 
 	// IPTablesOwnershipCleanup
-	{"IPTablesOwnershipCleanup", Alpha, 25, -1},
+	{"IPTablesOwnershipCleanup", Alpha, 25, 26},
+	{"IPTablesOwnershipCleanup", Beta, 27, -1},
 
 	// IPv6DualStack
 	{"IPv6DualStack", Alpha, 16, 20},
@@ -462,12 +486,15 @@ var rawData = []FeatureSpec{
 	// IdentifyPodOS
 	{"IdentifyPodOS", Alpha, 23, 23},
 	{"IdentifyPodOS", Beta, 24, 24},
-	{"IdentifyPodOS", GA, 25, -1},
+	{"IdentifyPodOS", GA, 25, 26},
 
 	// ImmutableEphemeralVolumes
 	{"ImmutableEphemeralVolumes", Alpha, 18, 18},
 	{"ImmutableEphemeralVolumes", Beta, 19, 20},
 	{"ImmutableEphemeralVolumes", GA, 21, 23},
+
+	// InPlacePodVerticalScaling
+	{"InPlacePodVerticalScaling", Alpha, 27, -1},
 
 	// InTreePluginAWSUnregister
 	{"InTreePluginAWSUnregister", Alpha, 21, -1},
@@ -507,7 +534,8 @@ var rawData = []FeatureSpec{
 	{"Initializers", Alpha, 8, 13},
 
 	// JobMutableNodeSchedulingDirectives
-	{"JobMutableNodeSchedulingDirectives", Beta, 23, -1},
+	{"JobMutableNodeSchedulingDirectives", Beta, 23, 26},
+	{"JobMutableNodeSchedulingDirectives", GA, 27, -1},
 
 	// JobPodFailurePolicy
 	{"JobPodFailurePolicy", Alpha, 25, 25},
@@ -542,12 +570,19 @@ var rawData = []FeatureSpec{
 	{"KubeletPodResources", Alpha, 13, 14},
 	{"KubeletPodResources", Beta, 15, -1},
 
+	// KubeletPodResourcesDynamicResources
+	{"KubeletPodResourcesDynamicResources", Alpha, 27, -1},
+
+	// KubeletPodResourcesGet
+	{"KubeletPodResourcesGet", Alpha, 27, -1},
+
 	// KubeletPodResourcesGetAllocatable
 	{"KubeletPodResourcesGetAllocatable", Alpha, 21, 22},
 	{"KubeletPodResourcesGetAllocatable", Beta, 23, -1},
 
 	// KubeletTracing
-	{"KubeletTracing", Alpha, 25, -1},
+	{"KubeletTracing", Alpha, 25, 26},
+	{"KubeletTracing", Beta, 27, -1},
 
 	// LegacyNodeRoleBehavior
 	{"LegacyNodeRoleBehavior", Alpha, 16, 18},
@@ -559,12 +594,13 @@ var rawData = []FeatureSpec{
 	{"LegacyServiceAccountTokenNoAutoGeneration", GA, 26, -1},
 
 	// LegacyServiceAccountTokenTracking
-	{"LegacyServiceAccountTokenTracking", Alpha, 26, -1},
+	{"LegacyServiceAccountTokenTracking", Alpha, 26, 26},
+	{"LegacyServiceAccountTokenTracking", Beta, 27, -1},
 
 	// LocalStorageCapacityIsolation
 	{"LocalStorageCapacityIsolation", Alpha, 7, 9},
 	{"LocalStorageCapacityIsolation", Beta, 10, 24},
-	{"LocalStorageCapacityIsolation", GA, 25, -1},
+	{"LocalStorageCapacityIsolation", GA, 25, 26},
 
 	// LocalStorageCapacityIsolationFSQuotaMonitoring
 	{"LocalStorageCapacityIsolationFSQuotaMonitoring", Alpha, 15, -1},
@@ -574,7 +610,8 @@ var rawData = []FeatureSpec{
 	{"LogarithmicScaleDown", Beta, 22, -1},
 
 	// MatchLabelKeysInPodTopologySpread
-	{"MatchLabelKeysInPodTopologySpread", Alpha, 25, -1},
+	{"MatchLabelKeysInPodTopologySpread", Alpha, 25, 26},
+	{"MatchLabelKeysInPodTopologySpread", Beta, 27, -1},
 
 	// MaxUnavailableStatefulSet
 	{"MaxUnavailableStatefulSet", Alpha, 24, -1},
@@ -591,7 +628,8 @@ var rawData = []FeatureSpec{
 	{"MinDomainsInPodTopologySpread", Beta, 25, -1},
 
 	// MinimizeIPTablesRestore
-	{"MinimizeIPTablesRestore", Alpha, 26, -1},
+	{"MinimizeIPTablesRestore", Alpha, 26, 26},
+	{"MinimizeIPTablesRestore", Beta, 27, -1},
 
 	// MixedProtocolLBService
 	{"MixedProtocolLBService", Alpha, 20, 23},
@@ -609,6 +647,9 @@ var rawData = []FeatureSpec{
 	// MultiCIDRRangeAllocator
 	{"MultiCIDRRangeAllocator", Alpha, 25, -1},
 
+	// MultiCIDRServiceAllocator
+	{"MultiCIDRServiceAllocator", Alpha, 27, -1},
+
 	// NamespaceDefaultLabelName
 	{"NamespaceDefaultLabelName", Beta, 21, 21},
 	{"NamespaceDefaultLabelName", GA, 22, 23},
@@ -616,10 +657,13 @@ var rawData = []FeatureSpec{
 	// NetworkPolicyEndPort
 	{"NetworkPolicyEndPort", Alpha, 21, 21},
 	{"NetworkPolicyEndPort", Beta, 22, 24},
-	{"NetworkPolicyEndPort", GA, 25, -1},
+	{"NetworkPolicyEndPort", GA, 25, 26},
 
 	// NetworkPolicyStatus
 	{"NetworkPolicyStatus", Alpha, 24, -1},
+
+	// NewVolumeManagerReconstruction
+	{"NewVolumeManagerReconstruction", Beta, 27, -1},
 
 	// NodeDisruptionExclusion
 	{"NodeDisruptionExclusion", Alpha, 16, 18},
@@ -634,6 +678,9 @@ var rawData = []FeatureSpec{
 	{"NodeLease", Alpha, 12, 13},
 	{"NodeLease", Beta, 14, 16},
 	{"NodeLease", GA, 17, 22},
+
+	// NodeLogQuery
+	{"NodeLogQuery", Alpha, 27, -1},
 
 	// NodeOutOfServiceVolumeDetach
 	{"NodeOutOfServiceVolumeDetach", Alpha, 24, 25},
@@ -653,10 +700,12 @@ var rawData = []FeatureSpec{
 
 	// OpenAPIV3
 	{"OpenAPIV3", Alpha, 23, 23},
-	{"OpenAPIV3", Beta, 24, -1},
+	{"OpenAPIV3", Beta, 24, 26},
+	{"OpenAPIV3", GA, 27, -1},
 
 	// PDBUnhealthyPodEvictionPolicy
-	{"PDBUnhealthyPodEvictionPolicy", Alpha, 26, -1},
+	{"PDBUnhealthyPodEvictionPolicy", Alpha, 26, 26},
+	{"PDBUnhealthyPodEvictionPolicy", Beta, 27, -1},
 
 	// PVCProtection
 	{"PVCProtection", Alpha, 9, 9},
@@ -704,7 +753,8 @@ var rawData = []FeatureSpec{
 	{"PodReadinessGates", GA, 14, 15},
 
 	// PodSchedulingReadiness
-	{"PodSchedulingReadiness", Alpha, 26, -1},
+	{"PodSchedulingReadiness", Alpha, 26, 26},
+	{"PodSchedulingReadiness", Beta, 27, -1},
 
 	// PodSecurity
 	{"PodSecurity", Alpha, 22, 22},
@@ -739,7 +789,8 @@ var rawData = []FeatureSpec{
 	{"ReadOnlyAPIDataVolumes", Deprecated, 7, 11},
 
 	// ReadWriteOncePod
-	{"ReadWriteOncePod", Alpha, 22, -1},
+	{"ReadWriteOncePod", Alpha, 22, 26},
+	{"ReadWriteOncePod", Beta, 27, -1},
 
 	// RecoverVolumeExpansionFailure
 	{"RecoverVolumeExpansionFailure", Alpha, 23, -1},
@@ -788,7 +839,8 @@ var rawData = []FeatureSpec{
 	{"SCTPSupport", GA, 20, 21},
 
 	// SELinuxMountReadWriteOncePod
-	{"SELinuxMountReadWriteOncePod", Alpha, 25, -1},
+	{"SELinuxMountReadWriteOncePod", Alpha, 25, 26},
+	{"SELinuxMountReadWriteOncePod", Beta, 27, -1},
 
 	// ScheduleDaemonSetPods
 	{"ScheduleDaemonSetPods", Alpha, 10, 11},
@@ -797,7 +849,11 @@ var rawData = []FeatureSpec{
 
 	// SeccompDefault
 	{"SeccompDefault", Alpha, 22, 24},
-	{"SeccompDefault", Beta, 25, -1},
+	{"SeccompDefault", Beta, 25, 26},
+	{"SeccompDefault", GA, 27, -1},
+
+	// SecurityContextDeny
+	{"SecurityContextDeny", Alpha, 27, -1},
 
 	// ServerSideApply
 	{"ServerSideApply", Alpha, 14, 15},
@@ -806,7 +862,8 @@ var rawData = []FeatureSpec{
 
 	// ServerSideFieldValidation
 	{"ServerSideFieldValidation", Alpha, 23, 24},
-	{"ServerSideFieldValidation", Beta, 25, -1},
+	{"ServerSideFieldValidation", Beta, 25, 26},
+	{"ServerSideFieldValidation", GA, 27, -1},
 
 	// ServiceAccountIssuerDiscovery
 	{"ServiceAccountIssuerDiscovery", Alpha, 18, 19},
@@ -848,6 +905,9 @@ var rawData = []FeatureSpec{
 	{"ServiceNodeExclusion", Beta, 19, 20},
 	{"ServiceNodeExclusion", GA, 21, 21},
 
+	// ServiceNodePortStaticSubrange
+	{"ServiceNodePortStaticSubrange", Alpha, 27, -1},
+
 	// ServiceProxyAllowExternalIPs
 	{"ServiceProxyAllowExternalIPs", Deprecated, 7, 11},
 
@@ -863,21 +923,26 @@ var rawData = []FeatureSpec{
 	{"SizeMemoryBackedVolumes", Alpha, 20, 21},
 	{"SizeMemoryBackedVolumes", Beta, 22, -1},
 
+	// StableLoadBalancerNodeSet
+	{"StableLoadBalancerNodeSet", Beta, 27, -1},
+
 	// StartupProbe
 	{"StartupProbe", Alpha, 16, 17},
 	{"StartupProbe", Beta, 18, 19},
 	{"StartupProbe", GA, 20, 22},
 
 	// StatefulSetAutoDeletePVC
-	{"StatefulSetAutoDeletePVC", Alpha, 23, -1},
+	{"StatefulSetAutoDeletePVC", Alpha, 23, 26},
+	{"StatefulSetAutoDeletePVC", Beta, 27, -1},
 
 	// StatefulSetMinReadySeconds
 	{"StatefulSetMinReadySeconds", Alpha, 22, 22},
 	{"StatefulSetMinReadySeconds", Beta, 23, 24},
-	{"StatefulSetMinReadySeconds", GA, 25, -1},
+	{"StatefulSetMinReadySeconds", GA, 25, 26},
 
 	// StatefulSetStartOrdinal
-	{"StatefulSetStartOrdinal", Alpha, 26, -1},
+	{"StatefulSetStartOrdinal", Alpha, 26, 26},
+	{"StatefulSetStartOrdinal", Beta, 27, -1},
 
 	// StorageObjectInUseProtection
 	{"StorageObjectInUseProtection", Beta, 10, 10},
@@ -942,7 +1007,8 @@ var rawData = []FeatureSpec{
 
 	// TopologyManager
 	{"TopologyManager", Alpha, 16, 17},
-	{"TopologyManager", Beta, 18, -1},
+	{"TopologyManager", Beta, 18, 26},
+	{"TopologyManager", GA, 27, -1},
 
 	// TopologyManagerPolicyAlphaOptions
 	{"TopologyManagerPolicyAlphaOptions", Alpha, 26, -1},
