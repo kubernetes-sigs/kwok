@@ -46,6 +46,11 @@ func NewVersion(major, minor, patch uint64) Version {
 	}
 }
 
+// ParseVersion parses the version.
+func ParseVersion(s string) (Version, error) {
+	return semver.ParseTolerant(s)
+}
+
 // ParseFromOutput parses the version from the output.
 func ParseFromOutput(s string) (Version, error) {
 	s = strings.ToLower(s)

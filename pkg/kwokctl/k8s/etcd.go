@@ -47,7 +47,7 @@ var etcdVersions = map[int]string{
 // GetEtcdVersion returns the etcd version for the given k8s version
 func GetEtcdVersion(version int) string {
 	if version < 0 {
-		return "unknown"
+		version = math.MaxInt
 	}
 	v, ok := etcdVersions[version]
 	if ok {
