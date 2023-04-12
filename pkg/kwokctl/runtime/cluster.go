@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/nxadm/tail"
@@ -127,8 +128,35 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
-	if len(others) != 0 {
-		objs = append(objs, others...)
+	const kwokControllerMountPrefix = "/var/components/controller"
+	for _, obj := range others {
+		switch obj := obj.(type) {
+		case *internalversion.ClusterLogs:
+			for i := range obj.Spec.Logs {
+				expandedPath, err := path.Expand(obj.Spec.Logs[i].LogsFile)
+				if err != nil {
+					return err
+				}
+				logVolumePrefix := ""
+				if c.conf.Options.Runtime == consts.RuntimeTypeKind && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
+					logVolumePrefix = kwokControllerMountPrefix
+				}
+				obj.Spec.Logs[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
+			}
+		case *internalversion.Logs:
+			for i := range obj.Spec.Logs {
+				expandedPath, err := path.Expand(obj.Spec.Logs[i].LogsFile)
+				if err != nil {
+					return err
+				}
+				logVolumePrefix := ""
+				if c.conf.Options.Runtime == consts.RuntimeTypeKind && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
+					logVolumePrefix = kwokControllerMountPrefix
+				}
+				obj.Spec.Logs[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
+			}
+		}
+		objs = append(objs, obj)
 	}
 
 	if updateFrequency := c.conf.Options.NodeStatusUpdateFrequencyMilliseconds; updateFrequency > 0 &&

@@ -39,7 +39,7 @@ type BuildKwokControllerComponentConfig struct {
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
-func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (component internalversion.Component, err error) {
+func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (component internalversion.Component) {
 	kwokControllerArgs := []string{
 		"--manage-all-nodes=true",
 	}
@@ -73,6 +73,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 				ReadOnly:  true,
 			},
 		)
+
 		if conf.Port != 0 {
 			ports = append(ports,
 				internalversion.Port{
@@ -113,5 +114,5 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
-	}, nil
+	}
 }

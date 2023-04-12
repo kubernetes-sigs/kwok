@@ -349,7 +349,15 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to expand host volumes for kwok controller component: %w", err)
 	}
-	kwokControllerComponent, err := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
+
+	logVolumes, err := runtime.GetLogVolumes(ctx)
+	if err != nil {
+		return err
+	}
+	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
+	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, logVolumes...)
+
+	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Workdir:        workdir,
 		Image:          conf.KwokControllerImage,
 		Version:        kwokControllerVersion,
@@ -360,11 +368,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminKeyPath:   adminKeyPath,
 		NodeName:       c.Name() + "-kwok-controller",
 		ExtraArgs:      kwokControllerComponentPatches.ExtraArgs,
-		ExtraVolumes:   kwokControllerComponentPatches.ExtraVolumes,
+		ExtraVolumes:   kwokControllerExtraVolumes,
 	})
-	if err != nil {
-		return err
-	}
 	config.Components = append(config.Components, kwokControllerComponent)
 
 	// Configure the prometheus

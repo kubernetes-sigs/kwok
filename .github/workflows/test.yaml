@@ -259,6 +259,11 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_exec
 
+      - name: Test Log
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_logs
+
       - name: Test Extra
         shell: bash
         run: |

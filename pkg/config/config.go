@@ -177,6 +177,28 @@ func Load(ctx context.Context, src ...string) ([]metav1.Object, error) {
 				return nil, err
 			}
 			objs = append(objs, out)
+		case v1alpha1.ClusterLogsKind:
+			obj := &v1alpha1.ClusterLogs{}
+			err = json.Unmarshal(raw, &obj)
+			if err != nil {
+				return nil, err
+			}
+			out, err := internalversion.ConvertToInternalClusterLogs(obj)
+			if err != nil {
+				return nil, err
+			}
+			objs = append(objs, out)
+		case v1alpha1.LogsKind:
+			obj := &v1alpha1.Logs{}
+			err = json.Unmarshal(raw, &obj)
+			if err != nil {
+				return nil, err
+			}
+			out, err := internalversion.ConvertToInternalLogs(obj)
+			if err != nil {
+				return nil, err
+			}
+			objs = append(objs, out)
 		}
 	}
 
@@ -254,6 +276,16 @@ func Save(ctx context.Context, path string, objs []metav1.Object) error {
 			}
 		case *internalversion.Exec:
 			obj, err = internalversion.ConvertToV1Alpha1Exec(o)
+			if err != nil {
+				return err
+			}
+		case *internalversion.ClusterLogs:
+			obj, err = internalversion.ConvertToV1Alpha1ClusterLogs(o)
+			if err != nil {
+				return err
+			}
+		case *internalversion.Logs:
+			obj, err = internalversion.ConvertToV1Alpha1Logs(o)
 			if err != nil {
 				return err
 			}

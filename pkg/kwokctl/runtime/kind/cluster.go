@@ -116,6 +116,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
 	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
+	extraLogVolumes, err := runtime.GetLogVolumes(ctx)
+	if err != nil {
+		return err
+	}
+	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
+	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, extraLogVolumes...)
 	kindYaml, err := BuildKind(BuildKindConfig{
 		KubeApiserverPort:             conf.KubeApiserverPort,
 		EtcdPort:                      conf.EtcdPort,
@@ -137,7 +143,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		SchedulerExtraVolumes:         kubeSchedulerComponentPatches.ExtraVolumes,
 		ControllerManagerExtraArgs:    kubeControllerManagerComponentPatches.ExtraArgs,
 		ControllerManagerExtraVolumes: kubeControllerManagerComponentPatches.ExtraVolumes,
-		KwokControllerExtraVolumes:    kwokControllerComponentPatches.ExtraVolumes,
+		KwokControllerExtraVolumes:    kwokControllerExtraVolumes,
 	})
 	if err != nil {
 		return err
@@ -151,7 +157,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		KwokControllerImage: conf.KwokControllerImage,
 		Name:                c.Name(),
 		ExtraArgs:           kwokControllerComponentPatches.ExtraArgs,
-		ExtraVolumes:        kwokControllerComponentPatches.ExtraVolumes,
+		ExtraVolumes:        kwokControllerExtraVolumes,
 	})
 	if err != nil {
 		return err

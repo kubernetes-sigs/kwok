@@ -17,7 +17,13 @@ limitations under the License.
 package runtime
 
 import (
+	"context"
+	"fmt"
+	"path/filepath"
+	"strings"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
@@ -42,4 +48,48 @@ func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion
 		result = append(result, v)
 	}
 	return result, nil
+}
+
+// GetLogVolumes returns volumes for Logs and ClusterLogs resource.
+func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
+	logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
+	clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
+
+	// Mount log dirs
+	mountDirs := make(map[string]struct{})
+	for _, log := range logs {
+		for _, l := range log.Spec.Logs {
+			abs, err := path.Expand(l.LogsFile)
+			if err != nil {
+				return nil, err
+			}
+			mountDirs[filepath.Dir(abs)] = struct{}{}
+		}
+	}
+
+	for _, cl := range clusterLogs {
+		for _, l := range cl.Spec.Logs {
+			abs, err := path.Expand(l.LogsFile)
+			if err != nil {
+				return nil, err
+			}
+			mountDirs[filepath.Dir(abs)] = struct{}{}
+		}
+	}
+
+	volumes := make([]internalversion.Volume, 0, len(mountDirs))
+	i := 0
+	for dir := range mountDirs {
+		dirPath := strings.TrimPrefix(dir, "/var/components/controller")
+		volumes = append(volumes, internalversion.Volume{
+			Name:      fmt.Sprintf("log-volume-%d", i),
+			HostPath:  dirPath,
+			MountPath: dirPath,
+			PathType:  internalversion.HostPathDirectoryOrCreate,
+			ReadOnly:  true,
+		})
+		i++
+	}
+
+	return volumes, nil
 }

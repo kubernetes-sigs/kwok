@@ -380,7 +380,15 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
-	kwokControllerComponent, err := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
+
+	logVolumes, err := runtime.GetLogVolumes(ctx)
+	if err != nil {
+		return err
+	}
+	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
+	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, logVolumes...)
+
+	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Workdir:        workdir,
 		Binary:         kwokControllerPath,
 		Version:        kwokControllerVersion,
@@ -391,7 +399,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminKeyPath:   adminKeyPath,
 		NodeName:       "localhost",
 		ExtraArgs:      kwokControllerComponentPatches.ExtraArgs,
-		ExtraVolumes:   kwokControllerComponentPatches.ExtraVolumes,
+		ExtraVolumes:   kwokControllerExtraVolumes,
 	})
 	if err != nil {
 		return err

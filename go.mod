@@ -9,6 +9,7 @@ require (
 	github.com/containernetworking/plugins v1.2.0
 	github.com/creack/pty v1.1.18
 	github.com/emicklei/go-restful/v3 v3.10.1
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/itchyny/gojq v0.12.11
 	github.com/nxadm/tail v1.4.8
@@ -28,6 +29,7 @@ require (
 	k8s.io/apiserver v0.26.0
 	k8s.io/client-go v0.26.0
 	k8s.io/code-generator v0.26.0
+	k8s.io/cri-api v0.26.3
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -41,7 +43,6 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20221103125252-ebfa2a0ac0a9 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
@@ -80,6 +81,8 @@ require (
 	golang.org/x/time v0.2.0 // indirect
 	golang.org/x/tools v0.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20220502173005-c8bf987b8c21 // indirect
+	google.golang.org/grpc v1.49.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
