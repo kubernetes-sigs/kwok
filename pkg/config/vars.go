@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"runtime"
-	"strconv"
 	"strings"
 
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
@@ -32,6 +31,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 var (
@@ -147,7 +147,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 	conf.KubeVersion = addPrefixV(envs.GetEnvWithPrefix("KUBE_VERSION", conf.KubeVersion))
 
 	if conf.SecurePort == nil {
-		conf.SecurePort = format.Ptr(parseRelease(conf.KubeVersion) > 12)
+		minor := parseRelease(conf.KubeVersion)
+		conf.SecurePort = format.Ptr(minor > 12 || minor == -1)
 	}
 	conf.SecurePort = format.Ptr(envs.GetEnvWithPrefix("SECURE_PORT", *conf.SecurePort))
 
@@ -432,16 +433,12 @@ func joinImageURI(prefix, name, version string) string {
 }
 
 // parseRelease returns the release of the version.
-func parseRelease(version string) int {
-	release := strings.Split(version, ".")
-	if len(release) < 2 {
-		return -1
-	}
-	r, err := strconv.ParseInt(release[1], 10, 64)
+func parseRelease(ver string) int {
+	v, err := version.ParseVersion(ver)
 	if err != nil {
 		return -1
 	}
-	return int(r)
+	return int(v.Minor)
 }
 
 // trimPrefixV returns the version without the prefix 'v'.
