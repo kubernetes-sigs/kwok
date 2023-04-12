@@ -51,7 +51,7 @@ func runE(ctx context.Context) error {
 		logger.Info("No clusters found")
 	} else {
 		for _, cluster := range clusters {
-			fmt.Println(cluster)
+			_, _ = fmt.Println(cluster)
 		}
 	}
 	return nil

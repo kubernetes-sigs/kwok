@@ -24,7 +24,6 @@ import (
 
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -38,6 +37,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
 )
 
@@ -235,8 +235,9 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 		Jitter:   0.1,
 		Steps:    5,
 	}
-	err := wait.ExponentialBackoffWithContext(ctx, backoff,
-		func() (bool, error) {
+
+	err := wait.Poll(ctx,
+		func(ctx context.Context) (bool, error) {
 			_, err := clientset.CoreV1().Nodes().List(ctx,
 				metav1.ListOptions{
 					Limit: 1,
@@ -247,6 +248,7 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 			}
 			return true, nil
 		},
+		wait.WithExponentialBackoff(&backoff),
 	)
 	if err != nil {
 		return err

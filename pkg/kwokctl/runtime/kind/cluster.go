@@ -27,7 +27,6 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
@@ -38,6 +37,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/image"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 // Cluster is an implementation of Runtime for kind
@@ -368,7 +368,7 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		ready   bool
 	)
 	logger := log.FromContext(ctx)
-	waitErr = wait.PollImmediateWithContext(ctx, time.Second, timeout, func(ctx context.Context) (bool, error) {
+	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		ready, err = c.Ready(ctx)
 		if err != nil {
 			logger.Debug("Cluster is not ready",
@@ -376,7 +376,7 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 			)
 		}
 		return ready, nil
-	})
+	}, wait.WithTimeout(timeout), wait.WithImmediate())
 	if err != nil {
 		return err
 	}
@@ -488,7 +488,7 @@ func (c *Cluster) waitComponentReady(ctx context.Context, name string, timeout t
 		ready   bool
 	)
 	logger := log.FromContext(ctx)
-	waitErr = wait.PollImmediateWithContext(ctx, time.Second, timeout, func(ctx context.Context) (bool, error) {
+	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		ready, err = c.componentReady(ctx, name)
 		if err != nil {
 			logger.Debug("Component is not ready",
@@ -497,7 +497,7 @@ func (c *Cluster) waitComponentReady(ctx context.Context, name string, timeout t
 			)
 		}
 		return ready, nil
-	})
+	}, wait.WithTimeout(timeout), wait.WithImmediate())
 	if err != nil {
 		return err
 	}
@@ -540,7 +540,7 @@ func (c *Cluster) waitComponentDown(ctx context.Context, name string, timeout ti
 		down    bool
 	)
 	logger := log.FromContext(ctx)
-	waitErr = wait.PollImmediateWithContext(ctx, time.Second, timeout, func(ctx context.Context) (bool, error) {
+	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		down, err = c.componentDown(ctx, name)
 		if err != nil {
 			logger.Debug("Component is not down",
@@ -549,7 +549,7 @@ func (c *Cluster) waitComponentDown(ctx context.Context, name string, timeout ti
 			)
 		}
 		return down, nil
-	})
+	}, wait.WithTimeout(timeout), wait.WithImmediate())
 	if err != nil {
 		return err
 	}
@@ -665,7 +665,7 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	if err != nil {
 		// kind does not exist, try to download it
 		kindPath := c.GetBinPath("kind" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0755, conf.QuietPull)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0750, conf.QuietPull)
 		if err != nil {
 			return "", err
 		}

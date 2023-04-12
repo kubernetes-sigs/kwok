@@ -273,7 +273,7 @@ func encodePrivateKeyToPEM(privateKey crypto.PrivateKey) ([]byte, error) {
 }
 
 func writeFile(certPath string, data []byte) error {
-	if err := os.MkdirAll(filepath.Dir(certPath), os.FileMode(0755)); err != nil {
+	if err := os.MkdirAll(filepath.Dir(certPath), os.FileMode(0750)); err != nil {
 		return err
 	}
 	return os.WriteFile(certPath, data, os.FileMode(0644))
