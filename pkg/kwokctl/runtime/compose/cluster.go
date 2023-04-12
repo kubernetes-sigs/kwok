@@ -738,7 +738,7 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 		if err != nil {
 			// docker compose subcommand does not exist, try to download it
 			dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
-			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0755, conf.QuietPull)
+			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0750, conf.QuietPull)
 			if err != nil {
 				return nil, err
 			}

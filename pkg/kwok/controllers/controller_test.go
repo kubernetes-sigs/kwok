@@ -26,10 +26,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
 )
 
@@ -146,7 +146,7 @@ func TestController(t *testing.T) {
 			}
 
 			// wait for nodes to be right phase indicated by `tt.wantNodePhase`
-			err = wait.PollUntilWithContext(ctx, time.Second, func(ctx context.Context) (done bool, err error) {
+			err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
 				list, err := ctr.clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 				if err != nil {
 					t.Log(fmt.Errorf("failed to list nodes, err: %w", err))

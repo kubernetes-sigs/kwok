@@ -8,11 +8,6 @@ jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        working-directory:
-          - pkg
-          - cmd
     steps:
       - uses: actions/setup-go@v4
         with:
@@ -22,4 +17,3 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.49.0
-          working-directory: ${{matrix.working-directory}}

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package main is a tool to generate the documentation for the kwok and kwokctl commands.
 package main
 
 import (
@@ -37,8 +38,8 @@ import (
 const basePath = "./site/content/en/docs/generated/"
 
 func main() {
-	if err := os.MkdirAll(basePath, os.FileMode(0755)); err != nil {
-		fmt.Println(err)
+	if err := os.MkdirAll(basePath, os.FileMode(0750)); err != nil {
+		_, _ = fmt.Println(err)
 		os.Exit(1)
 	}
 	config.GOOS = "linux"
@@ -58,26 +59,28 @@ func main() {
 	}
 	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.WarnLevel))
 
-	genKwok(ctx, flagset, basePath)
-	genKwokctl(ctx, flagset, basePath)
+	err = genKwok(ctx, flagset, basePath)
+	if err != nil {
+		logger.Error("Generate kwok docs", err)
+		os.Exit(1)
+	}
+	err = genKwokctl(ctx, flagset, basePath)
+	if err != nil {
+		logger.Error("Generate kwokctl docs", err)
+		os.Exit(1)
+	}
 }
 
-func genKwok(ctx context.Context, flags *pflag.FlagSet, basePath string) {
+func genKwok(ctx context.Context, flags *pflag.FlagSet, basePath string) error {
 	rootCmd := kwokcmd.NewCommand(ctx)
 	rootCmd.PersistentFlags().AddFlagSet(flags)
 	rootCmd.DisableAutoGenTag = true
-	if err := doc.GenMarkdownTree(rootCmd, basePath); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	return doc.GenMarkdownTree(rootCmd, basePath)
 }
 
-func genKwokctl(ctx context.Context, flags *pflag.FlagSet, basePath string) {
+func genKwokctl(ctx context.Context, flags *pflag.FlagSet, basePath string) error {
 	rootCmd := kwokctlcmd.NewCommand(ctx)
 	rootCmd.PersistentFlags().AddFlagSet(flags)
 	rootCmd.DisableAutoGenTag = true
-	if err := doc.GenMarkdownTree(rootCmd, basePath); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	return doc.GenMarkdownTree(rootCmd, basePath)
 }

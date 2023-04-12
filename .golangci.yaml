@@ -75,6 +75,8 @@ linters-settings:
       - k8s.io/klog: "please use `sigs.k8s.io/kwok/pkg/log instead"
       - golang.org/x/exp/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
       - log: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+      # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
+      - k8s.io/apimachinery/pkg/util/wait: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
   gocyclo:
     min-complexity: 50
   gosec:
@@ -104,3 +106,6 @@ issues:
 run:
   timeout: 10m
   allow-parallel-runners: true
+  skip-dirs-use-default: true
+  skip-files:
+    - ".*\\.zz_generated\\..*"

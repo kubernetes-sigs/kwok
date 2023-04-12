@@ -20,7 +20,8 @@ import (
 	"context"
 	"time"
 
-	apimachinerywait "k8s.io/apimachinery/pkg/util/wait"
+	//nolint:depguard
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (
@@ -28,6 +29,12 @@ const (
 	defaultPollInterval        = 1 * time.Second
 	defaultPollContinueOnError = 5
 )
+
+// Backoff is used to specify the backoff for the wait
+type Backoff = wait.Backoff
+
+// ConditionWithContextFunc is a function that can be used to poll a condition
+type ConditionWithContextFunc = wait.ConditionWithContextFunc
 
 // Options is used to configure the wait
 type Options struct {
@@ -39,6 +46,8 @@ type Options struct {
 	Immediate bool
 	// ContinueOnError is used to specify the number of times the wait should continue on error
 	ContinueOnError int
+	// Backoff is used to specify the backoff for the wait
+	Backoff *Backoff
 }
 
 // OptionFunc is a function that can be used to configure the wait
@@ -72,8 +81,15 @@ func WithImmediate() OptionFunc {
 	}
 }
 
+// WithExponentialBackoff configures the wait to use exponential backoff
+func WithExponentialBackoff(backoff *Backoff) OptionFunc {
+	return func(options *Options) {
+		options.Backoff = backoff
+	}
+}
+
 // Poll polls a condition until it returns true, an error, or the timeout is reached.
-func Poll(ctx context.Context, conditionFunc apimachinerywait.ConditionWithContextFunc, opts ...OptionFunc) error {
+func Poll(ctx context.Context, conditionFunc ConditionWithContextFunc, opts ...OptionFunc) error {
 	options := &Options{
 		Interval:        defaultPollInterval,
 		Timeout:         defaultPollTimeout,
@@ -101,8 +117,8 @@ func Poll(ctx context.Context, conditionFunc apimachinerywait.ConditionWithConte
 		}
 	}
 
-	if options.Immediate {
-		return apimachinerywait.PollImmediateWithContext(ctx, options.Interval, options.Timeout, cf)
+	if options.Backoff != nil {
+		return wait.ExponentialBackoffWithContext(ctx, *options.Backoff, cf)
 	}
-	return apimachinerywait.PollWithContext(ctx, options.Interval, options.Timeout, cf)
+	return wait.PollUntilContextTimeout(ctx, options.Interval, options.Timeout, options.Immediate, cf)
 }

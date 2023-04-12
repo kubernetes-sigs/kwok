@@ -37,7 +37,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
+	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0750, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
 
-	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0755, conf.QuietPull, true)
+	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0750, conf.QuietPull, true)
 	if err != nil {
 		return err
 	}

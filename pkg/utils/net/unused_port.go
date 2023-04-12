@@ -28,7 +28,7 @@ var (
 )
 
 // GetUnusedPort returns an unused port on the local machine.
-func GetUnusedPort(ctx context.Context) (port uint32, err error) {
+func GetUnusedPort(ctx context.Context) (uint32, error) {
 	for lastUsedPort > 10000 && ctx.Err() == nil {
 		lastUsedPort--
 		if isPortUnused(lastUsedPort) {
@@ -36,7 +36,7 @@ func GetUnusedPort(ctx context.Context) (port uint32, err error) {
 		}
 	}
 
-	return 0, fmt.Errorf("%w: %v", errGetUnusedPort, err)
+	return 0, errGetUnusedPort
 }
 
 func isPortUnused(port uint32) bool {
