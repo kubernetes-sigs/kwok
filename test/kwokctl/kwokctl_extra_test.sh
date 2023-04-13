@@ -66,7 +66,6 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
   local targets
-  local current_context
   local i
 
   KWOK_KUBE_VERSION="${release}" kwokctl --config "${DIR}/kwokctl-config-patches.yaml" create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090

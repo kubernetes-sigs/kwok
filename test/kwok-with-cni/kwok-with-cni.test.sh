@@ -38,7 +38,7 @@ function start_cluster() {
 
 # Check for normal heartbeat
 function test_node_ready() {
-  for i in {1..30}; do
+  for ((i = 0; i < 30; i++)); do
     if [[ ! "$(kubectl get node fake-node)" =~ "Ready" ]]; then
       echo "Waiting for fake-node to be ready..."
       sleep 1
@@ -56,7 +56,7 @@ function test_node_ready() {
 
 # Check for the Pod is running
 function test_pod_running() {
-  for i in {1..30}; do
+  for ((i = 0; i < 30; i++)); do
     if [[ ! "$(kubectl get pod -o wide | grep Running | wc -l)" -eq 5 ]]; then
       echo "Waiting all pods to be running..."
       sleep 1
