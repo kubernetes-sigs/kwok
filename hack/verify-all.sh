@@ -56,6 +56,11 @@ if [[ "${VERIFY_YAMLLINT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-yamllint.sh || failed+=(yamllint)
 fi
 
+if [[ "${VERIFY_SHELLCHECK:-true}" == "true" ]]; then
+  echo "[*] Verifying shell check..."
+  "${ROOT_DIR}"/hack/verify-shellcheck.sh || failed+=(shellcheck)
+fi
+
 # exit based on verify scripts
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Verify failed for: ${failed[*]}"
