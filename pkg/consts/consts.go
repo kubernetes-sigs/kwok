@@ -32,13 +32,13 @@ var (
 
 	EtcdBinaryPrefix = "https://github.com/etcd-io/etcd/releases/download"
 
-	DockerComposeVersion      = "2.13.0"
+	DockerComposeVersion      = "2.17.2"
 	DockerComposeBinaryPrefix = "https://github.com/docker/compose/releases/download"
 
-	KindVersion      = "0.17.0"
+	KindVersion      = "0.18.0"
 	KindBinaryPrefix = "https://github.com/kubernetes-sigs/kind/releases/download"
 
-	PrometheusVersion      = "2.41.0"
+	PrometheusVersion      = "2.43.0"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
 

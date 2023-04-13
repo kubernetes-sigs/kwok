@@ -13,7 +13,7 @@ kwokctl create cluster [flags]
       --disable-kube-controller-manager         Disable the kube-controller-manager
       --disable-kube-scheduler                  Disable the kube-scheduler
       --docker-compose-binary string            Binary of Docker-compose, only for docker runtime
-                                                 (default "https://github.com/docker/compose/releases/download/v2.13.0/docker-compose-linux-x86_64")
+                                                 (default "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-x86_64")
       --etcd-binary string                      Binary of etcd, only for binary runtime
       --etcd-binary-tar string                  Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
                                                  (default "https://github.com/etcd-io/etcd/releases/download/vunknown/etcd-vunknown-linux-amd64.tar.gz")
@@ -23,7 +23,7 @@ kwokctl create cluster [flags]
       --etcd-port uint32                        Port of etcd given to the host. The behavior is unstable for kind runtime and may be modified in the future
   -h, --help                                    help for cluster
       --kind-binary string                      Binary of kind, only for kind runtime
-                                                 (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.17.0/kind-linux-amd64")
+                                                 (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.18.0/kind-linux-amd64")
       --kind-node-image string                  Image of kind node, only for kind runtime
                                                 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
                                                  (default "docker.io/kindest/node:unknown")
@@ -59,10 +59,10 @@ kwokctl create cluster [flags]
                                                  (default "registry.k8s.io/kwok/kwok:unknown")
       --prometheus-binary string                Binary of Prometheus, only for binary runtime
       --prometheus-binary-tar string            Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
-                                                 (default "https://github.com/prometheus/prometheus/releases/download/v2.41.0/prometheus-2.41.0.linux-amd64.tar.gz")
+                                                 (default "https://github.com/prometheus/prometheus/releases/download/v2.43.0/prometheus-2.43.0.linux-amd64.tar.gz")
       --prometheus-image string                 Image of Prometheus, only for docker/nerdctl/kind runtime
                                                 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'
-                                                 (default "docker.io/prom/prometheus:v2.41.0")
+                                                 (default "docker.io/prom/prometheus:v2.43.0")
       --prometheus-port uint32                  Port to expose Prometheus metrics
       --quiet-pull                              Pull without printing progress information
       --runtime string                          Runtime of the cluster (binary or docker or kind or nerdctl)
