@@ -60,9 +60,9 @@ linters-settings:
       - pkg: k8s.io/apimachinery/pkg/api/errors
         alias: apierrors
   staticcheck:
-    go: "1.19"
+    go: "1.20"
   stylecheck:
-    go: "1.19"
+    go: "1.20"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     checks: ["all", "-ST1000", "-ST1003"]
   depguard:
