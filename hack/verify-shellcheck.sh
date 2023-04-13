@@ -46,7 +46,6 @@ disabled=(
   2155
   2181
   2207
-  2294
 )
 # comma separate for passing to shellcheck
 join_by() {
