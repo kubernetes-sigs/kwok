@@ -112,9 +112,9 @@ function args() {
 }
 
 function dry_run() {
-  echo "${@}"
+  echo "$*"
   if [[ "${DRY_RUN}" != "true" ]]; then
-    eval "${@}"
+    eval "$*"
   fi
 }
 
