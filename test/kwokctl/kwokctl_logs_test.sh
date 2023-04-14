@@ -65,7 +65,7 @@ function test_logs() {
       return 1
   fi
 
-  local want=$(cat "${targetLog}" | cut -d " " -f 4-)
+  local want=$(< "${targetLog}" cut -d " " -f 4-)
   if [[ ! "${result}" =~ "${want}" ]]; then
       echo "Error: log result does not match"
       echo " want: ${want}"
@@ -80,7 +80,7 @@ function test_logs() {
       return 1
   fi
 
-  local want=$(cat "${targetLog}" | tail -n 2 | cut -d " " -f 4-)
+  local want=$(< "${targetLog}" tail -n 2 | cut -d " " -f 4-)
   if [[ ! "${result}" =~ "${want}" ]]; then
       echo "Error: log tail result does not match"
       echo " want: ${want}"
@@ -95,7 +95,7 @@ function test_logs() {
       return 1
   fi
 
-  local want=$(cat "${targetLog}" | tail -n 2 | cut -d " " -f 4-)
+  local want=$(< "${targetLog}" tail -n 2 | cut -d " " -f 4-)
   if [[ ! "${result}" =~ "${want}" ]]; then
       echo "Error: log since-time result does not match"
       echo " want: ${want}"
@@ -111,7 +111,7 @@ function test_logs() {
   sleep 5
   kill -INT "${pid}"
 
-  local want=$(cat "${targetLog}" | cut -d " " -f 4-)
+  local want=$(< "${targetLog}" cut -d " " -f 4-)
   result=$(cat "${followLog}")
   if [[ ! "${result}" =~ "${want}" ]]; then
       echo "Error: log follow result does not match"

@@ -46,7 +46,7 @@ function test_all() {
 LAST_RELEASE_SIZE="${LAST_RELEASE_SIZE:-1}"
 
 function supported_releases() {
-  cat "${ROOT_DIR}/supported_releases.txt" | head -n "${LAST_RELEASE_SIZE}"
+  < "${ROOT_DIR}/supported_releases.txt" head -n "${LAST_RELEASE_SIZE}"
 }
 
 function build_kwokctl() {
