@@ -236,22 +236,17 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 		Steps:    5,
 	}
 
-	err := wait.Poll(ctx,
+	return wait.Poll(ctx,
 		func(ctx context.Context) (bool, error) {
-			_, err := clientset.CoreV1().Nodes().List(ctx,
+			if _, err := clientset.CoreV1().Nodes().List(ctx,
 				metav1.ListOptions{
 					Limit: 1,
-				})
-			if err != nil {
+				}); err != nil {
 				logger.Error("Failed to list nodes", err)
-				return false, nil
+				return false, err
 			}
 			return true, nil
 		},
 		wait.WithExponentialBackoff(&backoff),
 	)
-	if err != nil {
-		return err
-	}
-	return nil
 }
