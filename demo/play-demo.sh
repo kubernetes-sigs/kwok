@@ -57,7 +57,7 @@ function type_and_exec_command() {
 # play_file plays a file line by line.
 function play_file() {
   local file="$1"
-  cat "${file}" | while read -r line; do
+  while read -r line; do
     if [[ "${line}" =~ ^# ]]; then
       ps1 0.5
       type_message "${line}"
@@ -68,7 +68,7 @@ function play_file() {
       ps1 1
       type_and_exec_command "${line}"
     fi
-  done
+  done <"${file}"
 }
 
 play_file "$1"
