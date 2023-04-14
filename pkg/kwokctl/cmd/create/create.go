@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create/cluster"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create/node"
 )
 
 // NewCommand returns a new cobra.Command for cluster creation
@@ -30,11 +31,12 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "create [command]",
-		Short: "Creates one of [cluster]",
+		Short: "Creates one of [cluster,node]",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
 	}
 	cmd.AddCommand(cluster.NewCommand(ctx))
+	cmd.AddCommand(node.NewCommand(ctx))
 	return cmd
 }
