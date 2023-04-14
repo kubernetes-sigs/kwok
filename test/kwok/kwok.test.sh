@@ -66,12 +66,12 @@ function test_check_pod_status() {
     host_ip=$(_jq '.status.hostIP')
     pod_ip=$(_jq '.status.podIP')
     node_ip=$(kubectl get nodes ${node_name} -ojson | jq -r '.status.addresses[] | select( .type == "InternalIP" ) | .address')
-    if [[ $host_ip != $node_ip ]]; then
+    if [[ "${host_ip}" != "${node_ip}" ]]; then
         echo "Error: ${pod_name} Pod: HostIP (${host_ip}) is not equal to the IP on its Node (${node_ip})"
         return 1
     fi
     if [[ $host_network == "true" ]]; then
-      if [[ $pod_ip != $node_ip ]]; then
+      if [[ "${pod_ip}" != "${node_ip}" ]]; then
         echo "Error: ${pod_name} Pod with hostNetwork=${host_network}: PodIP (${pod_ip}) and HostIP (${host_ip}) are not equal"
         return 1
       fi
