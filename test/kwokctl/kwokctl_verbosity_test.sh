@@ -79,14 +79,11 @@ function check_nerdctl() {
 }
 
 function check_binary() {
-  ps aux | grep -- prometheus
-  echo
   local name="${1}"
 
-  for component in etcd kube-apiserver kube-controller-manager kube-scheduler; do
-    ps aux | grep -- "${component}" | grep -q -- "--v=4\|--log-level=debug" || return 1
+  for component in etcd kube-apiserver kube-controller-manager kube-scheduler prometheus; do
+    pgrep -a -f  "${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || return 1
   done
-  ps aux | grep -- prometheus | grep -q -- "--log.level=debug" || return 1
 }
 
 function test_verbosity() {
