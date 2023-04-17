@@ -53,7 +53,7 @@ function test_port_forward() {
   local port="${4}"
   local pid
   local result
-  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" 2>&1 > /dev/null &
+  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" > /dev/null 2>&1 &
   pid=$!
 
   # allow some time for port forward to start
@@ -74,7 +74,7 @@ function test_port_forward_failed() {
     local port="${4}"
     local pid
     local result
-    kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" 2>&1 > /dev/null &
+    kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" > /dev/null 2>&1 &
     pid=$!
 
     # allow some time for port forward to start
