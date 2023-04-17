@@ -16,10 +16,10 @@ kwokctl create cluster [flags]
                                                  (default "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-x86_64")
       --etcd-binary string                      Binary of etcd, only for binary runtime
       --etcd-binary-tar string                  Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
-                                                 (default "https://github.com/etcd-io/etcd/releases/download/v3.5.6/etcd-v3.5.6-linux-amd64.tar.gz")
+                                                 (default "https://github.com/etcd-io/etcd/releases/download/v3.5.7/etcd-v3.5.7-linux-amd64.tar.gz")
       --etcd-image string                       Image of etcd, only for docker/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
-                                                 (default "registry.k8s.io/etcd:3.5.6-0")
+                                                 (default "registry.k8s.io/etcd:3.5.7-0")
       --etcd-port uint32                        Port of etcd given to the host. The behavior is unstable for kind runtime and may be modified in the future
   -h, --help                                    help for cluster
       --kind-binary string                      Binary of kind, only for kind runtime
