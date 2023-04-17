@@ -55,24 +55,37 @@ function test_delete_cluster() {
   kwokctl delete cluster --name "${name}"
 }
 
+function check_component() {
+  local runtime="${1}"
+  local component="${2}"
+  local name="${3}"
+
+  local component_name=""
+  if [[ "${runtime}" == "kind" ]]; then
+    component_name="${component}-kwok-${name}-control-plane"
+    if [[ "${component}" == "prometheus" ]]; then
+      component_name="${component}"
+    fi
+    kwokctl --name="${name}" kubectl -n kube-system get pod "${component_name}" -oyaml
+  elif [[ "${runtime}" == "docker" ]]; then
+    docker inspect "kwok-${name}-${component}"
+  elif [[ "${runtime}" == "nerdctl" ]]; then
+    nerdctl inspect "kwok-${name}-${component}"
+  elif [[ "${runtime}" == "binary" ]]; then
+    pgrep -a -f "${component}"
+  fi
+}
+
 function check() {
   local runtime="${1}"
   local name="${2}"
-  local component=""
 
   for component in "${components[@]}"; do
-    if [[ "${runtime}" == "kind" ]]; then
-      local component_name="${component}-kwok-${name}-control-plane"
-      if [[ "${component}" == "prometheus" ]]; then
-        component_name=${component}
-      fi
-      kwokctl --name="${name}" kubectl -n kube-system get pod "${component_name}" -oyaml | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || { echo "Failed to check ${component}"; return 1; }
-    elif [[ "${runtime}" == "docker" ]]; then
-      docker inspect kwok-"${name}"-"${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || { echo "Failed to check ${component}"; return 1; }
-    elif [[ "${runtime}" == "nerdctl" ]]; then
-      nerdctl inspect kwok-"${name}"-"${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || { echo "Failed to check ${component}"; return 1; }
-    elif [[ "${runtime}" == "binary" ]]; then
-      pgrep -a -f "${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || { echo "Failed to check ${component}"; return 1; }
+    local output
+    output="$(check_component "${runtime}" "${component}" "${name}")"
+    if echo "${output}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug"; then
+      echo "Failed to check ${component}"
+      return 1
     fi
   done
 }
