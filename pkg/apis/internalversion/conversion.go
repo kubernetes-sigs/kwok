@@ -145,7 +145,7 @@ func ConvertToInternalVersionStage(in *v1alpha1.Stage) (*Stage, error) {
 	return &out, nil
 }
 
-// ConvertToV1Alpha1ClusterPortForward converts an internal version ConvertToV1Alpha1ClusterPortForward to a v1alpha1.ConvertToV1Alpha1ClusterPortForward.
+// ConvertToV1Alpha1ClusterPortForward converts an internal version ClusterPortForward to a v1alpha1.ClusterPortForward.
 func ConvertToV1Alpha1ClusterPortForward(in *ClusterPortForward) (*v1alpha1.ClusterPortForward, error) {
 	var out v1alpha1.ClusterPortForward
 	out.APIVersion = v1alpha1.GroupVersion.String()
@@ -157,7 +157,7 @@ func ConvertToV1Alpha1ClusterPortForward(in *ClusterPortForward) (*v1alpha1.Clus
 	return &out, nil
 }
 
-// ConvertToInternalClusterPortForward converts a v1alpha1.ConvertToInternalClusterPortForward to an internal version.
+// ConvertToInternalClusterPortForward converts a v1alpha1.ClusterPortForward to an internal version.
 func ConvertToInternalClusterPortForward(in *v1alpha1.ClusterPortForward) (*ClusterPortForward, error) {
 	var out ClusterPortForward
 	err := Convert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(in, &out, nil)
@@ -167,7 +167,7 @@ func ConvertToInternalClusterPortForward(in *v1alpha1.ClusterPortForward) (*Clus
 	return &out, nil
 }
 
-// ConvertToV1Alpha1PortForward converts an internal version ConvertToV1Alpha1PortForward to a v1alpha1.ConvertToV1Alpha1PortForward.
+// ConvertToV1Alpha1PortForward converts an internal version PortForward to a v1alpha1.PortForward.
 func ConvertToV1Alpha1PortForward(in *PortForward) (*v1alpha1.PortForward, error) {
 	var out v1alpha1.PortForward
 	out.APIVersion = v1alpha1.GroupVersion.String()
@@ -179,7 +179,7 @@ func ConvertToV1Alpha1PortForward(in *PortForward) (*v1alpha1.PortForward, error
 	return &out, nil
 }
 
-// ConvertToInternalPortForward converts a v1alpha1.ConvertToInternalVersionKwokctlConfiguration to an internal version.
+// ConvertToInternalPortForward converts a v1alpha1.PortForward to an internal version.
 func ConvertToInternalPortForward(in *v1alpha1.PortForward) (*PortForward, error) {
 	var out PortForward
 	err := Convert_v1alpha1_PortForward_To_internalversion_PortForward(in, &out, nil)
@@ -189,7 +189,7 @@ func ConvertToInternalPortForward(in *v1alpha1.PortForward) (*PortForward, error
 	return &out, nil
 }
 
-// ConvertToV1Alpha1ClusterExec converts an internal version ConvertToV1Alpha1ClusterExec to a v1alpha1.ConvertToV1Alpha1ClusterExec.
+// ConvertToV1Alpha1ClusterExec converts an internal version ClusterExec to a v1alpha1.ClusterExec.
 func ConvertToV1Alpha1ClusterExec(in *ClusterExec) (*v1alpha1.ClusterExec, error) {
 	var out v1alpha1.ClusterExec
 	out.APIVersion = v1alpha1.GroupVersion.String()
@@ -201,7 +201,7 @@ func ConvertToV1Alpha1ClusterExec(in *ClusterExec) (*v1alpha1.ClusterExec, error
 	return &out, nil
 }
 
-// ConvertToInternalClusterExec converts a v1alpha1.ConvertToInternalClusterExec to an internal version.
+// ConvertToInternalClusterExec converts a v1alpha1.ClusterExec to an internal version.
 func ConvertToInternalClusterExec(in *v1alpha1.ClusterExec) (*ClusterExec, error) {
 	var out ClusterExec
 	err := Convert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(in, &out, nil)
@@ -211,7 +211,7 @@ func ConvertToInternalClusterExec(in *v1alpha1.ClusterExec) (*ClusterExec, error
 	return &out, nil
 }
 
-// ConvertToInternalClusterLogs converts a v1alpha1.ConvertToInternalClusterLogs to an internal version.
+// ConvertToInternalClusterLogs converts a v1alpha1.ClusterLogs to an internal version.
 func ConvertToInternalClusterLogs(in *v1alpha1.ClusterLogs) (*ClusterLogs, error) {
 	var out ClusterLogs
 	err := Convert_v1alpha1_ClusterLogs_To_internalversion_ClusterLogs(in, &out, nil)
@@ -221,7 +221,7 @@ func ConvertToInternalClusterLogs(in *v1alpha1.ClusterLogs) (*ClusterLogs, error
 	return &out, nil
 }
 
-// ConvertToV1Alpha1Exec converts an internal version ConvertToV1Alpha1Exec to a v1alpha1.ConvertToV1Alpha1Exec.
+// ConvertToV1Alpha1Exec converts an internal version Exec to a v1alpha1.Exec.
 func ConvertToV1Alpha1Exec(in *Exec) (*v1alpha1.Exec, error) {
 	var out v1alpha1.Exec
 	out.APIVersion = v1alpha1.GroupVersion.String()
@@ -233,7 +233,7 @@ func ConvertToV1Alpha1Exec(in *Exec) (*v1alpha1.Exec, error) {
 	return &out, nil
 }
 
-// ConvertToInternalExec converts a v1alpha1.ConvertToInternalVersionKwokctlConfiguration to an internal version.
+// ConvertToInternalExec converts a v1alpha1.Exec to an internal version.
 func ConvertToInternalExec(in *v1alpha1.Exec) (*Exec, error) {
 	var out Exec
 	err := Convert_v1alpha1_Exec_To_internalversion_Exec(in, &out, nil)
@@ -243,7 +243,7 @@ func ConvertToInternalExec(in *v1alpha1.Exec) (*Exec, error) {
 	return &out, nil
 }
 
-// ConvertToV1Alpha1Logs converts an internal version ConvertToV1Alpha1Logs to a v1alpha1.ConvertToV1Alpha1Logs.
+// ConvertToV1Alpha1Logs converts an internal version Logs to a v1alpha1.Logs.
 func ConvertToV1Alpha1Logs(in *Logs) (*v1alpha1.Logs, error) {
 	var out v1alpha1.Logs
 	out.APIVersion = v1alpha1.GroupVersion.String()
@@ -255,7 +255,7 @@ func ConvertToV1Alpha1Logs(in *Logs) (*v1alpha1.Logs, error) {
 	return &out, nil
 }
 
-// ConvertToV1Alpha1ClusterLogs converts an internal version ConvertToV1Alpha1ClusterLogs to a v1alpha1.ConvertToV1Alpha1ClusterLogs.
+// ConvertToV1Alpha1ClusterLogs converts an internal version ClusterLogs to a v1alpha1.ClusterLogs.
 func ConvertToV1Alpha1ClusterLogs(in *ClusterLogs) (*v1alpha1.ClusterLogs, error) {
 	var out v1alpha1.ClusterLogs
 	out.APIVersion = v1alpha1.GroupVersion.String()
@@ -267,7 +267,7 @@ func ConvertToV1Alpha1ClusterLogs(in *ClusterLogs) (*v1alpha1.ClusterLogs, error
 	return &out, nil
 }
 
-// ConvertToInternalLogs converts a v1alpha1.ConvertToInternalVersionKwokctlConfiguration to an internal version.
+// ConvertToInternalLogs converts a v1alpha1.Logs to an internal version.
 func ConvertToInternalLogs(in *v1alpha1.Logs) (*Logs, error) {
 	var out Logs
 	err := Convert_v1alpha1_Logs_To_internalversion_Logs(in, &out, nil)
@@ -277,7 +277,7 @@ func ConvertToInternalLogs(in *v1alpha1.Logs) (*Logs, error) {
 	return &out, nil
 }
 
-// ConvertToV1Alpha1Attach converts an internal version ConvertToV1Alpha1Attach to a v1alpha1.ConvertToV1Alpha1Attach.
+// ConvertToV1Alpha1Attach converts an internal version Attach to a v1alpha1.Attach.
 func ConvertToV1Alpha1Attach(in *Attach) (*v1alpha1.Attach, error) {
 	var out v1alpha1.Attach
 	out.APIVersion = v1alpha1.GroupVersion.String()
@@ -289,7 +289,7 @@ func ConvertToV1Alpha1Attach(in *Attach) (*v1alpha1.Attach, error) {
 	return &out, nil
 }
 
-// ConvertToV1Alpha1ClusterAttach converts an internal version ConvertToV1Alpha1ClusterAttach to a v1alpha1.ConvertToV1Alpha1ClusterAttach.
+// ConvertToV1Alpha1ClusterAttach converts an internal version ClusterAttach to a v1alpha1.ClusterAttach.
 func ConvertToV1Alpha1ClusterAttach(in *ClusterAttach) (*v1alpha1.ClusterAttach, error) {
 	var out v1alpha1.ClusterAttach
 	out.APIVersion = v1alpha1.GroupVersion.String()
@@ -301,7 +301,7 @@ func ConvertToV1Alpha1ClusterAttach(in *ClusterAttach) (*v1alpha1.ClusterAttach,
 	return &out, nil
 }
 
-// ConvertToInternalClusterPortForward converts a v1alpha1.ConvertToInternalClusterPortForward to an internal version.
+// ConvertToInternalClusterAttach converts a v1alpha1.ClusterAttach to an internal version.
 func ConvertToInternalClusterAttach(in *v1alpha1.ClusterAttach) (*ClusterAttach, error) {
 	var out ClusterAttach
 	err := Convert_v1alpha1_ClusterAttach_To_internalversion_ClusterAttach(in, &out, nil)
@@ -311,7 +311,7 @@ func ConvertToInternalClusterAttach(in *v1alpha1.ClusterAttach) (*ClusterAttach,
 	return &out, nil
 }
 
-// ConvertToInternalAttach converts a v1alpha1.ConvertToInternalVersionKwokctlConfiguration to an internal version.
+// ConvertToInternalAttach converts a v1alpha1.Attach to an internal version.
 func ConvertToInternalAttach(in *v1alpha1.Attach) (*Attach, error) {
 	var out Attach
 	err := Convert_v1alpha1_Attach_To_internalversion_Attach(in, &out, nil)

@@ -40,7 +40,7 @@ type AttachSpec struct {
 	Attaches []AttachConfig `json:"attaches"`
 }
 
-// Attach holds information how to forward logs.
+// AttachConfig holds information how to attach.
 type AttachConfig struct {
 	// Containers is list of container names.
 	Containers []string `json:"containers"`

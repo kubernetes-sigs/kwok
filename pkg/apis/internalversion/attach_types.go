@@ -33,7 +33,7 @@ type AttachSpec struct {
 	Attaches []AttachConfig
 }
 
-// Attach holds information how to attach.
+// AttachConfig holds information how to attach.
 type AttachConfig struct {
 	// Containers is list of container names.
 	Containers []string
