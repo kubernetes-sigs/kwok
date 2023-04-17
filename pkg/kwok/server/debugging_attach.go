@@ -97,8 +97,7 @@ func (s *Server) getPodAttach(podName, podNamespace, containerName string) (*int
 		}
 	}
 
-	e := fmt.Errorf("config.Attaches=%v\nconfig.ClusterAttaches=%v\n", s.config.Attaches, s.config.ClusterAttaches)
-	return nil, fmt.Errorf("no attaches found for container %q in pod %q: %w", containerName, log.KRef(podNamespace, podName), e)
+	return nil, fmt.Errorf("no attaches found for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 }
 
 func findAttachInAttaches(containerName string, attaches []internalversion.AttachConfig) (*internalversion.AttachConfig, bool) {
