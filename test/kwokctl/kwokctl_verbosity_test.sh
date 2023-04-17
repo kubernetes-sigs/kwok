@@ -19,6 +19,8 @@ DIR="$(realpath "${DIR}")"
 
 RELEASES=()
 
+components=(etcd kube-apiserver kube-controller-manager kube-scheduler prometheus)
+
 function usage() {
   echo "Usage: $0 <kube-version...>"
   echo "  <kube-version> is the version of kubernetes to test against."
@@ -53,59 +55,36 @@ function test_delete_cluster() {
   kwokctl delete cluster --name "${name}"
 }
 
-function check_kind() {
-  local name="${1}"
+function check() {
+  local runtime="${1}"
+  local name="${2}"
+  local component=""
 
-  for pod in etcd kube-apiserver kube-controller-manager kube-scheduler; do
-    kwokctl --name="${name}" kubectl -n kube-system get pod "${pod}-kwok-${name}-control-plane" -oyaml | grep -q -- "--v=4\|--log-level=debug" || return 1
+  for component in "${components[@]}"; do
+    if [[ "${runtime}" == "kind" ]]; then
+      local component_name="${component}-kwok-${name}-control-plane"
+      if [[ "${component}" == "prometheus" ]]; then
+        component_name=${component}
+      fi
+      kwokctl --name="${name}" kubectl -n kube-system get pod "${component_name}" -oyaml | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || { echo "Failed to check ${component}"; return 1; }
+    elif [[ "${runtime}" == "docker" ]]; then
+      docker inspect kwok-"${name}"-"${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || { echo "Failed to check ${component}"; return 1; }
+    elif [[ "${runtime}" == "nerdctl" ]]; then
+      nerdctl inspect kwok-"${name}"-"${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || { echo "Failed to check ${component}"; return 1; }
+    elif [[ "${runtime}" == "binary" ]]; then
+      pgrep -a -f "${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || { echo "Failed to check ${component}"; return 1; }
+    fi
   done
-  kwokctl --name="${name}" kubectl -n kube-system get pod prometheus -oyaml | grep -q -- "--log.level=debug" || return 1
-}
-
-function check_docker() {
-  local name="${1}"
-
-  for component in etcd kube-apiserver kube-controller-manager kube-scheduler prometheus; do
-    docker inspect kwok-"${name}"-"${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || return 1
-  done
-}
-
-function check_nerdctl() {
-  local name="${1}"
-
-  for component in etcd kube-apiserver kube-controller-manager kube-scheduler prometheus; do
-    nerdctl inspect kwok-"${name}"-"${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || return 1
-  done
-}
-
-function check_binary() {
-  ps aux | grep -- prometheus
-  echo
-  local name="${1}"
-
-  for component in etcd kube-apiserver kube-controller-manager kube-scheduler; do
-    ps aux | grep -- "${component}" | grep -q -- "--v=4\|--log-level=debug" || return 1
-  done
-  ps aux | grep -- prometheus | grep -q -- "--log.level=debug" || return 1
 }
 
 function test_verbosity() {
   local runtime="${KWOK_RUNTIME}"
-  local release="${1}"
-  local name="${2}"
+  local name="${1}"
 
-  if [[ "${runtime}" == "kind" ]]; then
-    check_kind ${name}
-  elif [[ "${runtime}" == "docker" ]]; then
-    check_docker ${name}
-  elif [[ "${runtime}" == "nerdctl" ]]; then
-    check_nerdctl ${name}
-  elif [[ "${runtime}" == "binary" ]]; then
-    check_binary ${name}
-  fi
+  check "${runtime}" "${name}"
 
   if [[ $? -ne 0 ]]; then
-    echo "Error: '-v' flag not exsits in kube-apiserver"
+    echo "Error: log flag not exsits in ${runtime}"
     return 1
   fi
 }
@@ -117,7 +96,7 @@ function main() {
     echo "Testing verbosity on ${KWOK_RUNTIME} for ${release}"
     name="verbosity-cluster-${KWOK_RUNTIME}-${release//./-}"
     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
-    test_verbosity "${release}" "${name}" || failed+=("verbosity_${name}")
+    test_verbosity "${name}" || failed+=("verbosity_${name}")
     test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
   done
 
