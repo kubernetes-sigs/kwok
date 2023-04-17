@@ -57,7 +57,7 @@ function test_node_ready() {
 # Check for the Pod is running
 function test_pod_running() {
   for ((i = 0; i < 30; i++)); do
-    if [[ ! "$(kubectl get pod -o wide | grep Running | wc -l)" -eq 5 ]]; then
+    if [[ ! "$(kubectl get pod -o wide | grep -c Running)" -eq 5 ]]; then
       echo "Waiting all pods to be running..."
       sleep 1
     else
@@ -65,7 +65,7 @@ function test_pod_running() {
     fi
   done
 
-  if [[ ! "$(kubectl get pod -o wide | grep Running | wc -l)" -eq 5 ]]; then
+  if [[ ! "$(kubectl get pod -o wide | grep -c Running)" -eq 5 ]]; then
     echo "Error: Not all pods are running"
     kubectl get pod -o wide
     return 1
