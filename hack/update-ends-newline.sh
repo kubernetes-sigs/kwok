@@ -20,14 +20,15 @@ set -o pipefail
 ROOT_DIR=$(dirname "${BASH_SOURCE[0]}")/..
 
 function update_ends_newline() {
-  find . \
+  find . \( \
     -iname "*.md" \
     -o -iname "*.sh" \
     -o -iname "*.go" \
     -o -iname "*.tpl" \
     -o -iname "*.yaml" \
-    -o -iname "*.yml" |
-    xargs -I {} bash -c "[ -n \"\$(tail -c 1 {})\" ] && echo >> {}" || :
+    -o -iname "*.yml" \
+    \) \
+    -exec sh -c '[ -n "$(tail -c 1 "$1")" ] && echo "$1"' sh {} \;
 }
 
 cd "${ROOT_DIR}"
