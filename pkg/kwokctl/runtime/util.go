@@ -54,32 +54,38 @@ func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion
 func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
 	logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
 	clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
+	attaches := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
+	clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
 
 	// Mount log dirs
-	mountDirs := make(map[string]struct{})
+	var mountDirs dirMountSet
 	for _, log := range logs {
 		for _, l := range log.Spec.Logs {
-			abs, err := path.Expand(l.LogsFile)
-			if err != nil {
-				return nil, err
-			}
-			mountDirs[filepath.Dir(abs)] = struct{}{}
+			mountDirs.add(l.LogsFile)
 		}
 	}
 
 	for _, cl := range clusterLogs {
 		for _, l := range cl.Spec.Logs {
-			abs, err := path.Expand(l.LogsFile)
-			if err != nil {
-				return nil, err
-			}
-			mountDirs[filepath.Dir(abs)] = struct{}{}
+			mountDirs.add(l.LogsFile)
 		}
 	}
 
-	volumes := make([]internalversion.Volume, 0, len(mountDirs))
+	for _, attach := range attaches {
+		for _, a := range attach.Spec.Attaches {
+			mountDirs.add(a.LogsFile)
+		}
+	}
+
+	for _, ca := range clusterAttaches {
+		for _, a := range ca.Spec.Attaches {
+			mountDirs.add(a.LogsFile)
+		}
+	}
+
+	volumes := make([]internalversion.Volume, 0, mountDirs.size())
 	i := 0
-	for dir := range mountDirs {
+	for _, dir := range mountDirs.items() {
 		dirPath := strings.TrimPrefix(dir, "/var/components/controller")
 		volumes = append(volumes, internalversion.Volume{
 			Name:      fmt.Sprintf("log-volume-%d", i),
@@ -92,4 +98,36 @@ func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
 	}
 
 	return volumes, nil
+}
+
+type dirMountSet struct {
+	mounts map[string]struct{}
+	err    error
+}
+
+func (m *dirMountSet) add(logsFile string) {
+	if m.err != nil {
+		return
+	}
+	if m.mounts == nil {
+		m.mounts = make(map[string]struct{})
+	}
+	abs, err := path.Expand(logsFile)
+	if err != nil {
+		m.err = err
+		return
+	}
+	m.mounts[filepath.Dir(abs)] = struct{}{}
+}
+
+func (m *dirMountSet) size() int {
+	return len(m.mounts)
+}
+
+func (m *dirMountSet) items() []string {
+	result := make([]string, 0, m.size())
+	for mount := range m.mounts {
+		result = append(result, mount)
+	}
+	return result
 }

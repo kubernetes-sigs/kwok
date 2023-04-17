@@ -71,7 +71,7 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 	}
 
 	opts := newLogOptions(logOptions, time.Now())
-	return readLogs(ctx, log, opts, stdout, stderr)
+	return readLogs(ctx, log.LogsFile, opts, stdout, stderr)
 }
 
 // getContainerLogs handles containerLogs request against the Kubelet
@@ -210,16 +210,16 @@ func newLogOptions(apiOpts *corev1.PodLogOptions, now time.Time) *logOptions {
 	return opts
 }
 
-func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOptions, stdout, stderr io.Writer) error {
+func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, stderr io.Writer) error {
 	logger := log.FromContext(ctx)
 
-	f, err := os.Open(logInfo.LogsFile)
+	f, err := os.Open(logsFile)
 	if err != nil {
 		return err
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to open log file %q: %w", logInfo.LogsFile, err)
+		return fmt.Errorf("failed to open log file %q: %w", logsFile, err)
 	}
 
 	defer func(f *os.File) {
@@ -228,10 +228,10 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 
 	start, err := tail.FindTailLineStartIndex(f, opts.tail)
 	if err != nil {
-		return fmt.Errorf("failed to tail %d lines of log file %q: %w", opts.tail, logInfo.LogsFile, err)
+		return fmt.Errorf("failed to tail %d lines of log file %q: %w", opts.tail, logsFile, err)
 	}
 	if _, err := f.Seek(start, io.SeekStart); err != nil {
-		return fmt.Errorf("failed to seek %d in log file %q: %w", start, logInfo.LogsFile, err)
+		return fmt.Errorf("failed to seek %d in log file %q: %w", start, logsFile, err)
 	}
 
 	r := bufio.NewReader(f)
@@ -252,14 +252,14 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 
 	for {
 		if stop || (limitedMode && limitedNum == 0) {
-			logger.Debug("Finished parsing log file", "path", logInfo.LogsFile)
+			logger.Debug("Finished parsing log file", "path", logsFile)
 			return nil
 		}
 
 		l, err := r.ReadBytes('\n')
 		if err != nil {
 			if !errors.Is(err, io.EOF) {
-				return fmt.Errorf("failed to read log file: %q: %w", logInfo.LogsFile, err)
+				return fmt.Errorf("failed to read log file: %q: %w", logsFile, err)
 			}
 
 			if opts.follow {
@@ -270,7 +270,7 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 				// reset seek so that if this is an incomplete line,
 				// it will be read again
 				if _, err := f.Seek(-int64(len(l)), io.SeekCurrent); err != nil {
-					return fmt.Errorf("failed to reset seek in log file %q: %w", logInfo.LogsFile, err)
+					return fmt.Errorf("failed to reset seek in log file %q: %w", logsFile, err)
 				}
 				if watcher == nil {
 					// Initialize the watcher if it has not been initialized yet.
@@ -295,12 +295,12 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 				}
 
 				if recreated {
-					newF, err := os.Open(logInfo.LogsFile)
+					newF, err := os.Open(logsFile)
 					if err != nil {
 						if os.IsNotExist(err) {
 							continue
 						}
-						return fmt.Errorf("failed to open log file %q: %w", logInfo.LogsFile, err)
+						return fmt.Errorf("failed to open log file %q: %w", logsFile, err)
 					}
 
 					defer func(f *os.File) {
@@ -325,7 +325,7 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 			if len(l) == 0 {
 				continue
 			}
-			logger.Info("Incomplete line in log file", "path", logInfo.LogsFile, "line", l)
+			logger.Info("Incomplete line in log file", "path", logsFile, "line", l)
 		}
 
 		if parse == nil {
@@ -338,17 +338,17 @@ func readLogs(ctx context.Context, logInfo *internalversion.Log, opts *logOption
 
 		msg.reset()
 		if err := parse(l, msg); err != nil {
-			logger.Error("Failed when parsing line in log file", err, "path", logInfo.LogsFile, "line", l)
+			logger.Error("Failed when parsing line in log file", err, "path", logsFile, "line", l)
 			continue
 		}
 
 		// Write the log line into the stream.
 		if err := writer.write(msg, isNewLine); err != nil {
 			if errors.Is(err, errMaximumWrite) {
-				logger.Debug("Finished parsing log file, hit bytes limit", "path", logInfo.LogsFile, "limit", opts.bytes)
+				logger.Debug("Finished parsing log file, hit bytes limit", "path", logsFile, "limit", opts.bytes)
 				return nil
 			}
-			logger.Error("Failed when writing line to log file", err, "path", logInfo.LogsFile, "line", msg)
+			logger.Error("Failed when writing line to log file", err, "path", logsFile, "line", msg)
 			return err
 		}
 

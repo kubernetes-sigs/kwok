@@ -276,3 +276,47 @@ func ConvertToInternalLogs(in *v1alpha1.Logs) (*Logs, error) {
 	}
 	return &out, nil
 }
+
+// ConvertToV1Alpha1Attach converts an internal version ConvertToV1Alpha1Attach to a v1alpha1.ConvertToV1Alpha1Attach.
+func ConvertToV1Alpha1Attach(in *Attach) (*v1alpha1.Attach, error) {
+	var out v1alpha1.Attach
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.AttachKind
+	err := Convert_internalversion_Attach_To_v1alpha1_Attach(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToV1Alpha1ClusterAttach converts an internal version ConvertToV1Alpha1ClusterAttach to a v1alpha1.ConvertToV1Alpha1ClusterAttach.
+func ConvertToV1Alpha1ClusterAttach(in *ClusterAttach) (*v1alpha1.ClusterAttach, error) {
+	var out v1alpha1.ClusterAttach
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.ClusterAttachKind
+	err := Convert_internalversion_ClusterAttach_To_v1alpha1_ClusterAttach(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalClusterPortForward converts a v1alpha1.ConvertToInternalClusterPortForward to an internal version.
+func ConvertToInternalClusterAttach(in *v1alpha1.ClusterAttach) (*ClusterAttach, error) {
+	var out ClusterAttach
+	err := Convert_v1alpha1_ClusterAttach_To_internalversion_ClusterAttach(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalAttach converts a v1alpha1.ConvertToInternalVersionKwokctlConfiguration to an internal version.
+func ConvertToInternalAttach(in *v1alpha1.Attach) (*Attach, error) {
+	var out Attach
+	err := Convert_v1alpha1_Attach_To_internalversion_Attach(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

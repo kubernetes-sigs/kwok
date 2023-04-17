@@ -21,21 +21,33 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/apimachinery/pkg/types"
 	clientremotecommand "k8s.io/client-go/tools/remotecommand"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwok/server/remotecommand"
+	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // AttachContainer attaches to a container in a pod,
 // copying data between in/out/err and the container's stdin/stdout/stderr.
-func (s *Server) AttachContainer(ctx context.Context, podName, podNamespace string, uid types.UID, container string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize) error {
-	// TODO: Configure and implement the attach streamer
-	msg := fmt.Sprintf("TODO: AttachContainer(%q, %q)", podNamespace+"/"+podName, container)
-	_, _ = out.Write([]byte(msg))
-	return nil
+func (s *Server) AttachContainer(ctx context.Context, podName, podNamespace string, uid types.UID, containerName string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize) error {
+	attach, err := s.getPodAttach(podName, podNamespace, containerName)
+	if err != nil {
+		return err
+	}
+	opts := &logOptions{
+		tail:      -1, // -1 by default which means read all logs.
+		bytes:     -1, // -1 by default which means read all logs.
+		since:     time.Now(),
+		follow:    true,
+		timestamp: false,
+	}
+	return readLogs(ctx, attach.LogsFile, opts, stdout, stderr)
 }
 
 func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
@@ -60,4 +72,45 @@ func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
 		s.idleTimeout,
 		s.streamCreationTimeout,
 		remotecommand.SupportedStreamingProtocols)
+}
+
+func (s *Server) getPodAttach(podName, podNamespace, containerName string) (*internalversion.AttachConfig, error) {
+	a, has := slices.Find(s.config.Attaches, func(a *internalversion.Attach) bool {
+		return a.Name == podName && a.Namespace == podNamespace
+	})
+	if has {
+		a, found := findAttachInAttaches(containerName, a.Spec.Attaches)
+		if found {
+			return a, nil
+		}
+		return nil, fmt.Errorf("not found log target for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
+	}
+
+	for _, cl := range s.config.ClusterAttaches {
+		if !cl.Spec.Selector.Match(podName, podNamespace) {
+			continue
+		}
+
+		log, found := findAttachInAttaches(containerName, cl.Spec.Attaches)
+		if found {
+			return log, nil
+		}
+	}
+
+	e := fmt.Errorf("config.Attaches=%v\nconfig.ClusterAttaches=%v\n", s.config.Attaches, s.config.ClusterAttaches)
+	return nil, fmt.Errorf("no attaches found for container %q in pod %q: %w", containerName, log.KRef(podNamespace, podName), e)
+}
+
+func findAttachInAttaches(containerName string, attaches []internalversion.AttachConfig) (*internalversion.AttachConfig, bool) {
+	var defaultAttach *internalversion.AttachConfig
+	for i, a := range attaches {
+		if len(a.Containers) == 0 && defaultAttach == nil {
+			defaultAttach = &attaches[i]
+			continue
+		}
+		if slices.Contains(a.Containers, containerName) {
+			return &a, true
+		}
+	}
+	return defaultAttach, defaultAttach != nil
 }

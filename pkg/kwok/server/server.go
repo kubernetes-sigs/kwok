@@ -55,6 +55,8 @@ type Config struct {
 	Execs               []*internalversion.Exec
 	ClusterLogs         []*internalversion.ClusterLogs
 	Logs                []*internalversion.Logs
+	ClusterAttaches     []*internalversion.ClusterAttach
+	Attaches            []*internalversion.Attach
 }
 
 // NewServer creates a new Server.

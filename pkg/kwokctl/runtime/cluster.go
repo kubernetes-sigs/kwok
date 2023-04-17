@@ -155,6 +155,30 @@ func (c *Cluster) Save(ctx context.Context) error {
 				}
 				obj.Spec.Logs[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
 			}
+		case *internalversion.ClusterAttach:
+			for i := range obj.Spec.Attaches {
+				expandedPath, err := path.Expand(obj.Spec.Attaches[i].LogsFile)
+				if err != nil {
+					return err
+				}
+				logVolumePrefix := ""
+				if c.conf.Options.Runtime == consts.RuntimeTypeKind && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
+					logVolumePrefix = kwokControllerMountPrefix
+				}
+				obj.Spec.Attaches[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
+			}
+		case *internalversion.Attach:
+			for i := range obj.Spec.Attaches {
+				expandedPath, err := path.Expand(obj.Spec.Attaches[i].LogsFile)
+				if err != nil {
+					return err
+				}
+				logVolumePrefix := ""
+				if c.conf.Options.Runtime == consts.RuntimeTypeKind && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
+					logVolumePrefix = kwokControllerMountPrefix
+				}
+				obj.Spec.Attaches[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
+			}
 		}
 		objs = append(objs, obj)
 	}
