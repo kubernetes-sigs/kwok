@@ -61,19 +61,21 @@ function test_attach() {
   local attachLog="${LOGDIR}/attach.out"
   kwokctl --name "${name}" kubectl -n "${namespace}" attach "${target}" > "${attachLog}" 2>/dev/null &
   pid=$!
-  # Allow some time for attach to pick up and parse logs
+
+  # allow some time for attach to parse logs
   sleep 1
 
   echo '2016-10-06T00:20:09.669794202Z stdout F log content 4' >> "${targetLog}"
   echo '2016-10-06T00:20:10.669794202Z stdout F log content 5' >> "${targetLog}"
-
   sleep 5
   kill -INT "${pid}"
+
+  local want=$(cat "${targetLog}" | tail -n 2 | cut -d " " -f 4-)
 
   result=$(cat "${attachLog}")
   if [[ ! "${result}" =~ "${want}" ]]; then
       echo "Error: attach result does not match"
-      echo " want: ${line}"
+      echo " want: ${want}"
       echo " got: ${result}"
       return 1
   fi
