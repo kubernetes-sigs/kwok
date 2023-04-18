@@ -293,7 +293,7 @@ func TestPodController(t *testing.T) {
 			}
 		}
 		return true, nil
-	})
+	}, wait.WithContinueOnError(5))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -315,7 +315,7 @@ func TestPodController(t *testing.T) {
 			return false, fmt.Errorf("want 4 pods, got %d", len(list.Items))
 		}
 		return true, nil
-	})
+	}, wait.WithContinueOnError(5))
 	if err != nil {
 		t.Fatal(err)
 	}

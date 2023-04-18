@@ -25,9 +25,8 @@ import (
 )
 
 const (
-	defaultPollTimeout         = 1 * time.Minute
-	defaultPollInterval        = 1 * time.Second
-	defaultPollContinueOnError = 5
+	defaultPollTimeout  = 1 * time.Minute
+	defaultPollInterval = 1 * time.Second
 )
 
 // Backoff is used to specify the backoff for the wait
@@ -91,10 +90,9 @@ func WithExponentialBackoff(backoff *Backoff) OptionFunc {
 // Poll polls a condition until it returns true, an error, or the timeout is reached.
 func Poll(ctx context.Context, conditionFunc ConditionWithContextFunc, opts ...OptionFunc) error {
 	options := &Options{
-		Interval:        defaultPollInterval,
-		Timeout:         defaultPollTimeout,
-		ContinueOnError: defaultPollContinueOnError,
-		Immediate:       false,
+		Interval:  defaultPollInterval,
+		Timeout:   defaultPollTimeout,
+		Immediate: false,
 	}
 
 	for _, fn := range opts {

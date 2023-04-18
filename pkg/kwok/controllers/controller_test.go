@@ -149,19 +149,17 @@ func TestController(t *testing.T) {
 			err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
 				list, err := ctr.clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 				if err != nil {
-					t.Log(fmt.Errorf("failed to list nodes, err: %w", err))
-					return false, nil
+					return false, fmt.Errorf("failed to list nodes, err: %w", err)
 				}
 
 				for _, node := range list.Items {
 					wantNodePhase := tt.wantNodePhase[node.Name]
 					if node.Status.Phase != wantNodePhase {
-						t.Log(fmt.Errorf("node %s phase is %s, want %s", node.Name, node.Status.Phase, wantNodePhase))
-						return false, nil
+						return false, fmt.Errorf("node %s phase is %s, want %s", node.Name, node.Status.Phase, wantNodePhase)
 					}
 				}
 				return true, nil
-			})
+			}, wait.WithContinueOnError(5))
 			if err != nil {
 				t.Fatal(err)
 			}
