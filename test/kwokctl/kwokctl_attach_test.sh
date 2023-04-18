@@ -59,18 +59,27 @@ function test_attach() {
   echo '2016-10-06T00:19:09.669794202Z stdout F log content 3' >> "${targetLog}"
 
   local attachLog="${LOGDIR}/attach.out"
-  kwokctl --name "${name}" kubectl -n "${namespace}" attach "${target}" > "${attachLog}" 2>/dev/null &
+  kwokctl --name "${name}" kubectl -n "${namespace}" attach "${target}" > "${attachLog}" &
   pid=$!
 
   # allow some time for attach to parse logs
-  sleep 5
+  sleep 1
 
   echo '2016-10-06T00:20:09.669794202Z stdout F log content 4' >> "${targetLog}"
   echo '2016-10-06T00:20:10.669794202Z stdout F log content 5' >> "${targetLog}"
-  sleep 10
-  kill -INT "${pid}"
 
   local want=$(tail -n 2 "${targetLog}" | cut -d " " -f 4-)
+
+  local result
+  for ((i = 0; i < 60; i++)); do
+    result=$(cat "${attachLog}")
+    if [[ "${result}" =~ "${want}" ]]; then
+        break
+    fi
+    sleep 1
+  done
+
+  kill -INT "${pid}"
 
   result=$(cat "${attachLog}")
   if [[ ! "${result}" =~ "${want}" ]]; then
