@@ -92,13 +92,13 @@ function test_verbosity() {
   local name="${2}"
 
   if [[ "${runtime}" == "kind" ]]; then
-    check_kind ${name}
+    check_kind "${name}"
   elif [[ "${runtime}" == "docker" ]]; then
-    check_docker ${name}
+    check_docker "${name}"
   elif [[ "${runtime}" == "nerdctl" ]]; then
-    check_nerdctl ${name}
+    check_nerdctl "${name}"
   elif [[ "${runtime}" == "binary" ]]; then
-    check_binary ${name}
+    check_binary "${name}"
   fi
 
   if [[ $? -ne 0 ]]; then
