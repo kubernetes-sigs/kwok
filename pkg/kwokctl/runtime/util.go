@@ -83,6 +83,10 @@ func GetLogVolumes(ctx context.Context) ([]internalversion.Volume, error) {
 		}
 	}
 
+	if mountDirs.err != nil {
+		return nil, mountDirs.err
+	}
+
 	volumes := make([]internalversion.Volume, 0, mountDirs.size())
 	i := 0
 	for _, dir := range mountDirs.items() {

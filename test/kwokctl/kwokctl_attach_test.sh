@@ -59,15 +59,16 @@ function test_attach() {
   echo '2016-10-06T00:19:09.669794202Z stdout F log content 3' >> "${targetLog}"
 
   local attachLog="${LOGDIR}/attach.out"
-  kwokctl --name "${name}" kubectl -n "${namespace}" attach "${target}" > "${attachLog}" &
+  kwokctl --name "${name}" kubectl -n "${namespace}" attach "${target}" > "${attachLog}" 2>/dev/null &
   pid=$!
-  # Log in the future to test forwarding on attach
-  echo '2056-10-06T00:20:09.669794202Z stdout F log content 4' >> "${targetLog}"
-  echo '2056-10-06T00:20:10.669794202Z stdout F log content 5' >> "${targetLog}"
+  # Allow some time for attach to pick up and parse logs
+  sleep 1
+
+  echo '2016-10-06T00:20:09.669794202Z stdout F log content 4' >> "${targetLog}"
+  echo '2016-10-06T00:20:10.669794202Z stdout F log content 5' >> "${targetLog}"
+
   sleep 5
   kill -INT "${pid}"
-
-  local want=$(cat "${targetLog}" | tail -n 2 | cut -d " " -f 4-)
 
   result=$(cat "${attachLog}")
   if [[ ! "${result}" =~ "${want}" ]]; then
