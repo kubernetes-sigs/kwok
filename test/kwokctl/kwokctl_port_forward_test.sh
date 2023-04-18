@@ -53,7 +53,7 @@ function test_port_forward() {
   local port="${4}"
   local pid
   local result
-  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" > /dev/null 2>&1 &
+  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" >/dev/null 2>&1 &
   pid=$!
 
   # allow some time for port forward to start
@@ -68,21 +68,21 @@ function test_port_forward() {
 }
 
 function test_port_forward_failed() {
-    local name="${1}"
-    local namespace="${2}"
-    local target="${3}"
-    local port="${4}"
-    local pid
-    local result
-    kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" > /dev/null 2>&1 &
-    pid=$!
+  local name="${1}"
+  local namespace="${2}"
+  local target="${3}"
+  local port="${4}"
+  local pid
+  local result
+  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" >/dev/null 2>&1 &
+  pid=$!
 
-    # allow some time for port forward to start
-    sleep 5
-    if curl localhost:8888/healthz 2>/dev/null; then
-      echo "Error: port-forward to ${2} should fail"
-      return 1
-    fi
+  # allow some time for port forward to start
+  sleep 5
+  if curl localhost:8888/healthz 2>/dev/null; then
+    echo "Error: port-forward to ${2} should fail"
+    return 1
+  fi
 }
 
 function test_apply_node_and_pod() {

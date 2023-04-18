@@ -22,24 +22,24 @@ ROOT_DIR=$(realpath $(dirname "${BASH_SOURCE[0]}")/..)
 CODEGEN_PKG_VENDOR="${ROOT_DIR}"/vendor/k8s.io/code-generator
 CODEGEN_PKG=${CODEGEN_PKG:-${CODEGEN_PKG_VENDOR}}
 if [[ "${CODEGEN_PKG}" == "${CODEGEN_PKG_VENDOR}" ]]; then
-    ls "${CODEGEN_PKG_VENDOR}" >/dev/null 2>&1 || go mod vendor
+  ls "${CODEGEN_PKG_VENDOR}" >/dev/null 2>&1 || go mod vendor
 fi
 
 KWOK_PROJECT="sigs.k8s.io/kwok"
 KWOK_API_PACKAGE="${KWOK_PROJECT}/pkg/apis"
 
 function codegen() {
-    echo "Update codegen"
+  echo "Update codegen"
 
-    bash "${CODEGEN_PKG}"/generate-internal-groups.sh \
-        "deepcopy,defaulter,conversion" \
-        "${KWOK_API_PACKAGE}" \
-        "${KWOK_API_PACKAGE}" \
-        "${KWOK_API_PACKAGE}" \
-        ":v1alpha1,config/v1alpha1,internalversion" \
-        --trim-path-prefix "${KWOK_PROJECT}" \
-        --output-base "./" \
-        --go-header-file "${ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
+  bash "${CODEGEN_PKG}"/generate-internal-groups.sh \
+    "deepcopy,defaulter,conversion" \
+    "${KWOK_API_PACKAGE}" \
+    "${KWOK_API_PACKAGE}" \
+    "${KWOK_API_PACKAGE}" \
+    ":v1alpha1,config/v1alpha1,internalversion" \
+    --trim-path-prefix "${KWOK_PROJECT}" \
+    --output-base "./" \
+    --go-header-file "${ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 }
 
 cd "${ROOT_DIR}" && codegen || exit 1

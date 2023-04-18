@@ -51,7 +51,7 @@ function args() {
       --skip | --skip=*)
         [[ "${arg#*=}" != "${arg}" ]] && SKIPS+=("${arg#*=}") || { SKIPS+=("${2}") && shift; }
         shift
-      ;;
+        ;;
       -*)
         echo "Error: Unknown argument: ${arg}"
         usage

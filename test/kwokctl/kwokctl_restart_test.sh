@@ -91,13 +91,13 @@ function test_restart() {
   sleep 15
   expect_info="$(get_resource_info "${name}")"
 
-  echo  kwokctl --name "${name}" stop cluster
+  echo kwokctl --name "${name}" stop cluster
   kwokctl --name "${name}" stop cluster
   if [[ $? -eq 0 ]]; then
-      echo "Cluster ${name} stopped successfully."
+    echo "Cluster ${name} stopped successfully."
   else
-      echo "Error: cluster ${name} stop error"
-      return 1
+    echo "Error: cluster ${name} stop error"
+    return 1
   fi
   kwokctl --name "${name}" kubectl get no
   if [[ $? -eq 0 ]]; then
@@ -108,10 +108,10 @@ function test_restart() {
   echo kwokctl --name "${name}" start cluster --wait 10m --timeout 10m
   kwokctl --name "${name}" start cluster --wait 10m --timeout 10m
   if [[ $? -eq 0 ]]; then
-      echo "Cluster ${name} started successfully."
+    echo "Cluster ${name} started successfully."
   else
-      echo "Error: cluster ${name} start error"
-      return 1
+    echo "Error: cluster ${name} start error"
+    return 1
   fi
   test_prometheus
   if [[ $? -ne 0 ]]; then

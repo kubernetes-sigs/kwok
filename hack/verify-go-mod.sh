@@ -20,9 +20,9 @@ set -o pipefail
 ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
 function check() {
-    echo "Verify go.mod & go.sum"
-    go mod tidy
-    git --no-pager diff --exit-code go.mod go.sum
+  echo "Verify go.mod & go.sum"
+  go mod tidy
+  git --no-pager diff --exit-code go.mod go.sum
 }
 
 cd "${ROOT_DIR}"

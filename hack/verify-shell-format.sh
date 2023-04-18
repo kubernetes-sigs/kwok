@@ -17,19 +17,14 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
-
-function clean() {
-  rm -rf "${ROOT_DIR}/pkg/apis/**/zz_generated.*.go"
-}
+ROOT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)"
 
 function check() {
-  echo "Verify codegen"
-  "${ROOT_DIR}"/hack/update-codegen.sh
+  echo "Verify shell format"
+  "${ROOT_DIR}"/hack/update-shell-format.sh
   git --no-pager diff --exit-code
 }
 
 cd "${ROOT_DIR}"
 
-clean || :
 check || exit 1

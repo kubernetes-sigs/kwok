@@ -39,7 +39,7 @@ function type_message() {
   local message="$1"
   local delay="${2:-0.02}"
   local entry_delay="${3:-0.1}"
-  for (( i=0; i<${#message}; i++ )); do
+  for ((i = 0; i < ${#message}; i++)); do
     echo -n "${message:$i:1}"
     sleep "${delay}"
   done

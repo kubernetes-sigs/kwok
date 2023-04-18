@@ -36,28 +36,28 @@ function args() {
 }
 
 function show_info() {
-    local name="${1}"
-    echo kwokctl get clusters
-    kwokctl get clusters
-    echo
-    echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-    kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-    echo
-    echo kwokctl --name="${name}" logs etcd
-    kwokctl --name="${name}" logs etcd
-    echo
-    echo kwokctl --name="${name}" logs kube-apiserver
-    kwokctl --name="${name}" logs kube-apiserver
-    echo
-    echo kwokctl --name="${name}" logs kube-controller-manager
-    kwokctl --name="${name}" logs kube-controller-manager
-    echo
-    echo kwokctl --name="${name}" logs kube-scheduler
-    kwokctl --name="${name}" logs kube-scheduler
-    echo
-    echo kwokctl --name="${name}" logs kwok-controller
-    kwokctl --name="${name}" logs kwok-controller
-    echo
+  local name="${1}"
+  echo kwokctl get clusters
+  kwokctl get clusters
+  echo
+  echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
+  kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
+  echo
+  echo kwokctl --name="${name}" logs etcd
+  kwokctl --name="${name}" logs etcd
+  echo
+  echo kwokctl --name="${name}" logs kube-apiserver
+  kwokctl --name="${name}" logs kube-apiserver
+  echo
+  echo kwokctl --name="${name}" logs kube-controller-manager
+  kwokctl --name="${name}" logs kube-controller-manager
+  echo
+  echo kwokctl --name="${name}" logs kube-scheduler
+  kwokctl --name="${name}" logs kube-scheduler
+  echo
+  echo kwokctl --name="${name}" logs kwok-controller
+  kwokctl --name="${name}" logs kwok-controller
+  echo
 }
 
 function test_create_cluster() {
@@ -132,70 +132,70 @@ function test_prometheus() {
 }
 
 function test_kwok_controller_port() {
-    local result
-    result="$(curl -s http://127.0.0.1:10247/healthz)"
-    if [[ ! $result == "ok" ]]; then
-        echo "Error: controller healthz is not ok"
-        echo curl -s http://127.0.0.1:10247/healthz
-        echo "${result}"
-        return 1
-    fi
+  local result
+  result="$(curl -s http://127.0.0.1:10247/healthz)"
+  if [[ ! $result == "ok" ]]; then
+    echo "Error: controller healthz is not ok"
+    echo curl -s http://127.0.0.1:10247/healthz
+    echo "${result}"
+    return 1
+  fi
 }
 
 function test_etcd_port() {
-    local result
-    result=$(curl -s http://127.0.0.1:2400/health)
+  local result
+  result=$(curl -s http://127.0.0.1:2400/health)
 
-    if [[ "$(echo "${result}" | grep -o '"health"' | wc -c)" = 0 ]]; then
-      echo "Error: etcd connection"
-      echo curl -s http://127.0.0.1:2400/health
-      echo "${result}"
-      return 1
-    fi
+  if [[ "$(echo "${result}" | grep -o '"health"' | wc -c)" = 0 ]]; then
+    echo "Error: etcd connection"
+    echo curl -s http://127.0.0.1:2400/health
+    echo "${result}"
+    return 1
+  fi
 }
 
 function test_kube_scheduler_port() {
-    local result
+  local result
 
-    local version="${1}"
-    local minor="${version#*.}"
-    minor="${minor%.*}"
+  local version="${1}"
+  local minor="${version#*.}"
+  minor="${minor%.*}"
 
-    local proto="https"
-    if [[  $minor -le 12 ]]; then
-        proto="http"
-    fi
+  local proto="https"
+  if [[ $minor -le 12 ]]; then
+    proto="http"
+  fi
 
-    result=$(curl -s -k "${proto}://127.0.0.1:10250/healthz")
+  result=$(curl -s -k "${proto}://127.0.0.1:10250/healthz")
 
-    if [[ "${result}" != "ok" ]]; then
-      echo "Error: kube scheduler connection"
-      echo "curl -s ${proto}://127.0.0.1:10250/healthz"
-      echo "${result}"
-      return 1
-    fi
+  if [[ "${result}" != "ok" ]]; then
+    echo "Error: kube scheduler connection"
+    echo "curl -s ${proto}://127.0.0.1:10250/healthz"
+    echo "${result}"
+    return 1
+  fi
 }
 
 function test_kube_controller_manager_port() {
-    local result
+  local result
 
-    local version="${1}"
-    local minor="${version#*.}"
-    minor="${minor%.*}"
+  local version="${1}"
+  local minor="${version#*.}"
+  minor="${minor%.*}"
 
-    local proto="https"
-    if [[  $minor -le 12 ]]; then
-        proto="http"
-    fi
+  local proto="https"
+  if [[ $minor -le 12 ]]; then
+    proto="http"
+  fi
 
-    result=$(curl -s -k "${proto}://127.0.0.1:10260/healthz")
+  result=$(curl -s -k "${proto}://127.0.0.1:10260/healthz")
 
-    if [[ "${result}" != "ok" ]]; then
-      echo "Error: kube controller manager connection"
-      echo "curl -s ${proto}://127.0.0.1:10260/healthz"
-      echo "${result}"
-      return 1
-    fi
+  if [[ "${result}" != "ok" ]]; then
+    echo "Error: kube controller manager connection"
+    echo "curl -s ${proto}://127.0.0.1:10260/healthz"
+    echo "${result}"
+    return 1
+  fi
 }
 
 function main() {

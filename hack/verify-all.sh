@@ -61,6 +61,11 @@ if [[ "${VERIFY_SHELLCHECK:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-shellcheck.sh || failed+=(shellcheck)
 fi
 
+if [[ "${VERIFY_SHELL_FORMAT:-true}" == "true" ]]; then
+  echo "[*] Verifying shell format..."
+  "${ROOT_DIR}"/hack/verify-shell-format.sh || failed+=(shell-format)
+fi
+
 # exit based on verify scripts
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Verify failed for: ${failed[*]}"

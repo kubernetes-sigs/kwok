@@ -54,70 +54,70 @@ function test_logs() {
   local target="${3}"
   local targetLog="${LOGDIR}/kwok.log"
 
-  echo '2016-10-06T00:17:09.669794202Z stdout F log content 1' > "${targetLog}"
-  echo '2016-10-06T00:18:09.669794202Z stdout F log content 2' >> "${targetLog}"
-  echo '2016-10-06T00:19:09.669794202Z stdout F log content 3' >> "${targetLog}"
+  echo '2016-10-06T00:17:09.669794202Z stdout F log content 1' >"${targetLog}"
+  echo '2016-10-06T00:18:09.669794202Z stdout F log content 2' >>"${targetLog}"
+  echo '2016-10-06T00:19:09.669794202Z stdout F log content 3' >>"${targetLog}"
 
   # Test basic scenario
   result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs "${target}")
   if [[ $? -ne 0 ]]; then
-      echo "Error: logs failed"
-      return 1
+    echo "Error: logs failed"
+    return 1
   fi
 
-  local want=$(< "${targetLog}" cut -d " " -f 4-)
+  local want=$(cut <"${targetLog}" -d " " -f 4-)
   if [[ ! "${result}" =~ "${want}" ]]; then
-      echo "Error: log result does not match"
-      echo " want: ${want}"
-      echo " got: ${result}"
-      return 1
+    echo "Error: log result does not match"
+    echo " want: ${want}"
+    echo " got: ${result}"
+    return 1
   fi
 
   # Test log tail
   result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs --tail=2 "${target}")
   if [[ $? -ne 0 ]]; then
-      echo "Error: logs tail failed"
-      return 1
+    echo "Error: logs tail failed"
+    return 1
   fi
 
-  local want=$(< "${targetLog}" tail -n 2 | cut -d " " -f 4-)
+  local want=$(tail <"${targetLog}" -n 2 | cut -d " " -f 4-)
   if [[ ! "${result}" =~ "${want}" ]]; then
-      echo "Error: log tail result does not match"
-      echo " want: ${want}"
-      echo " got: ${result}"
-      return 1
+    echo "Error: log tail result does not match"
+    echo " want: ${want}"
+    echo " got: ${result}"
+    return 1
   fi
 
   # Test log since time
   result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs --since-time="2016-10-06T00:18:09.669794202Z" "${target}")
   if [[ $? -ne 0 ]]; then
-      echo "Error: logs tail failed"
-      return 1
+    echo "Error: logs tail failed"
+    return 1
   fi
 
-  local want=$(< "${targetLog}" tail -n 2 | cut -d " " -f 4-)
+  local want=$(tail <"${targetLog}" -n 2 | cut -d " " -f 4-)
   if [[ ! "${result}" =~ "${want}" ]]; then
-      echo "Error: log since-time result does not match"
-      echo " want: ${want}"
-      echo " got: ${result}"
-      return 1
+    echo "Error: log since-time result does not match"
+    echo " want: ${want}"
+    echo " got: ${result}"
+    return 1
   fi
 
   # Test follow log
   local followLog="${LOGDIR}/follow.out"
-  kwokctl --name "${name}" kubectl -n "${namespace}" logs -f "${target}" > "${followLog}" &
+  kwokctl --name "${name}" kubectl -n "${namespace}" logs -f "${target}" >"${followLog}" &
   pid=$!
-  echo '2016-10-06T00:20:09.669794202Z stdout F log content 4' >> "${targetLog}"
+  echo '2016-10-06T00:20:09.669794202Z stdout F log content 4' >>"${targetLog}"
   sleep 5
   kill -INT "${pid}"
 
-  local want=$(< "${targetLog}" cut -d " " -f 4-)
+  local want=$(cut <"${targetLog}" -d " " -f 4-)
   result=$(cat "${followLog}")
   if [[ ! "${result}" =~ "${want}" ]]; then
-      echo "Error: log follow result does not match"
-      echo " want: ${want}"
-      echo " got: ${result}"
-      return 1
+    echo "Error: log follow result does not match"
+    echo " want: ${want}"
+    echo " got: ${result}"
+    return 1
   fi
 }
 

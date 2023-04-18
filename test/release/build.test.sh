@@ -110,38 +110,38 @@ EOF
 }
 
 function want_cluster_image() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --load -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cluster_image_nerdctl() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cluster_image_with_push() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cluster_image_nerdctl_with_push() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 cluster:${VERSION}-k8s.v${v}"
   done
 }
 
 function want_cluster_image_with_push_staging() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cluster_image_nerdctl_with_push_staging() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
   done
@@ -302,38 +302,38 @@ EOF
 }
 
 function want_cross_cluster_image() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --load -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_with_push() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl_with_push() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 --platform=linux/arm64 cluster:${VERSION}-k8s.v${v}"
   done
 }
 
 function want_cross_cluster_image_with_push_staging() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/cluster/Dockerfile ."
   done
 }
 
 function want_cross_cluster_image_nerdctl_with_push_staging() {
-  for v in ${KUBE_RELEASES} ; do
+  for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 --platform=linux/arm64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
   done
