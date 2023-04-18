@@ -70,7 +70,7 @@ function test_attach() {
   sleep 5
   kill -INT "${pid}"
 
-  local want=$(cat "${targetLog}" | tail -n 2 | cut -d " " -f 4-)
+  local want=$(tail -n 2 "${targetLog}" | cut -d " " -f 4-)
 
   result=$(cat "${attachLog}")
   if [[ ! "${result}" =~ "${want}" ]]; then

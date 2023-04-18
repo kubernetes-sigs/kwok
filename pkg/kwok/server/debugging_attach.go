@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/apimachinery/pkg/types"
@@ -43,7 +42,6 @@ func (s *Server) AttachContainer(ctx context.Context, podName, podNamespace stri
 	opts := &logOptions{
 		tail:      0,  // -1 by default which means read all logs.
 		bytes:     -1, // -1 by default which means read all logs.
-		since:     time.Now(),
 		follow:    true,
 		timestamp: false,
 	}
