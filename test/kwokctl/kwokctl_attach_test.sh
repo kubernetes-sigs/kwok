@@ -63,11 +63,11 @@ function test_attach() {
   pid=$!
 
   # allow some time for attach to parse logs
-  sleep 1
+  sleep 5
 
   echo '2016-10-06T00:20:09.669794202Z stdout F log content 4' >> "${targetLog}"
   echo '2016-10-06T00:20:10.669794202Z stdout F log content 5' >> "${targetLog}"
-  sleep 5
+  sleep 10
   kill -INT "${pid}"
 
   local want=$(tail -n 2 "${targetLog}" | cut -d " " -f 4-)
