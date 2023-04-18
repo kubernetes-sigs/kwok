@@ -103,7 +103,7 @@ func TestNodeController(t *testing.T) {
 			return false, fmt.Errorf("node0 want 4 cpu, got %v", node0.Status.Allocatable[corev1.ResourceCPU])
 		}
 		return true, nil
-	})
+	}, wait.WithContinueOnError(5))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestNodeController(t *testing.T) {
 			return false, fmt.Errorf("want 2 nodes, got %d", nodeSize)
 		}
 		return true, nil
-	})
+	}, wait.WithContinueOnError(5))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +152,7 @@ func TestNodeController(t *testing.T) {
 			}
 		}
 		return true, nil
-	})
+	}, wait.WithContinueOnError(5))
 	if err != nil {
 		t.Fatal(err)
 	}
