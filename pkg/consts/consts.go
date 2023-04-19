@@ -22,11 +22,15 @@ var (
 	ProjectName = "kwok"
 	ConfigName  = "kwok.yaml"
 
-	Version      = "unknown"
+	// Version is the version of the project.
+	// It will be overwritten during the `make build` process.
+	Version      = "0.2.0"
 	BinaryPrefix = "https://github.com/kubernetes-sigs/kwok/releases/download"
 	ImagePrefix  = "registry.k8s.io/kwok"
 
-	KubeVersion      = "unknown"
+	// KubeVersion is the version of Kubernetes.
+	// It will be overwritten during the `make build` process.
+	KubeVersion      = "1.27.1"
 	KubeBinaryPrefix = "https://dl.k8s.io/release"
 	KubeImagePrefix  = "registry.k8s.io"
 

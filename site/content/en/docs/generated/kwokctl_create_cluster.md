@@ -26,37 +26,37 @@ kwokctl create cluster [flags]
                                                  (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.18.0/kind-linux-amd64")
       --kind-node-image string                  Image of kind node, only for kind runtime
                                                 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
-                                                 (default "docker.io/kindest/node:unknown")
+                                                 (default "docker.io/kindest/node:v1.27.1")
       --kube-admission                          Enable admission for kube-apiserver, only for non-kind runtime
       --kube-apiserver-binary string            Binary of kube-apiserver, only for binary runtime
-                                                 (default "https://dl.k8s.io/release/unknown/bin/linux/amd64/kube-apiserver")
+                                                 (default "https://dl.k8s.io/release/v1.27.1/bin/linux/amd64/kube-apiserver")
       --kube-apiserver-image string             Image of kube-apiserver, only for docker/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/kube-apiserver:${KWOK_KUBE_VERSION}'
-                                                 (default "registry.k8s.io/kube-apiserver:unknown")
+                                                 (default "registry.k8s.io/kube-apiserver:v1.27.1")
       --kube-apiserver-port uint32              Port of the apiserver (default random)
       --kube-audit-policy string                Path to the file that defines the audit policy configuration
       --kube-authorization                      Enable authorization on secure port, only for non-kind runtime
       --kube-controller-manager-binary string   Binary of kube-controller-manager, only for binary runtime
-                                                 (default "https://dl.k8s.io/release/unknown/bin/linux/amd64/kube-controller-manager")
+                                                 (default "https://dl.k8s.io/release/v1.27.1/bin/linux/amd64/kube-controller-manager")
       --kube-controller-manager-image string    Image of kube-controller-manager, only for docker/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/kube-controller-manager:${KWOK_KUBE_VERSION}'
-                                                 (default "registry.k8s.io/kube-controller-manager:unknown")
+                                                 (default "registry.k8s.io/kube-controller-manager:v1.27.1")
       --kube-controller-manager-port uint32     Port of kube-controller-manager given to the host, only for binary and docker/nerdctl runtime
       --kube-feature-gates string               A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes
       --kube-runtime-config string              A set of key=value pairs that enable or disable built-in APIs
       --kube-scheduler-binary string            Binary of kube-scheduler, only for binary runtime
-                                                 (default "https://dl.k8s.io/release/unknown/bin/linux/amd64/kube-scheduler")
+                                                 (default "https://dl.k8s.io/release/v1.27.1/bin/linux/amd64/kube-scheduler")
       --kube-scheduler-config string            Path to a kube-scheduler configuration file
       --kube-scheduler-image string             Image of kube-scheduler, only for docker/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/kube-scheduler:${KWOK_KUBE_VERSION}'
-                                                 (default "registry.k8s.io/kube-scheduler:unknown")
+                                                 (default "registry.k8s.io/kube-scheduler:v1.27.1")
       --kube-scheduler-port uint32              Port of kube-scheduler given to the host, only for binary and docker/nerdctl runtime
       --kubeconfig string                       The path to the kubeconfig file will be added to the newly created cluster and set to current-context (default "~/.kube/config")
       --kwok-controller-binary string           Binary of kwok-controller, only for binary runtime
-                                                 (default "https://github.com/kubernetes-sigs/kwok/releases/download/unknown/kwok-linux-amd64")
+                                                 (default "https://github.com/kubernetes-sigs/kwok/releases/download/v0.2.0/kwok-linux-amd64")
       --kwok-controller-image string            Image of kwok-controller, only for docker/nerdctl/kind runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
-                                                 (default "registry.k8s.io/kwok/kwok:unknown")
+                                                 (default "registry.k8s.io/kwok/kwok:v0.2.0")
       --prometheus-binary string                Binary of Prometheus, only for binary runtime
       --prometheus-binary-tar string            Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
                                                  (default "https://github.com/prometheus/prometheus/releases/download/v2.43.0/prometheus-2.43.0.linux-amd64.tar.gz")
