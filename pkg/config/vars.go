@@ -139,12 +139,12 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 	if conf.KwokVersion == "" {
 		conf.KwokVersion = consts.Version
 	}
-	conf.KwokVersion = addPrefixV(envs.GetEnvWithPrefix("VERSION", conf.KwokVersion))
+	conf.KwokVersion = version.AddPrefixV(envs.GetEnvWithPrefix("VERSION", conf.KwokVersion))
 
 	if conf.KubeVersion == "" {
 		conf.KubeVersion = consts.KubeVersion
 	}
-	conf.KubeVersion = addPrefixV(envs.GetEnvWithPrefix("KUBE_VERSION", conf.KubeVersion))
+	conf.KubeVersion = version.AddPrefixV(envs.GetEnvWithPrefix("KUBE_VERSION", conf.KubeVersion))
 
 	if conf.SecurePort == nil {
 		minor := parseRelease(conf.KubeVersion)
@@ -315,7 +315,7 @@ func setKwokctlEtcdConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.EtcdVersion == "" {
 		conf.EtcdVersion = k8s.GetEtcdVersion(parseRelease(conf.KubeVersion))
 	}
-	conf.EtcdVersion = trimPrefixV(envs.GetEnvWithPrefix("ETCD_VERSION", conf.EtcdVersion))
+	conf.EtcdVersion = version.TrimPrefixV(envs.GetEnvWithPrefix("ETCD_VERSION", conf.EtcdVersion))
 
 	if conf.EtcdBinaryPrefix == "" {
 		conf.EtcdBinaryPrefix = consts.EtcdBinaryPrefix + "/v" + strings.TrimSuffix(conf.EtcdVersion, "-0")
@@ -361,7 +361,7 @@ func setKwokctlKindConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.KindVersion == "" {
 		conf.KindVersion = consts.KindVersion
 	}
-	conf.KindVersion = addPrefixV(envs.GetEnvWithPrefix("KIND_VERSION", conf.KindVersion))
+	conf.KindVersion = version.AddPrefixV(envs.GetEnvWithPrefix("KIND_VERSION", conf.KindVersion))
 
 	if conf.KindBinaryPrefix == "" {
 		conf.KindBinaryPrefix = consts.KindBinaryPrefix + "/" + conf.KindVersion
@@ -378,7 +378,7 @@ func setKwokctlDockerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.DockerComposeVersion == "" {
 		conf.DockerComposeVersion = consts.DockerComposeVersion
 	}
-	conf.DockerComposeVersion = addPrefixV(envs.GetEnvWithPrefix("DOCKER_COMPOSE_VERSION", conf.DockerComposeVersion))
+	conf.DockerComposeVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DOCKER_COMPOSE_VERSION", conf.DockerComposeVersion))
 
 	if conf.DockerComposeBinaryPrefix == "" {
 		conf.DockerComposeBinaryPrefix = consts.DockerComposeBinaryPrefix + "/" + conf.DockerComposeVersion
@@ -397,7 +397,7 @@ func setKwokctlPrometheusConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 	if conf.PrometheusVersion == "" {
 		conf.PrometheusVersion = consts.PrometheusVersion
 	}
-	conf.PrometheusVersion = addPrefixV(envs.GetEnvWithPrefix("PROMETHEUS_VERSION", conf.PrometheusVersion))
+	conf.PrometheusVersion = version.AddPrefixV(envs.GetEnvWithPrefix("PROMETHEUS_VERSION", conf.PrometheusVersion))
 
 	if conf.PrometheusImagePrefix == "" {
 		conf.PrometheusImagePrefix = consts.PrometheusImagePrefix
@@ -439,37 +439,6 @@ func parseRelease(ver string) int {
 		return -1
 	}
 	return int(v.Minor)
-}
-
-// trimPrefixV returns the version without the prefix 'v'.
-func trimPrefixV(version string) string {
-	if len(version) <= 1 {
-		return version
-	}
-
-	// Not a semantic version or unprefixed 'v'
-	if version[0] != 'v' ||
-		!strings.Contains(version, ".") ||
-		version[1] < '0' ||
-		version[1] > '9' {
-		return version
-	}
-	return version[1:]
-}
-
-// addPrefixV returns the version with the prefix 'v'.
-func addPrefixV(version string) string {
-	if version == "" {
-		return version
-	}
-
-	// Not a semantic version or prefixed 'v'
-	if !strings.Contains(version, ".") ||
-		version[0] < '0' ||
-		version[0] > '9' {
-		return version
-	}
-	return "v" + version
 }
 
 var archMapping = map[string]string{

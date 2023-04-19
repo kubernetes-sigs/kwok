@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/config"
-	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create"
 	del "sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/etcdctl"
@@ -33,6 +32,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/start"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/stop"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // NewCommand returns a new cobra.Command for root
@@ -41,7 +41,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Args:          cobra.NoArgs,
 		Use:           "kwokctl [command]",
 		Short:         "kwokctl is a tool to streamline the creation and management of clusters, with nodes simulated by kwok",
-		Version:       consts.Version,
+		Version:       version.DisplayVersion(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

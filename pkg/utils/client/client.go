@@ -18,9 +18,6 @@ package client
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"runtime"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured/unstructuredscheme"
@@ -31,6 +28,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/flowcontrol"
+
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // Clientset is a set of Kubernetes clients.
@@ -85,7 +84,7 @@ func (g *Clientset) ToRESTConfig() (*rest.Config, error) {
 			restConfig = clientConfig
 		}
 		restConfig.RateLimiter = flowcontrol.NewFakeAlwaysRateLimiter()
-		restConfig.UserAgent = defaultKubernetesUserAgent()
+		restConfig.UserAgent = version.DefaultUserAgent()
 		restConfig.NegotiatedSerializer = unstructuredscheme.NewUnstructuredNegotiatedSerializer()
 		g.restConfig = restConfig
 
@@ -193,27 +192,3 @@ func (d *cachedDiscoveryInterface) Fresh() bool {
 }
 
 func (d *cachedDiscoveryInterface) Invalidate() {}
-
-// buildUserAgent builds a User-Agent string from given args.
-func buildUserAgent(command, os, arch string) string {
-	return fmt.Sprintf("%s (%s/%s)", command, os, arch)
-}
-
-// adjustCommand returns the last component of the
-// OS-specific command path for use in User-Agent.
-func adjustCommand(p string) string {
-	// Unlikely, but better than returning "".
-	if len(p) == 0 {
-		return "unknown"
-	}
-	return filepath.Base(p)
-}
-
-// defaultKubernetesUserAgent returns a User-Agent string built from static global vars.
-func defaultKubernetesUserAgent() string {
-	return buildUserAgent(
-		adjustCommand(os.Args[0]),
-		runtime.GOOS,
-		runtime.GOARCH,
-	)
-}

@@ -28,7 +28,6 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
-	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/server"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -37,6 +36,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
 )
@@ -59,7 +59,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Short:         "kwok is a tool for simulating the lifecycle of fake nodes, pods, and other Kubernetes API resources.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		Version:       consts.Version,
+		Version:       version.DisplayVersion(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context(), flags)
 		},
