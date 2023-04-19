@@ -185,6 +185,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		execs := config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
 		clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
 		logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
+		clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
+		attaches := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
 		config := server.Config{
 			ClusterPortForwards: clusterPortForwards,
 			PortForwards:        portForwards,
@@ -192,6 +194,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 			Execs:               execs,
 			ClusterLogs:         clusterLogs,
 			Logs:                logs,
+			ClusterAttaches:     clusterAttaches,
+			Attaches:            attaches,
 		}
 		svc := server.NewServer(config)
 		svc.InstallMetrics()
