@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+DIR="$(realpath "${DIR}")"
+
+source "${DIR}/suite.sh"
+
 KWOK_KUBE_VERSION=""
 
 function usage() {
@@ -29,40 +35,23 @@ function args() {
   KWOK_KUBE_VERSION="${1}"
 }
 
-function child_timeout() {
-  local to="${1}"
-  shift
-  "${@}" &
-  local wp=$!
-  local start=0
-  while kill -0 "${wp}" 2>/dev/null; do
-    if [[ "${start}" -ge "${to}" ]]; then
-      kill "${wp}"
-      echo "Error: Timeout ${to}s" >&2
-      return 1
-    fi
-    ((start++))
-    sleep 1
-  done
-  echo "Took ${start}s" >&2
-}
-
 function wait_resource() {
   local name="${1}"
-  local reason="${2}"
-  local want="${3}"
+  local resource="${2}"
+  local reason="${3}"
+  local want="${4}"
   local raw
   local got
   local all
   while true; do
-    raw="$(kwokctl kubectl get --no-headers "${name}" | grep "fake-" 2>/dev/null)"
+    raw="$(kwokctl --name "${name}" kubectl get --no-headers "${resource}" | grep "fake-" 2>/dev/null)"
     got=$(echo "${raw}" | grep -c "${reason}")
     if [[ "${got}" == "${want}" ]]; then
-      echo "${name} ${got} done"
+      echo "${resource} ${got} done"
       break
     else
       all=$(echo "${raw}" | wc -l)
-      echo "${name} ${got}/${all} => ${want}"
+      echo "${resource} ${got}/${all} => ${want}"
     fi
     sleep 1
   done
@@ -117,53 +106,42 @@ EOF
 }
 
 function scale_create_pod() {
-  local size="${1}"
+  local name="${1}"
+  local size="${2}"
   local node_name
-  node_name="$(kwokctl kubectl get node -o jsonpath='{.items.*.metadata.name}' | tr ' ' '\n' | grep fake- | head -n 1)"
-  gen_pods "${size}" "${node_name}" | kwokctl kubectl apply -f - >/dev/null &
-  wait_resource Pod Running "${size}"
+  node_name="$(kwokctl --name "${name}" kubectl get node -o jsonpath='{.items.*.metadata.name}' | tr ' ' '\n' | grep fake- | head -n 1)"
+  gen_pods "${size}" "${node_name}" | kwokctl --name "${name}" kubectl apply -f - >/dev/null &
+  wait_resource "${name}" Pod Running "${size}"
 }
 
 function scale_delete_pod() {
-  local size="${1}"
-  kwokctl kubectl delete pod -l app=fake-pod --grace-period 1 >/dev/null &
-  wait_resource Pod fake-pod- "${size}"
+  local name="${1}"
+  local size="${2}"
+  kwokctl --name "${name}" kubectl delete pod -l app=fake-pod --grace-period 1 >/dev/null &
+  wait_resource "${name}" Pod fake-pod- "${size}"
 }
 
 function scale_create_node() {
-  local size="${1}"
-  gen_nodes "${size}" "fake-node" | kwokctl kubectl apply -f - >/dev/null &
-  wait_resource Node Ready "${size}"
-}
-
-function create_cluster() {
-  KWOK_KUBE_VERSION="${KWOK_KUBE_VERSION}" kwokctl -v=-4 create cluster --timeout 30m --wait 30m --quiet-pull || {
-    echo "Error: Failed to create cluster" >&2
-    exit 1
-  }
-}
-
-function delete_cluster() {
-  kwokctl delete cluster
+  local name="${1}"
+  local size="${2}"
+  gen_nodes "${size}" "fake-node" | kwokctl --name "${name}" kubectl apply -f - >/dev/null &
+  wait_resource "${name}" Node Ready "${size}"
 }
 
 function main() {
   local failed=()
   local name
+  local release="${KWOK_KUBE_VERSION}"
 
   echo "------------------------------"
   echo "Benchmarking on ${KWOK_RUNTIME}"
   name="benchmark-${KWOK_RUNTIME}"
 
-  create_cluster
-  scale_create_node 1
-  child_timeout 120 scale_create_pod 1000 || failed+=("scale_create_pod_timeout_${name}")
-  child_timeout 120 scale_delete_pod 0 || failed+=("scale_delete_pod_timeout_${name}")
-  delete_cluster
-
-  create_cluster
-  child_timeout 120 scale_create_node 1000 || failed+=("scale_create_node_timeout_${name}")
-  delete_cluster
+  create_cluster "${name}" "${release}"
+  child_timeout 120 scale_create_node "${name}" 1000 || failed+=("scale_create_node_timeout_${name}")
+  child_timeout 120 scale_create_pod "${name}" 1000 || failed+=("scale_create_pod_timeout_${name}")
+  child_timeout 120 scale_delete_pod "${name}" 0 || failed+=("scale_delete_pod_timeout_${name}")
+  delete_cluster "${name}"
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
     echo "------------------------------"

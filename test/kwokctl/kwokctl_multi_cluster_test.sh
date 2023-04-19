@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+source "${DIR}/suite.sh"
+
 RELEASES=()
 
 function usage() {
@@ -33,23 +35,6 @@ function args() {
     RELEASES+=("${1}")
     shift
   done
-}
-
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    exit 1
-  fi
-}
-
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
 }
 
 function test_check_clusters() {
@@ -86,13 +71,13 @@ function main() {
     echo "Testing multi-cluster on ${KWOK_RUNTIME} for ${release}"
     name1="multi-cluster-1-cluster-${KWOK_RUNTIME}-${release//./-}"
     name2="multi-cluster-2-cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name1}" || failed+=("create_cluster_${name1}")
+    create_cluster "${name1}" "${release}"
     test_check_clusters "${name1}" || failed+=("check_cluster_${name1}")
-    test_create_cluster "${release}" "${name2}" || failed+=("create_cluster_${name2}")
+    create_cluster "${name2}" "${release}"
     test_check_clusters "${name1}" "${name2}" || failed+=("check_cluster_${name1}_${name2}")
-    test_delete_cluster "${release}" "${name1}" || failed+=("delete_cluster_${name1}")
+    delete_cluster "${name1}"
     test_check_clusters "${name2}" || failed+=("check_cluster_${name2}")
-    test_delete_cluster "${release}" "${name2}" || failed+=("delete_cluster_${name2}")
+    delete_cluster "${name2}"
     test_check_clusters || failed+=("check_cluster")
   done
 

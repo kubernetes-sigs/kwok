@@ -72,31 +72,6 @@ function build_image() {
   "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version "${VERSION}" --builder ${builder} --platform "linux/${GOARCH}"
 }
 
-function show_info() {
-  local name="${1}"
-  echo kwokctl get clusters
-  kwokctl get clusters
-  echo
-  echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-  kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-  echo
-  echo kwokctl --name="${name}" logs etcd
-  kwokctl --name="${name}" logs etcd
-  echo
-  echo kwokctl --name="${name}" logs kube-apiserver
-  kwokctl --name="${name}" logs kube-apiserver
-  echo
-  echo kwokctl --name="${name}" logs kube-controller-manager
-  kwokctl --name="${name}" logs kube-controller-manager
-  echo
-  echo kwokctl --name="${name}" logs kube-scheduler
-  kwokctl --name="${name}" logs kube-scheduler
-  echo
-  echo kwokctl --name="${name}" logs kwok-controller
-  kwokctl --name="${name}" logs kwok-controller
-  echo
-}
-
 function requirements() {
   install_kubectl
   install_buildx

@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+source "${DIR}/suite.sh"
+
 RELEASES=()
 
 function usage() {
@@ -33,17 +35,6 @@ function args() {
     RELEASES+=("${1}")
     shift
   done
-}
-
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-
-  KWOK_CONTROLLER_PORT=10247 KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --config="${DIR}/port-forward.yaml"
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    exit 1
-  fi
 }
 
 function test_port_forward() {
@@ -86,6 +77,7 @@ function test_port_forward_failed() {
 }
 
 function test_apply_node_and_pod() {
+  local name="${1}"
   kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml"
   if [[ $? -ne 0 ]]; then
     echo "Error: fake-node apply failed"
@@ -116,11 +108,7 @@ function test_apply_node_and_pod() {
   fi
 }
 
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
-}
+export KWOK_CONTROLLER_PORT=10247
 
 function main() {
   local failed=()
@@ -128,14 +116,14 @@ function main() {
     echo "------------------------------"
     echo "Testing port-forward on ${KWOK_RUNTIME} for ${release}"
     name="port-forward-cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
-    test_apply_node_and_pod || failed+=("apply_node_and_pod")
+    create_cluster "${name}" "${release}" --config "${DIR}/port-forward.yaml"
+    test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
     test_port_forward "${name}" other pod/fake-pod "8001" || failed+=("${name}_target_forward")
     test_port_forward "${name}" other pod/fake-pod "8002" || failed+=("${name}_command_forward")
     test_port_forward_failed "${name}" other pod/fake-pod "8003" || failed+=("${name}_failed")
     test_port_forward "${name}" default deploy/fake-pod "8004" || failed+=("${name}_cluster_default_forward")
     test_port_forward_failed "${name}" default deploy/fake-pod "8005" || failed+=("${name}_cluster_failed")
-    test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
+    delete_cluster "${name}"
   done
 
   if [[ "${#failed[@]}" -ne 0 ]]; then

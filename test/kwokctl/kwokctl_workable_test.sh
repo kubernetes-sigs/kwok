@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+source "${DIR}/suite.sh"
+
 RELEASES=()
 
 function usage() {
@@ -35,20 +37,11 @@ function args() {
   done
 }
 
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
+function test_workable() {
+  local name="${1}"
   local targets
   local current_context
   local i
-
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --kube-admission --kube-authorization --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
-
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    show_info "${name}"
-    return 1
-  fi
 
   current_context="$(kubectl config current-context)"
   if [[ "${current_context}" != "kwok-${name}" ]]; then
@@ -71,21 +64,15 @@ function test_create_cluster() {
 
   if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
     echo "Error: cluster not ready"
-    show_info "${name}"
+    show_all
     return 1
   fi
 
   if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
     echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
-    show_info "${name}"
+    show_all
     return 1
   fi
-}
-
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
 }
 
 function test_prometheus() {
@@ -180,15 +167,16 @@ function main() {
     echo "------------------------------"
     echo "Testing workable on ${KWOK_RUNTIME} for ${release}"
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
+    create_cluster "${name}" "${release}" -v=debug --kube-admission --kube-authorization --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
+    test_workable "${name}" || failed+=("workable_${name}")
     if [[ "${KWOK_RUNTIME}" != "kind" ]]; then
-      test_kube_controller_manager_port "${release}" "${name}" || failed+=("kube_controller_manager_port_${name}")
-      test_kube_scheduler_port "${release}" "${name}" || failed+=("kube_scheduler_port_${name}")
-      test_etcd_port "${release}" "${name}" || failed+=("etcd_port_${name}")
+      test_kube_controller_manager_port "${release}" || failed+=("kube_controller_manager_port_${name}")
+      test_kube_scheduler_port "${release}" || failed+=("kube_scheduler_port_${name}")
+      test_etcd_port || failed+=("etcd_port_${name}")
     fi
     test_prometheus || failed+=("prometheus_${name}")
     test_kwok_controller_port || failed+=("kwok_controller_port_${name}")
-    test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
+    delete_cluster "${name}"
   done
   echo "------------------------------"
 

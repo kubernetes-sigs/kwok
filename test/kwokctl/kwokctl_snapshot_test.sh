@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+source "${DIR}/suite.sh"
+
 RELEASES=()
 
 function usage() {
@@ -35,23 +37,6 @@ function args() {
   done
 }
 
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    exit 1
-  fi
-}
-
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
-}
-
 function get_snapshot_info() {
   local name="${1}"
   kwokctl --name "${name}" kubectl get pod | awk '{print $1}'
@@ -59,8 +44,7 @@ function get_snapshot_info() {
 }
 
 function test_snapshot_etcd() {
-  local release="${1}"
-  local name="${2}"
+  local name="${1}"
   local empty_info
   local full_info
   local restore_empty_info
@@ -131,8 +115,7 @@ function test_snapshot_etcd() {
 }
 
 function test_snapshot_k8s() {
-  local release="${1}"
-  local name="${2}"
+  local name="${1}"
   local full_info
   local restore_full_info
   local full_path="./snapshot-k8s-${name}"
@@ -191,13 +174,13 @@ function main() {
     echo "------------------------------"
     echo "Testing snapshot on ${KWOK_RUNTIME} for ${release}"
     name="snapshot-cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "etcd-${name}" || failed+=("create_cluster_etcd_${name}")
-    test_snapshot_etcd "${release}" "etcd-${name}" || failed+=("snapshot_etcd_${name}")
-    test_delete_cluster "${release}" "etcd-${name}" || failed+=("delete_cluster_etcd_${name}")
+    create_cluster "etcd-${name}" "${release}"
+    test_snapshot_etcd "etcd-${name}" || failed+=("snapshot_etcd_${name}")
+    delete_cluster "etcd-${name}"
 
-    test_create_cluster "${release}" "k8s-${name}" || failed+=("create_cluster_k8s_${name}")
-    test_snapshot_k8s "${release}" "k8s-${name}" || failed+=("snapshot_k8s_${name}")
-    test_delete_cluster "${release}" "k8s-${name}" || failed+=("delete_cluster_k8s_${name}")
+    create_cluster "k8s-${name}" "${release}"
+    test_snapshot_k8s "k8s-${name}" || failed+=("snapshot_k8s_${name}")
+    delete_cluster "k8s-${name}"
   done
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
