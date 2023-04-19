@@ -36,16 +36,16 @@ function args() {
 }
 
 function show_info() {
-    local name="${1}"
-    echo kwokctl get clusters
-    kwokctl get clusters
-    echo
-    echo kwokctl --name="${name}" logs etcd
-    kwokctl --name="${name}" logs etcd
-    echo
-    echo kwokctl --name="${name}" logs kube-apiserver
-    kwokctl --name="${name}" logs kube-apiserver
-    echo
+  local name="${1}"
+  echo kwokctl get clusters
+  kwokctl get clusters
+  echo
+  echo kwokctl --name="${name}" logs etcd
+  kwokctl --name="${name}" logs etcd
+  echo
+  echo kwokctl --name="${name}" logs kube-apiserver
+  kwokctl --name="${name}" logs kube-apiserver
+  echo
 }
 
 function test_create_cluster() {

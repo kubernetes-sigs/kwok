@@ -20,8 +20,8 @@ set -o pipefail
 ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
 function check() {
-    echo "Update cmd docs"
-    go run ./hack/gen_cmd_docs
+  echo "Update cmd docs"
+  go run ./hack/gen_cmd_docs
 }
 
 cd "${ROOT_DIR}"

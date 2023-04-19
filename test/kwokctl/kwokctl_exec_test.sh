@@ -55,15 +55,15 @@ function test_exec() {
   local result
   result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}")
   if [[ $? -ne 0 ]]; then
-      echo "Error: exec failed"
-      return 1
+    echo "Error: exec failed"
+    return 1
   fi
 
   if [[ ! "${result}" =~ "${want}" ]]; then
-      echo "Error: exec result does not match"
-      echo "  want: ${want}"
-      echo "  got:  ${result}"
-      return 1
+    echo "Error: exec result does not match"
+    echo "  want: ${want}"
+    echo "  got:  ${result}"
+    return 1
   fi
 }
 
@@ -113,7 +113,7 @@ function main() {
     test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
     test_apply_node_and_pod || failed+=("apply_node_and_pod")
     test_exec "${name}" other pod/fake-pod "pwd" "/tmp" || failed+=("${name}_target_exec")
-    test_exec "${name}" default deploy/fake-pod "env" "TEST_ENV=test"  || failed+=("${name}_cluster_default_exec")
+    test_exec "${name}" default deploy/fake-pod "env" "TEST_ENV=test" || failed+=("${name}_cluster_default_exec")
     test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
   done
 

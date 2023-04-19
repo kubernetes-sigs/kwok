@@ -20,10 +20,10 @@ set -o pipefail
 ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
 function check() {
-    echo "Verify cmd docs"
-    rm -rf "${ROOT_DIR}"/site/content/en/docs/generated/
-    "${ROOT_DIR}"/hack/update-cmd-docs.sh
-    git --no-pager diff --exit-code
+  echo "Verify cmd docs"
+  rm -rf "${ROOT_DIR}"/site/content/en/docs/generated/
+  "${ROOT_DIR}"/hack/update-cmd-docs.sh
+  git --no-pager diff --exit-code
 }
 
 cd "${ROOT_DIR}"
