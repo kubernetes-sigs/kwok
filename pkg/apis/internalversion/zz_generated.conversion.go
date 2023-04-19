@@ -94,6 +94,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ClusterExec)(nil), (*ClusterExec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(a.(*v1alpha1.ClusterExec), b.(*ClusterExec), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*ClusterExecSpec)(nil), (*v1alpha1.ClusterExecSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(a.(*ClusterExecSpec), b.(*v1alpha1.ClusterExecSpec), scope)
 	}); err != nil {
@@ -126,6 +131,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*ClusterPortForward)(nil), (*v1alpha1.ClusterPortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward(a.(*ClusterPortForward), b.(*v1alpha1.ClusterPortForward), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ClusterPortForward)(nil), (*ClusterPortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(a.(*v1alpha1.ClusterPortForward), b.(*ClusterPortForward), scope)
 	}); err != nil {
 		return err
 	}
@@ -181,6 +191,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*Exec)(nil), (*v1alpha1.Exec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_Exec_To_v1alpha1_Exec(a.(*Exec), b.(*v1alpha1.Exec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.Exec)(nil), (*Exec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Exec_To_internalversion_Exec(a.(*v1alpha1.Exec), b.(*Exec), scope)
 	}); err != nil {
 		return err
 	}
@@ -269,6 +284,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.KwokConfiguration)(nil), (*KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(a.(*configv1alpha1.KwokConfiguration), b.(*KwokConfiguration), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*KwokConfigurationOptions)(nil), (*configv1alpha1.KwokConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(a.(*KwokConfigurationOptions), b.(*configv1alpha1.KwokConfigurationOptions), scope)
 	}); err != nil {
@@ -284,8 +304,18 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.KwokctlConfiguration)(nil), (*KwokctlConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(a.(*configv1alpha1.KwokctlConfiguration), b.(*KwokctlConfiguration), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*KwokctlConfigurationOptions)(nil), (*configv1alpha1.KwokctlConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(a.(*KwokctlConfigurationOptions), b.(*configv1alpha1.KwokctlConfigurationOptions), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*configv1alpha1.KwokctlConfigurationOptions)(nil), (*KwokctlConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(a.(*configv1alpha1.KwokctlConfigurationOptions), b.(*KwokctlConfigurationOptions), scope)
 	}); err != nil {
 		return err
 	}
@@ -344,6 +374,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.PortForward)(nil), (*PortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_PortForward_To_internalversion_PortForward(a.(*v1alpha1.PortForward), b.(*PortForward), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*PortForwardSpec)(nil), (*v1alpha1.PortForwardSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(a.(*PortForwardSpec), b.(*v1alpha1.PortForwardSpec), scope)
 	}); err != nil {
@@ -366,6 +401,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*Stage)(nil), (*v1alpha1.Stage)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_Stage_To_v1alpha1_Stage(a.(*Stage), b.(*v1alpha1.Stage), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.Stage)(nil), (*Stage)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Stage_To_internalversion_Stage(a.(*v1alpha1.Stage), b.(*Stage), scope)
 	}); err != nil {
 		return err
 	}
@@ -449,46 +489,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha1.ClusterExec)(nil), (*ClusterExec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(a.(*v1alpha1.ClusterExec), b.(*ClusterExec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*v1alpha1.ClusterPortForward)(nil), (*ClusterPortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(a.(*v1alpha1.ClusterPortForward), b.(*ClusterPortForward), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*v1alpha1.Exec)(nil), (*Exec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_Exec_To_internalversion_Exec(a.(*v1alpha1.Exec), b.(*Exec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*configv1alpha1.KwokConfiguration)(nil), (*KwokConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(a.(*configv1alpha1.KwokConfiguration), b.(*KwokConfiguration), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*configv1alpha1.KwokctlConfigurationOptions)(nil), (*KwokctlConfigurationOptions)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(a.(*configv1alpha1.KwokctlConfigurationOptions), b.(*KwokctlConfigurationOptions), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*configv1alpha1.KwokctlConfiguration)(nil), (*KwokctlConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(a.(*configv1alpha1.KwokctlConfiguration), b.(*KwokctlConfiguration), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*v1alpha1.PortForward)(nil), (*PortForward)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_PortForward_To_internalversion_PortForward(a.(*v1alpha1.PortForward), b.(*PortForward), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*v1alpha1.Stage)(nil), (*Stage)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_Stage_To_internalversion_Stage(a.(*v1alpha1.Stage), b.(*Stage), scope)
-	}); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -506,6 +506,7 @@ func Convert_internalversion_Attach_To_v1alpha1_Attach(in *Attach, out *v1alpha1
 }
 
 func autoConvert_v1alpha1_Attach_To_internalversion_Attach(in *v1alpha1.Attach, out *Attach, s conversion.Scope) error {
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_AttachSpec_To_internalversion_AttachSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
@@ -574,6 +575,7 @@ func Convert_internalversion_ClusterAttach_To_v1alpha1_ClusterAttach(in *Cluster
 }
 
 func autoConvert_v1alpha1_ClusterAttach_To_internalversion_ClusterAttach(in *v1alpha1.ClusterAttach, out *ClusterAttach, s conversion.Scope) error {
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_ClusterAttachSpec_To_internalversion_ClusterAttachSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
@@ -622,12 +624,17 @@ func Convert_internalversion_ClusterExec_To_v1alpha1_ClusterExec(in *ClusterExec
 }
 
 func autoConvert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(in *v1alpha1.ClusterExec, out *ClusterExec, s conversion.Scope) error {
-	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
+}
+
+// Convert_v1alpha1_ClusterExec_To_internalversion_ClusterExec is an autogenerated conversion function.
+func Convert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(in *v1alpha1.ClusterExec, out *ClusterExec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(in, out, s)
 }
 
 func autoConvert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(in *ClusterExecSpec, out *v1alpha1.ClusterExecSpec, s conversion.Scope) error {
@@ -666,6 +673,7 @@ func Convert_internalversion_ClusterLogs_To_v1alpha1_ClusterLogs(in *ClusterLogs
 }
 
 func autoConvert_v1alpha1_ClusterLogs_To_internalversion_ClusterLogs(in *v1alpha1.ClusterLogs, out *ClusterLogs, s conversion.Scope) error {
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_ClusterLogsSpec_To_internalversion_ClusterLogsSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
@@ -714,12 +722,17 @@ func Convert_internalversion_ClusterPortForward_To_v1alpha1_ClusterPortForward(i
 }
 
 func autoConvert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(in *v1alpha1.ClusterPortForward, out *ClusterPortForward, s conversion.Scope) error {
-	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
+}
+
+// Convert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward is an autogenerated conversion function.
+func Convert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(in *v1alpha1.ClusterPortForward, out *ClusterPortForward, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(in, out, s)
 }
 
 func autoConvert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwardSpec(in *ClusterPortForwardSpec, out *v1alpha1.ClusterPortForwardSpec, s conversion.Scope) error {
@@ -906,12 +919,17 @@ func Convert_internalversion_Exec_To_v1alpha1_Exec(in *Exec, out *v1alpha1.Exec,
 }
 
 func autoConvert_v1alpha1_Exec_To_internalversion_Exec(in *v1alpha1.Exec, out *Exec, s conversion.Scope) error {
-	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
+}
+
+// Convert_v1alpha1_Exec_To_internalversion_Exec is an autogenerated conversion function.
+func Convert_v1alpha1_Exec_To_internalversion_Exec(in *v1alpha1.Exec, out *Exec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_Exec_To_internalversion_Exec(in, out, s)
 }
 
 func autoConvert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(in *ExecSpec, out *v1alpha1.ExecSpec, s conversion.Scope) error {
@@ -1100,12 +1118,17 @@ func Convert_internalversion_KwokConfiguration_To_v1alpha1_KwokConfiguration(in 
 }
 
 func autoConvert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(in *configv1alpha1.KwokConfiguration, out *KwokConfiguration, s conversion.Scope) error {
-	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(&in.Options, &out.Options, s); err != nil {
 		return err
 	}
 	return nil
+}
+
+// Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration is an autogenerated conversion function.
+func Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(in *configv1alpha1.KwokConfiguration, out *KwokConfiguration, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(in, out, s)
 }
 
 func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in *KwokConfigurationOptions, out *configv1alpha1.KwokConfigurationOptions, s conversion.Scope) error {
@@ -1214,7 +1237,7 @@ func Convert_internalversion_KwokctlConfiguration_To_v1alpha1_KwokctlConfigurati
 }
 
 func autoConvert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(in *configv1alpha1.KwokctlConfiguration, out *KwokctlConfiguration, s conversion.Scope) error {
-	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(&in.Options, &out.Options, s); err != nil {
 		return err
@@ -1242,6 +1265,11 @@ func autoConvert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfigu
 		out.ComponentsPatches = nil
 	}
 	return nil
+}
+
+// Convert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration is an autogenerated conversion function.
+func Convert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(in *configv1alpha1.KwokctlConfiguration, out *KwokctlConfiguration, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfiguration(in, out, s)
 }
 
 func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(in *KwokctlConfigurationOptions, out *configv1alpha1.KwokctlConfigurationOptions, s conversion.Scope) error {
@@ -1338,35 +1366,35 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	if err := v1.Convert_Pointer_bool_To_bool(&in.DisableKubeControllerManager, &out.DisableKubeControllerManager, s); err != nil {
 		return err
 	}
-	// WARNING: in.KubeImagePrefix requires manual conversion: does not exist in peer-type
-	// WARNING: in.EtcdImagePrefix requires manual conversion: does not exist in peer-type
-	// WARNING: in.KwokImagePrefix requires manual conversion: does not exist in peer-type
-	// WARNING: in.PrometheusImagePrefix requires manual conversion: does not exist in peer-type
+	// INFO: in.KubeImagePrefix opted out of conversion generation
+	// INFO: in.EtcdImagePrefix opted out of conversion generation
+	// INFO: in.KwokImagePrefix opted out of conversion generation
+	// INFO: in.PrometheusImagePrefix opted out of conversion generation
 	out.EtcdImage = in.EtcdImage
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
 	out.KubeSchedulerImage = in.KubeSchedulerImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.PrometheusImage = in.PrometheusImage
-	// WARNING: in.KindNodeImagePrefix requires manual conversion: does not exist in peer-type
+	// INFO: in.KindNodeImagePrefix opted out of conversion generation
 	out.KindNodeImage = in.KindNodeImage
 	out.BinSuffix = in.BinSuffix
-	// WARNING: in.KubeBinaryPrefix requires manual conversion: does not exist in peer-type
+	// INFO: in.KubeBinaryPrefix opted out of conversion generation
 	out.KubeApiserverBinary = in.KubeApiserverBinary
 	out.KubeControllerManagerBinary = in.KubeControllerManagerBinary
 	out.KubeSchedulerBinary = in.KubeSchedulerBinary
 	out.KubectlBinary = in.KubectlBinary
-	// WARNING: in.EtcdBinaryPrefix requires manual conversion: does not exist in peer-type
+	// INFO: in.EtcdBinaryPrefix opted out of conversion generation
 	out.EtcdBinary = in.EtcdBinary
 	out.EtcdBinaryTar = in.EtcdBinaryTar
-	// WARNING: in.KwokBinaryPrefix requires manual conversion: does not exist in peer-type
+	// INFO: in.KwokBinaryPrefix opted out of conversion generation
 	out.KwokControllerBinary = in.KwokControllerBinary
-	// WARNING: in.PrometheusBinaryPrefix requires manual conversion: does not exist in peer-type
+	// INFO: in.PrometheusBinaryPrefix opted out of conversion generation
 	out.PrometheusBinary = in.PrometheusBinary
 	out.PrometheusBinaryTar = in.PrometheusBinaryTar
-	// WARNING: in.DockerComposeBinaryPrefix requires manual conversion: does not exist in peer-type
+	// INFO: in.DockerComposeBinaryPrefix opted out of conversion generation
 	out.DockerComposeBinary = in.DockerComposeBinary
-	// WARNING: in.KindBinaryPrefix requires manual conversion: does not exist in peer-type
+	// INFO: in.KindBinaryPrefix opted out of conversion generation
 	out.KindBinary = in.KindBinary
 	out.Mode = in.Mode
 	out.KubeFeatureGates = in.KubeFeatureGates
@@ -1388,6 +1416,11 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = in.KubeControllerManagerNodeMonitorGracePeriodMilliseconds
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
 	return nil
+}
+
+// Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions is an autogenerated conversion function.
+func Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(in *configv1alpha1.KwokctlConfigurationOptions, out *KwokctlConfigurationOptions, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(in, out, s)
 }
 
 func autoConvert_internalversion_Log_To_v1alpha1_Log(in *Log, out *v1alpha1.Log, s conversion.Scope) error {
@@ -1428,6 +1461,7 @@ func Convert_internalversion_Logs_To_v1alpha1_Logs(in *Logs, out *v1alpha1.Logs,
 }
 
 func autoConvert_v1alpha1_Logs_To_internalversion_Logs(in *v1alpha1.Logs, out *Logs, s conversion.Scope) error {
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_LogsSpec_To_internalversion_LogsSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
@@ -1522,12 +1556,17 @@ func Convert_internalversion_PortForward_To_v1alpha1_PortForward(in *PortForward
 }
 
 func autoConvert_v1alpha1_PortForward_To_internalversion_PortForward(in *v1alpha1.PortForward, out *PortForward, s conversion.Scope) error {
-	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
+}
+
+// Convert_v1alpha1_PortForward_To_internalversion_PortForward is an autogenerated conversion function.
+func Convert_v1alpha1_PortForward_To_internalversion_PortForward(in *v1alpha1.PortForward, out *PortForward, s conversion.Scope) error {
+	return autoConvert_v1alpha1_PortForward_To_internalversion_PortForward(in, out, s)
 }
 
 func autoConvert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(in *PortForwardSpec, out *v1alpha1.PortForwardSpec, s conversion.Scope) error {
@@ -1588,12 +1627,17 @@ func Convert_internalversion_Stage_To_v1alpha1_Stage(in *Stage, out *v1alpha1.St
 }
 
 func autoConvert_v1alpha1_Stage_To_internalversion_Stage(in *v1alpha1.Stage, out *Stage, s conversion.Scope) error {
-	// WARNING: in.TypeMeta requires manual conversion: does not exist in peer-type
+	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
+}
+
+// Convert_v1alpha1_Stage_To_internalversion_Stage is an autogenerated conversion function.
+func Convert_v1alpha1_Stage_To_internalversion_Stage(in *v1alpha1.Stage, out *Stage, s conversion.Scope) error {
+	return autoConvert_v1alpha1_Stage_To_internalversion_Stage(in, out, s)
 }
 
 func autoConvert_internalversion_StageDelay_To_v1alpha1_StageDelay(in *StageDelay, out *v1alpha1.StageDelay, s conversion.Scope) error {

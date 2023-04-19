@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
@@ -33,7 +32,7 @@ import (
 func TestConfig(t *testing.T) {
 	ctx := context.Background()
 	config := filepath.Join(t.TempDir(), "config.yaml")
-	data := []metav1.Object{
+	data := []InternalObject{
 		&internalversion.KwokConfiguration{},
 		&internalversion.KwokctlConfiguration{},
 		&internalversion.Stage{},

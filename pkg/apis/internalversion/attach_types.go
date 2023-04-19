@@ -22,7 +22,6 @@ import (
 
 // Attach provides attach configuration for a single pod.
 type Attach struct {
-	metav1.TypeMeta
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ObjectMeta

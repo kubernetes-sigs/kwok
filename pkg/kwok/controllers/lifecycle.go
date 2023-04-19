@@ -48,7 +48,7 @@ func NewStagesFromYaml(data []byte) ([]*internalversion.Stage, error) {
 			return nil, err
 		}
 
-		internalStage, err := internalversion.ConvertToInternalVersionStage(&stage)
+		internalStage, err := internalversion.ConvertToInternalStage(&stage)
 		if err != nil {
 			return nil, err
 		}

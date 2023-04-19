@@ -73,7 +73,7 @@ func GetKwokctlConfiguration(ctx context.Context) (conf *internalversion.Kwokctl
 		logger.Debug("No configuration",
 			"kind", configv1alpha1.KwokctlConfigurationKind,
 		)
-		conf, err := internalversion.ConvertToInternalVersionKwokctlConfiguration(setKwokctlConfigurationDefaults(&configv1alpha1.KwokctlConfiguration{}))
+		conf, err := internalversion.ConvertToInternalKwokctlConfiguration(setKwokctlConfigurationDefaults(&configv1alpha1.KwokctlConfiguration{}))
 		if err != nil {
 			logger.Error("Get kwokctl configuration failed", err)
 			return &internalversion.KwokctlConfiguration{}
@@ -101,7 +101,7 @@ func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfig
 		logger.Debug("No configuration",
 			"kind", configv1alpha1.KwokConfigurationKind,
 		)
-		conf, err := internalversion.ConvertToInternalVersionKwokConfiguration(setKwokConfigurationDefaults(&configv1alpha1.KwokConfiguration{}))
+		conf, err := internalversion.ConvertToInternalKwokConfiguration(setKwokConfigurationDefaults(&configv1alpha1.KwokConfiguration{}))
 		if err != nil {
 			logger.Error("Get kwok configuration failed", err)
 			return &internalversion.KwokConfiguration{}
@@ -112,12 +112,22 @@ func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfig
 	return conf
 }
 
+func convertToInternalStage(config *v1alpha1.Stage) (*internalversion.Stage, error) {
+	obj := setStageDefaults(config)
+	return internalversion.ConvertToInternalStage(obj)
+}
+
 func setStageDefaults(config *v1alpha1.Stage) *v1alpha1.Stage {
 	if config == nil {
 		config = &v1alpha1.Stage{}
 	}
 	v1alpha1.SetObjectDefaults_Stage(config)
 	return config
+}
+
+func convertToInternalKwokConfiguration(config *configv1alpha1.KwokConfiguration) (*internalversion.KwokConfiguration, error) {
+	obj := setKwokConfigurationDefaults(config)
+	return internalversion.ConvertToInternalKwokConfiguration(obj)
 }
 
 func setKwokConfigurationDefaults(config *configv1alpha1.KwokConfiguration) *configv1alpha1.KwokConfiguration {
@@ -128,6 +138,11 @@ func setKwokConfigurationDefaults(config *configv1alpha1.KwokConfiguration) *con
 	configv1alpha1.SetObjectDefaults_KwokConfiguration(config)
 
 	return config
+}
+
+func convertToInternalKwokctlConfiguration(config *configv1alpha1.KwokctlConfiguration) (*internalversion.KwokctlConfiguration, error) {
+	obj := setKwokctlConfigurationDefaults(config)
+	return internalversion.ConvertToInternalKwokctlConfiguration(obj)
 }
 
 func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration) *configv1alpha1.KwokctlConfiguration {

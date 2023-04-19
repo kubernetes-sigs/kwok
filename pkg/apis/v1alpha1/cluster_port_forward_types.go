@@ -29,6 +29,7 @@ const (
 
 // ClusterPortForward provides cluster-wide port forward configuration.
 type ClusterPortForward struct {
+	//+k8s:conversion-gen=false
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata

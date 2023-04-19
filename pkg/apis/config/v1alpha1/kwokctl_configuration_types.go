@@ -34,6 +34,7 @@ const (
 
 // KwokctlConfiguration provides configuration for the Kwokctl.
 type KwokctlConfiguration struct {
+	//+k8s:conversion-gen=false
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
@@ -41,9 +42,9 @@ type KwokctlConfiguration struct {
 	// Options holds information about the default value.
 	Options KwokctlConfigurationOptions `json:"options,omitempty"`
 	// Components holds information about the components.
-	Components []Component `json:"components,omitempty"`
+	Components []Component `json:"components,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 	// ComponentsPatches holds information about the components patches.
-	ComponentsPatches []ComponentPatches `json:"componentsPatches,omitempty"`
+	ComponentsPatches []ComponentPatches `json:"componentsPatches,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 }
 
 // ExtraArgs holds information about the extra args.
@@ -133,18 +134,22 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeImagePrefix is the prefix of the kubernetes image.
 	// is the default value for env KWOK_KUBE_IMAGE_PREFIX
+	//+k8s:conversion-gen=false
 	KubeImagePrefix string `json:"kubeImagePrefix,omitempty"`
 
 	// EtcdImagePrefix is the prefix of the etcd image.
 	// is the default value for env KWOK_ETCD_IMAGE_PREFIX
+	//+k8s:conversion-gen=false
 	EtcdImagePrefix string `json:"etcdImagePrefix,omitempty"`
 
 	// KwokImagePrefix is the prefix of the kwok image.
 	// is the default value for env KWOK_IMAGE_PREFIX
+	//+k8s:conversion-gen=false
 	KwokImagePrefix string `json:"kwokImagePrefix,omitempty"`
 
 	// PrometheusImagePrefix is the prefix of the Prometheus image.
 	// is the default value for env KWOK_PROMETHEUS_IMAGE_PREFIX
+	//+k8s:conversion-gen=false
 	PrometheusImagePrefix string `json:"prometheusImagePrefix,omitempty"`
 
 	// EtcdImage is the image of etcd.
@@ -173,6 +178,7 @@ type KwokctlConfigurationOptions struct {
 
 	// KindNodeImagePrefix is the prefix of the kind node image.
 	// is the default value for env KWOK_KIND_NODE_IMAGE_PREFIX
+	//+k8s:conversion-gen=false
 	KindNodeImagePrefix string `json:"kindNodeImagePrefix,omitempty"`
 
 	// KindNodeImage is the image of kind node.
@@ -185,6 +191,7 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeBinaryPrefix is the prefix of the kubernetes binary.
 	// is the default value for env KWOK_KUBE_BINARY_PREFIX
+	//+k8s:conversion-gen=false
 	KubeBinaryPrefix string `json:"kubeBinaryPrefix,omitempty"`
 
 	// KubeApiserverBinary is the binary of kube-apiserver.
@@ -205,6 +212,7 @@ type KwokctlConfigurationOptions struct {
 
 	// EtcdBinaryPrefix is the prefix of the etcd binary.
 	// is the default value for env KWOK_ETCD_BINARY_PREFIX
+	//+k8s:conversion-gen=false
 	EtcdBinaryPrefix string `json:"etcdBinaryPrefix,omitempty"`
 
 	// EtcdBinary is the binary of etcd.
@@ -217,6 +225,7 @@ type KwokctlConfigurationOptions struct {
 
 	// KwokBinaryPrefix is the prefix of the kwok binary.
 	// is the default value for env KWOK_BINARY_PREFIX
+	//+k8s:conversion-gen=false
 	KwokBinaryPrefix string `json:"kwokBinaryPrefix,omitempty"`
 
 	// KwokControllerBinary is the binary of kwok.
@@ -225,6 +234,7 @@ type KwokctlConfigurationOptions struct {
 
 	// PrometheusBinaryPrefix is the prefix of the Prometheus binary.
 	// is the default value for env KWOK_PROMETHEUS_PREFIX
+	//+k8s:conversion-gen=false
 	PrometheusBinaryPrefix string `json:"prometheusBinaryPrefix,omitempty"`
 
 	// PrometheusBinary  is the binary of Prometheus.
@@ -237,6 +247,7 @@ type KwokctlConfigurationOptions struct {
 
 	// DockerComposeBinaryPrefix is the binary of docker-compose.
 	// is the default value for env KWOK_DOCKER_COMPOSE_BINARY_PREFIX
+	//+k8s:conversion-gen=false
 	DockerComposeBinaryPrefix string `json:"dockerComposeBinaryPrefix,omitempty"`
 
 	// DockerComposeBinary is the binary of Docker compose.
@@ -245,6 +256,7 @@ type KwokctlConfigurationOptions struct {
 
 	// KindBinaryPrefix is the binary prefix of kind.
 	// is the default value for env KWOK_KIND_BINARY_PREFIX
+	//+k8s:conversion-gen=false
 	KindBinaryPrefix string `json:"kindBinaryPrefix,omitempty"`
 
 	// KindBinary is the binary of kind.
@@ -314,7 +326,7 @@ type Component struct {
 	// Name of the component specified as a DNS_LABEL.
 	// Each component must have a unique name (DNS_LABEL).
 	// Cannot be updated.
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Links is a set of links for the component.
 	// +optional

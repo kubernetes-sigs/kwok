@@ -19,19 +19,17 @@ package config
 import (
 	"context"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
 type configCtx int
 
 type configValue struct {
-	Objects []metav1.Object
+	Objects []InternalObject
 }
 
 // setupContext sets the given objects in the context.
-func setupContext(ctx context.Context, objs []metav1.Object) context.Context {
+func setupContext(ctx context.Context, objs []InternalObject) context.Context {
 	val := &configValue{
 		Objects: objs,
 	}
@@ -39,7 +37,7 @@ func setupContext(ctx context.Context, objs []metav1.Object) context.Context {
 }
 
 // addToContext adds the given objects to the context.
-func addToContext(ctx context.Context, objs ...metav1.Object) {
+func addToContext(ctx context.Context, objs ...InternalObject) {
 	v := ctx.Value(configCtx(0))
 	val, ok := v.(*configValue)
 	if !ok {
@@ -52,7 +50,7 @@ func addToContext(ctx context.Context, objs ...metav1.Object) {
 }
 
 // getFromContext returns the objects from the context.
-func getFromContext(ctx context.Context) []metav1.Object {
+func getFromContext(ctx context.Context) []InternalObject {
 	v := ctx.Value(configCtx(0))
 	val, ok := v.(*configValue)
 	if !ok {

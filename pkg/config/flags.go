@@ -18,7 +18,6 @@ package config
 
 import (
 	"context"
-	"errors"
 	"os"
 
 	"github.com/spf13/pflag"
@@ -26,6 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // InitFlags initializes the flags for the configuration.
@@ -34,16 +34,30 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 	config := flags.StringArrayP("config", "c", []string{defaultConfigPath}, "config path")
 	_ = flags.Parse(os.Args[1:])
 
+	existDefaultConfig := false
+	configPath, err := path.Expand(defaultConfigPath)
+	if err == nil {
+		_, err = os.Stat(configPath)
+		if err == nil {
+			existDefaultConfig = true
+		}
+	}
+
+	if !slices.Contains(*config, defaultConfigPath) {
+		if existDefaultConfig {
+			*config = append([]string{configPath}, *config...)
+		}
+	} else {
+		if !existDefaultConfig {
+			*config = slices.Filter(*config, func(s string) bool {
+				return s != defaultConfigPath
+			})
+		}
+	}
+
 	logger := log.FromContext(ctx)
 	objs, err := Load(ctx, *config...)
 	if err != nil {
-		if len(*config) == 1 && (*config)[0] == defaultConfigPath && errors.Is(err, os.ErrNotExist) {
-			logger.Debug("Load config",
-				"path", *config,
-				"err", err,
-			)
-			return setupContext(ctx, objs), nil
-		}
 		return nil, err
 	}
 
@@ -55,6 +69,8 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 	} else {
 		logger.Debug("Load config",
 			"path", *config,
+			"count", len(objs),
+			"content", objs,
 		)
 	}
 

@@ -14,25 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package internalversion
+package maps
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"golang.org/x/exp/maps"
 )
 
-// ClusterLogs provides cluster-wide logs.
-type ClusterLogs struct {
-	// Standard list metadata.
-	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
-	metav1.ObjectMeta
-	// Spec holds spec for cluster logs.
-	Spec ClusterLogsSpec
-}
-
-// ClusterLogsSpec holds spec for cluster logs.
-type ClusterLogsSpec struct {
-	// Selector is a selector to filter pods to configure.
-	Selector *ObjectSelector
-	// Forwards is a list of log configurations.
-	Logs []Log
+// Keys returns the keys of the map.
+func Keys[M ~map[K]V, K comparable, V any](m M) []K {
+	return maps.Keys(m)
 }
