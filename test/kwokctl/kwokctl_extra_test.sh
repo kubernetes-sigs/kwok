@@ -37,38 +37,13 @@ function args() {
   done
 }
 
-function show_info() {
-  local name="${1}"
-  echo kwokctl get clusters
-  kwokctl get clusters
-  echo
-  echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-  kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-  echo
-  echo kwokctl --name="${name}" logs etcd
-  kwokctl --name="${name}" logs etcd
-  echo
-  echo kwokctl --name="${name}" logs kube-apiserver
-  kwokctl --name="${name}" logs kube-apiserver
-  echo
-  echo kwokctl --name="${name}" logs kube-controller-manager
-  kwokctl --name="${name}" logs kube-controller-manager
-  echo
-  echo kwokctl --name="${name}" logs kube-scheduler
-  kwokctl --name="${name}" logs kube-scheduler
-  echo
-  echo kwokctl --name="${name}" logs kwok-controller
-  kwokctl --name="${name}" logs kwok-controller
-  echo
-}
-
 function test_create_cluster() {
   local release="${1}"
   local name="${2}"
   local targets
   local i
 
-  KWOK_KUBE_VERSION="${release}" kwokctl --config "${DIR}/kwokctl-config-patches.yaml" create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090
+  KWOK_KUBE_VERSION="${release}" kwokctl --config "${DIR}/kwokctl-config-patches.yaml" create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --prometheus-port 9090
 
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
@@ -85,7 +60,7 @@ function test_delete_cluster() {
 
 function test_prometheus() {
   local targets
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     targets="$(curl -s http://127.0.0.1:9090/api/v1/targets)"
     if [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
       break

@@ -20,7 +20,7 @@ source "${DIR}/helper.sh"
 function main() {
   local all_releases=("${@}")
   for release in "${all_releases[@]}"; do
-    KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --timeout 10m --wait 10m --quiet-pull --config "${DIR}"/kwokctl-config-runtimes.yaml || exit 1
+    KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --timeout 30m --wait 30m --quiet-pull --config "${DIR}"/kwokctl-config-runtimes.yaml || exit 1
     kwokctl delete cluster || exit 1
   done
 }

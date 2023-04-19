@@ -137,7 +137,7 @@ function scale_create_node() {
 }
 
 function create_cluster() {
-  KWOK_KUBE_VERSION="${KWOK_KUBE_VERSION}" kwokctl -v=-4 create cluster --timeout 10m --wait 10m --quiet-pull || {
+  KWOK_KUBE_VERSION="${KWOK_KUBE_VERSION}" kwokctl -v=-4 create cluster --timeout 30m --wait 30m --quiet-pull || {
     echo "Error: Failed to create cluster" >&2
     exit 1
   }

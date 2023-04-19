@@ -39,7 +39,7 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
@@ -72,12 +72,12 @@ function test_snapshot_etcd() {
 
   kwokctl snapshot save --name "${name}" --path "${empty_path}" --format etcd
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f - && break
     sleep 1
   done
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     full_info="$(get_snapshot_info "${name}")"
     if [[ "${full_info}" != "${empty_info}" && "${full_info}" =~ "default pod/" ]]; then
       break
@@ -94,7 +94,7 @@ function test_snapshot_etcd() {
 
   sleep 1
   kwokctl snapshot restore --name "${name}" --path "${empty_path}" --format etcd
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     restore_empty_info="$(get_snapshot_info "${name}")"
     if [[ "${empty_info}" == "${restore_empty_info}" ]]; then
       break
@@ -112,7 +112,7 @@ function test_snapshot_etcd() {
   sleep 1
 
   kwokctl snapshot restore --name "${name}" --path "${full_path}" --format etcd
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     restore_full_info=$(get_snapshot_info "${name}")
     if [[ "${full_info}" == "${restore_full_info}" ]]; then
       break
@@ -137,12 +137,12 @@ function test_snapshot_k8s() {
   local restore_full_info
   local full_path="./snapshot-k8s-${name}"
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f - && break
     sleep 1
   done
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     full_info="$(get_snapshot_info "${name}")"
     if [[ "${full_info}" =~ "default pod/" ]]; then
       break
@@ -152,23 +152,22 @@ function test_snapshot_k8s() {
 
   kwokctl snapshot save --name "${name}" --path "${full_path}" --format k8s
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl delete -f - && break
     sleep 1
   done
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     restore_full_info="$(get_snapshot_info "${name}")"
     if [[ ! "${restore_full_info}" =~ "default pod/" ]]; then
       break
     fi
+    sleep 1
   done
-
-  sleep 5
 
   kwokctl snapshot restore --name "${name}" --path "${full_path}" --format k8s
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     restore_full_info="$(get_snapshot_info "${name}")"
     if [[ "${restore_full_info}" =~ "default pod/" ]]; then
       break

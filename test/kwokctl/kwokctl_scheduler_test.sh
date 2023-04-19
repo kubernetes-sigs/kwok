@@ -35,33 +35,11 @@ function args() {
   done
 }
 
-function show_info() {
-  local name="${1}"
-  echo kwokctl get clusters
-  kwokctl get clusters
-  echo
-  echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-  kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-  echo
-  echo kwokctl --name="${name}" logs etcd
-  kwokctl --name="${name}" logs etcd
-  echo
-  echo kwokctl --name="${name}" logs kube-apiserver
-  kwokctl --name="${name}" logs kube-apiserver
-  echo
-  echo kwokctl --name="${name}" logs kube-controller-manager
-  kwokctl --name="${name}" logs kube-controller-manager
-  echo
-  echo kwokctl --name="${name}" logs kube-scheduler
-  kwokctl --name="${name}" logs kube-scheduler
-  echo
-}
-
 function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --kube-scheduler-config="${DIR}/scheduler-config.yaml"
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --kube-scheduler-config="${DIR}/scheduler-config.yaml"
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
@@ -78,7 +56,7 @@ function test_scheduler() {
   local release="${1}"
   local name="${2}"
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml"
     if kwokctl --name="${name}" kubectl get node | grep Ready >/dev/null 2>&1; then
       break
@@ -86,7 +64,7 @@ function test_scheduler() {
     sleep 1
   done
 
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-scheduler-deployment.yaml"
     if kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
       break

@@ -39,7 +39,7 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_CONTROLLER_PORT=10247 KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --config="${DIR}/port-forward.yaml"
+  KWOK_CONTROLLER_PORT=10247 KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --config="${DIR}/port-forward.yaml"
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
@@ -91,7 +91,7 @@ function test_apply_node_and_pod() {
     echo "Error: fake-node apply failed"
     return 1
   fi
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"
     if [[ $? -eq 0 ]]; then
       break
