@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/nxadm/tail"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -123,7 +122,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 		return nil
 	}
 
-	objs := []metav1.Object{
+	objs := []config.InternalObject{
 		c.conf,
 	}
 

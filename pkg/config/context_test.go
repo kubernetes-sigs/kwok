@@ -26,7 +26,7 @@ import (
 
 func TestContext(t *testing.T) {
 	ctx := context.Background()
-	ctx = setupContext(ctx, []metav1.Object{
+	ctx = setupContext(ctx, []InternalObject{
 		&metav1.ObjectMeta{
 			Name: "first",
 		},
@@ -41,7 +41,7 @@ func TestContext(t *testing.T) {
 		t.Errorf("expected 2 objects, got %d", len(objs))
 	}
 
-	want := []metav1.Object{
+	want := []InternalObject{
 		&metav1.ObjectMeta{
 			Name: "first",
 		},
