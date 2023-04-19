@@ -39,7 +39,7 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1

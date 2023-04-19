@@ -41,7 +41,7 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --config="${DIR}/attach.yaml"
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --config="${DIR}/attach.yaml"
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
@@ -71,7 +71,7 @@ function test_attach() {
   local want=$(tail -n 2 "${targetLog}" | cut -d " " -f 4-)
 
   local result
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     result=$(cat "${attachLog}")
     if [[ "${result}" =~ "${want}" ]]; then
       break

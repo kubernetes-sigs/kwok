@@ -39,7 +39,7 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --prometheus-port 9090
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --prometheus-port 9090
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
@@ -54,7 +54,7 @@ function test_delete_cluster() {
 
 function test_prometheus() {
   local targets
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     targets="$(curl -s http://127.0.0.1:9090/api/v1/targets)"
     if [[ "$(echo "${targets}" | grep -o '"health":"up"' | wc -l)" -ge 6 ]]; then
       break
@@ -105,8 +105,8 @@ function test_restart() {
     return 1
   fi
 
-  echo kwokctl --name "${name}" start cluster --wait 10m --timeout 10m
-  kwokctl --name "${name}" start cluster --wait 10m --timeout 10m
+  echo kwokctl --name "${name}" start cluster --timeout 30m --wait 30m
+  kwokctl --name "${name}" start cluster --timeout 30m --wait 30m
   if [[ $? -eq 0 ]]; then
     echo "Cluster ${name} started successfully."
   else

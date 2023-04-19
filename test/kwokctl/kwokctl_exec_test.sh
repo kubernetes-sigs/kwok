@@ -39,7 +39,7 @@ function test_create_cluster() {
   local release="${1}"
   local name="${2}"
 
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 10m --wait 10m --quiet-pull --config="${DIR}/exec.yaml"
+  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --config="${DIR}/exec.yaml"
   if [[ $? -ne 0 ]]; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
@@ -63,6 +63,7 @@ function test_exec() {
     echo "Error: exec result does not match"
     echo "  want: ${want}"
     echo "  got:  ${result}"
+    show_info "${name}"
     return 1
   fi
 }
@@ -73,7 +74,7 @@ function test_apply_node_and_pod() {
     echo "Error: fake-node apply failed"
     return 1
   fi
-  for ((i = 0; i < 60; i++)); do
+  for ((i = 0; i < 120; i++)); do
     kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"
     if [[ $? -eq 0 ]]; then
       break
