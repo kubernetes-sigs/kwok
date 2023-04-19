@@ -40,7 +40,7 @@ func (s *Server) AttachContainer(ctx context.Context, podName, podNamespace stri
 		return err
 	}
 	opts := &logOptions{
-		tail:      0,  // -1 by default which means read all logs.
+		tail:      0,
 		bytes:     -1, // -1 by default which means read all logs.
 		follow:    true,
 		timestamp: false,
