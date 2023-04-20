@@ -8,7 +8,7 @@ This document walks you through how to configure the Logs feature.
 
 ## What is a Logs?
 
-The Logs API is a [`kwok` Configuration]({{< relref "/docs/user/configuration" >}}) that allows users to define and simulate logs to Pod(s).
+The Logs API is a [`kwok` Configuration][configuration] that allows users to define and simulate logs to Pod(s).
 
 A Logs resource has the following fields:
 
@@ -48,7 +48,6 @@ spec:
       - <string>
     matchNames:
       - <string>
-
   logs:
     - containers:
         - <string>
@@ -63,3 +62,5 @@ The `matchNames` field specifies the names to be matched. If the `matchNames` fi
 ## Examples
 
 <img width="700px" src="/img/demo/logs.svg">
+
+[configuration]: {{< relref "/docs/user/configuration" >}}

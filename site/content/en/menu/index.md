@@ -12,11 +12,12 @@ headless: true
     - [`kwok` out of Cluster]({{< relref "/docs/user/kwok-out-cluster" >}})
     - [`kwokctl` Manages Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}})
     - [Manage Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}})
-  - [`kwokctl` Snapshots Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}})
-  - [`kwokctl` Metrics]({{< relref "/docs/user/kwokctl-metrics" >}})
-  - [`kwokctl` Auditing]({{< relref "/docs/user/kwokctl-auditing" >}})
-  - [`kwokctl` Authorization]({{< relref "/docs/user/kwokctl-authorization" >}})
-  - [`kwokctl` Admission]({{< relref "/docs/user/kwokctl-admission" >}})
+  - **`kwokctl` Advanced Usage**
+    - [Snapshots]({{< relref "/docs/user/kwokctl-snapshot" >}})
+    - [Metrics]({{< relref "/docs/user/kwokctl-metrics" >}})
+    - [Auditing]({{< relref "/docs/user/kwokctl-auditing" >}})
+    - [Authorization]({{< relref "/docs/user/kwokctl-authorization" >}})
+    - [Admission]({{< relref "/docs/user/kwokctl-admission" >}})
   - **Configuration**
     - [Options]({{< relref "/docs/user/configuration" >}})
     - [Stages]({{< relref "/docs/user/stages-configuration" >}})

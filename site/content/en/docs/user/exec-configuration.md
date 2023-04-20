@@ -8,7 +8,7 @@ This document walks you through how to configure the Exec feature.
 
 ## What is a Exec?
 
-The Exec API is a [`kwok` Configuration]({{< relref "/docs/user/configuration" >}}) that allows users to define and simulate exec to Pod(s).
+The Exec API is a [`kwok` Configuration][configuration] that allows users to define and simulate exec to Pod(s).
 
 A Exec resource has the following fields:
 
@@ -52,7 +52,6 @@ spec:
       - <string>
     matchNames:
       - <string>
-
   execs:
     - containers:
         - <string>
@@ -70,3 +69,5 @@ The `matchNames` field specifies the names to be matched. If the `matchNames` fi
 ## Examples
 
 <img width="700px" src="/img/demo/exec.svg">
+
+[configuration]: {{< relref "/docs/user/configuration" >}}

@@ -10,11 +10,23 @@ This document walks through the installation of `kwokctl` and `kwok` binaries.
 
 On Linux/MacOS systems you can install kwok/kwokctl via [brew](https://formulae.brew.sh/formula/kwok):
 
+this will install the latest version of `kwokctl` and `kwok` binaries.
+
 ``` bash
 brew install kwok
 ```
 
+## Go Install
+
+also, you can install `kwokctl` and `kwok` binaries via [golang].
+
+``` bash
+go install sigs.k8s.io/kwok/cmd/{kwok,kwokctl}@latest
+```
+
 ## Binary Releases
+
+Or download from github releases page:
 
 ### Variables preparation
 
@@ -40,3 +52,5 @@ wget -O kwok -c "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST
 chmod +x kwok
 sudo mv kwok /usr/local/bin/kwok
 ```
+
+[golang]: https://golang.org/doc/install

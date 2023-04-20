@@ -8,7 +8,7 @@ This document walks you through how to configure the Stages of Lifecycle.
 
 ## What is a Stage?
 
-The Stage API is a [`kwok` Configuration]({{< relref "/docs/user/configuration" >}}) that allows users to define and simulate different stages in the lifecycle of Kubernetes resources, such as nodes and pods.
+The Stage API is a [`kwok` Configuration][configuration] that allows users to define and simulate different stages in the lifecycle of Kubernetes resources, such as nodes and pods.
 Each Stage resource specifies a resourceRef field that identifies the type of resource that the stage applies to, and a selector field that determines when the stage should be executed.
 
 A Stage resource has the following fields:
@@ -68,7 +68,7 @@ and gain insights into the behavior and performance of your applications and inf
 
 ## Expressions string
 
-The `<expressions-string>` is provided by the [Go Implementation](https://github.com/itchyny/gojq) of [JQ Expressions](https://stedolan.github.io/jq/manual/#Basicfilters)
+The `<expressions-string>` is provided by the [Go Implementation] of [JQ Expressions]
 
 ## Examples
 
@@ -76,7 +76,7 @@ The `<expressions-string>` is provided by the [Go Implementation](https://github
 
 This example shows how to configure the simplest and fastest stages of Node resource, which is also the default Node stages for `kwok`.
 
-[Default Node Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/node-fast.yaml)
+[Default Node Stages]
 
 ``` goat { height=300 width=400 }
          o
@@ -108,7 +108,7 @@ When applied, this Stage maintains the `status.conditions` field for the node.
 
 This example shows how to configure the simplest and fastest stages of Pod resource, which is also the default Pod stages for `kwok`.
 
-[Default Pod Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-fast.yaml)
+[Default Pod Stages]
 
 ``` goat { height=510 width=550 }
       o
@@ -160,9 +160,16 @@ When applied, this Stage empties the `metadata.finalizers` field for the pod, al
 
 ### Pod Stages that simulate real behavior as closely as possible
 
-[General Pod Stages](https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-general.yaml)
+[General Pod Stages]
 
 These Stages simulate real Pod behavior as closely as possible in the future,
 which is not perfect at the moment, so the refinement of this configuration is still a **Work In Progress**.
 
 <img width="700px" src="/img/demo/stages-pod-general.svg">
+
+[configuration]: {{< relref "/docs/user/configuration" >}}
+[Go Implementation]: https://github.com/itchyny/gojq
+[JQ Expressions]: https://stedolan.github.io/jq/manual/#Basicfilters
+[Default Node Stages]: https://github.com/kubernetes-sigs/kwok/blob/main/stages/node-fast.yaml
+[Default Pod Stages]: https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-fast.yaml
+[General Pod Stages]: https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-general.yaml
