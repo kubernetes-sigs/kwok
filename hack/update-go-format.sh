@@ -21,4 +21,7 @@ REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
 cd "${REPO_ROOT}"
 
-gofmt -s -w $(find cmd pkg -name '*.go')
+find cmd pkg -name '*.go' | while IFS='' read -r line
+do
+    gofmt -s -w "$line"
+done

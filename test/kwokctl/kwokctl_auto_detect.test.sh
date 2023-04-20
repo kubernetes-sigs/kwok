@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+DIR=$(dirname "${BASH_SOURCE[0]}" | while IFS='' read -r line
+do
+    realpath "$line"
+done)
+
 
 source "${DIR}/helper.sh"
 
@@ -27,4 +31,7 @@ function main() {
 
 requirements_for_binary
 
-main $(supported_releases)
+supported_releases | while IFS='' read -r line
+do
+    mian "$line"
+done

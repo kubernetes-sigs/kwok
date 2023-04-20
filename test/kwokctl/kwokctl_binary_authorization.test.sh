@@ -27,4 +27,7 @@ function main() {
 
 requirements_for_binary
 
-main $(supported_releases)
+supported_releases | while IFS='' read -r line
+do
+    mian "$line"
+done
