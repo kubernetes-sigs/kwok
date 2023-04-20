@@ -20,7 +20,14 @@ $(SVG_TERM):
 
 %.svg: %.demo $(SVG_TERM)
 	@echo "Generating $@"
-	@$(SVG_TERM) --out "$@" --window --command "cd .. && ./demo/play-demo.sh ./demo/$<"
+	@$(SVG_TERM) --out "$@" \
+	  --window \
+	  --height 24 \
+	  --width 86 \
+	  --command "cd .. && ./demo/play-demo.sh ./demo/$<"
+
+.PHONY: all
+all: $(patsubst %.demo,%.svg,$(wildcard *.demo))
 
 .PHONY: clean
 clean:
