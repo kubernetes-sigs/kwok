@@ -29,5 +29,5 @@ requirements_for_binary
 
 supported_releases | while IFS='' read -r line
 do
-    mian "$line"
+    main "$line"
 done
