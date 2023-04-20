@@ -49,7 +49,7 @@ function args() {
         exit 0
         ;;
       --skip | --skip=*)
-        [[ "${arg#*=}" != "${arg}" ]] && SKIPS+=("${arg#*=}") || { SKIPS+=("${2}") && shift; }
+        [[ "${arg#*=}" != "${arg}" ]] && SKIPS+=("${arg#*=}") || { SKIPS+=("${2}") && shift; } || :
         shift
       ;;
       -*)
