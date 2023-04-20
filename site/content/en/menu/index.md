@@ -20,6 +20,10 @@ headless: true
   - **Configuration**
     - [Options]({{< relref "/docs/user/configuration" >}})
     - [Stages]({{< relref "/docs/user/stages-configuration" >}})
+    - [PortForward]({{< relref "/docs/user/port-forward-configuration" >}})
+    - [Exec]({{< relref "/docs/user/exec-configuration" >}})
+    - [Logs]({{< relref "/docs/user/logs-configuration" >}})
+    - [Attach]({{< relref "/docs/user/attach-configuration" >}})
 - **Tools**
   - [`kwok`]({{< relref "/docs/generated/kwok" >}})
   - [`kwokctl`]({{< relref "/docs/generated/kwokctl" >}})

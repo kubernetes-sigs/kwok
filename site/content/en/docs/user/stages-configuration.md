@@ -8,7 +8,7 @@ This document walks you through how to configure the Stages of Lifecycle.
 
 ## What is a Stage?
 
-The Stage API is a [`kwok` Configuration](./configuration) that allows users to define and simulate different stages in the lifecycle of Kubernetes resources, such as nodes and pods.
+The Stage API is a [`kwok` Configuration]({{< relref "/docs/user/configuration" >}}) that allows users to define and simulate different stages in the lifecycle of Kubernetes resources, such as nodes and pods.
 Each Stage resource specifies a resourceRef field that identifies the type of resource that the stage applies to, and a selector field that determines when the stage should be executed.
 
 A Stage resource has the following fields:

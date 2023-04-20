@@ -1,0 +1,17 @@
+# Let's getting started with kwokctl!
+kwokctl -c ./test/kwokctl/exec.yaml create cluster
+
+# Create a node.
+kubectl apply -f ./test/kwok/fake-node.yaml
+
+# Apply a deployment.
+kubectl apply -f ./test/kwok/fake-deployment.yaml
+
+# Exec into the pod.
+kubectl exec deployment/fake-pod -- ls -lh
+
+# Delete the cluster.
+kwokctl delete cluster
+
+# That's all, enjoy it!
+clear

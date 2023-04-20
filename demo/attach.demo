@@ -1,0 +1,26 @@
+# Let's getting started with kwokctl!
+kwokctl -c ./test/kwokctl/attach.yaml create cluster
+
+# Create a node.
+kubectl apply -f ./test/kwokctl/fake-node.yaml
+
+# Apply a deployment.
+kubectl apply -f ./test/kwokctl/fake-deployment.yaml
+
+# Write some logs.
+echo "$(date --iso-8601=ns) stdout F Hello" > ./logs/kwok.log
+
+# Attach to the pod.
+kubectl attach deployment/fake-pod &
+
+# Again.
+echo "$(date --iso-8601=ns) stdout F Foo" >> ./logs/kwok.log
+
+# Again.
+echo "$(date --iso-8601=ns) stdout F Bar" >> ./logs/kwok.log
+
+# Delete the cluster.
+kwokctl delete cluster
+
+# That's all, enjoy it!
+clear
