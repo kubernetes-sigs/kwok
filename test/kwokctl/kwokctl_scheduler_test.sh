@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+source "${DIR}/suite.sh"
+
 RELEASES=()
 
 function usage() {
@@ -35,26 +37,8 @@ function args() {
   done
 }
 
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --kube-scheduler-config="${DIR}/scheduler-config.yaml"
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    exit 1
-  fi
-}
-
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
-}
-
 function test_scheduler() {
-  local release="${1}"
-  local name="${2}"
+  local name="${1}"
 
   for ((i = 0; i < 120; i++)); do
     kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml"
@@ -74,7 +58,7 @@ function test_scheduler() {
 
   if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
     echo "Error: cluster not ready"
-    show_info "${name}"
+    show_all
     return 1
   fi
 }
@@ -85,9 +69,9 @@ function main() {
     echo "------------------------------"
     echo "Testing scheduler on ${KWOK_RUNTIME} for ${release}"
     name="scheduler-cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
-    test_scheduler "${release}" "${name}" || failed+=("scheduler_${name}")
-    test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
+    create_cluster "${name}" "${release}" --kube-scheduler-config "${DIR}/scheduler-config.yaml"
+    test_scheduler "${name}" || failed+=("scheduler_${name}")
+    delete_cluster "${name}"
   done
 
   if [[ "${#failed[@]}" -ne 0 ]]; then

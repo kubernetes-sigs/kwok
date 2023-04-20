@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+source "${DIR}/suite.sh"
+
 RELEASES=()
 
 function usage() {
@@ -35,27 +37,8 @@ function args() {
   done
 }
 
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --kube-authorization
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    show_info "${name}"
-    exit 1
-  fi
-}
-
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
-}
-
 function test_authorization() {
-  local release="${1}"
-  local name="${2}"
+  local name="${1}"
   local resource
   resource="$(kwokctl --name "${name}" kubectl get role,rolebinding,clusterrole,clusterrolebinding -A)"
   if [[ "${resource}" == "" ]]; then
@@ -71,9 +54,9 @@ function main() {
     echo "------------------------------"
     echo "Testing authorization on ${KWOK_RUNTIME} for ${release}"
     name="authorization-cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
-    test_authorization "${release}" "${name}" || failed+=("authorization_${name}")
-    test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
+    create_cluster "${name}" "${release}" --kube-authorization
+    test_authorization "${name}" || failed+=("authorization_${name}")
+    delete_cluster "${name}"
   done
 
   if [[ "${#failed[@]}" -ne 0 ]]; then

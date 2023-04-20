@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+source "${DIR}/suite.sh"
+
 RELEASES=()
 
 function usage() {
@@ -33,23 +35,6 @@ function args() {
     RELEASES+=("${1}")
     shift
   done
-}
-
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-
-  KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --prometheus-port 9090
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    exit 1
-  fi
-}
-
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
 }
 
 function test_prometheus() {
@@ -77,8 +62,7 @@ function get_resource_info() {
 }
 
 function test_restart() {
-  local release="${1}"
-  local name="${2}"
+  local name="${1}"
   local expect_info
   local actual_info
 
@@ -134,9 +118,9 @@ function main() {
     echo "------------------------------"
     echo "Testing restart on ${KWOK_RUNTIME} for ${release}"
     name="restart-cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name}" || failed+=("create_cluster_${name}")
-    test_restart "${release}" "${name}" || failed+=("restart_cluster_${name}")
-    test_delete_cluster "${release}" "${name}" || failed+=("delete_cluster_${name}")
+    create_cluster "${name}" "${release}" --prometheus-port 9090
+    test_restart "${name}" || failed+=("restart_cluster_${name}")
+    delete_cluster "${name}"
   done
 
   if [[ "${#failed[@]}" -ne 0 ]]; then

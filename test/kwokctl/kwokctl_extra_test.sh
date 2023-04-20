@@ -17,6 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
+source "${DIR}/suite.sh"
+
 RELEASES=()
 
 EXTRASDIR="./extras"
@@ -35,27 +37,6 @@ function args() {
     RELEASES+=("${1}")
     shift
   done
-}
-
-function test_create_cluster() {
-  local release="${1}"
-  local name="${2}"
-  local targets
-  local i
-
-  KWOK_KUBE_VERSION="${release}" kwokctl --config "${DIR}/kwokctl-config-patches.yaml" create cluster --name "${name}" --timeout 30m --wait 30m --quiet-pull --prometheus-port 9090
-
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Cluster ${name} creation failed"
-    show_info "${name}"
-    return 1
-  fi
-}
-
-function test_delete_cluster() {
-  local release="${1}"
-  local name="${2}"
-  kwokctl delete cluster --name "${name}"
 }
 
 function test_prometheus() {
@@ -95,9 +76,9 @@ function main() {
     echo "------------------------------"
     echo "Testing extra on ${KWOK_RUNTIME} for ${release}"
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
-    test_create_cluster "${release}" "${name}" || failed+=("create_extra_cluster_${name}")
+    create_cluster "${name}" "${release}" --config "${DIR}/kwokctl-config-patches.yaml" --prometheus-port 9090
     test_prometheus || failed+=("prometheus_${name}")
-    test_delete_cluster "${release}" "${name}" || failed+=("delete_extra_cluster_${name}")
+    delete_cluster "${name}"
   done
   echo "------------------------------"
   rm -rf "${EXTRASDIR}"
