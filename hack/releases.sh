@@ -55,55 +55,55 @@ function args() {
     arg="$1"
     case "${arg}" in
     --bin | --bin=*)
-      [[ "${arg#*=}" != "${arg}" ]] && BINS+=("${arg#*=}") || { BINS+=("${2}") && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && BINS+=("${arg#*=}") || { BINS+=("${2}") && shift; } || :
       shift
       ;;
     --extra-tag | --extra-tag=*)
-      [[ "${arg#*=}" != "${arg}" ]] && EXTRA_TAGS+=("${arg#*=}") || { EXTRA_TAGS+=("${2}") && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && EXTRA_TAGS+=("${arg#*=}") || { EXTRA_TAGS+=("${2}") && shift; } || :
       shift
       ;;
     --platform | --platform=*)
-      [[ "${arg#*=}" != "${arg}" ]] && PLATFORMS+=("${arg#*=}") || { PLATFORMS+=("${2}") && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && PLATFORMS+=("${arg#*=}") || { PLATFORMS+=("${2}") && shift; } || :
       shift
       ;;
     --bucket | --bucket=*)
-      [[ "${arg#*=}" != "${arg}" ]] && BUCKET="${arg#*=}" || { BUCKET="${2}" && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && BUCKET="${arg#*=}" || { BUCKET="${2}" && shift; } || :
       shift
       ;;
     --gh-release | --gh-release=*)
-      [[ "${arg#*=}" != "${arg}" ]] && GH_RELEASE="${arg#*=}" || { GH_RELEASE="${2}" && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && GH_RELEASE="${arg#*=}" || { GH_RELEASE="${2}" && shift; } || :
       shift
       ;;
     --image-prefix | --image-prefix=*)
-      [[ "${arg#*=}" != "${arg}" ]] && IMAGE_PREFIX="${arg#*=}" || { IMAGE_PREFIX="${2}" && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && IMAGE_PREFIX="${arg#*=}" || { IMAGE_PREFIX="${2}" && shift; } || :
       shift
       ;;
     --binary-prefix | --binary-prefix=*)
-      [[ "${arg#*=}" != "${arg}" ]] && BINARY_PREFIX="${arg#*=}" || { BINARY_PREFIX="${2}" && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && BINARY_PREFIX="${arg#*=}" || { BINARY_PREFIX="${2}" && shift; } || :
       shift
       ;;
     --binary-name | --binary-name=*)
-      [[ "${arg#*=}" != "${arg}" ]] && BINARY_NAME="${arg#*=}" || { BINARY_NAME="${2}" && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && BINARY_NAME="${arg#*=}" || { BINARY_NAME="${2}" && shift; } || :
       shift
       ;;
     --version | --version=*)
-      [[ "${arg#*=}" != "${arg}" ]] && VERSION="${arg#*=}" || { VERSION="${2}" && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && VERSION="${arg#*=}" || { VERSION="${2}" && shift; } || :
       shift
       ;;
     --kube-version | --kube-version=*)
-      [[ "${arg#*=}" != "${arg}" ]] && KUBE_VERSION="${arg#*=}" || { KUBE_VERSION="${2}" && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && KUBE_VERSION="${arg#*=}" || { KUBE_VERSION="${2}" && shift; } || :
       shift
       ;;
     --staging-prefix | --staging-prefix=*)
-      [[ "${arg#*=}" != "${arg}" ]] && STAGING_PREFIX="${arg#*=}" || { STAGING_PREFIX="${2}" && shift; }
+      [[ "${arg#*=}" != "${arg}" ]] && STAGING_PREFIX="${arg#*=}" || { STAGING_PREFIX="${2}" && shift; } || :
       shift
       ;;
     --push | --push=*)
-      [[ "${arg#*=}" != "${arg}" ]] && PUSH="${arg#*=}" || PUSH="true"
+      [[ "${arg#*=}" != "${arg}" ]] && PUSH="${arg#*=}" || PUSH="true" || :
       shift
       ;;
     --dry-run | --dry-run=*)
-      [[ "${arg#*=}" != "${arg}" ]] && DRY_RUN="${arg#*=}" || DRY_RUN="true"
+      [[ "${arg#*=}" != "${arg}" ]] && DRY_RUN="${arg#*=}" || DRY_RUN="true" || :
       shift
       ;;
     --help)
