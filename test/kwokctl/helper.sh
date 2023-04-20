@@ -69,7 +69,7 @@ function build_image() {
     return
   fi
   "${ROOT_DIR}/hack/releases.sh" --bin kwok --version "${KWOK_CONTROLLER_IMAGE##*:}" --platform "linux/${GOARCH}"
-  "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version "${VERSION}" --builder ${builder} --platform "linux/${GOARCH}"
+  "${ROOT_DIR}/images/kwok/build.sh" --image "${KWOK_CONTROLLER_IMAGE%%:*}" --version "${VERSION}" --builder "${builder}" --platform "linux/${GOARCH}"
 }
 
 function show_info() {
