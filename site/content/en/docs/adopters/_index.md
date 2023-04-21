@@ -4,9 +4,7 @@ We are frequently asked who is using of KWOK and how. We would like to share the
 
 Sharing experiences and learning from other users is essential.
 
-{{< details "please consider adding yourself to the list of adopters" >}}
-
-Follow the example below to add.
+Please consider adding yourself to the list of adopters, follow the example below to add.
 
 ```yaml
 # kwok.yaml
@@ -19,10 +17,10 @@ links:
     url: https://kwok.sigs.k8s.io # your link url
 ```
 
-Create a pull request to [add yourself](https://github.com/kubernetes-sigs/kwok/new/main/site/assets/adopters/).
-
-{{< /details >}}
+Create a pull request to [add yourself].
 
 ## List of adopters
 
 {{< adopters >}}
+
+[add yourself]: https://github.com/kubernetes-sigs/kwok/new/main/site/assets/adopters/

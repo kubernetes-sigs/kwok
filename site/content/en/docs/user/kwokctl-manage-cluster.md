@@ -8,7 +8,7 @@ This document walks you through how to run `kwokctl` to manage fake clusters.
 
 ## Install `kwokctl`
 
-[Install `kwokctl`]({{< relref "/docs/user/install" >}}) in your environment.
+[Install `kwokctl`][install] in your environment.
 
 ## Create a Cluster
 
@@ -58,3 +58,4 @@ Cluster "kwok-kwok" deleted
 Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
 
 [manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
+[install]: {{< relref "/docs/user/install" >}}

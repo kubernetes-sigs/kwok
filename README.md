@@ -21,12 +21,12 @@ Please see [our website] for more in-depth information.
 
 ## Why KWOK?
 
-- Lightweight: You can [simulate thousands of nodes](https://kwok.sigs.k8s.io/docs/user/kwok-manage-nodes-and-pods/) on your laptop without significant consumption of CPU or memory resources.
-Currently, KWOK can reliably maintain 1k nodes and 100k pods.
+- Lightweight: You can [simulate thousands of nodes] on your laptop without significant consumption of CPU or memory resources.
+Currently, KWOK can reliably maintain 1k nodes and 100k pods easily.
 - Fast: You can create and delete clusters and nodes almost instantly, without waiting for boot or provisioning.
 Currently, KWOK can create 20 nodes or pods per second.
 - Compatibility: KWOK works with any tools or clients that are compliant with Kubernetes APIs, such as kubectl, helm, kui, etc.
-- Portability: KWOK has no specific hardware or software requirements. You can [run it using pre-built images](https://kwok.sigs.k8s.io/docs/user/all-in-one-image/), once Docker or Nerdctl is installed. Alternatively, binaries are also available for all platforms and can be easily installed.
+- Portability: KWOK has no specific hardware or software requirements. You can [run it using pre-built images], once Docker or Nerdctl is installed. Alternatively, binaries are also available for all platforms and can be easily installed.
 - Flexibility: You can configure different node types, labels, taints, capacities, conditions, etc., and you can configure different pod behaviors, status, etc. to test different scenarios and edge cases.
 
 ## Community
@@ -53,3 +53,5 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 [#kwok]: https://kubernetes.slack.com/messages/kwok/
 [#kwok-dev]: https://kubernetes.slack.com/messages/kwok-dev/
 [slack.k8s.io]: https://slack.k8s.io/
+[simulate thousands of nodes]: https://kwok.sigs.k8s.io/docs/user/kwok-manage-nodes-and-pods/
+[run it using pre-built images]: https://kwok.sigs.k8s.io/docs/user/all-in-one-image/

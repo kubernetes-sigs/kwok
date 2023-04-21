@@ -15,6 +15,10 @@ This document walks you through how to run `kwok` out of cluster for a Kubernete
 
 Firstly, you need to have a Kubernetes cluster, and the `kwok` command-line tool must be available in your `PATH`.
 
+## Install `kwok`
+
+[Install `kwok`][install] in your environment.
+
 ## Running
 
 Next, you can run `kwok` out of cluster by using the `--kubeconfig` flag.
@@ -38,3 +42,4 @@ Finally, you can see the `kwok` is running out of cluster for the Kubernetes clu
 Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
 
 [manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
+[install]: {{< relref "/docs/user/install" >}}

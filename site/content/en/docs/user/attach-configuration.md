@@ -8,7 +8,7 @@ This document walks you through how to configure the Attach feature.
 
 ## What is a Attach?
 
-The Attach API is a [`kwok` Configuration]({{< relref "/docs/user/configuration" >}}) that allows users to define and simulate attaching to Pod(s).
+The Attach API is a [`kwok` Configuration][configuration] that allows users to define and simulate attaching to Pod(s).
 
 A Attach resource has the following fields:
 
@@ -48,7 +48,6 @@ spec:
       - <string>
     matchNames:
       - <string>
-
   attaches:
     - containers:
         - <string>
@@ -62,3 +61,5 @@ The `matchNames` field specifies the names to be matched. If the `matchNames` fi
 ## Examples
 
 <img width="700px" src="/img/demo/attach.svg">
+
+[configuration]: {{< relref "/docs/user/configuration" >}}
