@@ -6,14 +6,6 @@ This document will introduce the design of KWOK.
 
 {{< /hint >}}
 
-## What's the kubemark?
-
-[kubemark] is a kubelet that does not actually run a container.
-
-## What's the kind?
-
-[kind] is run Kubernetes in Docker that is a real cluster.
-
 ## User Stories
 
 ### Scheduler
@@ -47,6 +39,4 @@ Learn more about the [architecture] of KWOK.
 
 [fake-kubelet]: https://github.com/wzshiming/fake-kubelet
 [fake-k8s]: https://github.com/wzshiming/fake-k8s
-[kind]: https://github.com/kubernetes-sigs/kind
-[kubemark]: https://github.com/kubernetes/kubernetes/tree/master/test/kubemark
 [architecture]: {{< relref "/docs/design/architecture" >}}
