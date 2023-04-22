@@ -33,7 +33,6 @@ disabled=(
   # this lint prefers command -v to which, they are not the same
   2230
   # TODO:
-  2046
   2076
   2181
   2207

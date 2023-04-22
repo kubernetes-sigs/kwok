@@ -21,7 +21,7 @@ ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
 function check() {
   echo "Verify gofmt"
-  out="$(gofmt -l -d $(find cmd pkg -name '*.go'))"
+  out="$(gofmt -l -d "$(find cmd pkg -name '*.go')")"
   if [[ -n "${out}" ]]; then
     echo "${out}"
     return 1

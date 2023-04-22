@@ -21,4 +21,4 @@ REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
 cd "${REPO_ROOT}"
 
-gofmt -s -w $(find cmd pkg -name '*.go')
+gofmt -s -w "$(find cmd pkg -name '*.go')"
