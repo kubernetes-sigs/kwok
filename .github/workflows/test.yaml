@@ -132,11 +132,6 @@ jobs:
           - nerdctl
           - kind
         exclude:
-          # No binary is provided by default for control plane components outside of Linux
-          # https://www.downloadkubernetes.com
-          # TODO: we can build the required binary
-          - os: macos-latest
-            kwokctl-runtime: binary
           - os: macos-latest
             kwokctl-runtime: nerdctl
 
@@ -150,10 +145,32 @@ jobs:
           go-version: "1.20"
 
       - name: Install CoreUtils for MacOS
-        if: ${{ matrix.os == 'macos-latest' && matrix.kwokctl-runtime != 'binary' }}
+        if: ${{ matrix.os == 'macos-latest' }}
         shell: bash
         run: |
-          brew install coreutils
+          brew install coreutils bash
+
+        # No binary is provided by default for control plane components outside of Linux
+        # https://www.downloadkubernetes.com
+      - name: Download Kubernetes Source Code
+        uses: actions/checkout@v3
+        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'macos-latest' }}
+        with:
+          repository: kubernetes/kubernetes
+          path: kubernetes
+          ref: v1.27.1
+      - name: Build Kubernetes Binary
+        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'macos-latest' }}
+        shell: bash
+        run: |
+          cd "${GITHUB_WORKSPACE}/kubernetes" && make WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler"
+          mkdir -p ~/.kwok
+          cat > ~/.kwok/kwok.yaml << EOF
+          kind: KwokctlConfiguration
+          apiVersion: config.kwok.x-k8s.io/v1alpha1
+          options:
+            kubeBinaryPrefix: "${GITHUB_WORKSPACE}/kubernetes/_output/bin"
+          EOF
 
       - name: Install Docker for MacOS
         if: ${{ matrix.os == 'macos-latest' && matrix.kwokctl-runtime != 'binary' }}
@@ -230,6 +247,7 @@ jobs:
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_audit
 
       - name: Test Verbosity
+        if: ${{ matrix.os == 'ubuntu-latest' || matrix.kwokctl-runtime != 'binary' }}
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_verbosity
