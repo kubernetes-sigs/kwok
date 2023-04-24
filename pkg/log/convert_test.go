@@ -16,86 +16,78 @@ limitations under the License.
 
 package log
 
-import (
-	"testing"
-)
+import "testing"
 
-func TestParseLevel(t *testing.T) {
+func TestToLogSeverityLevel(t *testing.T) {
 	type args struct {
-		s string
+		level Level
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantL   Level
-		wantErr bool
+		name string
+		args args
+		want string
 	}{
 		{
-			name: "debug",
+			name: "debuglevel,-1",
 			args: args{
-				s: "debug",
+				level: -1,
 			},
-			wantL: DebugLevel,
+			want: DebugLevelSecurity,
 		},
 		{
-			name: "info",
+			name: "debuglevel, -100",
 			args: args{
-				s: "info",
+				level: -100,
 			},
-			wantL: InfoLevel,
+			want: DebugLevelSecurity,
 		},
 		{
-			name: "-4",
+			name: "infolevel, 1",
 			args: args{
-				s: "-4",
+				level: 1,
 			},
-			wantL: DebugLevel,
+			want: InfoLevelSecurity,
 		},
 		{
-			name: "0",
+			name: "infolevel, 3",
 			args: args{
-				s: "0",
+				level: 3,
 			},
-			wantL: InfoLevel,
+			want: InfoLevelSecurity,
 		},
 		{
-			name: "4",
+			name: "warnlevel, 5",
 			args: args{
-				s: "4",
+				level: 5,
 			},
-			wantL: WarnLevel,
+			want: WarnLevelSecurity,
 		},
 		{
-			name: "8",
+			name: "warnlevel, 7",
 			args: args{
-				s: "8",
+				level: 7,
 			},
-			wantL: ErrorLevel,
+			want: WarnLevelSecurity,
 		},
 		{
-			name: "info+1",
+			name: "errorlevel, 8",
 			args: args{
-				s: "info+1",
+				level: 8,
 			},
-			wantL: InfoLevel + 1,
+			want: ErrorLevelSecurity,
 		},
 		{
-			name: "info-1",
+			name: "errorlevel, 100",
 			args: args{
-				s: "info-1",
+				level: 100,
 			},
-			wantL: InfoLevel - 1,
+			want: ErrorLevelSecurity,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotL, err := ParseLevel(tt.args.s)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ParseLevel() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotL != tt.wantL {
-				t.Errorf("ParseLevel() gotL = %v, want %v", gotL, tt.wantL)
+			if got := ToLogSeverityLevel(tt.args.level); got != tt.want {
+				t.Errorf("ToLogSeverityLevel() = %v, want %v", got, tt.want)
 			}
 		})
 	}
