@@ -65,7 +65,7 @@ function test_attach() {
   local result
   for ((i = 0; i < 120; i++)); do
     result=$(cat "${attachLog}")
-    if [[ "${result}" =~ "${want}" ]]; then
+    if [[ "${result}" == *"${want}"* ]]; then
       break
     fi
     sleep 1
@@ -74,7 +74,7 @@ function test_attach() {
   kill -INT "${pid}"
 
   result=$(cat "${attachLog}")
-  if [[ ! "${result}" =~ "${want}" ]]; then
+  if [[ ! "${result}" == *"${want}"* ]]; then
     echo "Error: attach result does not match"
     echo " want: ${want}"
     echo " got: ${result}"

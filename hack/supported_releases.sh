@@ -86,7 +86,7 @@ function send_pr() {
   # Use the fixed branch as the key to prevent duplicate PRs from being created
   branch="bump-releases"
 
-  if [[ "$(git branch -r --list "origin/${branch}")" =~ "origin/${branch}" ]]; then
+  if [[ "$(git branch -r --list "origin/${branch}")" == *"origin/${branch}"* ]]; then
     echo "Remote branch already exists"
     return 0
   fi

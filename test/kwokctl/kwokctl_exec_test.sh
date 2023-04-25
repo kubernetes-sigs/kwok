@@ -50,7 +50,7 @@ function test_exec() {
     return 1
   fi
 
-  if [[ ! "${result}" =~ "${want}" ]]; then
+  if [[ ! "${result}" == *"${want}"* ]]; then
     echo "Error: exec result does not match"
     echo "  want: ${want}"
     echo "  got:  ${result}"
