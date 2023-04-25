@@ -66,6 +66,11 @@ if [[ "${VERIFY_SHELL_FORMAT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-shell-format.sh || failed+=(shell-format)
 fi
 
+if [[ "${VERIFY_SPELLING:-true}" == "true" ]]; then
+  echo "[*] Verifying spelling..."
+  "${ROOT_DIR}"/hack/verify-spelling.sh || failed+=(spelling)
+fi
+
 # exit based on verify scripts
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Verify failed for: ${failed[*]}"
