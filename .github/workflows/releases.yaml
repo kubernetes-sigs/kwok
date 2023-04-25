@@ -6,6 +6,7 @@ on:
 
 env:
   PUSH: 'true'
+  PRE_RELEASE: GA
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:

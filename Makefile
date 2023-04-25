@@ -60,6 +60,8 @@ STAGING_IMAGE_PREFIX = $(IMAGE_PREFIX)
 STAGING_PREFIX =
 endif
 
+PRE_RELEASE ?=
+
 ifeq ($(STAGING_IMAGE_PREFIX),)
 KWOK_IMAGE ?= kwok
 CLUSTER_IMAGE ?= cluster
@@ -113,6 +115,7 @@ build: vendor
 		--version=${VERSION} \
 		--kube-version=v${LATEST_KUBE_RELEASE} \
 		--staging-prefix=${STAGING_PREFIX} \
+		--pre-release=${PRE_RELEASE} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
@@ -156,6 +159,7 @@ cross-build: vendor
 		--version=${VERSION} \
 		--kube-version=v${LATEST_KUBE_RELEASE} \
 		--staging-prefix=${STAGING_PREFIX} \
+		--pre-release=${PRE_RELEASE} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
