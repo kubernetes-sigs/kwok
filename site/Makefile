@@ -40,11 +40,11 @@ check-version: check-binary-version check-image-version
 
 .PHONY: check-image-version
 check-image-version:
-	docker manifest inspect $(HUGO_IMAGE)
+	skopeo --override-os linux inspect docker://$(HUGO_IMAGE)
 
 .PHONY: check-binary-version
 check-binary-version:
-	curl -sL https://api.github.com/repos/gohugoio/hugo/releases/tags/v$(HUGO_VERSION)
+	curl -sfL https://api.github.com/repos/gohugoio/hugo/releases/tags/v$(HUGO_VERSION)
 
 .PHONY: links
 links:
