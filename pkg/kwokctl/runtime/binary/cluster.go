@@ -73,16 +73,20 @@ func (c *Cluster) download(ctx context.Context) error {
 		return err
 	}
 
-	kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
-	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeControllerManagerBinary, kubeControllerManagerPath, 0750, conf.QuietPull)
-	if err != nil {
-		return err
+	if !conf.DisableKubeControllerManager {
+		kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeControllerManagerBinary, kubeControllerManagerPath, 0750, conf.QuietPull)
+		if err != nil {
+			return err
+		}
 	}
 
-	kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
-	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeSchedulerBinary, kubeSchedulerPath, 0750, conf.QuietPull)
-	if err != nil {
-		return err
+	if !conf.DisableKubeScheduler {
+		kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
+		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeSchedulerBinary, kubeSchedulerPath, 0750, conf.QuietPull)
+		if err != nil {
+			return err
+		}
 	}
 
 	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
