@@ -73,7 +73,7 @@ spec:
         machineID: {{ with .machineID }} {{ . }} {{ else }} "" {{ end }}
         operatingSystem: {{ with .operatingSystem }} {{ . }} {{ else }} "linux" {{ end }}
         osImage: {{ with .osImage }} {{ . }} {{ else }} "" {{ end }}
-        systemUUID: {{ with .osImage }} {{ . }} {{ else }} "" {{ end }}
+        systemUUID: {{ with .systemUUID }} {{ . }} {{ else }} "" {{ end }}
       {{ end }}
       phase: Running
   immediateNextStage: true
