@@ -122,7 +122,7 @@ function test_modify_pod_status() {
 
   sleep 2
 
-  if [[ ! "$(kubectl get pod "${first_pod}" -o wide)" =~ "192.168.0.1" ]]; then
+  if [[ ! "$(kubectl get pod "${first_pod}" -o wide)" == *"192.168.0.1"* ]]; then
     echo "Error: fake-pod is not updated"
     kubectl get pod "${first_pod}" -o wide
     return 1
