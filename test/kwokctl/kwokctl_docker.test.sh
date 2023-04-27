@@ -27,4 +27,5 @@ function main() {
 
 requirements
 
-main $(supported_releases)
+mapfile -t releases < <(supported_releases)
+main "${releases[@]}"

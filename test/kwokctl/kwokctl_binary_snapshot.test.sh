@@ -27,4 +27,5 @@ function main() {
 
 requirements_for_binary
 
-main $(supported_releases)
+mapfile -t releases < <(supported_releases)
+main "${releases[@]}"
