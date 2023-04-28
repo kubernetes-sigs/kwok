@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
 source "${DIR}/helper.sh"
 
@@ -27,4 +27,5 @@ function main() {
 
 requirements_for_binary
 
-main $(supported_releases)
+mapfile -t releases < <(supported_releases)
+main "${releases[@]}"

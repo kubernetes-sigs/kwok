@@ -17,7 +17,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR=$(realpath $(dirname "${BASH_SOURCE[0]}")/..)
+ROOT_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)
 
 CODEGEN_PKG_VENDOR="${ROOT_DIR}"/vendor/k8s.io/code-generator
 CODEGEN_PKG=${CODEGEN_PKG:-${CODEGEN_PKG_VENDOR}}
