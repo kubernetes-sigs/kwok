@@ -305,9 +305,9 @@ func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 
 func setKwokctlKwokConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.KwokBinaryPrefix == "" {
-		conf.KwokBinaryPrefix = consts.BinaryPrefix
+		conf.KwokBinaryPrefix = consts.BinaryPrefix + "/" + conf.KwokVersion
 	}
-	conf.KwokBinaryPrefix = envs.GetEnvWithPrefix("BINARY_PREFIX", conf.KwokBinaryPrefix+"/"+conf.KwokVersion)
+	conf.KwokBinaryPrefix = envs.GetEnvWithPrefix("BINARY_PREFIX", conf.KwokBinaryPrefix)
 
 	if conf.KwokControllerBinary == "" {
 		conf.KwokControllerBinary = conf.KwokBinaryPrefix + "/kwok-" + GOOS + "-" + GOARCH + conf.BinSuffix
