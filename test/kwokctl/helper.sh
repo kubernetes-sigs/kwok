@@ -32,6 +32,7 @@ export KWOK_CONTROLLER_BINARY="${LOCAL_PATH}/kwok"
 export KWOKCTL_CONTROLLER_BINARY="${LOCAL_PATH}/kwokctl"
 export KWOK_CONTROLLER_IMAGE="local/kwok:${VERSION}"
 export PATH="${LOCAL_PATH}:${PATH}"
+export no_proxy='0.0.0.0'
 
 function test_all() {
   local runtime="${1}"
