@@ -32,9 +32,9 @@ export KWOK_CONTROLLER_BINARY="${LOCAL_PATH}/kwok"
 export KWOKCTL_CONTROLLER_BINARY="${LOCAL_PATH}/kwokctl"
 export KWOK_CONTROLLER_IMAGE="local/kwok:${VERSION}"
 export PATH="${LOCAL_PATH}:${PATH}"
-# unset all_proxy
+unset all_proxy
 export no_proxy='0.0.0.0,127.0.0.1,localhost,localaddress,.localdomain.com'
-echo "proxyport","${http_proxy}","${https_proxy}","${all_proxy}"
+echo "proxyport","${http_proxy}","${https_proxy}","${all_proxy}","${no_proxy}"
 
 function test_all() {
   local runtime="${1}"
