@@ -17,21 +17,23 @@ limitations under the License.
 package log
 
 import (
+	"context"
+
 	//nolint:depguard
 	"golang.org/x/exp/slog"
 )
 
-var noop = wrapSlog(slog.New(noopHandler{}), slog.InfoLevel)
+var noop = wrapSlog(slog.New(noopHandler{}), slog.LevelInfo)
 
 type noopHandler struct{}
 
 var _ slog.Handler = noopHandler{}
 
-func (noopHandler) Enabled(slog.Level) bool {
+func (noopHandler) Enabled(_ context.Context, _ slog.Level) bool {
 	return false
 }
 
-func (noopHandler) Handle(r slog.Record) error {
+func (noopHandler) Handle(_ context.Context, _ slog.Record) error {
 	return nil
 }
 

@@ -17,6 +17,7 @@ limitations under the License.
 package log
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -50,15 +51,15 @@ func newCtlHandler(w io.Writer, fd int, level slog.Level) *ctlHandler {
 	}
 }
 
-func (c *ctlHandler) Enabled(level slog.Level) bool {
+func (c *ctlHandler) Enabled(_ context.Context, level slog.Level) bool {
 	return level >= c.level
 }
 
 func formatValue(val slog.Value) string {
 	switch val.Kind() {
-	case slog.StringKind:
+	case slog.KindString:
 		return quoteIfNeed(val.String())
-	case slog.DurationKind:
+	case slog.KindDuration:
 		return format.HumanDuration(val.Duration())
 	default:
 		switch x := val.Any().(type) {
@@ -76,7 +77,7 @@ func formatValue(val slog.Value) string {
 	}
 }
 
-func (c *ctlHandler) Handle(r slog.Record) error {
+func (c *ctlHandler) Handle(_ context.Context, r slog.Record) error {
 	if r.Level < c.level {
 		return nil
 	}
@@ -94,13 +95,14 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 	if c.attrsStr != nil {
 		attrs = append(attrs, *c.attrsStr)
 	}
-	r.Attrs(func(attr slog.Attr) {
+	r.Attrs(func(attr slog.Attr) bool {
 		value := formatValue(attr.Value)
 		if len(c.groups) == 0 {
 			attrs = append(attrs, attr.Key+"="+value)
 		} else {
 			attrs = append(attrs, strings.Join(append(c.groups, attr.Key), ".")+"="+value)
 		}
+		return true
 	})
 
 	attrsStr := ""
@@ -111,7 +113,7 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 	msg := r.Message
 	var err error
 	if attrsStr == "" {
-		if r.Level != slog.InfoLevel {
+		if r.Level != slog.LevelInfo {
 			levelStr := r.Level.String()
 			c, ok := levelColor[strings.SplitN(levelStr, "+", 2)[0]]
 			if ok {
@@ -121,7 +123,7 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 		_, err = fmt.Fprintf(c.output, "%s\n", msg)
 	} else {
 		msgWidth := stringWidth(msg)
-		if r.Level != slog.InfoLevel {
+		if r.Level != slog.LevelInfo {
 			levelStr := r.Level.String()
 			c, ok := levelColor[strings.SplitN(levelStr, "+", 2)[0]]
 			if ok {
@@ -152,9 +154,9 @@ func newColour(c ctc.Color, msg string) color {
 }
 
 var levelColor = map[string]color{
-	slog.ErrorLevel.String(): newColour(ctc.ForegroundRed, slog.ErrorLevel.String()),
-	slog.WarnLevel.String():  newColour(ctc.ForegroundYellow, slog.WarnLevel.String()),
-	slog.DebugLevel.String(): newColour(ctc.ForegroundCyan, slog.DebugLevel.String()),
+	slog.LevelError.String(): newColour(ctc.ForegroundRed, slog.LevelError.String()),
+	slog.LevelWarn.String():  newColour(ctc.ForegroundYellow, slog.LevelWarn.String()),
+	slog.LevelDebug.String(): newColour(ctc.ForegroundCyan, slog.LevelDebug.String()),
 }
 
 func (c *ctlHandler) WithAttrs(attrs []slog.Attr) slog.Handler {

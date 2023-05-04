@@ -17,6 +17,7 @@ limitations under the License.
 package log
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -30,10 +31,10 @@ type Level = slog.Level
 
 // The following is Level definitions copied from slog.
 const (
-	DebugLevel Level = slog.DebugLevel
-	InfoLevel  Level = slog.InfoLevel
-	WarnLevel  Level = slog.WarnLevel
-	ErrorLevel Level = slog.ErrorLevel
+	DebugLevel Level = slog.LevelDebug
+	InfoLevel  Level = slog.LevelInfo
+	WarnLevel  Level = slog.LevelWarn
+	ErrorLevel Level = slog.LevelError
 )
 
 func wrapSlog(log *slog.Logger, level slog.Level) *Logger {
@@ -46,37 +47,32 @@ type Logger struct {
 	level Level // Level specifies a level of verbosity for V logs.
 }
 
-// LogDepth logs a message with the given level and depth.
-func (l *Logger) LogDepth(calldepth int, level Level, msg string, args ...any) {
-	l.log.LogDepth(calldepth+1, level, msg, args...)
-}
-
 // Log logs a message with the given level.
 func (l *Logger) Log(level Level, msg string, args ...any) {
-	l.LogDepth(0, level, msg, args...)
+	l.log.Log(context.TODO(), level, msg, args...)
 }
 
 // Debug logs a debug message.
 func (l *Logger) Debug(msg string, args ...any) {
-	l.LogDepth(0, DebugLevel, msg, args...)
+	l.log.Log(context.TODO(), DebugLevel, msg, args...)
 }
 
 // Info logs an informational message.
 func (l *Logger) Info(msg string, args ...any) {
-	l.LogDepth(0, InfoLevel, msg, args...)
+	l.log.Log(context.TODO(), InfoLevel, msg, args...)
 }
 
 // Warn logs a warning message.
 func (l *Logger) Warn(msg string, args ...any) {
-	l.LogDepth(0, WarnLevel, msg, args...)
+	l.log.Log(context.TODO(), WarnLevel, msg, args...)
 }
 
 // Error logs an error message.
 func (l *Logger) Error(msg string, err error, args ...any) {
 	if err != nil {
-		args = append(args[:len(args):len(args)], slog.Any(slog.ErrorKey, err))
+		args = append(args[:len(args):len(args)], slog.Any("err", err))
 	}
-	l.log.LogDepth(0, ErrorLevel, msg, args...)
+	l.log.Log(context.TODO(), ErrorLevel, msg, args...)
 }
 
 // With returns a new Logger that includes the given arguments.
