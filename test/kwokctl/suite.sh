@@ -47,14 +47,14 @@ function create_cluster() {
   local release="${2}"
   shift 2
 
-  KWOK_KUBE_VERSION="${release}" kwokctl \
-    create cluster \
-    --name "${name}" \
-    --timeout 30m \
-    --wait 30m \
-    --quiet-pull \
-    "$@"
-  if [[ $? -ne 0 ]]; then
+  if ! KWOK_KUBE_VERSION="${release}" kwokctl \
+         create cluster \
+         --name "${name}" \
+         --timeout 30m \
+         --wait 30m \
+         --quiet-pull \
+         "$@";
+  then
     echo "Error: Cluster ${name} creation failed"
     show_all
     exit 1
@@ -63,8 +63,9 @@ function create_cluster() {
 
 function delete_cluster() {
   local name="${1}"
-  kwokctl delete cluster --name "${name}"
-  if [[ $? -ne 0 ]]; then
+
+  if ! kwokctl delete cluster --name "${name}";
+  then
     echo "Error: Cluster ${name} deletion failed"
     exit 1
   fi

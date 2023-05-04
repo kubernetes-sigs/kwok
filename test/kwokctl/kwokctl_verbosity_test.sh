@@ -73,20 +73,15 @@ function check_binary() {
 function test_verbosity() {
   local name="${1}"
   local runtime="${2}"
+  local runtimes=(kind docker nerdctl binary)
 
-  if [[ "${runtime}" == "kind" ]]; then
-    check_kind "${name}"
-  elif [[ "${runtime}" == "docker" ]]; then
-    check_docker "${name}"
-  elif [[ "${runtime}" == "nerdctl" ]]; then
-    check_nerdctl "${name}"
-  elif [[ "${runtime}" == "binary" ]]; then
-    check_binary "${name}"
-  fi
-
-  if [[ $? -ne 0 ]]; then
-    echo "Error: '-v' flag not exsits in kube-apiserver"
-    return 1
+  if [[ "${runtimes[*]}" == *"${runtime}"* ]];
+  then
+    if ! check_"${runtime}" "${name}";
+    then
+      echo "Error: '-v' flag not exsits in kube-apiserver"
+      return 1
+    fi
   fi
 }
 

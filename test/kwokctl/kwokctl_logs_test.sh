@@ -50,8 +50,8 @@ function test_logs() {
   echo '2016-10-06T00:19:09.669794202Z stdout F log content 3' >>"${targetLog}"
 
   # Test basic scenario
-  result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs "${target}")
-  if [[ $? -ne 0 ]]; then
+  if ! result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs "${target}");
+  then
     echo "Error: logs failed"
     return 1
   fi
@@ -66,8 +66,8 @@ function test_logs() {
   fi
 
   # Test log tail
-  result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs --tail=2 "${target}")
-  if [[ $? -ne 0 ]]; then
+  if ! result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs --tail=2 "${target}");
+  then
     echo "Error: logs tail failed"
     return 1
   fi
@@ -82,8 +82,8 @@ function test_logs() {
   fi
 
   # Test log since time
-  result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs --since-time="2016-10-06T00:18:09.669794202Z" "${target}")
-  if [[ $? -ne 0 ]]; then
+  if ! result=$(kwokctl --name "${name}" kubectl -n "${namespace}" logs --since-time="2016-10-06T00:18:09.669794202Z" "${target}");
+  then
     echo "Error: logs tail failed"
     return 1
   fi
@@ -118,23 +118,26 @@ function test_logs() {
 
 function test_apply_node_and_pod() {
   local name="${1}"
-  kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml"
-  if [[ $? -ne 0 ]]; then
+  if ! kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml";
+  then
     echo "Error: fake-node apply failed"
     return 1
   fi
-  kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"
-  if [[ $? -ne 0 ]]; then
+
+  if ! kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml";
+  then
     echo "Error: fake-pod apply failed"
     return 1
   fi
-  kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-deployment.yaml"
-  if [[ $? -ne 0 ]]; then
+
+  if ! kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-deployment.yaml";
+  then
     echo "Error: fake-deployment apply failed"
     return 1
   fi
-  kwokctl --name "${name}" kubectl wait pod -A --all --for=condition=Ready --timeout=60s
-  if [[ $? -ne 0 ]]; then
+
+  if ! kwokctl --name "${name}" kubectl wait pod -A --all --for=condition=Ready --timeout=60s;
+  then
     echo "Error: fake-pod wait failed"
     echo kwokctl --name "${name}" kubectl get pod -A --all
     kwokctl --name "${name}" kubectl get pod -A --all
