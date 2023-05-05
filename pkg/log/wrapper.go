@@ -19,8 +19,10 @@ package log
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	//nolint:depguard
 	"golang.org/x/exp/slog"
@@ -31,40 +33,40 @@ type Level = slog.Level
 
 // The following is Level definitions copied from slog.
 const (
-	DebugLevel Level = slog.LevelDebug
-	InfoLevel  Level = slog.LevelInfo
-	WarnLevel  Level = slog.LevelWarn
-	ErrorLevel Level = slog.LevelError
+	LevelDebug Level = slog.LevelDebug
+	LevelInfo  Level = slog.LevelInfo
+	LevelWarn  Level = slog.LevelWarn
+	LevelError Level = slog.LevelError
 )
 
-func wrapSlog(log *slog.Logger, level slog.Level) *Logger {
-	return &Logger{log, level}
+func wrapSlog(handler slog.Handler, level slog.Level) *Logger {
+	return &Logger{handler, level}
 }
 
-// Logger is a wrapper around slog.Logger.
+// Logger is a wrapper around slog.Handler.
 type Logger struct {
-	log   *slog.Logger
-	level Level // Level specifies a level of verbosity for V logs.
+	handler slog.Handler
+	level   Level // Level specifies a level of verbosity for V logs.
 }
 
 // Log logs a message with the given level.
 func (l *Logger) Log(level Level, msg string, args ...any) {
-	l.log.Log(context.TODO(), level, msg, args...)
+	l.log(level, msg, args...)
 }
 
 // Debug logs a debug message.
 func (l *Logger) Debug(msg string, args ...any) {
-	l.log.Log(context.TODO(), DebugLevel, msg, args...)
+	l.log(LevelDebug, msg, args...)
 }
 
 // Info logs an informational message.
 func (l *Logger) Info(msg string, args ...any) {
-	l.log.Log(context.TODO(), InfoLevel, msg, args...)
+	l.log(LevelInfo, msg, args...)
 }
 
 // Warn logs a warning message.
 func (l *Logger) Warn(msg string, args ...any) {
-	l.log.Log(context.TODO(), WarnLevel, msg, args...)
+	l.log(LevelWarn, msg, args...)
 }
 
 // Error logs an error message.
@@ -72,18 +74,44 @@ func (l *Logger) Error(msg string, err error, args ...any) {
 	if err != nil {
 		args = append(args[:len(args):len(args)], slog.Any("err", err))
 	}
-	l.log.Log(context.TODO(), ErrorLevel, msg, args...)
+	l.log(LevelError, msg, args...)
+}
+
+// log is the low-level logging method for methods that take ...any.
+// It must always be called directly by an exported logging method
+// or function, because it uses a fixed call depth to obtain the pc.
+// copied from slog.Logger
+func (l *Logger) log(level Level, msg string, args ...any) {
+	if !l.handler.Enabled(context.Background(), level) {
+		return
+	}
+	var pc uintptr
+	var pcs [1]uintptr
+	// skip [runtime.Callers, this function, this function's caller]
+	runtime.Callers(3, pcs[:])
+	pc = pcs[0]
+	r := slog.NewRecord(time.Now(), level, msg, pc)
+	r.Add(args...)
+	_ = l.handler.Handle(context.Background(), r)
 }
 
 // With returns a new Logger that includes the given arguments.
 func (l *Logger) With(args ...any) *Logger {
-	return wrapSlog(l.log.With(args...), l.level)
+	var (
+		attr  slog.Attr
+		attrs []slog.Attr
+	)
+	for len(args) > 0 {
+		attr, args = argsToAttr(args)
+		attrs = append(attrs, attr)
+	}
+	return wrapSlog(l.handler.WithAttrs(attrs), l.level)
 }
 
 // WithGroup returns a new Logger that starts a group. The keys of all
 // attributes added to the Logger will be qualified by the given name.
 func (l *Logger) WithGroup(name string) *Logger {
-	return wrapSlog(l.log.WithGroup(name), l.level)
+	return wrapSlog(l.handler.WithGroup(name), l.level)
 }
 
 // Level returns
@@ -107,13 +135,13 @@ func ParseLevel(s string) (l Level, err error) {
 
 	switch strings.ToUpper(name) {
 	case "DEBUG":
-		l = DebugLevel
+		l = LevelDebug
 	case "INFO":
-		l = InfoLevel
+		l = LevelInfo
 	case "WARN":
-		l = WarnLevel
+		l = LevelWarn
 	case "ERROR":
-		l = ErrorLevel
+		l = LevelError
 	default:
 		return 0, fmt.Errorf("ParseLevel %q: invalid level name", s)
 	}
@@ -127,4 +155,29 @@ func ParseLevel(s string) (l Level, err error) {
 	}
 
 	return l, nil
+}
+
+const badKey = "!BADKEY"
+
+// argsToAttr turns a prefix of the nonempty args slice into an Attr
+// and returns the unconsumed portion of the slice.
+// If args[0] is an Attr, it returns it.
+// If args[0] is a string, it treats the first two elements as
+// a key-value pair.
+// Otherwise, it treats args[0] as a value with a missing key.
+// copied from slog.Logger
+func argsToAttr(args []any) (slog.Attr, []any) {
+	switch x := args[0].(type) {
+	case string:
+		if len(args) == 1 {
+			return slog.String(badKey, x), nil
+		}
+		return slog.Any(x, args[1]), args[2:]
+
+	case slog.Attr:
+		return x, args[1:]
+
+	default:
+		return slog.Any(badKey, x), args[1:]
+	}
 }

@@ -45,7 +45,7 @@ func FromContext(ctx context.Context) *Logger {
 	if l, ok := ctx.Value(contextKey{}).(*Logger); ok {
 		return l
 	}
-	return wrapSlog(slog.Default(), slog.LevelInfo)
+	return wrapSlog(slog.Default().Handler(), slog.LevelInfo)
 }
 
 // NewContext returns a new context with the given logger.
@@ -62,7 +62,7 @@ func NewLogger(w io.Writer, level slog.Level) *Logger {
 	if file, ok := w.(*os.File); ok {
 		fd := int(file.Fd())
 		if IsTerminal(fd) {
-			return wrapSlog(slog.New(newCtlHandler(w, fd, level)), level)
+			return wrapSlog(newCtlHandler(w, fd, level), level)
 		}
 	}
 
@@ -89,5 +89,5 @@ func NewLogger(w io.Writer, level slog.Level) *Logger {
 			return a
 		},
 	}
-	return wrapSlog(slog.New(handler.NewJSONHandler(w)), level)
+	return wrapSlog(handler.NewJSONHandler(w), level)
 }

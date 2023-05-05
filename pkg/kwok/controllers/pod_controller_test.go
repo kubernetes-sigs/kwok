@@ -177,7 +177,7 @@ func TestPodController(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.DebugLevel))
+	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	t.Cleanup(func() {
 		cancel()

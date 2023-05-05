@@ -35,56 +35,56 @@ func TestParseLevel(t *testing.T) {
 			args: args{
 				s: "debug",
 			},
-			wantL: DebugLevel,
+			wantL: LevelDebug,
 		},
 		{
 			name: "info",
 			args: args{
 				s: "info",
 			},
-			wantL: InfoLevel,
+			wantL: LevelInfo,
 		},
 		{
 			name: "-4",
 			args: args{
 				s: "-4",
 			},
-			wantL: DebugLevel,
+			wantL: LevelDebug,
 		},
 		{
 			name: "0",
 			args: args{
 				s: "0",
 			},
-			wantL: InfoLevel,
+			wantL: LevelInfo,
 		},
 		{
 			name: "4",
 			args: args{
 				s: "4",
 			},
-			wantL: WarnLevel,
+			wantL: LevelWarn,
 		},
 		{
 			name: "8",
 			args: args{
 				s: "8",
 			},
-			wantL: ErrorLevel,
+			wantL: LevelError,
 		},
 		{
 			name: "info+1",
 			args: args{
 				s: "info+1",
 			},
-			wantL: InfoLevel + 1,
+			wantL: LevelInfo + 1,
 		},
 		{
 			name: "info-1",
 			args: args{
 				s: "info-1",
 			},
-			wantL: InfoLevel - 1,
+			wantL: LevelInfo - 1,
 		},
 	}
 	for _, tt := range tests {
