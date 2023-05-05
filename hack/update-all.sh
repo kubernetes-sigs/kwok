@@ -51,6 +51,11 @@ if [[ "${UPDATE_SHELL_FORMAT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/update-shell-format.sh || failed+=(shell-format)
 fi
 
+if [[ "${UPDATE_SPELLING:-true}" == "true" ]]; then
+  echo "[*] Update spelling..."
+  "${ROOT_DIR}"/hack/update-spelling.sh || failed+=(spelling)
+fi
+
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Update failed for: ${failed[*]}"
   exit 1
