@@ -113,7 +113,7 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 	if attrsStr == "" {
 		if r.Level != slog.InfoLevel {
 			levelStr := r.Level.String()
-			c, ok := levelColour[strings.SplitN(levelStr, "+", 2)[0]]
+			c, ok := levelColor[strings.SplitN(levelStr, "+", 2)[0]]
 			if ok {
 				msg = c.renderer + " " + msg
 			}
@@ -123,7 +123,7 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 		msgWidth := stringWidth(msg)
 		if r.Level != slog.InfoLevel {
 			levelStr := r.Level.String()
-			c, ok := levelColour[strings.SplitN(levelStr, "+", 2)[0]]
+			c, ok := levelColor[strings.SplitN(levelStr, "+", 2)[0]]
 			if ok {
 				msg = c.renderer + " " + msg
 				msgWidth += c.width + 1
@@ -139,19 +139,19 @@ func (c *ctlHandler) Handle(r slog.Record) error {
 	return err
 }
 
-type colour struct {
+type color struct {
 	renderer string
 	width    int
 }
 
-func newColour(c ctc.Color, msg string) colour {
-	return colour{
+func newColour(c ctc.Color, msg string) color {
+	return color{
 		renderer: fmt.Sprintf("%s%s%s", c, msg, ctc.Reset),
 		width:    stringWidth(msg),
 	}
 }
 
-var levelColour = map[string]colour{
+var levelColor = map[string]color{
 	slog.ErrorLevel.String(): newColour(ctc.ForegroundRed, slog.ErrorLevel.String()),
 	slog.WarnLevel.String():  newColour(ctc.ForegroundYellow, slog.WarnLevel.String()),
 	slog.DebugLevel.String(): newColour(ctc.ForegroundCyan, slog.DebugLevel.String()),

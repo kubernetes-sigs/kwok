@@ -535,7 +535,7 @@ func waitLogs(ctx context.Context, watcher *fsnotify.Watcher) (bool, bool, error
 	for {
 		select {
 		case <-ctx.Done():
-			return false, false, fmt.Errorf("context cancelled")
+			return false, false, fmt.Errorf("context canceled")
 		case e := <-watcher.Events:
 			switch e.Op {
 			case fsnotify.Write:
