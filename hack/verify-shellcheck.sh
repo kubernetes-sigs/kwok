@@ -34,7 +34,6 @@ disabled=(
   2230
   # TODO:
   2181
-  2207
 )
 # comma separate for passing to shellcheck
 join_by() {

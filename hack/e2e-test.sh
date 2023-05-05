@@ -65,9 +65,7 @@ function args() {
     done
   fi
   if [[ "${#TARGETS[@]}" == 0 ]]; then
-    TARGETS=(
-      $(all_cases)
-    )
+    mapfile -t TARGETS < <(all_cases)
   fi
 }
 
