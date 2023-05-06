@@ -187,7 +187,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		}
 	}
 
-	if conf.Verbosity != int(log.InfoLevel) {
+	if conf.Verbosity != int(log.LevelInfo) {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs, "--v="+strconv.Itoa(conf.Verbosity))
 	}
 

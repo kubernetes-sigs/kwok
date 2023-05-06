@@ -57,7 +57,7 @@ func main() {
 		logger.Error("Init config flags", err)
 		os.Exit(1)
 	}
-	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.WarnLevel))
+	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelWarn))
 
 	err = genKwok(ctx, flagset, basePath)
 	if err != nil {

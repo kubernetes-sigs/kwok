@@ -171,7 +171,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		//	)
 	}
 
-	if conf.Verbosity != int(log.InfoLevel) {
+	if conf.Verbosity != int(log.LevelInfo) {
 		kubeSchedulerArgs = append(kubeSchedulerArgs, "--v="+strconv.Itoa(conf.Verbosity))
 	}
 

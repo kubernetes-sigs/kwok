@@ -38,11 +38,11 @@ func ToKlogLevel(level Level) int {
 // ToLogSeverityLevel maps the current logging level to a severity level string
 func ToLogSeverityLevel(level Level) string {
 	switch {
-	case level < slog.InfoLevel:
+	case level < slog.LevelInfo:
 		return DebugLevelSecurity
-	case level < slog.WarnLevel:
+	case level < slog.LevelWarn:
 		return InfoLevelSecurity
-	case level < slog.ErrorLevel:
+	case level < slog.LevelError:
 		return WarnLevelSecurity
 	default:
 		return ErrorLevelSecurity

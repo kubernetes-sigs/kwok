@@ -208,7 +208,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		}
 	}
 
-	if conf.Verbosity != int(log.InfoLevel) {
+	if conf.Verbosity != int(log.LevelInfo) {
 		kubeApiserverArgs = append(kubeApiserverArgs, "--v="+strconv.Itoa(conf.Verbosity))
 	}
 
