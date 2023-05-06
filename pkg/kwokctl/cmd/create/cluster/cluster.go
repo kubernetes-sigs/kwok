@@ -138,6 +138,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
+	gctx := ctx
 	if flags.Timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, flags.Timeout)
@@ -271,7 +272,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if flags.Wait > 0 {
 		start := time.Now()
 		logger.Info("Waiting for cluster to be ready")
-		err = rt.WaitReady(context.Background(), flags.Wait)
+		err = rt.WaitReady(gctx, flags.Wait)
 		if err != nil {
 			logger.Error("Failed to wait for cluster to be ready", err,
 				"elapsed", time.Since(start),
