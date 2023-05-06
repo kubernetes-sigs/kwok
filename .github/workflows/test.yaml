@@ -135,9 +135,6 @@ jobs:
           - docker
           - nerdctl
           - kind
-        exclude:
-          - os: macos-latest
-            kwokctl-runtime: nerdctl
 
     continue-on-error: false
     runs-on: ${{ matrix.os }}
@@ -203,8 +200,20 @@ jobs:
         run: |
           docker info
 
-      - name: Install Nerdctl and Start Containerd
-        if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
+      - name: Install Nerdctl for MacOS
+        if: ${{ matrix.os == 'macos-latest' && matrix.kwokctl-runtime == 'nerdctl' }}
+        shell: bash
+        run: |
+          brew install lima
+          limactl start
+          sudo cat <<EOF >/usr/local/bin/nerdctl
+          #!/bin/sh
+          lima nerdctl $@
+          EOF
+          chmod +x /usr/local/bin/nerdctl
+
+      - name: Install Nerdctl for Linux
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'nerdctl' }}
         shell: bash
         run: |
           curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.1.0/nerdctl-full-1.1.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local

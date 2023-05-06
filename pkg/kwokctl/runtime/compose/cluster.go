@@ -519,12 +519,8 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 		ready, err := c.isRunning(ctx)
 		if err != nil {
-			logger.Debug("Failed to check components status",
-				"times", i,
-				"err", err,
-			)
-			time.Sleep(time.Second)
-			continue
+			logger.Error("Failed to check components status", err)
+			return nil
 		}
 		if !ready {
 			time.Sleep(time.Second)
