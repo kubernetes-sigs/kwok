@@ -25,6 +25,7 @@ BINARY_NAME=""
 VERSION=""
 KUBE_VERSION=""
 STAGING_PREFIX=""
+PRE_RELEASE=""
 DRY_RUN=false
 PUSH=false
 BINS=()
@@ -98,6 +99,10 @@ function args() {
       [[ "${arg#*=}" != "${arg}" ]] && STAGING_PREFIX="${arg#*=}" || { STAGING_PREFIX="${2}" && shift; } || :
       shift
       ;;
+    --pre-release | --pre-release=*)
+      [[ "${arg#*=}" != "${arg}" ]] && PRE_RELEASE="${arg#*=}" || { PRE_RELEASE="${2}" && shift; } || :
+      shift
+      ;;
     --push | --push=*)
       [[ "${arg#*=}" != "${arg}" ]] && PUSH="${arg#*=}" || PUSH="true" || :
       shift
@@ -161,6 +166,9 @@ function main() {
   fi
   if [[ "${BINARY_NAME}" != "" ]]; then
     LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.BinaryName=${BINARY_NAME}")
+  fi
+  if [[ "${PRE_RELEASE}" != "" ]]; then
+    LDFLAGS+=("-X sigs.k8s.io/kwok/pkg/consts.PreRelease=${PRE_RELEASE}")
   fi
   if [[ "${#LDFLAGS}" -gt 0 ]]; then
     extra_args+=("-ldflags" "'${LDFLAGS[*]}'")

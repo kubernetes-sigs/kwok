@@ -16,6 +16,7 @@ steps:
       - STAGING_IMAGE_PREFIX=gcr.io/k8s-staging-kwok
       - IMAGE_PREFIX=registry.k8s.io/kwok
       - NUMBER_SUPPORTED_KUBE_RELEASES=6
+      - PRE_RELEASE=GA
     args:
       - -c
       - |
