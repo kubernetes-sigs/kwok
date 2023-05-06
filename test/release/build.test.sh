@@ -83,6 +83,12 @@ nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 -f ./images/kwok/Dock
 EOF
 }
 
+function want_image_podman() {
+  cat <<EOF
+podman build --tag=kwok:${VERSION} --platform=linux/amd64 -f ./images/kwok/Dockerfile .
+EOF
+}
+
 function want_image_with_push() {
   cat <<EOF
 docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --push -f ./images/kwok/Dockerfile .
@@ -93,6 +99,13 @@ function want_image_nerdctl_with_push() {
   cat <<EOF
 nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 -f ./images/kwok/Dockerfile .
 nerdctl push --platform=linux/amd64 kwok:${VERSION}
+EOF
+}
+
+function want_image_podman_with_push() {
+  cat <<EOF
+podman build --tag=kwok:${VERSION} --platform=linux/amd64 -f ./images/kwok/Dockerfile .
+podman push --platform=linux/amd64 kwok:${VERSION}
 EOF
 }
 
@@ -109,6 +122,13 @@ nerdctl push --platform=linux/amd64 ${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION}
 EOF
 }
 
+function want_image_podman_with_push_staging() {
+  cat <<EOF
+podman build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 -f ./images/kwok/Dockerfile .
+podman push --platform=linux/amd64 ${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION}
+EOF
+}
+
 function want_cluster_image() {
   for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --load -f ./images/cluster/Dockerfile ."
@@ -118,6 +138,12 @@ function want_cluster_image() {
 function want_cluster_image_nerdctl() {
   for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
+  done
+}
+
+function want_cluster_image_podman() {
+  for v in ${KUBE_RELEASES}; do
+    echo "podman build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
   done
 }
 
@@ -134,6 +160,13 @@ function want_cluster_image_nerdctl_with_push() {
   done
 }
 
+function want_cluster_image_podman_with_push() {
+  for v in ${KUBE_RELEASES}; do
+    echo "podman build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
+    echo "podman push --platform=linux/amd64 cluster:${VERSION}-k8s.v${v}"
+  done
+}
+
 function want_cluster_image_with_push_staging() {
   for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --push -f ./images/cluster/Dockerfile ."
@@ -144,6 +177,13 @@ function want_cluster_image_nerdctl_with_push_staging() {
   for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
+  done
+}
+
+function want_cluster_image_podman_with_push_staging() {
+  for v in ${KUBE_RELEASES}; do
+    echo "podman build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 -f ./images/cluster/Dockerfile ."
+    echo "podman push --platform=linux/amd64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
   done
 }
 
@@ -275,6 +315,12 @@ nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm6
 EOF
 }
 
+function want_cross_image_podman() {
+  cat <<EOF
+podman build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f ./images/kwok/Dockerfile .
+EOF
+}
+
 function want_cross_image_with_push() {
   cat <<EOF
 docker buildx build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/kwok/Dockerfile .
@@ -285,6 +331,13 @@ function want_cross_image_nerdctl_with_push() {
   cat <<EOF
 nerdctl build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f ./images/kwok/Dockerfile .
 nerdctl push --platform=linux/amd64 --platform=linux/arm64 kwok:${VERSION}
+EOF
+}
+
+function want_cross_image_podman_with_push() {
+  cat <<EOF
+podman build --tag=kwok:${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f ./images/kwok/Dockerfile .
+podman push --platform=linux/amd64 --platform=linux/arm64 kwok:${VERSION}
 EOF
 }
 
@@ -301,6 +354,13 @@ nerdctl push --platform=linux/amd64 --platform=linux/arm64 ${IMAGE_PREFIX}/kwok:
 EOF
 }
 
+function want_cross_image_podman_with_push_staging() {
+  cat <<EOF
+podman build --tag=${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION} --platform=linux/amd64 --platform=linux/arm64 -f ./images/kwok/Dockerfile .
+podman push --platform=linux/amd64 --platform=linux/arm64 ${IMAGE_PREFIX}/kwok:${PREFIX}-${VERSION}
+EOF
+}
+
 function want_cross_cluster_image() {
   for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --load -f ./images/cluster/Dockerfile ."
@@ -310,6 +370,12 @@ function want_cross_cluster_image() {
 function want_cross_cluster_image_nerdctl() {
   for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
+  done
+}
+
+function want_cross_cluster_image_podman() {
+  for v in ${KUBE_RELEASES}; do
+    echo "podman build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
   done
 }
 
@@ -326,6 +392,13 @@ function want_cross_cluster_image_nerdctl_with_push() {
   done
 }
 
+function want_cross_cluster_image_podman_with_push() {
+  for v in ${KUBE_RELEASES}; do
+    echo "podman build --build-arg=kube_version=v${v} --tag=cluster:${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
+    echo "podman push --platform=linux/amd64 --platform=linux/arm64 cluster:${VERSION}-k8s.v${v}"
+  done
+}
+
 function want_cross_cluster_image_with_push_staging() {
   for v in ${KUBE_RELEASES}; do
     echo "docker buildx build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/cluster/Dockerfile ."
@@ -336,6 +409,13 @@ function want_cross_cluster_image_nerdctl_with_push_staging() {
   for v in ${KUBE_RELEASES}; do
     echo "nerdctl build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
     echo "nerdctl push --platform=linux/amd64 --platform=linux/arm64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
+  done
+}
+
+function want_cross_cluster_image_podman_with_push_staging() {
+  for v in ${KUBE_RELEASES}; do
+    echo "podman build --build-arg=kube_version=v${v} --tag=${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v} --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile ."
+    echo "podman push --platform=linux/amd64 --platform=linux/arm64 ${IMAGE_PREFIX}/cluster:${PREFIX}-${VERSION}-k8s.v${v}"
   done
 }
 
@@ -356,6 +436,10 @@ function main() {
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl PUSH=true image | diff -u <(want_image_nerdctl_with_push) - || failed+=("image-nerdctl-with-push")
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} image | diff -u <(want_image_nerdctl_with_push_staging) - || failed+=("image--nerdctl-with-push-staging")
 
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman image | diff -u <(want_image_podman) - || failed+=("image-podman")
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true image | diff -u <(want_image_podman_with_push) - || failed+=("image-podman-with-push")
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} image | diff -u <(want_image_podman_with_push_staging) - || failed+=("image--podman-with-push-staging")
+
   make --no-print-directory -C "${ROOT_DIR}" cluster-image | diff -u <(want_cluster_image) - || failed+=("cluster-image")
   make --no-print-directory -C "${ROOT_DIR}" PUSH=true cluster-image | diff -u <(want_cluster_image_with_push) - || failed+=("cluster-image-with-push")
   make --no-print-directory -C "${ROOT_DIR}" PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cluster-image | diff -u <(want_cluster_image_with_push_staging) - || failed+=("cluster-image-with-push-staging")
@@ -363,6 +447,10 @@ function main() {
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl cluster-image | diff -u <(want_cluster_image_nerdctl) - || failed+=("cluster-image-nerdctl")
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl PUSH=true cluster-image | diff -u <(want_cluster_image_nerdctl_with_push) - || failed+=("cluster-image-nerdctl-with-push")
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cluster-image | diff -u <(want_cluster_image_nerdctl_with_push_staging) - || failed+=("cluster-image-nerdctl-with-push-staging")
+
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman cluster-image | diff -u <(want_cluster_image_podman) - || failed+=("cluster-image-podman")
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true cluster-image | diff -u <(want_cluster_image_podman_with_push) - || failed+=("cluster-image-podman-with-push")
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cluster-image | diff -u <(want_cluster_image_podman_with_push_staging) - || failed+=("cluster-image-podman-with-push-staging")
 
   make --no-print-directory -C "${ROOT_DIR}" cross-build | diff -u <(want_cross_build) - || failed+=("cross-build")
   make --no-print-directory -C "${ROOT_DIR}" PUSH=true BUCKET=bucket cross-build | diff -u <(want_cross_build_with_push_bucket) - || failed+=("cross-build-with-push-bucket")
@@ -377,6 +465,10 @@ function main() {
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl PUSH=true cross-image | diff -u <(want_cross_image_nerdctl_with_push) - || failed+=("cross-image-nerdctl-with-push")
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cross-image | diff -u <(want_cross_image_nerdctl_with_push_staging) - || failed+=("cross-image-nerdctl-with-push-staging")
 
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman cross-image | diff -u <(want_cross_image_podman) - || failed+=("cross-image-podman")
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true cross-image | diff -u <(want_cross_image_podman_with_push) - || failed+=("cross-image-podman-with-push")
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cross-image | diff -u <(want_cross_image_podman_with_push_staging) - || failed+=("cross-image-podman-with-push-staging")
+
   make --no-print-directory -C "${ROOT_DIR}" cross-cluster-image | diff -u <(want_cross_cluster_image) - || failed+=("cross-cluster-image")
   make --no-print-directory -C "${ROOT_DIR}" PUSH=true cross-cluster-image | diff -u <(want_cross_cluster_image_with_push) - || failed+=("cross-cluster-image-with-push")
   make --no-print-directory -C "${ROOT_DIR}" PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cross-cluster-image | diff -u <(want_cross_cluster_image_with_push_staging) - || failed+=("cross-cluster-image-with-push-staging")
@@ -384,6 +476,10 @@ function main() {
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl cross-cluster-image | diff -u <(want_cross_cluster_image_nerdctl) - || failed+=("cross-cluster-image-nerdctl")
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl PUSH=true cross-cluster-image | diff -u <(want_cross_cluster_image_nerdctl_with_push) - || failed+=("cross-cluster-image-nerdctl-with-push")
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=nerdctl PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cross-cluster-image | diff -u <(want_cross_cluster_image_nerdctl_with_push_staging) - || failed+=("cross-cluster-image-nerdctl-with-push-staging")
+
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman cross-cluster-image | diff -u <(want_cross_cluster_image_podman) - || failed+=("cross-cluster-image-podman")
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true cross-cluster-image | diff -u <(want_cross_cluster_image_podman_with_push) - || failed+=("cross-cluster-image-podman-with-push")
+  make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cross-cluster-image | diff -u <(want_cross_cluster_image_podman_with_push_staging) - || failed+=("cross-cluster-image-podman-with-push-staging")
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
     echo "Error: Some tests failed"

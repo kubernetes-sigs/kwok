@@ -158,6 +158,13 @@ function main() {
         dry_run nerdctl push "${platform_args[@]}" "${image}"
       done
     fi
+  elif [[ "${BUILDER}" == "podman" ]]; then
+    build_with_podman "${extra_args[@]}"
+    if [[ "${PUSH}" == "true" ]]; then
+      for image in "${images[@]}"; do
+        dry_run podman push "${platform_args[@]}" "${image}"
+      done
+    fi
   else
     if [[ "${PUSH}" == "true" ]]; then
       extra_args+=("--push")
@@ -181,6 +188,15 @@ function build_with_nerdctl() {
   local extra_args
   extra_args=("$@")
   dry_run nerdctl build \
+    "${extra_args[@]}" \
+    -f "${DOCKERFILE}" \
+    .
+}
+
+function build_with_podman() {
+  local extra_args
+  extra_args=("$@")
+  dry_run podman build \
     "${extra_args[@]}" \
     -f "${DOCKERFILE}" \
     .

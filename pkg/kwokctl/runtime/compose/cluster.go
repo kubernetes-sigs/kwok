@@ -50,6 +50,14 @@ type Cluster struct {
 	runtime string
 }
 
+// NewPodmanCluster creates a new Runtime for podman-compose.
+func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypePodman,
+	}, nil
+}
+
 // NewNerdctlCluster creates a new Runtime for nerdctl compose.
 func NewNerdctlCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
@@ -546,6 +554,10 @@ type statusItem struct {
 }
 
 func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
+	// podman doesn't support ps --format=json
+	if c.runtime == consts.RuntimeTypePodman {
+		return true, nil
+	}
 	commands, err := c.buildComposeCommands(ctx, "ps", "--format=json")
 	if err != nil {
 		return false, err
@@ -733,6 +745,9 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 	}
 	conf := &config.Options
 
+	if c.runtime == consts.RuntimeTypePodman {
+		return append([]string{c.runtime + "-compose"}, args...), nil
+	}
 	if c.runtime == consts.RuntimeTypeDocker {
 		err := exec.Exec(ctx, c.runtime, "compose", "version")
 		if err != nil {
