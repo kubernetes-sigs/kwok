@@ -20,6 +20,19 @@ KWOK stands for Kubernetes WithOut Kubelet. So far, it provides two tools:
 - `kwok` is the cornerstone of this project, responsible for simulating the lifecycle of fake nodes, pods, and other Kubernetes API resources.
 - `kwokctl` is a CLI tool designed to streamline the creation and management of clusters, with nodes simulated by `kwok`.
 
+### What's the difference with `kubemark`
+
+[kubemark] is a kubelet that does not actually run a container. Its behavior is exactly the same as kubelet,
+which means that simulating a large number of nodes and pods requires a lot of memory.
+
+`kwok`, however, simply simulates the behavior of the node. As a result, it can simulate a large number of nodes and pods using very little memory.
+
+### What's the difference with `kind`
+
+[kind] runs Kubernetes in Docker, creating a real cluster.
+
+`kwokctl` can be used as an alternative to [kind] in some scenarios where you don’t need to actually run any pod.
+
 ## Why KWOK?
 
 - Lightweight: You can [simulate thousands of nodes] on your laptop without significant consumption of CPU or memory resources.
@@ -71,6 +84,8 @@ If you're interested in participating in future discussions or development relat
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct][code of conduct].
 
 [KWOK]: https://sigs.k8s.io/kwok
+[kind]: https://github.com/kubernetes-sigs/kind
+[kubemark]: https://github.com/kubernetes/kubernetes/tree/master/test/kubemark
 [community page]: https://kubernetes.io/community/
 [contributor guide]: {{< relref "/docs/contributing/getting-started" >}}
 [code of conduct]: https://github.com/kubernetes-sigs/kwok/blob/main/code-of-conduct.md
