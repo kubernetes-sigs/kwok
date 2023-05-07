@@ -58,5 +58,6 @@ const (
 	RuntimeTypeKind    = "kind"
 	RuntimeTypeDocker  = "docker"
 	RuntimeTypeNerdctl = "nerdctl"
+	RuntimeTypePodman  = "podman"
 	RuntimeTypeBinary  = "binary"
 )

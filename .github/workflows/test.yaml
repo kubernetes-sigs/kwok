@@ -30,6 +30,7 @@ jobs:
         builder:
           - docker
           - nerdctl
+          - podman
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
@@ -56,6 +57,12 @@ jobs:
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
           containerd-rootless-setuptool.sh install-buildkit-containerd
+
+      - name: Install Podman Compose
+        if: ${{ matrix.kwokctl-runtime == 'podman' }}
+        shell: bash
+        run: |
+          pip3 install podman-compose
 
       - name: Build Image
         shell: bash
@@ -134,10 +141,13 @@ jobs:
           - binary
           - docker
           - nerdctl
+          - podman
           - kind
         exclude:
           - os: macos-latest
             kwokctl-runtime: nerdctl
+          - os: macos-latest
+            kwokctl-runtime: podman
 
     continue-on-error: false
     runs-on: ${{ matrix.os }}
@@ -177,14 +187,14 @@ jobs:
           EOF
 
       - name: Install Docker for MacOS
-        if: ${{ matrix.os == 'macos-latest' && matrix.kwokctl-runtime != 'binary' }}
+        if: ${{ matrix.os == 'macos-latest' && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
         shell: bash
         run: |
           brew install colima docker
           colima start --mount $HOME/.kwok/:w --mount $(pwd):w --mount-type virtiofs
 
       - name: Install Buildx
-        if: ${{ matrix.kwokctl-runtime != 'binary' }}
+        if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
         shell: bash
         run: |
           ./hack/requirements.sh buildx
@@ -198,7 +208,7 @@ jobs:
            docker compose version
 
       - name: Docker Info
-        if: ${{ matrix.kwokctl-runtime != 'binary' }}
+        if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
         shell: bash
         run: |
           docker info
@@ -212,6 +222,13 @@ jobs:
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
           containerd-rootless-setuptool.sh install-buildkit-containerd
+
+      - name: Install Podman Compose
+        if: ${{ matrix.kwokctl-runtime == 'podman' }}
+        shell: bash
+        run: |
+          pip3 install podman-compose
+          podman-compose version
 
       - name: Make pki directory
         if: ${{ matrix.kwokctl-runtime == 'binary' }}

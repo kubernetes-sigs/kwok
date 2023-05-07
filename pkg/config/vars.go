@@ -180,6 +180,7 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 		if GOOS == "linux" {
 			// TODO: Move to above after test coverage
 			conf.Runtimes = append(conf.Runtimes,
+				consts.RuntimeTypePodman,
 				consts.RuntimeTypeNerdctl,
 				consts.RuntimeTypeBinary,
 			)

@@ -226,6 +226,7 @@ e2e-test:
 	@./hack/requirements.sh kubectl buildx kind
 	@./hack/e2e-test.sh \
 		--skip=nerdctl \
+		--skip=podman \
 		--skip=kind \
 		--skip=kwokctl_binary_port_forward
 

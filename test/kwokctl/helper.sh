@@ -79,6 +79,12 @@ function requirements() {
   build_image
 }
 
+function requirements_for_podman() {
+  install_kubectl
+  build_kwokctl
+  build_image podman
+}
+
 function requirements_for_nerdctl() {
   install_kubectl
   build_kwokctl
