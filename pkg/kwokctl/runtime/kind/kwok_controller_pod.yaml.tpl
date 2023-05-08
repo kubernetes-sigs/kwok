@@ -60,7 +60,7 @@ spec:
       name: k8s-certs
       readOnly: true
     {{ range .ExtraVolumes }}
-    - mountPath: /var/components/controller{{ .MountPath }}
+    - mountPath: {{ .MountPath }}
       name: {{ .Name }}
       readOnly: {{ .ReadOnly }}
     {{ end }}
@@ -81,7 +81,7 @@ spec:
     name: k8s-certs
   {{ range .ExtraVolumes }}
   - hostPath:
-      path: /var/components/controller{{ .HostPath }}
+      path: /var/components/controller{{ .MountPath }}
       type: {{ .PathType }}
     name: {{ .Name }}
   {{ end }}

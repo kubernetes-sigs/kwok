@@ -358,10 +358,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return fmt.Errorf("failed to expand host volumes for kwok controller component: %w", err)
 	}
 
-	logVolumes, err := runtime.GetLogVolumes(ctx)
-	if err != nil {
-		return err
-	}
+	logVolumes := runtime.GetLogVolumes(ctx)
 	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, logVolumes...)
 

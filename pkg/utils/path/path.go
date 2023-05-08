@@ -86,3 +86,8 @@ func RelFromHome(target string) string {
 func Join(elem ...string) string {
 	return Clean(filepath.Join(elem...))
 }
+
+// Dir is a wrapper around filepath.Dir.
+func Dir(path string) string {
+	return filepath.Dir(path)
+}
