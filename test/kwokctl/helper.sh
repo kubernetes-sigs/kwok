@@ -30,7 +30,7 @@ LOCAL_PATH="${ROOT_DIR}/bin/${GOOS}/${GOARCH}"
 
 export KWOK_CONTROLLER_BINARY="${LOCAL_PATH}/kwok"
 export KWOKCTL_CONTROLLER_BINARY="${LOCAL_PATH}/kwokctl"
-export KWOK_CONTROLLER_IMAGE="local/kwok:${VERSION}"
+export KWOK_CONTROLLER_IMAGE="localhost/kwok:${VERSION}"
 export PATH="${LOCAL_PATH}:${PATH}"
 
 function test_all() {

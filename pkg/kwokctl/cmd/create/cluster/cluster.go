@@ -250,7 +250,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 				}
 			}
 
-			if flags.Options.Runtime == consts.RuntimeTypeKind {
+			if flags.Options.Runtime == consts.RuntimeTypeKind ||
+				flags.Options.Runtime == consts.RuntimeTypeKindPodman {
 				// override kubeconfig for kind
 				defer setContext()
 			} else {

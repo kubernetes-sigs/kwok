@@ -55,9 +55,10 @@ var (
 
 // The following runtime is provided.
 const (
-	RuntimeTypeKind    = "kind"
-	RuntimeTypeDocker  = "docker"
-	RuntimeTypeNerdctl = "nerdctl"
-	RuntimeTypePodman  = "podman"
-	RuntimeTypeBinary  = "binary"
+	RuntimeTypeKind       = "kind"
+	RuntimeTypeKindPodman = RuntimeTypeKind + "-" + RuntimeTypePodman
+	RuntimeTypeDocker     = "docker"
+	RuntimeTypeNerdctl    = "nerdctl"
+	RuntimeTypePodman     = "podman"
+	RuntimeTypeBinary     = "binary"
 )

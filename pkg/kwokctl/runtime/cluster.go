@@ -128,6 +128,8 @@ func (c *Cluster) Save(ctx context.Context) error {
 
 	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
 	const kwokControllerMountPrefix = "/var/components/controller"
+	mutateLogsFile := c.conf.Options.Runtime == consts.RuntimeTypeKind ||
+		c.conf.Options.Runtime == consts.RuntimeTypeKindPodman
 	for _, obj := range others {
 		switch obj := obj.(type) {
 		case *internalversion.ClusterLogs:
@@ -137,7 +139,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 					return err
 				}
 				logVolumePrefix := ""
-				if c.conf.Options.Runtime == consts.RuntimeTypeKind && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
+				if mutateLogsFile && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
 					logVolumePrefix = kwokControllerMountPrefix
 				}
 				obj.Spec.Logs[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
@@ -149,7 +151,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 					return err
 				}
 				logVolumePrefix := ""
-				if c.conf.Options.Runtime == consts.RuntimeTypeKind && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
+				if mutateLogsFile && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
 					logVolumePrefix = kwokControllerMountPrefix
 				}
 				obj.Spec.Logs[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
@@ -161,7 +163,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 					return err
 				}
 				logVolumePrefix := ""
-				if c.conf.Options.Runtime == consts.RuntimeTypeKind && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
+				if mutateLogsFile && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
 					logVolumePrefix = kwokControllerMountPrefix
 				}
 				obj.Spec.Attaches[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
@@ -173,7 +175,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 					return err
 				}
 				logVolumePrefix := ""
-				if c.conf.Options.Runtime == consts.RuntimeTypeKind && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
+				if mutateLogsFile && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
 					logVolumePrefix = kwokControllerMountPrefix
 				}
 				obj.Spec.Attaches[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
@@ -184,6 +186,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 
 	if updateFrequency := c.conf.Options.NodeStatusUpdateFrequencyMilliseconds; updateFrequency > 0 &&
 		c.conf.Options.Runtime != consts.RuntimeTypeKind &&
+		c.conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
 		len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
 		nodeStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
 		if err != nil {

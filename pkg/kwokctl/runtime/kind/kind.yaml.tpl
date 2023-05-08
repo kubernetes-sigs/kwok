@@ -2,7 +2,6 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 
 networking:
-  apiServerAddress: "0.0.0.0"
 {{ if .KubeApiserverPort }}
   apiServerPort: {{ .KubeApiserverPort }}
 {{ end }}
@@ -14,19 +13,16 @@ nodes:
   {{ if .PrometheusPort }}
   - containerPort: 9090
     hostPort: {{ .PrometheusPort }}
-    listenAddress: "0.0.0.0"
     protocol: TCP
   {{ end }}
   {{ if .KwokControllerPort }}
   - containerPort: 10247
     hostPort: {{ .KwokControllerPort }}
-    listenAddress: "0.0.0.0"
     protocol: TCP
   {{ end }}
   {{ if .EtcdPort }}
   - containerPort: 2379
     hostPort: {{ .EtcdPort }}
-    listenAddress: "0.0.0.0"
     protocol: TCP
   {{ end }}
 {{ end }}

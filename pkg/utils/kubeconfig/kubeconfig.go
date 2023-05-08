@@ -56,7 +56,7 @@ func AddContext(kubeconfigPath, contextName string, config *Config) error {
 	if err != nil {
 		return err
 	}
-	return modifyContext(kubeconfigPath, func(kubeconfig *clientcmdapi.Config) error {
+	return ModifyContext(kubeconfigPath, func(kubeconfig *clientcmdapi.Config) error {
 		if config.Cluster != nil {
 			if kubeconfig.Clusters == nil {
 				kubeconfig.Clusters = map[string]*clientcmdapi.Cluster{}
@@ -85,7 +85,7 @@ func AddContext(kubeconfigPath, contextName string, config *Config) error {
 
 // RemoveContext removes a context from the kubeconfig file
 func RemoveContext(kubeconfigPath, contextName string) error {
-	return modifyContext(kubeconfigPath, func(kubeconfig *clientcmdapi.Config) error {
+	return ModifyContext(kubeconfigPath, func(kubeconfig *clientcmdapi.Config) error {
 		if kubeconfig.Contexts != nil {
 			delete(kubeconfig.Contexts, contextName)
 		}
@@ -102,7 +102,8 @@ func RemoveContext(kubeconfigPath, contextName string) error {
 	})
 }
 
-func modifyContext(kubeconfigPath string, fun func(kubeconfig *clientcmdapi.Config) error) error {
+// ModifyContext modifies the kubeconfig file
+func ModifyContext(kubeconfigPath string, fun func(kubeconfig *clientcmdapi.Config) error) error {
 	// load kubeconfig file
 	kubeconfig, err := clientcmd.LoadFromFile(kubeconfigPath)
 	if err != nil {

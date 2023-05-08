@@ -143,11 +143,14 @@ jobs:
           - nerdctl
           - podman
           - kind
+          - kind-podman
         exclude:
           - os: macos-latest
             kwokctl-runtime: nerdctl
           - os: macos-latest
             kwokctl-runtime: podman
+          - os: macos-latest
+            kwokctl-runtime: kind-podman
 
     continue-on-error: false
     runs-on: ${{ matrix.os }}
@@ -229,6 +232,17 @@ jobs:
         run: |
           pip3 install podman-compose
           podman-compose version
+
+      - name: Setup Podman For Kind
+        if: ${{ matrix.kwokctl-runtime == 'kind-podman' }}
+        shell: bash
+        run: |
+          sudo mkdir -p /etc/systemd/system/user@.service.d
+          sudo tee <<EOF /etc/systemd/system/user@.service.d/delegate.conf
+          [Service]
+          Delegate=yes
+          EOF
+          sudo systemctl daemon-reload
 
       - name: Make pki directory
         if: ${{ matrix.kwokctl-runtime == 'binary' }}
@@ -314,7 +328,7 @@ jobs:
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_extra
 
       - name: Test Benchmark
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime != 'kind' }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime != 'kind' && matrix.kwokctl-runtime != 'kind-podman' }}
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark

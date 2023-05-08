@@ -169,7 +169,7 @@ function main() {
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
     create_cluster "${name}" "${release}" -v=debug --kube-admission --kube-authorization --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
     test_workable "${name}" || failed+=("workable_${name}")
-    if [[ "${KWOK_RUNTIME}" != "kind" ]]; then
+    if [[ "${KWOK_RUNTIME}" != "kind" && "${KWOK_RUNTIME}" != "kind-podman" ]]; then
       test_kube_controller_manager_port "${release}" || failed+=("kube_controller_manager_port_${name}")
       test_kube_scheduler_port "${release}" || failed+=("kube_scheduler_port_${name}")
       test_etcd_port || failed+=("etcd_port_${name}")

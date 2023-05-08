@@ -18,6 +18,8 @@ package kind
 
 import (
 	"context"
+	"net"
+	"net/url"
 
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
@@ -46,4 +48,47 @@ func (c *Cluster) RemoveContext(ctx context.Context, kubeconfigPath string) erro
 		return err
 	}
 	return nil
+}
+
+// fillKubeconfigContextServer fill the server of cluster to kubeconfig
+// because the server of cluster not set in kind, so we need to fill it.
+func (c *Cluster) fillKubeconfigContextServer() error {
+	kubeconfigPath := kubeconfig.GetRecommendedKubeconfigPath()
+	name := "kind-" + c.Name()
+	err := kubeconfig.ModifyContext(kubeconfigPath, withFillContextServer(name, "0.0.0.0"))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func withFillContextServer(name string, bindAddress string) func(kubeconfig *clientcmdapi.Config) error {
+	return func(kubeconfig *clientcmdapi.Config) error {
+		if kubeconfig.Clusters == nil {
+			return nil
+		}
+		if kubeconfig.Clusters[name] == nil {
+			return nil
+		}
+		if kubeconfig.Clusters[name].Server == "" {
+			return nil
+		}
+
+		server, err := url.Parse(kubeconfig.Clusters[name].Server)
+		if err != nil {
+			return err
+		}
+
+		host, port, err := net.SplitHostPort(server.Host)
+		if err != nil {
+			return err
+		}
+		if host != "" {
+			return nil
+		}
+
+		server.Host = net.JoinHostPort(bindAddress, port)
+		kubeconfig.Clusters[name].Server = server.String()
+		return nil
+	}
 }
