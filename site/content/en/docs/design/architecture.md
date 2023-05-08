@@ -40,7 +40,7 @@ Tools --- |   kubectl ---)-> kube-apiserver -+--- kube-scheduler           ⎪  
           |              |                    \                            ⎪             |
           | ------------ |                     +- kwok-controller          ⎭             |
           |              +---------------------------------------------------------------+
-          |   kwokctl -->|   binary   |   docker   |   nerdctl   |   podman   |   kind   |
+          |   kwokctl -->|   binary   |   docker   |   podman   |   nerdctl   |   kind   |
           +--------------+---------------------------------------------------------------+
                                                |
 
@@ -53,8 +53,8 @@ We now provide some runtime to simulate the cluster, such as:
 
 - `binary` - It will download required binaries of control plane components and start them directly.
 - `docker` - It will use `docker compose` to start the control plane components.
+- `podman` - It will use `podman-compose` to start the control plane components.
 - `nerdctl` - It will use `nerdctl compose` to start the control plane components.
-- `podman` - **TODO**
 - `kind` - It will use `kind` to start a cluster and deploy the `kwok` into it.
 
 ### Components
