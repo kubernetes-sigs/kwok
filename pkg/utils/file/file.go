@@ -96,3 +96,8 @@ func Exists(name string) bool {
 	_, err := os.Stat(name)
 	return err == nil
 }
+
+// Remove removes a file.
+func Remove(name string) error {
+	return os.Remove(name)
+}

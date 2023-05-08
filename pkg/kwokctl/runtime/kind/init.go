@@ -22,5 +22,6 @@ import (
 )
 
 func init() {
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKind, NewCluster)
+	runtime.DefaultRegistry.Register(consts.RuntimeTypeKind, NewDockerCluster)
+	runtime.DefaultRegistry.Register(consts.RuntimeTypeKindPodman, NewPodmanCluster)
 }

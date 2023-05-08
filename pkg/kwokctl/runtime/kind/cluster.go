@@ -23,12 +23,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -36,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/image"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -43,23 +46,41 @@ import (
 // Cluster is an implementation of Runtime for kind
 type Cluster struct {
 	*runtime.Cluster
+
+	runtime string
 }
 
-// NewCluster creates a new Runtime for kind
-func NewCluster(name, workdir string) (runtime.Runtime, error) {
+// NewDockerCluster creates a new Runtime for kind with docker
+func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypeDocker,
+	}, nil
+}
+
+// NewPodmanCluster creates a new Runtime for kind with podman
+func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypePodman,
 	}, nil
 }
 
 // Available  checks whether the runtime is available.
 func (c *Cluster) Available(ctx context.Context) error {
-	// kind depends on docker or podman
-	// kwokctl will download kind binary if it is not available
-	// TODO: nerdctl kind provider support is discussing in
-	// https://github.com/kubernetes-sigs/kind/issues/2317 and
-	// https://github.com/containerd/nerdctl/issues/349
-	return nil
+	return exec.Exec(ctx, c.runtime, "version")
+}
+
+// https://github.com/kubernetes-sigs/kind/blob/7b017b2ce14a7fdea9d3ed2fa259c38c927e2dd1/pkg/internal/runtime/runtime.go
+func (c *Cluster) withProviderEnv(ctx context.Context) context.Context {
+	provider := ""
+	if c.runtime == consts.RuntimeTypePodman {
+		provider = c.runtime
+	}
+	ctx = exec.WithEnv(ctx, []string{
+		"KIND_EXPERIMENTAL_PROVIDER=" + provider,
+	})
+	return ctx
 }
 
 // Install installs the cluster
@@ -195,7 +216,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	err = image.PullImages(ctx, "docker", images, conf.QuietPull)
+	err = image.PullImages(ctx, c.runtime, images, conf.QuietPull)
 	if err != nil {
 		return err
 	}
@@ -205,6 +226,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 // Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
+	ctx = c.withProviderEnv(ctx)
+
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -288,11 +311,22 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
+	// TODO: remove this when kind support set server
+	err = c.fillKubeconfigContextServer()
+	if err != nil {
+		return err
+	}
+
 	images := []string{conf.KwokControllerImage}
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	err = loadImages(ctx, kindPath, c.Name(), images)
+
+	if c.runtime == consts.RuntimeTypeDocker {
+		err = loadDockerImages(ctx, kindPath, c.Name(), images)
+	} else {
+		err = loadArchiveImages(ctx, kindPath, c.Name(), images, c.runtime, conf.CacheDir)
+	}
 	if err != nil {
 		return err
 	}
@@ -310,7 +344,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, "docker", "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
+	err = exec.Exec(ctx, c.runtime, "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
 	if err != nil {
 		return err
 	}
@@ -344,7 +378,9 @@ func (c *Cluster) Up(ctx context.Context) error {
 	return nil
 }
 
-func loadImages(ctx context.Context, command, kindCluster string, images []string) error {
+// loadDockerImages loads docker images into the cluster.
+// `kind load docker-image`
+func loadDockerImages(ctx context.Context, command string, kindCluster string, images []string) error {
 	logger := log.FromContext(ctx)
 	for _, image := range images {
 		err := exec.Exec(ctx,
@@ -356,6 +392,38 @@ func loadImages(ctx context.Context, command, kindCluster string, images []strin
 			return err
 		}
 		logger.Info("Loaded image", "image", image)
+	}
+	return nil
+}
+
+// loadArchiveImages loads docker images into the cluster.
+// `kind load image-archive`
+func loadArchiveImages(ctx context.Context, command string, kindCluster string, images []string, runtime string, tmpDir string) error {
+	logger := log.FromContext(ctx)
+	for _, image := range images {
+		archive := path.Join(tmpDir, "image-archive", strings.ReplaceAll(image, ":", "/")+".tar")
+		err := os.MkdirAll(filepath.Dir(archive), 0750)
+		if err != nil {
+			return err
+		}
+
+		err = exec.Exec(ctx, runtime, "save", image, "-o", archive)
+		if err != nil {
+			return err
+		}
+		err = exec.Exec(ctx,
+			command, "load", "image-archive",
+			archive,
+			"--name", kindCluster,
+		)
+		if err != nil {
+			return err
+		}
+		logger.Info("Loaded image", "image", image)
+		err = file.Remove(archive)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -428,6 +496,8 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
+	ctx = c.withProviderEnv(ctx)
+
 	kindPath, err := c.preDownloadKind(ctx)
 	if err != nil {
 		return err
@@ -444,7 +514,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
-	err := exec.Exec(ctx, "docker", "start", c.getClusterName())
+	err := exec.Exec(ctx, c.runtime, "start", c.getClusterName())
 	if err != nil {
 		return err
 	}
@@ -453,7 +523,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
-	err := exec.Exec(ctx, "docker", "stop", c.getClusterName())
+	err := exec.Exec(ctx, c.runtime, "stop", c.getClusterName())
 	if err != nil {
 		return err
 	}
@@ -462,7 +532,7 @@ func (c *Cluster) Stop(ctx context.Context) error {
 
 // StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
-	err := exec.Exec(ctx, "docker", "exec", c.getClusterName(), "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
+	err := exec.Exec(ctx, c.runtime, "exec", c.getClusterName(), "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
 		return err
 	}
@@ -472,7 +542,7 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 
 // StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
-	err := exec.Exec(ctx, "docker", "exec", c.getClusterName(), "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
+	err := exec.Exec(ctx, c.runtime, "exec", c.getClusterName(), "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
 		return err
 	}

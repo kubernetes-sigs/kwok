@@ -41,7 +41,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 		return err
 	}
 	defer func() {
-		err = exec.Exec(ctx, "docker", "exec", "-i", kindName, "rm", "-f", tmpFile)
+		err = exec.Exec(ctx, c.runtime, "exec", "-i", kindName, "rm", "-f", tmpFile)
 		if err != nil {
 			logger.Error("Failed to clean snapshot", err)
 		}
@@ -49,7 +49,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 	// Copy to host path from container of Kind use Docker
 	// Etcd image does not have `tar`, can't use `kubectl cp`, so we use `docker cp` instead
-	err = exec.Exec(ctx, "docker", "cp", kindName+":"+tmpFile, path)
+	err = exec.Exec(ctx, c.runtime, "cp", kindName+":"+tmpFile, path)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	}()
 
 	// Copy to kind container from host temporary directory
-	err = exec.Exec(ctx, "docker", "cp", etcdDataTmp, kindName+":/var/lib/")
+	err = exec.Exec(ctx, c.runtime, "cp", etcdDataTmp, kindName+":/var/lib/")
 	if err != nil {
 		return err
 	}

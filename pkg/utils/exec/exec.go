@@ -136,7 +136,7 @@ func Exec(ctx context.Context, name string, arg ...string) error {
 	opt := fromExecOptions(ctx)
 	if opt.Env != nil {
 		cmd.Env = opt.Env
-		cmd.Env = append(cmd.Env, os.Environ()...)
+		cmd.Env = append(os.Environ(), cmd.Env...)
 	}
 	cmd.Dir = opt.Dir
 	if opt.In != nil {
