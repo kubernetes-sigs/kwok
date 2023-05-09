@@ -14,9 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package components
+package net
 
 const (
-	publicAddress = "0.0.0.0"
-	localAddress  = "127.0.0.1"
+	// LocalAddress is the local address.
+	LocalAddress = "127.0.0.1"
+
+	// PublicAddress is the public address.
+	PublicAddress = "0.0.0.0"
 )

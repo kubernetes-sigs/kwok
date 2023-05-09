@@ -30,7 +30,7 @@ type BuildEtcdComponentConfig struct {
 	Version      version.Version
 	DataPath     string
 	Workdir      string
-	Address      string
+	BindAddress  string
 	Port         uint32
 	PeerPort     uint32
 	LogLevel     string
@@ -49,9 +49,6 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	if conf.Port == 0 {
 		conf.Port = 2379
 		exposePort = false
-	}
-	if conf.Address == "" {
-		conf.Address = publicAddress
 	}
 
 	var volumes []internalversion.Volume
@@ -97,22 +94,22 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			)
 		}
 		etcdArgs = append(etcdArgs,
-			"--initial-advertise-peer-urls=http://"+conf.Address+":2380",
-			"--listen-peer-urls=http://"+conf.Address+":2380",
-			"--advertise-client-urls=http://"+conf.Address+":2379",
-			"--listen-client-urls=http://"+conf.Address+":2379",
-			"--initial-cluster=node0=http://"+conf.Address+":2380",
+			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":2380",
+			"--listen-peer-urls=http://"+conf.BindAddress+":2380",
+			"--advertise-client-urls=http://"+conf.BindAddress+":2379",
+			"--listen-client-urls=http://"+conf.BindAddress+":2379",
+			"--initial-cluster=node0=http://"+conf.BindAddress+":2380",
 		)
 	} else {
 		etcdPeerPortStr := format.String(conf.PeerPort)
 		etcdClientPortStr := format.String(conf.Port)
 		etcdArgs = append(etcdArgs,
 			"--data-dir="+conf.DataPath,
-			"--initial-advertise-peer-urls=http://"+conf.Address+":"+etcdPeerPortStr,
-			"--listen-peer-urls=http://"+conf.Address+":"+etcdPeerPortStr,
-			"--advertise-client-urls=http://"+conf.Address+":"+etcdClientPortStr,
-			"--listen-client-urls=http://"+conf.Address+":"+etcdClientPortStr,
-			"--initial-cluster=node0=http://"+conf.Address+":"+etcdPeerPortStr,
+			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
+			"--listen-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
+			"--advertise-client-urls=http://"+conf.BindAddress+":"+etcdClientPortStr,
+			"--listen-client-urls=http://"+conf.BindAddress+":"+etcdClientPortStr,
+			"--initial-cluster=node0=http://"+conf.BindAddress+":"+etcdPeerPortStr,
 		)
 	}
 

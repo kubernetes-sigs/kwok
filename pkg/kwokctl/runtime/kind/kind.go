@@ -201,4 +201,6 @@ type BuildKindConfig struct {
 	LogLevel                      string
 	ControllerManagerExtraVolumes []internalversion.Volume
 	KwokControllerExtraVolumes    []internalversion.Volume
+
+	BindAddress string
 }

@@ -32,7 +32,7 @@ type BuildKubeApiserverComponentConfig struct {
 	Image             string
 	Version           version.Version
 	Workdir           string
-	Address           string
+	BindAddress       string
 	Port              uint32
 	EtcdAddress       string
 	EtcdPort          uint32
@@ -55,14 +55,6 @@ type BuildKubeApiserverComponentConfig struct {
 func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (component internalversion.Component, err error) {
 	if conf.EtcdPort == 0 {
 		conf.EtcdPort = 2379
-	}
-
-	if conf.Address == "" {
-		conf.Address = publicAddress
-	}
-
-	if conf.EtcdAddress == "" {
-		conf.EtcdAddress = localAddress
 	}
 
 	kubeApiserverArgs := []string{
@@ -140,7 +132,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				},
 			)
 			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--bind-address="+publicAddress,
+				"--bind-address="+conf.BindAddress,
 				"--secure-port=6443",
 				"--tls-cert-file=/etc/kubernetes/pki/admin.crt",
 				"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
@@ -151,7 +143,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			)
 		} else {
 			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--bind-address="+conf.Address,
+				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
 				"--tls-cert-file="+conf.AdminCertPath,
 				"--tls-private-key-file="+conf.AdminKeyPath,
@@ -171,12 +163,12 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			}
 
 			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--insecure-bind-address="+publicAddress,
+				"--insecure-bind-address="+conf.BindAddress,
 				"--insecure-port=8080",
 			)
 		} else {
 			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--insecure-bind-address="+conf.Address,
+				"--insecure-bind-address="+conf.BindAddress,
 				"--insecure-port="+format.String(conf.Port),
 			)
 		}

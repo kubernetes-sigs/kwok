@@ -40,7 +40,7 @@ func GetUnusedPort(ctx context.Context) (uint32, error) {
 }
 
 func isPortUnused(port uint32) bool {
-	return isHostPortUnused("127.0.0.1", port) && isHostPortUnused("", port)
+	return isHostPortUnused(LocalAddress, port) && isHostPortUnused("", port)
 }
 
 func isHostPortUnused(host string, port uint32) bool {

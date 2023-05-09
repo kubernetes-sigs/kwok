@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
@@ -39,7 +40,6 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 	if conf.SecurePort {
 		scheme = "https"
 	}
-	localAddress := "127.0.0.1"
 
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	adminKeyPath := path.Join(pkiPath, "admin.key")
@@ -48,7 +48,7 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 	// set the context in default kubeconfig
 	kubeConfig := &kubeconfig.Config{
 		Cluster: &clientcmdapi.Cluster{
-			Server: scheme + "://" + localAddress + ":" + format.String(conf.KubeApiserverPort),
+			Server: scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
 		},
 		Context: &clientcmdapi.Context{
 			Cluster: c.Name(),

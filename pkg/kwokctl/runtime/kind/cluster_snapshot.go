@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 )
 
 // SnapshotSave save the snapshot of cluster
@@ -36,7 +37,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 	// Save to /var/lib/etcd/snapshot.db on container of Kind use Kubectl
 	// Why this path, etcd is just the volume /var/lib/etcd/ in container of Kind.
 	tmpFile := "/var/lib/etcd/snapshot.db"
-	err := c.KubectlInCluster(ctx, "exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "snapshot", "save", tmpFile, "--endpoints=127.0.0.1:2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt")
+	err := c.KubectlInCluster(ctx, "exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "snapshot", "save", tmpFile, "--endpoints="+net.LocalAddress+":2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt")
 	if err != nil {
 		return err
 	}

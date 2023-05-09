@@ -29,7 +29,7 @@ type BuildPrometheusComponentConfig struct {
 	Image         string
 	Version       version.Version
 	Workdir       string
-	Address       string
+	BindAddress   string
 	Port          uint32
 	ConfigPath    string
 	AdminCertPath string
@@ -41,10 +41,6 @@ type BuildPrometheusComponentConfig struct {
 
 // BuildPrometheusComponent builds a prometheus component.
 func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component internalversion.Component, err error) {
-	if conf.Address == "" {
-		conf.Address = publicAddress
-	}
-
 	prometheusArgs := []string{}
 	prometheusArgs = append(prometheusArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
@@ -78,12 +74,12 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		}
 		prometheusArgs = append(prometheusArgs,
 			"--config.file=/etc/prometheus/prometheus.yaml",
-			"--web.listen-address="+publicAddress+":9090",
+			"--web.listen-address="+conf.BindAddress+":9090",
 		)
 	} else {
 		prometheusArgs = append(prometheusArgs,
 			"--config.file="+conf.ConfigPath,
-			"--web.listen-address="+conf.Address+":"+format.String(conf.Port),
+			"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),
 		)
 	}
 
