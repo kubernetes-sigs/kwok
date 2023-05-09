@@ -24,6 +24,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
@@ -34,45 +35,59 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 	config := flags.StringArrayP("config", "c", []string{defaultConfigPath}, "config path")
 	_ = flags.Parse(os.Args[1:])
 
-	existDefaultConfig := false
-	configPath, err := path.Expand(defaultConfigPath)
-	if err == nil {
-		_, err = os.Stat(configPath)
-		if err == nil {
-			existDefaultConfig = true
+	// Expand the all config paths.
+	defaultConfigPath, err := path.Expand(defaultConfigPath)
+	if err != nil {
+		return nil, err
+	}
+	configPaths := make([]string, 0, len(*config))
+	for _, c := range *config {
+		configPath, err := path.Expand(c)
+		if err != nil {
+			return nil, err
 		}
+		configPaths = append(configPaths, configPath)
 	}
 
-	if !slices.Contains(*config, defaultConfigPath) {
-		if existDefaultConfig {
-			*config = append([]string{configPath}, *config...)
-		}
-	} else {
-		if !existDefaultConfig {
-			*config = slices.Filter(*config, func(s string) bool {
-				return s != defaultConfigPath
-			})
-		}
-	}
+	configPaths = loadConfig(configPaths, defaultConfigPath, file.Exists(defaultConfigPath))
 
 	logger := log.FromContext(ctx)
-	objs, err := Load(ctx, *config...)
+	objs, err := Load(ctx, configPaths...)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(objs) == 0 {
 		logger.Debug("Load config",
-			"path", *config,
+			"path", configPaths,
 			"err", "empty config",
 		)
 	} else {
 		logger.Debug("Load config",
-			"path", *config,
+			"path", configPaths,
 			"count", len(objs),
 			"content", objs,
 		)
 	}
 
 	return setupContext(ctx, objs), nil
+}
+
+// loadConfig loads the config paths.
+// ~/.kwok/kwok.yaml will be loaded first if it exists.
+func loadConfig(configPaths []string, defaultConfigPath string, existDefaultConfig bool) []string {
+	if !slices.Contains(configPaths, defaultConfigPath) {
+		if existDefaultConfig {
+			// If the defaultConfigPath is not specified and the default config exists, it will be loaded first.
+			return append([]string{defaultConfigPath}, configPaths...)
+		}
+	} else {
+		if !existDefaultConfig {
+			// If the defaultConfigPath is specified and the default config does not exist, it will be removed.
+			return slices.Filter(configPaths, func(s string) bool {
+				return s != defaultConfigPath
+			})
+		}
+	}
+	return configPaths
 }
