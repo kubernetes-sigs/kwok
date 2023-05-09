@@ -9,6 +9,7 @@ spec:
   containers:
   - args:
     - --config=/etc/kwok/kwok.yaml
+    - --v={{ .Verbosity }}
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
     - --manage-nodes-with-label-selector=

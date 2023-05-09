@@ -34,7 +34,7 @@ type BuildPrometheusComponentConfig struct {
 	ConfigPath    string
 	AdminCertPath string
 	AdminKeyPath  string
-	LogLevel      string
+	Verbosity     log.Level
 	ExtraArgs     []internalversion.ExtraArgs
 	ExtraVolumes  []internalversion.Volume
 }
@@ -87,8 +87,8 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		)
 	}
 
-	if conf.LogLevel != log.InfoLevelSecurity {
-		prometheusArgs = append(prometheusArgs, "--log.level="+conf.LogLevel)
+	if conf.Verbosity != log.LevelInfo {
+		prometheusArgs = append(prometheusArgs, "--log.level="+log.ToLogSeverityLevel(conf.Verbosity))
 	}
 
 	return internalversion.Component{

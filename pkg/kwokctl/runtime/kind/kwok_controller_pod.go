@@ -24,6 +24,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"sigs.k8s.io/kwok/pkg/log"
 
 	_ "embed"
 )
@@ -59,6 +60,7 @@ type BuildKwokControllerPodConfig struct {
 	KwokControllerImageName string
 	KwokControllerImageTag  string
 	Name                    string
+	Verbosity               log.Level
 	ExtraArgs               []internalversion.ExtraArgs
 	ExtraVolumes            []internalversion.Volume
 }

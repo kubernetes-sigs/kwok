@@ -33,7 +33,7 @@ type BuildEtcdComponentConfig struct {
 	Address      string
 	Port         uint32
 	PeerPort     uint32
-	LogLevel     string
+	Verbosity    log.Level
 	ExtraArgs    []internalversion.ExtraArgs
 	ExtraVolumes []internalversion.Volume
 }
@@ -117,11 +117,11 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	}
 
 	if conf.Version.GTE(version.NewVersion(3, 4, 0)) {
-		if conf.LogLevel != log.InfoLevelSecurity {
-			etcdArgs = append(etcdArgs, "--log-level="+conf.LogLevel)
+		if conf.Verbosity != log.LevelInfo {
+			etcdArgs = append(etcdArgs, "--log-level="+log.ToLogSeverityLevel(conf.Verbosity))
 		}
 	} else {
-		if conf.LogLevel == log.DebugLevelSecurity {
+		if conf.Verbosity <= log.LevelDebug {
 			etcdArgs = append(etcdArgs, "--debug")
 		}
 	}

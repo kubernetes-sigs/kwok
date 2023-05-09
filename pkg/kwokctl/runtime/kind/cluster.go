@@ -85,9 +85,8 @@ func (c *Cluster) withProviderEnv(ctx context.Context) context.Context {
 
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
-	level := log.FromContext(ctx).Level()
-	verbosity := log.ToKlogLevel(level)
-	logLevel := log.ToLogSeverityLevel(level)
+	logger := log.FromContext(ctx)
+	verbosity := logger.Level()
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -152,7 +151,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		SchedulerConfig:               schedulerConfigPath,
 		ConfigPath:                    configPath,
 		Verbosity:                     verbosity,
-		LogLevel:                      logLevel,
 		EtcdExtraArgs:                 etcdComponentPatches.ExtraArgs,
 		EtcdExtraVolumes:              etcdComponentPatches.ExtraVolumes,
 		ApiserverExtraArgs:            kubeApiserverComponentPatches.ExtraArgs,
@@ -174,6 +172,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kwokControllerPod, err := BuildKwokControllerPod(BuildKwokControllerPodConfig{
 		KwokControllerImage: conf.KwokControllerImage,
 		Name:                c.Name(),
+		Verbosity:           verbosity,
 		ExtraArgs:           kwokControllerComponentPatches.ExtraArgs,
 		ExtraVolumes:        kwokControllerExtraVolumes,
 	})
@@ -193,8 +192,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 			ExtraArgs:       prometheusPatches.ExtraArgs,
 			ExtraVolumes:    prometheusPatches.ExtraVolumes,
 		}
-		if logLevel != log.InfoLevelSecurity {
-			prometheusConf.LogLevel = logLevel
+		if verbosity != log.LevelInfo {
+			prometheusConf.LogLevel = log.ToLogSeverityLevel(verbosity)
 		}
 		prometheusDeploy, err := BuildPrometheusDeployment(prometheusConf)
 		if err != nil {

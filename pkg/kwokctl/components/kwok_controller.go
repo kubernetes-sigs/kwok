@@ -18,6 +18,7 @@ package components
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -34,6 +35,7 @@ type BuildKwokControllerComponentConfig struct {
 	AdminCertPath  string
 	AdminKeyPath   string
 	NodeName       string
+	Verbosity      log.Level
 	ExtraArgs      []internalversion.ExtraArgs
 	ExtraVolumes   []internalversion.Volume
 }
@@ -99,6 +101,10 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--node-name=localhost",
 			"--node-port="+format.String(conf.Port),
 		)
+	}
+
+	if conf.Verbosity != log.LevelInfo {
+		kwokControllerArgs = append(kwokControllerArgs, "--v="+format.String(conf.Verbosity))
 	}
 
 	return internalversion.Component{
