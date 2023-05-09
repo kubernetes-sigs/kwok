@@ -19,6 +19,7 @@ package internalversion
 import (
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // ConvertToV1alpha1KwokctlConfiguration converts an internal version KwokctlConfiguration to a v1alpha1.KwokctlConfiguration.
@@ -160,6 +161,15 @@ func ConvertToInternalClusterLogs(in *v1alpha1.ClusterLogs) (*ClusterLogs, error
 	if err != nil {
 		return nil, err
 	}
+	for i := range out.Spec.Logs {
+		logsFile := out.Spec.Logs[i].LogsFile
+		if logsFile != "" {
+			out.Spec.Logs[i].LogsFile, err = path.Expand(logsFile)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	return &out, nil
 }
 
@@ -216,6 +226,15 @@ func ConvertToInternalLogs(in *v1alpha1.Logs) (*Logs, error) {
 	if err != nil {
 		return nil, err
 	}
+	for i := range out.Spec.Logs {
+		logsFile := out.Spec.Logs[i].LogsFile
+		if logsFile != "" {
+			out.Spec.Logs[i].LogsFile, err = path.Expand(logsFile)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	return &out, nil
 }
 
@@ -250,6 +269,15 @@ func ConvertToInternalClusterAttach(in *v1alpha1.ClusterAttach) (*ClusterAttach,
 	if err != nil {
 		return nil, err
 	}
+	for i := range out.Spec.Attaches {
+		logsFile := out.Spec.Attaches[i].LogsFile
+		if logsFile != "" {
+			out.Spec.Attaches[i].LogsFile, err = path.Expand(logsFile)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	return &out, nil
 }
 
@@ -259,6 +287,15 @@ func ConvertToInternalAttach(in *v1alpha1.Attach) (*Attach, error) {
 	err := Convert_v1alpha1_Attach_To_internalversion_Attach(in, &out, nil)
 	if err != nil {
 		return nil, err
+	}
+	for i := range out.Spec.Attaches {
+		logsFile := out.Spec.Attaches[i].LogsFile
+		if logsFile != "" {
+			out.Spec.Attaches[i].LogsFile, err = path.Expand(logsFile)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	return &out, nil
 }

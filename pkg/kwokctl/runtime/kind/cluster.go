@@ -137,10 +137,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
 	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
-	extraLogVolumes, err := runtime.GetLogVolumes(ctx)
-	if err != nil {
-		return err
-	}
+	extraLogVolumes := runtime.GetLogVolumes(ctx)
 	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, extraLogVolumes...)
 	kindYaml, err := BuildKind(BuildKindConfig{

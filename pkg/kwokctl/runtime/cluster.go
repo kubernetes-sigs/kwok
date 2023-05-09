@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/nxadm/tail"
@@ -127,62 +126,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
-	const kwokControllerMountPrefix = "/var/components/controller"
-	mutateLogsFile := c.conf.Options.Runtime == consts.RuntimeTypeKind ||
-		c.conf.Options.Runtime == consts.RuntimeTypeKindPodman
-	for _, obj := range others {
-		switch obj := obj.(type) {
-		case *internalversion.ClusterLogs:
-			for i := range obj.Spec.Logs {
-				expandedPath, err := path.Expand(obj.Spec.Logs[i].LogsFile)
-				if err != nil {
-					return err
-				}
-				logVolumePrefix := ""
-				if mutateLogsFile && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
-					logVolumePrefix = kwokControllerMountPrefix
-				}
-				obj.Spec.Logs[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
-			}
-		case *internalversion.Logs:
-			for i := range obj.Spec.Logs {
-				expandedPath, err := path.Expand(obj.Spec.Logs[i].LogsFile)
-				if err != nil {
-					return err
-				}
-				logVolumePrefix := ""
-				if mutateLogsFile && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
-					logVolumePrefix = kwokControllerMountPrefix
-				}
-				obj.Spec.Logs[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
-			}
-		case *internalversion.ClusterAttach:
-			for i := range obj.Spec.Attaches {
-				expandedPath, err := path.Expand(obj.Spec.Attaches[i].LogsFile)
-				if err != nil {
-					return err
-				}
-				logVolumePrefix := ""
-				if mutateLogsFile && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
-					logVolumePrefix = kwokControllerMountPrefix
-				}
-				obj.Spec.Attaches[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
-			}
-		case *internalversion.Attach:
-			for i := range obj.Spec.Attaches {
-				expandedPath, err := path.Expand(obj.Spec.Attaches[i].LogsFile)
-				if err != nil {
-					return err
-				}
-				logVolumePrefix := ""
-				if mutateLogsFile && !strings.HasPrefix(expandedPath, kwokControllerMountPrefix) {
-					logVolumePrefix = kwokControllerMountPrefix
-				}
-				obj.Spec.Attaches[i].LogsFile = path.Join(logVolumePrefix, expandedPath)
-			}
-		}
-		objs = append(objs, obj)
-	}
+	objs = append(objs, others...)
 
 	if updateFrequency := c.conf.Options.NodeStatusUpdateFrequencyMilliseconds; updateFrequency > 0 &&
 		c.conf.Options.Runtime != consts.RuntimeTypeKind &&
