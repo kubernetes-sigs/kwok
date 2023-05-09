@@ -17,8 +17,6 @@ limitations under the License.
 package components
 
 import (
-	"strconv"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -40,7 +38,7 @@ type BuildKubeSchedulerComponentConfig struct {
 	ConfigPath       string
 	KubeconfigPath   string
 	KubeFeatureGates string
-	Verbosity        int
+	Verbosity        log.Level
 	ExtraArgs        []internalversion.ExtraArgs
 	ExtraVolumes     []internalversion.Volume
 }
@@ -171,8 +169,8 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		//	)
 	}
 
-	if conf.Verbosity != int(log.LevelInfo) {
-		kubeSchedulerArgs = append(kubeSchedulerArgs, "--v="+strconv.Itoa(conf.Verbosity))
+	if conf.Verbosity != log.LevelInfo {
+		kubeSchedulerArgs = append(kubeSchedulerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
 
 	return internalversion.Component{

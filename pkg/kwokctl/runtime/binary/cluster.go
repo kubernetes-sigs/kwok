@@ -179,9 +179,8 @@ func (c *Cluster) setupPorts(ctx context.Context, ports ...*uint32) error {
 
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
-	level := log.FromContext(ctx).Level()
-	verbosity := log.ToKlogLevel(level)
-	logLevel := log.ToLogSeverityLevel(level)
+	logger := log.FromContext(ctx)
+	verbosity := logger.Level()
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -250,7 +249,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		DataPath:     etcdDataPath,
 		Port:         conf.EtcdPort,
 		PeerPort:     conf.EtcdPeerPort,
-		LogLevel:     logLevel,
+		Verbosity:    verbosity,
 		ExtraArgs:    etcdComponentPatches.ExtraArgs,
 		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
 	})
@@ -402,6 +401,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminCertPath:  adminCertPath,
 		AdminKeyPath:   adminKeyPath,
 		NodeName:       "localhost",
+		Verbosity:      verbosity,
 		ExtraArgs:      kwokControllerComponentPatches.ExtraArgs,
 		ExtraVolumes:   kwokControllerExtraVolumes,
 	})
@@ -448,7 +448,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Address:      localAddress,
 			Port:         conf.PrometheusPort,
 			ConfigPath:   prometheusConfigPath,
-			LogLevel:     logLevel,
+			Verbosity:    verbosity,
 			ExtraArgs:    prometheusComponentPatches.ExtraArgs,
 			ExtraVolumes: prometheusComponentPatches.ExtraVolumes,
 		})
@@ -475,7 +475,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Save config
-	logger := log.FromContext(ctx)
 	err = c.SetConfig(ctx, config)
 	if err != nil {
 		logger.Error("Failed to set config", err)
