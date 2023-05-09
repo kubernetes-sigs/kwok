@@ -226,13 +226,6 @@ jobs:
           containerd-rootless-setuptool.sh install
           containerd-rootless-setuptool.sh install-buildkit-containerd
 
-      - name: Install Podman Compose
-        if: ${{ matrix.kwokctl-runtime == 'podman' }}
-        shell: bash
-        run: |
-          pip3 install podman-compose
-          podman-compose version
-
       - name: Setup Podman For Kind
         if: ${{ matrix.kwokctl-runtime == 'kind-podman' }}
         shell: bash
