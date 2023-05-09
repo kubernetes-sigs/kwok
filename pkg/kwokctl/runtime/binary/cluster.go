@@ -390,6 +390,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Workdir:        workdir,
 		Binary:         kwokControllerPath,
 		Version:        kwokControllerVersion,
+		BindAddress:    conf.BindAddress,
 		Port:           conf.KwokControllerPort,
 		ConfigPath:     kwokConfigPath,
 		KubeconfigPath: kubeconfigPath,

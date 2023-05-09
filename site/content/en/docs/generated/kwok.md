@@ -23,7 +23,7 @@ kwok [flags]
       --node-ip string                                     IP of the node
       --node-name string                                   Name of the node
       --node-port int                                      Port of the node
-      --server-address string                              Address to expose health and metrics on
+      --server-address string                              Address to expose the server on
       --tls-cert-file string                               File containing the default x509 Certificate for HTTPS
       --tls-private-key-file string                        File containing the default x509 private key matching --tls-cert-file
   -v, --v log-level                                        number for the log level verbosity (DEBUG, INFO, WARN, ERROR) or (-4, 0, 4, 8) (default INFO)
