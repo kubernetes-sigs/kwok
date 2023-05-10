@@ -296,6 +296,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminCertPath:     adminCertPath,
 		AdminKeyPath:      adminKeyPath,
 		Verbosity:         verbosity,
+		DisableQPSLimits:  conf.DisableQPSLimits,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
 		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
 	})
@@ -335,6 +336,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
 			Verbosity:                          verbosity,
+			DisableQPSLimits:                   conf.DisableQPSLimits,
 			ExtraArgs:                          kubeControllerManagerPatches.ExtraArgs,
 			ExtraVolumes:                       kubeControllerManagerPatches.ExtraVolumes,
 		})
@@ -382,6 +384,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeconfigPath:   kubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
 			Verbosity:        verbosity,
+			DisableQPSLimits: conf.DisableQPSLimits,
 			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
 			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
 		})

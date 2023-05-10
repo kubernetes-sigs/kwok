@@ -46,6 +46,7 @@ type BuildKubeApiserverComponentConfig struct {
 	AdminCertPath     string
 	AdminKeyPath      string
 	Verbosity         log.Level
+	DisableQPSLimits  bool
 	ExtraArgs         []internalversion.ExtraArgs
 	ExtraVolumes      []internalversion.Volume
 }
@@ -82,6 +83,20 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--feature-gates="+conf.KubeFeatureGates,
 		)
+	}
+
+	if conf.DisableQPSLimits {
+		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--max-requests-inflight=0",
+			"--max-mutating-requests-inflight=0",
+		)
+
+		// FeatureGate APIPriorityAndFairness is not available before 1.17.0
+		if conf.Version.GE(version.NewVersion(1, 18, 0)) {
+			kubeApiserverArgs = append(kubeApiserverArgs,
+				"--enable-priority-and-fairness=false",
+			)
+		}
 	}
 
 	var ports []internalversion.Port

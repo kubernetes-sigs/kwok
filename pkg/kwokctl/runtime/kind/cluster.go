@@ -41,6 +41,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -132,6 +133,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	configPath := c.GetWorkdirPath(runtime.ConfigName)
 
+	kubeVersion, err := version.ParseVersion(conf.KubeVersion)
+	if err != nil {
+		return err
+	}
+
 	etcdComponentPatches := runtime.GetComponentPatches(config, "etcd")
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(config, "kube-apiserver")
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
@@ -162,6 +168,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		ControllerManagerExtraArgs:    kubeControllerManagerComponentPatches.ExtraArgs,
 		ControllerManagerExtraVolumes: kubeControllerManagerComponentPatches.ExtraVolumes,
 		KwokControllerExtraVolumes:    kwokControllerExtraVolumes,
+		DisableQPSLimits:              conf.DisableQPSLimits,
+		KubeVersion:                   kubeVersion,
 	})
 	if err != nil {
 		return err

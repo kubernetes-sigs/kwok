@@ -2442,6 +2442,17 @@ string
 <p>KubeApiserverCertSANs sets extra Subject Alternative Names for the API Server signing cert.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>disableQPSLimits</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>DisableQPSLimits specifies whether to disable QPS limits for components.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.Port">

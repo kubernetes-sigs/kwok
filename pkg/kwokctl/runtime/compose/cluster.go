@@ -322,6 +322,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		EtcdPort:          conf.EtcdPort,
 		EtcdAddress:       c.Name() + "-etcd",
 		Verbosity:         verbosity,
+		DisableQPSLimits:  conf.DisableQPSLimits,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
 		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
 	})
@@ -356,6 +357,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeconfigPath:                     inClusterOnHostKubeconfigPath,
 			KubeFeatureGates:                   conf.KubeFeatureGates,
 			Verbosity:                          verbosity,
+			DisableQPSLimits:                   conf.DisableQPSLimits,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
 			ExtraArgs:                          kubeControllerManagerComponentPatches.ExtraArgs,
@@ -402,6 +404,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeconfigPath:   inClusterOnHostKubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
 			Verbosity:        verbosity,
+			DisableQPSLimits: conf.DisableQPSLimits,
 			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
 			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
 		})

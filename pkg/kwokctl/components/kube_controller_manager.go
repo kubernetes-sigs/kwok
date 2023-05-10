@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -43,6 +44,7 @@ type BuildKubeControllerManagerComponentConfig struct {
 	NodeMonitorPeriodMilliseconds      int64
 	NodeMonitorGracePeriodMilliseconds int64
 	Verbosity                          log.Level
+	DisableQPSLimits                   bool
 	ExtraArgs                          []internalversion.ExtraArgs
 	ExtraVolumes                       []internalversion.Volume
 }
@@ -178,6 +180,13 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				"--service-account-private-key-file="+conf.AdminKeyPath,
 			)
 		}
+	}
+
+	if conf.DisableQPSLimits {
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			"--kube-api-qps="+format.String(consts.DefaultUnlimitedQPS),
+			"--kube-api-burst="+format.String(consts.DefaultUnlimitedBurst),
+		)
 	}
 
 	if conf.Verbosity != log.LevelInfo {

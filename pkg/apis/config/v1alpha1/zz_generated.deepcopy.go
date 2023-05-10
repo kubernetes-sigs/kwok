@@ -285,6 +285,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.DisableQPSLimits != nil {
+		in, out := &in.DisableQPSLimits, &out.DisableQPSLimits
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

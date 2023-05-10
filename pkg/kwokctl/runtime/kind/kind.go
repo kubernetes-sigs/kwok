@@ -22,9 +22,11 @@ import (
 	"text/template"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 
 	_ "embed"
 )
@@ -137,6 +139,49 @@ func expendExtrasForBuildKind(conf BuildKindConfig) BuildKindConfig {
 			},
 		)
 	}
+
+	if conf.DisableQPSLimits {
+		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "max-requests-inflight",
+				Value: "0",
+			},
+			internalversion.ExtraArgs{
+				Key:   "max-mutating-requests-inflight",
+				Value: "0",
+			},
+		)
+
+		// FeatureGate APIPriorityAndFairness is not available before 1.17.0
+		if conf.KubeVersion.GE(version.NewVersion(1, 18, 0)) {
+			conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
+				internalversion.ExtraArgs{
+					Key:   "enable-priority-and-fairness",
+					Value: "false",
+				},
+			)
+		}
+		conf.ControllerManagerExtraArgs = append(conf.ControllerManagerExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "kube-api-qps",
+				Value: format.String(consts.DefaultUnlimitedQPS),
+			},
+			internalversion.ExtraArgs{
+				Key:   "kube-api-burst",
+				Value: format.String(consts.DefaultUnlimitedBurst),
+			},
+		)
+		conf.SchedulerExtraArgs = append(conf.SchedulerExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "kube-api-qps",
+				Value: format.String(consts.DefaultUnlimitedQPS),
+			},
+			internalversion.ExtraArgs{
+				Key:   "kube-api-burst",
+				Value: format.String(consts.DefaultUnlimitedBurst),
+			},
+		)
+	}
 	return conf
 }
 
@@ -203,5 +248,7 @@ type BuildKindConfig struct {
 	ControllerManagerExtraVolumes []internalversion.Volume
 	KwokControllerExtraVolumes    []internalversion.Volume
 
-	BindAddress string
+	BindAddress      string
+	DisableQPSLimits bool
+	KubeVersion      version.Version
 }
