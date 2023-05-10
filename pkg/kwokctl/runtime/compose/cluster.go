@@ -742,7 +742,11 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 	conf := &config.Options
 
 	if c.runtime == consts.RuntimeTypePodman {
-		return append([]string{c.runtime + "-compose"}, args...), nil
+		pc, err := c.preInstallPodmanCompose(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return append(pc, args...), nil
 	}
 	if c.runtime == consts.RuntimeTypeDocker {
 		err := exec.Exec(ctx, c.runtime, "compose", "version")
@@ -763,4 +767,39 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	etcdContainerName := c.Name() + "-etcd"
 	return exec.Exec(ctx, c.runtime, append([]string{"exec", "-i", etcdContainerName, "etcdctl"}, args...)...)
+}
+
+// preInstallPodmanCompose pre-installs podman-compose
+func (c *Cluster) preInstallPodmanCompose(ctx context.Context) ([]string, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conf := &config.Options
+
+	p, err := exec.LookPath("podman-compose")
+	if err == nil {
+		return []string{p}, nil
+	}
+
+	pybin, err := exec.LookPath("python3")
+	if err != nil {
+		pybin, err = exec.LookPath("python")
+		if err != nil {
+			return nil, fmt.Errorf("failed to find python3 or python")
+		}
+	}
+
+	target := path.Join(conf.CacheDir, "py", "podman-compose")
+	bin := path.Join(target, "podman_compose.py")
+	if !file.Exists(bin) {
+		err = exec.Exec(exec.WithStdIO(ctx), pybin, "-m", "pip", "install", "-t", target, "podman-compose")
+		if err != nil {
+			return nil, err
+		}
+		if !file.Exists(bin) {
+			return nil, fmt.Errorf("failed to install podman-compose")
+		}
+	}
+	return []string{pybin, bin}, nil
 }
