@@ -29,7 +29,7 @@ type BuildKubeSchedulerComponentConfig struct {
 	Image            string
 	Version          version.Version
 	Workdir          string
-	Address          string
+	BindAddress      string
 	Port             uint32
 	SecurePort       bool
 	CaCertPath       string
@@ -45,10 +45,6 @@ type BuildKubeSchedulerComponentConfig struct {
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
 func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (component internalversion.Component, err error) {
-	if conf.Address == "" {
-		conf.Address = publicAddress
-	}
-
 	kubeSchedulerArgs := []string{}
 	kubeSchedulerArgs = append(kubeSchedulerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
@@ -119,7 +115,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 
 		if inContainer {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--bind-address="+publicAddress,
+				"--bind-address="+conf.BindAddress,
 				"--secure-port=10259",
 			)
 			if conf.Port != 0 {
@@ -133,7 +129,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			}
 		} else {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--bind-address="+conf.Address,
+				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
 			)
 		}
@@ -144,7 +140,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	} else {
 		if inContainer {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--address="+publicAddress,
+				"--address="+conf.BindAddress,
 				"--port=10251",
 			)
 			if conf.Port != 0 {
@@ -158,7 +154,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			}
 		} else {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--address="+conf.Address,
+				"--address="+conf.BindAddress,
 				"--port="+format.String(conf.Port),
 			)
 		}

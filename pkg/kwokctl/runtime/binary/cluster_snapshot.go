@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 )
 
 // SnapshotSave save the snapshot of cluster
@@ -42,7 +43,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, etcdctlPath, "snapshot", "save", path, "--endpoints=127.0.0.1:"+format.String(conf.EtcdPort))
+	err = exec.Exec(ctx, etcdctlPath, "snapshot", "save", path, "--endpoints="+net.LocalAddress+":"+format.String(conf.EtcdPort))
 	if err != nil {
 		return err
 	}

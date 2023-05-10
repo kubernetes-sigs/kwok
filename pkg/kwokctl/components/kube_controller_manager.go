@@ -31,7 +31,7 @@ type BuildKubeControllerManagerComponentConfig struct {
 	Image                              string
 	Version                            version.Version
 	Workdir                            string
-	Address                            string
+	BindAddress                        string
 	Port                               uint32
 	SecurePort                         bool
 	CaCertPath                         string
@@ -49,10 +49,6 @@ type BuildKubeControllerManagerComponentConfig struct {
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
 func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponentConfig) (component internalversion.Component, err error) {
-	if conf.Address == "" {
-		conf.Address = publicAddress
-	}
-
 	kubeControllerManagerArgs := []string{}
 	kubeControllerManagerArgs = append(kubeControllerManagerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
@@ -115,7 +111,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 
 		if inContainer {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--bind-address="+publicAddress,
+				"--bind-address="+conf.BindAddress,
 				"--secure-port=10257",
 			)
 			if conf.Port > 0 {
@@ -129,7 +125,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			}
 		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--bind-address="+conf.Address,
+				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
 			)
 		}
@@ -141,7 +137,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	} else {
 		if inContainer {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--address="+publicAddress,
+				"--address="+conf.BindAddress,
 				"--port=10252",
 			)
 			if conf.Port > 0 {
@@ -155,7 +151,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			}
 		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--address="+conf.Address,
+				"--address="+conf.BindAddress,
 				"--port="+format.String(conf.Port),
 			)
 		}

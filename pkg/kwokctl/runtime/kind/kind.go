@@ -202,4 +202,6 @@ type BuildKindConfig struct {
 	Verbosity                     log.Level
 	ControllerManagerExtraVolumes []internalversion.Volume
 	KwokControllerExtraVolumes    []internalversion.Volume
+
+	BindAddress string
 }

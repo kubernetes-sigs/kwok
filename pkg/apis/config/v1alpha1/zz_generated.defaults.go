@@ -94,6 +94,9 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 	if in.Options.NodeStatusUpdateFrequencyMilliseconds == 0 {
 		in.Options.NodeStatusUpdateFrequencyMilliseconds = 1200000
 	}
+	if in.Options.BindAddress == "" {
+		in.Options.BindAddress = "0.0.0.0"
+	}
 	for i := range in.Components {
 		a := &in.Components[i]
 		for j := range a.Ports {

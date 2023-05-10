@@ -201,7 +201,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.SecurePort {
 		scheme = "https"
 	}
-	localAddress := "127.0.0.1"
+
 	workdir := c.Workdir()
 
 	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
@@ -245,7 +245,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Workdir:      workdir,
 		Binary:       etcdPath,
 		Version:      etcdVersion,
-		Address:      localAddress,
+		BindAddress:  conf.BindAddress,
 		DataPath:     etcdDataPath,
 		Port:         conf.EtcdPort,
 		PeerPort:     conf.EtcdPeerPort,
@@ -269,8 +269,9 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Workdir:           workdir,
 		Binary:            kubeApiserverPath,
 		Version:           kubeApiserverVersion,
+		BindAddress:       conf.BindAddress,
 		Port:              conf.KubeApiserverPort,
-		EtcdAddress:       localAddress,
+		EtcdAddress:       net.LocalAddress,
 		EtcdPort:          conf.EtcdPort,
 		KubeRuntimeConfig: conf.KubeRuntimeConfig,
 		KubeFeatureGates:  conf.KubeFeatureGates,
@@ -310,7 +311,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Workdir:                            workdir,
 			Binary:                             kubeControllerManagerPath,
 			Version:                            kubeControllerManagerVersion,
-			Address:                            localAddress,
+			BindAddress:                        conf.BindAddress,
 			Port:                               conf.KubeControllerManagerPort,
 			SecurePort:                         conf.SecurePort,
 			CaCertPath:                         caCertPath,
@@ -358,7 +359,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Workdir:          workdir,
 			Binary:           kubeSchedulerPath,
 			Version:          kubeSchedulerVersion,
-			Address:          localAddress,
+			BindAddress:      conf.BindAddress,
 			Port:             conf.KubeSchedulerPort,
 			SecurePort:       conf.SecurePort,
 			CaCertPath:       caCertPath,
@@ -388,6 +389,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Workdir:        workdir,
 		Binary:         kwokControllerPath,
 		Version:        kwokControllerVersion,
+		BindAddress:    conf.BindAddress,
 		Port:           conf.KwokControllerPort,
 		ConfigPath:     kwokConfigPath,
 		KubeconfigPath: kubeconfigPath,
@@ -437,7 +439,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Workdir:      workdir,
 			Binary:       prometheusPath,
 			Version:      prometheusVersion,
-			Address:      localAddress,
+			BindAddress:  conf.BindAddress,
 			Port:         conf.PrometheusPort,
 			ConfigPath:   prometheusConfigPath,
 			Verbosity:    verbosity,
@@ -454,7 +456,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
-		Address:      scheme + "://" + localAddress + ":" + format.String(conf.KubeApiserverPort),
+		Address:      scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
 		AdminCrtPath: adminCertPath,
 		AdminKeyPath: adminKeyPath,
 	})
@@ -777,5 +779,5 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 		return err
 	}
 
-	return exec.Exec(ctx, etcdctlPath, append([]string{"--endpoints", "127.0.0.1:" + format.String(conf.EtcdPort)}, args...)...)
+	return exec.Exec(ctx, etcdctlPath, append([]string{"--endpoints", net.LocalAddress + ":" + format.String(conf.EtcdPort)}, args...)...)
 }

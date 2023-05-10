@@ -29,6 +29,7 @@ type BuildKwokControllerComponentConfig struct {
 	Image          string
 	Version        version.Version
 	Workdir        string
+	BindAddress    string
 	Port           uint32
 	ConfigPath     string
 	KubeconfigPath string
@@ -91,6 +92,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
 			"--node-name="+conf.NodeName,
 			"--node-port=10247",
+			"--server-address="+conf.BindAddress+":10247",
 		)
 	} else {
 		kwokControllerArgs = append(kwokControllerArgs,
@@ -100,6 +102,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--tls-private-key-file="+conf.AdminKeyPath,
 			"--node-name=localhost",
 			"--node-port="+format.String(conf.Port),
+			"--server-address="+conf.BindAddress+":"+format.String(conf.Port),
 		)
 	}
 

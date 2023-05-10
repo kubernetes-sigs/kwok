@@ -52,10 +52,10 @@ func (c *Cluster) RemoveContext(ctx context.Context, kubeconfigPath string) erro
 
 // fillKubeconfigContextServer fill the server of cluster to kubeconfig
 // because the server of cluster not set in kind, so we need to fill it.
-func (c *Cluster) fillKubeconfigContextServer() error {
+func (c *Cluster) fillKubeconfigContextServer(bindAddress string) error {
 	kubeconfigPath := kubeconfig.GetRecommendedKubeconfigPath()
 	name := "kind-" + c.Name()
-	err := kubeconfig.ModifyContext(kubeconfigPath, withFillContextServer(name, "0.0.0.0"))
+	err := kubeconfig.ModifyContext(kubeconfigPath, withFillContextServer(name, bindAddress))
 	if err != nil {
 		return err
 	}

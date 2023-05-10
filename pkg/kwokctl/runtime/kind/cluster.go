@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/image"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -140,6 +141,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, extraLogVolumes...)
 	kindYaml, err := BuildKind(BuildKindConfig{
+		BindAddress:                   conf.BindAddress,
 		KubeApiserverPort:             conf.KubeApiserverPort,
 		EtcdPort:                      conf.EtcdPort,
 		PrometheusPort:                conf.PrometheusPort,
@@ -308,7 +310,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	// TODO: remove this when kind support set server
-	err = c.fillKubeconfigContextServer()
+	err = c.fillKubeconfigContextServer(conf.BindAddress)
 	if err != nil {
 		return err
 	}
@@ -679,7 +681,7 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	etcdContainerName := c.getComponentName("etcd")
 
-	return c.KubectlInCluster(ctx, append([]string{"exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "--endpoints=127.0.0.1:2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt"}, args...)...)
+	return c.KubectlInCluster(ctx, append([]string{"exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "--endpoints=" + net.LocalAddress + ":2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt"}, args...)...)
 }
 
 // preDownloadKind pre-download and cache kind

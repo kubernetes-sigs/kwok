@@ -1334,6 +1334,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeControllerManagerNodeMonitorPeriodMilliseconds = in.KubeControllerManagerNodeMonitorPeriodMilliseconds
 	out.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = in.KubeControllerManagerNodeMonitorGracePeriodMilliseconds
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
+	out.BindAddress = in.BindAddress
 	return nil
 }
 
@@ -1415,6 +1416,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeControllerManagerNodeMonitorPeriodMilliseconds = in.KubeControllerManagerNodeMonitorPeriodMilliseconds
 	out.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = in.KubeControllerManagerNodeMonitorGracePeriodMilliseconds
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
+	out.BindAddress = in.BindAddress
 	return nil
 }
 

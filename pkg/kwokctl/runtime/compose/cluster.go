@@ -218,6 +218,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Workdir:      workdir,
 		Image:        conf.EtcdImage,
 		Version:      etcdVersion,
+		BindAddress:  net.PublicAddress,
 		Port:         conf.EtcdPort,
 		DataPath:     etcdDataPath,
 		Verbosity:    verbosity,
@@ -244,6 +245,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Workdir:           workdir,
 		Image:             conf.KubeApiserverImage,
 		Version:           kubeApiserverVersion,
+		BindAddress:       net.PublicAddress,
 		Port:              conf.KubeApiserverPort,
 		KubeRuntimeConfig: conf.KubeRuntimeConfig,
 		KubeFeatureGates:  conf.KubeFeatureGates,
@@ -282,6 +284,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Workdir:                            workdir,
 			Image:                              conf.KubeControllerManagerImage,
 			Version:                            kubeControllerManagerVersion,
+			BindAddress:                        net.PublicAddress,
 			Port:                               conf.KubeControllerManagerPort,
 			SecurePort:                         conf.SecurePort,
 			CaCertPath:                         caCertPath,
@@ -327,6 +330,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Workdir:          workdir,
 			Image:            conf.KubeSchedulerImage,
 			Version:          kubeSchedulerVersion,
+			BindAddress:      net.PublicAddress,
 			Port:             conf.KubeSchedulerPort,
 			SecurePort:       conf.SecurePort,
 			CaCertPath:       caCertPath,
@@ -365,6 +369,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Workdir:        workdir,
 		Image:          conf.KwokControllerImage,
 		Version:        kwokControllerVersion,
+		BindAddress:    net.PublicAddress,
 		Port:           conf.KwokControllerPort,
 		ConfigPath:     kwokConfigPath,
 		KubeconfigPath: inClusterOnHostKubeconfigPath,
@@ -411,6 +416,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Workdir:       workdir,
 			Image:         conf.PrometheusImage,
 			Version:       prometheusVersion,
+			BindAddress:   net.PublicAddress,
 			Port:          conf.PrometheusPort,
 			ConfigPath:    prometheusConfigPath,
 			AdminCertPath: adminCertPath,
@@ -426,7 +432,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Setup compose
-	compose := convertToCompose(c.Name(), config.Components)
+	compose := convertToCompose(c.Name(), conf.BindAddress, config.Components)
 	composeData, err := yaml.Marshal(compose)
 	if err != nil {
 		return err
@@ -436,7 +442,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
-		Address:      scheme + "://127.0.0.1:" + format.String(conf.KubeApiserverPort),
+		Address:      scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
 		AdminCrtPath: adminCertPath,
 		AdminKeyPath: adminKeyPath,
 	})

@@ -25,8 +25,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
-func convertToCompose(name string, cs []internalversion.Component) *types.Config {
-	svcs := convertComponentsToComposeServices(name, cs)
+func convertToCompose(name string, hostIP string, cs []internalversion.Component) *types.Config {
+	svcs := convertComponentsToComposeServices(name, hostIP, cs)
 	return &types.Config{
 		Extensions: map[string]interface{}{
 			"version": "3",
@@ -40,15 +40,15 @@ func convertToCompose(name string, cs []internalversion.Component) *types.Config
 	}
 }
 
-func convertComponentsToComposeServices(prefix string, cs []internalversion.Component) (svcs types.Services) {
+func convertComponentsToComposeServices(prefix string, hostIP string, cs []internalversion.Component) (svcs types.Services) {
 	svcs = make(types.Services, len(cs))
 	for i, c := range cs {
-		svcs[i] = convertComponentToComposeService(prefix, c)
+		svcs[i] = convertComponentToComposeService(prefix, hostIP, c)
 	}
 	return svcs
 }
 
-func convertComponentToComposeService(prefix string, cs internalversion.Component) (svc types.ServiceConfig) {
+func convertComponentToComposeService(prefix string, hostIP string, cs internalversion.Component) (svc types.ServiceConfig) {
 	svc.Name = cs.Name
 	svc.ContainerName = prefix + "-" + cs.Name
 	svc.Image = cs.Image
@@ -63,6 +63,7 @@ func convertComponentToComposeService(prefix string, cs internalversion.Componen
 	for i, p := range cs.Ports {
 		svc.Ports[i] = types.ServicePortConfig{
 			Mode:      "ingress",
+			HostIP:    hostIP,
 			Target:    p.Port,
 			Published: format.String(p.HostPort),
 			Protocol:  strings.ToLower(string(p.Protocol)),
