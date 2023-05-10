@@ -322,7 +322,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 	}
 
-	err = c.Kubectl(ctx, "cordon", c.Name()+"-control-plane")
+	err = c.Kubectl(ctx, "cordon", c.getClusterName())
 	if err != nil {
 		logger.Error("Failed cordon node", err)
 	}
@@ -462,26 +462,29 @@ func (c *Cluster) Stop(ctx context.Context) error {
 
 // StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
-	err := exec.Exec(ctx, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
+	err := exec.Exec(ctx, "docker", "exec", c.getClusterName(), "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
 		return err
 	}
 
-	return c.waitComponentReady(ctx, name, 30*time.Second)
+	return c.waitComponentReady(ctx, name, true, 120*time.Second)
 }
 
 // StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
-	err := exec.Exec(ctx, "docker", "exec", c.Name()+"-control-plane", "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
+	err := exec.Exec(ctx, "docker", "exec", c.getClusterName(), "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
 		return err
 	}
 
-	return c.waitComponentDown(ctx, name, 30*time.Second)
+	if name == "etcd" || name == "kube-apiserver" {
+		return nil
+	}
+	return c.waitComponentReady(ctx, name, false, 120*time.Second)
 }
 
 // waitComponentReady waits for a component to be ready
-func (c *Cluster) waitComponentReady(ctx context.Context, name string, timeout time.Duration) error {
+func (c *Cluster) waitComponentReady(ctx context.Context, name string, wantReady bool, timeout time.Duration) error {
 	var (
 		err     error
 		waitErr error
@@ -491,12 +494,12 @@ func (c *Cluster) waitComponentReady(ctx context.Context, name string, timeout t
 	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		ready, err = c.componentReady(ctx, name)
 		if err != nil {
-			logger.Debug("Component is not ready",
+			logger.Debug("check component ready",
 				"component", name,
 				"err", err,
 			)
 		}
-		return ready, nil
+		return ready == wantReady, nil
 	}, wait.WithTimeout(timeout), wait.WithImmediate())
 	if err != nil {
 		return err
@@ -509,73 +512,33 @@ func (c *Cluster) waitComponentReady(ctx context.Context, name string, timeout t
 
 func (c *Cluster) componentReady(ctx context.Context, name string) (bool, error) {
 	out := bytes.NewBuffer(nil)
-	err := c.KubectlInCluster(exec.WithWriteTo(ctx, out), "get", "pod", "--namespace=kube-system", "--field-selector=status.phase!=Running", "--output=json", name)
+	err := c.KubectlInCluster(exec.WithWriteTo(ctx, out), "get", "pod", "--namespace=kube-system", "--output=json", c.getComponentName(name))
+	if err != nil {
+		if strings.Contains(out.String(), "NotFound") {
+			return false, nil
+		}
+		return false, err
+	}
+
+	var pod corev1.Pod
+	err = json.Unmarshal(out.Bytes(), &pod)
 	if err != nil {
 		return false, err
 	}
 
-	var data corev1.PodList
-	err = json.Unmarshal(out.Bytes(), &data)
-	if err != nil {
-		return false, err
-	}
-
-	if len(data.Items) != 0 {
-		logger := log.FromContext(ctx)
-		logger.Debug("Component not running",
-			"component", name,
-			"pod", log.KObj(&data.Items[0]).String(),
-			"phase", string(data.Items[0].Status.Phase),
-		)
+	if pod.Status.Phase != corev1.PodRunning {
 		return false, nil
 	}
-	return true, nil
-}
-
-// waitComponentDown waits for a component to be down
-func (c *Cluster) waitComponentDown(ctx context.Context, name string, timeout time.Duration) error {
-	var (
-		err     error
-		waitErr error
-		down    bool
-	)
-	logger := log.FromContext(ctx)
-	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		down, err = c.componentDown(ctx, name)
-		if err != nil {
-			logger.Debug("Component is not down",
-				"component", name,
-				"err", err,
-			)
+	if pod.Status.ContainerStatuses == nil {
+		return false, nil
+	}
+	for _, containerStatus := range pod.Status.ContainerStatuses {
+		if !containerStatus.Ready {
+			return false, nil
 		}
-		return down, nil
-	}, wait.WithTimeout(timeout), wait.WithImmediate())
-	if err != nil {
-		return err
-	}
-	if waitErr != nil {
-		return waitErr
-	}
-	return nil
-}
-
-func (c *Cluster) componentDown(ctx context.Context, name string) (bool, error) {
-	out := bytes.NewBuffer(nil)
-	err := c.KubectlInCluster(exec.WithWriteTo(ctx, out), "get", "pod", "--namespace=kube-system", "--output=json", name)
-	if err != nil {
-		return false, err
 	}
 
-	var data corev1.PodList
-	err = json.Unmarshal(out.Bytes(), &data)
-	if err != nil {
-		return false, err
-	}
-
-	if len(data.Items) == 0 {
-		return true, nil
-	}
-	return false, nil
+	return true, nil
 }
 
 func (c *Cluster) getClusterName() string {
