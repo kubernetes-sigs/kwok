@@ -67,29 +67,29 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.KubeSchedulerConfig, "kube-scheduler-config", flags.Options.KubeSchedulerConfig, `Path to a kube-scheduler configuration file`)
 	cmd.Flags().BoolVar(&flags.Options.DisableKubeScheduler, "disable-kube-scheduler", flags.Options.DisableKubeScheduler, `Disable the kube-scheduler`)
 	cmd.Flags().BoolVar(&flags.Options.DisableKubeControllerManager, "disable-kube-controller-manager", flags.Options.DisableKubeControllerManager, `Disable the kube-controller-manager`)
-	cmd.Flags().StringVar(&flags.Options.EtcdImage, "etcd-image", flags.Options.EtcdImage, `Image of etcd, only for docker/nerdctl runtime
+	cmd.Flags().StringVar(&flags.Options.EtcdImage, "etcd-image", flags.Options.EtcdImage, `Image of etcd, only for docker/podman/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
 `)
-	cmd.Flags().Uint32Var(&flags.Options.EtcdPort, "etcd-port", flags.Options.EtcdPort, `Port of etcd given to the host. The behavior is unstable for kind runtime and may be modified in the future`)
-	cmd.Flags().StringVar(&flags.Options.KubeApiserverImage, "kube-apiserver-image", flags.Options.KubeApiserverImage, `Image of kube-apiserver, only for docker/nerdctl runtime
+	cmd.Flags().Uint32Var(&flags.Options.EtcdPort, "etcd-port", flags.Options.EtcdPort, `Port of etcd given to the host. The behavior is unstable for kind/kind-podman runtime and may be modified in the future`)
+	cmd.Flags().StringVar(&flags.Options.KubeApiserverImage, "kube-apiserver-image", flags.Options.KubeApiserverImage, `Image of kube-apiserver, only for docker/podman/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/kube-apiserver:${KWOK_KUBE_VERSION}'
 `)
-	cmd.Flags().StringVar(&flags.Options.KubeControllerManagerImage, "kube-controller-manager-image", flags.Options.KubeControllerManagerImage, `Image of kube-controller-manager, only for docker/nerdctl runtime
+	cmd.Flags().StringVar(&flags.Options.KubeControllerManagerImage, "kube-controller-manager-image", flags.Options.KubeControllerManagerImage, `Image of kube-controller-manager, only for docker/podman/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/kube-controller-manager:${KWOK_KUBE_VERSION}'
 `)
-	cmd.Flags().Uint32Var(&flags.Options.KubeControllerManagerPort, "kube-controller-manager-port", flags.Options.KubeControllerManagerPort, `Port of kube-controller-manager given to the host, only for binary and docker/nerdctl runtime`)
-	cmd.Flags().StringVar(&flags.Options.KubeSchedulerImage, "kube-scheduler-image", flags.Options.KubeSchedulerImage, `Image of kube-scheduler, only for docker/nerdctl runtime
+	cmd.Flags().Uint32Var(&flags.Options.KubeControllerManagerPort, "kube-controller-manager-port", flags.Options.KubeControllerManagerPort, `Port of kube-controller-manager given to the host, only for binary and docker/podman/nerdctl runtime`)
+	cmd.Flags().StringVar(&flags.Options.KubeSchedulerImage, "kube-scheduler-image", flags.Options.KubeSchedulerImage, `Image of kube-scheduler, only for docker/podman/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/kube-scheduler:${KWOK_KUBE_VERSION}'
 `)
-	cmd.Flags().Uint32Var(&flags.Options.KubeSchedulerPort, "kube-scheduler-port", flags.Options.KubeSchedulerPort, `Port of kube-scheduler given to the host, only for binary and docker/nerdctl runtime`)
-	cmd.Flags().StringVar(&flags.Options.KwokControllerImage, "kwok-controller-image", flags.Options.KwokControllerImage, `Image of kwok-controller, only for docker/nerdctl/kind runtime
+	cmd.Flags().Uint32Var(&flags.Options.KubeSchedulerPort, "kube-scheduler-port", flags.Options.KubeSchedulerPort, `Port of kube-scheduler given to the host, only for binary and docker/podman/nerdctl runtime`)
+	cmd.Flags().StringVar(&flags.Options.KwokControllerImage, "kwok-controller-image", flags.Options.KwokControllerImage, `Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
 `)
-	cmd.Flags().StringVar(&flags.Options.PrometheusImage, "prometheus-image", flags.Options.PrometheusImage, `Image of Prometheus, only for docker/nerdctl/kind runtime
+	cmd.Flags().StringVar(&flags.Options.PrometheusImage, "prometheus-image", flags.Options.PrometheusImage, `Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'
 `)
 	cmd.Flags().Uint32Var(&flags.Options.KwokControllerPort, "controller-port", flags.Options.KwokControllerPort, `Port of kwok-controller given to the host`)
-	cmd.Flags().StringVar(&flags.Options.KindNodeImage, "kind-node-image", flags.Options.KindNodeImage, `Image of kind node, only for kind runtime
+	cmd.Flags().StringVar(&flags.Options.KindNodeImage, "kind-node-image", flags.Options.KindNodeImage, `Image of kind node, only for kind/kind-podman runtime
 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
 `)
 	cmd.Flags().StringVar(&flags.Options.KubeApiserverBinary, "kube-apiserver-binary", flags.Options.KubeApiserverBinary, `Binary of kube-apiserver, only for binary runtime
@@ -108,13 +108,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 `)
 	cmd.Flags().StringVar(&flags.Options.DockerComposeBinary, "docker-compose-binary", flags.Options.DockerComposeBinary, `Binary of Docker-compose, only for docker runtime
 `)
-	cmd.Flags().StringVar(&flags.Options.KindBinary, "kind-binary", flags.Options.KindBinary, `Binary of kind, only for kind runtime
+	cmd.Flags().StringVar(&flags.Options.KindBinary, "kind-binary", flags.Options.KindBinary, `Binary of kind, only for kind/kind-podman runtime
 `)
 	cmd.Flags().StringVar(&flags.Options.KubeFeatureGates, "kube-feature-gates", flags.Options.KubeFeatureGates, `A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes`)
 	cmd.Flags().StringVar(&flags.Options.KubeRuntimeConfig, "kube-runtime-config", flags.Options.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs`)
 	cmd.Flags().StringVar(&flags.Options.KubeAuditPolicy, "kube-audit-policy", flags.Options.KubeAuditPolicy, "Path to the file that defines the audit policy configuration")
-	cmd.Flags().BoolVar(&flags.Options.KubeAuthorization, "kube-authorization", flags.Options.KubeAuthorization, "Enable authorization on secure port, only for non-kind runtime")
-	cmd.Flags().BoolVar(&flags.Options.KubeAdmission, "kube-admission", flags.Options.KubeAdmission, "Enable admission for kube-apiserver, only for non-kind runtime")
+	cmd.Flags().BoolVar(&flags.Options.KubeAuthorization, "kube-authorization", flags.Options.KubeAuthorization, "Enable authorization for kube-apiserver, only for non kind/kind-podman runtime")
+	cmd.Flags().BoolVar(&flags.Options.KubeAdmission, "kube-admission", flags.Options.KubeAdmission, "Enable admission for kube-apiserver, only for non kind/kind-podman runtime")
 	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
 	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 0, "Timeout for waiting for the cluster to be created")
 	cmd.Flags().DurationVar(&flags.Wait, "wait", 0, "Wait for the cluster to be ready")

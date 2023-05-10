@@ -26,7 +26,7 @@ If you are creating a cluster with kube version < `1.21`, then [authorization] a
 
 All components run using local binary, you need to use `127.0.0.1` to access the webhook service on the host.
 
-### In Docker/Nerdctl
+### In Docker/Podman/Nerdctl
 
 All components run in containers, you need to use the service name of the network to access the webhook service on the container.
 
