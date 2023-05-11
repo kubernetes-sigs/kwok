@@ -20,7 +20,6 @@ import (
 	"encoding/binary"
 	"net"
 	"sync"
-	"time"
 
 	"github.com/wzshiming/cron"
 	"k8s.io/apimachinery/pkg/labels"
@@ -119,50 +118,6 @@ func (i *ipPool) Use(ip string) {
 	i.used[ip] = struct{}{}
 }
 
-type parallelTasks struct {
-	wg     sync.WaitGroup
-	bucket chan struct{}
-	tasks  chan func()
-}
-
-func newParallelTasks(n int) *parallelTasks {
-	return &parallelTasks{
-		bucket: make(chan struct{}, n),
-		tasks:  make(chan func()),
-	}
-}
-
-func (p *parallelTasks) Add(fun func()) {
-	p.wg.Add(1)
-	select {
-	case p.tasks <- fun: // there are idle threads
-	case p.bucket <- struct{}{}: // there are free threads
-		go p.fork()
-		p.tasks <- fun
-	}
-}
-
-func (p *parallelTasks) fork() {
-	defer func() {
-		<-p.bucket
-	}()
-	timer := time.NewTimer(time.Second / 2)
-	for {
-		select {
-		case <-timer.C: // idle threads
-			return
-		case fun := <-p.tasks:
-			fun()
-			p.wg.Done()
-			timer.Reset(time.Second / 2)
-		}
-	}
-}
-
-func (p *parallelTasks) Wait() {
-	p.wg.Wait()
-}
-
 func labelsParse(selector string) (labels.Selector, error) {
 	if selector == "" {
 		return nil, nil
@@ -175,4 +130,9 @@ type jobInfoMap = maps.SyncMap[string, jobInfo]
 type jobInfo struct {
 	ResourceVersion string
 	Cancel          cron.DoFunc
+}
+
+type resourceStageJob[T any] struct {
+	Resource T
+	Stage    *LifecycleStage
 }

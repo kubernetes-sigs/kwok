@@ -61,8 +61,9 @@ type PodController struct {
 	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	ipPools                               maps.SyncMap[string, *ipPool]
 	renderer                              *renderer
-	lockPodChan                           chan *corev1.Pod
-	parallelTasks                         *parallelTasks
+	preprocessChan                        chan *corev1.Pod
+	playStageChan                         chan resourceStageJob[*corev1.Pod]
+	playStageParallelism                  uint
 	lifecycle                             Lifecycle
 	cronjob                               *cron.Cron
 	delayJobs                             jobInfoMap
@@ -79,13 +80,17 @@ type PodControllerConfig struct {
 	CIDR                                  string
 	NodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	Stages                                []*internalversion.Stage
-	LockPodParallelism                    int
+	PlayStageParallelism                  uint
 	FuncMap                               template.FuncMap
 	Recorder                              record.EventRecorder
 }
 
 // NewPodController creates a new fake pods controller
 func NewPodController(conf PodControllerConfig) (*PodController, error) {
+	if conf.PlayStageParallelism <= 0 {
+		return nil, fmt.Errorf("playStageParallelism must be greater than 0")
+	}
+
 	disregardStatusWithAnnotationSelector, err := labelsParse(conf.DisregardStatusWithAnnotationSelector)
 	if err != nil {
 		return nil, err
@@ -111,8 +116,9 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		nodeGetFunc:                           conf.NodeGetFunc,
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
-		parallelTasks:                         newParallelTasks(conf.LockPodParallelism),
-		lockPodChan:                           make(chan *corev1.Pod),
+		playStageParallelism:                  conf.PlayStageParallelism,
+		preprocessChan:                        make(chan *corev1.Pod),
+		playStageChan:                         make(chan resourceStageJob[*corev1.Pod]),
 		recorder:                              conf.Recorder,
 	}
 	funcMap := template.FuncMap{
@@ -131,19 +137,22 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 // Start starts the fake pod controller
 // It will modify the pods status to we want
 func (c *PodController) Start(ctx context.Context) error {
-	go c.LockPods(ctx, c.lockPodChan)
+	go c.preprocessWorker(ctx)
+	for i := uint(0); i < c.playStageParallelism; i++ {
+		go c.playStageWorker(ctx)
+	}
 
 	opt := metav1.ListOptions{
 		FieldSelector: podFieldSelector,
 	}
-	err := c.WatchPods(ctx, c.lockPodChan, opt)
+	err := c.watchResources(ctx, opt)
 	if err != nil {
 		return fmt.Errorf("failed watch pods: %w", err)
 	}
 
 	logger := log.FromContext(ctx)
 	go func() {
-		err = c.ListPods(ctx, c.lockPodChan, opt)
+		err = c.listResources(ctx, opt)
 		if err != nil {
 			logger.Error("Failed list pods", err)
 		}
@@ -151,8 +160,8 @@ func (c *PodController) Start(ctx context.Context) error {
 	return nil
 }
 
-// FinalizersModify modify the finalizers of the pod
-func (c *PodController) FinalizersModify(ctx context.Context, pod *corev1.Pod, finalizers *internalversion.StageFinalizers) (*corev1.Pod, error) {
+// finalizersModify modify the finalizers of the pod
+func (c *PodController) finalizersModify(ctx context.Context, pod *corev1.Pod, finalizers *internalversion.StageFinalizers) (*corev1.Pod, error) {
 	ops := finalizersModify(pod.Finalizers, finalizers)
 	if len(ops) == 0 {
 		return nil, nil
@@ -181,8 +190,8 @@ func (c *PodController) FinalizersModify(ctx context.Context, pod *corev1.Pod, f
 	return result, nil
 }
 
-// DeletePod deletes a pod
-func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
+// deleteResource deletes a pod
+func (c *PodController) deleteResource(ctx context.Context, pod *corev1.Pod) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
@@ -203,8 +212,22 @@ func (c *PodController) DeletePod(ctx context.Context, pod *corev1.Pod) error {
 	return nil
 }
 
-// LockPod locks a given pod
-func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
+// preprocessWorker receives the resource from the preprocessChan and preprocess it
+func (c *PodController) preprocessWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
+	for pod := range c.preprocessChan {
+		err := c.preprocess(ctx, pod)
+		if err != nil {
+			logger.Error("Failed to preprocess node", err,
+				"pod", log.KObj(pod),
+				"node", pod.Spec.NodeName,
+			)
+		}
+	}
+}
+
+// preprocess the pod and send it to the playStageWorker
+func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 	key := log.KObj(pod).String()
 
 	resourceJob, ok := c.delayJobs.Load(key)
@@ -217,6 +240,7 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 		"pod", key,
 		"node", pod.Spec.NodeName,
 	)
+
 	data, err := expression.ToJSONStandard(pod)
 	if err != nil {
 		return err
@@ -248,9 +272,10 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 		if ok {
 			resourceJob.Cancel()
 		}
-		c.parallelTasks.Add(func() {
-			c.playStage(ctx, pod, stage)
-		})
+		c.playStageChan <- resourceStageJob[*corev1.Pod]{
+			Resource: pod,
+			Stage:    stage,
+		}
 	})
 	if ok {
 		resourceJob, ok := c.delayJobs.LoadOrStore(key, jobInfo{
@@ -265,6 +290,14 @@ func (c *PodController) LockPod(ctx context.Context, pod *corev1.Pod) error {
 	return nil
 }
 
+// playStageWorker receives the resource from the playStageChan and play the stage
+func (c *PodController) playStageWorker(ctx context.Context) {
+	for pod := range c.playStageChan {
+		c.playStage(ctx, pod.Resource, pod.Stage)
+	}
+}
+
+// playStage plays the stage
 func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *LifecycleStage) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
@@ -277,21 +310,21 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 		}, next.Event.Type, next.Event.Reason, next.Event.Message)
 	}
 	if next.Finalizers != nil {
-		result, err := c.FinalizersModify(ctx, pod, next.Finalizers)
+		result, err := c.finalizersModify(ctx, pod, next.Finalizers)
 		if err != nil {
 			logger.Error("Failed to finalizers", err)
 		}
 		if result != nil && stage.ImmediateNextStage() {
-			c.lockPodChan <- result
+			c.preprocessChan <- result
 		}
 	}
 	if next.Delete {
-		err := c.DeletePod(ctx, pod)
+		err := c.deleteResource(ctx, pod)
 		if err != nil {
 			logger.Error("Failed to delete pod", err)
 		}
 	} else if next.StatusTemplate != "" {
-		patch, err := c.configurePod(pod, next.StatusTemplate)
+		patch, err := c.configureResource(pod, next.StatusTemplate)
 		if err != nil {
 			logger.Error("Failed to configure pod", err)
 			return
@@ -301,18 +334,19 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 				"reason", "do not need to modify",
 			)
 		} else {
-			result, err := c.lockPod(ctx, pod, patch)
+			result, err := c.patchResource(ctx, pod, patch)
 			if err != nil {
-				logger.Error("Failed to lock pod", err)
+				logger.Error("Failed to patch node", err)
 			}
 			if result != nil && stage.ImmediateNextStage() {
-				c.lockPodChan <- result
+				c.preprocessChan <- result
 			}
 		}
 	}
 }
 
-func (c *PodController) lockPod(ctx context.Context, pod *corev1.Pod, patch []byte) (*corev1.Pod, error) {
+// patchResource patches the resource
+func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patch []byte) (*corev1.Pod, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
@@ -328,25 +362,11 @@ func (c *PodController) lockPod(ctx context.Context, pod *corev1.Pod, patch []by
 		}
 		return nil, err
 	}
-	logger.Info("Lock pod")
+	logger.Info("Patch pod")
 	return result, nil
 }
 
-// LockPods locks a pods from the channel
-func (c *PodController) LockPods(ctx context.Context, pods <-chan *corev1.Pod) {
-	logger := log.FromContext(ctx)
-	for pod := range pods {
-		err := c.LockPod(ctx, pod)
-		if err != nil {
-			logger.Error("Failed to lock pod", err,
-				"pod", log.KObj(pod),
-				"node", pod.Spec.NodeName,
-			)
-		}
-	}
-}
-
-func (c *PodController) needLockPod(pod *corev1.Pod) bool {
+func (c *PodController) need(pod *corev1.Pod) bool {
 	if _, has := c.nodeGetFunc(pod.Spec.NodeName); !has {
 		return false
 	}
@@ -365,8 +385,8 @@ func (c *PodController) needLockPod(pod *corev1.Pod) bool {
 	return true
 }
 
-// WatchPods watch pods put into the channel
-func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.Pod, opt metav1.ListOptions) error {
+// watchResources watch resources and send to preprocessChan
+func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptions) error {
 	watcher, err := c.clientSet.CoreV1().Pods(corev1.NamespaceAll).Watch(ctx, opt)
 	if err != nil {
 		return err
@@ -399,8 +419,8 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 				switch event.Type {
 				case watch.Added, watch.Modified:
 					pod := event.Object.(*corev1.Pod)
-					if c.needLockPod(pod) {
-						lockChan <- pod.DeepCopy()
+					if c.need(pod) {
+						c.preprocessChan <- pod.DeepCopy()
 					} else {
 						logger.Debug("Skip pod",
 							"reason", "not managed",
@@ -412,7 +432,7 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
-					if c.needLockPod(pod) {
+					if c.need(pod) {
 						// Recycling PodIP
 						c.recyclingPodIP(ctx, pod)
 
@@ -435,23 +455,23 @@ func (c *PodController) WatchPods(ctx context.Context, lockChan chan<- *corev1.P
 	return nil
 }
 
-// ListPods list pods put into the channel
-func (c *PodController) ListPods(ctx context.Context, ch chan<- *corev1.Pod, opt metav1.ListOptions) error {
+// listResources lists all resources and sends to preprocessChan
+func (c *PodController) listResources(ctx context.Context, opt metav1.ListOptions) error {
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 		return c.clientSet.CoreV1().Pods(corev1.NamespaceAll).List(ctx, opts)
 	})
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		pod := obj.(*corev1.Pod)
-		if c.needLockPod(pod) {
-			ch <- pod.DeepCopy()
+		if c.need(pod) {
+			c.preprocessChan <- pod.DeepCopy()
 		}
 		return nil
 	})
 }
 
-// LockPodsOnNode locks pods on the node
-func (c *PodController) LockPodsOnNode(ctx context.Context, nodeName string) error {
-	return c.ListPods(ctx, c.lockPodChan, metav1.ListOptions{
+// PlayStagePodsOnNode plays stage pods on node
+func (c *PodController) PlayStagePodsOnNode(ctx context.Context, nodeName string) error {
+	return c.listResources(ctx, metav1.ListOptions{
 		FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
 	})
 }
@@ -510,7 +530,7 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 	}
 }
 
-func (c *PodController) configurePod(pod *corev1.Pod, template string) ([]byte, error) {
+func (c *PodController) configureResource(pod *corev1.Pod, template string) ([]byte, error) {
 	if !c.enableCNI {
 		// Mark the pod IP that existed before the kubelet was started
 		if nodeInfo, has := c.nodeGetFunc(pod.Spec.NodeName); has {

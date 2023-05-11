@@ -94,11 +94,12 @@ type NodeController struct {
 	disregardStatusWithLabelSelector      labels.Selector
 	manageNodesWithLabelSelector          string
 	nodeSelectorFunc                      func(node *corev1.Node) bool
-	lockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
+	onNodeManagedFunc                     func(ctx context.Context, nodeName string) error
 	nodesSets                             maps.SyncMap[string, *NodeInfo]
 	renderer                              *renderer
-	nodeChan                              chan *corev1.Node
-	parallelTasks                         *parallelTasks
+	preprocessChan                        chan *corev1.Node
+	playStageChan                         chan resourceStageJob[*corev1.Node]
+	playStageParallelism                  uint
 	lifecycle                             Lifecycle
 	cronjob                               *cron.Cron
 	delayJobs                             jobInfoMap
@@ -109,7 +110,7 @@ type NodeController struct {
 type NodeControllerConfig struct {
 	ClientSet                             kubernetes.Interface
 	NodeSelectorFunc                      func(node *corev1.Node) bool
-	LockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
+	OnNodeManagedFunc                     func(ctx context.Context, nodeName string) error
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
 	ManageNodesWithLabelSelector          string
@@ -117,7 +118,7 @@ type NodeControllerConfig struct {
 	NodeName                              string
 	NodePort                              int
 	Stages                                []*internalversion.Stage
-	LockNodeParallelism                   int
+	PlayStageParallelism                  uint
 	FuncMap                               template.FuncMap
 	Recorder                              record.EventRecorder
 }
@@ -130,6 +131,10 @@ type NodeInfo struct {
 
 // NewNodeController creates a new fake nodes controller
 func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
+	if conf.PlayStageParallelism <= 0 {
+		return nil, fmt.Errorf("playStageParallelism must be greater than 0")
+	}
+
 	disregardStatusWithAnnotationSelector, err := labelsParse(conf.DisregardStatusWithAnnotationSelector)
 	if err != nil {
 		return nil, err
@@ -151,14 +156,15 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		manageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
-		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
+		onNodeManagedFunc:                     conf.OnNodeManagedFunc,
 		nodeIP:                                conf.NodeIP,
 		nodeName:                              conf.NodeName,
 		nodePort:                              conf.NodePort,
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
-		parallelTasks:                         newParallelTasks(conf.LockNodeParallelism),
-		nodeChan:                              make(chan *corev1.Node),
+		playStageParallelism:                  conf.PlayStageParallelism,
+		preprocessChan:                        make(chan *corev1.Node),
+		playStageChan:                         make(chan resourceStageJob[*corev1.Node]),
 		recorder:                              conf.Recorder,
 	}
 	funcMap := template.FuncMap{
@@ -179,28 +185,31 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 // Start starts the fake nodes controller
 // if nodeSelectorFunc is not nil, it will use it to determine if the node should be managed
 func (c *NodeController) Start(ctx context.Context) error {
-	go c.LockNodes(ctx, c.nodeChan)
+	go c.preprocessWorker(ctx)
+	for i := uint(0); i < c.playStageParallelism; i++ {
+		go c.playStageWorker(ctx)
+	}
 
 	opt := metav1.ListOptions{
 		LabelSelector: c.manageNodesWithLabelSelector,
 	}
-	err := c.WatchNodes(ctx, c.nodeChan, opt)
+	err := c.watchResources(ctx, opt)
 	if err != nil {
-		return fmt.Errorf("failed watch node: %w", err)
+		return fmt.Errorf("failed watch nodes: %w", err)
 	}
 
 	logger := log.FromContext(ctx)
 	go func() {
-		err = c.ListNodes(ctx, c.nodeChan, opt)
+		err = c.listResources(ctx, opt)
 		if err != nil {
-			logger.Error("Failed list node", err)
+			logger.Error("Failed list nodes", err)
 		}
 	}()
 
 	return nil
 }
 
-func (c *NodeController) needLockNode(node *corev1.Node) bool {
+func (c *NodeController) need(node *corev1.Node) bool {
 	if !c.nodeSelectorFunc(node) {
 		return false
 	}
@@ -218,8 +227,8 @@ func (c *NodeController) needLockNode(node *corev1.Node) bool {
 	return true
 }
 
-// WatchNodes watch nodes put into the channel
-func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node, opt metav1.ListOptions) error {
+// watchResources watch resources and send to preprocessChan
+func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOptions) error {
 	// Watch nodes in the cluster
 	watcher, err := c.clientSet.CoreV1().Nodes().Watch(ctx, opt)
 	if err != nil {
@@ -252,13 +261,13 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 				switch event.Type {
 				case watch.Added:
 					node := event.Object.(*corev1.Node)
-					if c.needLockNode(node) {
+					if c.need(node) {
 						c.putNodeInfo(node)
-						ch <- node
-						if c.lockPodsOnNodeFunc != nil {
-							err = c.lockPodsOnNodeFunc(ctx, node.Name)
+						c.preprocessChan <- node
+						if c.onNodeManagedFunc != nil {
+							err = c.onNodeManagedFunc(ctx, node.Name)
 							if err != nil {
-								logger.Error("Failed to lock pods on node", err,
+								logger.Error("Failed to onNodeManagedFunc", err,
 									"node", node.Name,
 								)
 							}
@@ -266,9 +275,9 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 					}
 				case watch.Modified:
 					node := event.Object.(*corev1.Node)
-					if c.needLockNode(node) {
+					if c.need(node) {
 						c.putNodeInfo(node)
-						ch <- node
+						c.preprocessChan <- node
 					}
 				case watch.Deleted:
 					node := event.Object.(*corev1.Node)
@@ -293,36 +302,23 @@ func (c *NodeController) WatchNodes(ctx context.Context, ch chan<- *corev1.Node,
 	return nil
 }
 
-// ListNodes list nodes put into the channel
-func (c *NodeController) ListNodes(ctx context.Context, ch chan<- *corev1.Node, opt metav1.ListOptions) error {
+// listResources lists all resources and sends to preprocessChan
+func (c *NodeController) listResources(ctx context.Context, opt metav1.ListOptions) error {
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 		return c.clientSet.CoreV1().Nodes().List(ctx, opts)
 	})
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		node := obj.(*corev1.Node)
-		if c.needLockNode(node) {
+		if c.need(node) {
 			c.putNodeInfo(node)
-			ch <- node
+			c.preprocessChan <- node
 		}
 		return nil
 	})
 }
 
-// LockNodes locks a nodes from the channel
-func (c *NodeController) LockNodes(ctx context.Context, nodes <-chan *corev1.Node) {
-	logger := log.FromContext(ctx)
-	for node := range nodes {
-		err := c.LockNode(ctx, node)
-		if err != nil {
-			logger.Error("Failed to lock node", err,
-				"node", node.Name,
-			)
-		}
-	}
-}
-
-// FinalizersModify modify finalizers of node
-func (c *NodeController) FinalizersModify(ctx context.Context, node *corev1.Node, finalizers *internalversion.StageFinalizers) (*corev1.Node, error) {
+// finalizersModify modify finalizers of node
+func (c *NodeController) finalizersModify(ctx context.Context, node *corev1.Node, finalizers *internalversion.StageFinalizers) (*corev1.Node, error) {
 	ops := finalizersModify(node.Finalizers, finalizers)
 	if len(ops) == 0 {
 		return nil, nil
@@ -350,8 +346,8 @@ func (c *NodeController) FinalizersModify(ctx context.Context, node *corev1.Node
 	return result, nil
 }
 
-// DeleteNode deletes a node
-func (c *NodeController) DeleteNode(ctx context.Context, node *corev1.Node) error {
+// deleteResource deletes a node
+func (c *NodeController) deleteResource(ctx context.Context, node *corev1.Node) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
@@ -371,9 +367,23 @@ func (c *NodeController) DeleteNode(ctx context.Context, node *corev1.Node) erro
 	return nil
 }
 
-// LockNode locks a given node
-func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error {
+// preprocessWorker receives the resource from the preprocessChan and preprocess it
+func (c *NodeController) preprocessWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
+	for node := range c.preprocessChan {
+		err := c.preprocess(ctx, node)
+		if err != nil {
+			logger.Error("Failed to preprocess node", err,
+				"node", node.Name,
+			)
+		}
+	}
+}
+
+// preprocess the pod and send it to the playStageWorker
+func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) error {
 	key := node.Name
+
 	resourceJob, ok := c.delayJobs.Load(key)
 	if ok && resourceJob.ResourceVersion == node.ResourceVersion {
 		return nil
@@ -381,8 +391,9 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 
 	logger := log.FromContext(ctx)
 	logger = logger.With(
-		"node", node.Name,
+		"node", key,
 	)
+
 	data, err := expression.ToJSONStandard(node)
 	if err != nil {
 		return err
@@ -414,9 +425,10 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 		if ok {
 			resourceJob.Cancel()
 		}
-		c.parallelTasks.Add(func() {
-			c.playStage(ctx, node, stage)
-		})
+		c.playStageChan <- resourceStageJob[*corev1.Node]{
+			Resource: node,
+			Stage:    stage,
+		}
 	})
 	if ok {
 		resourceJob, ok := c.delayJobs.LoadOrStore(key, jobInfo{
@@ -430,6 +442,14 @@ func (c *NodeController) LockNode(ctx context.Context, node *corev1.Node) error 
 	return nil
 }
 
+// playStageWorker receives the resource from the playStageChan and play the stage
+func (c *NodeController) playStageWorker(ctx context.Context) {
+	for node := range c.playStageChan {
+		c.playStage(ctx, node.Resource, node.Stage)
+	}
+}
+
+// playStage plays the stage
 func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *LifecycleStage) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
@@ -442,16 +462,16 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 		}, next.Event.Type, next.Event.Reason, next.Event.Message)
 	}
 	if next.Finalizers != nil {
-		result, err := c.FinalizersModify(ctx, node, next.Finalizers)
+		result, err := c.finalizersModify(ctx, node, next.Finalizers)
 		if err != nil {
 			logger.Error("Failed to finalizers of node", err)
 		}
 		if result != nil && stage.ImmediateNextStage() {
-			c.nodeChan <- result
+			c.preprocessChan <- result
 		}
 	}
 	if next.Delete {
-		err := c.DeleteNode(ctx, node)
+		err := c.deleteResource(ctx, node)
 		if err != nil {
 			logger.Error("Failed to delete node", err)
 		}
@@ -466,18 +486,19 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 				"reason", "do not need to modify",
 			)
 		} else {
-			result, err := c.lockNode(ctx, node, patch)
+			result, err := c.patchResource(ctx, node, patch)
 			if err != nil {
-				logger.Error("Failed to lock node", err)
+				logger.Error("Failed to patch node", err)
 			}
 			if result != nil && stage.ImmediateNextStage() {
-				c.nodeChan <- result
+				c.preprocessChan <- result
 			}
 		}
 	}
 }
 
-func (c *NodeController) lockNode(ctx context.Context, node *corev1.Node, patch []byte) (*corev1.Node, error) {
+// patchResource patches the resource
+func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, patch []byte) (*corev1.Node, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
@@ -492,7 +513,7 @@ func (c *NodeController) lockNode(ctx context.Context, node *corev1.Node, patch 
 		}
 		return nil, err
 	}
-	logger.Info("Lock node")
+	logger.Info("Patch node")
 	return result, nil
 }
 

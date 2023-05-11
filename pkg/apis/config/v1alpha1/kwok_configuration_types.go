@@ -110,4 +110,12 @@ type KwokConfigurationOptions struct {
 	// EnableProfiling enables /debug/pprof handler, if enableDebuggingHandlers is true.
 	// +default=true
 	EnableProfilingHandler *bool `json:"enableProfilingHandler,omitempty"`
+
+	// PodPlayStageParallelism is the number of PodPlayStages that are allowed to run in parallel.
+	// +default=4
+	PodPlayStageParallelism uint `json:"podPlayStageParallelism,omitempty"`
+
+	// NodePlayStageParallelism is the number of NodePlayStages that are allowed to run in parallel.
+	// +default=4
+	NodePlayStageParallelism uint `json:"nodePlayStageParallelism,omitempty"`
 }

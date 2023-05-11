@@ -58,6 +58,12 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 		var ptrVar1 bool = true
 		in.Options.EnableProfilingHandler = &ptrVar1
 	}
+	if in.Options.PodPlayStageParallelism == 0 {
+		in.Options.PodPlayStageParallelism = 4
+	}
+	if in.Options.NodePlayStageParallelism == 0 {
+		in.Options.NodePlayStageParallelism = 4
+	}
 }
 
 func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {

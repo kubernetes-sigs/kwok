@@ -70,12 +70,12 @@ func TestNodeController(t *testing.T) {
 	}
 	nodeStageStatus, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
 	nodes, err := NewNodeController(NodeControllerConfig{
-		ClientSet:           clientset,
-		NodeIP:              "10.0.0.1",
-		NodeSelectorFunc:    nodeSelectorFunc,
-		Stages:              nodeStageStatus,
-		FuncMap:             defaultFuncMap,
-		LockNodeParallelism: 2,
+		ClientSet:            clientset,
+		NodeIP:               "10.0.0.1",
+		NodeSelectorFunc:     nodeSelectorFunc,
+		Stages:               nodeStageStatus,
+		FuncMap:              defaultFuncMap,
+		PlayStageParallelism: 2,
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new nodes controller error: %w", err))

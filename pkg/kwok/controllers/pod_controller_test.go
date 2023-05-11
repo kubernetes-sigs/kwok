@@ -170,7 +170,7 @@ func TestPodController(t *testing.T) {
 		Stages:                                podStageStatus,
 		NodeGetFunc:                           nodeGetFunc,
 		FuncMap:                               defaultFuncMap,
-		LockPodParallelism:                    2,
+		PlayStageParallelism:                  2,
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new pods controller error: %w", err))
@@ -273,7 +273,7 @@ func TestPodController(t *testing.T) {
 				if pod.Status.Phase != corev1.PodRunning {
 					return false, fmt.Errorf("want pod %s phase is running, got %s", pod.Name, pod.Status.Phase)
 				}
-				if pods.needLockPod(&list.Items[index]) {
+				if pods.need(&list.Items[index]) {
 					if pod.Status.HostIP != nodeInfo.HostIPs[0] {
 						return false, fmt.Errorf("want pod %s hostIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.HostIP)
 					}
