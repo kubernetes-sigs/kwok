@@ -27,16 +27,15 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 )
 
-func versionInfo() string {
-	v := consts.Version
-	ver, err := ParseVersion(v)
+func versionInfo(version, preRelease string) string {
+	ver, err := ParseVersion(version)
 	if err != nil {
-		return v
+		return version
 	}
 
 	// Mark pre-release version, that is not our released.
-	if len(ver.Pre) == 0 && consts.PreRelease != "GA" {
-		ver.Pre = append(ver.Pre, semver.PRVersion{VersionStr: consts.PreRelease})
+	if len(ver.Pre) == 0 && preRelease != "GA" {
+		ver.Pre = append(ver.Pre, semver.PRVersion{VersionStr: preRelease})
 	}
 
 	return ver.String()
@@ -44,12 +43,12 @@ func versionInfo() string {
 
 // DisplayVersion is the version string for the current build
 func DisplayVersion() string {
-	return fmt.Sprintf("%s %s (%s/%s)", AddPrefixV(versionInfo()), runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	return fmt.Sprintf("%s %s (%s/%s)", AddPrefixV(versionInfo(consts.Version, consts.PreRelease)), runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }
 
 // DefaultUserAgent returns a User-Agent string built from static global vars.
 func DefaultUserAgent() string {
-	return fmt.Sprintf("%s/%s (%s/%s)", adjustCommand(os.Args[0]), AddPrefixV(versionInfo()), runtime.GOOS, runtime.GOARCH)
+	return fmt.Sprintf("%s/%s (%s/%s)", adjustCommand(os.Args[0]), AddPrefixV(versionInfo(consts.Version, consts.PreRelease)), runtime.GOOS, runtime.GOARCH)
 }
 
 // adjustCommand returns the last component of the
