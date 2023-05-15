@@ -110,7 +110,6 @@ type KwokctlConfigurationOptions struct {
 
 	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
 	// is the default value for flag --secure-port and env KWOK_SECURE_PORT
-	// +default=false
 	SecurePort *bool `json:"securePort,omitempty"`
 
 	// QuietPull is the flag to quiet the pull.
