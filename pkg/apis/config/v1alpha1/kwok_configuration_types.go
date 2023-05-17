@@ -118,4 +118,11 @@ type KwokConfigurationOptions struct {
 	// NodePlayStageParallelism is the number of NodePlayStages that are allowed to run in parallel.
 	// +default=4
 	NodePlayStageParallelism uint `json:"nodePlayStageParallelism,omitempty"`
+
+	// NodeLeaseDurationSeconds is the duration the Kubelet will set on its corresponding Lease.
+	NodeLeaseDurationSeconds uint `json:"nodeLeaseDurationSeconds,omitempty"`
+
+	// NodeLeaseParallelism is the number of NodeLeases that are allowed to be processed in parallel.
+	// +default=4
+	NodeLeaseParallelism uint `json:"nodeLeaseParallelism,omitempty"`
 }

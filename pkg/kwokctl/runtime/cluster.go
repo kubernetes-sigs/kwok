@@ -128,25 +128,35 @@ func (c *Cluster) Save(ctx context.Context) error {
 	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
 	objs = append(objs, others...)
 
-	if updateFrequency := c.conf.Options.NodeStatusUpdateFrequencyMilliseconds; updateFrequency > 0 &&
-		c.conf.Options.Runtime != consts.RuntimeTypeKind &&
-		c.conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
-		len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
-		nodeStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
-		if err != nil {
-			return err
-		}
-		hasUpdate := false
-		for _, stage := range nodeStages {
-			if stage.Name == "node-heartbeat" {
-				stage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
-				stage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
-				hasUpdate = true
+	if c.conf.Options.NodeLeaseDurationSeconds == 0 {
+		if updateFrequency := c.conf.Options.NodeStatusUpdateFrequencyMilliseconds; updateFrequency > 0 &&
+			c.conf.Options.Runtime != consts.RuntimeTypeKind &&
+			c.conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
+			len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
+			nodeStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+			if err != nil {
+				return err
 			}
-			objs = append(objs, stage)
-		}
-		if !hasUpdate {
-			return fmt.Errorf("failed to update node heartbeat stage")
+			for _, stage := range nodeStages {
+				objs = append(objs, stage)
+			}
+
+			nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+			if err != nil {
+				return err
+			}
+			hasUpdate := false
+			for _, stage := range nodeHeartbeatStages {
+				if stage.Name == "node-heartbeat" {
+					stage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
+					stage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
+					hasUpdate = true
+				}
+				objs = append(objs, stage)
+			}
+			if !hasUpdate {
+				return fmt.Errorf("failed to update node heartbeat stage")
+			}
 		}
 	}
 

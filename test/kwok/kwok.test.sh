@@ -110,6 +110,7 @@ function test_modify_node_status() {
     kubectl get node fake-node
     return 1
   fi
+  kubectl annotate node fake-node --overwrite kwok.x-k8s.io/status-
 }
 
 # Check for the status of the Pod is modified by Kubectl
@@ -127,6 +128,29 @@ function test_modify_pod_status() {
     kubectl get pod "${first_pod}" -o wide
     return 1
   fi
+
+  kubectl annotate pod "${first_pod}" --overwrite kwok.x-k8s.io/status-
+}
+
+function test_check_node_lease_transitions() {
+  local want="${1}"
+  local node_leases_transitions
+  node_leases_transitions="$(kubectl get leases fake-node -n kube-node-lease -ojson | jq -r '.spec.leaseTransitions // 0')"
+  if [[ "${node_leases_transitions}" != "${want}" ]]; then
+    echo "Error: fake-node lease transitions is not ${want}, got ${node_leases_transitions}"
+    return 1
+  fi
+}
+
+function recreate_kwok() {
+  kubectl scale deployment/kwok-controller -n kube-system --replicas=0
+  kubectl wait --for=delete pod -l app=kwok-controller -n kube-system --timeout=60s
+
+  kubectl scale deployment/kwok-controller -n kube-system --replicas=2
+}
+
+function recreate_pods() {
+  kubectl delete pod --all -n default
 }
 
 # Cleanup
@@ -148,6 +172,15 @@ function main() {
 
   test_modify_node_status || failed+=("modify_node_status")
   test_modify_pod_status || failed+=("modify_pod_status")
+  test_check_node_lease_transitions 0 || failed+=("check_node_lease_transitions")
+
+  recreate_kwok || failed+=("recreate_kwok")
+  recreate_pods || failed+=("recreate_pods")
+  test_node_ready || failed+=("node_ready_again")
+  test_pod_running || failed+=("pod_running_again")
+  test_check_pod_status || failed+=("check_pod_status_again")
+
+  test_check_node_lease_transitions 1 || failed+=("check_node_lease_transitions_again")
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
     echo "Error: Some tests failed"

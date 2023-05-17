@@ -172,11 +172,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	kwokControllerPod, err := BuildKwokControllerPod(BuildKwokControllerPodConfig{
-		KwokControllerImage: conf.KwokControllerImage,
-		Name:                c.Name(),
-		Verbosity:           verbosity,
-		ExtraArgs:           kwokControllerComponentPatches.ExtraArgs,
-		ExtraVolumes:        kwokControllerExtraVolumes,
+		KwokControllerImage:      conf.KwokControllerImage,
+		Name:                     c.Name(),
+		Verbosity:                verbosity,
+		NodeLeaseDurationSeconds: 40,
+		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
+		ExtraVolumes:             kwokControllerExtraVolumes,
 	})
 	if err != nil {
 		return err

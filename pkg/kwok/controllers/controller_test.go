@@ -68,6 +68,8 @@ func TestController(t *testing.T) {
 	}
 
 	nodeStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+	nodeHeartbeatStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+	nodeStages = append(nodeStages, nodeHeartbeatStages...)
 	podStages, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
 
 	tests := []struct {

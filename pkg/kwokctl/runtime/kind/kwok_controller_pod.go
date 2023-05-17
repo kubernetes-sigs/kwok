@@ -56,11 +56,12 @@ func BuildKwokControllerPod(conf BuildKwokControllerPodConfig) (string, error) {
 
 // BuildKwokControllerPodConfig is the configuration for building the kwok controller pod
 type BuildKwokControllerPodConfig struct {
-	KwokControllerImage     string
-	KwokControllerImageName string
-	KwokControllerImageTag  string
-	Name                    string
-	Verbosity               log.Level
-	ExtraArgs               []internalversion.ExtraArgs
-	ExtraVolumes            []internalversion.Volume
+	KwokControllerImage      string
+	KwokControllerImageName  string
+	KwokControllerImageTag   string
+	Name                     string
+	Verbosity                log.Level
+	NodeLeaseDurationSeconds uint
+	ExtraArgs                []internalversion.ExtraArgs
+	ExtraVolumes             []internalversion.Volume
 }

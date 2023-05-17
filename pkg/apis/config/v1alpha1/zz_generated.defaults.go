@@ -64,6 +64,9 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 	if in.Options.NodePlayStageParallelism == 0 {
 		in.Options.NodePlayStageParallelism = 4
 	}
+	if in.Options.NodeLeaseParallelism == 0 {
+		in.Options.NodeLeaseParallelism = 4
+	}
 }
 
 func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
@@ -95,6 +98,9 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 	}
 	if in.Options.NodeStatusUpdateFrequencyMilliseconds == 0 {
 		in.Options.NodeStatusUpdateFrequencyMilliseconds = 1200000
+	}
+	if in.Options.NodeLeaseDurationSeconds == 0 {
+		in.Options.NodeLeaseDurationSeconds = 1200
 	}
 	if in.Options.BindAddress == "" {
 		in.Options.BindAddress = "0.0.0.0"

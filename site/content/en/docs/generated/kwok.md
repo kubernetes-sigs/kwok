@@ -21,6 +21,7 @@ kwok [flags]
       --manage-nodes-with-label-selector string            Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes.
       --master string                                      The address of the Kubernetes API server (overrides any value in kubeconfig).
       --node-ip string                                     IP of the node
+      --node-lease-duration-seconds uint                   Duration of node lease seconds
       --node-name string                                   Name of the node
       --node-port int                                      Port of the node
       --server-address string                              Address to expose the server on

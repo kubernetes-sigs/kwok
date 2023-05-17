@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/clock"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -81,6 +82,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "Path to the kubeconfig file to use")
 	cmd.Flags().StringVar(&flags.Master, "master", flags.Master, "The address of the Kubernetes API server (overrides any value in kubeconfig).")
 	cmd.Flags().StringVar(&flags.Options.ServerAddress, "server-address", flags.Options.ServerAddress, "Address to expose the server on")
+	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease seconds")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
 	if config.GOOS != "linux" {
@@ -145,6 +147,13 @@ func runE(ctx context.Context, flags *flagpole) error {
 		if err != nil {
 			return err
 		}
+		if flags.Options.NodeLeaseDurationSeconds == 0 {
+			nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+			if err != nil {
+				return err
+			}
+			nodeStages = append(nodeStages, nodeHeartbeatStages...)
+		}
 	}
 	podStages := filterStages(stagesData, "v1", "Pod")
 	if len(podStages) == 0 {
@@ -154,7 +163,14 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
+	id, err := controllers.Identity()
+	if err != nil {
+		return err
+	}
+	ctx = log.NewContext(ctx, logger.With("id", id))
+
 	ctr, err := controllers.NewController(controllers.Config{
+		Clock:                                 clock.RealClock{},
 		ClientSet:                             typedClient,
 		EnableCNI:                             flags.Options.EnableCNI,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
@@ -170,6 +186,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 		NodePlayStageParallelism:              flags.Options.NodePlayStageParallelism,
 		NodeStages:                            nodeStages,
 		PodStages:                             podStages,
+		NodeLeaseParallelism:                  flags.Options.NodeLeaseParallelism,
+		NodeLeaseDurationSeconds:              flags.Options.NodeLeaseDurationSeconds,
+		ID:                                    id,
 	})
 	if err != nil {
 		return err

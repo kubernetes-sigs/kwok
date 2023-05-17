@@ -21,6 +21,7 @@ spec:
     - --node-ip=$(POD_IP)
     - --node-name=kwok-controller.kube-system.svc
     - --node-port=10247
+    - --node-lease-duration-seconds={{ .NodeLeaseDurationSeconds }}
     {{ range .ExtraArgs }}
     - --{{ .Key }}={{ .Value }}
     {{ end }}

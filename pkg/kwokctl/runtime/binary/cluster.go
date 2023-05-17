@@ -386,18 +386,19 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
-		Workdir:        workdir,
-		Binary:         kwokControllerPath,
-		Version:        kwokControllerVersion,
-		BindAddress:    conf.BindAddress,
-		Port:           conf.KwokControllerPort,
-		ConfigPath:     kwokConfigPath,
-		KubeconfigPath: kubeconfigPath,
-		AdminCertPath:  adminCertPath,
-		AdminKeyPath:   adminKeyPath,
-		NodeName:       "localhost",
-		Verbosity:      verbosity,
-		ExtraArgs:      kwokControllerComponentPatches.ExtraArgs,
+		Workdir:                  workdir,
+		Binary:                   kwokControllerPath,
+		Version:                  kwokControllerVersion,
+		BindAddress:              conf.BindAddress,
+		Port:                     conf.KwokControllerPort,
+		ConfigPath:               kwokConfigPath,
+		KubeconfigPath:           kubeconfigPath,
+		AdminCertPath:            adminCertPath,
+		AdminKeyPath:             adminKeyPath,
+		NodeName:                 "localhost",
+		Verbosity:                verbosity,
+		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
+		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
 	})
 	if err != nil {
 		return err

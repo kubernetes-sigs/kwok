@@ -35,3 +35,14 @@ rules:
     verbs:
       - update
       - patch
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - create
+      - update
+      - patch
+      - watch
+      - list
+      - get

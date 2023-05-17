@@ -25,20 +25,21 @@ import (
 
 // BuildKwokControllerComponentConfig is the configuration for building a kwok controller component.
 type BuildKwokControllerComponentConfig struct {
-	Binary         string
-	Image          string
-	Version        version.Version
-	Workdir        string
-	BindAddress    string
-	Port           uint32
-	ConfigPath     string
-	KubeconfigPath string
-	AdminCertPath  string
-	AdminKeyPath   string
-	NodeName       string
-	Verbosity      log.Level
-	ExtraArgs      []internalversion.ExtraArgs
-	ExtraVolumes   []internalversion.Volume
+	Binary                   string
+	Image                    string
+	Version                  version.Version
+	Workdir                  string
+	BindAddress              string
+	Port                     uint32
+	ConfigPath               string
+	KubeconfigPath           string
+	AdminCertPath            string
+	AdminKeyPath             string
+	NodeName                 string
+	Verbosity                log.Level
+	NodeLeaseDurationSeconds uint
+	ExtraArgs                []internalversion.ExtraArgs
+	ExtraVolumes             []internalversion.Volume
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
@@ -93,6 +94,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--node-name="+conf.NodeName,
 			"--node-port=10247",
 			"--server-address="+conf.BindAddress+":10247",
+			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
 	} else {
 		kwokControllerArgs = append(kwokControllerArgs,
@@ -103,6 +105,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--node-name=localhost",
 			"--node-port="+format.String(conf.Port),
 			"--server-address="+conf.BindAddress+":"+format.String(conf.Port),
+			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
 	}
 

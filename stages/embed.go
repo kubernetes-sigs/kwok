@@ -26,6 +26,10 @@ var (
 	//go:embed node-fast.yaml
 	DefaultNodeStages string
 
+	// DefaultNodeHeartbeatStages is the default node heartbeat stages.
+	//go:embed node-heartbeat.yaml
+	DefaultNodeHeartbeatStages string
+
 	// DefaultPodStages is the default pod stages.
 	//go:embed pod-fast.yaml
 	DefaultPodStages string
