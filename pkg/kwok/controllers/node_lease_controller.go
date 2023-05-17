@@ -180,6 +180,11 @@ func (c *NodeLeaseController) listResources(ctx context.Context, opt metav1.List
 		return c.clientSet.CoordinationV1().Leases(c.leaseNamespace).List(ctx, opts)
 	})
 
+	logger := log.FromContext(ctx)
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to list node leases")()
+	}
+
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		lease := obj.(*coordinationv1.Lease)
 		c.latestLease.Store(lease.Name, lease)
@@ -315,6 +320,12 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 		}
 	}
 
+	logger := log.FromContext(ctx)
+
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to create node lease")()
+	}
+
 	lease, err := c.clientSet.CoordinationV1().Leases(c.leaseNamespace).Create(ctx, lease, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
@@ -339,6 +350,12 @@ func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordination
 		if err != nil {
 			return nil, false, err
 		}
+	}
+
+	logger := log.FromContext(ctx)
+
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to update node lease")()
 	}
 
 	lease, err := c.clientSet.CoordinationV1().Leases(c.leaseNamespace).Update(ctx, lease, metav1.UpdateOptions{})

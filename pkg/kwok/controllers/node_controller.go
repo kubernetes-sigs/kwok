@@ -336,6 +336,9 @@ func (c *NodeController) listResources(ctx context.Context, opt metav1.ListOptio
 	})
 
 	logger := log.FromContext(ctx)
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to list nodes")()
+	}
 
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		node := obj.(*corev1.Node)
@@ -370,6 +373,10 @@ func (c *NodeController) finalizersModify(ctx context.Context, node *corev1.Node
 		"node", node.Name,
 	)
 
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to patch node finalizers")()
+	}
+
 	result, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -390,6 +397,10 @@ func (c *NodeController) deleteResource(ctx context.Context, node *corev1.Node) 
 	logger = logger.With(
 		"node", node.Name,
 	)
+
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to delete node")()
+	}
 
 	err := c.clientSet.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
 	if err != nil {
@@ -575,6 +586,10 @@ func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, p
 	logger = logger.With(
 		"node", node.Name,
 	)
+
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to patch node")()
+	}
 
 	result, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {

@@ -194,6 +194,10 @@ func (c *PodController) finalizersModify(ctx context.Context, pod *corev1.Pod, f
 		"node", pod.Spec.NodeName,
 	)
 
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to patch pod finalizers")()
+	}
+
 	result, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -215,6 +219,10 @@ func (c *PodController) deleteResource(ctx context.Context, pod *corev1.Pod) err
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
+
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to delete pod")()
+	}
 
 	err := c.clientSet.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
@@ -401,6 +409,10 @@ func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patc
 		"node", pod.Spec.NodeName,
 	)
 
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to patch pod")()
+	}
+
 	result, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -520,6 +532,9 @@ func (c *PodController) listResources(ctx context.Context, opt metav1.ListOption
 	})
 
 	logger := log.FromContext(ctx)
+	if logger.Enabled(ctx, log.LevelWarn) {
+		defer log.Elapsed(ctx, c.clock, log.LevelWarn, time.Second, "Long time to list pods")()
+	}
 
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		pod := obj.(*corev1.Pod)

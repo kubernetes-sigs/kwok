@@ -49,6 +49,11 @@ type Logger struct {
 	level   Level // Level specifies a level of verbosity for V logs.
 }
 
+// Enabled returns whether the given level is enabled.
+func (l *Logger) Enabled(ctx context.Context, level Level) bool {
+	return l.handler.Enabled(ctx, level)
+}
+
 // Log logs a message with the given level.
 func (l *Logger) Log(level Level, msg string, args ...any) {
 	l.log(level, msg, args...)
