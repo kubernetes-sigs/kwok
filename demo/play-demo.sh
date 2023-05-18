@@ -23,8 +23,8 @@ function color() {
   echo -e "\033[1;${color}m${text}\033[0m"
 }
 
-PLAY_PWD="${PLAY_PWD:-"~/go/src/sigs.k8s.io/kwok"}"
-PLAY_PS1="$(color 96 "${PLAY_PWD}") $(color 94 "$") "
+PLAY_PWD="${PLAY_PWD:-"~/sigs.k8s.io/kwok"}"
+PLAY_PS1="$(color 96 "${PLAY_PWD}")$(color 94 "$") "
 
 function ps1() {
   local delay="${1}"

@@ -8,16 +8,16 @@ kubectl apply -f ./test/kwokctl/fake-node.yaml
 kubectl apply -f ./test/kwokctl/fake-deployment.yaml
 
 # Write some logs.
-echo "$(date --iso-8601=ns) stdout F Hello" > ./logs/kwok.log
+echo "$(date --iso-8601=ns) stdout F Hello" >./logs/kwok.log
 
 # Look at the logs.
 kubectl logs -f deployment/fake-pod &
 
 # Again.
-echo "$(date --iso-8601=ns) stdout F Foo" >> ./logs/kwok.log
+echo "$(date --iso-8601=ns) stdout F Foo" >>./logs/kwok.log
 
 # Again.
-echo "$(date --iso-8601=ns) stdout F Bar" >> ./logs/kwok.log
+echo "$(date --iso-8601=ns) stdout F Bar" >>./logs/kwok.log
 
 # Delete the cluster.
 kwokctl delete cluster

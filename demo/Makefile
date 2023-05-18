@@ -22,8 +22,6 @@ $(SVG_TERM):
 	@echo "Generating $@"
 	@$(SVG_TERM) --out "$@" \
 	  --window \
-	  --height 24 \
-	  --width 86 \
 	  --command "cd .. && ./demo/play-demo.sh ./demo/$<"
 
 .PHONY: all
