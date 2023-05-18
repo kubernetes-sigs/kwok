@@ -164,11 +164,11 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 	}
 	conf.KubeVersion = version.AddPrefixV(envs.GetEnvWithPrefix("KUBE_VERSION", conf.KubeVersion))
 
-	if conf.SecurePort == nil {
+	conf.SecurePort = format.Ptr(envs.GetEnvWithPrefix("SECURE_PORT", *conf.SecurePort))
+	if *conf.SecurePort {
 		minor := parseRelease(conf.KubeVersion)
 		conf.SecurePort = format.Ptr(minor > 12 || minor == -1)
 	}
-	conf.SecurePort = format.Ptr(envs.GetEnvWithPrefix("SECURE_PORT", *conf.SecurePort))
 
 	conf.QuietPull = format.Ptr(envs.GetEnvWithPrefix("QUIET_PULL", *conf.QuietPull))
 

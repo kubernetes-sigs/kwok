@@ -14,9 +14,11 @@ These two controllers call out to a webhook service to do some processing.
 
 ## Enable Admission
 
-On Kind runtime is enabled by default, but on other runtime, you need to enable it manually.
+Before the release of v0.3.0, on Kind runtime is enabled by default, but on other runtimes, you need to enable it manually.
+If you want to enable kube authorization, you need with `--kube-admission` flag when creating cluster.
 
-If you want to enable kube authorization, you need with `--kube-admission` flag when create cluster.
+Starting from v0.3.0, Admission is enabled by default.
+If you want to disable kube authorization, you need with `--kube-admission=false` flag when creating cluster.
 
 If you are creating a cluster with kube version < `1.21`, then [authorization] also needs to be enabled.
 

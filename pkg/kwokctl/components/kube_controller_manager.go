@@ -103,11 +103,9 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	if conf.SecurePort {
-		if conf.Version.GE(version.NewVersion(1, 12, 0)) {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
-			)
-		}
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
+		)
 
 		if inContainer {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,

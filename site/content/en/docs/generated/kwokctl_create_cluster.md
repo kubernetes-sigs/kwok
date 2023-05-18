@@ -27,7 +27,7 @@ kwokctl create cluster [flags]
       --kind-node-image string                  Image of kind node, only for kind/kind-podman runtime
                                                 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
                                                  (default "docker.io/kindest/node:v1.27.1")
-      --kube-admission                          Enable admission for kube-apiserver, only for non kind/kind-podman runtime
+      --kube-admission                          Enable admission for kube-apiserver, only for non kind/kind-podman runtime (default true)
       --kube-apiserver-binary string            Binary of kube-apiserver, only for binary runtime
                                                  (default "https://dl.k8s.io/release/v1.27.1/bin/linux/amd64/kube-apiserver")
       --kube-apiserver-image string             Image of kube-apiserver, only for docker/podman/nerdctl runtime
@@ -35,7 +35,7 @@ kwokctl create cluster [flags]
                                                  (default "registry.k8s.io/kube-apiserver:v1.27.1")
       --kube-apiserver-port uint32              Port of the apiserver (default random)
       --kube-audit-policy string                Path to the file that defines the audit policy configuration
-      --kube-authorization                      Enable authorization for kube-apiserver, only for non kind/kind-podman runtime
+      --kube-authorization                      Enable authorization for kube-apiserver, only for non kind/kind-podman runtime (default true)
       --kube-controller-manager-binary string   Binary of kube-controller-manager, only for binary runtime
                                                  (default "https://dl.k8s.io/release/v1.27.1/bin/linux/amd64/kube-controller-manager")
       --kube-controller-manager-image string    Image of kube-controller-manager, only for docker/podman/nerdctl runtime

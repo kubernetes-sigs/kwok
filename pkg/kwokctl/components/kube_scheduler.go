@@ -107,11 +107,9 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	if conf.SecurePort {
-		if conf.Version.GE(version.NewVersion(1, 12, 0)) {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
-			)
-		}
+		kubeSchedulerArgs = append(kubeSchedulerArgs,
+			"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
+		)
 
 		if inContainer {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,

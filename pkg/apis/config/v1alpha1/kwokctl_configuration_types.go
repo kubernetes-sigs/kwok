@@ -110,6 +110,7 @@ type KwokctlConfigurationOptions struct {
 
 	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
 	// is the default value for flag --secure-port and env KWOK_SECURE_PORT
+	// +default=true
 	SecurePort *bool `json:"securePort,omitempty"`
 
 	// QuietPull is the flag to quiet the pull.
@@ -280,12 +281,12 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeAuthorization is the flag to enable authorization on secure port.
 	// is the default value for flag --kube-authorization and env KWOK_KUBE_AUTHORIZATION
-	// +default=false
+	// +default=true
 	KubeAuthorization *bool `json:"kubeAuthorization,omitempty"`
 
 	// KubeAdmission is the flag to enable admission for kube-apiserver.
 	// is the default value for flag --kube-admission and env KWOK_KUBE_ADMISSION
-	// +default=false
+	// +default=true
 	KubeAdmission *bool `json:"kubeAdmission,omitempty"`
 
 	// EtcdPeerPort is etcd peer port in the binary runtime
