@@ -81,6 +81,8 @@ function test_restart() {
     echo "Error: cluster ${name} stop error"
     return 1
   fi
+  # Wait for successful stop to prevent port occupation
+  sleep 5
   if kwokctl --name "${name}" kubectl get no; then
     echo "Error: cluster ${name} do not stop"
     return 1
