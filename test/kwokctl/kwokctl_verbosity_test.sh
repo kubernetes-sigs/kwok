@@ -37,20 +37,37 @@ function args() {
   done
 }
 
+function check_log_level() {
+  local name="${1}"
+  local component="${2}"
+  local command="${3}"
+  local error_component=""
+
+  if ! ${command} | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug"; then
+    error_component="${component}"
+  fi
+
+  if [ -n "${error_component}" ]; then
+    echo "Error: ${error_component} is missing log level."
+    return 1
+  fi
+}
+
 function check_kind() {
   local name="${1}"
 
-  for pod in etcd kube-apiserver kube-controller-manager kube-scheduler; do
-    kwokctl --name="${name}" kubectl -n kube-system get pod "${pod}-kwok-${name}-control-plane" -oyaml | grep -q -- "--v=4\|--log-level=debug" || return 1
+  for component in etcd kube-apiserver kube-controller-manager kube-scheduler; do
+    check_log_level "${name}" "${component}" "kwokctl --name=${name} kubectl -n kube-system get pod ${component}-kwok-${name}-control-plane -oyaml"
   done
-  kwokctl --name="${name}" kubectl -n kube-system get pod prometheus -oyaml | grep -q -- "--log.level=debug" || return 1
+
+  check_log_level "${name}" "prometheus" "kwokctl --name=${name} kubectl -n kube-system get pod prometheus -oyaml"
 }
 
 function check_docker() {
   local name="${1}"
 
   for component in etcd kube-apiserver kube-controller-manager kube-scheduler prometheus; do
-    docker inspect kwok-"${name}"-"${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || return 1
+    check_log_level "${name}" "${component}" "docker inspect kwok-${name}-${component}"
   done
 }
 
@@ -58,7 +75,7 @@ function check_nerdctl() {
   local name="${1}"
 
   for component in etcd kube-apiserver kube-controller-manager kube-scheduler prometheus; do
-    nerdctl inspect kwok-"${name}"-"${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || return 1
+    check_log_level "${name}" "${component}" "nerdctl inspect kwok-${name}-${component}"
   done
 }
 
@@ -66,7 +83,7 @@ function check_binary() {
   local name="${1}"
 
   for component in etcd kube-apiserver kube-controller-manager kube-scheduler prometheus; do
-    pgrep -a -f "${component}" | grep -q -- "--v=4\|--log-level=debug\|--log.level=debug" || return 1
+    check_log_level "${name}" "${component}" "pgrep -a -f ${component}"
   done
 }
 
@@ -77,7 +94,6 @@ function test_verbosity() {
 
   if [[ "${runtimes[*]}" == *"${runtime}"* ]]; then
     if ! "check_${runtime}" "${name}"; then
-      echo "Error: '-v' flag not exsits in kube-apiserver"
       return 1
     fi
   fi
