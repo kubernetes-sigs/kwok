@@ -54,9 +54,9 @@ metadata:
   name: kwok-node-0
 spec:
   taints: # Avoid scheduling actual running pods to fake Node
-    - effect: NoSchedule
-      key: kwok.x-k8s.io/node
-      value: fake
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
 status:
   allocatable:
     cpu: 32
@@ -114,20 +114,20 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              - matchExpressions:
-                  - key: type
-                    operator: In
-                    values:
-                      - kwok
+            - matchExpressions:
+              - key: type
+                operator: In
+                values:
+                - kwok
       # A taints was added to an automatically created Node.
       # You can remove taints of Node or add this tolerations.
       tolerations:
-        - key: "kwok.x-k8s.io/node"
-          operator: "Exists"
-          effect: "NoSchedule"
+      - key: "kwok.x-k8s.io/node"
+        operator: "Exists"
+        effect: "NoSchedule"
       containers:
-        - name: fake-container
-          image: fake-image
+      - name: fake-container
+        image: fake-image
 EOF
 ```
 

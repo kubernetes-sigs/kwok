@@ -20,13 +20,13 @@ metadata:
   namespace: <string>
 spec:
   execs:
-    - containers:
-        - <string>
-      local:
-        workDir: <string>
-        envs:
-          - name: <string>
-            value: <string>
+  - containers:
+    - <string>
+    local:
+      workDir: <string>
+      envs:
+      - name: <string>
+        value: <string>
 ```
 
 To exec a container, you can set the `execs` field in the spec section of a Exec resource.
@@ -49,17 +49,17 @@ metadata:
 spec:
   selector:
     matchNamespaces:
-      - <string>
+    - <string>
     matchNames:
-      - <string>
+    - <string>
   execs:
-    - containers:
-        - <string>
-      local:
-        workDir: <string>
-        envs:
-          - name: <string>
-            value: <string>
+  - containers:
+    - <string>
+    local:
+      workDir: <string>
+      envs:
+      - name: <string>
+        value: <string>
 ```
 
 The `selector` field specifies the Pods to be executed.

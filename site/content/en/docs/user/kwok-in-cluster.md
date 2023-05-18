@@ -26,10 +26,10 @@ cat <<EOF > "${KWOK_WORK_DIR}/kustomization.yaml"
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
-  - name: registry.k8s.io/kwok/kwok
-    newTag: "${KWOK_LATEST_RELEASE}"
+- name: registry.k8s.io/kwok/kwok
+  newTag: "${KWOK_LATEST_RELEASE}"
 resources:
-  - "https://github.com/${KWOK_REPO}/kustomize/kwok?ref=${KWOK_LATEST_RELEASE}"
+- "https://github.com/${KWOK_REPO}/kustomize/kwok?ref=${KWOK_LATEST_RELEASE}"
 EOF
 ```
 

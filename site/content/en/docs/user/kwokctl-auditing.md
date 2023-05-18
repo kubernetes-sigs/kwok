@@ -2,7 +2,7 @@
 
 {{< hint "info" >}}
 
-This document walks you through how to enable [Audit policy](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy) on a `kwokctl` cluster
+This document walks you through how to enable [Audit policy] on a `kwokctl` cluster
 
 {{< /hint >}}
 
@@ -32,3 +32,5 @@ kwokctl logs audit
 ## Example audit logs
 
 <img width="700px" src="/img/demo/audit-log.svg">
+
+[Audit policy]: https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy

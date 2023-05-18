@@ -20,10 +20,10 @@ metadata:
   namespace: <string>
 spec:
   logs:
-    - containers:
-        - <string>
-      logsFile: <string>
-      follow: <bool>
+  - containers:
+    - <string>
+    logsFile: <string>
+    follow: <bool>
 ```
 
 To log a container, you can set the `logs` field in the spec section of a Logs resource.
@@ -45,14 +45,14 @@ metadata:
 spec:
   selector:
     matchNamespaces:
-      - <string>
+    - <string>
     matchNames:
-      - <string>
+    - <string>
   logs:
-    - containers:
-        - <string>
-      logsFile: <string>
-      follow: <bool>
+  - containers:
+    - <string>
+    logsFile: <string>
+    follow: <bool>
 ```
 
 The `selector` field specifies the Pods to be logged.

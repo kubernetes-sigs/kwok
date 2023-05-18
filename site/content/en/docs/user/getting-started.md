@@ -11,24 +11,39 @@ Here are some tips to help you get started.
 
 ## Basic Usage
 
-- [`kwok` Manages Nodes and Pods]({{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}) - Basic operations of `kwok` to manage Nodes and Pods
+- [Install] - Install `kwokctl` and `kwok`
+- [`kwok` Manages Nodes and Pods] - Basic operations of `kwok` to manage Nodes and Pods
 - `kwok` - maintain Nodes heartbeat and Pods status.
-    - [`kwok` in Cluster]({{< relref "/docs/user/kwok-in-cluster" >}}) - Installing `kwok` in a cluster
-    - [`kwok` out of Cluster]({{< relref "/docs/user/kwok-out-cluster" >}}) - Run `kwok` out of your cluster
+  - [`kwok` in Cluster] - Installing `kwok` in a cluster
+  - [`kwok` out of Cluster] - Run `kwok` out of your cluster
 - `kwokctl` - cluster creation, etcd snapshot, etc.
-    - [`kwokctl` Manages Clusters]({{< relref "/docs/user/kwokctl-manage-cluster" >}}) - Create/Delete a cluster where all nodes are managed by `kwok`
-    - [`kwokctl` Snapshots Cluster]({{< relref "/docs/user/kwokctl-snapshot" >}}) - Save/Restore the Etcd data of a cluster created by `kwokctl`
-- [All in One Image]({{< relref "/docs/user/all-in-one-image" >}}) - Create a cluster with an all-in-one image easily
+  - [`kwokctl` Manages Clusters] - Create/Delete a cluster where all nodes are managed by `kwok`
+  - [`kwokctl` Snapshots Cluster] - Save/Restore the Etcd data of a cluster created by `kwokctl`
+- [All in One Image] - Create a cluster with an all-in-one image easily
 
 ## Configuration
 
 If any special concerns, you can configure KWOK with options and stages.
 
-- [Options]({{< relref "/docs/user/configuration" >}})
-- [Stages]({{< relref "/docs/user/stages-configuration" >}})
-- [PortForward]({{< relref "/docs/user/port-forward-configuration" >}})
-- [Exec]({{< relref "/docs/user/exec-configuration" >}})
-- [Logs]({{< relref "/docs/user/logs-configuration" >}})
-- [Attach]({{< relref "/docs/user/attach-configuration" >}})
+- [Options]
+- [Stages]
+- [PortForward]
+- [Exec]
+- [Logs]
+- [Attach]
 
 I hope this helps you get started with KWOK! Good luck and have fun!
+
+[Install]: {{< relref "/docs/user/install" >}}
+[`kwok` Manages Nodes and Pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
+[`kwok` in Cluster]: {{< relref "/docs/user/kwok-in-cluster" >}}
+[`kwok` out of Cluster]: {{< relref "/docs/user/kwok-out-cluster" >}}
+[`kwokctl` Manages Clusters]: {{< relref "/docs/user/kwokctl-manage-cluster" >}}
+[`kwokctl` Snapshots Cluster]: {{< relref "/docs/user/kwokctl-snapshot" >}}
+[All in One Image]: {{< relref "/docs/user/all-in-one-image" >}}
+[Options]: {{< relref "/docs/user/configuration" >}}
+[Stages]: {{< relref "/docs/user/stages-configuration" >}}
+[PortForward]: {{< relref "/docs/user/port-forward-configuration" >}}
+[Exec]: {{< relref "/docs/user/exec-configuration" >}}
+[Logs]: {{< relref "/docs/user/logs-configuration" >}}
+[Attach]: {{< relref "/docs/user/attach-configuration" >}}

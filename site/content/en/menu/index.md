@@ -3,6 +3,7 @@ headless: true
 ---
 
 - [Home]({{< relref "/" >}})
+- [Adopters]({{< relref "/docs/adopters" >}})
 - **User Guide**
   - [Getting Started]({{< relref "/docs/user/getting-started" >}})
   - **Quick Start**
@@ -25,9 +26,6 @@ headless: true
     - [Exec]({{< relref "/docs/user/exec-configuration" >}})
     - [Logs]({{< relref "/docs/user/logs-configuration" >}})
     - [Attach]({{< relref "/docs/user/attach-configuration" >}})
-- **Tools**
-  - [`kwok`]({{< relref "/docs/generated/kwok" >}})
-  - [`kwokctl`]({{< relref "/docs/generated/kwokctl" >}})
 - **Design**
   - [Introduction]({{< relref "/docs/design/introduction" >}})
   - [Architecture]({{< relref "/docs/design/architecture" >}})
@@ -37,4 +35,6 @@ headless: true
   - [Development]({{< relref "/docs/contributing/development" >}})
   - [Roadmap ⛓](https://github.com/orgs/kubernetes-sigs/projects/21)
   - [Source Code ⛓](https://github.com/kubernetes-sigs/kwok)
-- [Adopters]({{< relref "/docs/adopters" >}})
+- **Tools**
+  - [`kwok`]({{< relref "/docs/generated/kwok" >}})
+  - [`kwokctl`]({{< relref "/docs/generated/kwokctl" >}})
