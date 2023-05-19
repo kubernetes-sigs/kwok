@@ -20,16 +20,16 @@ metadata:
   namespace: <string>
 spec:
   forwards:
-    - ports:
-        - <int>
-      target:
-        port: <int>
-        address: <string>
-    - ports:
-        - <int>
-      command:
-        - <string>
-        - <string>
+  - ports:
+    - <int>
+    target:
+      port: <int>
+      address: <string>
+  - ports:
+    - <int>
+    command:
+    - <string>
+    - <string>
 ```
 
 To forward a port, you can set the `forwards` field in the spec section of a PortForward resource.
@@ -52,20 +52,20 @@ metadata:
 spec:
   selector:
     matchNamespaces:
-      - <string>
+    - <string>
     matchNames:
-      - <string>
+    - <string>
   forwards:
-    - ports:
-        - <int>
-      target:
-        port: <int>
-        address: <string>
-    - ports:
-        - <int>
-      command:
-        - <string>
-        - <string>
+  - ports:
+    - <int>
+    target:
+      port: <int>
+      address: <string>
+  - ports:
+    - <int>
+    command:
+    - <string>
+    - <string>
 ```
 
 The `selector` field is used to select the Pods to be port forwarded.

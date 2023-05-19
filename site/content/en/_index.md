@@ -63,10 +63,8 @@ Runtime indicates which medium `kwokctl` will use to start the cluster
 | Windows | 🟠/🔵    | 🔵      | 🔵      | 🔵       | 🔵    |
 
 - 🟢 Supported
-- 🔴 Not supported
 - 🟠 Need to use your own build of the Kubernetes binary
 - 🔵 Expected support but not fully tested
-- ⚫ TODO
 
 ## Community
 

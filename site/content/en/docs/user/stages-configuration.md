@@ -28,10 +28,10 @@ spec:
     matchAnnotations:
       <string>: <string>
     matchExpressions:
-      - key: <expressions-string>
-        operator: <string>
-        values:
-          - <string>
+    - key: <expressions-string>
+      operator: <string>
+      values:
+      - <string>
   delay:
     durationMilliseconds: <int>
     durationFrom:
@@ -43,9 +43,9 @@ spec:
     statusTemplate: <string>
     finalizers:
       add:
-        - value: <string>
+      - value: <string>
       remove:
-        - value: <string>
+      - value: <string>
       empty: <bool>
     delete: <bool>
   immediateNextStage: <bool>

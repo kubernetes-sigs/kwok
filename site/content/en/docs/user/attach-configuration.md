@@ -20,9 +20,9 @@ metadata:
   namespace: <string>
 spec:
   attaches:
-    - containers:
-        - <string>
-      logsFile: <string>
+  - containers:
+    - <string>
+    logsFile: <string>
 ```
 
 To attach a container, you can set the `attaches` field in the spec section of an Attach resource.
@@ -45,13 +45,13 @@ metadata:
 spec:
   selector:
     matchNamespaces:
-      - <string>
+    - <string>
     matchNames:
-      - <string>
+    - <string>
   attaches:
-    - containers:
-        - <string>
-      logsFile: <string>
+  - containers:
+    - <string>
+    logsFile: <string>
 ```
 
 The `selector` field specifies the Pods to be attached.
