@@ -111,7 +111,7 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 				"key", privateKeyFile,
 			)
 			svc := &http.Server{
-				ReadHeaderTimeout: 5 * time.Second,
+				ReadHeaderTimeout: 10 * time.Second,
 				BaseContext: func(_ net.Listener) context.Context {
 					return ctx
 				},
@@ -130,7 +130,7 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 			"address", address,
 		)
 		svc := &http.Server{
-			ReadHeaderTimeout: 5 * time.Second,
+			ReadHeaderTimeout: 10 * time.Second,
 			BaseContext: func(_ net.Listener) context.Context {
 				return ctx
 			},
