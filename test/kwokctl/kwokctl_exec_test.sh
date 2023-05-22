@@ -45,14 +45,19 @@ function test_exec() {
   local want="${5}"
   local result
 <<<<<<< HEAD
+<<<<<<< HEAD
   if ! result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}"); then
 =======
+=======
+  date
+>>>>>>> c3e33d3 (fix exec)
   result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}")
   if [[ $? -ne 0 ]]; then
 >>>>>>> c3114f7 (fix exec)
     echo "Error: exec failed"
     return 1
   fi
+  date
 
   if [[ ! "${result}" == *"${want}"* ]]; then
     echo "Error: exec result does not match"
