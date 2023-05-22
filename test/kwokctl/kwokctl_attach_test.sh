@@ -95,7 +95,7 @@ function test_apply_node_and_pod() {
     return 1
   fi
   for ((i = 0; i < 120; i++)); do
-    kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod.yaml"
+    kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"
     if [[ $? -eq 0 ]]; then
       break
     fi
