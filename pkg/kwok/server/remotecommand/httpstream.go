@@ -108,6 +108,8 @@ func createStreams(req *http.Request, w http.ResponseWriter, opts *Options, supp
 	var ctx *streamContext
 	var ok bool
 	if wsstream.IsWebSocketRequest(req) {
+		fmt.Println("================")
+		fmt.Println("is websocket")
 		ctx, ok = createWebSocketStreams(req, w, opts, idleTimeout)
 	} else {
 		ctx, ok = createHTTPStreamStreams(req, w, opts, supportedStreamProtocols, idleTimeout, streamCreationTimeout)
