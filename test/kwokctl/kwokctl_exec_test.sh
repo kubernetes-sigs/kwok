@@ -44,9 +44,7 @@ function test_exec() {
   local cmd="${4}"
   local want="${5}"
   local result
-  result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}")
-  # kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}"
-  echo "${result}"
+  result=$(kwokctl -v=-4 --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}")
   if [[ $? -ne 0 ]]; then
     echo "Error: exec failed"
     return 1
