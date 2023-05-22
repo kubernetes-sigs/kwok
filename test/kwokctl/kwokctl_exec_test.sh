@@ -75,6 +75,7 @@ function test_apply_node_and_pod() {
     return 1
   fi
 <<<<<<< HEAD
+<<<<<<< HEAD
   if ! retry 120 kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"; then
 =======
   # kwokctl --name "${name}" kubectl create ns other
@@ -82,6 +83,8 @@ function test_apply_node_and_pod() {
   #   echo "Error: other-namespace create failed"
   #   return 1
   # fi
+=======
+>>>>>>> d524495 (fix exec)
   for ((i = 0; i < 120; i++)); do
     kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"
     if [[ $? -eq 0 ]]; then
