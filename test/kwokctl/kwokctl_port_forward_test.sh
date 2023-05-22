@@ -82,7 +82,23 @@ function test_apply_node_and_pod() {
     echo "Error: fake-node apply failed"
     return 1
   fi
+<<<<<<< HEAD
   if ! retry 120 kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"; then
+=======
+  kwokctl --name "${name}" kubectl create ns other
+  if [[ $? -ne 0 ]]; then
+    echo "Error: other-namespace create failed"
+    return 1
+  fi
+  for ((i = 0; i < 120; i++)); do
+    kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod.yaml"
+    if [[ $? -eq 0 ]]; then
+      break
+    fi
+    sleep 1
+  done
+  if [[ $? -ne 0 ]]; then
+>>>>>>> c3114f7 (fix exec)
     echo "Error: fake-pod apply failed"
     return 1
   fi

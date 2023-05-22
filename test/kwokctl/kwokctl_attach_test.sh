@@ -92,7 +92,19 @@ function test_apply_node_and_pod() {
     echo "Error: fake-pod apply failed"
     return 1
   fi
+<<<<<<< HEAD
   if ! kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-deployment.yaml"; then
+=======
+  for ((i = 0; i < 120; i++)); do
+    kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod.yaml"
+    if [[ $? -eq 0 ]]; then
+      break
+    fi
+    sleep 1
+  done
+  kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-deployment.yaml"
+  if [[ $? -ne 0 ]]; then
+>>>>>>> c3114f7 (fix exec)
     echo "Error: fake-deployment apply failed"
     return 1
   fi
