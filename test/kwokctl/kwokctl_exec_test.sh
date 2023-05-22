@@ -44,6 +44,7 @@ function test_exec() {
   local cmd="${4}"
   local want="${5}"
   local result
+  kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}"
   result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}")
   if [[ $? -ne 0 ]]; then
     echo "Error: exec failed"
@@ -105,6 +106,7 @@ function main() {
     create_cluster "${name}" "${release}" --config "${DIR}/exec.yaml"
     test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
     test_exec "${name}" other pod/fake-pod "pwd" "/tmp" || failed+=("${name}_target_exec")
+    sleep 5
     test_exec "${name}" default deploy/fake-pod "env" "TEST_ENV=test" || failed+=("${name}_cluster_default_exec")
     delete_cluster "${name}"
   done

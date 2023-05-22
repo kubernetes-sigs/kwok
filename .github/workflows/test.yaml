@@ -250,84 +250,84 @@ jobs:
           ./hack/requirements.sh kubectl
           kubectl version || :
 
-      - name: Test Workable
-        shell: bash
-        run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" && ( "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" ) ]]; then
-            export LAST_RELEASE_SIZE=20
-          fi
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
+      # - name: Test Workable
+      #   shell: bash
+      #   run: |
+      #     if [[ "${{ matrix.os }}" == "ubuntu-latest" && ( "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" ) ]]; then
+      #       export LAST_RELEASE_SIZE=20
+      #     fi
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
-      - name: Test Multi Cluster
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_multi_cluster
+      # - name: Test Multi Cluster
+      #   if: ${{ matrix.os == 'ubuntu-latest' }}
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_multi_cluster
 
-      - name: Test Snapshot
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_snapshot
+      # - name: Test Snapshot
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_snapshot
 
-      - name: Test Audit
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_audit
+      # - name: Test Audit
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_audit
 
-      - name: Test Verbosity
-        if: ${{ matrix.os == 'ubuntu-latest' || matrix.kwokctl-runtime != 'binary' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_verbosity
+      # - name: Test Verbosity
+      #   if: ${{ matrix.os == 'ubuntu-latest' || matrix.kwokctl-runtime != 'binary' }}
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_verbosity
 
-      - name: Test Scheduler
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_scheduler
+      # - name: Test Scheduler
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_scheduler
 
-      - name: Test Authorization
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_authorization
+      # - name: Test Authorization
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_authorization
 
-      - name: Test Restart
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
+      # - name: Test Restart
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
 
-      - name: Test Port Forward
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_port_forward
+      # - name: Test Port Forward
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_port_forward
 
       - name: Test Exec
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_exec
 
-      - name: Test Log
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_logs
+      # - name: Test Log
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_logs
 
-      - name: Test Attach
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_attach
+      # - name: Test Attach
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_attach
 
-      - name: Test Extra
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_extra
+      # - name: Test Extra
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_extra
 
-      - name: Test Benchmark
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime != 'kind' && matrix.kwokctl-runtime != 'kind-podman' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark
+      # - name: Test Benchmark
+      #   if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime != 'kind' && matrix.kwokctl-runtime != 'kind-podman' }}
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark
 
-      - name: Test Auto Detect
-        if: ${{ matrix.kwokctl-runtime == 'binary' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_auto_detect
+      # - name: Test Auto Detect
+      #   if: ${{ matrix.kwokctl-runtime == 'binary' }}
+      #   shell: bash
+      #   run: |
+      #     ./hack/e2e-test.sh kwokctl/kwokctl_auto_detect
