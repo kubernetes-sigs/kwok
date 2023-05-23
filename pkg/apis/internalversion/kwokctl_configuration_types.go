@@ -87,6 +87,7 @@ type KwokctlConfigurationOptions struct {
 	KindVersion string
 
 	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
+	// is not available before Kubernetes 1.13.0
 	SecurePort bool
 
 	// QuietPull is the flag to quiet the pull.

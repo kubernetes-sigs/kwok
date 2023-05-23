@@ -109,6 +109,7 @@ type KwokctlConfigurationOptions struct {
 	KindVersion string `json:"kindVersion,omitempty"`
 
 	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
+	// is not available before Kubernetes 1.13.0
 	// is the default value for flag --secure-port and env KWOK_SECURE_PORT
 	SecurePort *bool `json:"securePort,omitempty"`
 

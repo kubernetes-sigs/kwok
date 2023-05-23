@@ -66,7 +66,7 @@ kwokctl create cluster [flags]
       --prometheus-port uint32                  Port to expose Prometheus metrics
       --quiet-pull                              Pull without printing progress information
       --runtime string                          Runtime of the cluster (binary or docker or kind or kind-podman or nerdctl or podman)
-      --secure-port                             The apiserver port on which to serve HTTPS with authentication and authorization (default true)
+      --secure-port                             The apiserver port on which to serve HTTPS with authentication and authorization, is not available before Kubernetes 1.13.0 (default true)
       --timeout duration                        Timeout for waiting for the cluster to be created
       --wait duration                           Wait for the cluster to be ready
 ```
