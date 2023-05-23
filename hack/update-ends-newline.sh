@@ -28,7 +28,13 @@ function update_ends_newline() {
     -o -iname "*.yaml" \
     -o -iname "*.yml" \
     \) \
-    -exec sh -c '[ -n "$(tail -c 1 "$1")" ] && echo "$1"' sh {} \;
+    -not \( \
+    -path ./.git/\* -o \
+    -path ./vendor/\* -o \
+    -path ./demo/node_modules/\* -o \
+    -path ./site/themes/\* \
+    \) \
+    -exec sh -c '[ -n "$(tail -c 1 $1)" ] && echo >> $1' sh {} \;
 }
 
 cd "${ROOT_DIR}"
