@@ -40,9 +40,12 @@ var kindYamlTemplate = template.Must(template.New("_").Parse(kindYamlTpl))
 func BuildKind(conf BuildKindConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 
-	conf = expendExtrasForBuildKind(conf)
-
 	var err error
+	conf, err = expendExtrasForBuildKind(conf)
+	if err != nil {
+		return "", fmt.Errorf("failed to expand extras for build kind: %w", err)
+	}
+
 	conf, err = expandHostVolumePaths(conf)
 	if err != nil {
 		return "", fmt.Errorf("failed to expand host volume paths: %w", err)
@@ -55,7 +58,7 @@ func BuildKind(conf BuildKindConfig) (string, error) {
 	return buf.String(), nil
 }
 
-func expendExtrasForBuildKind(conf BuildKindConfig) BuildKindConfig {
+func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 	if conf.AuditPolicy != "" {
 		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
 			internalversion.ExtraArgs{
@@ -109,6 +112,29 @@ func expendExtrasForBuildKind(conf BuildKindConfig) BuildKindConfig {
 				PathType:  internalversion.HostPathFile,
 			},
 		)
+	}
+
+	if conf.TracingConfigPath != "" {
+		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "tracing-config-file",
+				Value: "/etc/kubernetes/apiserver-tracing-config.yaml",
+			},
+		)
+		conf.ApiserverExtraVolumes = append(conf.ApiserverExtraVolumes,
+			internalversion.Volume{
+				Name:      "apiserver-tracing-config",
+				HostPath:  conf.TracingConfigPath,
+				MountPath: "/etc/kubernetes/apiserver-tracing-config.yaml",
+				ReadOnly:  true,
+				PathType:  internalversion.HostPathFile,
+			},
+		)
+		if conf.KubeVersion.LT(version.NewVersion(1, 22, 0)) {
+			return conf, fmt.Errorf("the kube-apiserver version is less than 1.22.0, so the --jaeger-port cannot be enabled")
+		} else if conf.KubeVersion.LT(version.NewVersion(1, 27, 0)) {
+			conf.FeatureGates = append(conf.FeatureGates, "APIServerTracing: true")
+		}
 	}
 
 	if conf.Verbosity != log.LevelInfo {
@@ -182,7 +208,7 @@ func expendExtrasForBuildKind(conf BuildKindConfig) BuildKindConfig {
 			},
 		)
 	}
-	return conf
+	return conf, nil
 }
 
 func expandHostVolumePaths(conf BuildKindConfig) (BuildKindConfig, error) {
@@ -225,6 +251,7 @@ type BuildKindConfig struct {
 	KubeApiserverPort  uint32
 	EtcdPort           uint32
 	PrometheusPort     uint32
+	JaegerPort         uint32
 	KwokControllerPort uint32
 
 	RuntimeConfig []string
@@ -233,9 +260,10 @@ type BuildKindConfig struct {
 	AuditPolicy string
 	AuditLog    string
 
-	KubeconfigPath  string
-	SchedulerConfig string
-	ConfigPath      string
+	KubeconfigPath    string
+	SchedulerConfig   string
+	ConfigPath        string
+	TracingConfigPath string
 
 	EtcdExtraArgs                 []internalversion.ExtraArgs
 	EtcdExtraVolumes              []internalversion.Volume

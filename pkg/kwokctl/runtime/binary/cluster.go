@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
@@ -118,6 +119,21 @@ func (c *Cluster) download(ctx context.Context) error {
 			}
 		} else {
 			err = c.DownloadWithCache(ctx, conf.CacheDir, conf.PrometheusBinary, prometheusPath, 0750, conf.QuietPull)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if conf.JaegerPort != 0 {
+		jaegerPath := c.GetBinPath("jaeger-all-in-one" + conf.BinSuffix)
+		if conf.JaegerBinary == "" {
+			err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.JaegerBinaryTar, jaegerPath, "jaeger-all-in-one"+conf.BinSuffix, 0750, conf.QuietPull, true)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.JaegerBinary, jaegerPath, 0750, conf.QuietPull)
 			if err != nil {
 				return err
 			}
@@ -298,6 +314,29 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	kubeApiserverTracingConfigPath := ""
+	if conf.JaegerPort != 0 {
+		err = c.setupPorts(ctx,
+			&conf.JaegerOtlpGrpcPort,
+		)
+		if err != nil {
+			return err
+		}
+
+		kubeApiserverTracingConfigData, err := k8s.BuildKubeApiserverTracingConfig(k8s.BuildKubeApiserverTracingConfigParam{
+			Endpoint: net.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to generate kubeApiserverTracingConfig yaml: %w", err)
+		}
+		kubeApiserverTracingConfigPath = c.GetWorkdirPath(runtime.ApiserverTracingConfig)
+
+		err = c.WriteFile(kubeApiserverTracingConfigPath, []byte(kubeApiserverTracingConfigData))
+		if err != nil {
+			return fmt.Errorf("failed to write kubeApiserverTracingConfig yaml: %w", err)
+		}
+	}
+
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(config, "kube-apiserver")
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Workdir:           workdir,
@@ -319,6 +358,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AdminKeyPath:      adminKeyPath,
 		Verbosity:         verbosity,
 		DisableQPSLimits:  conf.DisableQPSLimits,
+		TracingConfigPath: kubeApiserverTracingConfigPath,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
 		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
 		ExtraEnvs:         kubeApiserverComponentPatches.ExtraEnvs,
@@ -496,6 +536,33 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 		config.Components = append(config.Components, prometheusComponent)
+	}
+
+	// Configure the jaeger
+	if conf.JaegerPort != 0 {
+		jaegerPath := c.GetBinPath("jaeger-all-in-one" + conf.BinSuffix)
+
+		jaegerVersion, err := c.ParseVersionFromBinary(ctx, jaegerPath)
+		if err != nil {
+			return err
+		}
+
+		jaegerComponentPatches := runtime.GetComponentPatches(config, "jaeger")
+		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
+			Workdir:      workdir,
+			Binary:       jaegerPath,
+			Version:      jaegerVersion,
+			BindAddress:  conf.BindAddress,
+			Port:         conf.JaegerPort,
+			OtlpGrpcPort: conf.JaegerOtlpGrpcPort,
+			Verbosity:    verbosity,
+			ExtraArgs:    jaegerComponentPatches.ExtraArgs,
+			ExtraVolumes: jaegerComponentPatches.ExtraVolumes,
+		})
+		if err != nil {
+			return err
+		}
+		config.Components = append(config.Components, jaegerComponent)
 	}
 
 	// Setup kubeconfig

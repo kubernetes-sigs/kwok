@@ -49,6 +49,18 @@ var (
 
 	// GOARCH is the architecture target for which the code is compiled.
 	GOARCH = runtime.GOARCH
+
+	// windows is the windows system
+	windows = "windows"
+
+	// linux is the linux system
+	linux = "linux"
+
+	// binarySuffixTar is the file suffix tar.gz
+	binarySuffixTar = "tar.gz"
+
+	// binarySuffixZip is the file suffix zip
+	binarySuffixZip = "zip"
 )
 
 // ClusterName returns the cluster name.
@@ -185,7 +197,7 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 		conf.Runtimes = []string{
 			consts.RuntimeTypeDocker,
 		}
-		if GOOS == "linux" {
+		if GOOS == linux {
 			// TODO: Move to above after test coverage
 			conf.Runtimes = append(conf.Runtimes,
 				consts.RuntimeTypePodman,
@@ -205,7 +217,7 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 	}
 
 	if conf.BinSuffix == "" {
-		if GOOS == "windows" {
+		if GOOS == windows {
 			conf.BinSuffix = ".exe"
 		}
 	}
@@ -229,6 +241,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 	setKwokctlDockerConfig(conf)
 
 	setKwokctlPrometheusConfig(conf)
+
+	setKwokctlJaegerConfig(conf)
 
 	return config
 }
@@ -346,10 +360,10 @@ func setKwokctlEtcdConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 
 	if conf.EtcdBinaryTar == "" {
 		conf.EtcdBinaryTar = conf.EtcdBinaryPrefix + "/etcd-v" + strings.TrimSuffix(conf.EtcdVersion, "-0") + "-" + GOOS + "-" + GOARCH + "." + func() string {
-			if GOOS == "linux" {
-				return "tar.gz"
+			if GOOS == linux {
+				return binarySuffixTar
 			}
-			return "zip"
+			return binarySuffixZip
 		}()
 	}
 	conf.EtcdBinaryTar = envs.GetEnvWithPrefix("ETCD_BINARY_TAR", conf.EtcdBinaryTar)
@@ -438,13 +452,49 @@ func setKwokctlPrometheusConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 
 	if conf.PrometheusBinaryTar == "" {
 		conf.PrometheusBinaryTar = conf.PrometheusBinaryPrefix + "/prometheus-" + strings.TrimPrefix(conf.PrometheusVersion, "v") + "." + GOOS + "-" + GOARCH + "." + func() string {
-			if GOOS == "windows" {
-				return "zip"
+			if GOOS == windows {
+				return binarySuffixZip
 			}
-			return "tar.gz"
+			return binarySuffixTar
 		}()
 	}
 	conf.PrometheusBinaryTar = envs.GetEnvWithPrefix("PROMETHEUS_BINARY_TAR", conf.PrometheusBinaryTar)
+}
+
+func setKwokctlJaegerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	conf.JaegerPort = envs.GetEnvWithPrefix("JAEGER_PORT", conf.JaegerPort)
+
+	if conf.JaegerVersion == "" {
+		conf.JaegerVersion = consts.JaegerVersion
+	}
+	conf.JaegerVersion = version.AddPrefixV(envs.GetEnvWithPrefix("JAEGER_VERSION", conf.JaegerVersion))
+
+	if conf.JaegerImagePrefix == "" {
+		conf.JaegerImagePrefix = consts.JaegerImagePrefix
+	}
+	conf.JaegerImagePrefix = envs.GetEnvWithPrefix("JAEGER_IMAGE_PREFIX", conf.JaegerImagePrefix)
+
+	if conf.JaegerImage == "" {
+		conf.JaegerImage = joinImageURI(conf.JaegerImagePrefix, "all-in-one", strings.TrimPrefix(conf.JaegerVersion, "v"))
+	}
+	conf.JaegerImage = envs.GetEnvWithPrefix("JAEGER_IMAGE", conf.JaegerImage)
+
+	if conf.JaegerBinaryPrefix == "" {
+		conf.JaegerBinaryPrefix = consts.JaegerBinaryPrefix + "/" + conf.JaegerVersion
+	}
+	conf.JaegerBinaryPrefix = envs.GetEnvWithPrefix("JAEGER_BINARY_PREFIX", conf.JaegerBinaryPrefix)
+
+	conf.JaegerBinary = envs.GetEnvWithPrefix("JAEGER_BINARY", conf.JaegerBinary)
+
+	if conf.JaegerBinaryTar == "" {
+		conf.JaegerBinaryTar = conf.JaegerBinaryPrefix + "/jaeger-" + strings.TrimPrefix(conf.JaegerVersion, "v") + "-" + GOOS + "-" + GOARCH + "." + func() string {
+			if GOOS == windows {
+				return binarySuffixZip
+			}
+			return binarySuffixTar
+		}()
+	}
+	conf.JaegerBinaryTar = envs.GetEnvWithPrefix("JAEGER_BINARY_TAR", conf.JaegerBinaryTar)
 }
 
 // joinImageURI joins the image URI.

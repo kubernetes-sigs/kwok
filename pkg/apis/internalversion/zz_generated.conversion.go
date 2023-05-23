@@ -1385,10 +1385,13 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.Runtime = in.Runtime
 	out.Runtimes = *(*[]string)(unsafe.Pointer(&in.Runtimes))
 	out.PrometheusPort = in.PrometheusPort
+	out.JaegerPort = in.JaegerPort
+	out.JaegerOtlpGrpcPort = in.JaegerOtlpGrpcPort
 	out.KwokVersion = in.KwokVersion
 	out.KubeVersion = in.KubeVersion
 	out.EtcdVersion = in.EtcdVersion
 	out.PrometheusVersion = in.PrometheusVersion
+	out.JaegerVersion = in.JaegerVersion
 	out.DockerComposeVersion = in.DockerComposeVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_bool_To_Pointer_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
@@ -1410,6 +1413,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeSchedulerImage = in.KubeSchedulerImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.PrometheusImage = in.PrometheusImage
+	out.JaegerImage = in.JaegerImage
 	out.KindNodeImage = in.KindNodeImage
 	out.BinSuffix = in.BinSuffix
 	out.KubeApiserverBinary = in.KubeApiserverBinary
@@ -1421,6 +1425,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KwokControllerBinary = in.KwokControllerBinary
 	out.PrometheusBinary = in.PrometheusBinary
 	out.PrometheusBinaryTar = in.PrometheusBinaryTar
+	out.JaegerBinary = in.JaegerBinary
+	out.JaegerBinaryTar = in.JaegerBinaryTar
 	out.DockerComposeBinary = in.DockerComposeBinary
 	out.KindBinary = in.KindBinary
 	out.Mode = in.Mode
@@ -1461,10 +1467,13 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.Runtime = in.Runtime
 	out.Runtimes = *(*[]string)(unsafe.Pointer(&in.Runtimes))
 	out.PrometheusPort = in.PrometheusPort
+	out.JaegerPort = in.JaegerPort
+	out.JaegerOtlpGrpcPort = in.JaegerOtlpGrpcPort
 	out.KwokVersion = in.KwokVersion
 	out.KubeVersion = in.KubeVersion
 	out.EtcdVersion = in.EtcdVersion
 	out.PrometheusVersion = in.PrometheusVersion
+	out.JaegerVersion = in.JaegerVersion
 	out.DockerComposeVersion = in.DockerComposeVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_Pointer_bool_To_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
@@ -1484,12 +1493,14 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.EtcdImagePrefix opted out of conversion generation
 	// INFO: in.KwokImagePrefix opted out of conversion generation
 	// INFO: in.PrometheusImagePrefix opted out of conversion generation
+	// INFO: in.JaegerImagePrefix opted out of conversion generation
 	out.EtcdImage = in.EtcdImage
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
 	out.KubeSchedulerImage = in.KubeSchedulerImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.PrometheusImage = in.PrometheusImage
+	out.JaegerImage = in.JaegerImage
 	// INFO: in.KindNodeImagePrefix opted out of conversion generation
 	out.KindNodeImage = in.KindNodeImage
 	out.BinSuffix = in.BinSuffix
@@ -1506,6 +1517,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.PrometheusBinaryPrefix opted out of conversion generation
 	out.PrometheusBinary = in.PrometheusBinary
 	out.PrometheusBinaryTar = in.PrometheusBinaryTar
+	// INFO: in.JaegerBinaryPrefix opted out of conversion generation
+	out.JaegerBinary = in.JaegerBinary
+	out.JaegerBinaryTar = in.JaegerBinaryTar
 	// INFO: in.DockerComposeBinaryPrefix opted out of conversion generation
 	out.DockerComposeBinary = in.DockerComposeBinary
 	// INFO: in.KindBinaryPrefix opted out of conversion generation

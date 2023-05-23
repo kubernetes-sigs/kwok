@@ -52,6 +52,10 @@ var (
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
 
+	JaegerVersion      = "1.45.0"
+	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
+	JaegerImagePrefix  = "docker.io/jaegertracing"
+
 	KindNodeImagePrefix = "docker.io/kindest"
 
 	DefaultUnlimitedQPS   = 5000.0

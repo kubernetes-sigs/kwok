@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
@@ -273,6 +274,9 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
+	if conf.JaegerPort != 0 {
+		images = append(images, conf.JaegerImage)
+	}
 	err = c.PullImages(ctx, c.runtime, images, conf.QuietPull)
 	if err != nil {
 		return err
@@ -317,6 +321,23 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to expand host volumes for kube api server component: %w", err)
 	}
+
+	kubeApiserverTracingConfigPath := ""
+	if conf.JaegerPort != 0 {
+		kubeApiserverTracingConfigData, err := k8s.BuildKubeApiserverTracingConfig(k8s.BuildKubeApiserverTracingConfigParam{
+			Endpoint: c.Name() + "-jaeger:4317",
+		})
+		if err != nil {
+			return fmt.Errorf("failed to generate kubeApiserverTracingConfig yaml: %w", err)
+		}
+		kubeApiserverTracingConfigPath = c.GetWorkdirPath(runtime.ApiserverTracingConfig)
+
+		err = c.WriteFile(kubeApiserverTracingConfigPath, []byte(kubeApiserverTracingConfigData))
+		if err != nil {
+			return fmt.Errorf("failed to write kubeApiserverTracingConfig yaml: %w", err)
+		}
+	}
+
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Workdir:           workdir,
 		Image:             conf.KubeApiserverImage,
@@ -337,6 +358,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		EtcdAddress:       c.Name() + "-etcd",
 		Verbosity:         verbosity,
 		DisableQPSLimits:  conf.DisableQPSLimits,
+		TracingConfigPath: kubeApiserverTracingConfigPath,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
 		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
 		ExtraEnvs:         kubeApiserverComponentPatches.ExtraEnvs,
@@ -515,6 +537,34 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 		config.Components = append(config.Components, prometheusComponent)
+	}
+
+	// Configure the jaeger
+	if conf.JaegerPort != 0 {
+		jaegerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.JaegerImage, "")
+		if err != nil {
+			return err
+		}
+
+		jaegerComponentPatches := runtime.GetComponentPatches(config, "jaeger")
+		jaegerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(jaegerComponentPatches.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for jaeger component: %w", err)
+		}
+		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
+			Workdir:      workdir,
+			Image:        conf.JaegerImage,
+			Version:      jaegerVersion,
+			BindAddress:  net.PublicAddress,
+			Port:         conf.JaegerPort,
+			Verbosity:    verbosity,
+			ExtraArgs:    jaegerComponentPatches.ExtraArgs,
+			ExtraVolumes: jaegerComponentPatches.ExtraVolumes,
+		})
+		if err != nil {
+			return err
+		}
+		config.Components = append(config.Components, jaegerComponent)
 	}
 
 	// Setup kubeconfig

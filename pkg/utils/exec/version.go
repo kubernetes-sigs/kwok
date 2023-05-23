@@ -32,8 +32,14 @@ func ParseVersionFromBinary(ctx context.Context, path string) (version.Version, 
 	out := bytes.NewBuffer(nil)
 	err := Exec(WithAllWriteTo(ctx, out), path, "--version")
 	if err != nil {
-		return version.Version{}, err
+		out.Reset()
+		// try match jaeger version
+		err = Exec(WithAllWriteTo(ctx, out), path, "version")
+		if err != nil {
+			return version.Version{}, err
+		}
 	}
+
 	logger := log.FromContext(ctx)
 	content := out.String()
 	ver, err := version.ParseFromOutput(content)
@@ -78,7 +84,13 @@ func ParseVersionFromImage(ctx context.Context, runtime string, image string, co
 	out := bytes.NewBuffer(nil)
 	err := Exec(WithAllWriteTo(ctx, out), runtime, args...)
 	if err != nil {
-		return version.Version{}, err
+		// try match jaeger version
+		args[len(args)-1] = "version"
+		out.Reset()
+		err = Exec(WithAllWriteTo(ctx, out), runtime, args...)
+		if err != nil {
+			return version.Version{}, err
+		}
 	}
 	content := out.String()
 	ver, err := version.ParseFromOutput(content)

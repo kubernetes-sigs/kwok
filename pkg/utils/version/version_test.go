@@ -69,6 +69,12 @@ func TestParseFromOutput(t *testing.T) {
 			},
 			want: semver.MustParse("255.0.0"),
 		},
+		{
+			args: args{
+				s: "{\"gitCommit\":\"6999753837aa2dd7523df7006d743867f19466f9\",\"gitVersion\":\"v1.45.0\",\"buildDate\":\"2023-05-05T20:59:36Z\"}",
+			},
+			want: semver.MustParse("1.45.0"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

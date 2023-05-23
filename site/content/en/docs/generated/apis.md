@@ -2094,6 +2094,29 @@ is the default value for flag &ndash;prometheus-port and env KWOK_PROMETHEUS_POR
 </tr>
 <tr>
 <td>
+<code>jaegerPort</code>
+<em>
+uint32
+</em>
+</td>
+<td>
+<p>JaegerPort is the port to expose Jaeger UI.
+is the default value for flag &ndash;jaeger-port and env KWOK_JAEGER_PORT</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jaegerOtlpGrpcPort</code>
+<em>
+uint32
+</em>
+</td>
+<td>
+<p>JaegerOtlpGrpcPort is the port to expose OTLP GRPC collector.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kwokVersion</code>
 <em>
 string
@@ -2138,6 +2161,18 @@ string
 <td>
 <p>PrometheusVersion is the version of Prometheus to use.
 is the default value for env KWOK_PROMETHEUS_VERSION</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jaegerVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JaegerVersion is the version of Jaeger to use.
+is the default value for env KWOK_JAEGER_VERSION</p>
 </td>
 </tr>
 <tr>
@@ -2276,6 +2311,18 @@ is the default value for env KWOK_PROMETHEUS_IMAGE_PREFIX</p>
 </tr>
 <tr>
 <td>
+<code>jaegerImagePrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JaegerImagePrefix is the prefix of the Jaeger image.
+is the default value for env KWOK_JAEGER_IMAGE_PREFIX</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>etcdImage</code>
 <em>
 string
@@ -2344,6 +2391,18 @@ string
 <td>
 <p>PrometheusImage is the image of Prometheus.
 is the default value for flag &ndash;prometheus-image and env KWOK_PROMETHEUS_IMAGE</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jaegerImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JaegerImage is the image of Jaeger.
+is the default value for flag &ndash;jaeger-image and env KWOK_JAEGER_IMAGE</p>
 </td>
 </tr>
 <tr>
@@ -2536,6 +2595,42 @@ string
 <td>
 <p>PrometheusBinaryTar is the tar of binary of Prometheus.
 is the default value for env KWOK_PROMETHEUS_BINARY_TAR</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jaegerBinaryPrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JaegerBinaryPrefix is the prefix of the Jaeger binary.
+is the default value for env KWOK_JAEGER_PREFIX</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jaegerBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JaegerBinary  is the binary of Jaeger.
+is the default value for flag &ndash;jaeger-binary and env KWOK_JAEGER_BINARY</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jaegerBinaryTar</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JaegerBinaryTar is the tar of binary of Jaeger.
+is the default value for env KWOK_JAEGER_TAR</p>
 </td>
 </tr>
 <tr>

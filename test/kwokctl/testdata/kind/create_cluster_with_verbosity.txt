@@ -1,5 +1,11 @@
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
+apiVersion: apiserver.config.k8s.io/v1alpha1
+kind: TracingConfiguration
+endpoint: 0.0.0.0:4317
+samplingRatePerMillion: 1000000
+EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -9,6 +15,9 @@ nodes:
   extraPortMappings:
   - containerPort: 9090
     hostPort: 9090
+    protocol: TCP
+  - containerPort: 16686
+    hostPort: 16686
     protocol: TCP
   kubeadmConfigPatches:
   - |
@@ -21,10 +30,17 @@ nodes:
     kind: ClusterConfiguration
     apiServer:
       extraArgs:
+        "tracing-config-file": "/etc/kubernetes/apiserver-tracing-config.yaml"
         "v": "4"
         "max-requests-inflight": "0"
         "max-mutating-requests-inflight": "0"
         "enable-priority-and-fairness": "false"
+      extraVolumes:
+      - name: apiserver-tracing-config
+        hostPath: /var/components/apiserver/etc/kubernetes/apiserver-tracing-config.yaml
+        mountPath: /etc/kubernetes/apiserver-tracing-config.yaml
+        readOnly: true
+        pathType: File
   - |
     kind: ClusterConfiguration
     controllerManager:
@@ -43,6 +59,9 @@ nodes:
   extraMounts:
   - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
     containerPath: /etc/kwok/kwok.yaml
+    readOnly: true
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
+    containerPath: /var/components/apiserver/etc/kubernetes/apiserver-tracing-config.yaml
     readOnly: true
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml
@@ -280,13 +299,49 @@ spec:
   hostNetwork: true
   nodeName: kwok-<CLUSTER_NAME>-control-plane
 EOF
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/jaeger-deployment.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jaeger
+  namespace: kube-system
+  labels:
+    app: jaeger
+spec:
+  containers:
+    - name: jaeger
+      image: docker.io/jaegertracing/all-in-one:1.45.0
+      args:
+        - --collector.otlp.enabled=true
+        - --log-level=debug
+  restartPolicy: Always
+  hostNetwork: true
+  nodeName: kwok-<CLUSTER_NAME>-control-plane
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-query
+spec:
+  selector:
+    app: jaeger
+  ports:
+  - name: query
+    port: 16686
+    targetPort: 16686
+  - name: otlp-grpc
+    port: 4317
+    targetPort: 4317
+EOF
 docker pull docker.io/kindest/node:v1.27.3
 docker pull localhost/kwok:test
 docker pull docker.io/prom/prometheus:v2.44.0
+docker pull docker.io/jaegertracing/all-in-one:1.45.0
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.27.3 --wait 29m
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image localhost/kwok:test --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v2.44.0 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/jaegertracing/all-in-one:1.45.0 --name kwok-<CLUSTER_NAME>
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
@@ -295,5 +350,6 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 docker cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.crt <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
 docker cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.key <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.key
 kubectl apply -f <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus-deployment.yaml
+kubectl apply -f <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/jaeger-deployment.yaml
 kubectl cordon kwok-<CLUSTER_NAME>-control-plane
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config

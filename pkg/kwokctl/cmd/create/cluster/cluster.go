@@ -62,6 +62,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 	cmd.Flags().Uint32Var(&flags.Options.KubeApiserverPort, "kube-apiserver-port", flags.Options.KubeApiserverPort, `Port of the apiserver (default random)`)
 	cmd.Flags().Uint32Var(&flags.Options.PrometheusPort, "prometheus-port", flags.Options.PrometheusPort, `Port to expose Prometheus metrics`)
+	cmd.Flags().Uint32Var(&flags.Options.JaegerPort, "jaeger-port", flags.Options.JaegerPort, `Port to expose Jaeger UI`)
 	cmd.Flags().BoolVar(&flags.Options.SecurePort, "secure-port", flags.Options.SecurePort, `The apiserver port on which to serve HTTPS with authentication and authorization, is not available before Kubernetes 1.13.0`)
 	cmd.Flags().BoolVar(&flags.Options.QuietPull, "quiet-pull", flags.Options.QuietPull, `Pull without printing progress information`)
 	cmd.Flags().StringVar(&flags.Options.KubeSchedulerConfig, "kube-scheduler-config", flags.Options.KubeSchedulerConfig, `Path to a kube-scheduler configuration file`)
@@ -88,6 +89,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.PrometheusImage, "prometheus-image", flags.Options.PrometheusImage, `Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'
 `)
+	cmd.Flags().StringVar(&flags.Options.JaegerImage, "jaeger-image", flags.Options.JaegerImage, `Image of Jaeger, only for docker/podman/nerdctl/kind/kind-podman runtime
+'${KWOK_JAEGER_IMAGE_PREFIX}/all-in-one:${KWOK_JAEGER_VERSION}'
+`)
 	cmd.Flags().Uint32Var(&flags.Options.KwokControllerPort, "controller-port", flags.Options.KwokControllerPort, `Port of kwok-controller given to the host`)
 	cmd.Flags().StringVar(&flags.Options.KindNodeImage, "kind-node-image", flags.Options.KindNodeImage, `Image of kind node, only for kind/kind-podman runtime
 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
@@ -105,6 +109,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 `)
 	cmd.Flags().StringVar(&flags.Options.PrometheusBinary, "prometheus-binary", flags.Options.PrometheusBinary, `Binary of Prometheus, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.Options.PrometheusBinaryTar, "prometheus-binary-tar", flags.Options.PrometheusBinaryTar, `Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
+`)
+	cmd.Flags().StringVar(&flags.Options.JaegerBinary, "jaeger-binary", flags.Options.JaegerBinary, `Binary of Jaeger, only for binary runtime`)
+	cmd.Flags().StringVar(&flags.Options.JaegerBinaryTar, "jaeger-binary-tar", flags.Options.JaegerBinaryTar, `Tar of Jaeger, if --jaeger-binary is set, this is ignored, only for binary runtime
 `)
 	cmd.Flags().StringVar(&flags.Options.DockerComposeBinary, "docker-compose-binary", flags.Options.DockerComposeBinary, `Binary of Docker-compose, only for docker runtime
 `)
