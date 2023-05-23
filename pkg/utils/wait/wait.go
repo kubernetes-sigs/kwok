@@ -120,3 +120,8 @@ func Poll(ctx context.Context, conditionFunc ConditionWithContextFunc, opts ...O
 	}
 	return wait.PollUntilContextTimeout(ctx, options.Interval, options.Timeout, options.Immediate, cf)
 }
+
+// Jitter returns a time.Duration between duration and duration + maxFactor * duration.
+func Jitter(duration time.Duration, maxFactor float64) time.Duration {
+	return wait.Jitter(duration, maxFactor)
+}

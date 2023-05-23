@@ -319,6 +319,10 @@ type KwokctlConfigurationOptions struct {
 	// +default=1200000
 	NodeStatusUpdateFrequencyMilliseconds int64 `json:"nodeStatusUpdateFrequencyMilliseconds,omitempty"`
 
+	// NodeLeaseDurationSeconds is the duration the Kubelet will set on its corresponding Lease.
+	// +default=1200
+	NodeLeaseDurationSeconds uint `json:"nodeLeaseDurationSeconds,omitempty"`
+
 	// BindAddress is the address to bind to.
 	// +default="0.0.0.0"
 	BindAddress string `json:"bindAddress,omitempty"`

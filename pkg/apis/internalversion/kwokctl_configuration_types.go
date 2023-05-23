@@ -204,6 +204,9 @@ type KwokctlConfigurationOptions struct {
 	// NodeStatusUpdateFrequencyMilliseconds is --node-status-update-frequency for kwok like kubelet.
 	NodeStatusUpdateFrequencyMilliseconds int64
 
+	// NodeLeaseDurationSeconds is the duration the Kubelet will set on its corresponding Lease.
+	NodeLeaseDurationSeconds uint
+
 	// BindAddress is the address to bind to.
 	BindAddress string
 }

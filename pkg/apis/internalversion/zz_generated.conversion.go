@@ -1160,6 +1160,8 @@ func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfig
 	}
 	out.PodPlayStageParallelism = in.PodPlayStageParallelism
 	out.NodePlayStageParallelism = in.NodePlayStageParallelism
+	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
+	out.NodeLeaseParallelism = in.NodeLeaseParallelism
 	return nil
 }
 
@@ -1197,6 +1199,8 @@ func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfig
 	}
 	out.PodPlayStageParallelism = in.PodPlayStageParallelism
 	out.NodePlayStageParallelism = in.NodePlayStageParallelism
+	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
+	out.NodeLeaseParallelism = in.NodeLeaseParallelism
 	return nil
 }
 
@@ -1338,6 +1342,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeControllerManagerNodeMonitorPeriodMilliseconds = in.KubeControllerManagerNodeMonitorPeriodMilliseconds
 	out.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = in.KubeControllerManagerNodeMonitorGracePeriodMilliseconds
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
+	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.BindAddress = in.BindAddress
 	return nil
 }
@@ -1420,6 +1425,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeControllerManagerNodeMonitorPeriodMilliseconds = in.KubeControllerManagerNodeMonitorPeriodMilliseconds
 	out.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = in.KubeControllerManagerNodeMonitorGracePeriodMilliseconds
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
+	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.BindAddress = in.BindAddress
 	return nil
 }

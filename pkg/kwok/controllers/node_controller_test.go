@@ -68,12 +68,14 @@ func TestNodeController(t *testing.T) {
 	nodeSelectorFunc := func(node *corev1.Node) bool {
 		return strings.HasPrefix(node.Name, "node")
 	}
-	nodeStageStatus, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+	nodeStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+	nodeHeartbeatStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+	nodeStages = append(nodeStages, nodeHeartbeatStages...)
 	nodes, err := NewNodeController(NodeControllerConfig{
 		ClientSet:            clientset,
 		NodeIP:               "10.0.0.1",
 		NodeSelectorFunc:     nodeSelectorFunc,
-		Stages:               nodeStageStatus,
+		Stages:               nodeStages,
 		FuncMap:              defaultFuncMap,
 		PlayStageParallelism: 2,
 	})

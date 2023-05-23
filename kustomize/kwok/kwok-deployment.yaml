@@ -27,6 +27,7 @@ spec:
             - --node-ip=$(POD_IP)
             - --node-port=10247
             - --cidr=10.0.0.1/24
+            - --node-lease-duration-seconds=40
           env:
             - name: POD_IP
               valueFrom:

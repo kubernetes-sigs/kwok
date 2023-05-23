@@ -6,6 +6,15 @@ images:
     newName: kwok
     newTag: test
 
+patchesStrategicMerge:
+  - |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: kwok-controller
+    spec:
+      replicas: 2
+
 resources:
   - ../../kustomize/kwok
   - fake-deployment.yaml

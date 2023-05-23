@@ -37,6 +37,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/pager"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwok/cni"
@@ -52,12 +53,14 @@ var (
 
 // PodController is a fake pods implementation that can be used to test
 type PodController struct {
+	clock                                 clock.Clock
 	enableCNI                             bool
 	clientSet                             kubernetes.Interface
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
 	nodeIP                                string
 	defaultCIDR                           string
+	namespace                             string
 	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	ipPools                               maps.SyncMap[string, *ipPool]
 	renderer                              *renderer
@@ -68,21 +71,26 @@ type PodController struct {
 	cronjob                               *cron.Cron
 	delayJobs                             jobInfoMap
 	recorder                              record.EventRecorder
+	readOnlyFunc                          func(nodeName string) bool
+	triggerPreprocessChan                 chan string
 }
 
 // PodControllerConfig is the configuration for the PodController
 type PodControllerConfig struct {
+	Clock                                 clock.Clock
 	EnableCNI                             bool
 	ClientSet                             kubernetes.Interface
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
 	NodeIP                                string
 	CIDR                                  string
+	Namespace                             string
 	NodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	Stages                                []*internalversion.Stage
 	PlayStageParallelism                  uint
 	FuncMap                               template.FuncMap
 	Recorder                              record.EventRecorder
+	ReadOnlyFunc                          func(nodeName string) bool
 }
 
 // NewPodController creates a new fake pods controller
@@ -106,20 +114,28 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		return nil, err
 	}
 
+	if conf.Clock == nil {
+		conf.Clock = clock.RealClock{}
+	}
+
 	c := &PodController{
+		clock:                                 conf.Clock,
 		enableCNI:                             conf.EnableCNI,
 		clientSet:                             conf.ClientSet,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		nodeIP:                                conf.NodeIP,
 		defaultCIDR:                           conf.CIDR,
+		namespace:                             conf.Namespace,
 		nodeGetFunc:                           conf.NodeGetFunc,
 		cronjob:                               cron.NewCron(),
 		lifecycle:                             lifecycles,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Pod),
+		triggerPreprocessChan:                 make(chan string, 16),
 		playStageChan:                         make(chan resourceStageJob[*corev1.Pod]),
 		recorder:                              conf.Recorder,
+		readOnlyFunc:                          conf.ReadOnlyFunc,
 	}
 	funcMap := template.FuncMap{
 		"NodeIP":     c.funcNodeIP,
@@ -138,6 +154,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 // It will modify the pods status to we want
 func (c *PodController) Start(ctx context.Context) error {
 	go c.preprocessWorker(ctx)
+	go c.triggerPreprocessWorker(ctx)
 	for i := uint(0); i < c.playStageParallelism; i++ {
 		go c.playStageWorker(ctx)
 	}
@@ -176,6 +193,7 @@ func (c *PodController) finalizersModify(ctx context.Context, pod *corev1.Pod, f
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
+
 	result, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -197,6 +215,7 @@ func (c *PodController) deleteResource(ctx context.Context, pod *corev1.Pod) err
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
+
 	err := c.clientSet.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -221,6 +240,21 @@ func (c *PodController) preprocessWorker(ctx context.Context) {
 			logger.Error("Failed to preprocess node", err,
 				"pod", log.KObj(pod),
 				"node", pod.Spec.NodeName,
+			)
+		}
+	}
+}
+
+// triggerPreprocessWorker receives the resource from the triggerPreprocessChan and preprocess it
+func (c *PodController) triggerPreprocessWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
+	for nodeName := range c.triggerPreprocessChan {
+		err := c.listResources(ctx, metav1.ListOptions{
+			FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
+		})
+		if err != nil {
+			logger.Error("Failed to preprocess node", err,
+				"node", nodeName,
 			)
 		}
 	}
@@ -256,7 +290,8 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		)
 		return nil
 	}
-	now := time.Now()
+
+	now := c.clock.Now()
 	delay, _ := stage.Delay(ctx, data, now)
 
 	if delay != 0 {
@@ -301,6 +336,12 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *LifecycleStage) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"pod", log.KObj(pod),
+		"node", pod.Spec.NodeName,
+		"stage", stage.Name(),
+	)
+
 	if next.Event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
 			Kind:      "Pod",
@@ -345,6 +386,13 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 	}
 }
 
+func (c *PodController) readOnly(nodeName string) bool {
+	if c.readOnlyFunc == nil {
+		return false
+	}
+	return c.readOnlyFunc(nodeName)
+}
+
 // patchResource patches the resource
 func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patch []byte) (*corev1.Pod, error) {
 	logger := log.FromContext(ctx)
@@ -352,6 +400,7 @@ func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patc
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
+
 	result, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -387,7 +436,7 @@ func (c *PodController) need(pod *corev1.Pod) bool {
 
 // watchResources watch resources and send to preprocessChan
 func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptions) error {
-	watcher, err := c.clientSet.CoreV1().Pods(corev1.NamespaceAll).Watch(ctx, opt)
+	watcher, err := c.clientSet.CoreV1().Pods(c.namespace).Watch(ctx, opt)
 	if err != nil {
 		return err
 	}
@@ -401,7 +450,7 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 			case event, ok := <-rc:
 				if !ok {
 					for {
-						watcher, err := c.clientSet.CoreV1().Pods(corev1.NamespaceAll).Watch(ctx, opt)
+						watcher, err := c.clientSet.CoreV1().Pods(c.namespace).Watch(ctx, opt)
 						if err == nil {
 							rc = watcher.ResultChan()
 							continue loop
@@ -411,7 +460,7 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 						select {
 						case <-ctx.Done():
 							break loop
-						case <-time.After(time.Second * 5):
+						case <-c.clock.After(time.Second * 5):
 						}
 					}
 				}
@@ -420,7 +469,16 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 				case watch.Added, watch.Modified:
 					pod := event.Object.(*corev1.Pod)
 					if c.need(pod) {
-						c.preprocessChan <- pod.DeepCopy()
+						if c.readOnly(pod.Spec.NodeName) {
+							logger.Debug("Skip pod",
+								"reason", "read only",
+								"event", event.Type,
+								"pod", log.KObj(pod),
+								"node", pod.Spec.NodeName,
+							)
+						} else {
+							c.preprocessChan <- pod.DeepCopy()
+						}
 					} else {
 						logger.Debug("Skip pod",
 							"reason", "not managed",
@@ -458,22 +516,31 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 // listResources lists all resources and sends to preprocessChan
 func (c *PodController) listResources(ctx context.Context, opt metav1.ListOptions) error {
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
-		return c.clientSet.CoreV1().Pods(corev1.NamespaceAll).List(ctx, opts)
+		return c.clientSet.CoreV1().Pods(c.namespace).List(ctx, opts)
 	})
+
+	logger := log.FromContext(ctx)
+
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		pod := obj.(*corev1.Pod)
 		if c.need(pod) {
-			c.preprocessChan <- pod.DeepCopy()
+			if c.readOnly(pod.Spec.NodeName) {
+				logger.Debug("Skip pod",
+					"pod", log.KObj(pod),
+					"node", pod.Spec.NodeName,
+					"reason", "read only",
+				)
+			} else {
+				c.preprocessChan <- pod.DeepCopy()
+			}
 		}
 		return nil
 	})
 }
 
 // PlayStagePodsOnNode plays stage pods on node
-func (c *PodController) PlayStagePodsOnNode(ctx context.Context, nodeName string) error {
-	return c.listResources(ctx, metav1.ListOptions{
-		FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
-	})
+func (c *PodController) PlayStagePodsOnNode(nodeName string) {
+	c.triggerPreprocessChan <- nodeName
 }
 
 // ipPool returns the ipPool for the given cidr

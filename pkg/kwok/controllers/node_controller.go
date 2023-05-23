@@ -37,6 +37,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/pager"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 	netutils "k8s.io/utils/net"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -82,10 +83,12 @@ var (
 		},
 	}
 	nodeConditionsData, _ = expression.ToJSONStandard(nodeConditions)
+	nodeKind              = corev1.SchemeGroupVersion.WithKind("Node")
 )
 
 // NodeController is a fake nodes implementation that can be used to test
 type NodeController struct {
+	clock                                 clock.Clock
 	clientSet                             kubernetes.Interface
 	nodeIP                                string
 	nodeName                              string
@@ -94,7 +97,7 @@ type NodeController struct {
 	disregardStatusWithLabelSelector      labels.Selector
 	manageNodesWithLabelSelector          string
 	nodeSelectorFunc                      func(node *corev1.Node) bool
-	onNodeManagedFunc                     func(ctx context.Context, nodeName string) error
+	onNodeManagedFunc                     func(nodeName string)
 	nodesSets                             maps.SyncMap[string, *NodeInfo]
 	renderer                              *renderer
 	preprocessChan                        chan *corev1.Node
@@ -104,13 +107,16 @@ type NodeController struct {
 	cronjob                               *cron.Cron
 	delayJobs                             jobInfoMap
 	recorder                              record.EventRecorder
+	readOnlyFunc                          func(nodeName string) bool
+	triggerPreprocessChan                 chan string
 }
 
 // NodeControllerConfig is the configuration for the NodeController
 type NodeControllerConfig struct {
+	Clock                                 clock.Clock
 	ClientSet                             kubernetes.Interface
 	NodeSelectorFunc                      func(node *corev1.Node) bool
-	OnNodeManagedFunc                     func(ctx context.Context, nodeName string) error
+	OnNodeManagedFunc                     func(nodeName string)
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
 	ManageNodesWithLabelSelector          string
@@ -121,12 +127,15 @@ type NodeControllerConfig struct {
 	PlayStageParallelism                  uint
 	FuncMap                               template.FuncMap
 	Recorder                              record.EventRecorder
+	ReadOnlyFunc                          func(nodeName string) bool
 }
 
 // NodeInfo is the collection of necessary node information
 type NodeInfo struct {
-	HostIPs  []string
-	PodCIDRs []string
+	Node            *corev1.Node
+	HostIPs         []string
+	PodCIDRs        []string
+	OwnerReferences []metav1.OwnerReference
 }
 
 // NewNodeController creates a new fake nodes controller
@@ -150,7 +159,12 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		return nil, err
 	}
 
+	if conf.Clock == nil {
+		conf.Clock = clock.RealClock{}
+	}
+
 	c := &NodeController{
+		clock:                                 conf.Clock,
 		clientSet:                             conf.ClientSet,
 		nodeSelectorFunc:                      conf.NodeSelectorFunc,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
@@ -164,8 +178,10 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		lifecycle:                             lifecycles,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Node),
+		triggerPreprocessChan:                 make(chan string, 16),
 		playStageChan:                         make(chan resourceStageJob[*corev1.Node]),
 		recorder:                              conf.Recorder,
+		readOnlyFunc:                          conf.ReadOnlyFunc,
 	}
 	funcMap := template.FuncMap{
 		"NodeIP":   c.funcNodeIP,
@@ -186,6 +202,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 // if nodeSelectorFunc is not nil, it will use it to determine if the node should be managed
 func (c *NodeController) Start(ctx context.Context) error {
 	go c.preprocessWorker(ctx)
+	go c.triggerPreprocessWorker(ctx)
 	for i := uint(0); i < c.playStageParallelism; i++ {
 		go c.playStageWorker(ctx)
 	}
@@ -205,7 +222,6 @@ func (c *NodeController) Start(ctx context.Context) error {
 			logger.Error("Failed list nodes", err)
 		}
 	}()
-
 	return nil
 }
 
@@ -254,7 +270,7 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 						select {
 						case <-ctx.Done():
 							break loop
-						case <-time.After(time.Second * 5):
+						case <-c.clock.After(time.Second * 5):
 						}
 					}
 				}
@@ -263,21 +279,32 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 					node := event.Object.(*corev1.Node)
 					if c.need(node) {
 						c.putNodeInfo(node)
-						c.preprocessChan <- node
+						if c.readOnly(node.Name) {
+							logger.Debug("Skip node",
+								"reason", "read only",
+								"event", event.Type,
+								"node", node.Name,
+							)
+						} else {
+							c.preprocessChan <- node
+						}
 						if c.onNodeManagedFunc != nil {
-							err = c.onNodeManagedFunc(ctx, node.Name)
-							if err != nil {
-								logger.Error("Failed to onNodeManagedFunc", err,
-									"node", node.Name,
-								)
-							}
+							c.onNodeManagedFunc(node.Name)
 						}
 					}
 				case watch.Modified:
 					node := event.Object.(*corev1.Node)
 					if c.need(node) {
 						c.putNodeInfo(node)
-						c.preprocessChan <- node
+						if c.readOnly(node.Name) {
+							logger.Debug("Skip node",
+								"reason", "read only",
+								"event", event.Type,
+								"node", node.Name,
+							)
+						} else {
+							c.preprocessChan <- node
+						}
 					}
 				case watch.Deleted:
 					node := event.Object.(*corev1.Node)
@@ -307,11 +334,21 @@ func (c *NodeController) listResources(ctx context.Context, opt metav1.ListOptio
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 		return c.clientSet.CoreV1().Nodes().List(ctx, opts)
 	})
+
+	logger := log.FromContext(ctx)
+
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		node := obj.(*corev1.Node)
 		if c.need(node) {
 			c.putNodeInfo(node)
-			c.preprocessChan <- node
+			if c.readOnly(node.Name) {
+				logger.Debug("Skip node",
+					"node", node.Name,
+					"reason", "read only",
+				)
+			} else {
+				c.preprocessChan <- node
+			}
 		}
 		return nil
 	})
@@ -332,6 +369,7 @@ func (c *NodeController) finalizersModify(ctx context.Context, node *corev1.Node
 	logger = logger.With(
 		"node", node.Name,
 	)
+
 	result, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -352,6 +390,7 @@ func (c *NodeController) deleteResource(ctx context.Context, node *corev1.Node) 
 	logger = logger.With(
 		"node", node.Name,
 	)
+
 	err := c.clientSet.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -375,6 +414,26 @@ func (c *NodeController) preprocessWorker(ctx context.Context) {
 		if err != nil {
 			logger.Error("Failed to preprocess node", err,
 				"node", node.Name,
+			)
+		}
+	}
+}
+
+// triggerPreprocessWorker receives the resource from the triggerPreprocessChan and preprocess it
+func (c *NodeController) triggerPreprocessWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
+	for nodeName := range c.triggerPreprocessChan {
+		nodeInfo, has := c.nodesSets.Load(nodeName)
+		if !has || nodeInfo.Node == nil {
+			logger.Warn("Node not found",
+				"node", nodeName,
+			)
+			continue
+		}
+		err := c.preprocess(ctx, nodeInfo.Node)
+		if err != nil {
+			logger.Error("Failed to preprocess node", err,
+				"node", nodeName,
 			)
 		}
 	}
@@ -409,7 +468,8 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		)
 		return nil
 	}
-	now := time.Now()
+
+	now := c.clock.Now()
 	delay, _ := stage.Delay(ctx, data, now)
 
 	if delay != 0 {
@@ -453,6 +513,11 @@ func (c *NodeController) playStageWorker(ctx context.Context) {
 func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *LifecycleStage) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"node", node.Name,
+		"stage", stage.Name(),
+	)
+
 	if next.Event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
 			Kind:      "Node",
@@ -497,12 +562,20 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 	}
 }
 
+func (c *NodeController) readOnly(nodeName string) bool {
+	if c.readOnlyFunc == nil {
+		return false
+	}
+	return c.readOnlyFunc(nodeName)
+}
+
 // patchResource patches the resource
 func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, patch []byte) (*corev1.Node, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
 	)
+
 	result, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -566,10 +639,24 @@ func (c *NodeController) putNodeInfo(node *corev1.Node) {
 	}
 
 	nodeInfo := &NodeInfo{
+		Node:     node,
 		HostIPs:  hostIps,
 		PodCIDRs: podCIDRs,
+		OwnerReferences: []metav1.OwnerReference{
+			{
+				APIVersion: nodeKind.Version,
+				Kind:       nodeKind.Kind,
+				Name:       node.Name,
+				UID:        node.UID,
+			},
+		},
 	}
 	c.nodesSets.Store(node.Name, nodeInfo)
+}
+
+// Manage manages the node
+func (c *NodeController) Manage(nodeName string) {
+	c.triggerPreprocessChan <- nodeName
 }
 
 // getNodeHostIPs returns the provided node's IP(s); either a single "primary IP" for the

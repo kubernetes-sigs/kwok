@@ -202,6 +202,14 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 		}
 	}
 
+	// Disable node lease duration seconds for kubernetes < 1.14
+	if conf.NodeLeaseDurationSeconds != 0 {
+		minor := parseRelease(conf.KubeVersion)
+		if minor < 14 && minor != -1 {
+			conf.NodeLeaseDurationSeconds = 0
+		}
+	}
+
 	setKwokctlKubernetesConfig(conf)
 
 	setKwokctlKwokConfig(conf)

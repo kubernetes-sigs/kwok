@@ -366,19 +366,20 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, logVolumes...)
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
-		Workdir:        workdir,
-		Image:          conf.KwokControllerImage,
-		Version:        kwokControllerVersion,
-		BindAddress:    net.PublicAddress,
-		Port:           conf.KwokControllerPort,
-		ConfigPath:     kwokConfigPath,
-		KubeconfigPath: inClusterOnHostKubeconfigPath,
-		AdminCertPath:  adminCertPath,
-		AdminKeyPath:   adminKeyPath,
-		NodeName:       c.Name() + "-kwok-controller",
-		Verbosity:      verbosity,
-		ExtraArgs:      kwokControllerComponentPatches.ExtraArgs,
-		ExtraVolumes:   kwokControllerExtraVolumes,
+		Workdir:                  workdir,
+		Image:                    conf.KwokControllerImage,
+		Version:                  kwokControllerVersion,
+		BindAddress:              net.PublicAddress,
+		Port:                     conf.KwokControllerPort,
+		ConfigPath:               kwokConfigPath,
+		KubeconfigPath:           inClusterOnHostKubeconfigPath,
+		AdminCertPath:            adminCertPath,
+		AdminKeyPath:             adminKeyPath,
+		NodeName:                 c.Name() + "-kwok-controller",
+		Verbosity:                verbosity,
+		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
+		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
+		ExtraVolumes:             kwokControllerExtraVolumes,
 	})
 	config.Components = append(config.Components, kwokControllerComponent)
 
