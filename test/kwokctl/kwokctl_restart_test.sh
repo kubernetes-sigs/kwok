@@ -66,8 +66,7 @@ function test_restart() {
   local expect_info
   local actual_info
 
-  test_prometheus
-  if [[ $? -ne 0 ]]; then
+  if ! test_prometheus; then
     echo "Error: cluster ${name} not ready"
     return 1
   fi
@@ -76,29 +75,25 @@ function test_restart() {
   expect_info="$(get_resource_info "${name}")"
 
   echo kwokctl --name "${name}" stop cluster
-  kwokctl --name "${name}" stop cluster
-  if [[ $? -eq 0 ]]; then
+  if kwokctl --name "${name}" stop cluster; then
     echo "Cluster ${name} stopped successfully."
   else
     echo "Error: cluster ${name} stop error"
     return 1
   fi
-  kwokctl --name "${name}" kubectl get no
-  if [[ $? -eq 0 ]]; then
+  if kwokctl --name "${name}" kubectl get no; then
     echo "Error: cluster ${name} do not stop"
     return 1
   fi
 
   echo kwokctl --name "${name}" start cluster --timeout 30m --wait 30m
-  kwokctl --name "${name}" start cluster --timeout 30m --wait 30m
-  if [[ $? -eq 0 ]]; then
+  if kwokctl --name "${name}" start cluster --timeout 30m --wait 30m; then
     echo "Cluster ${name} started successfully."
   else
     echo "Error: cluster ${name} start error"
     return 1
   fi
-  test_prometheus
-  if [[ $? -ne 0 ]]; then
+  if ! test_prometheus; then
     echo "Error: cluster ${name} not restart"
     return 1
   fi

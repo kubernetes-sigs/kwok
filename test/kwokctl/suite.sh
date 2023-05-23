@@ -47,14 +47,13 @@ function create_cluster() {
   local release="${2}"
   shift 2
 
-  KWOK_KUBE_VERSION="${release}" kwokctl \
+  if ! KWOK_KUBE_VERSION="${release}" kwokctl \
     create cluster \
     --name "${name}" \
     --timeout 30m \
     --wait 30m \
     --quiet-pull \
-    "$@"
-  if [[ $? -ne 0 ]]; then
+    "$@"; then
     echo "Error: Cluster ${name} creation failed"
     show_all
     exit 1
@@ -63,8 +62,7 @@ function create_cluster() {
 
 function delete_cluster() {
   local name="${1}"
-  kwokctl delete cluster --name "${name}"
-  if [[ $? -ne 0 ]]; then
+  if ! kwokctl delete cluster --name "${name}"; then
     echo "Error: Cluster ${name} deletion failed"
     exit 1
   fi
@@ -86,4 +84,21 @@ function child_timeout() {
     sleep 1
   done
   echo "Took ${start}s" >&2
+}
+
+function retry() {
+  local times="${1}"
+  shift
+  local start=0
+  while true; do
+    if "${@}"; then
+      return 0
+    fi
+    if [[ "${start}" -ge "${times}" ]]; then
+      echo "Error: Retry ${times} times" >&2
+      return 1
+    fi
+    ((start++))
+    sleep 1
+  done
 }

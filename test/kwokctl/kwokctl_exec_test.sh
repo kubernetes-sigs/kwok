@@ -44,8 +44,7 @@ function test_exec() {
   local cmd="${4}"
   local want="${5}"
   local result
-  result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}")
-  if [[ $? -ne 0 ]]; then
+  if ! result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}"); then
     echo "Error: exec failed"
     return 1
   fi
@@ -61,29 +60,19 @@ function test_exec() {
 
 function test_apply_node_and_pod() {
   local name="${1}"
-  kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml"
-  if [[ $? -ne 0 ]]; then
+  if ! kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-node.yaml"; then
     echo "Error: fake-node apply failed"
     return 1
   fi
-  for ((i = 0; i < 120; i++)); do
-    kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"
-    if [[ $? -eq 0 ]]; then
-      break
-    fi
-    sleep 1
-  done
-  if [[ $? -ne 0 ]]; then
+  if ! retry 120 kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"; then
     echo "Error: fake-pod apply failed"
     return 1
   fi
-  kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-deployment.yaml"
-  if [[ $? -ne 0 ]]; then
+  if ! kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-deployment.yaml"; then
     echo "Error: fake-deployment apply failed"
     return 1
   fi
-  kwokctl --name "${name}" kubectl wait pod -A --all --for=condition=Ready --timeout=60s
-  if [[ $? -ne 0 ]]; then
+  if ! kwokctl --name "${name}" kubectl wait pod -A --all --for=condition=Ready --timeout=60s; then
     echo "Error: fake-pod wait failed"
     echo kwokctl --name "${name}" kubectl get pod -A --all
     kwokctl --name "${name}" kubectl get pod -A --all
