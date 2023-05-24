@@ -257,6 +257,10 @@ func (c *PodController) preprocessWorker(ctx context.Context) {
 func (c *PodController) triggerPreprocessWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for nodeName := range c.triggerPreprocessChan {
+		logger.Info("PodController",
+			"triggerPreprocessChan", len(c.triggerPreprocessChan),
+			"node", nodeName,
+		)
 		err := c.listResources(ctx, metav1.ListOptions{
 			FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
 		})

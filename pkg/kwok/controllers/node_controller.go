@@ -434,6 +434,10 @@ func (c *NodeController) preprocessWorker(ctx context.Context) {
 func (c *NodeController) triggerPreprocessWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for nodeName := range c.triggerPreprocessChan {
+		logger.Info("NodeController",
+			"triggerPreprocessChan", len(c.triggerPreprocessChan),
+			"node", nodeName,
+		)
 		nodeInfo, has := c.nodesSets.Load(nodeName)
 		if !has || nodeInfo.Node == nil {
 			logger.Warn("Node not found",
