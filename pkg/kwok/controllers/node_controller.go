@@ -430,11 +430,13 @@ func (c *NodeController) triggerPreprocessWorker(ctx context.Context) {
 			)
 			continue
 		}
-		err := c.preprocess(ctx, nodeInfo.Node)
-		if err != nil {
-			logger.Error("Failed to preprocess node", err,
-				"node", nodeName,
+		if c.readOnly(nodeInfo.Node.Name) {
+			logger.Debug("Skip node",
+				"node", nodeInfo.Node.Name,
+				"reason", "read only",
 			)
+		} else {
+			c.preprocessChan <- nodeInfo.Node
 		}
 	}
 }
