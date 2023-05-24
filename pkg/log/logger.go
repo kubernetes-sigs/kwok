@@ -29,7 +29,11 @@ import (
 )
 
 // IsTerminal returns true if the given file descriptor is a terminal.
-var IsTerminal = term.IsTerminal
+func IsTerminal() bool {
+	return isTerminal(int(os.Stdout.Fd()))
+}
+
+var isTerminal = term.IsTerminal
 
 // DurationFormat is the format used to print time.Duration in both nanosecond and string.
 type DurationFormat struct {
@@ -61,7 +65,7 @@ func NewLogger(w io.Writer, level slog.Level) *Logger {
 
 	if file, ok := w.(*os.File); ok {
 		fd := int(file.Fd())
-		if IsTerminal(fd) {
+		if isTerminal(fd) {
 			return wrapSlog(newCtlHandler(w, fd, level), level)
 		}
 	}

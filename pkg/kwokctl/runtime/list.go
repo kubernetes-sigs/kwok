@@ -17,11 +17,17 @@ limitations under the License.
 package runtime
 
 import (
+	"context"
 	"os"
+
+	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // ListClusters returns the list of clusters in the directory
-func ListClusters(workdir string) ([]string, error) {
+func ListClusters(ctx context.Context, workdir string) ([]string, error) {
 	entries, err := os.ReadDir(workdir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -29,11 +35,20 @@ func ListClusters(workdir string) ([]string, error) {
 		}
 		return nil, err
 	}
+	logger := log.FromContext(ctx)
 	ret := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		if entry.IsDir() {
-			ret = append(ret, entry.Name())
+		name := entry.Name()
+		if !entry.IsDir() {
+			logger.Warn("Found non-directory entry in clusters directory, please remove it", "path", path.Join(workdir, name))
+			continue
 		}
+		if !file.Exists(path.Join(workdir, name, consts.ConfigName)) {
+			logger.Warn("Found directory without a config file, please remove it", "path", path.Join(workdir, name))
+			continue
+		}
+
+		ret = append(ret, name)
 	}
 	return ret, nil
 }
