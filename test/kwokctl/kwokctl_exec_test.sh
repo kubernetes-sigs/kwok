@@ -44,10 +44,12 @@ function test_exec() {
   local cmd="${4}"
   local want="${5}"
   local result
-  if ! result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}"); then
-    echo "Error: exec failed"
-    return 1
-  fi
+  for ((i = 0; i < 120; i++)); do
+    if result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}"); then
+      break
+    fi
+    sleep 1
+  done
 
   if [[ ! "${result}" == *"${want}"* ]]; then
     echo "Error: exec result does not match"

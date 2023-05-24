@@ -82,14 +82,6 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		var ptrVar1 bool = false
 		in.Options.DisableKubeControllerManager = &ptrVar1
 	}
-	if in.Options.KubeAuthorization == nil {
-		var ptrVar1 bool = false
-		in.Options.KubeAuthorization = &ptrVar1
-	}
-	if in.Options.KubeAdmission == nil {
-		var ptrVar1 bool = false
-		in.Options.KubeAdmission = &ptrVar1
-	}
 	if in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds == 0 {
 		in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds = 600000
 	}

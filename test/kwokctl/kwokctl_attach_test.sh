@@ -88,7 +88,7 @@ function test_apply_node_and_pod() {
     echo "Error: fake-node apply failed"
     return 1
   fi
-  if ! kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"; then
+  if ! retry 120 kwokctl --name "${name}" kubectl apply -f "${DIR}/fake-pod-in-other-ns.yaml"; then
     echo "Error: fake-pod apply failed"
     return 1
   fi

@@ -11,10 +11,8 @@ This document walks you known about kubernetes authorization in kwokctl.
 Kubernetes provides a rich authorization plugin interface to support various authorization modules,
 such as ABAC, RBAC, Webhook and Node.
 
-In kwokctl, we don't care about it, so that default will disable kube authorization.
-
 ## Enable Authorization
 
-On Kind runtime is enabled by default, but on other runtime, you need to enable it manually.
+Authorization is enabled by default. but prior to v0.3.0, that is disabled by default (excluding kind).
 
-If you want to enable kube authorization, you need with `--kube-authorization` flag when create cluster.
+Use `--kube-authorization=true` or `--kube-authorization=false` to enable or disable authorization when creating a cluster.
