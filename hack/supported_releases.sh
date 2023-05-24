@@ -84,7 +84,7 @@ function send_pr() {
   fi
 
   # Use the fixed branch as the key to prevent duplicate PRs from being created
-  branch="bump-releases"
+  branch="dependabot/bump-releases"
 
   if [[ "$(git branch -r --list "origin/${branch}")" == *"origin/${branch}"* ]]; then
     echo "Remote branch already exists"
