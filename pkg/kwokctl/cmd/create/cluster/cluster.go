@@ -285,8 +285,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
-	if log.IsTerminal(int(os.Stdout.Fd())) && flags.Kubeconfig != "" {
-		fmt.Fprintf(os.Stderr, `You can now use your cluster with:
+	if log.IsTerminal() && flags.Kubeconfig != "" {
+		_, _ = fmt.Fprintf(os.Stderr, `You can now use your cluster with:
 
 	kubectl cluster-info --context %s
 
