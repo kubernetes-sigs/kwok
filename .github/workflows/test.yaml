@@ -221,8 +221,8 @@ jobs:
           brew install lima
           limactl start
           sudo cat <<EOF >/usr/local/bin/nerdctl
-          #!/bin/sh
-          lima nerdctl $@
+          #!/usr/bin/env bash
+          lima nerdctl "$@"
           EOF
           chmod +x /usr/local/bin/nerdctl
 

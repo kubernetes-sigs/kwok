@@ -571,6 +571,12 @@ func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
 	logger.Info("commands", commands)
 	logger.Info("commands", commands[0])
 	logger.Info("c.workdir", c.Workdir())
+	out1 := bytes.NewBuffer(nil)
+	err = exec.Exec(exec.WithWriteTo(ctx, out1), "nerdctl", "--version")
+	if err != nil {
+		logger.Error("exec error", err)
+	}
+	logger.Info("out1", out1.String())
 	out := bytes.NewBuffer(nil)
 	err = exec.Exec(exec.WithWriteTo(exec.WithDir(ctx, c.Workdir()), out), commands[0], commands[1:]...)
 	if err != nil {
