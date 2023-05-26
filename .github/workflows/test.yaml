@@ -222,7 +222,7 @@ jobs:
           limactl start
           sudo cat <<EOF >/usr/local/bin/nerdctl
           #!/usr/bin/env bash
-          lima nerdctl "$@"
+          lima nerdctl "\$@"
           EOF
           chmod +x /usr/local/bin/nerdctl
 
