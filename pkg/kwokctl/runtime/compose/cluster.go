@@ -557,6 +557,8 @@ type statusItem struct {
 }
 
 func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
+	logger := log.FromContext(ctx)
+
 	// podman doesn't support ps --format=json
 	if c.runtime == consts.RuntimeTypePodman {
 		return true, nil
@@ -565,17 +567,25 @@ func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	logger.Info("commands", commands)
+	logger.Info("commands", commands[0])
+	logger.Info("c.workdir", c.Workdir())
 	out := bytes.NewBuffer(nil)
 	err = exec.Exec(exec.WithWriteTo(exec.WithDir(ctx, c.Workdir()), out), commands[0], commands[1:]...)
 	if err != nil {
+		logger.Error("exec error", err)
 		return false, err
 	}
 
 	var data []statusItem
+	logger.Info("out bytes", out.Bytes())
 	err = json.Unmarshal(out.Bytes(), &data)
 	if err != nil {
+		logger.Error("Unmarshal error", err, data)
 		return false, err
 	}
+	logger.Info("data", data)
 
 	if len(data) == 0 {
 		logger := log.FromContext(ctx)

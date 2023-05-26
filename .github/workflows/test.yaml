@@ -132,23 +132,23 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          # - ubuntu-latest
           - macos-latest
           # Linux containers are not supported on Windows Runner
           # https://github.com/orgs/community/discussions/25491#discussioncomment-3248089
           # - windows-latest
         kwokctl-runtime:
-          - binary
-          - docker
+          # - binary
+          # - docker
           - nerdctl
-          - podman
-          - kind
-          - kind-podman
-        exclude:
-          - os: macos-latest
-            kwokctl-runtime: podman
-          - os: macos-latest
-            kwokctl-runtime: kind-podman
+          # - podman
+          # - kind
+          # - kind-podman
+        # exclude:
+        #   - os: macos-latest
+        #     kwokctl-runtime: podman
+        #   - os: macos-latest
+        #     kwokctl-runtime: kind-podman
 
     continue-on-error: false
     runs-on: ${{ matrix.os }}
