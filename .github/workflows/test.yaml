@@ -187,12 +187,12 @@ jobs:
             kubeBinaryPrefix: "${GITHUB_WORKSPACE}/kubernetes/_output/bin"
           EOF
 
-      - name: Install Docker for MacOS
-        if: ${{ matrix.os == 'macos-latest' && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
-        shell: bash
-        run: |
-          brew install colima docker
-          colima start --mount $HOME/.kwok/:w --mount $(pwd):w --mount-type virtiofs
+      # - name: Install Docker for MacOS
+      #   if: ${{ matrix.os == 'macos-latest' && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
+      #   shell: bash
+      #   run: |
+      #     brew install colima docker
+      #     colima start --mount $HOME/.kwok/:w --mount $(pwd):w --mount-type virtiofs
 
       - name: Install Buildx
         if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
@@ -201,18 +201,18 @@ jobs:
           ./hack/requirements.sh buildx
           docker buildx version
 
-      - name: Install Docker Compose V2
-        if: ${{ matrix.kwokctl-runtime == 'docker' }}
-        shell: bash
-        run: |
-          ./hack/requirements.sh compose
-           docker compose version
+      # - name: Install Docker Compose V2
+      #   if: ${{ matrix.kwokctl-runtime == 'docker' }}
+      #   shell: bash
+      #   run: |
+      #     ./hack/requirements.sh compose
+      #      docker compose version
 
-      - name: Docker Info
-        if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
-        shell: bash
-        run: |
-          docker info
+      # - name: Docker Info
+      #   if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
+      #   shell: bash
+      #   run: |
+      #     docker info
 
       - name: Install Nerdctl for MacOS
         if: ${{ matrix.os == 'macos-latest' && matrix.kwokctl-runtime == 'nerdctl' }}
@@ -226,26 +226,26 @@ jobs:
           EOF
           chmod +x /usr/local/bin/nerdctl
 
-      - name: Install Nerdctl for Linux
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'nerdctl' }}
-        shell: bash
-        run: |
-          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.1.0/nerdctl-full-1.1.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
-          sudo systemctl daemon-reload
-          sudo systemctl enable --now containerd
-          containerd-rootless-setuptool.sh install
-          containerd-rootless-setuptool.sh install-buildkit-containerd
+      # - name: Install Nerdctl for Linux
+      #   if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'nerdctl' }}
+      #   shell: bash
+      #   run: |
+      #     curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.1.0/nerdctl-full-1.1.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+      #     sudo systemctl daemon-reload
+      #     sudo systemctl enable --now containerd
+      #     containerd-rootless-setuptool.sh install
+      #     containerd-rootless-setuptool.sh install-buildkit-containerd
 
-      - name: Setup Podman For Kind
-        if: ${{ matrix.kwokctl-runtime == 'kind-podman' }}
-        shell: bash
-        run: |
-          sudo mkdir -p /etc/systemd/system/user@.service.d
-          sudo tee <<EOF /etc/systemd/system/user@.service.d/delegate.conf
-          [Service]
-          Delegate=yes
-          EOF
-          sudo systemctl daemon-reload
+      # - name: Setup Podman For Kind
+      #   if: ${{ matrix.kwokctl-runtime == 'kind-podman' }}
+      #   shell: bash
+      #   run: |
+      #     sudo mkdir -p /etc/systemd/system/user@.service.d
+      #     sudo tee <<EOF /etc/systemd/system/user@.service.d/delegate.conf
+      #     [Service]
+      #     Delegate=yes
+      #     EOF
+      #     sudo systemctl daemon-reload
 
       - name: Make pki directory
         if: ${{ matrix.kwokctl-runtime == 'binary' }}
