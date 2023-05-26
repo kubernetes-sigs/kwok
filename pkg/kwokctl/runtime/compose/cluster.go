@@ -519,6 +519,10 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	logger := log.FromContext(ctx)
 	for i := 0; ctx.Err() == nil; i++ {
+		err = exec.Exec(exec.WithDir(ctx, c.Workdir()), "nerdctl", "compose", "down")
+		if err != nil {
+			logger.Warn("err", err)
+		}
 		err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 		if err != nil {
 			logger.Debug("Failed to start cluster",
@@ -572,10 +576,7 @@ func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
 	logger.Info("commands", commands[0])
 	logger.Info("c.workdir", c.Workdir())
 	out1 := bytes.NewBuffer(nil)
-	err = exec.Exec(exec.WithWriteTo(ctx, out1), "nerdctl", "--version")
-	if err != nil {
-		logger.Error("exec error", err)
-	}
+	exec.Exec(exec.WithWriteTo(ctx, out1), "nerdctl", "--version")
 	logger.Info("out1", out1.String())
 	out := bytes.NewBuffer(nil)
 	err = exec.Exec(exec.WithWriteTo(exec.WithDir(ctx, c.Workdir()), out), commands[0], commands[1:]...)
