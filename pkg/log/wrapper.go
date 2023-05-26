@@ -39,7 +39,7 @@ const (
 	LevelError Level = slog.LevelError
 )
 
-func wrapSlog(handler slog.Handler, level slog.Level) *Logger {
+func wrapSlog(handler slog.Handler, level Level) *Logger {
 	return &Logger{handler, level}
 }
 
