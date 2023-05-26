@@ -171,6 +171,8 @@ function main() {
     minor="${minor%.*}"
 
     nerdctl compose --help
+    nerdctl --version
+    lima --version
 
     if [[ $minor -lt 13 ]]; then
       echo "no secure port"
