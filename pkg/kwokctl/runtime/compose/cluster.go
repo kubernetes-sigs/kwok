@@ -579,7 +579,7 @@ func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
 	}
 
 	var data []statusItem
-	logger.Info("out bytes", out.Bytes())
+	logger.Info("out bytes", out.String())
 	err = json.Unmarshal(out.Bytes(), &data)
 	if err != nil {
 		logger.Error("Unmarshal error", err, data)

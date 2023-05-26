@@ -170,6 +170,8 @@ function main() {
     local minor="${release#*.}"
     minor="${minor%.*}"
 
+    nerdctl compose --help
+
     if [[ $minor -lt 13 ]]; then
       echo "no secure port"
       create_cluster "${name}" "${release}" -v=debug --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
