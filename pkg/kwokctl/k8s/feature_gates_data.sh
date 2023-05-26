@@ -33,12 +33,22 @@ if [[ ! "${latest_release}" -gt "${minimum_release}" ]]; then
 fi
 
 function features() {
+  file_paths=(
+    "pkg/features/kube_features.go"
+    "staging/src/k8s.io/component-base/metrics/features/kube_features.go"
+    "staging/src/k8s.io/component-base/logs/api/v1/kube_features.go"
+    "staging/src/k8s.io/controller-manager/pkg/features/kube_features.go"
+    "staging/src/k8s.io/apiextensions-apiserver/pkg/features/kube_features.go"
+    "staging/src/k8s.io/apiserver/pkg/features/kube_features.go"
+  )
   for i in $(seq "${minimum_release}" "${latest_release}"); do
-    curl -sSL "https://github.com/kubernetes/kubernetes/raw/release-1.${i}/pkg/features/kube_features.go" |
-      grep "{Default: " |
-      sed -e 's/\w\+\.//g' |
-      sed -e 's/[:,}]//g' |
-      awk "{print \$1, \$5, $i}"
+    for p in "${file_paths[@]}"; do
+      curl -sSL "https://github.com/kubernetes/kubernetes/raw/release-1.${i}/${p}" |
+        grep "{Default: " |
+        sed -e 's/\w\+\.//g' |
+        sed -e 's/[:,}]//g' |
+        awk "{print \$1, \$5, $i}"
+    done
   done
 }
 
