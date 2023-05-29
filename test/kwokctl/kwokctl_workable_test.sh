@@ -167,16 +167,7 @@ function main() {
     echo "------------------------------"
     echo "Testing workable on ${KWOK_RUNTIME} for ${release}"
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
-    local minor="${release#*.}"
-    minor="${minor%.*}"
-
-    if [[ $minor -lt 13 ]]; then
-      echo "no secure port"
-      create_cluster "${name}" "${release}" -v=debug --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
-    else
-      echo "secure port"
-      create_cluster "${name}" "${release}" -v=debug --secure-port --kube-admission --kube-authorization --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
-    fi
+    create_cluster "${name}" "${release}" -v=debug --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
     test_workable "${name}" || failed+=("workable_${name}")
     if [[ "${KWOK_RUNTIME}" != "kind" && "${KWOK_RUNTIME}" != "kind-podman" ]]; then
       test_kube_controller_manager_port "${release}" || failed+=("kube_controller_manager_port_${name}")
