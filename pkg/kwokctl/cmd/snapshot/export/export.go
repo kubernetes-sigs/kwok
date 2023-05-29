@@ -83,7 +83,18 @@ func runE(ctx context.Context, flags *flagpole) error {
 		UserName: flags.ImpersonateUser,
 		Groups:   flags.ImpersonateGroups,
 	}
-	err = snapshot.Save(ctx, flags.Kubeconfig, file, flags.Filters, impersonateConfig, flags.PageSize, flags.PageBufferSize)
+
+	pagerConfig := &snapshot.PagerConfig{
+		PageSize:       flags.PageSize,
+		PageBufferSize: flags.PageBufferSize,
+	}
+
+	snapshotSaveConfig := snapshot.SaveConfig{
+		PagerConfig:         pagerConfig,
+		ImpersonationConfig: impersonateConfig,
+	}
+
+	err = snapshot.Save(ctx, flags.Kubeconfig, file, flags.Filters, snapshotSaveConfig)
 	if err != nil {
 		return err
 	}

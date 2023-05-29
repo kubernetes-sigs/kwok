@@ -36,10 +36,24 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
+// PagerConfig is the configuration of the list pager.
+// It defines the page size and the page buffer size of the list pager.
+type PagerConfig struct {
+	PageSize       int64
+	PageBufferSize int32
+}
+
+// SaveConfig is the a combination of the impersonation config
+// and the PagerConfig.
+type SaveConfig struct {
+	PagerConfig         *PagerConfig
+	ImpersonationConfig rest.ImpersonationConfig
+}
+
 // Save saves the snapshot of cluster
-func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []string, impersonateConfig rest.ImpersonationConfig, pageSize int64, pageBufferSize int32) error {
+func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []string, saveConfig SaveConfig) error {
 	clientset, err := client.NewClientset("", kubeconfigPath,
-		client.WithImpersonate(impersonateConfig),
+		client.WithImpersonate(saveConfig.ImpersonationConfig),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create clientset: %w", err)
@@ -89,8 +103,16 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 			return list, err
 		})
 
-		listPager.PageSize = pageSize
-		listPager.PageBufferSize = pageBufferSize
+		pagerConfig := saveConfig.PagerConfig
+
+		if pagerConfig != nil {
+			if pagerConfig.PageSize > 0 {
+				listPager.PageSize = pagerConfig.PageSize
+			}
+			if pagerConfig.PageBufferSize > 0 {
+				listPager.PageBufferSize = pagerConfig.PageBufferSize
+			}
+		}
 
 		count := 0
 		if err := listPager.EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {

@@ -111,7 +111,7 @@ type Runtime interface {
 	SnapshotRestore(ctx context.Context, path string) error
 
 	// SnapshotSaveWithYAML save the snapshot of cluster
-	SnapshotSaveWithYAML(ctx context.Context, path string, filters []string, pageSize int64, pageBufferSize int32) error
+	SnapshotSaveWithYAML(ctx context.Context, path string, filters []string) error
 
 	// SnapshotRestoreWithYAML restore the snapshot of cluster
 	SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error

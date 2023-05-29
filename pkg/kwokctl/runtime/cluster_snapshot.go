@@ -27,7 +27,7 @@ import (
 )
 
 // SnapshotSaveWithYAML save the snapshot of cluster
-func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters []string, pageSize int64, pageBufferSize int32) error {
+func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters []string) error {
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -38,7 +38,10 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
 	// In most cases, the user should have full privileges on the clusters created by kwokctl,
 	// so no need to expose impersonation args to "snapshot save" command.
-	return snapshot.Save(ctx, kubeconfigPath, file, filters, rest.ImpersonationConfig{}, pageSize, pageBufferSize)
+	snapshotSaveConfig := snapshot.SaveConfig{
+		ImpersonationConfig: rest.ImpersonationConfig{},
+	}
+	return snapshot.Save(ctx, kubeconfigPath, file, filters, snapshotSaveConfig)
 }
 
 // SnapshotRestoreWithYAML restore the snapshot of cluster

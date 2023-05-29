@@ -110,8 +110,8 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 }
 
 // SnapshotSaveWithYAML save the snapshot of cluster
-func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters []string, pageSize int64, pageBufferSize int32) error {
-	err := c.Cluster.SnapshotSaveWithYAML(ctx, path, filters, pageSize, pageBufferSize)
+func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters []string) error {
+	err := c.Cluster.SnapshotSaveWithYAML(ctx, path, filters)
 	if err != nil {
 		return err
 	}
