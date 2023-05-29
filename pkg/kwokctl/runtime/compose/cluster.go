@@ -518,17 +518,18 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	logger := log.FromContext(ctx)
+	logger.Info("up cluster")
 	for i := 0; ctx.Err() == nil; i++ {
-		err = exec.Exec(exec.WithDir(ctx, c.Workdir()), "nerdctl", "compose", "down")
-		if err != nil {
-			logger.Warn("err", err)
-		}
 		err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 		if err != nil {
 			logger.Debug("Failed to start cluster",
 				"times", i,
 				"err", err,
 			)
+			err = exec.Exec(exec.WithDir(ctx, c.Workdir()), "nerdctl", "compose", "down")
+			if err != nil {
+				logger.Warn("err", err)
+			}
 			time.Sleep(time.Second)
 			continue
 		}
