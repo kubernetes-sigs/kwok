@@ -49,7 +49,7 @@ func FromContext(ctx context.Context) *Logger {
 	if l, ok := ctx.Value(contextKey{}).(*Logger); ok {
 		return l
 	}
-	return wrapSlog(slog.Default().Handler(), slog.LevelInfo)
+	return wrapSlog(slog.Default().Handler(), LevelInfo)
 }
 
 // NewContext returns a new context with the given logger.
@@ -58,7 +58,7 @@ func NewContext(ctx context.Context, logger *Logger) context.Context {
 }
 
 // NewLogger returns a new Logger that writes to w.
-func NewLogger(w io.Writer, level slog.Level) *Logger {
+func NewLogger(w io.Writer, level Level) *Logger {
 	if w == nil {
 		return noop
 	}
@@ -70,7 +70,7 @@ func NewLogger(w io.Writer, level slog.Level) *Logger {
 		}
 	}
 
-	handler := slog.HandlerOptions{
+	handler := &slog.HandlerOptions{
 		AddSource: true,
 		Level:     level,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
@@ -93,5 +93,5 @@ func NewLogger(w io.Writer, level slog.Level) *Logger {
 			return a
 		},
 	}
-	return wrapSlog(handler.NewJSONHandler(w), level)
+	return wrapSlog(slog.NewJSONHandler(w, handler), level)
 }

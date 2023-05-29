@@ -16,9 +16,6 @@ limitations under the License.
 
 package log
 
-//nolint:depguard
-import "golang.org/x/exp/slog"
-
 // The following is Level security definitions.
 const (
 	InfoLevelSecurity  = "info"
@@ -38,11 +35,11 @@ func ToKlogLevel(level Level) int {
 // ToLogSeverityLevel maps the current logging level to a severity level string
 func ToLogSeverityLevel(level Level) string {
 	switch {
-	case level < slog.LevelInfo:
+	case level < LevelInfo:
 		return DebugLevelSecurity
-	case level < slog.LevelWarn:
+	case level < LevelWarn:
 		return InfoLevelSecurity
-	case level < slog.LevelError:
+	case level < LevelError:
 		return WarnLevelSecurity
 	default:
 		return ErrorLevelSecurity

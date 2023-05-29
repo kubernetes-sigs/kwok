@@ -18,11 +18,169 @@ package log
 
 import (
 	"errors"
+	"sort"
 	"testing"
 
 	//nolint:depguard
 	"golang.org/x/exp/slog"
 )
+
+func Test_quoteRangeTable(t *testing.T) {
+	r16 := quoteRangeTable.R16
+	for _, r := range r16 {
+		if r.Lo > r.Hi {
+			t.Errorf("quoteRangeTable has invalid range: %v", r)
+		}
+	}
+	// This test ensures that the quoteRangeTable is sorted.
+	isSorted := sort.SliceIsSorted(r16, func(i, j int) bool {
+		return r16[i].Lo < r16[j].Lo
+	})
+	if !isSorted {
+		t.Errorf("quoteRangeTable is not sorted")
+	}
+}
+
+func Test_quoteIfNeed(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"empty",
+			args{
+				s: "",
+			},
+			``,
+		},
+		{
+			"simple",
+			args{
+				s: "simple",
+			},
+			`simple`,
+		},
+		{
+			"simple with space",
+			args{
+				s: "simple with space",
+			},
+			`"simple with space"`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := quoteIfNeed(tt.args.s); got != tt.want {
+				t.Errorf("quoteIfNeed() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_formatLog(t *testing.T) {
+	type args struct {
+		msg       string
+		attrsStr  string
+		level     Level
+		termWidth int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "msg",
+			args: args{
+				msg: "msg",
+			},
+			want: "msg\n",
+		},
+		{
+			name: "msg with attrs",
+			args: args{
+				msg:      "msg",
+				attrsStr: `a=b`,
+			},
+			want: "msg a=b\n",
+		},
+		{
+			name: "msg with attrs and level",
+			args: args{
+				msg:      "msg",
+				attrsStr: `a=b`,
+				level:    LevelDebug,
+			},
+			want: "\x1b[0;36mDEBUG\x1b[0m msg a=b\n",
+		},
+		{
+			name: "msg with attrs and termWidth",
+			args: args{
+				msg:       "msg",
+				attrsStr:  `a=b`,
+				termWidth: 20,
+			},
+			want: "msg              a=b\n",
+		},
+		{
+			name: "msg with attrs and level and termWidth",
+			args: args{
+				msg:       "msg",
+				attrsStr:  `a=b`,
+				level:     LevelDebug,
+				termWidth: 20,
+			},
+			want: "\x1b[0;36mDEBUG\x1b[0m msg        a=b\n",
+		},
+		{
+			name: "msg with attrs and 5 termWidth",
+			args: args{
+				msg:       "msg",
+				attrsStr:  `a=b`,
+				termWidth: 5,
+			},
+			want: "msg a=b\n",
+		},
+		{
+			name: "msg with attrs and 6 termWidth",
+			args: args{
+				msg:       "msg",
+				attrsStr:  `a=b`,
+				termWidth: 6,
+			},
+			want: "msg a=b\n",
+		},
+		{
+			name: "msg with attrs and 7 termWidth",
+			args: args{
+				msg:       "msg",
+				attrsStr:  `a=b`,
+				termWidth: 7,
+			},
+			want: "msg a=b\n",
+		},
+		{
+			name: "msg with attrs and 8 termWidth",
+			args: args{
+				msg:       "msg",
+				attrsStr:  `a=b`,
+				termWidth: 8,
+			},
+			want: "msg  a=b\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := formatLog(tt.args.msg, tt.args.attrsStr, tt.args.level, tt.args.termWidth); got != tt.want {
+				t.Errorf("formatLog() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
 
 func Test_formatValue(t *testing.T) {
 	type args struct {
