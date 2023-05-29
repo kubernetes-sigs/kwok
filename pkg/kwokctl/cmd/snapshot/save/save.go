@@ -33,10 +33,12 @@ import (
 )
 
 type flagpole struct {
-	Name    string
-	Path    string
-	Format  string
-	Filters []string
+	Name           string
+	Path           string
+	Format         string
+	Filters        []string
+	PageSize       int64
+	PageBufferSize int32
 }
 
 // NewCommand returns a new cobra.Command for cluster snapshotting.
@@ -55,6 +57,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the snapshot")
 	cmd.Flags().StringVar(&flags.Format, "format", "etcd", "Format of the snapshot file (etcd, k8s)")
 	cmd.Flags().StringSliceVar(&flags.Filters, "filter", snapshot.Resources, "Filter the resources to save, only support for k8s format")
+	cmd.Flags().Int64Var(&flags.PageSize, "page-size", 500, "Define the page size")
+	cmd.Flags().Int32Var(&flags.PageBufferSize, "page-buffer-size", 10, "Define the number of pages to buffer")
 	return cmd
 }
 
@@ -87,7 +91,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 			return err
 		}
 	case "k8s":
-		err = rt.SnapshotSaveWithYAML(ctx, flags.Path, flags.Filters)
+		err = rt.SnapshotSaveWithYAML(ctx, flags.Path, flags.Filters, flags.PageSize, flags.PageBufferSize)
 		if err != nil {
 			return err
 		}

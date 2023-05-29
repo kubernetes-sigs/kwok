@@ -37,7 +37,7 @@ import (
 )
 
 // Save saves the snapshot of cluster
-func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []string, impersonateConfig rest.ImpersonationConfig) error {
+func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []string, impersonateConfig rest.ImpersonationConfig, pageSize int64, pageBufferSize int32) error {
 	clientset, err := client.NewClientset("", kubeconfigPath,
 		client.WithImpersonate(impersonateConfig),
 	)
@@ -88,6 +88,9 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 			})
 			return list, err
 		})
+
+		listPager.PageSize = pageSize
+		listPager.PageBufferSize = pageBufferSize
 
 		count := 0
 		if err := listPager.EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
