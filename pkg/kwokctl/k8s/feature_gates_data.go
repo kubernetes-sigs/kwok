@@ -35,6 +35,14 @@ var rawData = []FeatureSpec{
 	{"APISelfSubjectReview", Alpha, 26, 26},
 	{"APISelfSubjectReview", Beta, 27, -1},
 
+	// APIServerIdentity
+	{"APIServerIdentity", Alpha, 20, 25},
+	{"APIServerIdentity", Beta, 26, -1},
+
+	// APIServerTracing
+	{"APIServerTracing", Alpha, 22, 26},
+	{"APIServerTracing", Beta, 27, -1},
+
 	// Accelerators
 	{"Accelerators", Alpha, 6, 10},
 
@@ -224,6 +232,10 @@ var rawData = []FeatureSpec{
 	// ClusterTrustBundle
 	{"ClusterTrustBundle", Alpha, 27, -1},
 
+	// ComponentSLIs
+	{"ComponentSLIs", Alpha, 26, 26},
+	{"ComponentSLIs", Beta, 27, -1},
+
 	// ConfigurableFSGroupPolicy
 	{"ConfigurableFSGroupPolicy", Alpha, 18, 19},
 	{"ConfigurableFSGroupPolicy", Beta, 20, 22},
@@ -235,7 +247,11 @@ var rawData = []FeatureSpec{
 	// ContainerCheckpoint
 	{"ContainerCheckpoint", Alpha, 25, -1},
 
+	// ContextualLogging
+	{"ContextualLogging", Alpha, 25, -1},
+
 	// ControllerManagerLeaderMigration
+	{"ControllerManagerLeaderMigration", Alpha, 21, 21},
 	{"ControllerManagerLeaderMigration", Beta, 22, 23},
 	{"ControllerManagerLeaderMigration", GA, 24, 26},
 
@@ -350,6 +366,11 @@ var rawData = []FeatureSpec{
 
 	// DynamicVolumeProvisioning
 	{"DynamicVolumeProvisioning", Alpha, 6, 7},
+
+	// EfficientWatchResumption
+	{"EfficientWatchResumption", Alpha, 20, 20},
+	{"EfficientWatchResumption", Beta, 21, 23},
+	{"EfficientWatchResumption", GA, 24, -1},
 
 	// ElasticIndexedJob
 	{"ElasticIndexedJob", Beta, 27, -1},
@@ -481,7 +502,7 @@ var rawData = []FeatureSpec{
 	// IPv6DualStack
 	{"IPv6DualStack", Alpha, 16, 20},
 	{"IPv6DualStack", Beta, 21, 22},
-	{"IPv6DualStack", GA, 23, 24},
+	{"IPv6DualStack", GA, 23, 26},
 
 	// IdentifyPodOS
 	{"IdentifyPodOS", Alpha, 23, 23},
@@ -550,6 +571,10 @@ var rawData = []FeatureSpec{
 	{"JobTrackingWithFinalizers", Beta, 23, 25},
 	{"JobTrackingWithFinalizers", GA, 26, -1},
 
+	// KMSv2
+	{"KMSv2", Alpha, 25, 26},
+	{"KMSv2", Beta, 27, -1},
+
 	// KubeletConfigFile
 	{"KubeletConfigFile", Alpha, 8, 9},
 
@@ -608,6 +633,12 @@ var rawData = []FeatureSpec{
 	// LogarithmicScaleDown
 	{"LogarithmicScaleDown", Alpha, 21, 21},
 	{"LogarithmicScaleDown", Beta, 22, -1},
+
+	// LoggingAlphaOptions
+	{"LoggingAlphaOptions", Alpha, 25, -1},
+
+	// LoggingBetaOptions
+	{"LoggingBetaOptions", Beta, 25, -1},
 
 	// MatchLabelKeysInPodTopologySpread
 	{"MatchLabelKeysInPodTopologySpread", Alpha, 25, 26},
@@ -795,6 +826,15 @@ var rawData = []FeatureSpec{
 	// RecoverVolumeExpansionFailure
 	{"RecoverVolumeExpansionFailure", Alpha, 23, -1},
 
+	// RemainingItemCount
+	{"RemainingItemCount", Alpha, 15, 15},
+	{"RemainingItemCount", Beta, 16, -1},
+
+	// RemoveSelfLink
+	{"RemoveSelfLink", Alpha, 16, 19},
+	{"RemoveSelfLink", Beta, 20, 23},
+	{"RemoveSelfLink", GA, 24, -1},
+
 	// RequestManagement
 	{"RequestManagement", Alpha, 15, 16},
 
@@ -854,6 +894,11 @@ var rawData = []FeatureSpec{
 
 	// SecurityContextDeny
 	{"SecurityContextDeny", Alpha, 27, -1},
+
+	// SelectorIndex
+	{"SelectorIndex", Alpha, 18, 18},
+	{"SelectorIndex", Beta, 19, 19},
+	{"SelectorIndex", GA, 20, 24},
 
 	// ServerSideApply
 	{"ServerSideApply", Alpha, 14, 15},
@@ -948,6 +993,13 @@ var rawData = []FeatureSpec{
 	{"StorageObjectInUseProtection", Beta, 10, 10},
 	{"StorageObjectInUseProtection", GA, 11, 24},
 
+	// StorageVersionAPI
+	{"StorageVersionAPI", Alpha, 20, -1},
+
+	// StorageVersionHash
+	{"StorageVersionHash", Alpha, 14, 14},
+	{"StorageVersionHash", Beta, 15, -1},
+
 	// StreamingProxyRedirects
 	{"StreamingProxyRedirects", Beta, 6, 17},
 	{"StreamingProxyRedirects", Deprecated, 18, 23},
@@ -1023,6 +1075,7 @@ var rawData = []FeatureSpec{
 	{"UserNamespacesStatelessPodsSupport", Alpha, 25, -1},
 
 	// ValidateProxyRedirects
+	{"ValidateProxyRedirects", Alpha, 12, 13},
 	{"ValidateProxyRedirects", Beta, 14, 21},
 	{"ValidateProxyRedirects", Deprecated, 22, 23},
 
@@ -1059,11 +1112,19 @@ var rawData = []FeatureSpec{
 	{"WarningHeaders", Beta, 19, 21},
 	{"WarningHeaders", GA, 22, 23},
 
+	// WatchBookmark
+	{"WatchBookmark", Alpha, 15, 15},
+	{"WatchBookmark", Beta, 16, 16},
+	{"WatchBookmark", GA, 17, -1},
+
+	// WatchList
+	{"WatchList", Alpha, 27, -1},
+
 	// WinDSR
-	{"WinDSR", Alpha, 19, -1},
+	{"WinDSR", Alpha, 14, -1},
 
 	// WinOverlay
-	{"WinOverlay", Alpha, 19, 19},
+	{"WinOverlay", Alpha, 14, 19},
 	{"WinOverlay", Beta, 20, -1},
 
 	// WindowsEndpointSliceProxying
