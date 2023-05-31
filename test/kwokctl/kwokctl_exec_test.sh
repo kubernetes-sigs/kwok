@@ -44,8 +44,9 @@ function test_exec() {
   local cmd="${4}"
   local want="${5}"
   local result
-  for ((i = 0; i < 120; i++)); do
-    if result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}"); then
+  for ((i = 0; i < 10; i++)); do
+    result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}" || :)
+    if [[ "${result}" == *"${want}"* ]]; then
       break
     fi
     sleep 1
