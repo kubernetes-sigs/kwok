@@ -58,12 +58,6 @@ jobs:
           containerd-rootless-setuptool.sh install
           containerd-rootless-setuptool.sh install-buildkit-containerd
 
-      - name: Install Podman Compose
-        if: ${{ matrix.kwokctl-runtime == 'podman' }}
-        shell: bash
-        run: |
-          pip3 install podman-compose
-
       - name: Build Image
         shell: bash
         run: |
@@ -202,13 +196,6 @@ jobs:
         run: |
           ./hack/requirements.sh buildx
           docker buildx version
-
-      - name: Install Docker Compose V2
-        if: ${{ matrix.kwokctl-runtime == 'docker' }}
-        shell: bash
-        run: |
-          ./hack/requirements.sh compose
-           docker compose version
 
       - name: Docker Info
         if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}

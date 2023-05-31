@@ -21,8 +21,6 @@ KUBE_VERSION=1.26.0
 # https://github.com/docker/buildx/pull/1412
 BUILDX_VERSION=0.9.1
 
-COMPOSE_VERSION=2.13.0
-
 NERDCTL_VERSION=1.6.0
 
 function command_exist() {
@@ -151,25 +149,6 @@ function install_buildx() {
   fi
 }
 
-function install_compose() {
-  local binary
-
-  if docker compose version; then
-    return 0
-  fi
-
-  binary="$(runtime_home)/.docker/cli-plugins/docker-compose"
-
-  mkdir -p "$(dirname "${binary}")" &&
-    wget -O "${binary}" "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-$(runtime_os)-$(runtime_arch_alias)" &&
-    chmod +x "${binary}"
-
-  if ! docker compose version; then
-    echo docker-compose is installed but not effective >&2
-    return 1
-  fi
-}
-
 function install_nerdctl() {
   if command_exist nerdctl; then
     return 0
@@ -196,7 +175,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
       kubectl
       kind
       buildx
-      compose
     )
     echo "Usage: ${0} [flags] [requirements]"
     echo "  Empty argument will install all requirements."
