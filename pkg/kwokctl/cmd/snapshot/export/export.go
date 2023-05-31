@@ -34,6 +34,8 @@ type flagpole struct {
 	Filters           []string
 	ImpersonateUser   string
 	ImpersonateGroups []string
+	PageSize          int64
+	PageBufferSize    int32
 }
 
 // NewCommand returns a new cobra.Command for cluster exporting.
@@ -53,6 +55,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringSliceVar(&flags.Filters, "filter", snapshot.Resources, "Filter the resources to export")
 	cmd.Flags().StringVar(&flags.ImpersonateUser, "as", "", "Username to impersonate for the operation. User could be a regular user or a service account in a namespace.")
 	cmd.Flags().StringSliceVar(&flags.ImpersonateGroups, "as-group", nil, "Group to impersonate for the operation, this flag can be repeated to specify multiple groups.")
+	cmd.Flags().Int64Var(&flags.PageSize, "page-size", 500, "Define the page size")
+	cmd.Flags().Int32Var(&flags.PageBufferSize, "page-buffer-size", 10, "Define the number of pages to buffer")
 	return cmd
 }
 
@@ -79,7 +83,18 @@ func runE(ctx context.Context, flags *flagpole) error {
 		UserName: flags.ImpersonateUser,
 		Groups:   flags.ImpersonateGroups,
 	}
-	err = snapshot.Save(ctx, flags.Kubeconfig, file, flags.Filters, impersonateConfig)
+
+	pagerConfig := &snapshot.PagerConfig{
+		PageSize:       flags.PageSize,
+		PageBufferSize: flags.PageBufferSize,
+	}
+
+	snapshotSaveConfig := snapshot.SaveConfig{
+		PagerConfig:         pagerConfig,
+		ImpersonationConfig: impersonateConfig,
+	}
+
+	err = snapshot.Save(ctx, flags.Kubeconfig, file, flags.Filters, snapshotSaveConfig)
 	if err != nil {
 		return err
 	}
