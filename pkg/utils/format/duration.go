@@ -27,17 +27,31 @@ import (
 func HumanDuration(d time.Duration) string {
 	// Allow deviation no more than 2 seconds(excluded) to tolerate machine time
 	// inconsistence, it can be considered as almost now.
-	seconds := d.Seconds()
 	switch {
-	case int(seconds) < -1:
+	case d <= -2*time.Second:
 		return "<invalid>"
-	case seconds < 1:
-		if seconds*10 > 1 {
-			return fmt.Sprintf("%.1fs", d.Truncate(time.Second/10).Seconds())
-		}
+	case d < time.Millisecond:
 		return "0s"
+	}
+
+	milliseconds := int(d / time.Millisecond)
+	switch {
+	case milliseconds < 100:
+		return fmt.Sprintf("%dms", milliseconds)
+	case milliseconds < 1000:
+		return fmt.Sprintf("0.%ds", milliseconds/100)
+	}
+
+	seconds := int(d / time.Second)
+	switch {
+	case seconds < 10:
+		ms := int(d/time.Millisecond) % 1000
+		if ms < 100 {
+			return fmt.Sprintf("%ds", seconds)
+		}
+		return fmt.Sprintf("%d.%ds", seconds, ms/100)
 	case seconds < 60*2:
-		return fmt.Sprintf("%ds", int(seconds))
+		return fmt.Sprintf("%ds", seconds)
 	}
 
 	minutes := int(d / time.Minute)
