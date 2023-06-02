@@ -42,7 +42,7 @@ function usage() {
   echo "  --platform <platform> is multi-platform capable for image"
   echo "  --push will push image to registry"
   echo "  --dry-run just show what would be done"
-  echo "  --builder <builder> specify image builder, default: docker. available options: docker, nerdctl"
+  echo "  --builder <builder> specify image builder, default: ${BUILDER}. available options: docker, nerdctl, podman"
 }
 
 function args() {
