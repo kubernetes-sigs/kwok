@@ -22,6 +22,7 @@ DIR="$(realpath "${DIR}")"
 ROOT_DIR="$(realpath "${DIR}/../..")"
 DOCKERFILE="$(echo "${DIR}/Dockerfile" | sed "s|^${ROOT_DIR}/|./|")"
 
+BASE_IMAGE=
 DRY_RUN=false
 PUSH=false
 IMAGES=()
@@ -41,6 +42,7 @@ function usage() {
   echo "  --push will push image to registry"
   echo "  --dry-run just show what would be done"
   echo "  --builder <builder> specify image builder, default: docker. available options: docker, nerdctl"
+  echo "  --base-image <base-image> specify base image, default: ${BASE_IMAGE}"
 }
 
 function args() {
@@ -78,6 +80,10 @@ function args() {
       ;;
     --builder | --builder=*)
       [[ "${arg#*=}" != "${arg}" ]] && BUILDER="${arg#*=}" || { BUILDER="${2}" && shift; } || :
+      shift
+      ;;
+    --base-image | --base-image=*)
+      [[ "${arg#*=}" != "${arg}" ]] && BASE_IMAGE="${arg#*=}" || { BASE_IMAGE="${2}" && shift; } || :
       shift
       ;;
     --help)
@@ -145,6 +151,10 @@ function main() {
       done
     fi
   done
+
+  if [[ "${BASE_IMAGE}" != "" ]]; then
+    extra_args+=("--build-arg=BASE_IMAGE=${BASE_IMAGE}")
+  fi
 
   for platform in "${PLATFORMS[@]}"; do
     extra_args+=("--platform=${platform}")

@@ -3,7 +3,7 @@ kind: Kustomization
 
 images:
   - name: registry.k8s.io/kwok/kwok
-    newName: kwok
+    newName: kwok-with-cni
     newTag: test
 
 resources:

@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3.17
+ARG BASE_IMAGE=docker.io/library/alpine:3.17
+FROM --platform=$TARGETPLATFORM $BASE_IMAGE AS cache
 ARG TARGETPLATFORM
 COPY --chmod=0755 bin/$TARGETPLATFORM/kwok /usr/local/bin/
 
