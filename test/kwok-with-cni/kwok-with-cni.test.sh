@@ -19,15 +19,16 @@ DIR="$(realpath "${DIR}")"
 
 ROOT_DIR="$(realpath "${DIR}/../..")"
 
+BASH_IMAGE=registry.k8s.io/build-image/distroless-iptables:v0.2.4
 CLUSTER_NAME=kwok-test
-KWOK_IMAGE="kwok"
+KWOK_IMAGE="kwok-with-cni"
 KWOK_VERSION="test"
 
 function start_cluster() {
   local linux_platform
   linux_platform="linux/$(go env GOARCH)"
   "${ROOT_DIR}"/hack/releases.sh --bin kwok --platform "${linux_platform}"
-  "${ROOT_DIR}"/images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}" --platform "${linux_platform}"
+  "${ROOT_DIR}"/images/kwok/build.sh --base-image ${BASH_IMAGE} --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}" --platform "${linux_platform}"
 
   kind create cluster --name="${CLUSTER_NAME}"
 
