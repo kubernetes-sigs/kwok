@@ -19,6 +19,7 @@ headless: true
     - [Auditing]({{< relref "/docs/user/kwokctl-auditing" >}})
     - [Authorization]({{< relref "/docs/user/kwokctl-authorization" >}})
     - [Admission]({{< relref "/docs/user/kwokctl-admission" >}})
+    - [Platform-Specific Binaries]({{< relref "/docs/user/kwokctl-platform-specific-binaries" >}})
   - **Configuration**
     - [Options]({{< relref "/docs/user/configuration" >}})
     - [Stages]({{< relref "/docs/user/stages-configuration" >}})
