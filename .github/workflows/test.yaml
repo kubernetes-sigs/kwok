@@ -134,17 +134,29 @@ jobs:
         kwokctl-runtime:
           - binary
           - docker
-          - nerdctl
           - podman
           - kind
           - kind-podman
         exclude:
           - os: macos-latest
-            kwokctl-runtime: nerdctl
-          - os: macos-latest
             kwokctl-runtime: podman
           - os: macos-latest
             kwokctl-runtime: kind-podman
+        include:
+          # nerdctl is still very early and has many bugs and differences in docker behavior,
+          # so we need to verify that it works on every release.
+          - os: ubuntu-latest
+            kwokctl-runtime: nerdctl
+            nerdctl-version: 1.4.0
+          - os: ubuntu-latest
+            kwokctl-runtime: nerdctl
+            nerdctl-version: 1.3.1
+          - os: ubuntu-latest
+            kwokctl-runtime: nerdctl
+            nerdctl-version: 1.2.1
+          - os: ubuntu-latest
+            kwokctl-runtime: nerdctl
+            nerdctl-version: 1.1.0
 
     continue-on-error: false
     runs-on: ${{ matrix.os }}
@@ -207,7 +219,9 @@ jobs:
         if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
         shell: bash
         run: |
-          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.1.0/nerdctl-full-1.1.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+          sudo mkdir -p /etc/cni/net.d
+          sudo chmod 777 /etc/cni/net.d
+          curl -sSL https://github.com/containerd/nerdctl/releases/download/v${{ matrix.nerdctl-version }}/nerdctl-full-${{ matrix.nerdctl-version }}-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
           sudo systemctl daemon-reload
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
