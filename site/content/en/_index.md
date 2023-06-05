@@ -63,7 +63,7 @@ Runtime indicates which medium `kwokctl` will use to start the cluster
 | Windows | 🟠/🔵    | 🔵      | 🔵      | 🔵       | 🔵    |
 
 - 🟢 Supported
-- 🟠 Need to use your own build of the Kubernetes binary
+- 🟠 Need to build [platform-specific Kubernetes binaries]
 - 🔵 Expected support but not fully tested
 
 ## Community
@@ -93,3 +93,4 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 [slack.k8s.io]: https://slack.k8s.io/
 [run it using pre-built images]: {{< relref "/docs/user/all-in-one-image" >}}
 [simulate thousands of nodes]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
+[platform-specific Kubernetes binaries]: {{< relref "/docs/user/kwokctl-platform-specific-binaries" >}}
