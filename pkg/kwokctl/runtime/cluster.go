@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
 )
@@ -85,6 +86,39 @@ func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfigura
 		return conf, err
 	}
 	c.conf = conf
+	logger := log.FromContext(ctx)
+	if conf.Status.Version == "" {
+		logger.Warn("The cluster was created by an older version of kwokctl, "+
+			"please recreate the cluster",
+			"createdByVersion", "<0.3.0",
+			"kwokctlVersion", consts.Version,
+		)
+		conf.Status.Version = "0.0.0"
+	} else if conf.Status.Version != consts.Version {
+		currentVer, err := version.ParseVersion(conf.Status.Version)
+		if err != nil {
+			return nil, err
+		}
+		ver, err := version.ParseVersion(consts.Version)
+		if err != nil {
+			return nil, err
+		}
+		switch {
+		case currentVer.LT(ver):
+			logger.Warn("The cluster was created by a older version of kwokctl, "+
+				"please recreate the cluster",
+				"createdByVersion", conf.Status.Version,
+				"kwokctlVersion", consts.Version,
+			)
+		case currentVer.GT(ver):
+			logger.Warn("The cluster was created by a newer version of kwokctl, "+
+				"please upgrade kwokctl or recreate the cluster",
+				"createdByVersion", conf.Status.Version,
+				"kwokctlVersion", consts.Version,
+			)
+		}
+	}
+
 	return conf, nil
 }
 
@@ -124,17 +158,23 @@ func (c *Cluster) Save(ctx context.Context) error {
 		return nil
 	}
 
+	conf := c.conf.DeepCopy()
 	objs := []config.InternalObject{
-		c.conf,
+		conf,
+	}
+
+	if conf.Status.Version == "" {
+		c.conf = c.conf.DeepCopy()
+		c.conf.Status.Version = consts.Version
 	}
 
 	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
 	objs = append(objs, others...)
 
-	if c.conf.Options.NodeLeaseDurationSeconds == 0 {
-		if updateFrequency := c.conf.Options.NodeStatusUpdateFrequencyMilliseconds; updateFrequency > 0 &&
-			c.conf.Options.Runtime != consts.RuntimeTypeKind &&
-			c.conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
+	if conf.Options.NodeLeaseDurationSeconds == 0 {
+		if updateFrequency := conf.Options.NodeStatusUpdateFrequencyMilliseconds; updateFrequency > 0 &&
+			conf.Options.Runtime != consts.RuntimeTypeKind &&
+			conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
 			len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
 			nodeStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
 			if err != nil {
