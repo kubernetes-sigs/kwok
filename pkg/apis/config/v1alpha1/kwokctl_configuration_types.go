@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -434,16 +433,27 @@ type Volume struct {
 }
 
 // HostPathType represents the type of storage used for HostPath volumes.
-type HostPathType = corev1.HostPathType
+// +enum
+type HostPathType string
 
 // Constants for HostPathType.
 const (
-	HostPathUnset             HostPathType = corev1.HostPathUnset
-	HostPathDirectoryOrCreate HostPathType = corev1.HostPathDirectoryOrCreate
-	HostPathDirectory         HostPathType = corev1.HostPathDirectory
-	HostPathFileOrCreate      HostPathType = corev1.HostPathFileOrCreate
-	HostPathFile              HostPathType = corev1.HostPathFile
-	HostPathSocket            HostPathType = corev1.HostPathSocket
-	HostPathCharDev           HostPathType = corev1.HostPathCharDev
-	HostPathBlockDev          HostPathType = corev1.HostPathBlockDev
+	// For backwards compatible, leave it empty if unset
+	HostPathUnset HostPathType = ""
+	// If nothing exists at the given path, an empty directory will be created there
+	// as needed with file mode 0755, having the same group and ownership with Kubelet.
+	HostPathDirectoryOrCreate HostPathType = "DirectoryOrCreate"
+	// A directory must exist at the given path
+	HostPathDirectory HostPathType = "Directory"
+	// If nothing exists at the given path, an empty file will be created there
+	// as needed with file mode 0644, having the same group and ownership with Kubelet.
+	HostPathFileOrCreate HostPathType = "FileOrCreate"
+	// A file must exist at the given path
+	HostPathFile HostPathType = "File"
+	// A UNIX socket must exist at the given path
+	HostPathSocket HostPathType = "Socket"
+	// A character device must exist at the given path
+	HostPathCharDev HostPathType = "CharDevice"
+	// A block device must exist at the given path
+	HostPathBlockDev HostPathType = "BlockDevice"
 )

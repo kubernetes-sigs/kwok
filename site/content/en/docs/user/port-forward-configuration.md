@@ -8,7 +8,7 @@ This document walks you through how to configure the PortForward feature.
 
 ## What is a PortForward?
 
-The PortForward API is a [`kwok` Configuration][configuration] that allows users to define and simulate port forwarding to Pod(s).
+The [PortForward API] is a [`kwok` Configuration][configuration] that allows users to define and simulate port forwarding to Pod(s).
 
 A PortForward resource has the following fields:
 
@@ -40,7 +40,7 @@ The `command` should be a string array, where the first element is the command a
 
 ### ClusterPortForward
 
-The ClusterPortForward API is a special PortForward API which is cluster-side.
+The [ClusterPortForward API] is a special PortForward API which is cluster-side.
 
 A ClusterPortForward resource has the following fields:
 
@@ -77,3 +77,5 @@ The `matchNames` field is used to match the name of the Pods. If the `matchNames
 <img width="700px" src="/img/demo/port-forward.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
+[PortForward API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.PortForward
+[ClusterPortForward API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterPortForward

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright 2022 The Kubernetes Authors.
+# Copyright 2023 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ set -o pipefail
 ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
 function check() {
-  echo "Verify cmd docs"
-  rm -rf "${ROOT_DIR}"/site/content/en/docs/generated/{kwok,kwokctl}*.md
-  "${ROOT_DIR}"/hack/update-cmd-docs.sh
+  echo "Verify api docs"
+  rm -rf "${ROOT_DIR}"/site/content/en/docs/generated/apis.md
+  "${ROOT_DIR}"/hack/update-api-docs.sh
   git --no-pager diff --exit-code
 }
 

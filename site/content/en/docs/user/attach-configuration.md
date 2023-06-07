@@ -8,7 +8,7 @@ This document walks you through how to configure the Attach feature.
 
 ## What is a Attach?
 
-The Attach API is a [`kwok` Configuration][configuration] that allows users to define and simulate attaching to Pod(s).
+The [Attach API] is a [`kwok` Configuration][configuration] that allows users to define and simulate attaching to Pod(s).
 
 A Attach resource has the following fields:
 
@@ -33,7 +33,7 @@ The `logsFile` field specifies the file path of the logs. If the `logsFile` fiel
 
 ### ClusterAttach
 
-The ClusterAttach API is a special Attach API which is cluster-side.
+The [ClusterAttach API] is a special Attach API which is cluster-side.
 
 A ClusterAttach resource has the following fields:
 
@@ -63,3 +63,5 @@ The `matchNames` field specifies the names to be matched. If the `matchNames` fi
 <img width="700px" src="/img/demo/attach.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
+[Attach API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Attach
+[ClusterAttach API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterAttach

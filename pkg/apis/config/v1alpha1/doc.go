@@ -16,6 +16,7 @@ limitations under the License.
 
 // +k8s:deepcopy-gen=package
 // +k8s:defaulter-gen=TypeMeta
+// +groupName=config.kwok.x-k8s.io
 
 // Package v1alpha1 implements the v1alpha1 apiVersion of kwok's configuration
 package v1alpha1
