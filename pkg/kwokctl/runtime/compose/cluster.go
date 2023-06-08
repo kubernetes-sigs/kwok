@@ -773,7 +773,10 @@ func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]s
 // EtcdctlInCluster implements the ectdctl subcommand
 func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	etcdContainerName := c.Name() + "-etcd"
-	return exec.Exec(ctx, c.runtime, append([]string{"exec", "-i", etcdContainerName, "etcdctl"}, args...)...)
+
+	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
+	args = append([]string{"exec", "--env=ETCDCTL_API=3", "-i", etcdContainerName, "etcdctl"}, args...)
+	return exec.Exec(ctx, c.runtime, args...)
 }
 
 // preInstallPodmanCompose pre-installs podman-compose

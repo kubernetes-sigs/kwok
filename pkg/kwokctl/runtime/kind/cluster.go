@@ -682,7 +682,18 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	etcdContainerName := c.getComponentName("etcd")
 
-	return c.KubectlInCluster(ctx, append([]string{"exec", "-i", "-n", "kube-system", etcdContainerName, "--", "etcdctl", "--endpoints=" + net.LocalAddress + ":2379", "--cert=/etc/kubernetes/pki/etcd/server.crt", "--key=/etc/kubernetes/pki/etcd/server.key", "--cacert=/etc/kubernetes/pki/etcd/ca.crt"}, args...)...)
+	args = append(
+		[]string{
+			"exec", "-i", "-n", "kube-system", etcdContainerName, "--",
+			"etcdctl",
+			"--endpoints=" + net.LocalAddress + ":2379",
+			"--cert=/etc/kubernetes/pki/etcd/server.crt",
+			"--key=/etc/kubernetes/pki/etcd/server.key",
+			"--cacert=/etc/kubernetes/pki/etcd/ca.crt",
+		},
+		args...,
+	)
+	return c.KubectlInCluster(ctx, args...)
 }
 
 // preDownloadKind pre-download and cache kind

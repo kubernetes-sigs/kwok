@@ -773,12 +773,5 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 		return err
 	}
 	conf := &config.Options
-	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
-
-	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0750, conf.QuietPull, true)
-	if err != nil {
-		return err
-	}
-
-	return exec.Exec(ctx, etcdctlPath, append([]string{"--endpoints", net.LocalAddress + ":" + format.String(conf.EtcdPort)}, args...)...)
+	return c.Etcdctl(ctx, append([]string{"--endpoints", net.LocalAddress + ":" + format.String(conf.EtcdPort)}, args...)...)
 }
