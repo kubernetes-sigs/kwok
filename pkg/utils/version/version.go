@@ -58,7 +58,11 @@ func ParseFromOutput(s string) (Version, error) {
 	if len(matches) == 0 {
 		return semver.Version{}, fmt.Errorf("failed to parse version from output: %q", s)
 	}
-	return semver.Parse(matches[2])
+	v := matches[2]
+	if strings.HasPrefix(v, "0.0.0") {
+		return semver.Version{}, nil
+	}
+	return semver.Parse(v)
 }
 
 // ParseFromBinary parses the version from the binary.

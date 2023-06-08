@@ -409,12 +409,18 @@ func (c *NodeController) deleteResource(ctx context.Context, node *corev1.Node) 
 // preprocessWorker receives the resource from the preprocessChan and preprocess it
 func (c *NodeController) preprocessWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
-	for node := range c.preprocessChan {
-		err := c.preprocess(ctx, node)
-		if err != nil {
-			logger.Error("Failed to preprocess node", err,
-				"node", node.Name,
-			)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("Stop preprocess worker")
+			return
+		case node := <-c.preprocessChan:
+			err := c.preprocess(ctx, node)
+			if err != nil {
+				logger.Error("Failed to preprocess node", err,
+					"node", node.Name,
+				)
+			}
 		}
 	}
 }
@@ -422,21 +428,27 @@ func (c *NodeController) preprocessWorker(ctx context.Context) {
 // triggerPreprocessWorker receives the resource from the triggerPreprocessChan and preprocess it
 func (c *NodeController) triggerPreprocessWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
-	for nodeName := range c.triggerPreprocessChan {
-		nodeInfo, has := c.nodesSets.Load(nodeName)
-		if !has || nodeInfo.Node == nil {
-			logger.Warn("Node not found",
-				"node", nodeName,
-			)
-			continue
-		}
-		if c.readOnly(nodeInfo.Node.Name) {
-			logger.Debug("Skip node",
-				"node", nodeInfo.Node.Name,
-				"reason", "read only",
-			)
-		} else {
-			c.preprocessChan <- nodeInfo.Node
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("Stop trigger preprocess worker")
+			return
+		case nodeName := <-c.triggerPreprocessChan:
+			nodeInfo, has := c.nodesSets.Load(nodeName)
+			if !has || nodeInfo.Node == nil {
+				logger.Warn("Node not found",
+					"node", nodeName,
+				)
+				continue
+			}
+			if c.readOnly(nodeInfo.Node.Name) {
+				logger.Debug("Skip node",
+					"node", nodeInfo.Node.Name,
+					"reason", "read only",
+				)
+			} else {
+				c.preprocessChan <- nodeInfo.Node
+			}
 		}
 	}
 }
@@ -506,8 +518,15 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *NodeController) playStageWorker(ctx context.Context) {
-	for node := range c.playStageChan {
-		c.playStage(ctx, node.Resource, node.Stage)
+	logger := log.FromContext(ctx)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("Stop play stage worker")
+			return
+		case node := <-c.playStageChan:
+			c.playStage(ctx, node.Resource, node.Stage)
+		}
 	}
 }
 
