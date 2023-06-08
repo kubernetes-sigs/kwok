@@ -108,6 +108,7 @@ type StageFinalizers struct {
 
 // FinalizerItem  describes the one of the finalizers.
 type FinalizerItem struct {
+	// Value is the value of the finalizer.
 	Value string `json:"value,omitempty"`
 }
 
@@ -151,13 +152,18 @@ type SelectorRequirement struct {
 }
 
 // SelectorOperator is a label selector operator is the set of operators that can be used in a selector requirement.
+// +enum
 type SelectorOperator string
 
 // The following are valid selector operators.
-var (
-	SelectorOpIn           SelectorOperator = "In"
-	SelectorOpNotIn        SelectorOperator = "NotIn"
-	SelectorOpExists       SelectorOperator = "Exists"
+const (
+	// SelectorOpIn is the set inclusion operator.
+	SelectorOpIn SelectorOperator = "In"
+	// SelectorOpNotIn is the negated set inclusion operator.
+	SelectorOpNotIn SelectorOperator = "NotIn"
+	// SelectorOpExists is the existence operator.
+	SelectorOpExists SelectorOperator = "Exists"
+	// SelectorOpDoesNotExist is the negated existence operator.
 	SelectorOpDoesNotExist SelectorOperator = "DoesNotExist"
 )
 

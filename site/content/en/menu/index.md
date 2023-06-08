@@ -36,6 +36,7 @@ headless: true
   - [Development]({{< relref "/docs/contributing/development" >}})
   - [Roadmap ⛓](https://github.com/orgs/kubernetes-sigs/projects/21)
   - [Source Code ⛓](https://github.com/kubernetes-sigs/kwok)
+- [API reference]({{< relref "/docs/generated/apis" >}})
 - **Tools**
   - [`kwok`]({{< relref "/docs/generated/kwok" >}})
   - [`kwokctl`]({{< relref "/docs/generated/kwokctl" >}})

@@ -46,6 +46,11 @@ if [[ "${UPDATE_CMD_DOCS:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/update-cmd-docs.sh || failed+=(cmd-docs)
 fi
 
+if [[ "${UPDATE_API_DOCS:-true}" == "true" ]]; then
+  echo "[*] Update api docs..."
+  "${ROOT_DIR}"/hack/update-api-docs.sh || failed+=(api-docs)
+fi
+
 if [[ "${UPDATE_SHELL_FORMAT:-true}" == "true" ]]; then
   echo "[*] Update shell format..."
   "${ROOT_DIR}"/hack/update-shell-format.sh || failed+=(shell-format)

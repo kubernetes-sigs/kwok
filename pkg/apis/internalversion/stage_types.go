@@ -97,6 +97,7 @@ type StageFinalizers struct {
 
 // FinalizerItem  describes the one of the finalizers.
 type FinalizerItem struct {
+	// Value is the value of the finalizer.
 	Value string
 }
 
@@ -143,10 +144,14 @@ type SelectorRequirement struct {
 type SelectorOperator string
 
 // The following are valid selector operators.
-var (
-	SelectorOpIn           SelectorOperator = "In"
-	SelectorOpNotIn        SelectorOperator = "NotIn"
-	SelectorOpExists       SelectorOperator = "Exists"
+const (
+	// SelectorOpIn is the set inclusion operator.
+	SelectorOpIn SelectorOperator = "In"
+	// SelectorOpNotIn is the negated set inclusion operator.
+	SelectorOpNotIn SelectorOperator = "NotIn"
+	// SelectorOpExists is the existence operator.
+	SelectorOpExists SelectorOperator = "Exists"
+	// SelectorOpDoesNotExist is the negated existence operator.
 	SelectorOpDoesNotExist SelectorOperator = "DoesNotExist"
 )
 

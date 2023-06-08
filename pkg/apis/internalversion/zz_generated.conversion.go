@@ -24,7 +24,6 @@ package internalversion
 import (
 	unsafe "unsafe"
 
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -1847,7 +1846,7 @@ func autoConvert_internalversion_Volume_To_v1alpha1_Volume(in *Volume, out *conf
 	}
 	out.HostPath = in.HostPath
 	out.MountPath = in.MountPath
-	out.PathType = corev1.HostPathType(in.PathType)
+	out.PathType = configv1alpha1.HostPathType(in.PathType)
 	return nil
 }
 
@@ -1863,7 +1862,7 @@ func autoConvert_v1alpha1_Volume_To_internalversion_Volume(in *configv1alpha1.Vo
 	}
 	out.HostPath = in.HostPath
 	out.MountPath = in.MountPath
-	out.PathType = corev1.HostPathType(in.PathType)
+	out.PathType = HostPathType(in.PathType)
 	return nil
 }
 

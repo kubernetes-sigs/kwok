@@ -51,6 +51,11 @@ if [[ "${VERIFY_CMD_DOCS:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-cmd-docs.sh || failed+=(cmd-docs)
 fi
 
+if [[ "${VERIFY_API_DOCS:-true}" == "true" ]]; then
+  echo "[*] Verifying api docs..."
+  "${ROOT_DIR}"/hack/verify-api-docs.sh || failed+=(api-docs)
+fi
+
 if [[ "${VERIFY_YAMLLINT:-true}" == "true" ]]; then
   echo "[*] Verifying YAML lint..."
   "${ROOT_DIR}"/hack/verify-yamllint.sh || failed+=(yamllint)

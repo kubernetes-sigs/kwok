@@ -8,7 +8,7 @@ This document walks you through how to configure the Exec feature.
 
 ## What is a Exec?
 
-The Exec API is a [`kwok` Configuration][configuration] that allows users to define and simulate exec to Pod(s).
+The [Exec API] is a [`kwok` Configuration][configuration] that allows users to define and simulate exec to Pod(s).
 
 A Exec resource has the following fields:
 
@@ -37,7 +37,7 @@ The `envs` field specifies the environment variables of the local environment.
 
 ### ClusterExec
 
-The ClusterExec API is a special Exec API which is cluster-side.
+The [ClusterExec API] is a special Exec API which is cluster-side.
 
 A ClusterExec resource has the following fields:
 
@@ -71,3 +71,5 @@ The `matchNames` field specifies the names to be matched. If the `matchNames` fi
 <img width="700px" src="/img/demo/exec.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
+[Exec API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Exec
+[ClusterExec API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterExec

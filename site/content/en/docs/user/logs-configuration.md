@@ -8,7 +8,7 @@ This document walks you through how to configure the Logs feature.
 
 ## What is a Logs?
 
-The Logs API is a [`kwok` Configuration][configuration] that allows users to define and simulate logs to Pod(s).
+The [Logs API] is a [`kwok` Configuration][configuration] that allows users to define and simulate logs to Pod(s).
 
 A Logs resource has the following fields:
 
@@ -33,7 +33,7 @@ The `follow` field specifies whether to follow the logs. If the `follow` field i
 
 ### ClusterLogs
 
-The ClusterLogs API is a special Logs API which is cluster-side.
+The [ClusterLogs API] is a special Logs API which is cluster-side.
 
 A ClusterLogs resource has the following fields:
 
@@ -64,3 +64,5 @@ The `matchNames` field specifies the names to be matched. If the `matchNames` fi
 <img width="700px" src="/img/demo/logs.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
+[Logs API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Logs
+[ClusterLogs API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterLogs

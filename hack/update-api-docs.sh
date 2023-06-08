@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright 2022 The Kubernetes Authors.
+# Copyright 2023 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,11 +19,20 @@ set -o pipefail
 
 ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
+function gendoc() {
+  local confdir="${ROOT_DIR}/hack/api_docs"
+
+  go run github.com/ahmetb/gen-crd-api-reference-docs \
+    -template-dir "${confdir}" \
+    -config "${confdir}/config.json" \
+    "$@"
+}
+
 function check() {
-  echo "Verify cmd docs"
-  rm -rf "${ROOT_DIR}"/site/content/en/docs/generated/{kwok,kwokctl}*.md
-  "${ROOT_DIR}"/hack/update-cmd-docs.sh
-  git --no-pager diff --exit-code
+  echo "Update api docs"
+  gendoc \
+    -api-dir "sigs.k8s.io/kwok/pkg/apis/" \
+    -out-file "site/content/en/docs/generated/apis.md"
 }
 
 cd "${ROOT_DIR}"

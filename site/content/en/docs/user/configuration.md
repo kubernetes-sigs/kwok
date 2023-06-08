@@ -49,5 +49,5 @@ When using `kwok`, it takes its configuration from the configuration file and ig
 
 When using `kwokctl`, it takes its configuration from the configuration file and passes the configuration file to `kwok`.
 
-[api-config-v1alpha1]: https://pkg.go.dev/sigs.k8s.io/kwok/pkg/apis/config/v1alpha1
+[api-config-v1alpha1]: {{< relref "/docs/generated/apis" >}}#config.kwok.x-k8s.io/v1alpha1
 [YAML]: https://yaml.org/
