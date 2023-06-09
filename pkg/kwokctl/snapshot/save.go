@@ -68,16 +68,18 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 		return fmt.Errorf("failed to create dynamic client: %w", err)
 	}
 
+	logger := log.FromContext(ctx)
+
 	gvrs := make([]schema.GroupVersionResource, 0, len(resources))
 	for _, resource := range resources {
 		mapping, err := mappingFor(restMapper, resource)
 		if err != nil {
-			return fmt.Errorf("failed to get mapping for resource %q: %w", resource, err)
+			logger.Warn("Failed to get mapping for resource", "resource", resource, "err", err)
+			continue
 		}
 		gvrs = append(gvrs, mapping.Resource)
 	}
 
-	logger := log.FromContext(ctx)
 	encoder := yaml.NewEncoder(w)
 	totalCount := 0
 	start := time.Now()

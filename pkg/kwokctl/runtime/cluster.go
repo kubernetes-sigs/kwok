@@ -335,3 +335,29 @@ func (c *Cluster) GetBinPath(name string) string {
 func (c *Cluster) GetLogPath(name string) string {
 	return path.Join(c.workdir, "logs", name)
 }
+
+func (c *Cluster) etcdctlPath(ctx context.Context) (string, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return "", err
+	}
+	conf := &config.Options
+	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
+	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0750, conf.QuietPull, true)
+	if err != nil {
+		return "", err
+	}
+	return etcdctlPath, nil
+}
+
+// Etcdctl runs etcdctl.
+func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
+	etcdctlPath, err := c.etcdctlPath(ctx)
+	if err != nil {
+		return err
+	}
+
+	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
+	ctx = exec.WithEnv(ctx, []string{"ETCDCTL_API=3"})
+	return exec.Exec(ctx, etcdctlPath, args...)
+}

@@ -17,6 +17,8 @@ limitations under the License.
 package components
 
 import (
+	"runtime"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -123,6 +125,14 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		}
 	}
 
+	envs := []internalversion.Env{}
+	if runtime.GOARCH != "amd64" {
+		envs = append(envs, internalversion.Env{
+			Name:  "ETCD_UNSUPPORTED_ARCH",
+			Value: runtime.GOARCH,
+		})
+	}
+
 	return internalversion.Component{
 		Name:    "etcd",
 		Version: conf.Version.String(),
@@ -133,5 +143,6 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		Ports:   ports,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Envs:    envs,
 	}, nil
 }

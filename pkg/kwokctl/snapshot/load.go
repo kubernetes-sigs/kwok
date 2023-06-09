@@ -39,16 +39,18 @@ import (
 
 // Load loads the resources to cluster from the reader
 func Load(ctx context.Context, kubeconfigPath string, r io.Reader, filters []string) error {
-	l, err := newLoader(kubeconfigPath, filters)
+	l, err := newLoader(kubeconfigPath)
 	if err != nil {
 		return err
 	}
-	logger := log.FromContext(ctx)
+	l.addResource(ctx, filters)
 	start := time.Now()
 	err = l.Load(ctx, r)
 	if err != nil {
 		return err
 	}
+
+	logger := log.FromContext(ctx)
 	logger.Info("Load Snapshot",
 		"elapsed", time.Since(start),
 	)
@@ -75,7 +77,7 @@ type loader struct {
 	dynClient  *dynamic.DynamicClient
 }
 
-func newLoader(kubeconfigPath string, resources []string) (*loader, error) {
+func newLoader(kubeconfigPath string) (*loader, error) {
 	clientset, err := client.NewClientset("", kubeconfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create clientset: %w", err)
@@ -90,21 +92,25 @@ func newLoader(kubeconfigPath string, resources []string) (*loader, error) {
 		return nil, fmt.Errorf("failed to create dynamic client: %w", err)
 	}
 
-	filterMap := make(map[schema.GroupKind]struct{})
-	for _, resource := range resources {
-		mapping, err := mappingFor(restMapper, resource)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get mapping for resource %q: %w", resource, err)
-		}
-		filterMap[mapping.GroupVersionKind.GroupKind()] = struct{}{}
-	}
 	return &loader{
-		filterMap:  filterMap,
+		filterMap:  make(map[schema.GroupKind]struct{}),
 		exist:      make(map[uniqueKey]types.UID),
 		pending:    make(map[uniqueKey][]*unstructured.Unstructured),
 		restMapper: restMapper,
 		dynClient:  dynClient,
 	}, nil
+}
+
+func (l *loader) addResource(ctx context.Context, resources []string) {
+	logger := log.FromContext(ctx)
+	for _, resource := range resources {
+		mapping, err := mappingFor(l.restMapper, resource)
+		if err != nil {
+			logger.Warn("Failed to get mapping for resource", "resource", resource, "err", err)
+			continue
+		}
+		l.filterMap[mapping.GroupVersionKind.GroupKind()] = struct{}{}
+	}
 }
 
 func (l *loader) Load(ctx context.Context, r io.Reader) error {

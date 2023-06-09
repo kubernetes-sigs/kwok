@@ -18,8 +18,6 @@ package k8s
 
 import (
 	"math"
-	"os"
-	"runtime"
 )
 
 // lists from https://github.com/kubernetes/kubernetes/blob/f33c4a1c79f60e7843919b869bfd431599b83755/cmd/kubeadm/app/constants/constants.go#L469
@@ -70,9 +68,4 @@ func GetEtcdVersion(version int) string {
 		version = min
 	}
 	return etcdVersions[version]
-}
-
-func init() {
-	_ = os.Setenv("ETCD_UNSUPPORTED_ARCH", runtime.GOARCH)
-	_ = os.Setenv("ETCDCTL_API", "3")
 }
