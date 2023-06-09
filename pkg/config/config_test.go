@@ -20,18 +20,18 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 func TestConfig(t *testing.T) {
 	ctx := context.Background()
-	config := filepath.Join(t.TempDir(), "config.yaml")
+	config := path.Join(t.TempDir(), "config.yaml")
 	data := []InternalObject{
 		&internalversion.KwokConfiguration{},
 		&internalversion.KwokctlConfiguration{},
@@ -142,7 +142,7 @@ kind: KwokctlConfiguration
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := filepath.Join(t.TempDir(), "config.yaml")
+			p := path.Join(t.TempDir(), "config.yaml")
 			err := os.WriteFile(p, tt.data, 0640)
 			if err != nil {
 				t.Fatal(err)

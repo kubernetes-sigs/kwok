@@ -41,6 +41,12 @@ func TestParseFromOutput(t *testing.T) {
 		},
 		{
 			args: args{
+				s: "Kubernetes v0.0.0-master+$Format:%H$",
+			},
+			want: semver.MustParse("0.0.0"),
+		},
+		{
+			args: args{
 				s: "prometheus, version 2.35.0 (branch: HEAD)",
 			},
 			want: semver.MustParse("2.35.0"),

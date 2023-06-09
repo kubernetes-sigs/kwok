@@ -68,7 +68,10 @@ function test_workable() {
     return 1
   fi
 
+  sleep 10
   if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
+    echo kwokctl --name="${name}" etcdctl --debug get / --keys-only
+    kwokctl --name="${name}" etcdctl --debug get / --keys-only
     echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
     show_all
     return 1

@@ -32,7 +32,7 @@ import (
 // Version represents a semver compatible version
 type Version = semver.Version
 
-var versionRegexp = regexp.MustCompile(`(kubernetes|version):? v?(\d+\.\d+\.\d+\S*)`)
+var versionRegexp = regexp.MustCompile(`(kubernetes|version):? v?(\d+\.\d+\.\d+)`)
 
 // Unknown is the unknown version.
 var Unknown = Version{}
