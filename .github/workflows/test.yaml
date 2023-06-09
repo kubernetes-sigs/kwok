@@ -125,24 +125,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
+        include:
+          # Windows
           # Linux containers are not supported on Windows Runner
           # https://github.com/orgs/community/discussions/25491#discussioncomment-3248089
-          # - windows-latest
-        kwokctl-runtime:
-          - binary
-          - docker
-          - podman
-          - kind
-          - kind-podman
-        exclude:
+          - os: windows-latest
+            kwokctl-runtime: binary
+
+          # MacOS
           - os: macos-latest
+            kwokctl-runtime: binary
+          - os: macos-latest
+            kwokctl-runtime: docker
+          - os: macos-latest
+            kwokctl-runtime: kind
+
+          # Linux
+          - os: ubuntu-latest
+            kwokctl-runtime: binary
+          - os: ubuntu-latest
+            kwokctl-runtime: docker
+          - os: ubuntu-latest
             kwokctl-runtime: podman
-          - os: macos-latest
+          - os: ubuntu-latest
+            kwokctl-runtime: kind
+          - os: ubuntu-latest
             kwokctl-runtime: kind-podman
-        include:
           # nerdctl is still very early and has many bugs and differences in docker behavior,
           # so we need to verify that it works on every release.
           - os: ubuntu-latest
@@ -177,22 +185,33 @@ jobs:
         # https://www.downloadkubernetes.com
       - name: Download Kubernetes Source Code
         uses: actions/checkout@v3
-        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'macos-latest' }}
+        if: ${{ matrix.kwokctl-runtime == 'binary' && ( matrix.os == 'macos-latest' || matrix.os == 'windows-latest' ) }}
         with:
           repository: kubernetes/kubernetes
           path: kubernetes
           ref: v1.27.1
-      - name: Build Kubernetes Binary
+      - name: Build Kubernetes Binary for Windows
+        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'windows-latest' }}
+        shell: bash
+        run: |
+          export GOBIN="$(go env GOPATH)/bin"
+          cd "${GITHUB_WORKSPACE}/kubernetes" && go install ./cmd/{kube-apiserver,kube-controller-manager,kube-scheduler}
+          mkdir -p ~/.kwok && cat > ~/.kwok/kwok.yaml << EOF
+          kind: KwokctlConfiguration
+          apiVersion: config.kwok.x-k8s.io/v1alpha1
+          options:
+            kubeBinaryPrefix: '${GOBIN//\\//}'
+          EOF
+      - name: Build Kubernetes Binary for MacOS
         if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'macos-latest' }}
         shell: bash
         run: |
           cd "${GITHUB_WORKSPACE}/kubernetes" && make WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler"
-          mkdir -p ~/.kwok
-          cat > ~/.kwok/kwok.yaml << EOF
+          mkdir -p ~/.kwok && cat > ~/.kwok/kwok.yaml << EOF
           kind: KwokctlConfiguration
           apiVersion: config.kwok.x-k8s.io/v1alpha1
           options:
-            kubeBinaryPrefix: "${GITHUB_WORKSPACE}/kubernetes/_output/bin"
+            kubeBinaryPrefix: '${GITHUB_WORKSPACE}/kubernetes/_output/bin'
           EOF
 
       - name: Install Docker for MacOS
@@ -239,7 +258,7 @@ jobs:
           sudo systemctl daemon-reload
 
       - name: Make pki directory
-        if: ${{ matrix.kwokctl-runtime == 'binary' }}
+        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os != 'windows-latest' }}
         shell: bash
         run: |
           sudo mkdir -p /var/run/kubernetes
@@ -260,7 +279,6 @@ jobs:
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
       - name: Test Multi Cluster
-        if: ${{ matrix.os == 'ubuntu-latest' }}
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_multi_cluster
