@@ -115,4 +115,7 @@ type Runtime interface {
 
 	// SnapshotRestoreWithYAML restore the snapshot of cluster
 	SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error
+
+	// GetWorkdirPath get the workdir path of cluster
+	GetWorkdirPath(name string) string
 }

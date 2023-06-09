@@ -44,6 +44,7 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	adminKeyPath := path.Join(pkiPath, "admin.key")
 	adminCertPath := path.Join(pkiPath, "admin.crt")
+	caCertPath := path.Join(pkiPath, "ca.crt")
 
 	// set the context in default kubeconfig
 	kubeConfig := &kubeconfig.Config{
@@ -55,7 +56,11 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 		},
 	}
 	if conf.SecurePort {
-		kubeConfig.Cluster.InsecureSkipTLSVerify = true
+		if caCertPath == "" {
+			kubeConfig.Cluster.InsecureSkipTLSVerify = true
+		} else {
+			kubeConfig.Cluster.CertificateAuthority = caCertPath
+		}
 		kubeConfig.Context.AuthInfo = c.Name()
 		kubeConfig.User = &clientcmdapi.AuthInfo{
 			ClientCertificate: adminCertPath,

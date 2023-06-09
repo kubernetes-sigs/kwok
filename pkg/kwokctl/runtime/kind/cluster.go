@@ -343,7 +343,23 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(ctx, c.runtime, "cp", c.GetWorkdirPath(runtime.KwokPod), c.Name()+"-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml")
+	kindName := c.getClusterName()
+	err = exec.Exec(ctx, c.runtime, "cp", c.GetWorkdirPath(runtime.KwokPod), kindName+":/etc/kubernetes/manifests/kwok-controller.yaml")
+	if err != nil {
+		return err
+	}
+
+	// Copy ca.crt and ca.key to host's workdir
+	pkiPath := c.GetWorkdirPath(runtime.PkiName)
+	err = os.MkdirAll(pkiPath, 0750)
+	if err != nil {
+		return err
+	}
+	err = exec.Exec(ctx, c.runtime, "cp", kindName+":/etc/kubernetes/pki/ca.crt", path.Join(pkiPath, "ca.crt"))
+	if err != nil {
+		return err
+	}
+	err = exec.Exec(ctx, c.runtime, "cp", kindName+":/etc/kubernetes/pki/ca.key", path.Join(pkiPath, "ca.key"))
 	if err != nil {
 		return err
 	}
@@ -355,6 +371,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 	}
 
+	// Cordoning the node to prevent fake pods from being scheduled on it
 	err = c.Kubectl(ctx, "cordon", c.getClusterName())
 	if err != nil {
 		logger.Error("Failed cordon node", err)

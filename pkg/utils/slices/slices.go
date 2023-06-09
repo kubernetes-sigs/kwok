@@ -55,3 +55,32 @@ func Contains[S ~[]T, T comparable](s S, t T) bool {
 	}
 	return false
 }
+
+// Unique returns a new slice containing only the unique elements in the slice.
+func Unique[S ~[]T, T comparable](s S) []T {
+	if len(s) <= 1 {
+		return s
+	}
+	exist := make(map[T]struct{})
+	out := make([]T, 0, len(s))
+	for _, v := range s {
+		if _, ok := exist[v]; !ok {
+			exist[v] = struct{}{}
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// Equal returns true if the two slices are equal.
+func Equal[S ~[]T, T comparable](s1, s2 S) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+	for i := range s1 {
+		if s1[i] != s2[i] {
+			return false
+		}
+	}
+	return true
+}

@@ -23,8 +23,10 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
 
 	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/path"
@@ -133,4 +135,66 @@ func ModifyContext(kubeconfigPath string, fun func(kubeconfig *clientcmdapi.Conf
 		return fmt.Errorf("failed to modify kubeconfig file: %w", err)
 	}
 	return nil
+}
+
+// LoadFromFile loads a kubeconfig from a file
+func LoadFromFile(path string) (*clientcmdapi.Config, error) {
+	return clientcmd.LoadFromFile(path)
+}
+
+// EncodeKubeconfig encodes a kubeconfig to bytes
+func EncodeKubeconfig(config *clientcmdapi.Config) ([]byte, error) {
+	return runtime.Encode(clientcmdlatest.Codec, config)
+}
+
+// DecodeKubeconfig decodes a kubeconfig from bytes
+func DecodeKubeconfig(data []byte) (*clientcmdapi.Config, error) {
+	config := &clientcmdapi.Config{}
+	err := runtime.DecodeInto(clientcmdlatest.Codec, data, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+// BuildKubeconfigConfig is the configuration for BuildKubeconfig.
+type BuildKubeconfigConfig struct {
+	ProjectName  string
+	SecurePort   bool
+	Address      string
+	CACrtPath    string
+	AdminCrtPath string
+	AdminKeyPath string
+}
+
+// BuildKubeconfig builds a kubeconfig file from the given parameters.
+func BuildKubeconfig(conf BuildKubeconfigConfig) *clientcmdapi.Config {
+	config := &clientcmdapi.Config{
+		Clusters: map[string]*clientcmdapi.Cluster{
+			conf.ProjectName: {
+				Server: conf.Address,
+			},
+		},
+		Contexts: map[string]*clientcmdapi.Context{
+			conf.ProjectName: {
+				Cluster: conf.ProjectName,
+			},
+		},
+		AuthInfos:      map[string]*clientcmdapi.AuthInfo{},
+		CurrentContext: conf.ProjectName,
+	}
+
+	if conf.SecurePort {
+		if conf.CACrtPath == "" {
+			config.Clusters[conf.ProjectName].InsecureSkipTLSVerify = true
+		} else {
+			config.Clusters[conf.ProjectName].CertificateAuthority = conf.CACrtPath
+		}
+		config.Contexts[conf.ProjectName].AuthInfo = conf.ProjectName
+		config.AuthInfos[conf.ProjectName] = &clientcmdapi.AuthInfo{
+			ClientCertificate: conf.AdminCrtPath,
+			ClientKey:         conf.AdminKeyPath,
+		}
+	}
+	return config
 }

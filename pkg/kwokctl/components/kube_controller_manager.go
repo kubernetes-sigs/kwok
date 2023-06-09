@@ -83,6 +83,11 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
+				HostPath:  conf.CaCertPath,
+				MountPath: "/etc/kubernetes/pki/ca.crt",
+				ReadOnly:  true,
+			},
+			internalversion.Volume{
 				HostPath:  conf.AdminCertPath,
 				MountPath: "/etc/kubernetes/pki/admin.crt",
 				ReadOnly:  true,
@@ -163,13 +168,6 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 
 	if conf.KubeAuthorization {
 		if inContainer {
-			volumes = append(volumes,
-				internalversion.Volume{
-					HostPath:  conf.CaCertPath,
-					MountPath: "/etc/kubernetes/pki/ca.crt",
-					ReadOnly:  true,
-				},
-			)
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--root-ca-file=/etc/kubernetes/pki/ca.crt",
 				"--service-account-private-key-file=/etc/kubernetes/pki/admin.key",

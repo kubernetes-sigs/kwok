@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/image"
+	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -88,7 +89,17 @@ func (c *Cluster) setup(ctx context.Context) error {
 
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	if !file.Exists(pkiPath) {
-		err = pki.GeneratePki(pkiPath)
+		sans := []string{
+			c.Name() + "-kube-apiserver",
+		}
+		ips, err := net.GetAllIPs()
+		if err != nil {
+			logger := log.FromContext(ctx)
+			logger.Warn("failed to get all ips", "err", err)
+		} else {
+			sans = append(sans, ips...)
+		}
+		err = pki.GeneratePki(pkiPath, sans...)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %w", err)
 		}
@@ -160,13 +171,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	workdir := c.Workdir()
-	adminKeyPath := ""
-	adminCertPath := ""
-	caCertPath := ""
-	caCertPath = path.Join(pkiPath, "ca.crt")
-	adminKeyPath = path.Join(pkiPath, "admin.key")
-	adminCertPath = path.Join(pkiPath, "admin.crt")
+	caCertPath := path.Join(pkiPath, "ca.crt")
+	adminKeyPath := path.Join(pkiPath, "admin.key")
+	adminCertPath := path.Join(pkiPath, "admin.crt")
 	inClusterPkiPath := "/etc/kubernetes/pki/"
+	inClusterCaCertPath := path.Join(inClusterPkiPath, "ca.crt")
 	inClusterAdminKeyPath := path.Join(inClusterPkiPath, "admin.key")
 	inClusterAdminCertPath := path.Join(inClusterPkiPath, "admin.crt")
 
@@ -373,6 +382,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Port:                     conf.KwokControllerPort,
 		ConfigPath:               kwokConfigPath,
 		KubeconfigPath:           inClusterOnHostKubeconfigPath,
+		CaCertPath:               caCertPath,
 		AdminCertPath:            adminCertPath,
 		AdminKeyPath:             adminKeyPath,
 		NodeName:                 c.Name() + "-kwok-controller",
@@ -440,35 +450,37 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Setup kubeconfig
-	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
+	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
 		Address:      scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
+		CACrtPath:    caCertPath,
 		AdminCrtPath: adminCertPath,
 		AdminKeyPath: adminKeyPath,
-	})
+	}))
 	if err != nil {
 		return err
 	}
 
-	inClusterKubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
+	inClusterKubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
 		Address:      scheme + "://" + c.Name() + "-kube-apiserver:" + format.String(inClusterPort),
+		CACrtPath:    inClusterCaCertPath,
 		AdminCrtPath: inClusterAdminCertPath,
 		AdminKeyPath: inClusterAdminKeyPath,
-	})
+	}))
 	if err != nil {
 		return err
 	}
 
 	// Save config
-	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0640)
+	err = os.WriteFile(kubeconfigPath, kubeconfigData, 0640)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(inClusterOnHostKubeconfigPath, []byte(inClusterKubeconfigData), 0640)
+	err = os.WriteFile(inClusterOnHostKubeconfigPath, inClusterKubeconfigData, 0640)
 	if err != nil {
 		return err
 	}

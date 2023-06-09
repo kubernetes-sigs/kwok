@@ -9,7 +9,11 @@ kwokctl get kubeconfig [flags]
 ### Options
 
 ```
-  -h, --help   help for kubeconfig
+      --group strings              Signing certificate with the specified groups if modified (default [system:masters])
+  -h, --help                       help for kubeconfig
+      --host string                Override host[:port] for kubeconfig (default "127.0.0.1")
+      --insecure-skip-tls-verify   Skip server certificate verification
+      --user string                Signing certificate with the specified user if modified (default "kwok-admin")
 ```
 
 ### Options inherited from parent commands

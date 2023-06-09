@@ -68,6 +68,14 @@ function test_workable() {
     return 1
   fi
 
+  kwokctl --name="${name}" get kubeconfig --user=cluster-admin --group=system:masters >"${name}.kubeconfig"
+  if ! kubectl --kubeconfig "${name}.kubeconfig" get pod | grep Running >/dev/null 2>&1; then
+    echo "Error: kubeconfig not work"
+    echo cat "${name}.kubeconfig"
+    cat "${name}.kubeconfig"
+    return 1
+  fi
+
   if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
     echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
     show_all

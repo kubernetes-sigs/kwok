@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -135,7 +136,15 @@ func (c *Cluster) setup(ctx context.Context) error {
 
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	if !file.Exists(pkiPath) {
-		err = pki.GeneratePki(pkiPath)
+		sans := []string{}
+		ips, err := net.GetAllIPs()
+		if err != nil {
+			logger := log.FromContext(ctx)
+			logger.Warn("failed to get all ips", "err", err)
+		} else {
+			sans = append(sans, ips...)
+		}
+		err = pki.GeneratePki(pkiPath, sans...)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %w", err)
 		}
@@ -315,6 +324,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Port:                               conf.KubeControllerManagerPort,
 			SecurePort:                         conf.SecurePort,
 			CaCertPath:                         caCertPath,
+			AdminCertPath:                      adminCertPath,
 			AdminKeyPath:                       adminKeyPath,
 			KubeAuthorization:                  conf.KubeAuthorization,
 			KubeconfigPath:                     kubeconfigPath,
@@ -363,6 +373,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Port:             conf.KubeSchedulerPort,
 			SecurePort:       conf.SecurePort,
 			CaCertPath:       caCertPath,
+			AdminCertPath:    adminCertPath,
 			AdminKeyPath:     adminKeyPath,
 			ConfigPath:       schedulerConfigPath,
 			KubeconfigPath:   kubeconfigPath,
@@ -393,6 +404,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Port:                     conf.KwokControllerPort,
 		ConfigPath:               kwokConfigPath,
 		KubeconfigPath:           kubeconfigPath,
+		CaCertPath:               caCertPath,
 		AdminCertPath:            adminCertPath,
 		AdminKeyPath:             adminKeyPath,
 		NodeName:                 "localhost",
@@ -454,17 +466,18 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Setup kubeconfig
-	kubeconfigData, err := k8s.BuildKubeconfig(k8s.BuildKubeconfigConfig{
+	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
 		Address:      scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
+		CACrtPath:    caCertPath,
 		AdminCrtPath: adminCertPath,
 		AdminKeyPath: adminKeyPath,
-	})
+	}))
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(kubeconfigPath, []byte(kubeconfigData), 0640)
+	err = os.WriteFile(kubeconfigPath, kubeconfigData, 0640)
 	if err != nil {
 		return err
 	}

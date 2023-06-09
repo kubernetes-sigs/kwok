@@ -20,24 +20,41 @@ package kubeconfig
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net"
+	"net/url"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"sigs.k8s.io/kwok/pkg/config"
+	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type flagpole struct {
-	Name string
+	Name                  string
+	Host                  string
+	InsecureSkipTLSVerify bool
+	User                  string
+	Groups                []string
 }
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
 func NewCommand(ctx context.Context) *cobra.Command {
-	flags := &flagpole{}
+	flags := &flagpole{
+		Host:                  "127.0.0.1",
+		User:                  pki.DefaultUser,
+		Groups:                pki.DefaultGroups,
+		InsecureSkipTLSVerify: false,
+	}
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -48,6 +65,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			return runE(cmd.Context(), flags)
 		},
 	}
+
+	cmd.Flags().StringVar(&flags.Host, "host", flags.Host, "Override host[:port] for kubeconfig")
+	cmd.Flags().BoolVar(&flags.InsecureSkipTLSVerify, "insecure-skip-tls-verify", flags.InsecureSkipTLSVerify, "Skip server certificate verification")
+	cmd.Flags().StringVar(&flags.User, "user", flags.User, "Signing certificate with the specified user if modified")
+	cmd.Flags().StringSliceVar(&flags.Groups, "group", flags.Groups, "Signing certificate with the specified groups if modified")
 	return cmd
 }
 
@@ -67,7 +89,101 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	err = rt.KubectlInCluster(exec.WithStdIO(ctx), "config", "view", "--minify", "--flatten", "--raw")
+	kubeconfigPath := rt.GetWorkdirPath(runtime.InHostKubeconfigName)
 
-	return err
+	kubeConfig, err := clientcmd.LoadFromFile(kubeconfigPath)
+	if err != nil {
+		return fmt.Errorf("failed to load kubeconfig file %s: %w", kubeconfigPath, err)
+	}
+
+	err = clientcmdapi.MinifyConfig(kubeConfig)
+	if err != nil {
+		return fmt.Errorf("failed to minify kubeconfig file %s: %w", kubeconfigPath, err)
+	}
+	currentContext := kubeConfig.CurrentContext
+
+	clusterName := kubeConfig.Contexts[currentContext].Cluster
+	if clusterName == "" || kubeConfig.Clusters[clusterName] == nil {
+		return fmt.Errorf("failed to load kubeconfig file %s: %w", kubeconfigPath, err)
+	}
+
+	if flags.Host != "" {
+		cluster := kubeConfig.Clusters[clusterName]
+		host, err := modifyAddress(cluster.Server, flags.Host)
+		if err != nil {
+			return fmt.Errorf("failed to modify host %s: %w", cluster.Server, err)
+		}
+		kubeConfig.Clusters[clusterName].Server = host
+	}
+
+	if flags.InsecureSkipTLSVerify {
+		cluster := kubeConfig.Clusters[clusterName]
+		cluster.InsecureSkipTLSVerify = true
+		cluster.CertificateAuthorityData = nil
+	}
+
+	userName := kubeConfig.Contexts[currentContext].AuthInfo
+
+	if userName != "" && (!slices.Equal(pki.DefaultGroups, flags.Groups) || flags.User != pki.DefaultUser) {
+		// Load CA cert and key
+		caCert, caKey, err := pki.ReadCertAndKey(rt.GetWorkdirPath(runtime.PkiName), "ca")
+		if err != nil {
+			return err
+		}
+
+		// Sign admin cert and key
+		now := time.Now()
+		notBefore := now.UTC()
+		notAfter := now.Add(pki.CertificateValidity).UTC()
+		cert, key, err := pki.GenerateSignCert(flags.User, caCert, caKey, notBefore, notAfter, flags.Groups, nil)
+		if err != nil {
+			return fmt.Errorf("failed to generate admin cert and key: %w", err)
+		}
+
+		// Modify kubeconfig
+		keyData, err := pki.EncodePrivateKeyToPEM(key)
+		if err != nil {
+			return err
+		}
+		certData := pki.EncodeCertToPEM(cert)
+		kubeConfig.AuthInfos[userName].ClientCertificateData = certData
+		kubeConfig.AuthInfos[userName].ClientCertificate = ""
+		kubeConfig.AuthInfos[userName].ClientKeyData = keyData
+		kubeConfig.AuthInfos[userName].ClientKey = ""
+	}
+
+	err = clientcmdapi.FlattenConfig(kubeConfig)
+	if err != nil {
+		return fmt.Errorf("failed to flatten kubeconfig file %s: %w", kubeconfigPath, err)
+	}
+
+	// Encode kubeconfig
+	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeConfig)
+	if err != nil {
+		return fmt.Errorf("failed to encode kubeconfig: %w", err)
+	}
+
+	_, err = os.Stdout.Write(kubeconfigData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func modifyAddress(origin string, address string) (string, error) {
+	u, err := url.Parse(origin)
+	if err != nil {
+		return "", err
+	}
+	if _, _, err = net.SplitHostPort(address); err == nil {
+		u.Host = address
+	} else {
+		_, port, err := net.SplitHostPort(u.Host)
+		if err != nil {
+			return "", err
+		}
+		u.Host = net.JoinHostPort(address, port)
+	}
+	return u.String(), nil
 }

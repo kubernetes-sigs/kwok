@@ -17,12 +17,30 @@ limitations under the License.
 package pki
 
 import (
+	"fmt"
 	"testing"
+	"time"
 )
 
 func TestGeneratePki(t *testing.T) {
-	_, err := generatePki()
+	now := time.Now()
+	notBefore := now.UTC()
+	notAfter := now.Add(CertificateValidity).UTC()
+
+	caCert, caKey, err := GenerateCA("kwok-ca", notBefore, notAfter)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal(fmt.Errorf("failed to generate CA: %w", err))
 	}
+
+	cert, key, err := GenerateSignCert("kwok-admin", caCert, caKey, notBefore, notAfter, DefaultGroups, DefaultAltNames)
+	if err != nil {
+		t.Fatal(fmt.Errorf("failed to generate admin cert and key: %w", err))
+	}
+
+	_, err = EncodePrivateKeyToPEM(key)
+	if err != nil {
+		t.Fatal(fmt.Errorf("failed to encode private key: %w", err))
+	}
+
+	_ = EncodeCertToPEM(cert)
 }
