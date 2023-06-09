@@ -33,7 +33,8 @@ import (
 // ForkExec forks a new process and execs the given command.
 // The process will be terminated when the context is canceled.
 func ForkExec(ctx context.Context, dir string, name string, arg ...string) error {
-	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	baseName := getBaseName(name)
+	pidPath := path.Join(dir, "pids", baseName+".pid")
 	pidData, err := os.ReadFile(pidPath)
 	if err == nil {
 		pid, err := strconv.Atoi(string(pidData))
@@ -44,8 +45,8 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 		}
 	}
 
-	logPath := path.Join(dir, "logs", filepath.Base(name)+".log")
-	cmdlinePath := path.Join(dir, "cmdline", filepath.Base(name))
+	logPath := path.Join(dir, "logs", baseName+".log")
+	cmdlinePath := path.Join(dir, "cmdline", baseName)
 
 	err = os.MkdirAll(filepath.Dir(pidPath), 0750)
 	if err != nil {
@@ -91,7 +92,8 @@ func ForkExec(ctx context.Context, dir string, name string, arg ...string) error
 
 // ForkExecRestart restarts the process if it is not running.
 func ForkExecRestart(ctx context.Context, dir string, name string) error {
-	cmdlinePath := path.Join(dir, "cmdline", filepath.Base(name))
+	baseName := getBaseName(name)
+	cmdlinePath := path.Join(dir, "cmdline", baseName)
 
 	data, err := os.ReadFile(cmdlinePath)
 	if err != nil {
@@ -105,7 +107,8 @@ func ForkExecRestart(ctx context.Context, dir string, name string) error {
 
 // ForkExecKill kills the process if it is running.
 func ForkExecKill(ctx context.Context, dir string, name string) error {
-	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	baseName := getBaseName(name)
+	pidPath := path.Join(dir, "pids", baseName+".pid")
 	_, err := os.Stat(pidPath)
 	if err != nil {
 		// No pid file exists, which means the process has been terminated
@@ -159,7 +162,8 @@ func killProcess(pid int) error {
 
 // IsRunning returns true if the process is running.
 func IsRunning(ctx context.Context, dir string, name string) bool {
-	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	baseName := getBaseName(name)
+	pidPath := path.Join(dir, "pids", baseName+".pid")
 	pidData, err := os.ReadFile(pidPath)
 	if err != nil {
 		return false
@@ -172,4 +176,13 @@ func IsRunning(ctx context.Context, dir string, name string) bool {
 		return false
 	}
 	return true
+}
+
+func getBaseName(name string) string {
+	baseName := filepath.Base(name)
+	index := strings.IndexByte(baseName, '.')
+	if index == -1 {
+		return baseName
+	}
+	return baseName[:index]
 }
