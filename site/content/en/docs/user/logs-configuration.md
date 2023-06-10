@@ -1,3 +1,7 @@
+---
+title: "Logs"
+---
+
 # Logs Configuration
 
 {{< hint "info" >}}

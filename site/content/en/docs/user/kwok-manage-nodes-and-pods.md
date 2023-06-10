@@ -1,3 +1,7 @@
+---
+title: Manage Nodes and Pods
+---
+
 # Manage nodes and pods with `kwok`
 
 {{< hint "info" >}}

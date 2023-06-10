@@ -1,3 +1,7 @@
+---
+title: "Admission"
+---
+
 # `kwokctl` Admission
 
 {{< hint "info" >}}

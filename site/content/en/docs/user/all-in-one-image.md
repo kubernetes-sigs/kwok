@@ -1,3 +1,7 @@
+---
+title: All-in-one Image
+---
+
 # Run cluster with all-in-one image
 
 {{< hint "info" >}}

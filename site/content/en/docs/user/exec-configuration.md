@@ -1,3 +1,7 @@
+---
+title: Exec
+---
+
 # Exec Configuration
 
 {{< hint "info" >}}

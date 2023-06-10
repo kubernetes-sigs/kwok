@@ -1,3 +1,8 @@
+---
+title: Adopters
+bookToc: false
+---
+
 # Adopters
 
 We are frequently asked who is using of KWOK and how. We would like to share the list of adopters below.

@@ -1,4 +1,5 @@
 ---
+title: "`kwok` out of Cluster"
 aliases:
   - /docs/user/kwok-in-local/
 ---
@@ -42,4 +43,4 @@ Finally, you can see the `kwok` is running out of cluster for the Kubernetes clu
 Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
 
 [manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
-[install]: {{< relref "/docs/user/install" >}}
+[install]: {{< relref "/docs/user/installation" >}}

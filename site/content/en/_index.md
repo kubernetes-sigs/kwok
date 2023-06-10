@@ -1,6 +1,5 @@
 ---
 title: Home
-type: docs
 ---
 
 # `KWOK` (`K`ubernetes `W`ith`O`ut `K`ubelet)
@@ -49,8 +48,8 @@ The animation below shows a test process to work with the latest version of `kwo
 
 <img width="700px" src="/img/demo/manage-clusters.svg">
 
-Welcome to [get started]({{< relref "/docs/user/getting-started" >}}) with the installation, basic usage, custom configuration,
-and [contribution to KWOK]({{< relref "/docs/contributing/getting-started" >}}).
+Welcome to [get started][user guide] with the installation, basic usage, custom configuration,
+and [contribution to KWOK][contributor guide].
 
 ## `kwokctl` Runtime and OS Support
 
@@ -85,7 +84,8 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 [kind]: https://github.com/kubernetes-sigs/kind
 [kubemark]: https://github.com/kubernetes/kubernetes/tree/master/test/kubemark
 [community page]: https://kubernetes.io/community/
-[contributor guide]: {{< relref "/docs/contributing/getting-started" >}}
+[user guide]: {{< relref "/docs/user" >}}
+[contributor guide]: {{< relref "/docs/contributing" >}}
 [code of conduct]: https://github.com/kubernetes-sigs/kwok/blob/main/code-of-conduct.md
 [sigs.k8s.io/kwok]: https://sigs.k8s.io/kwok/
 [#kwok]: https://kubernetes.slack.com/messages/kwok/

@@ -1,3 +1,9 @@
+---
+title: Contributing
+aliases:
+  - /docs/contributing/getting-started
+---
+
 # Getting Started
 
 {{< hint "info" >}}

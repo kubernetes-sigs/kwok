@@ -1,3 +1,7 @@
+---
+title: Development
+---
+
 # Development
 
 {{< hint "info" >}}

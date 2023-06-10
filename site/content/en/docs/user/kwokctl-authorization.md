@@ -1,3 +1,7 @@
+---
+title: "Authorization"
+---
+
 # `kwokctl` Authorization
 
 {{< hint "info" >}}

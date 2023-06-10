@@ -1,3 +1,9 @@
+---
+title: User Guide
+aliases:
+  - /docs/user/getting-started
+---
+
 # Getting Started
 
 {{< hint "info" >}}
@@ -34,7 +40,7 @@ If any special concerns, you can configure KWOK with options and stages.
 
 I hope this helps you get started with KWOK! Good luck and have fun!
 
-[Install]: {{< relref "/docs/user/install" >}}
+[Install]: {{< relref "/docs/user/installation" >}}
 [`kwok` Manages Nodes and Pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
 [`kwok` in Cluster]: {{< relref "/docs/user/kwok-in-cluster" >}}
 [`kwok` out of Cluster]: {{< relref "/docs/user/kwok-out-cluster" >}}

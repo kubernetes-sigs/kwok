@@ -1,3 +1,7 @@
+---
+title: "Metrics"
+---
+
 # `kwokctl` Metrics
 
 {{< hint "info" >}}

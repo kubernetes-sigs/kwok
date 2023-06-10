@@ -1,3 +1,7 @@
+---
+title: "Stages"
+---
+
 # Stages Configuration
 
 {{< hint "info" >}}

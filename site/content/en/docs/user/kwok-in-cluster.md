@@ -1,3 +1,7 @@
+---
+title: "`kwok` in Cluster"
+---
+
 # Deploy `kwok` in a Cluster
 
 {{< hint "info" >}}
