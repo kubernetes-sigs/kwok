@@ -60,13 +60,13 @@ Runtime indicates which medium `kwokctl` will use to start the cluster
 |  linux/amd64  |   🟢   |   🟢   |   🟢   |   🟢    |  🟢   |     🟢      |
 |  linux/arm64  |   🔵   |   🔵   |   🟣   |   🟣    |  🟣   |     🟣      |
 | darwin/amd64  | 🟢/🟠  |   🟢   |   🔵   |  🔵/🟡  |  🟢   |     🔵      |
-| darwin/arm64  | 🔵/🟠  |   🔵   |   🟣   |  🟣/🟡  |  🟣   |     🟣      |
-| windows/amd64 | 🟤/🟠  |   🟤   |   🟤   |  🟤/🟡  |  🟤   |     🟤      |
-| windows/arm64 | 🟤/🟠  |   🟤   |   🔴   |   🔴    |  🔴   |     🔴      |
+| darwin/arm64  | 🔵/🟠  |   🔵   |   🔵   |  🔵/🟡  |  🔵   |     🔵      |
+| windows/amd64 | 🟣/🟠  |   🟣   |   🟤   |  🟤/🟡  |  🟤   |     🟤      |
+| windows/arm64 | 🟣/🟠  |   🟣   |   🔴   |   🔴    |  🔴   |     🔴      |
 
 - 🟢 Supported and test covered by CI
 - 🔵 Supported and test by manually
-- 🟣 Supported but not test yet
+- 🟣 Supported but not test yet (need help to verify)
 - 🟤 Unsupported but should work in theory (need help to verify)
 - 🔴 Unsupported and will not work
 - 🟠 Need to build [platform-specific Kubernetes binaries]
