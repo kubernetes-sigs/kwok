@@ -1343,6 +1343,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.BindAddress = in.BindAddress
+	out.KubeApiserverCertSANs = *(*[]string)(unsafe.Pointer(&in.KubeApiserverCertSANs))
 	return nil
 }
 
@@ -1426,6 +1427,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.BindAddress = in.BindAddress
+	out.KubeApiserverCertSANs = *(*[]string)(unsafe.Pointer(&in.KubeApiserverCertSANs))
 	return nil
 }
 

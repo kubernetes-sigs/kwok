@@ -99,6 +99,9 @@ func (c *Cluster) setup(ctx context.Context) error {
 		} else {
 			sans = append(sans, ips...)
 		}
+		if len(conf.KubeApiserverCertSANs) != 0 {
+			sans = append(sans, conf.KubeApiserverCertSANs...)
+		}
 		err = pki.GeneratePki(pkiPath, sans...)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %w", err)

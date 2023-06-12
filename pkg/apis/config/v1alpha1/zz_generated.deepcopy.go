@@ -280,6 +280,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = new(bool)
 		**out = **in
 	}
+	if in.KubeApiserverCertSANs != nil {
+		in, out := &in.KubeApiserverCertSANs, &out.KubeApiserverCertSANs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

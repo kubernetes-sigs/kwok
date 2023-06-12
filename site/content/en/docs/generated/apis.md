@@ -2428,6 +2428,17 @@ string
 <p>BindAddress is the address to bind to.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>kubeApiserverCertSANs</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>KubeApiserverCertSANs sets extra Subject Alternative Names for the API Server signing cert.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.Port">
