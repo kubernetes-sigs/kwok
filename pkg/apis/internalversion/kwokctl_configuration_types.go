@@ -209,6 +209,9 @@ type KwokctlConfigurationOptions struct {
 
 	// BindAddress is the address to bind to.
 	BindAddress string
+
+	// KubeApiserverCertSANs sets extra Subject Alternative Names for the API Server signing cert.
+	KubeApiserverCertSANs []string
 }
 
 // Component is a component of the cluster.
