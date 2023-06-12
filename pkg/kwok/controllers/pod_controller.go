@@ -234,13 +234,19 @@ func (c *PodController) deleteResource(ctx context.Context, pod *corev1.Pod) err
 // preprocessWorker receives the resource from the preprocessChan and preprocess it
 func (c *PodController) preprocessWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
-	for pod := range c.preprocessChan {
-		err := c.preprocess(ctx, pod)
-		if err != nil {
-			logger.Error("Failed to preprocess node", err,
-				"pod", log.KObj(pod),
-				"node", pod.Spec.NodeName,
-			)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("Stop preprocess worker")
+			return
+		case pod := <-c.preprocessChan:
+			err := c.preprocess(ctx, pod)
+			if err != nil {
+				logger.Error("Failed to preprocess node", err,
+					"pod", log.KObj(pod),
+					"node", pod.Spec.NodeName,
+				)
+			}
 		}
 	}
 }
@@ -248,14 +254,20 @@ func (c *PodController) preprocessWorker(ctx context.Context) {
 // triggerPreprocessWorker receives the resource from the triggerPreprocessChan and preprocess it
 func (c *PodController) triggerPreprocessWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
-	for nodeName := range c.triggerPreprocessChan {
-		err := c.listResources(ctx, metav1.ListOptions{
-			FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
-		})
-		if err != nil {
-			logger.Error("Failed to preprocess node", err,
-				"node", nodeName,
-			)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("Stop trigger preprocess worker")
+			return
+		case nodeName := <-c.triggerPreprocessChan:
+			err := c.listResources(ctx, metav1.ListOptions{
+				FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
+			})
+			if err != nil {
+				logger.Error("Failed to preprocess node", err,
+					"node", nodeName,
+				)
+			}
 		}
 	}
 }
@@ -327,8 +339,15 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *PodController) playStageWorker(ctx context.Context) {
-	for pod := range c.playStageChan {
-		c.playStage(ctx, pod.Resource, pod.Stage)
+	logger := log.FromContext(ctx)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("Stop play stage worker")
+			return
+		case pod := <-c.playStageChan:
+			c.playStage(ctx, pod.Resource, pod.Stage)
+		}
 	}
 }
 

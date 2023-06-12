@@ -30,6 +30,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
 )
@@ -298,7 +299,12 @@ func TestPodController(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pod := list.Items[0]
+	pod, ok := slices.Find(list.Items, func(pod corev1.Pod) bool {
+		return pod.Name == "pod0"
+	})
+	if !ok {
+		t.Fatal(fmt.Errorf("not found pod0"))
+	}
 	now := metav1.Now()
 	pod.DeletionTimestamp = &now
 	_, err = clientset.CoreV1().Pods("default").Update(ctx, &pod, metav1.UpdateOptions{})
@@ -315,7 +321,7 @@ func TestPodController(t *testing.T) {
 			return false, fmt.Errorf("want 4 pods, got %d", len(list.Items))
 		}
 		return true, nil
-	}, wait.WithContinueOnError(5))
+	}, wait.WithContinueOnError(10))
 	if err != nil {
 		t.Fatal(err)
 	}

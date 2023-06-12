@@ -188,8 +188,15 @@ func (c *NodeLeaseController) listResources(ctx context.Context, opt metav1.List
 }
 
 func (c *NodeLeaseController) syncWorker(ctx context.Context) {
-	for nodeName := range c.leaseChan {
-		c.sync(ctx, nodeName)
+	logger := log.FromContext(ctx)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("Stop sync worker")
+			return
+		case nodeName := <-c.leaseChan:
+			c.sync(ctx, nodeName)
+		}
 	}
 }
 
