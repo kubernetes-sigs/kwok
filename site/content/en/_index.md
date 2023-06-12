@@ -51,19 +51,26 @@ The animation below shows a test process to work with the latest version of `kwo
 Welcome to [get started][user guide] with the installation, basic usage, custom configuration,
 and [contribution to KWOK][contributor guide].
 
-## `kwokctl` Runtime and OS Support
+## `kwokctl` Runtime Support Matrix
 
 Runtime indicates which medium `kwokctl` will use to start the cluster
 
-|         | binary | docker | podman | nerdctl | kind |
-| ------- | ------ | ------ | ------ | ------- | ---- |
-| Linux   | 🟢      | 🟢      | 🟢      | 🟢       | 🟢    |
-| Darwin  | 🟠/🟢    | 🟢      | 🔵      | 🔵       | 🟢    |
-| Windows | 🟠/🔵    | 🔵      | 🔵      | 🔵       | 🔵    |
+|    OS/Arch    | binary | docker | podman | nerdctl | kind  | kind-podman |
+|:-------------:|:------:|:------:|:------:|:-------:|:-----:|:-----------:|
+|  linux/amd64  |   🟢   |   🟢   |   🟢   |   🟢    |  🟢   |     🟢      |
+|  linux/arm64  |   🔵   |   🔵   |   🟣   |   🟣    |  🟣   |     🟣      |
+| darwin/amd64  | 🟢/🟠  |   🟢   |   🔵   |  🔵/🟡  |  🟢   |     🔵      |
+| darwin/arm64  | 🔵/🟠  |   🔵   |   🟣   |  🟣/🟡  |  🟣   |     🟣      |
+| windows/amd64 | 🟤/🟠  |   🟤   |   🟤   |  🟤/🟡  |  🟤   |     🟤      |
+| windows/arm64 | 🟤/🟠  |   🟤   |   🔴   |   🔴    |  🔴   |     🔴      |
 
-- 🟢 Supported
+- 🟢 Supported and test covered by CI
+- 🔵 Supported and test by manually
+- 🟣 Supported but not test yet
+- 🟤 Unsupported but should work in theory (need help to verify)
+- 🔴 Unsupported and will not work
 - 🟠 Need to build [platform-specific Kubernetes binaries]
-- 🔵 Expected support but not fully tested
+- 🟡 Need to do some workaround to make it work
 
 ## Community
 
