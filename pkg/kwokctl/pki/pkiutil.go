@@ -208,8 +208,67 @@ func removeDuplicateAltNames(altNames *AltNames) {
 	altNames.IPs = ips
 }
 
-// writeCertAndKey stores certificate and key at the specified location
-func writeCertAndKey(pkiPath string, name string, cert *x509.Certificate, key crypto.Signer) error {
+// ReadCertAndKey reads certificate and key from the specified location
+func ReadCertAndKey(pkiPath string, name string) (*x509.Certificate, crypto.Signer, error) {
+	cert, err := readCert(pkiPath, name)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to read certificate: %w", err)
+	}
+
+	key, err := readKey(pkiPath, name)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to read key: %w", err)
+	}
+
+	return cert, key, nil
+}
+
+// readCert reads certificate from the specified location
+func readCert(pkiPath, name string) (*x509.Certificate, error) {
+	certificatePath := pathForCert(pkiPath, name)
+	certBytes, err := os.ReadFile(certificatePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read certificate from file %s: %w", certificatePath, err)
+	}
+	return decodeCertPEM(certBytes)
+}
+
+// readKey reads key from the specified location
+func readKey(pkiPath, name string) (crypto.Signer, error) {
+	keyPath := pathForKey(pkiPath, name)
+	keyBytes, err := os.ReadFile(keyPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read key from file %s: %w", keyPath, err)
+	}
+	return decodeKeyPEM(keyBytes)
+}
+
+// decodeCertPEM decodes a PEM-encoded certificate.
+func decodeCertPEM(certPEM []byte) (*x509.Certificate, error) {
+	block, _ := pem.Decode(certPEM)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode certificate PEM")
+	}
+	return x509.ParseCertificate(block.Bytes)
+}
+
+// decodeKeyPEM decodes a PEM-encoded key.
+func decodeKeyPEM(keyPEM []byte) (crypto.Signer, error) {
+	block, _ := pem.Decode(keyPEM)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode key PEM")
+	}
+	switch block.Type {
+	case RSAPrivateKeyBlockType:
+		return x509.ParsePKCS1PrivateKey(block.Bytes)
+	case ECPrivateKeyBlockType:
+		return x509.ParseECPrivateKey(block.Bytes)
+	}
+	return nil, fmt.Errorf("unsupported key type %q", block.Type)
+}
+
+// WriteCertAndKey stores certificate and key at the specified location
+func WriteCertAndKey(pkiPath string, name string, cert *x509.Certificate, key crypto.Signer) error {
 	if err := writeKey(pkiPath, name, key); err != nil {
 		return fmt.Errorf("couldn't write key: %w", err)
 	}
@@ -219,7 +278,8 @@ func writeCertAndKey(pkiPath string, name string, cert *x509.Certificate, key cr
 // writeCert stores the given certificate at the given location
 func writeCert(pkiPath, name string, cert *x509.Certificate) error {
 	certificatePath := pathForCert(pkiPath, name)
-	if err := writeFile(certificatePath, encodeCertPEM(cert)); err != nil {
+	encoded := EncodeCertToPEM(cert)
+	if err := writeFile(certificatePath, encoded); err != nil {
 		return fmt.Errorf("unable to write certificate to file %s: %w", certificatePath, err)
 	}
 	return nil
@@ -228,7 +288,7 @@ func writeCert(pkiPath, name string, cert *x509.Certificate) error {
 // writeKey stores the given key at the given location
 func writeKey(pkiPath, name string, key crypto.Signer) error {
 	privateKeyPath := pathForKey(pkiPath, name)
-	encoded, err := encodePrivateKeyToPEM(key)
+	encoded, err := EncodePrivateKeyToPEM(key)
 	if err != nil {
 		return fmt.Errorf("unable to marshal private key to PEM: %w", err)
 	}
@@ -238,8 +298,8 @@ func writeKey(pkiPath, name string, key crypto.Signer) error {
 	return nil
 }
 
-// encodeCertPEM returns PEM-encoded certificate data
-func encodeCertPEM(cert *x509.Certificate) []byte {
+// EncodeCertToPEM returns PEM-encoded certificate data
+func EncodeCertToPEM(cert *x509.Certificate) []byte {
 	block := pem.Block{
 		Type:  CertificateBlockType,
 		Bytes: cert.Raw,
@@ -247,9 +307,9 @@ func encodeCertPEM(cert *x509.Certificate) []byte {
 	return pem.EncodeToMemory(&block)
 }
 
-// encodePrivateKeyToPEM converts a known private key type of RSA or ECDSA to
+// EncodePrivateKeyToPEM converts a known private key type of RSA or ECDSA to
 // a PEM encoded block or returns an error.
-func encodePrivateKeyToPEM(privateKey crypto.PrivateKey) ([]byte, error) {
+func EncodePrivateKeyToPEM(privateKey crypto.PrivateKey) ([]byte, error) {
 	switch t := privateKey.(type) {
 	case *ecdsa.PrivateKey:
 		derBytes, err := x509.MarshalECPrivateKey(t)

@@ -19,9 +19,8 @@ package controllers
 import (
 	"strconv"
 
-	"k8s.io/utils/strings/slices"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type jsonpathOperation struct {

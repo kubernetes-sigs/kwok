@@ -19,74 +19,98 @@ package pki
 import (
 	"crypto"
 	"crypto/x509"
+	"fmt"
 	"net"
 	"time"
+
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
-type pkiSuite struct {
-	cert   *x509.Certificate
-	key    crypto.Signer
-	caCert *x509.Certificate
-	caKey  crypto.Signer
-}
+var (
+	// DefaultUser is the default user for the admin user
+	DefaultUser = "kwok-admin"
+	// DefaultGroups is the default groups for the admin user
+	DefaultGroups = []string{
+		"system:masters",
+	}
+	// DefaultAltNames is the default alt names for the admin user
+	DefaultAltNames = []string{
+		"kubernetes",
+		"kubernetes.default",
+		"kubernetes.default.svc",
+		"kubernetes.default.svc.cluster.local",
+		"localhost",
+		"127.0.0.1",
+		"::1",
+	}
+)
 
-func generatePki() (*pkiSuite, error) {
+// GeneratePki generates the pki for kwokctl
+func GeneratePki(pkiPath string, sans ...string) error {
 	now := time.Now()
 	notBefore := now.UTC()
 	notAfter := now.Add(CertificateValidity).UTC()
-	caCert, caKey, err := NewCertificateAuthority(CertConfig{
-		CommonName:         "kwok-ca",
-		PublicKeyAlgorithm: x509.RSA,
-		NotAfter:           notAfter,
-		NotBefore:          notBefore,
-	})
+
+	// Generate CA
+	caCert, caKey, err := GenerateCA("kwok-ca", notBefore, notAfter)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to generate CA: %w", err)
+	}
+	err = WriteCertAndKey(pkiPath, "ca", caCert, caKey)
+	if err != nil {
+		return fmt.Errorf("failed to write CA: %w", err)
 	}
 
-	cert, key, err := NewCertAndKey(caCert, caKey, CertConfig{
-		CommonName:   "kwok-admin",
-		Organization: []string{"system:masters"},
-		Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
-		AltNames: AltNames{
-			DNSNames: []string{
-				"kubernetes",
-				"kubernetes.default",
-				"kubernetes.default.svc",
-				"kubernetes.default.svc.cluster.local",
-			},
-			IPs: []net.IP{
-				net.IPv4(127, 0, 0, 1),
-			},
-		},
-		PublicKeyAlgorithm: x509.RSA,
-		NotAfter:           notAfter,
-		NotBefore:          notBefore,
-	})
-	if err != nil {
-		return nil, err
+	// Generate admin cert, use single cert for all components
+	allSANs := DefaultAltNames
+	if len(sans) != 0 {
+		allSANs = append(allSANs, sans...)
 	}
-	return &pkiSuite{
-		cert:   cert,
-		key:    key,
-		caCert: caCert,
-		caKey:  caKey,
-	}, nil
-}
-
-// GeneratePki generates a new PKI suite for the cluster.
-func GeneratePki(dir string) error {
-	p, err := generatePki()
+	cert, key, err := GenerateSignCert(DefaultUser, caCert, caKey, notBefore, notAfter, DefaultGroups, allSANs)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to generate admin cert and key: %w", err)
 	}
-	err = writeCertAndKey(dir, "admin", p.cert, p.key)
+	err = WriteCertAndKey(pkiPath, "admin", cert, key)
 	if err != nil {
-		return err
-	}
-	err = writeCert(dir, "ca", p.caCert)
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to write admin cert and key: %w", err)
 	}
 	return nil
+}
+
+// GenerateCA generates a CA certificate and key.
+func GenerateCA(cn string, notBefore, notAfter time.Time) (cert *x509.Certificate, key crypto.Signer, err error) {
+	return NewCertificateAuthority(CertConfig{
+		CommonName:         cn,
+		PublicKeyAlgorithm: x509.RSA,
+		NotAfter:           notAfter,
+		NotBefore:          notBefore,
+	})
+}
+
+// GenerateSignCert generates a certificate and key signed by the given CA.
+func GenerateSignCert(cn string, caCert *x509.Certificate, caKey crypto.Signer, notBefore, notAfter time.Time, organizations []string, sans []string) (cert *x509.Certificate, key crypto.Signer, err error) {
+	alt := AltNames{}
+
+	if len(sans) != 0 {
+		sans = slices.Unique(sans)
+		for _, name := range sans {
+			ip := net.ParseIP(name)
+			if ip != nil {
+				alt.IPs = append(alt.IPs, ip)
+			} else {
+				alt.DNSNames = append(alt.DNSNames, name)
+			}
+		}
+	}
+
+	certConfig := CertConfig{
+		CommonName:         cn,
+		Organization:       organizations,
+		Usages:             []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
+		AltNames:           alt,
+		PublicKeyAlgorithm: x509.RSA,
+		NotAfter:           notAfter,
+		NotBefore:          notBefore,
+	}
+	return NewCertAndKey(caCert, caKey, certConfig)
 }

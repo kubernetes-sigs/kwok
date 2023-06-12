@@ -67,6 +67,11 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
+				HostPath:  conf.CaCertPath,
+				MountPath: "/etc/kubernetes/pki/ca.crt",
+				ReadOnly:  true,
+			},
+			internalversion.Volume{
 				HostPath:  conf.AdminCertPath,
 				MountPath: "/etc/kubernetes/pki/admin.crt",
 				ReadOnly:  true,

@@ -21,9 +21,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"k8s.io/utils/strings/slices"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // Requirement contains values, a key, and an operator that relates the key and values.

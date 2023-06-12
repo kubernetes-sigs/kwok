@@ -33,6 +33,7 @@ type BuildKwokControllerComponentConfig struct {
 	Port                     uint32
 	ConfigPath               string
 	KubeconfigPath           string
+	CaCertPath               string
 	AdminCertPath            string
 	AdminKeyPath             string
 	NodeName                 string
@@ -59,6 +60,11 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
 				MountPath: "/root/.kube/config",
+				ReadOnly:  true,
+			},
+			internalversion.Volume{
+				HostPath:  conf.CaCertPath,
+				MountPath: "/etc/kubernetes/pki/ca.crt",
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
