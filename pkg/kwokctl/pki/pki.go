@@ -48,7 +48,7 @@ var (
 // GeneratePki generates the pki for kwokctl
 func GeneratePki(pkiPath string, sans ...string) error {
 	now := time.Now()
-	notBefore := now.UTC()
+	notBefore := now.Add(-24 * time.Hour).UTC()
 	notAfter := now.Add(CertificateValidity).UTC()
 
 	// Generate CA
