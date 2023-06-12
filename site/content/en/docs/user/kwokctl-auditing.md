@@ -1,3 +1,7 @@
+---
+title: "Auditing"
+---
+
 # `kwokctl` Auditing
 
 {{< hint "info" >}}

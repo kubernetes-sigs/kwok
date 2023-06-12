@@ -18,3 +18,11 @@ code {
     border-radius: .25rem;
     font-size: .875em;
 }
+
+a.active {
+    color: var(--color-link);
+}
+
+a.ancestor {
+    color: var(--color-visited-link);
+}

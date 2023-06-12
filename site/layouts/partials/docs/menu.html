@@ -1,0 +1,19 @@
+<nav>
+  {{ partial "docs/brand" . }}
+  {{ partial "docs/search" . }}
+  {{ if .Site.IsMultiLingual }}
+    {{ partial "docs/languages" . }}
+  {{ end }}
+
+  {{ partial "docs/inject/menu-before" . }}
+  {{ partial "docs/menu-hugo" (dict "page" . "menuEntries" .Site.Menus.before ) }}
+  {{ partial "docs/menu-hugo" (dict "page" . "menuEntries" .Site.Menus.main ) }}
+  {{ partial "docs/menu-hugo" (dict "page" . "menuEntries" .Site.Menus.after ) }}
+  {{ partial "docs/inject/menu-after" . }}
+</nav>
+
+<!-- Restore menu position as soon as possible to avoid flickering -->
+{{ $script := resources.Get "menu-reset.js" | resources.Minify }}
+{{ with $script.Content }}
+<script>{{ . | safeJS }}</script>
+{{ end }}

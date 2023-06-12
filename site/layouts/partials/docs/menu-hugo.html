@@ -1,0 +1,76 @@
+<!--
+  https://gohugo.io/variables/menus/
+-->
+
+{{ template "book-menu" (dict "page" .page "menuEntries" .menuEntries) }}
+
+{{ define "book-menu" }}
+{{ $page := .page }}
+<ul>
+  {{ range .menuEntries }}
+  <li>
+    {{ $attrs := dict "href" .URL }}
+
+    {{ $checked := eq .Params.collapse "never" }}
+    {{ $collapse := and .HasChildren (not $checked) }}
+
+    {{- if or ($page.IsMenuCurrent .Menu .) ($page.HasMenuCurrent .Menu .) }}
+      {{ $checked = true }}
+    {{- end }}
+
+
+    {{ if $collapse }}
+      <input type="checkbox" id="section-{{ .Identifier }}" class="toggle" {{ if $checked }}checked{{ end }} />
+      <label for="section-{{ .Identifier }}" class="flex justify-between">
+        {{ template "book-menu-link" (dict "page" $page "menuEntries" .) }}
+      </label>
+    {{ else }}
+      {{ template "book-menu-link" (dict "page" $page "menuEntries" .) }}
+    {{ end }}
+
+    {{ with .Children }}
+      {{ template "book-menu" (dict "page" $page "menuEntries" .) }}
+    {{ end }}
+  </li>
+  {{- end }}
+
+</ul>
+{{ end }}
+
+
+{{ define "book-menu-link" }}
+  {{ $page := .page }}
+
+  {{- $attrs := dict "href" .URL }}
+
+  {{ with .menuEntries }}
+
+  {{ $title := or .Title .Name .Identifier | markdownify }}
+
+  {{- if $page.IsMenuCurrent .Menu . }}
+      {{- $attrs = merge $attrs (dict "class" "active" "aria-current" "page") }}
+  {{- else if $page.HasMenuCurrent .Menu .}}
+      {{- $attrs = merge $attrs (dict "class" "ancestor" "aria-current" "true") }}
+  {{- end }}
+
+  {{ if .URL }}
+    <a href="{{ .URL }}"
+      {{- range $k, $v := $attrs }}
+        {{- with $v }}
+          {{- printf " %s=%q" $k $v | safeHTMLAttr }}
+        {{- end }}
+      {{- end -}}
+      {{ if not .Page }}
+        target="_blank" rel="noopener"
+      {{ end }}
+    >
+      {{ $title }}
+    </a>
+  {{ else }}
+    <strong>
+      {{ $title }}
+    </strong>
+  {{ end }}
+
+  {{ end }}
+{{ end }}

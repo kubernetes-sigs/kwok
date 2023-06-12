@@ -1,4 +1,10 @@
-# Install
+---
+title: Installation
+aliases:
+  - /docs/user/install/
+---
+
+# Installation
 
 {{< hint "info" >}}
 
@@ -16,7 +22,7 @@ this will install the latest version of `kwokctl` and `kwok` binaries.
 brew install kwok
 ```
 
-## Go Install
+## Install with Golang
 
 also, you can install `kwokctl` and `kwok` binaries via [golang].
 

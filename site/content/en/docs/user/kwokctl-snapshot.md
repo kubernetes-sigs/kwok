@@ -1,3 +1,7 @@
+---
+title: "Snapshot"
+---
+
 # `kwokctl` Snapshot
 
 {{< hint "info" >}}

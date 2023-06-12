@@ -1,3 +1,7 @@
+---
+title: "`kwokctl` Manage Clusters"
+---
+
 # Create a Cluster with `kwokctl`
 
 {{< hint "info" >}}
@@ -58,4 +62,4 @@ Cluster "kwok-kwok" deleted
 Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
 
 [manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
-[install]: {{< relref "/docs/user/install" >}}
+[install]: {{< relref "/docs/user/installation" >}}

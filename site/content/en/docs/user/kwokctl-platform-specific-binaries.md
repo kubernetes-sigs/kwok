@@ -1,3 +1,7 @@
+---
+title: "Platform-Specific Binaries"
+---
+
 # Platform-Specific Kubernetes Binaries
 
 {{< hint "info" >}}
