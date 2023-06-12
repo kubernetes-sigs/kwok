@@ -133,7 +133,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 		// Sign admin cert and key
 		now := time.Now()
-		notBefore := now.UTC()
+		notBefore := now.Add(-24 * time.Hour).UTC()
 		notAfter := now.Add(pki.CertificateValidity).UTC()
 		cert, key, err := pki.GenerateSignCert(flags.User, caCert, caKey, notBefore, notAfter, flags.Groups, nil)
 		if err != nil {
