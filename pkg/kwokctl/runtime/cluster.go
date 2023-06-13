@@ -47,7 +47,6 @@ var (
 	InClusterKubeconfigName = "kubeconfig"
 	EtcdDataDirName         = "etcd"
 	PkiName                 = "pki"
-	ComposeName             = "docker-compose.yaml"
 	Prometheus              = "prometheus.yaml"
 	KindName                = "kind.yaml"
 	KwokPod                 = "kwok-controller-pod.yaml"
@@ -55,6 +54,10 @@ var (
 	AuditPolicyName         = "audit.yaml"
 	AuditLogName            = "audit.log"
 	SchedulerConfigName     = "scheduler.yaml"
+
+	// ComposeName is the default name of the docker-compose file
+	// Deprecated: *-compose will be removed in the future
+	ComposeName = "docker-compose.yaml"
 )
 
 // Cluster is the cluster

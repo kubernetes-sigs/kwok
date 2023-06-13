@@ -17,13 +17,12 @@ limitations under the License.
 package compose
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"time"
+	"strconv"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 
@@ -33,6 +32,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -40,18 +40,23 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
-// Cluster is an implementation of Runtime for docker-compose.
+// Cluster is an implementation of Runtime for docker.
 type Cluster struct {
 	*runtime.Cluster
 
 	runtime string
+
+	selfCompose *bool
+
+	composeCommands []string
+
+	canNerdctlUnlessStopped *bool
 }
 
-// NewPodmanCluster creates a new Runtime for podman-compose.
+// NewPodmanCluster creates a new Runtime for podman.
 func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir),
@@ -59,7 +64,7 @@ func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
-// NewNerdctlCluster creates a new Runtime for nerdctl compose.
+// NewNerdctlCluster creates a new Runtime for nerdctl.
 func NewNerdctlCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir),
@@ -67,12 +72,58 @@ func NewNerdctlCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
-// NewDockerCluster creates a new Runtime for docker-compose.
+// NewDockerCluster creates a new Runtime for docker.
 func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir),
 		runtime: consts.RuntimeTypeDocker,
 	}, nil
+}
+
+var (
+	selfComposePrefer = envs.GetEnvWithPrefix("CONTAINER_SELF_COMPOSE", "auto")
+)
+
+// getSwitchStatus parses the value to bool pointer.
+func getSwitchStatus(value string) (*bool, error) {
+	if strings.ToLower(value) == "auto" {
+		return nil, nil
+	}
+	b, err := strconv.ParseBool(value)
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
+}
+
+func (c *Cluster) isSelfCompose(ctx context.Context, creating bool) bool {
+	if c.selfCompose != nil {
+		return *c.selfCompose
+	}
+
+	var err error
+	logger := log.FromContext(ctx)
+
+	c.selfCompose, err = getSwitchStatus(selfComposePrefer)
+	if err != nil {
+		logger.Warn("Failed to parse env KWOK_CONTAINER_SELF_COMPOSE, ignore it, fallback to auto", "err", err)
+	} else if c.selfCompose != nil {
+		logger.Info("Found env KWOK_CONTAINER_SELF_COMPOSE, use it", "value", *c.selfCompose)
+		return *c.selfCompose
+	}
+
+	if creating {
+		// When create a new cluster, then use self-compose.
+		c.selfCompose = format.Ptr(true)
+	} else {
+		// otherwise, check whether the compose file exists.
+		// If not exists, then use self-compose.
+		// If exists, then use *-compose.
+		composePath := c.GetWorkdirPath(runtime.ComposeName)
+		c.selfCompose = format.Ptr(!file.Exists(composePath))
+	}
+
+	return *c.selfCompose
 }
 
 // Available  checks whether the runtime is available.
@@ -165,7 +216,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
 	kwokConfigPath := c.GetWorkdirPath(runtime.ConfigName)
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
-	composePath := c.GetWorkdirPath(runtime.ComposeName)
 	auditLogPath := ""
 	auditPolicyPath := ""
 	if conf.KubeAuditPolicy != "" {
@@ -221,8 +271,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	etedComponentPatches := runtime.GetComponentPatches(config, "etcd")
-	etedComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(etedComponentPatches.ExtraVolumes)
+	etcdComponentPatches := runtime.GetComponentPatches(config, "etcd")
+	etcdComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(etcdComponentPatches.ExtraVolumes)
 	if err != nil {
 		return fmt.Errorf("failed to expand host volumes for etcd component: %w", err)
 	}
@@ -234,8 +284,8 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Port:         conf.EtcdPort,
 		DataPath:     etcdDataPath,
 		Verbosity:    verbosity,
-		ExtraArgs:    etedComponentPatches.ExtraArgs,
-		ExtraVolumes: etedComponentPatches.ExtraVolumes,
+		ExtraArgs:    etcdComponentPatches.ExtraArgs,
+		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
 	})
 	if err != nil {
 		return err
@@ -445,13 +495,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		config.Components = append(config.Components, prometheusComponent)
 	}
 
-	// Setup compose
-	compose := convertToCompose(c.Name(), conf.BindAddress, config.Components)
-	composeData, err := yaml.Marshal(compose)
-	if err != nil {
-		return err
-	}
-
 	// Setup kubeconfig
 	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
@@ -477,6 +520,20 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	isSelfCompose := c.isSelfCompose(ctx, true)
+	if !isSelfCompose {
+		composePath := c.GetWorkdirPath(runtime.ComposeName)
+		compose := convertToCompose(c.Name(), conf.BindAddress, config.Components)
+		composeData, err := yaml.Marshal(compose)
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(composePath, composeData, 0640)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Save config
 	err = os.WriteFile(kubeconfigPath, kubeconfigData, 0640)
 	if err != nil {
@@ -488,25 +545,43 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	err = os.WriteFile(composePath, composeData, 0640)
+	err = c.SetConfig(ctx, config)
+	if err != nil {
+		return err
+	}
+	err = c.Save(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = c.SetConfig(ctx, config)
-	if err != nil {
-		logger.Error("Failed to set config", err)
-	}
-	err = c.Save(ctx)
-	if err != nil {
-		logger.Error("Failed to update cluster", err)
-	}
+	if isSelfCompose {
+		err = c.createNetwork(ctx)
+		if err != nil {
+			return err
+		}
 
+		err = c.createComponents(ctx)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 // Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
+	if c.isSelfCompose(ctx, false) {
+		err := c.deleteComponents(ctx)
+		if err != nil {
+			return err
+		}
+
+		err = c.deleteNetwork(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
 	err := c.Cluster.Uninstall(ctx)
 	if err != nil {
 		return err
@@ -516,189 +591,115 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 
 // Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
-	args := []string{"up", "-d"}
-	if conf.QuietPull {
-		args = append(args, "--quiet-pull")
-	}
-
-	commands, err := c.buildComposeCommands(ctx, args...)
-	if err != nil {
-		return err
-	}
-
-	logger := log.FromContext(ctx)
-	for i := 0; ctx.Err() == nil; i++ {
-		err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
+	if c.isSelfCompose(ctx, false) {
+		err := c.startComponents(ctx)
 		if err != nil {
-			logger.Debug("Failed to start cluster",
-				"times", i,
-				"err", err,
-			)
-			time.Sleep(time.Second)
-			continue
+			return err
 		}
-		ready, err := c.isRunning(ctx)
-		if err != nil {
-			logger.Debug("Failed to check components status",
-				"times", i,
-				"err", err,
-			)
-			time.Sleep(time.Second)
-			continue
-		}
-		if !ready {
-			time.Sleep(time.Second)
-			continue
-		}
-		break
-	}
-	err = ctx.Err()
-	if err != nil {
-		return err
+		return nil
 	}
 
-	return nil
-}
-
-type statusItem struct {
-	Service string
-	State   string
-}
-
-func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
-	// podman doesn't support ps --format=json
-	if c.runtime == consts.RuntimeTypePodman {
-		return true, nil
-	}
-	commands, err := c.buildComposeCommands(ctx, "ps", "--format=json")
-	if err != nil {
-		return false, err
-	}
-	out := bytes.NewBuffer(nil)
-	err = exec.Exec(exec.WithWriteTo(exec.WithDir(ctx, c.Workdir()), out), commands[0], commands[1:]...)
-	if err != nil {
-		return false, err
-	}
-
-	var data []statusItem
-	err = json.Unmarshal(out.Bytes(), &data)
-	if err != nil {
-		return false, err
-	}
-
-	if len(data) == 0 {
-		logger := log.FromContext(ctx)
-		logger.Debug("No components found")
-		return false, nil
-	}
-
-	components, ok := slices.Find(data, func(i statusItem) bool {
-		return i.State != "running"
-	})
-	if ok {
-		logger := log.FromContext(ctx)
-		logger.Debug("Components not all running",
-			"components", components,
-		)
-		return false, nil
-	}
-	return true, nil
+	return c.up(ctx)
 }
 
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
-	logger := log.FromContext(ctx)
-	args := []string{"down"}
-	commands, err := c.buildComposeCommands(ctx, args...)
-	if err != nil {
-		return err
+	if c.isSelfCompose(ctx, false) {
+		err := c.stopComponents(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
-	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
-	if err != nil {
-		logger.Error("Failed to down cluster", err)
-	}
-	return nil
+	return c.down(ctx)
 }
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
-	// TODO: nerdctl does not support 'compose start' in v1.1.0 or earlier
-	// Support in https://github.com/containerd/nerdctl/pull/1656 merge into the main branch, but there is no release
-	subcommand := []string{"start"}
-	if c.runtime == consts.RuntimeTypeNerdctl {
-		subcommand = []string{"up", "-d"}
-	}
-
-	commands, err := c.buildComposeCommands(ctx, subcommand...)
-	if err != nil {
-		return err
-	}
-
-	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
-	if err != nil {
-		return fmt.Errorf("failed to start cluster: %w", err)
-	}
-
-	if c.runtime == consts.RuntimeTypeNerdctl {
-		backupFilename := c.GetWorkdirPath("restart.db")
-		fi, err := os.Stat(backupFilename)
-		if err == nil {
-			if fi.IsDir() {
-				return fmt.Errorf("wrong backup file %s, it cannot be a directory, please remove it", backupFilename)
+	if c.isSelfCompose(ctx, false) {
+		if c.runtime == consts.RuntimeTypeNerdctl {
+			canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+			if !canNerdctlUnlessStopped {
+				// TODO: Remove this, nerdctl stop will restart containers
+				// https://github.com/containerd/nerdctl/issues/1980
+				err := c.createComponents(ctx)
+				if err != nil {
+					return err
+				}
 			}
-			if err := c.SnapshotRestore(ctx, backupFilename); err != nil {
-				return fmt.Errorf("failed to restore cluster data: %w", err)
-			}
-			if err := os.Remove(backupFilename); err != nil {
-				return fmt.Errorf("failed to remove backup file: %w", err)
-			}
-		} else if !os.IsNotExist(err) {
+		}
+		err := c.startComponents(ctx)
+		if err != nil {
 			return err
 		}
+
+		if c.runtime == consts.RuntimeTypeNerdctl {
+			canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+			if !canNerdctlUnlessStopped {
+				backupFilename := c.GetWorkdirPath("restart.db")
+				fi, err := os.Stat(backupFilename)
+				if err == nil {
+					if fi.IsDir() {
+						return fmt.Errorf("wrong backup file %s, it cannot be a directory, please remove it", backupFilename)
+					}
+					if err := c.SnapshotRestore(ctx, backupFilename); err != nil {
+						return fmt.Errorf("failed to restore cluster data: %w", err)
+					}
+					if err := os.Remove(backupFilename); err != nil {
+						return fmt.Errorf("failed to remove backup file: %w", err)
+					}
+				} else if !os.IsNotExist(err) {
+					return err
+				}
+			}
+		}
+		return nil
 	}
 
-	return nil
+	return c.start(ctx)
 }
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
-	// TODO: nerdctl does not support 'compose stop' in v1.0.0 or earlier
-	subcommand := "stop"
-	if c.runtime == consts.RuntimeTypeNerdctl {
-		subcommand = "down"
-		err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
-		if err != nil {
-			return fmt.Errorf("failed to snapshot cluster data: %w", err)
+	if c.isSelfCompose(ctx, false) {
+		if c.runtime == consts.RuntimeTypeNerdctl {
+			canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+			if !canNerdctlUnlessStopped {
+				err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
+				if err != nil {
+					return fmt.Errorf("failed to snapshot cluster data: %w", err)
+				}
+			}
 		}
+		err := c.stopComponents(ctx)
+		if err != nil {
+			return err
+		}
+		if c.runtime == consts.RuntimeTypeNerdctl {
+			canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+			if !canNerdctlUnlessStopped {
+				// TODO: Remove this, nerdctl stop will restart containers
+				// https://github.com/containerd/nerdctl/issues/1980
+				err = c.deleteComponents(ctx)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	}
-
-	commands, err := c.buildComposeCommands(ctx, subcommand)
-	if err != nil {
-		return err
-	}
-
-	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
-	if err != nil {
-		return fmt.Errorf("failed to stop cluster: %w", err)
-	}
-	return nil
+	return c.stop(ctx)
 }
 
 // StartComponent starts a component in the cluster
-func (c *Cluster) StartComponent(ctx context.Context, name string) error {
-	return exec.Exec(exec.WithDir(ctx, c.Workdir()), c.runtime, "start", c.Name()+"-"+name)
+func (c *Cluster) StartComponent(ctx context.Context, componentName string) error {
+	return c.startComponent(ctx, componentName)
 }
 
 // StopComponent stops a component in the cluster
-func (c *Cluster) StopComponent(ctx context.Context, name string) error {
-	return exec.Exec(exec.WithDir(ctx, c.Workdir()), c.runtime, "stop", c.Name()+"-"+name)
+func (c *Cluster) StopComponent(ctx context.Context, componentName string) error {
+	return c.stopComponent(ctx, componentName)
 }
 
 func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow bool) error {
@@ -755,36 +756,6 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 	}, nil
 }
 
-// buildComposeCommands returns the compose commands with given current runtime and args
-func (c *Cluster) buildComposeCommands(ctx context.Context, args ...string) ([]string, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return nil, err
-	}
-	conf := &config.Options
-
-	if c.runtime == consts.RuntimeTypePodman {
-		pc, err := c.preInstallPodmanCompose(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return append(pc, args...), nil
-	}
-	if c.runtime == consts.RuntimeTypeDocker {
-		err := exec.Exec(ctx, c.runtime, "compose", "version")
-		if err != nil {
-			// docker compose subcommand does not exist, try to download it
-			dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
-			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0750, conf.QuietPull)
-			if err != nil {
-				return nil, err
-			}
-			return append([]string{dockerComposePath}, args...), nil
-		}
-	}
-	return append([]string{c.runtime, "compose"}, args...), nil
-}
-
 // EtcdctlInCluster implements the ectdctl subcommand
 func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	etcdContainerName := c.Name() + "-etcd"
@@ -792,39 +763,4 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
 	args = append([]string{"exec", "--env=ETCDCTL_API=3", "-i", etcdContainerName, "etcdctl"}, args...)
 	return exec.Exec(ctx, c.runtime, args...)
-}
-
-// preInstallPodmanCompose pre-installs podman-compose
-func (c *Cluster) preInstallPodmanCompose(ctx context.Context) ([]string, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return nil, err
-	}
-	conf := &config.Options
-
-	p, err := exec.LookPath("podman-compose")
-	if err == nil {
-		return []string{p}, nil
-	}
-
-	pybin, err := exec.LookPath("python3")
-	if err != nil {
-		pybin, err = exec.LookPath("python")
-		if err != nil {
-			return nil, fmt.Errorf("failed to find python3 or python")
-		}
-	}
-
-	target := path.Join(conf.CacheDir, "py", "podman-compose")
-	bin := path.Join(target, "podman_compose.py")
-	if !file.Exists(bin) {
-		err = exec.Exec(exec.WithStdIO(ctx), pybin, "-m", "pip", "install", "-t", target, "podman-compose")
-		if err != nil {
-			return nil, err
-		}
-		if !file.Exists(bin) {
-			return nil, fmt.Errorf("failed to install podman-compose")
-		}
-	}
-	return []string{pybin, bin}, nil
 }
