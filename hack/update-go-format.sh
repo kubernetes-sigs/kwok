@@ -21,5 +21,5 @@ REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
 cd "${REPO_ROOT}"
 
-mapfile -t gofiles < <(find cmd pkg -name '*.go')
+mapfile -t gofiles < <(find cmd pkg hack stages -name '*.go')
 gofmt -s -w "${gofiles[@]}"

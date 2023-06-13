@@ -21,7 +21,7 @@ ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
 
 function check() {
   echo "Verify gofmt"
-  mapfile -t findfiles < <(find cmd pkg -name '*.go')
+  mapfile -t findfiles < <(find cmd pkg hack stages -name '*.go')
   out="$(gofmt -s -w "${findfiles[@]}")"
 
   if [[ -n "${out}" ]]; then
