@@ -212,6 +212,9 @@ Resource Types:
 <a href="#kwok.x-k8s.io/v1alpha1.Logs">Logs</a>
 </li>
 <li>
+<a href="#kwok.x-k8s.io/v1alpha1.Metric">Metric</a>
+</li>
+<li>
 <a href="#kwok.x-k8s.io/v1alpha1.PortForward">PortForward</a>
 </li>
 <li>
@@ -815,6 +818,96 @@ LogsSpec
 </td>
 <td>
 <p>Logs is a list of logs to configure.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.Metric">
+Metric
+<a href="#kwok.x-k8s.io%2fv1alpha1.Metric"> #</a>
+</h3>
+<p>
+<p>Metric provides metrics configuration.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>Metric</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>Standard list metadata.
+More info: <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricSpec">
+MetricSpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec holds spec for metrics.</p>
+<table>
+<tr>
+<td>
+<code>path</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path is a restful service path.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metrics</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricConfig">
+[]MetricConfig
+</a>
+</em>
+</td>
+<td>
+<p>Metrics is a list of metric configurations.</p>
 </td>
 </tr>
 </table>
@@ -3325,6 +3418,240 @@ LogsSpec
 </td>
 <td>
 <p>Logs is a list of logs to configure.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.MetricBucket">
+MetricBucket
+<a href="#kwok.x-k8s.io%2fv1alpha1.MetricBucket"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricConfig">MetricConfig</a>
+</p>
+<p>
+<p>MetricBucket is a single bucket for a metric.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>le</code>
+<em>
+float64
+</em>
+</td>
+<td>
+<p>Le is less-than or equal.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Value is a CEL expression.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hidden</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Hidden is means that this bucket not shown in the metric.
+but value will be calculated and cumulative into the next bucket.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.MetricConfig">
+MetricConfig
+<a href="#kwok.x-k8s.io%2fv1alpha1.MetricConfig"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricSpec">MetricSpec</a>
+</p>
+<p>
+<p>MetricConfig provides metric configuration to a single metric</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the fully-qualified name of the metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>help</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Help provides information about this metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Kind is kind of metric (ex. counter, gauge, histogram).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricLabel">
+[]MetricLabel
+</a>
+</em>
+</td>
+<td>
+<p>Labels are metric labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Value is a CEL expression.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>buckets</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricBucket">
+[]MetricBucket
+</a>
+</em>
+</td>
+<td>
+<p>Buckets is a list of buckets for a histogram metric.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.MetricLabel">
+MetricLabel
+<a href="#kwok.x-k8s.io%2fv1alpha1.MetricLabel"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricConfig">MetricConfig</a>
+</p>
+<p>
+<p>MetricLabel holds label name and the value of the label.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is a label name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Value is a CEL expression.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.MetricSpec">
+MetricSpec
+<a href="#kwok.x-k8s.io%2fv1alpha1.MetricSpec"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.Metric">Metric</a>
+</p>
+<p>
+<p>MetricSpec holds spec for metrics.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>path</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path is a restful service path.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metrics</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricConfig">
+[]MetricConfig
+</a>
+</em>
+</td>
+<td>
+<p>Metrics is a list of metric configurations.</p>
 </td>
 </tr>
 </tbody>

@@ -17,11 +17,43 @@ limitations under the License.
 package server
 
 import (
+	"fmt"
+
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"sigs.k8s.io/kwok/pkg/kwok/metrics"
+	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 )
 
 // InstallMetrics registers the metrics handler on the given mux.
-func (s *Server) InstallMetrics() {
+func (s *Server) InstallMetrics() error {
 	promHandler := promhttp.Handler()
 	s.restfulCont.Handle("/metrics", promHandler)
+
+	controller := s.config.Controller
+	env, err := cel.NewEnvironment(cel.NodeEvaluatorConfig{
+		StartedContainersTotal: func(nodeName string) int64 {
+			nodeInfo, ok := controller.GetNode(nodeName)
+			if !ok {
+				return 0
+			}
+			return nodeInfo.StartedContainer.Load()
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create CEL environment: %w", err)
+	}
+	for _, m := range s.config.Metrics {
+		handler, err := metrics.NewMetricsUpdateHandler(metrics.UpdateHandlerConfig{
+			NodeName:    m.Name,
+			Metrics:     m,
+			Controller:  controller,
+			Environment: env,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create metrics update handler: %w", err)
+		}
+		s.restfulCont.Handle(m.Spec.Path, handler)
+	}
+	return nil
 }

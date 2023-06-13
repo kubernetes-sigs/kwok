@@ -194,6 +194,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Name:            c.Name(),
 			ExtraArgs:       prometheusPatches.ExtraArgs,
 			ExtraVolumes:    prometheusPatches.ExtraVolumes,
+			Metrics:         runtime.GetMetrics(ctx),
 		}
 		if verbosity != log.LevelInfo {
 			prometheusConf.LogLevel = log.ToLogSeverityLevel(verbosity)

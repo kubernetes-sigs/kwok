@@ -453,6 +453,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			SecurePort:   conf.SecurePort,
 			AdminCrtPath: inClusterAdminCertPath,
 			AdminKeyPath: inClusterAdminKeyPath,
+			Metrics:      runtime.GetMetrics(ctx),
 		})
 		if err != nil {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)

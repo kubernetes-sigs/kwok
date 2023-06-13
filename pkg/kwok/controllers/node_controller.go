@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"sync/atomic"
 	"text/template"
 	"time"
 
@@ -132,10 +133,11 @@ type NodeControllerConfig struct {
 
 // NodeInfo is the collection of necessary node information
 type NodeInfo struct {
-	Node            *corev1.Node
-	HostIPs         []string
-	PodCIDRs        []string
-	OwnerReferences []metav1.OwnerReference
+	Node             *corev1.Node
+	HostIPs          []string
+	PodCIDRs         []string
+	OwnerReferences  []metav1.OwnerReference
+	StartedContainer atomic.Int64
 }
 
 // NewNodeController creates a new fake nodes controller

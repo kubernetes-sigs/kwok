@@ -29,6 +29,7 @@ import (
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
 )
@@ -57,6 +58,8 @@ type Config struct {
 	Logs                []*internalversion.Logs
 	ClusterAttaches     []*internalversion.ClusterAttach
 	Attaches            []*internalversion.Attach
+	Metrics             []*internalversion.Metric
+	Controller          *controllers.Controller
 }
 
 // NewServer creates a new Server.

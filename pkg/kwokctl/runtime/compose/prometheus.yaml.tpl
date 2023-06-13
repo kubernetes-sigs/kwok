@@ -40,6 +40,18 @@ scrape_configs:
   - targets:
     - "{{ .ProjectName }}-kwok-controller:10247"
 
+{{ $projectName := .ProjectName }}
+{{ range .Metrics }}
+- job_name: "kwok-metric-{{ .Name }}"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: {{ .Spec.Path }}
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - "{{ $projectName }}-kwok-controller:10247"
+{{ end }}
 {{ if .SecurePort }}
 - job_name: "kube-apiserver"
   scheme: https

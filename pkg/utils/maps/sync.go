@@ -79,3 +79,13 @@ func (m *SyncMap[K, V]) Size() int {
 	})
 	return size
 }
+
+// Keys returns all the keys in the map.
+func (m *SyncMap[K, V]) Keys() []K {
+	keys := []K{}
+	m.m.Range(func(key, value interface{}) bool {
+		keys = append(keys, key.(K))
+		return true
+	})
+	return keys
+}
