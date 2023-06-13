@@ -84,3 +84,12 @@ func Equal[S ~[]T, T comparable](s1, s2 S) bool {
 	}
 	return true
 }
+
+// Reverse returns a new slice containing the elements of the slice in reverse order.
+func Reverse[S ~[]T, T any](s S) []T {
+	out := make([]T, len(s))
+	for i := range s {
+		out[len(s)-1-i] = s[i]
+	}
+	return out
+}

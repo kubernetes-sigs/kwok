@@ -101,6 +101,7 @@ type KwokctlConfigurationOptions struct {
 
 	// DockerComposeVersion is the version of docker-compose to use.
 	// is the default value for env KWOK_DOCKER_COMPOSE_VERSION
+	// Deprecated: docker compose will be removed in a future release
 	DockerComposeVersion string `json:"dockerComposeVersion,omitempty"`
 
 	// KindVersion is the version of kind to use.
@@ -246,11 +247,13 @@ type KwokctlConfigurationOptions struct {
 
 	// DockerComposeBinaryPrefix is the binary of docker-compose.
 	// is the default value for env KWOK_DOCKER_COMPOSE_BINARY_PREFIX
+	// Deprecated: docker compose will be removed in a future release
 	//+k8s:conversion-gen=false
 	DockerComposeBinaryPrefix string `json:"dockerComposeBinaryPrefix,omitempty"`
 
 	// DockerComposeBinary is the binary of Docker compose.
 	// is the default value for flag --docker-compose-binary and env KWOK_DOCKER_COMPOSE_BINARY
+	// Deprecated: docker compose will be removed in a future release
 	DockerComposeBinary string `json:"dockerComposeBinary,omitempty"`
 
 	// KindBinaryPrefix is the binary prefix of kind.

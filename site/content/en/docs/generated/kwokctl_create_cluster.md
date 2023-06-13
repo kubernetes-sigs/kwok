@@ -12,8 +12,6 @@ kwokctl create cluster [flags]
       --controller-port uint32                  Port of kwok-controller given to the host
       --disable-kube-controller-manager         Disable the kube-controller-manager
       --disable-kube-scheduler                  Disable the kube-scheduler
-      --docker-compose-binary string            Binary of Docker-compose, only for docker runtime
-                                                 (default "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-x86_64")
       --etcd-binary string                      Binary of etcd, only for binary runtime
       --etcd-binary-tar string                  Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
                                                  (default "https://github.com/etcd-io/etcd/releases/download/v3.5.7/etcd-v3.5.7-linux-amd64.tar.gz")

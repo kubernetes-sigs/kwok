@@ -108,6 +108,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 `)
 	cmd.Flags().StringVar(&flags.Options.DockerComposeBinary, "docker-compose-binary", flags.Options.DockerComposeBinary, `Binary of Docker-compose, only for docker runtime
 `)
+	_ = cmd.Flags().MarkDeprecated("docker-compose-binary", "docker compose will be removed in a future release")
+
 	cmd.Flags().StringVar(&flags.Options.KindBinary, "kind-binary", flags.Options.KindBinary, `Binary of kind, only for kind/kind-podman runtime
 `)
 	cmd.Flags().StringVar(&flags.Options.KubeFeatureGates, "kube-feature-gates", flags.Options.KubeFeatureGates, `A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes`)

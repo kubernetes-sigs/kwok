@@ -14,5 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package compose implements the runtime.Runtime interface using the image with compose file.
+// Package compose implements the runtime.Runtime interface using the image.
 package compose
