@@ -17,9 +17,21 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
+DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-cd "${REPO_ROOT}"
+ROOT_DIR="$(realpath "${DIR}/..")"
 
-mapfile -t gofiles < <(find cmd pkg -name '*.go')
-gofmt -s -w "${gofiles[@]}"
+function format() {
+  echo "Update go format"
+  mapfile -t findfiles < <(find . \( \
+    -iname "*.go" \
+    \) \
+    -not \( \
+    -path ./vendor/\* \
+    -o -path ./demo/node_modules/\* \
+    -o -path ./site/themes/\* \
+    \))
+  gofmt -s -w "${findfiles[@]}"
+}
+
+cd "${ROOT_DIR}" && format

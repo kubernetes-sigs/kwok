@@ -17,7 +17,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)"
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+ROOT_DIR="$(realpath "${DIR}/..")"
 
 SHELLCHECK_VERSION="0.9.0"
 
@@ -42,13 +44,13 @@ join_by() {
 SHELLCHECK_DISABLED="$(join_by , "${disabled[@]}")"
 readonly SHELLCHECK_DISABLED
 
-all_shell_scripts=()
-while IFS=$'\n' read -r script; do
-  git check-ignore -q "$script" || all_shell_scripts+=("$script")
-done < <(find . -name "*.sh" \
+mapfile -t findfiles < <(find . \( \
+  -iname "*.sh" \
+  \) \
   -not \( \
-  -path ./.git\* -o \
-  -path ./vendor\* \
+  -path ./vendor/\* \
+  -o -path ./demo/node_modules/\* \
+  -o -path ./site/themes/\* \
   \))
 
 SHELLCHECK_OPTIONS=(
@@ -89,4 +91,4 @@ else
   exit 1
 fi
 
-cd "${ROOT_DIR}" && "${COMMAND[@]}" "${SHELLCHECK_OPTIONS[@]}" "${all_shell_scripts[@]}"
+cd "${ROOT_DIR}" && "${COMMAND[@]}" "${SHELLCHECK_OPTIONS[@]}" "${findfiles[@]}"

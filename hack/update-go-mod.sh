@@ -17,8 +17,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
+DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-cd "${REPO_ROOT}"
+ROOT_DIR="$(realpath "${DIR}/..")"
 
-go mod tidy
+cd "${ROOT_DIR}" && go mod tidy

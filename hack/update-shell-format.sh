@@ -17,40 +17,21 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)"
+DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-all_shell_scripts=()
-while IFS=$'\n' read -r script; do
-  git check-ignore -q "$script" || all_shell_scripts+=("$script")
-done < <(find . -name "*.sh" \
-  -not \( \
-  -path ./.git\* -o \
-  -path ./vendor\* \
-  \))
+ROOT_DIR="$(realpath "${DIR}/..")"
 
-COMMAND=()
-if command -v shfmt; then
-  COMMAND=(shfmt)
-elif command -v "${ROOT_DIR}/bin/shfmt"; then
-  COMMAND=("${ROOT_DIR}/bin/shfmt")
-elif [[ "$(uname -s)" == "Linux" ]] && [[ "$(uname -m)" == "x86_64" ]]; then
-  wget "https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_linux_amd64"
-  mkdir -p "${ROOT_DIR}"/bin
-  mv "shfmt_v3.6.0_linux_amd64" "${ROOT_DIR}/bin/shfmt"
-  chmod +x "${ROOT_DIR}/bin/shfmt"
-  COMMAND=("${ROOT_DIR}/bin/shfmt")
-elif command -v docker; then
-  COMMAND=(
-    docker run
-    --rm
-    -v "${ROOT_DIR}:${ROOT_DIR}"
-    -w "${ROOT_DIR}"
-    docker.io/mvdan/shfmt:v3.6.0-alpine
-    shfmt
-  )
-else
-  echo "WARNING: shfmt or docker not installed" >&2
-  exit 1
-fi
+function format() {
+  echo "Update shell format"
+  mapfile -t findfiles < <(find . \( \
+    -iname "*.sh" \
+    \) \
+    -not \( \
+    -path ./vendor/\* \
+    -o -path ./demo/node_modules/\* \
+    -o -path ./site/themes/\* \
+    \))
+  go run mvdan.cc/sh/v3/cmd/shfmt -w -i=2 "${findfiles[@]}"
+}
 
-cd "${ROOT_DIR}" && "${COMMAND[@]}" -w -i=2 "${all_shell_scripts[@]}"
+cd "${ROOT_DIR}" && format

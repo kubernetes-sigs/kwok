@@ -17,7 +17,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+ROOT_DIR="$(realpath "${DIR}/..")"
 
 function gendoc() {
   local confdir="${ROOT_DIR}/hack/api_docs"
@@ -35,6 +37,4 @@ function check() {
     -out-file "site/content/en/docs/generated/apis.md"
 }
 
-cd "${ROOT_DIR}"
-
-check || exit 1
+cd "${ROOT_DIR}" && check

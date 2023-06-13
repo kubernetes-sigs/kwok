@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.0
 	github.com/blang/semver/v4 v4.0.0
+	github.com/client9/misspell v0.3.4
 	github.com/compose-spec/compose-go v1.8.2
 	github.com/containerd/go-cni v1.1.9
 	github.com/containernetworking/plugins v1.2.0
@@ -32,6 +33,7 @@ require (
 	k8s.io/code-generator v0.27.1
 	k8s.io/cri-api v0.27.1
 	k8s.io/utils v0.0.0-20230209194617-a36077c30491
+	mvdan.cc/sh/v3 v3.6.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -53,6 +55,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
+	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -67,6 +70,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
@@ -93,6 +97,7 @@ require (
 	k8s.io/klog v0.2.0 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230308215209-15aac26d736a // indirect
+	mvdan.cc/editorconfig v0.2.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
