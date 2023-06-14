@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    beta.kubernetes.io/arch: amd64
+    beta.kubernetes.io/os: linux
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-node-0
+    kubernetes.io/os: linux
+    kubernetes.io/role: agent
+    node-role.kubernetes.io/agent: ""
+    type: kwok
+  name: kwok-node-0
+status:
+  allocatable:
+    cpu: 32
+    memory: 256Gi
+    pods: 110
+  capacity:
+    cpu: 32
+    memory: 256Gi
+    pods: 110
