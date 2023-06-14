@@ -30,7 +30,7 @@ require (
 	k8s.io/apimachinery v0.27.1
 	k8s.io/apiserver v0.27.1
 	k8s.io/client-go v0.27.1
-	k8s.io/code-generator v0.27.1
+	k8s.io/code-generator v0.27.2
 	k8s.io/cri-api v0.27.1
 	k8s.io/utils v0.0.0-20230209194617-a36077c30491
 	mvdan.cc/sh/v3 v3.6.0
@@ -96,7 +96,7 @@ require (
 	k8s.io/gengo v0.0.0-20220902162205-c0856e24416d // indirect
 	k8s.io/klog v0.2.0 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20230308215209-15aac26d736a // indirect
+	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
 	mvdan.cc/editorconfig v0.2.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
