@@ -41,6 +41,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/version"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 // Cluster is an implementation of Runtime for docker.
@@ -560,7 +561,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
-		err = c.createComponents(ctx)
+		err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+			err = c.createComponents(ctx)
+			return err == nil, err
+		},
+			wait.WithContinueOnError(5),
+			wait.WithImmediate(),
+		)
 		if err != nil {
 			return err
 		}
@@ -571,7 +578,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 // Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
 	if c.isSelfCompose(ctx, false) {
-		err := c.deleteComponents(ctx)
+		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+			err := c.deleteComponents(ctx)
+			return err == nil, err
+		},
+			wait.WithContinueOnError(5),
+			wait.WithImmediate(),
+		)
 		if err != nil {
 			return err
 		}
@@ -592,7 +605,13 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 // Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
 	if c.isSelfCompose(ctx, false) {
-		err := c.startComponents(ctx)
+		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+			err := c.startComponents(ctx)
+			return err == nil, err
+		},
+			wait.WithContinueOnError(5),
+			wait.WithImmediate(),
+		)
 		if err != nil {
 			return err
 		}
@@ -605,7 +624,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
 	if c.isSelfCompose(ctx, false) {
-		err := c.stopComponents(ctx)
+		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+			err := c.stopComponents(ctx)
+			return err == nil, err
+		},
+			wait.WithContinueOnError(5),
+			wait.WithImmediate(),
+		)
 		if err != nil {
 			return err
 		}
@@ -629,7 +654,13 @@ func (c *Cluster) Start(ctx context.Context) error {
 				}
 			}
 		}
-		err := c.startComponents(ctx)
+		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+			err := c.startComponents(ctx)
+			return err == nil, err
+		},
+			wait.WithContinueOnError(5),
+			wait.WithImmediate(),
+		)
 		if err != nil {
 			return err
 		}
@@ -672,7 +703,13 @@ func (c *Cluster) Stop(ctx context.Context) error {
 				}
 			}
 		}
-		err := c.stopComponents(ctx)
+		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+			err := c.stopComponents(ctx)
+			return err == nil, err
+		},
+			wait.WithContinueOnError(5),
+			wait.WithImmediate(),
+		)
 		if err != nil {
 			return err
 		}
