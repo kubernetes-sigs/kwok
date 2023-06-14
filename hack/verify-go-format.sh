@@ -17,11 +17,20 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+ROOT_DIR="$(realpath "${DIR}/..")"
 
 function check() {
-  echo "Verify gofmt"
-  mapfile -t findfiles < <(find cmd pkg -name '*.go')
+  echo "Verify go format"
+  mapfile -t findfiles < <(find . \( \
+    -iname "*.go" \
+    \) \
+    -not \( \
+    -path ./vendor/\* \
+    -o -path ./demo/node_modules/\* \
+    -o -path ./site/themes/\* \
+    \))
   out="$(gofmt -s -w "${findfiles[@]}")"
 
   if [[ -n "${out}" ]]; then
@@ -30,6 +39,4 @@ function check() {
   fi
 }
 
-cd "${ROOT_DIR}"
-
-check || exit 1
+cd "${ROOT_DIR}" && check

@@ -17,10 +17,21 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")/.."
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+ROOT_DIR="$(realpath "${DIR}/..")"
 
 function check() {
-  git ls-files | grep -v "vendor\/" | xargs go run "${ROOT_DIR}"/hack/verify_boilerplate
+  mapfile -t findfiles < <(find . \( \
+    -iname "*.sh" \
+    -o -iname "*.go" \
+    \) \
+    -not \( \
+    -path ./vendor/\* \
+    -o -path ./demo/node_modules/\* \
+    -o -path ./site/themes/\* \
+    \))
+  go run "${ROOT_DIR}"/hack/verify_boilerplate "${findfiles[@]}"
 }
 
-check || exit 1
+cd "${ROOT_DIR}" && check

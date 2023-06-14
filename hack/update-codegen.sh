@@ -17,7 +17,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+ROOT_DIR="$(realpath "${DIR}/..")"
 
 CODEGEN_PKG_VENDOR="${ROOT_DIR}"/vendor/k8s.io/code-generator
 CODEGEN_PKG=${CODEGEN_PKG:-${CODEGEN_PKG_VENDOR}}
@@ -42,4 +44,4 @@ function codegen() {
     --go-header-file "${ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 }
 
-cd "${ROOT_DIR}" && codegen || exit 1
+cd "${ROOT_DIR}" && codegen

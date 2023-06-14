@@ -17,7 +17,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)"
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+ROOT_DIR="$(realpath "${DIR}/..")"
 
 function check() {
   echo "Verify shell format"
@@ -25,6 +27,4 @@ function check() {
   git --no-pager diff --exit-code
 }
 
-cd "${ROOT_DIR}"
-
-check || exit 1
+cd "${ROOT_DIR}" && check

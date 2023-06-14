@@ -17,7 +17,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)"
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+ROOT_DIR="$(realpath "${DIR}/..")"
+
 COMMAND=()
 if command -v yamllint; then
   COMMAND=(yamllint)
@@ -39,4 +42,20 @@ else
   echo "WARNING: yamllint, python3 or docker not installed" >&2
   exit 1
 fi
-cd "${ROOT_DIR}" && "${COMMAND[@]}" -s -c .yamllint.conf .
+
+function check() {
+  echo "Verify go format"
+  mapfile -t findfiles < <(find . \( \
+    -iname "*.yaml" \
+    -o -iname "*.yml" \
+    \) \
+    -not \( \
+    -path ./vendor/\* \
+    -o -path ./demo/node_modules/\* \
+    -o -path ./site/themes/\* \
+    \))
+
+  "${COMMAND[@]}" -s -c .yamllint.conf "${findfiles[@]}"
+}
+
+cd "${ROOT_DIR}" && check

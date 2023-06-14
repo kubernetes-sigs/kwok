@@ -17,40 +17,31 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-TOOL_VERSION="v0.3.4"
+DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-ROOT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/..)"
+ROOT_DIR="$(realpath "${DIR}/..")"
+
 allowed_spelling_words="${ROOT_DIR}/hack/spelling.txt"
-
-COMMAND=()
-if command -v misspell; then
-  COMMAND=(misspell)
-elif command -v "${ROOT_DIR}/bin/misspell"; then
-  COMMAND=("${ROOT_DIR}/bin/misspell")
-else
-  GOBIN="${ROOT_DIR}/bin/" go install github.com/client9/misspell/cmd/misspell@${TOOL_VERSION}
-  COMMAND=("${ROOT_DIR}/bin/misspell")
-fi
 
 function update() {
   local ignore
   ignore="$(tr <"${allowed_spelling_words}" '\n' ',')"
   mapfile -t files < <(find . \( \
-    -iname "*.md" -o \
-    -iname "*.sh" -o \
-    -iname "*.go" -o \
-    -iname "*.tpl" -o \
-    -iname "*.yaml" -o \
-    -iname "*.yml" \
+    -iname "*.md" \
+    -o -iname "*.sh" \
+    -o -iname "*.go" \
+    -o -iname "*.tpl" \
+    -o -iname "*.yaml" \
+    -o -iname "*.yml" \
     \) \
     -not \( \
-    -path ./.git/\* -o \
-    -path ./vendor/\* -o \
-    -path ./demo/node_modules/\* -o \
-    -path ./site/themes/\* \
+    -path ./.git/\* \
+    -o -path ./vendor/\* \
+    -o -path ./demo/node_modules/\* \
+    -o -path ./site/themes/\* \
     \))
-  "${COMMAND[@]}" -locale US -w -i "${ignore}" "${files[@]}"
+  go run github.com/client9/misspell/cmd/misspell \
+    -locale US -w -i "${ignore}" "${files[@]}"
 }
 
-cd "${ROOT_DIR}"
-update || exit 1
+cd "${ROOT_DIR}" && update

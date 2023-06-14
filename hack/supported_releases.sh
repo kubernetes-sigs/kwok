@@ -15,8 +15,6 @@
 
 DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-DIR="$(realpath "${DIR}")"
-
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 record="${ROOT_DIR}/supported_releases.txt"
