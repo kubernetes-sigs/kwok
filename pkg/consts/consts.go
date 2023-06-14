@@ -24,7 +24,7 @@ var (
 
 	// Version is the version of the project.
 	// It will be overwritten during the `make build` process.
-	Version      = "0.2.0"
+	Version      = "0.3.0"
 	BinaryPrefix = "https://github.com/kubernetes-sigs/kwok/releases/download"
 	ImagePrefix  = "registry.k8s.io/kwok"
 
@@ -34,19 +34,21 @@ var (
 
 	// KubeVersion is the version of Kubernetes.
 	// It will be overwritten during the `make build` process.
-	KubeVersion      = "1.27.1"
+	KubeVersion      = "1.27.3"
 	KubeBinaryPrefix = "https://dl.k8s.io/release"
 	KubeImagePrefix  = "registry.k8s.io"
 
 	EtcdBinaryPrefix = "https://github.com/etcd-io/etcd/releases/download"
 
+	// DockerComposeVersion
+	// Deprecated: will be removed in the future.
 	DockerComposeVersion      = "2.17.2"
 	DockerComposeBinaryPrefix = "https://github.com/docker/compose/releases/download"
 
-	KindVersion      = "0.18.0"
+	KindVersion      = "0.19.0"
 	KindBinaryPrefix = "https://github.com/kubernetes-sigs/kind/releases/download"
 
-	PrometheusVersion      = "2.43.0"
+	PrometheusVersion      = "2.44.0"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
 

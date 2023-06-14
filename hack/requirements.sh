@@ -13,15 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KIND_VERSION=0.17.0
+KIND_VERSION=0.19.0
 
-KUBE_VERSION=1.26.0
+KUBE_VERSION=1.27.3
 
 # TODO: Stay at 0.9 in figuring out the Attestations of buildx.
 # https://github.com/docker/buildx/pull/1412
 BUILDX_VERSION=0.9.1
-
-NERDCTL_VERSION=1.6.0
 
 function command_exist() {
   local command="${1}"
@@ -147,25 +145,6 @@ function install_buildx() {
   if ! docker buildx inspect --builder kwok >/dev/null 2>&1; then
     docker buildx create --use --name kwok >/dev/null 2>&1
   fi
-}
-
-function install_nerdctl() {
-  if command_exist nerdctl; then
-    return 0
-  fi
-
-  wget -O /tmp/nerdctl.tar.gz "https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-full-${NERDCTL_VERSION}-$(runtime_os)-$(runtime_arch).tar.gz"
-  tar xvf /tmp/nerdctl.tar.gz -C /usr/local/
-
-  containerd-rootless-setuptool.sh install
-  rm /tmp/nerdctl.tar.gz
-
-  if ! command_exist nerdctl; then
-    echo nerdctl is installed but not effective >&2
-    return 1
-  fi
-
-  nerdctl version
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

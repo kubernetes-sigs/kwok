@@ -20,7 +20,7 @@ import (
 	"math"
 )
 
-// lists from https://github.com/kubernetes/kubernetes/blob/f33c4a1c79f60e7843919b869bfd431599b83755/cmd/kubeadm/app/constants/constants.go#L469
+// lists from https://github.com/kubernetes/kubernetes/blob/d2332eb5fd2546d6955349feb0f401e7481367e3/cmd/kubeadm/app/constants/constants.go#L469
 var etcdVersions = map[int]string{
 	8:  "3.0.17",
 	9:  "3.1.12",
@@ -36,12 +36,13 @@ var etcdVersions = map[int]string{
 	19: "3.4.13-0",
 	20: "3.4.13-0",
 	21: "3.4.13-0",
-	22: "3.5.7-0",
-	23: "3.5.7-0",
-	24: "3.5.7-0",
-	25: "3.5.7-0",
-	26: "3.5.7-0",
-	27: "3.5.7-0",
+	22: "3.5.9-0",
+	23: "3.5.9-0",
+	24: "3.5.9-0",
+	25: "3.5.9-0",
+	26: "3.5.9-0",
+	27: "3.5.9-0",
+	28: "3.5.9-0",
 }
 
 // GetEtcdVersion returns the etcd version for the given k8s version
