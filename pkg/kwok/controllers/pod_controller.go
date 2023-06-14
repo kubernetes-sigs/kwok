@@ -62,6 +62,7 @@ type PodController struct {
 	defaultCIDR                           string
 	namespace                             string
 	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
+	nodeHasMetric                         func(nodeName string) bool
 	ipPools                               maps.SyncMap[string, *ipPool]
 	renderer                              *renderer
 	preprocessChan                        chan *corev1.Pod
@@ -86,6 +87,7 @@ type PodControllerConfig struct {
 	CIDR                                  string
 	Namespace                             string
 	NodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
+	NodeHasMetric                         func(nodeName string) bool
 	Stages                                []*internalversion.Stage
 	PlayStageParallelism                  uint
 	FuncMap                               template.FuncMap
@@ -507,6 +509,15 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 						)
 					}
 
+					if event.Type == watch.Added &&
+						c.nodeHasMetric != nil &&
+						c.nodeHasMetric(pod.Spec.NodeName) &&
+						c.nodeGetFunc != nil {
+						nodeInfo, ok := c.nodeGetFunc(pod.Spec.NodeName)
+						if ok {
+							nodeInfo.StartedContainer.Add(int64(len(pod.Spec.Containers)))
+						}
+					}
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
 					if c.need(pod) {

@@ -299,3 +299,25 @@ func ConvertToInternalAttach(in *v1alpha1.Attach) (*Attach, error) {
 	}
 	return &out, nil
 }
+
+// ConvertToV1Alpha1Metric converts an internal version Metric to a v1alpha1.Metric.
+func ConvertToV1Alpha1Metric(in *Metric) (*v1alpha1.Metric, error) {
+	var out v1alpha1.Metric
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.MetricKind
+	err := Convert_internalversion_Metric_To_v1alpha1_Metric(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalMetric converts a v1alpha1.Metric to an internal version.
+func ConvertToInternalMetric(in *v1alpha1.Metric) (*Metric, error) {
+	var out Metric
+	err := Convert_v1alpha1_Metric_To_internalversion_Metric(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

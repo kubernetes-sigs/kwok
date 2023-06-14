@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -169,6 +170,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 	ctx = log.NewContext(ctx, logger.With("id", id))
 
+	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+
 	ctr, err := controllers.NewController(controllers.Config{
 		Clock:                                 clock.RealClock{},
 		ClientSet:                             typedClient,
@@ -217,9 +220,13 @@ func runE(ctx context.Context, flags *flagpole) error {
 			Logs:                logs,
 			ClusterAttaches:     clusterAttaches,
 			Attaches:            attaches,
+			Metrics:             metrics,
+			Controller:          ctr,
 		}
 		svc := server.NewServer(config)
-		svc.InstallMetrics()
+		if err := svc.InstallMetrics(); err != nil {
+			return fmt.Errorf("failed to install metrics: %w", err)
+		}
 		svc.InstallHealthz()
 
 		if flags.Options.EnableDebuggingHandlers {

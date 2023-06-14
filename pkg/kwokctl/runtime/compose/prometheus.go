@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"text/template"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+
 	_ "embed"
 )
 
@@ -45,4 +47,5 @@ type BuildPrometheusConfig struct {
 	SecurePort   bool
 	AdminCrtPath string
 	AdminKeyPath string
+	Metrics      []*internalversion.Metric
 }

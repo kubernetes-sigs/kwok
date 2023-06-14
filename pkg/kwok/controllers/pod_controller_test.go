@@ -161,6 +161,9 @@ func TestPodController(t *testing.T) {
 		}
 		return nodeInfo, true
 	}
+	nodeHasMetric := func(nodeName string) bool {
+		return false
+	}
 	podStages, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
@@ -170,6 +173,7 @@ func TestPodController(t *testing.T) {
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
 		Stages:                                podStages,
 		NodeGetFunc:                           nodeGetFunc,
+		NodeHasMetric:                         nodeHasMetric,
 		FuncMap:                               defaultFuncMap,
 		PlayStageParallelism:                  2,
 	})

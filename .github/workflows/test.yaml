@@ -321,6 +321,11 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_extra
 
+      - name: Test Metrics
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_metric
+
       - name: Test Benchmark
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime != 'kind' && matrix.kwokctl-runtime != 'kind-podman' }}
         shell: bash

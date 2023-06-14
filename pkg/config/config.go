@@ -144,6 +144,12 @@ var configHandlers = map[string]configHandler{
 		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalClusterAttach),
 		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1Alpha1ClusterAttach),
 	},
+	v1alpha1.MetricKind: {
+		Unmarshal:        unmarshalConfig[*v1alpha1.Metric],
+		Marshal:          marshalConfig,
+		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalMetric),
+		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1Alpha1Metric),
+	},
 }
 
 func unmarshalConfig[T versiondObject](raw []byte) (versiondObject, error) {

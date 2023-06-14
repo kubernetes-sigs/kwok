@@ -77,6 +77,17 @@ data:
         static_configs:
           - targets:
               - "localhost:10247"
+      {{ range .Metrics }}
+      - job_name: "kwok-metric-{{ .Name }}"
+        scheme: http
+        honor_timestamps: true
+        metrics_path: {{ .Spec.Path }}
+        follow_redirects: true
+        enable_http2: true
+        static_configs:
+        - targets:
+            - "localhost:10247"
+      {{ end }}
       - job_name: "kube-apiserver"
         scheme: https
         honor_timestamps: true

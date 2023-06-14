@@ -98,3 +98,8 @@ func GetLogVolumes(ctx context.Context) []internalversion.Volume {
 	}
 	return volumes
 }
+
+// GetMetrics returns metrics for Metrics resource.
+func GetMetrics(ctx context.Context) []*internalversion.Metric {
+	return config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+}
