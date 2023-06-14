@@ -1394,6 +1394,9 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.BindAddress = in.BindAddress
 	out.KubeApiserverCertSANs = *(*[]string)(unsafe.Pointer(&in.KubeApiserverCertSANs))
+	if err := v1.Convert_bool_To_Pointer_bool(&in.DisableQPSLimits, &out.DisableQPSLimits, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1478,6 +1481,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.BindAddress = in.BindAddress
 	out.KubeApiserverCertSANs = *(*[]string)(unsafe.Pointer(&in.KubeApiserverCertSANs))
+	if err := v1.Convert_Pointer_bool_To_bool(&in.DisableQPSLimits, &out.DisableQPSLimits, s); err != nil {
+		return err
+	}
 	return nil
 }
 

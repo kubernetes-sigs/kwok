@@ -51,6 +51,9 @@ var (
 	PrometheusImagePrefix  = "docker.io/prom"
 
 	KindNodeImagePrefix = "docker.io/kindest"
+
+	DefaultUnlimitedQPS   = 5000.0
+	DefaultUnlimitedBurst = 10000
 )
 
 // The following runtime is provided.

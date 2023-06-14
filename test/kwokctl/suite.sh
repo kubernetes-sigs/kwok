@@ -53,6 +53,7 @@ function create_cluster() {
     --timeout 30m \
     --wait 30m \
     --quiet-pull \
+    --disable-qps-limits \
     "$@"; then
     echo "Error: Cluster ${name} creation failed"
     show_all

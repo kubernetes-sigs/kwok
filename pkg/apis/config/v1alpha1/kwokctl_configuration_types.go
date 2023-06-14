@@ -330,6 +330,10 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeApiserverCertSANs sets extra Subject Alternative Names for the API Server signing cert.
 	KubeApiserverCertSANs []string `json:"kubeApiserverCertSANs,omitempty"`
+
+	// DisableQPSLimits specifies whether to disable QPS limits for components.
+	// +default=false
+	DisableQPSLimits *bool `json:"disableQPSLimits,omitempty"`
 }
 
 // Component is a component of the cluster.

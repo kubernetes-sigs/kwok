@@ -18,6 +18,7 @@ package components
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -39,6 +40,7 @@ type BuildKubeSchedulerComponentConfig struct {
 	KubeconfigPath   string
 	KubeFeatureGates string
 	Verbosity        log.Level
+	DisableQPSLimits bool
 	ExtraArgs        []internalversion.ExtraArgs
 	ExtraVolumes     []internalversion.Volume
 }
@@ -168,6 +170,13 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		//	kubeSchedulerArgs = append(kubeSchedulerArgs,
 		//		"--secure-port=0",
 		//	)
+	}
+
+	if conf.DisableQPSLimits {
+		kubeSchedulerArgs = append(kubeSchedulerArgs,
+			"--kube-api-qps="+format.String(consts.DefaultUnlimitedQPS),
+			"--kube-api-burst="+format.String(consts.DefaultUnlimitedBurst),
+		)
 	}
 
 	if conf.Verbosity != log.LevelInfo {

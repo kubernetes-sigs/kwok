@@ -97,6 +97,10 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 	if in.Options.BindAddress == "" {
 		in.Options.BindAddress = "0.0.0.0"
 	}
+	if in.Options.DisableQPSLimits == nil {
+		var ptrVar1 bool = false
+		in.Options.DisableQPSLimits = &ptrVar1
+	}
 	for i := range in.Components {
 		a := &in.Components[i]
 		for j := range a.Ports {
