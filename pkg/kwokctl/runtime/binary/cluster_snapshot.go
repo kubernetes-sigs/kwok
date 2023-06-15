@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 // SnapshotSave save the snapshot of cluster
@@ -84,7 +85,18 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 // SnapshotRestoreWithYAML restore the snapshot of cluster
 func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error {
 	logger := log.FromContext(ctx)
-	err := c.StopComponent(ctx, "kube-controller-manager")
+	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.StopComponent(ctx, "kube-controller-manager")
+		if err != nil {
+			return false, err
+		}
+		component, err := c.GetComponent(ctx, "kube-controller-manager")
+		if err != nil {
+			return false, err
+		}
+		ready := c.isRunning(ctx, component)
+		return !ready, nil
+	})
 	if err != nil {
 		logger.Error("Failed to stop kube-controller-manager", err)
 	}

@@ -106,9 +106,6 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filt
 	logger := log.FromContext(ctx)
 	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		err := c.StopComponent(ctx, "kube-controller-manager")
-		if err != nil {
-			return false, err
-		}
 		return err == nil, err
 	})
 	if err != nil {

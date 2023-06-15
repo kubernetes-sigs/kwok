@@ -37,7 +37,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
-func (c *Cluster) up(ctx context.Context) error {
+func (c *Cluster) upCompose(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (c *Cluster) up(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) down(ctx context.Context) error {
+func (c *Cluster) downCompose(ctx context.Context) error {
 	args := []string{"down"}
 	commands, err := c.buildComposeCommands(ctx, args...)
 	if err != nil {
@@ -102,7 +102,7 @@ func (c *Cluster) down(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) start(ctx context.Context) error {
+func (c *Cluster) startCompose(ctx context.Context) error {
 	// TODO: nerdctl does not support 'compose start' in v1.1.0 or earlier
 	// Support in https://github.com/containerd/nerdctl/pull/1656 merge into the main branch, but there is no release
 	subcommand := []string{"start"}
@@ -140,7 +140,7 @@ func (c *Cluster) start(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) stop(ctx context.Context) error {
+func (c *Cluster) stopCompose(ctx context.Context) error {
 	// TODO: nerdctl does not support 'compose stop' in v1.0.0 or earlier
 	subcommand := "stop"
 	if c.runtime == consts.RuntimeTypeNerdctl {
