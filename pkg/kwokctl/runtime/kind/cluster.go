@@ -469,7 +469,11 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 			)
 		}
 		return ready, nil
-	}, wait.WithTimeout(timeout), wait.WithImmediate())
+	},
+		wait.WithTimeout(timeout),
+		wait.WithContinueOnError(10),
+		wait.WithInterval(time.Second/2),
+	)
 	if err != nil {
 		return err
 	}
@@ -555,24 +559,52 @@ func (c *Cluster) Stop(ctx context.Context) error {
 	return nil
 }
 
+var importantComponents = map[string]struct{}{
+	"etcd":           {},
+	"kube-apiserver": {},
+}
+
 // StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With("component", name)
+	if _, important := importantComponents[name]; !important {
+		if _, exist, err := c.inspectComponent(ctx, name); err != nil {
+			return err
+		} else if exist {
+			logger.Debug("Component already started")
+			return nil
+		}
+	}
+
+	logger.Debug("Starting component")
 	err := exec.Exec(ctx, c.runtime, "exec", c.getClusterName(), "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
 		return err
 	}
-
 	return c.waitComponentReady(ctx, name, true, 120*time.Second)
 }
 
 // StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With("component", name)
+	if _, important := importantComponents[name]; !important {
+		if _, exist, err := c.inspectComponent(ctx, name); err != nil {
+			return err
+		} else if !exist {
+			logger.Debug("Component already stopped")
+			return nil
+		}
+	}
+
+	logger.Debug("Stopping component")
 	err := exec.Exec(ctx, c.runtime, "exec", c.getClusterName(), "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
 		return err
 	}
-
-	if name == "etcd" || name == "kube-apiserver" {
+	// Once etcd and kube-apiserver are stopped, the cluster will go down
+	if _, important := importantComponents[name]; important {
 		return nil
 	}
 	return c.waitComponentReady(ctx, name, false, 120*time.Second)
@@ -584,18 +616,27 @@ func (c *Cluster) waitComponentReady(ctx context.Context, name string, wantReady
 		err     error
 		waitErr error
 		ready   bool
+		exist   bool
 	)
 	logger := log.FromContext(ctx)
 	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		ready, err = c.componentReady(ctx, name)
+		ready, exist, err = c.inspectComponent(ctx, name)
 		if err != nil {
 			logger.Debug("check component ready",
 				"component", name,
 				"err", err,
 			)
+			//nolint:nilerr
+			return false, nil
 		}
-		return ready == wantReady, nil
-	}, wait.WithTimeout(timeout), wait.WithImmediate())
+		if wantReady {
+			return ready, nil
+		}
+		return !exist, nil
+	},
+		wait.WithTimeout(timeout),
+		wait.WithImmediate(),
+	)
 	if err != nil {
 		return err
 	}
@@ -605,35 +646,35 @@ func (c *Cluster) waitComponentReady(ctx context.Context, name string, wantReady
 	return nil
 }
 
-func (c *Cluster) componentReady(ctx context.Context, name string) (bool, error) {
+func (c *Cluster) inspectComponent(ctx context.Context, name string) (ready bool, exist bool, err error) {
 	out := bytes.NewBuffer(nil)
-	err := c.KubectlInCluster(exec.WithWriteTo(ctx, out), "get", "pod", "--namespace=kube-system", "--output=json", c.getComponentName(name))
+	err = c.KubectlInCluster(exec.WithWriteTo(ctx, out), "get", "pod", "--namespace=kube-system", "--output=json", c.getComponentName(name))
 	if err != nil {
 		if strings.Contains(out.String(), "NotFound") {
-			return false, nil
+			return false, false, nil
 		}
-		return false, err
+		return false, false, err
 	}
 
 	var pod corev1.Pod
 	err = json.Unmarshal(out.Bytes(), &pod)
 	if err != nil {
-		return false, err
+		return false, true, err
 	}
 
 	if pod.Status.Phase != corev1.PodRunning {
-		return false, nil
+		return false, true, nil
 	}
 	if pod.Status.ContainerStatuses == nil {
-		return false, nil
+		return false, true, nil
 	}
 	for _, containerStatus := range pod.Status.ContainerStatuses {
 		if !containerStatus.Ready {
-			return false, nil
+			return false, true, nil
 		}
 	}
 
-	return true, nil
+	return true, true, nil
 }
 
 func (c *Cluster) getClusterName() string {

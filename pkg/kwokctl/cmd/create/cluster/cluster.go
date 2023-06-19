@@ -148,6 +148,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		defer cancel()
 	}
 
+	// Choose runtime
 	var rt runtime.Runtime
 	if flags.Options.Runtime == "" {
 		errs := make([]error, 0, len(flags.Options.Runtimes))
@@ -184,31 +185,19 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
+	// Set up the cluster
 	_, err = rt.Config(ctx)
-	if err == nil {
+	exist := err == nil
+	cleanUp := func() {}
+	if exist {
 		logger.Info("Cluster already exists")
-
 		if ready, err := rt.Ready(ctx); err == nil && ready {
 			logger.Info("Cluster is already ready")
 			return nil
 		}
-
-		logger.Info("Cluster is not ready yet, will be restarted")
-		err = rt.Install(ctx)
-		if err != nil {
-			logger.Error("Failed to continue install cluster", err)
-			return err
-		}
-
-		// Down the cluster for restart
-		err = rt.Down(ctx)
-		if err != nil {
-			logger.Error("Failed to down cluster", err)
-		}
+		logger.Info("Cluster is not ready yet, continue it")
 	} else {
-		start := time.Now()
-		logger.Info("Cluster is creating")
-		cleanUp := func() {
+		cleanUp = func() {
 			err := rt.Uninstall(ctx)
 			if err != nil {
 				logger.Error("Failed to clean up cluster", err)
@@ -228,42 +217,45 @@ func runE(ctx context.Context, flags *flagpole) error {
 			cleanUp()
 			return err
 		}
-
-		err = rt.Install(ctx)
-		if err != nil {
-			logger.Error("Failed to setup config", err)
-			cleanUp()
-			return err
-		}
-		logger.Info("Cluster is created",
-			"elapsed", time.Since(start),
-		)
-
-		if flags.Kubeconfig != "" {
-			setContext := func() {
-				err = rt.AddContext(ctx, flags.Kubeconfig)
-				if err != nil {
-					logger.Error("Failed to add context to kubeconfig", err,
-						"kubeconfig", flags.Kubeconfig,
-					)
-				} else {
-					logger.Debug("Added context to kubeconfig",
-						"kubeconfig", flags.Kubeconfig,
-					)
-				}
-			}
-
-			if flags.Options.Runtime == consts.RuntimeTypeKind ||
-				flags.Options.Runtime == consts.RuntimeTypeKindPodman {
-				// override kubeconfig for kind
-				defer setContext()
-			} else {
-				setContext()
-			}
-		}
 	}
 
+	// Create the cluster
 	start := time.Now()
+	logger.Info("Cluster is creating")
+	err = rt.Install(ctx)
+	if err != nil {
+		logger.Error("Failed to setup config", err)
+		cleanUp()
+		return err
+	}
+	if flags.Kubeconfig != "" {
+		setContext := func() {
+			err = rt.AddContext(ctx, flags.Kubeconfig)
+			if err != nil {
+				logger.Error("Failed to add context to kubeconfig", err,
+					"kubeconfig", flags.Kubeconfig,
+				)
+			} else {
+				logger.Debug("Added context to kubeconfig",
+					"kubeconfig", flags.Kubeconfig,
+				)
+			}
+		}
+
+		if flags.Options.Runtime == consts.RuntimeTypeKind ||
+			flags.Options.Runtime == consts.RuntimeTypeKindPodman {
+			// override kubeconfig for kind
+			defer setContext()
+		} else {
+			setContext()
+		}
+	}
+	logger.Info("Cluster is created",
+		"elapsed", time.Since(start),
+	)
+
+	// Start the cluster
+	start = time.Now()
 	logger.Info("Cluster is starting")
 	err = rt.Up(ctx)
 	if err != nil {
@@ -273,8 +265,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 		"elapsed", time.Since(start),
 	)
 
+	// Wait for cluster to be ready
 	if flags.Wait > 0 {
-		start := time.Now()
+		start = time.Now()
 		logger.Info("Waiting for cluster to be ready")
 		err = rt.WaitReady(gctx, flags.Wait)
 		if err != nil {

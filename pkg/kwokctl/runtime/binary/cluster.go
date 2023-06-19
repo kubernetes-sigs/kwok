@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/nxadm/tail"
-	"golang.org/x/sync/errgroup"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
@@ -39,7 +38,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -516,154 +514,142 @@ func (c *Cluster) isRunning(ctx context.Context, component internalversion.Compo
 }
 
 func (c *Cluster) startComponent(ctx context.Context, component internalversion.Component) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With("component", component.Name)
+	if c.isRunning(ctx, component) {
+		logger.Debug("Component already started")
+		return nil
+	}
+	logger.Debug("Starting component")
 	return exec.ForkExec(ctx, component.WorkDir, component.Binary, component.Args...)
 }
 
 func (c *Cluster) startComponents(ctx context.Context, cs []internalversion.Component) error {
-	groups, err := components.GroupByLinks(cs)
+	err := components.ForeachComponents(ctx, cs, false, true, func(ctx context.Context, component internalversion.Component) error {
+		return c.startComponent(ctx, component)
+	})
 	if err != nil {
 		return err
 	}
-
-	logger := log.FromContext(ctx)
-
-	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		for i, group := range groups {
-			if len(group) == 1 {
-				if err = c.startComponent(ctx, group[0]); err != nil {
-					return false, err
-				}
-			} else { // parallel start components
-				g, ctx := errgroup.WithContext(ctx)
-				for _, component := range group {
-					component := component
-					logger.Debug("Starting component",
-						"component", component.Name,
-						"group", i,
-					)
-					g.Go(func() error {
-						return c.startComponent(ctx, component)
-					})
-				}
-				if err := g.Wait(); err != nil {
-					return false, err
-				}
-			}
-		}
-
-		// check apiserver is ready
-		ready, err := c.Ready(ctx)
-		if err != nil {
-			logger.Debug("Apiserver is not ready",
-				"err", err,
-			)
-			return false, nil
-		}
-		if !ready {
-			logger.Debug("Apiserver is not ready")
-			return false, nil
-		}
-
-		// check if all components is running
-		for i, group := range groups {
-			component, notReady := slices.Find(group, func(component internalversion.Component) bool {
-				return !c.isRunning(ctx, component)
-			})
-			if notReady {
-				logger.Debug("Component is not running, retrying",
-					"component", component.Name,
-					"group", i,
-				)
-				return false, nil
-			}
-		}
-		return true, nil
-	}, wait.WithTimeout(2*time.Minute), wait.WithImmediate())
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
 func (c *Cluster) stopComponent(ctx context.Context, component internalversion.Component) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With("component", component.Name)
+	if !c.isRunning(ctx, component) {
+		logger.Debug("Component already stopped")
+		return nil
+	}
+	logger.Debug("Stopping component")
 	return exec.ForkExecKill(ctx, component.WorkDir, component.Binary)
 }
 
 func (c *Cluster) stopComponents(ctx context.Context, cs []internalversion.Component) error {
-	groups, err := components.GroupByLinks(cs)
+	err := components.ForeachComponents(ctx, cs, true, true, func(ctx context.Context, component internalversion.Component) error {
+		return c.stopComponent(ctx, component)
+	})
 	if err != nil {
 		return err
-	}
-	g, _ := errgroup.WithContext(ctx)
-	for i := len(groups) - 1; i >= 0; i-- {
-		group := groups[i]
-		for _, component := range group {
-			component := component
-			g.Go(func() error {
-				return c.stopComponent(ctx, component)
-			})
-		}
-		if err := g.Wait(); err != nil {
-			return err
-		}
 	}
 	return nil
 }
 
 // Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = c.startComponents(ctx, config.Components)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.start(ctx)
 }
 
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = c.stopComponents(ctx, config.Components)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.stop(ctx)
 }
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = c.startComponents(ctx, config.Components)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.start(ctx)
 }
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
+	return c.stop(ctx)
+}
+
+func (c *Cluster) start(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = c.stopComponents(ctx, config.Components)
+	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.startComponents(ctx, config.Components)
+		return err == nil, err
+	},
+		wait.WithContinueOnError(5),
+		wait.WithImmediate(),
+	)
+	if err != nil {
+		return err
+	}
+
+	logger := log.FromContext(ctx)
+	err = c.waitServed(ctx, 2*time.Minute)
+	if err != nil {
+		logger.Warn("Cluster is not served yet", "err", err)
+	}
+	return nil
+}
+
+func (c *Cluster) served(ctx context.Context) (bool, error) {
+	err := c.KubectlInCluster(ctx, "get", "--raw", "/version")
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (c *Cluster) waitServed(ctx context.Context, timeout time.Duration) error {
+	var (
+		err     error
+		waitErr error
+		ready   bool
+	)
+	logger := log.FromContext(ctx)
+	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		ready, err = c.served(ctx)
+		if err != nil {
+			logger.Debug("Cluster is not served yet",
+				"err", err,
+			)
+		}
+		return ready, nil
+	},
+		wait.WithTimeout(timeout),
+		wait.WithInterval(time.Second/5),
+		wait.WithImmediate(),
+	)
+	if err != nil {
+		return err
+	}
+	if waitErr != nil {
+		return waitErr
+	}
+	return nil
+}
+
+func (c *Cluster) stop(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.stopComponents(ctx, config.Components)
+		return err == nil, err
+	},
+		wait.WithContinueOnError(5),
+		wait.WithImmediate(),
+	)
 	if err != nil {
 		return err
 	}
@@ -794,4 +780,50 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	}
 	conf := &config.Options
 	return c.Etcdctl(ctx, append([]string{"--endpoints", net.LocalAddress + ":" + format.String(conf.EtcdPort)}, args...)...)
+}
+
+// Ready returns true if the cluster is ready
+func (c *Cluster) Ready(ctx context.Context) (bool, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	for _, component := range config.Components {
+		if !c.isRunning(ctx, component) {
+			return false, nil
+		}
+	}
+
+	return c.Cluster.Ready(ctx)
+}
+
+// WaitReady waits for the cluster to be ready.
+func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
+	var (
+		err     error
+		waitErr error
+		ready   bool
+	)
+	logger := log.FromContext(ctx)
+	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		ready, err = c.Ready(ctx)
+		if err != nil {
+			logger.Debug("Cluster is not ready",
+				"err", err,
+			)
+		}
+		return ready, nil
+	},
+		wait.WithTimeout(timeout),
+		wait.WithContinueOnError(10),
+		wait.WithInterval(time.Second/2),
+	)
+	if err != nil {
+		return err
+	}
+	if waitErr != nil {
+		return waitErr
+	}
+	return nil
 }

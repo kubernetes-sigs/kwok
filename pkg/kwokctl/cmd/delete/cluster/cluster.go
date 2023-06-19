@@ -76,9 +76,21 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 		return err
 	}
-	logger.Info("Cluster is stopping")
 
+	// Stop the cluster
 	start := time.Now()
+	logger.Info("Cluster is stopping")
+	err = rt.Down(ctx)
+	if err != nil {
+		return err
+	}
+	logger.Info("Cluster is stopped",
+		"elapsed", time.Since(start),
+	)
+
+	// Delete the cluster
+	start = time.Now()
+	logger.Info("Cluster is deleting")
 	if flags.Kubeconfig != "" {
 		err = rt.RemoveContext(ctx, flags.Kubeconfig)
 		if err != nil {
@@ -90,17 +102,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 			"kubeconfig", flags.Kubeconfig,
 		)
 	}
-
-	err = rt.Down(ctx)
-	if err != nil {
-		return err
-	}
-	logger.Info("Cluster is stopped",
-		"elapsed", time.Since(start),
-	)
-
-	start = time.Now()
-	logger.Info("Cluster is deleting")
 	err = rt.Uninstall(ctx)
 	if err != nil {
 		return err

@@ -23,6 +23,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"sigs.k8s.io/yaml"
 
@@ -609,128 +610,113 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 // Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
 	if c.isSelfCompose(ctx, false) {
-		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-			err := c.startComponents(ctx)
-			return err == nil, err
-		},
-			wait.WithContinueOnError(5),
-			wait.WithImmediate(),
-		)
-		if err != nil {
-			return err
-		}
-		return nil
+		return c.start(ctx)
 	}
-
-	return c.up(ctx)
+	return c.upCompose(ctx)
 }
 
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
 	if c.isSelfCompose(ctx, false) {
-		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-			err := c.stopComponents(ctx)
-			return err == nil, err
-		},
-			wait.WithContinueOnError(5),
-			wait.WithImmediate(),
-		)
-		if err != nil {
-			return err
-		}
-		return nil
+		return c.stop(ctx)
 	}
-
-	return c.down(ctx)
+	return c.downCompose(ctx)
 }
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
 	if c.isSelfCompose(ctx, false) {
-		if c.runtime == consts.RuntimeTypeNerdctl {
-			canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
-			if !canNerdctlUnlessStopped {
-				// TODO: Remove this, nerdctl stop will restart containers
-				// https://github.com/containerd/nerdctl/issues/1980
-				err := c.createComponents(ctx)
-				if err != nil {
-					return err
-				}
-			}
-		}
-		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-			err := c.startComponents(ctx)
-			return err == nil, err
-		},
-			wait.WithContinueOnError(5),
-			wait.WithImmediate(),
-		)
-		if err != nil {
-			return err
-		}
-
-		if c.runtime == consts.RuntimeTypeNerdctl {
-			canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
-			if !canNerdctlUnlessStopped {
-				backupFilename := c.GetWorkdirPath("restart.db")
-				fi, err := os.Stat(backupFilename)
-				if err == nil {
-					if fi.IsDir() {
-						return fmt.Errorf("wrong backup file %s, it cannot be a directory, please remove it", backupFilename)
-					}
-					if err := c.SnapshotRestore(ctx, backupFilename); err != nil {
-						return fmt.Errorf("failed to restore cluster data: %w", err)
-					}
-					if err := os.Remove(backupFilename); err != nil {
-						return fmt.Errorf("failed to remove backup file: %w", err)
-					}
-				} else if !os.IsNotExist(err) {
-					return err
-				}
-			}
-		}
-		return nil
+		return c.start(ctx)
 	}
-
-	return c.start(ctx)
+	return c.startCompose(ctx)
 }
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
 	if c.isSelfCompose(ctx, false) {
-		if c.runtime == consts.RuntimeTypeNerdctl {
-			canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
-			if !canNerdctlUnlessStopped {
-				err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
-				if err != nil {
-					return fmt.Errorf("failed to snapshot cluster data: %w", err)
-				}
-			}
-		}
-		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-			err := c.stopComponents(ctx)
-			return err == nil, err
-		},
-			wait.WithContinueOnError(5),
-			wait.WithImmediate(),
-		)
-		if err != nil {
-			return err
-		}
-		if c.runtime == consts.RuntimeTypeNerdctl {
-			canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
-			if !canNerdctlUnlessStopped {
-				// TODO: Remove this, nerdctl stop will restart containers
-				// https://github.com/containerd/nerdctl/issues/1980
-				err = c.deleteComponents(ctx)
-				if err != nil {
-					return err
-				}
-			}
-		}
-		return nil
+		return c.stop(ctx)
 	}
-	return c.stop(ctx)
+	return c.stopCompose(ctx)
+}
+
+func (c *Cluster) start(ctx context.Context) error {
+	if c.runtime == consts.RuntimeTypeNerdctl {
+		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+		if !canNerdctlUnlessStopped {
+			// TODO: Remove this, nerdctl stop will restart containers
+			// https://github.com/containerd/nerdctl/issues/1980
+			err := c.createComponents(ctx)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.startComponents(ctx)
+		return err == nil, err
+	},
+		wait.WithContinueOnError(5),
+		wait.WithImmediate(),
+	)
+	if err != nil {
+		return err
+	}
+
+	if c.runtime == consts.RuntimeTypeNerdctl {
+		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+		if !canNerdctlUnlessStopped {
+			backupFilename := c.GetWorkdirPath("restart.db")
+			fi, err := os.Stat(backupFilename)
+			if err == nil {
+				if fi.IsDir() {
+					return fmt.Errorf("wrong backup file %s, it cannot be a directory, please remove it", backupFilename)
+				}
+				if err := c.SnapshotRestore(ctx, backupFilename); err != nil {
+					return fmt.Errorf("failed to restore cluster data: %w", err)
+				}
+				if err := os.Remove(backupFilename); err != nil {
+					return fmt.Errorf("failed to remove backup file: %w", err)
+				}
+			} else if !os.IsNotExist(err) {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (c *Cluster) stop(ctx context.Context) error {
+	if c.runtime == consts.RuntimeTypeNerdctl {
+		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+		if !canNerdctlUnlessStopped {
+			err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
+			if err != nil {
+				return fmt.Errorf("failed to snapshot cluster data: %w", err)
+			}
+		}
+	}
+	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.stopComponents(ctx)
+		return err == nil, err
+	},
+		wait.WithContinueOnError(5),
+		wait.WithImmediate(),
+	)
+	if err != nil {
+		return err
+	}
+	if c.runtime == consts.RuntimeTypeNerdctl {
+		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+		if !canNerdctlUnlessStopped {
+			// TODO: Remove this, nerdctl stop will restart containers
+			// https://github.com/containerd/nerdctl/issues/1980
+			err = c.deleteComponents(ctx)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // StartComponent starts a component in the cluster
@@ -804,4 +790,50 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
 	args = append([]string{"exec", "--env=ETCDCTL_API=3", "-i", etcdContainerName, "etcdctl"}, args...)
 	return exec.Exec(ctx, c.runtime, args...)
+}
+
+// Ready returns true if the cluster is ready
+func (c *Cluster) Ready(ctx context.Context) (bool, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	for _, component := range config.Components {
+		if running, _ := c.inspectComponent(ctx, component.Name); !running {
+			return false, nil
+		}
+	}
+
+	return c.Cluster.Ready(ctx)
+}
+
+// WaitReady waits for the cluster to be ready.
+func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
+	var (
+		err     error
+		waitErr error
+		ready   bool
+	)
+	logger := log.FromContext(ctx)
+	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		ready, err = c.Ready(ctx)
+		if err != nil {
+			logger.Debug("Cluster is not ready",
+				"err", err,
+			)
+		}
+		return ready, nil
+	},
+		wait.WithTimeout(timeout),
+		wait.WithContinueOnError(10),
+		wait.WithInterval(time.Second/2),
+	)
+	if err != nil {
+		return err
+	}
+	if waitErr != nil {
+		return waitErr
+	}
+	return nil
 }

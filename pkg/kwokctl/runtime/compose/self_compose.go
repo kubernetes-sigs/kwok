@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/sync/errgroup"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
@@ -259,7 +257,7 @@ func (c *Cluster) createComponents(ctx context.Context) error {
 		return err
 	}
 
-	err = runComponents(ctx, conf.Components, false, true, func(ctx context.Context, component internalversion.Component) error {
+	err = components.ForeachComponents(ctx, conf.Components, false, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.createComponent(ctx, component.Name)
 	})
 	if err != nil {
@@ -302,7 +300,7 @@ func (c *Cluster) deleteComponents(ctx context.Context) error {
 		return err
 	}
 
-	err = runComponents(ctx, conf.Components, true, true, func(ctx context.Context, component internalversion.Component) error {
+	err = components.ForeachComponents(ctx, conf.Components, true, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.deleteComponent(ctx, component.Name)
 	})
 	if err != nil {
@@ -420,7 +418,7 @@ func (c *Cluster) startComponents(ctx context.Context) error {
 		return err
 	}
 
-	err = runComponents(ctx, conf.Components, false, true, func(ctx context.Context, component internalversion.Component) error {
+	err = components.ForeachComponents(ctx, conf.Components, false, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.startComponent(ctx, component.Name)
 	})
 	if err != nil {
@@ -455,56 +453,11 @@ func (c *Cluster) stopComponents(ctx context.Context) error {
 		return err
 	}
 
-	err = runComponents(ctx, conf.Components, true, false, func(ctx context.Context, component internalversion.Component) error {
+	err = components.ForeachComponents(ctx, conf.Components, true, false, func(ctx context.Context, component internalversion.Component) error {
 		return c.stopComponent(ctx, component.Name)
 	})
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func runComponents(ctx context.Context, cs []internalversion.Component, reverse, order bool, fun func(ctx context.Context, component internalversion.Component) error) error {
-	groups, err := components.GroupByLinks(cs)
-	if err != nil {
-		return err
-	}
-	if reverse {
-		groups = slices.Reverse(groups)
-	}
-
-	if order {
-		for _, group := range groups {
-			if len(group) == 1 {
-				if err := fun(ctx, group[0]); err != nil {
-					return err
-				}
-			} else {
-				g, ctx := errgroup.WithContext(ctx)
-				for _, component := range group {
-					component := component
-					g.Go(func() error {
-						return fun(ctx, component)
-					})
-				}
-				if err := g.Wait(); err != nil {
-					return err
-				}
-			}
-		}
-	} else {
-		g, ctx := errgroup.WithContext(ctx)
-		for _, group := range groups {
-			for _, component := range group {
-				component := component
-				g.Go(func() error {
-					return fun(ctx, component)
-				})
-			}
-		}
-		if err := g.Wait(); err != nil {
-			return err
-		}
 	}
 	return nil
 }
