@@ -179,6 +179,19 @@ KwokctlConfigurationOptions
 <p>ComponentsPatches holds information about the components patches.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.KwokctlConfigurationStatus">
+KwokctlConfigurationStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds information about the status.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h2 id="kwok.x-k8s.io/v1alpha1">
@@ -2544,6 +2557,38 @@ bool
 </td>
 <td>
 <p>DisableQPSLimits specifies whether to disable QPS limits for components.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlConfigurationStatus">
+KwokctlConfigurationStatus
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.KwokctlConfigurationStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.KwokctlConfiguration">KwokctlConfiguration</a>
+</p>
+<p>
+<p>KwokctlConfigurationStatus holds information about the status.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>version</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version is the version of the kwokctl.</p>
 </td>
 </tr>
 </tbody>

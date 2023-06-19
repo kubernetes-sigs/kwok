@@ -31,6 +31,14 @@ type KwokctlConfiguration struct {
 	Components []Component
 	// ComponentsPatches holds information about the components patches.
 	ComponentsPatches []ComponentPatches
+	// Status holds information about the status.
+	Status KwokctlConfigurationStatus
+}
+
+// KwokctlConfigurationStatus holds information about the status.
+type KwokctlConfigurationStatus struct {
+	// Version is the version of the kwokctl.
+	Version string
 }
 
 // ExtraArgs holds information about the extra args.

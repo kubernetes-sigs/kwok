@@ -44,6 +44,14 @@ type KwokctlConfiguration struct {
 	Components []Component `json:"components,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 	// ComponentsPatches holds information about the components patches.
 	ComponentsPatches []ComponentPatches `json:"componentsPatches,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	// Status holds information about the status.
+	Status KwokctlConfigurationStatus `json:"status,omitempty"`
+}
+
+// KwokctlConfigurationStatus holds information about the status.
+type KwokctlConfigurationStatus struct {
+	// Version is the version of the kwokctl.
+	Version string `json:"version,omitempty"`
 }
 
 // ExtraArgs holds information about the extra args.
