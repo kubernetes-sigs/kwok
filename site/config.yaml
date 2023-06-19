@@ -166,6 +166,15 @@ menu:
     - identifier: platform-specific-binaries
       pageRef: "/docs/user/kwokctl-platform-specific-binaries"
       parent: kwokctl-advanced-usage
+    - identifier: with-argo
+      pageRef: "/docs/examples/argo"
+      parent: kwokctl-advanced-usage
+    - identifier: with-linkerd
+      pageRef: "/docs/examples/linkerd"
+      parent: kwokctl-advanced-usage
+    - identifier: with-istio
+      pageRef: "/docs/examples/istio"
+      parent: kwokctl-advanced-usage
 
     - identifier: tools
       title: Tools
