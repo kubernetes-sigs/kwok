@@ -1,28 +1,42 @@
 
 @import "plugins/_numbered.scss";
 
-
 .gh-label {
-    display: inline-block;
-    padding: 0 10px;
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 18px;
-    border: 1px solid transparent;
-    border-radius: 2em;
-}
-
-code {
-    padding: 0 .25rem;
-    background: var(--gray-200);
-    border-radius: .25rem;
-    font-size: .875em;
+  display: inline-block;
+  padding: 0 10px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 18px;
+  border: 1px solid transparent;
+  border-radius: 2em;
 }
 
 a.active {
-    color: var(--color-link);
+  color: var(--color-link);
 }
 
 a.ancestor {
-    color: var(--color-visited-link);
+  color: var(--color-visited-link);
+}
+
+code {
+  padding: 0 .25rem;
+  background: var(--gray-200);
+  border-radius: .25rem;
+  font-size: .875em;
+  word-break: break-word;
+}
+
+.markdown {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 400;
+    line-height: 1.2;
+    margin-top: 1.5em;
+    margin-bottom: 1rem;
+  }
 }
