@@ -676,6 +676,70 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 	return c.logs(ctx, name, out, true)
 }
 
+// CollectLogs returns the logs of the specified component.
+func (c *Cluster) CollectLogs(ctx context.Context, name string, dir string) error {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	kindPath, err := c.preDownloadKind(ctx)
+	if err != nil {
+		return err
+	}
+	ctx = c.withProviderEnv(ctx)
+	err = exec.WriteToPath(ctx, filepath.Join(dir, conf.Options.Runtime+"-info.txt"), []string{kindPath, "version"})
+	if err != nil {
+		return err
+	}
+
+	componentsDir := filepath.Join(dir, "components")
+	logger := log.FromContext(ctx)
+	for _, component := range conf.Components {
+		path := filepath.Join(componentsDir, component.Name+".log")
+		f, err := file.Open(path, 0640)
+		if err != nil {
+			logger.Error("Failed to open file", err)
+			continue
+		}
+		if err = c.Logs(ctx, component.Name, f); err != nil {
+			logger.Error("Failed to get log", err)
+			if err = f.Close(); err != nil {
+				logger.Error("Failed to close file", err)
+				if err = os.Remove(path); err != nil {
+					logger.Error("Failed to remove file", err)
+				}
+			}
+		}
+		if err = f.Close(); err != nil {
+			logger.Error("Failed to close file", err)
+			if err = os.Remove(path); err != nil {
+				logger.Error("Failed to remove file", err)
+			}
+		}
+	}
+
+	if conf.Options.KubeAuditPolicy != "" {
+		filePath := filepath.Join(componentsDir, "audit.log")
+		f, err := file.Open(filePath, 0640)
+		if err != nil {
+			logger.Error("Failed to open file", err)
+		} else {
+			if err = c.AuditLogs(ctx, f); err != nil {
+				logger.Error("Failed to get audit log", err)
+			}
+			if err = f.Close(); err != nil {
+				logger.Error("Failed to close file", err)
+				if err = os.Remove(filePath); err != nil {
+					logger.Error("Failed to remove file", err)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 // ListBinaries list binaries in the cluster
 func (c *Cluster) ListBinaries(ctx context.Context) ([]string, error) {
 	config, err := c.Config(ctx)

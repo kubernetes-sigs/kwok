@@ -64,7 +64,6 @@ function test_workable() {
 
   if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
     echo "Error: cluster not ready"
-    show_all
     return 1
   fi
 
@@ -78,7 +77,6 @@ function test_workable() {
 
   if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
     echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
-    show_all
     return 1
   fi
 }

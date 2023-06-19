@@ -20,6 +20,7 @@ DIR="$(realpath "${DIR}")"
 ROOT_DIR="$(realpath "${DIR}/../..")"
 
 source "${ROOT_DIR}/hack/requirements.sh"
+source "${DIR}/suite.sh"
 
 VERSION="$("${ROOT_DIR}/hack/get-version.sh")"
 
@@ -39,7 +40,17 @@ function test_all() {
   local releases=("${@:3}")
 
   echo "Test ${cases} on ${runtime} for ${releases[*]}"
-  KWOK_RUNTIME="${runtime}" "${DIR}/kwokctl_${cases}_test.sh" "${releases[@]}"
+  if KWOK_RUNTIME="${runtime}" "${DIR}/kwokctl_${cases}_test.sh" "${releases[@]}"; then
+    rm -rf "${KWOK_LOGS_DIR}"
+  else
+    return 1
+  fi
+
+  for name in $(kwokctl get clusters); do
+    echo "Clean up cluster '${name}' that have not been deleted."
+    delete_cluster "${name}"
+    return 1
+  done
 }
 
 # Test only the latest releases of Kubernetes

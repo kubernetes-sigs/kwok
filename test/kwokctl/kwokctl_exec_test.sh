@@ -56,7 +56,6 @@ function test_exec() {
     echo "Error: exec result does not match"
     echo "  want: ${want}"
     echo "  got:  ${result}"
-    show_info "${name}"
     return 1
   fi
 }

@@ -22,12 +22,14 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	rt "runtime"
 	"time"
 
 	"github.com/nxadm/tail"
 	"golang.org/x/sync/errgroup"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
@@ -759,6 +761,46 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 		}
 	}()
 	<-ctx.Done()
+	return nil
+}
+
+// CollectLogs returns the logs of the specified component.
+func (c *Cluster) CollectLogs(ctx context.Context, name string, dir string) error {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join(dir, consts.RuntimeTypeBinary+"-info.txt")
+	f, err := file.Open(path, 0640)
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH))
+	if err != nil {
+		return err
+	}
+	if err = f.Close(); err != nil {
+		return err
+	}
+
+	componentsDir := filepath.Join(dir, "components")
+	logger := log.FromContext(ctx)
+	for _, component := range conf.Components {
+		src := c.GetLogPath(filepath.Base(component.Name) + ".log")
+		dest := filepath.Join(componentsDir, component.Name+".log")
+		if err = file.Copy(src, dest); err != nil {
+			logger.Error("Failed to copy file", err)
+		}
+	}
+	if conf.Options.KubeAuditPolicy != "" {
+		src := c.GetLogPath(runtime.AuditLogName)
+		dest := filepath.Join(componentsDir, runtime.AuditLogName)
+		if err = file.Copy(src, dest); err != nil {
+			logger.Error("Failed to copy file", err)
+		}
+	}
+
 	return nil
 }
 

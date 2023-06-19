@@ -13,33 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-function show_all() {
-  for name in $(kwokctl get clusters); do
-    show_info "${name}"
-  done
-}
+export KWOK_LOGS_DIR="/tmp/kwok/logs"
 
-function show_info() {
+function save_logs() {
   local name="${1}"
-  echo
-  echo kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-  kwokctl --name="${name}" kubectl get pod -o wide --all-namespaces
-  echo
-  echo kwokctl --name="${name}" logs etcd
-  kwokctl --name="${name}" logs etcd
-  echo
-  echo kwokctl --name="${name}" logs kube-apiserver
-  kwokctl --name="${name}" logs kube-apiserver
-  echo
-  echo kwokctl --name="${name}" logs kube-controller-manager
-  kwokctl --name="${name}" logs kube-controller-manager
-  echo
-  echo kwokctl --name="${name}" logs kube-scheduler
-  kwokctl --name="${name}" logs kube-scheduler
-  echo
-  echo kwokctl --name="${name}" logs kwok-controller
-  kwokctl --name="${name}" logs kwok-controller
-  echo
+  mkdir -p "${KWOK_LOGS_DIR}"
+  kwokctl --name="${name}" export logs "${KWOK_LOGS_DIR}"
 }
 
 function create_cluster() {
@@ -56,13 +35,13 @@ function create_cluster() {
     --disable-qps-limits \
     "$@"; then
     echo "Error: Cluster ${name} creation failed"
-    show_all
     exit 1
   fi
 }
 
 function delete_cluster() {
   local name="${1}"
+  save_logs "${name}"
   if ! kwokctl delete cluster --name "${name}"; then
     echo "Error: Cluster ${name} deletion failed"
     exit 1
