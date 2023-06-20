@@ -181,7 +181,7 @@ jobs:
         with:
           repository: kubernetes/kubernetes
           path: kubernetes
-          ref: v1.27.1
+          ref: v1.27.3
       - name: Build Kubernetes Binary
         if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'macos-latest' }}
         shell: bash
