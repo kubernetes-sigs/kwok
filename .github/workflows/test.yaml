@@ -311,6 +311,11 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_logs
 
+      - name: Test Export Logs
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_export_logs
+
       - name: Test Attach
         shell: bash
         run: |
@@ -346,3 +351,10 @@ jobs:
           KWOK_MODE: StableFeatureGateAndAPI
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
+
+      - name: Upload logs
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}${{ matrix.nerdctl-version && '-nerdctl' || '' }}${{ matrix.nerdctl-version }}
+          path: /tmp/kwok/logs

@@ -23,6 +23,9 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
 // IOStreams contains the standard streams.
@@ -174,4 +177,24 @@ func Exec(ctx context.Context, name string, arg ...string) error {
 		return fmt.Errorf("cmd wait: %s %s: %w", name, strings.Join(arg, " "), err)
 	}
 	return nil
+}
+
+// WriteToPath writes the output of a command to a specified file
+func WriteToPath(ctx context.Context, path string, commands []string) error {
+	f, err := file.Open(path, 0640)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = f.Close()
+		if err != nil {
+			logger := log.FromContext(ctx)
+			logger.Error("Failed to close file", err)
+			err := os.Remove(path)
+			if err != nil {
+				logger.Error("Failed to remove file", err)
+			}
+		}
+	}()
+	return Exec(WithAllWriteTo(ctx, f), commands[0], commands[1:]...)
 }

@@ -101,3 +101,12 @@ func Exists(name string) bool {
 func Remove(name string) error {
 	return os.Remove(name)
 }
+
+// Open open or create the file
+func Open(name string, perm os.FileMode) (*os.File, error) {
+	err := os.MkdirAll(filepath.Dir(name), 0750)
+	if err != nil {
+		return nil, err
+	}
+	return os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
+}

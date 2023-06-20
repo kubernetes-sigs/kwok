@@ -92,6 +92,9 @@ type Runtime interface {
 	// LogsFollow follow logs of a component with follow
 	LogsFollow(ctx context.Context, name string, out io.Writer) error
 
+	// CollectLogs will populate dir with cluster logs and other debug files
+	CollectLogs(ctx context.Context, name string, dir string) error
+
 	// AuditLogs audit logs of apiserver
 	AuditLogs(ctx context.Context, out io.Writer) error
 

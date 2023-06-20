@@ -20,6 +20,7 @@ kwokctl [command] [flags]
 * [kwokctl create](kwokctl_create.md)	 - Creates one of [cluster]
 * [kwokctl delete](kwokctl_delete.md)	 - Deletes one of [cluster]
 * [kwokctl etcdctl](kwokctl_etcdctl.md)	 - etcdctl in cluster
+* [kwokctl export](kwokctl_export.md)	 - Exports one of [logs]
 * [kwokctl get](kwokctl_get.md)	 - Gets one of [artifacts, clusters, kubeconfig]
 * [kwokctl kubectl](kwokctl_kubectl.md)	 - kubectl in cluster
 * [kwokctl logs](kwokctl_logs.md)	 - Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]
