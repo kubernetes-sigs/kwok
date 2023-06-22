@@ -35,7 +35,7 @@ spec:
       containerStatuses:
         {{ range .spec.containers }}
         - image: {{ .image }}
-          name: {{ .name }}
+          name: {{ printf "%q" .name }}
           ready: true
           restartCount: 0
           state:
@@ -46,7 +46,7 @@ spec:
       initContainerStatuses:
         {{ range .spec.initContainers }}
         - image: {{ .image }}
-          name: {{ .name }}
+          name: {{ printf "%q" .name }}
           ready: true
           restartCount: 0
           state:
