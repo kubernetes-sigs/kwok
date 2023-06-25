@@ -20,6 +20,7 @@ package exec
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
@@ -46,4 +47,11 @@ func command(ctx context.Context, name string, arg ...string) *exec.Cmd {
 func isRunning(pid int) bool {
 	_, err := os.FindProcess(pid)
 	return err == nil
+}
+
+func setUser(cmd *exec.Cmd, uid, gid *int64) error {
+	if uid == nil && gid == nil {
+		return nil
+	}
+	return fmt.Errorf("user and group are not supported in windows")
 }

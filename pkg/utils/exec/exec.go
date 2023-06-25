@@ -44,6 +44,10 @@ type Options struct {
 	Dir string
 	// Env is the environment variables of the command.
 	Env []string
+	// UID is the user id of the command
+	UID *int64
+	// GID is the group id of the command
+	GID *int64
 	// IOStreams contains the standard streams.
 	IOStreams
 	// PipeStdin is true if the command's stdin should be piped.
@@ -56,6 +60,8 @@ func (e *Options) deepCopy() *Options {
 	return &Options{
 		Dir:       e.Dir,
 		Env:       append([]string(nil), e.Env...),
+		GID:       e.GID,
+		UID:       e.UID,
 		IOStreams: e.IOStreams,
 		PipeStdin: e.PipeStdin,
 		Fork:      e.Fork,
@@ -73,6 +79,14 @@ func WithPipeStdin(ctx context.Context, pipeStdin bool) context.Context {
 func WithEnv(ctx context.Context, env []string) context.Context {
 	ctx, opt := withExecOptions(ctx)
 	opt.Env = append(opt.Env, env...)
+	return ctx
+}
+
+// WithUser returns a context with the given username and group name.
+func WithUser(ctx context.Context, uid, gid *int64) context.Context {
+	ctx, opt := withExecOptions(ctx)
+	opt.UID = uid
+	opt.GID = gid
 	return ctx
 }
 
@@ -170,6 +184,9 @@ func Command(ctx context.Context, name string, args ...string) (cmd *exec.Cmd, e
 	}
 	if opt.Env != nil {
 		cmd.Env = append(os.Environ(), opt.Env...)
+	}
+	if err = setUser(cmd, opt.UID, opt.GID); err != nil {
+		return nil, fmt.Errorf("cmd set user: %s %s: %w", name, strings.Join(args, " "), err)
 	}
 
 	cmd.Dir = opt.Dir

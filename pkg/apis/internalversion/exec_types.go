@@ -50,6 +50,8 @@ type ExecTargetLocal struct {
 	WorkDir string
 	// Envs is a list of environment variables to exec with.
 	Envs []EnvVar
+	// SecurityContext is the user context to exec.
+	SecurityContext *SecurityContext
 }
 
 // EnvVar represents an environment variable present in a Container.
@@ -58,4 +60,12 @@ type EnvVar struct {
 	Name string
 	// Value of the environment variable.
 	Value string
+}
+
+// SecurityContext specifies the existing uid and gid to run exec command in container process.
+type SecurityContext struct {
+	// RunAsUser is the existing uid to run exec command in container process.
+	RunAsUser *int64
+	// RunAsGroup is the existing gid to run exec command in container process.
+	RunAsGroup *int64
 }

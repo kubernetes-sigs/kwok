@@ -53,6 +53,11 @@ func (s *Server) ExecInContainer(ctx context.Context, podName, podNamespace stri
 		ctx = exec.WithEnv(ctx, envs)
 	}
 
+	// Set the user.
+	if execTarget.Local.SecurityContext != nil {
+		ctx = exec.WithUser(ctx, execTarget.Local.SecurityContext.RunAsUser, execTarget.Local.SecurityContext.RunAsGroup)
+	}
+
 	// Set the working directory.
 	if execTarget.Local.WorkDir != "" {
 		ctx = exec.WithDir(ctx, execTarget.Local.WorkDir)
