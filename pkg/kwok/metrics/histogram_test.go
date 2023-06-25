@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	dto "github.com/prometheus/client_model/go"
 
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -89,7 +90,7 @@ func TestHistogramObserve(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(out.Histogram, want); diff != "" {
+	if diff := cmp.Diff(out.Histogram, want, cmpopts.IgnoreUnexported(dto.Histogram{}, dto.Bucket{})); diff != "" {
 		t.Errorf("Histogram mismatch (-want +got):\n%s", diff)
 	}
 }

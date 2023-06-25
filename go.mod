@@ -16,8 +16,8 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/itchyny/gojq v0.12.13
 	github.com/nxadm/tail v1.4.8
-	github.com/prometheus/client_golang v1.15.1
-	github.com/prometheus/client_model v0.3.0
+	github.com/prometheus/client_golang v1.16.0
+	github.com/prometheus/client_model v0.4.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/wzshiming/cmux v0.3.2
@@ -77,7 +77,7 @@ require (
 	github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
-	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/wzshiming/llrb v0.2.1 // indirect
