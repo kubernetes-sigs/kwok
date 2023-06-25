@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"text/template"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -37,12 +36,13 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 )
 
 var (
 	startTime = time.Now().Format(time.RFC3339Nano)
 
-	defaultFuncMap = template.FuncMap{
+	defaultFuncMap = gotpl.FuncMap{
 		"Now": func() string {
 			return time.Now().Format(time.RFC3339Nano)
 		},

@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"net"
 	"sync/atomic"
-	"text/template"
 	"time"
 
 	"github.com/wzshiming/cron"
@@ -44,6 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
+	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
@@ -100,7 +100,7 @@ type NodeController struct {
 	nodeSelectorFunc                      func(node *corev1.Node) bool
 	onNodeManagedFunc                     func(nodeName string)
 	nodesSets                             maps.SyncMap[string, *NodeInfo]
-	renderer                              *renderer
+	renderer                              gotpl.Renderer
 	preprocessChan                        chan *corev1.Node
 	playStageChan                         chan resourceStageJob[*corev1.Node]
 	playStageParallelism                  uint
@@ -126,7 +126,7 @@ type NodeControllerConfig struct {
 	NodePort                              int
 	Stages                                []*internalversion.Stage
 	PlayStageParallelism                  uint
-	FuncMap                               template.FuncMap
+	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
 	ReadOnlyFunc                          func(nodeName string) bool
 }
@@ -185,7 +185,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		recorder:                              conf.Recorder,
 		readOnlyFunc:                          conf.ReadOnlyFunc,
 	}
-	funcMap := template.FuncMap{
+	funcMap := gotpl.FuncMap{
 		"NodeIP":   c.funcNodeIP,
 		"NodeName": c.funcNodeName,
 		"NodePort": c.funcNodePort,
@@ -196,7 +196,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 	for k, v := range conf.FuncMap {
 		funcMap[k] = v
 	}
-	c.renderer = newRenderer(funcMap)
+	c.renderer = gotpl.NewRenderer(funcMap)
 	return c, nil
 }
 
@@ -614,7 +614,7 @@ func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, p
 }
 
 func (c *NodeController) computePatch(node *corev1.Node, tpl string) ([]byte, error) {
-	patch, err := c.renderer.renderToJSON(tpl, node)
+	patch, err := c.renderer.ToJSON(tpl, node)
 	if err != nil {
 		return nil, err
 	}
