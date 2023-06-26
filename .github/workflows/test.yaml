@@ -195,6 +195,14 @@ jobs:
             kubeBinaryPrefix: "${GITHUB_WORKSPACE}/kubernetes/_output/bin"
           EOF
 
+        # TODO: workaround for https://github.com/actions/runner-images/issues/7753 (caused by https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394).
+        # Remove this when this issue is fixed and available in the ubuntu runner image
+      - name: Setup Podman for Ubuntu
+        if: ${{ matrix.os == 'ubuntu-latest' && (matrix.kwokctl-runtime == 'podman' || matrix.kwokctl-runtime == 'kind-podman') }}
+        shell: bash
+        run: |
+          sudo apt install podman=3.4.4+ds1-1ubuntu1 --allow-downgrades
+
       - name: Install Docker for MacOS
         if: ${{ matrix.os == 'macos-latest' && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
         shell: bash
@@ -227,7 +235,7 @@ jobs:
           containerd-rootless-setuptool.sh install
           containerd-rootless-setuptool.sh install-buildkit-containerd
 
-      - name: Setup Podman For Kind
+      - name: Setup Podman for Kind
         if: ${{ matrix.kwokctl-runtime == 'kind-podman' }}
         shell: bash
         run: |
