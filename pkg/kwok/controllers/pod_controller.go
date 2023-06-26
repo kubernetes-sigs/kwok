@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"text/template"
 	"time"
 
 	"github.com/wzshiming/cron"
@@ -43,6 +42,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
+	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
@@ -64,7 +64,7 @@ type PodController struct {
 	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	nodeHasMetric                         func(nodeName string) bool
 	ipPools                               maps.SyncMap[string, *ipPool]
-	renderer                              *renderer
+	renderer                              gotpl.Renderer
 	preprocessChan                        chan *corev1.Pod
 	playStageChan                         chan resourceStageJob[*corev1.Pod]
 	playStageParallelism                  uint
@@ -90,7 +90,7 @@ type PodControllerConfig struct {
 	NodeHasMetric                         func(nodeName string) bool
 	Stages                                []*internalversion.Stage
 	PlayStageParallelism                  uint
-	FuncMap                               template.FuncMap
+	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
 	ReadOnlyFunc                          func(nodeName string) bool
 }
@@ -139,7 +139,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		recorder:                              conf.Recorder,
 		readOnlyFunc:                          conf.ReadOnlyFunc,
 	}
-	funcMap := template.FuncMap{
+	funcMap := gotpl.FuncMap{
 		"NodeIP":     c.funcNodeIP,
 		"PodIP":      c.funcPodIP,
 		"NodeIPWith": c.funcNodeIPWith,
@@ -148,7 +148,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 	for k, v := range conf.FuncMap {
 		funcMap[k] = v
 	}
-	c.renderer = newRenderer(funcMap)
+	c.renderer = gotpl.NewRenderer(funcMap)
 	return c, nil
 }
 
@@ -658,7 +658,7 @@ func (c *PodController) configureResource(pod *corev1.Pod, template string) ([]b
 }
 
 func (c *PodController) computePatch(pod *corev1.Pod, tpl string) ([]byte, error) {
-	patch, err := c.renderer.renderToJSON(tpl, pod)
+	patch, err := c.renderer.ToJSON(tpl, pod)
 	if err != nil {
 		return nil, err
 	}

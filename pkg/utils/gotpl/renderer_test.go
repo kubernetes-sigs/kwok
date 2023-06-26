@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package gotpl
 
 import (
 	"testing"
 	"text/template"
 )
 
-func TestRenderToJson(t *testing.T) {
+func TestRenderToJSON(t *testing.T) {
 	testCases := []struct {
 		name      string
 		funcMap   template.FuncMap
@@ -68,8 +68,8 @@ func TestRenderToJson(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := newRenderer(tc.funcMap)
-			actual, err := r.renderToJSON(tc.templText, tc.original)
+			r := NewRenderer(tc.funcMap)
+			actual, err := r.ToJSON(tc.templText, tc.original)
 			if err != nil {
 				t.Fatal(err)
 			}
