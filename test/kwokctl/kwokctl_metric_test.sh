@@ -67,9 +67,9 @@ function metric_value() {
 
 function test_node_metrics() {
   local result
-  result="$(curl http://localhost:10250/metrics/nodes/fake-node)"
   local found_metric=0
   for ((i = 0; i < 15; i++)); do
+    result="$(curl http://localhost:10250/metrics/nodes/fake-node)"
     if [[ "$(metric_value "${result}" 'kubelet_node_name{node="fake-node"}')" -eq 1 ]]; then
       found_metric=1
       break
@@ -84,6 +84,7 @@ function test_node_metrics() {
 
   found_metric=0
   for ((i = 0; i < 15; i++)); do
+    result="$(curl http://localhost:10250/metrics/nodes/fake-node)"
     if [[ "$(metric_value "${result}" "kubelet_started_containers_total")" -ne 1 ]]; then
       found_metric=1
       break
@@ -98,6 +99,16 @@ function test_node_metrics() {
 
   if [[ -z "$(metric_value "${result}" "kubelet_pleg_relist_duration_seconds_count")" ]]; then
     echo "Error: kubelet_pleg_relist_duration_seconds_count not set"
+    return 1
+  fi
+
+  if [[ -z "$(metric_value "${result}" "container_cpu_usage_seconds_total")" ]]; then
+    echo "Error: container_cpu_usage_seconds_total not set"
+    return 1
+  fi
+
+  if [[ -z "$(metric_value "${result}" "pod_cpu_usage_seconds_total")" ]]; then
+    echo "Error: pod_cpu_usage_seconds_total not set"
     return 1
   fi
 }

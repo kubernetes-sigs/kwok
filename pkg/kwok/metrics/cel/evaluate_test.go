@@ -32,7 +32,7 @@ func TestNodeEvaluation(t *testing.T) {
 			CreationTimestamp: metav1.Time{Time: now.Add(-24 * time.Hour)},
 		},
 	}
-	exp := "( now().unixSecond() - node.metadata.creationTimestamp.unixSecond() ) * node.startedContainersTotal() / 10"
+	exp := "( Now().UnixSecond() - node.metadata.creationTimestamp.UnixSecond() ) * node.StartedContainersTotal() / 10.0"
 
 	env, err := NewEnvironment(NodeEvaluatorConfig{
 		Now: func() time.Time {
@@ -51,7 +51,9 @@ func TestNodeEvaluation(t *testing.T) {
 		t.Fatalf("failed to compile expression: %v", err)
 	}
 
-	actual, err := eval.EvaluateFloat64(n)
+	actual, err := eval.EvaluateFloat64(Data{
+		Node: n,
+	})
 	if err != nil {
 		t.Fatalf("evaluation failed: %v", err)
 	}

@@ -29,9 +29,27 @@ import (
 // Public to allow building arbitrary schemes.
 // All generated defaulters are covering - they call all nested defaulters.
 func RegisterDefaults(scheme *runtime.Scheme) error {
+	scheme.AddTypeDefaultingFunc(&Metric{}, func(obj interface{}) { SetObjectDefaults_Metric(obj.(*Metric)) })
+	scheme.AddTypeDefaultingFunc(&MetricList{}, func(obj interface{}) { SetObjectDefaults_MetricList(obj.(*MetricList)) })
 	scheme.AddTypeDefaultingFunc(&Stage{}, func(obj interface{}) { SetObjectDefaults_Stage(obj.(*Stage)) })
 	scheme.AddTypeDefaultingFunc(&StageList{}, func(obj interface{}) { SetObjectDefaults_StageList(obj.(*StageList)) })
 	return nil
+}
+
+func SetObjectDefaults_Metric(in *Metric) {
+	for i := range in.Spec.Metrics {
+		a := &in.Spec.Metrics[i]
+		if a.Dimension == "" {
+			a.Dimension = "node"
+		}
+	}
+}
+
+func SetObjectDefaults_MetricList(in *MetricList) {
+	for i := range in.Items {
+		a := &in.Items[i]
+		SetObjectDefaults_Metric(a)
+	}
 }
 
 func SetObjectDefaults_Stage(in *Stage) {

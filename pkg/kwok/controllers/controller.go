@@ -120,7 +120,7 @@ type Config struct {
 	NodeLeaseDurationSeconds              uint
 	NodeLeaseParallelism                  uint
 	ID                                    string
-	Metrics                               []*internalversion.Metric
+	EnableMetrics                         bool
 }
 
 // NewController creates a new fake kubelet controller
@@ -307,13 +307,10 @@ func (c *Controller) Start(ctx context.Context) error {
 		FuncMap:              defaultFuncMap,
 		Recorder:             recorder,
 		ReadOnlyFunc:         readOnlyFunc,
+		EnableMetrics:        conf.EnableMetrics,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create nodes controller: %w", err)
-	}
-
-	nodeHasMetric := func(nodeName string) bool {
-		return len(conf.Metrics) != 0
 	}
 
 	pods, err := NewPodController(PodControllerConfig{
@@ -328,10 +325,10 @@ func (c *Controller) Start(ctx context.Context) error {
 		PlayStageParallelism:                  conf.PodPlayStageParallelism,
 		Namespace:                             corev1.NamespaceAll,
 		NodeGetFunc:                           nodes.Get,
-		NodeHasMetric:                         nodeHasMetric,
 		FuncMap:                               defaultFuncMap,
 		Recorder:                              recorder,
 		ReadOnlyFunc:                          readOnlyFunc,
+		EnableMetrics:                         conf.EnableMetrics,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create pods controller: %w", err)
@@ -387,6 +384,11 @@ func (c *Controller) Start(ctx context.Context) error {
 // GetNode returns the node with the given name
 func (c *Controller) GetNode(nodeName string) (*NodeInfo, bool) {
 	return c.nodes.Get(nodeName)
+}
+
+// ListPods returns all pods on the given node
+func (c *Controller) ListPods(nodeName string) ([]*PodInfo, bool) {
+	return c.pods.List(nodeName)
 }
 
 // Identity returns a unique identifier for this controller

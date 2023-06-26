@@ -315,6 +315,7 @@ func ConvertToV1Alpha1Metric(in *Metric) (*v1alpha1.Metric, error) {
 // ConvertToInternalMetric converts a v1alpha1.Metric to an internal version.
 func ConvertToInternalMetric(in *v1alpha1.Metric) (*Metric, error) {
 	var out Metric
+	v1alpha1.SetObjectDefaults_Metric(in)
 	err := Convert_v1alpha1_Metric_To_internalversion_Metric(in, &out, nil)
 	if err != nil {
 		return nil, err

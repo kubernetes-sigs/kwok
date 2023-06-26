@@ -77,7 +77,7 @@ type MetricConfig struct {
 	// Kind is kind of metric
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=counter;gauge;histogram
-	Kind string `json:"kind"`
+	Kind Kind `json:"kind"`
 	// Labels are metric labels.
 	// +patchMergeKey=name
 	// +patchStrategy=merge
@@ -92,7 +92,36 @@ type MetricConfig struct {
 	// +listType=map
 	// +listMapKey=le
 	Buckets []MetricBucket `json:"buckets,omitempty"`
+	// Dimension is a dimension of the metric.
+	// +default="node"
+	Dimension Dimension `json:"dimension,omitempty"`
 }
+
+// Kind is kind of metric configuration.
+// +enum
+type Kind string
+
+const (
+	// KindCounter is a counter metric.
+	KindCounter Kind = "counter"
+	// KindGauge is a gauge metric.
+	KindGauge Kind = "gauge"
+	// KindHistogram is a histogram metric.
+	KindHistogram Kind = "histogram"
+)
+
+// Dimension is a dimension of the metric.
+// +enum
+type Dimension string
+
+const (
+	// DimensionNode is a node dimension.
+	DimensionNode Dimension = "node"
+	// DimensionPod is a pod dimension.
+	DimensionPod Dimension = "pod"
+	// DimensionContainer is a container dimension.
+	DimensionContainer Dimension = "container"
+)
 
 // MetricLabel holds label name and the value of the label.
 type MetricLabel struct {

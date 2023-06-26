@@ -1677,10 +1677,11 @@ func Convert_v1alpha1_MetricBucket_To_internalversion_MetricBucket(in *v1alpha1.
 func autoConvert_internalversion_MetricConfig_To_v1alpha1_MetricConfig(in *MetricConfig, out *v1alpha1.MetricConfig, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Help = in.Help
-	out.Kind = in.Kind
+	out.Kind = v1alpha1.Kind(in.Kind)
 	out.Labels = *(*[]v1alpha1.MetricLabel)(unsafe.Pointer(&in.Labels))
 	out.Value = in.Value
 	out.Buckets = *(*[]v1alpha1.MetricBucket)(unsafe.Pointer(&in.Buckets))
+	out.Dimension = v1alpha1.Dimension(in.Dimension)
 	return nil
 }
 
@@ -1692,10 +1693,11 @@ func Convert_internalversion_MetricConfig_To_v1alpha1_MetricConfig(in *MetricCon
 func autoConvert_v1alpha1_MetricConfig_To_internalversion_MetricConfig(in *v1alpha1.MetricConfig, out *MetricConfig, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Help = in.Help
-	out.Kind = in.Kind
+	out.Kind = Kind(in.Kind)
 	out.Labels = *(*[]MetricLabel)(unsafe.Pointer(&in.Labels))
 	out.Value = in.Value
 	out.Buckets = *(*[]MetricBucket)(unsafe.Pointer(&in.Buckets))
+	out.Dimension = Dimension(in.Dimension)
 	return nil
 }
 
