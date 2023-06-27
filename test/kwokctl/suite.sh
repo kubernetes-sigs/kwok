@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export KWOK_LOGS_DIR="/tmp/kwok/logs"
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+ROOT_DIR="$(realpath "${DIR}/../..")"
+
+export KWOK_LOGS_DIR="${ROOT_DIR}/logs"
 
 function save_logs() {
   local name="${1}"

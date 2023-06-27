@@ -364,5 +364,5 @@ jobs:
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}${{ matrix.nerdctl-version && '-nerdctl' || '' }}${{ matrix.nerdctl-version }}
-          path: /tmp/kwok/logs
+          name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}${{ matrix.nerdctl-version && format('-nerdctl-{0}', matrix.nerdctl-version) || '' }}
+          path: ${{ github.workspace }}/logs
