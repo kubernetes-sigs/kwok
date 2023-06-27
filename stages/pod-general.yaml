@@ -63,7 +63,7 @@ spec:
       initContainerStatuses:
         {{ range .spec.initContainers }}
         - image: {{ .image }}
-          name: {{ .name }}
+          name: {{ printf "%q" .name }}
           ready: false
           restartCount: 0
           started: false
@@ -74,7 +74,7 @@ spec:
       containerStatuses:
         {{ range .spec.containers }}
         - image: {{ .image }}
-          name: {{ .name }}
+          name: {{ printf "%q" .name }}
           ready: false
           restartCount: 0
           started: false
@@ -86,7 +86,7 @@ spec:
       containerStatuses:
         {{ range .spec.containers }}
         - image: {{ .image }}
-          name: {{ .name }}
+          name: {{ printf "%q" .name }}
           ready: false
           restartCount: 0
           started: false
@@ -196,7 +196,7 @@ spec:
       containerStatuses:
         {{ range .spec.containers }}
         - image: {{ .image }}
-          name: {{ .name }}
+          name: {{ printf "%q" .name }}
           ready: false
           restartCount: 0
           started: false

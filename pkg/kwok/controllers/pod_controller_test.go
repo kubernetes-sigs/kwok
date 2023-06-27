@@ -231,7 +231,7 @@ func TestPodController(t *testing.T) {
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:  "test-container",
+					Name:  "1",
 					Image: "test-image",
 				},
 			},
