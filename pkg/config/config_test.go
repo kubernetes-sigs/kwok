@@ -17,9 +17,9 @@ limitations under the License.
 package config
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -62,7 +62,7 @@ func TestConfig(t *testing.T) {
 	}
 }
 
-func Test_loadRawConfig(t *testing.T) {
+func Test_loadRaw(t *testing.T) {
 	tests := []struct {
 		name    string
 		data    []byte
@@ -142,19 +142,13 @@ kind: KwokctlConfiguration
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := filepath.Join(t.TempDir(), "config.yaml")
-			err := os.WriteFile(p, tt.data, 0640)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			got, err := loadRawConfig(p)
+			got, err := loadRaw(bytes.NewBuffer(tt.data))
 			if (err != nil) != tt.wantErr {
-				t.Errorf("loadRawConfig() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("loadRaw() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("loadRawConfig() got = %v, want %v", got, tt.want)
+				t.Errorf("loadRaw() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
