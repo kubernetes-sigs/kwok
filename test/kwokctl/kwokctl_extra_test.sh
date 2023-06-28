@@ -76,7 +76,73 @@ function main() {
     echo "------------------------------"
     echo "Testing extra on ${KWOK_RUNTIME} for ${release}"
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
-    create_cluster "${name}" "${release}" --config "${DIR}/kwokctl-config-patches.yaml" --prometheus-port 9090
+    create_cluster "${name}" "${release}" --config - <<EOF
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokctlConfiguration
+options:
+  prometheusPort: 9090
+componentsPatches:
+- name: kube-apiserver
+  extraArgs:
+  - key: v
+    value: "5"
+  extraVolumes:
+  - name: tmp-apiserver
+    hostPath: ./extras/apiserver
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+- name: kube-controller-manager
+  extraArgs:
+  - key: v
+    value: "5"
+  extraVolumes:
+  - name: tmp-controller-manager
+    hostPath: ./extras/controller-manager
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+- name: kube-scheduler
+  extraArgs:
+  - key: v
+    value: "5"
+  extraVolumes:
+  - name: tmp-scheduler
+    hostPath: ./extras/scheduler
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+- name: kwok-controller
+  extraArgs:
+  - key: v
+    value: "-4"
+  extraVolumes:
+  - name: tmp-controller
+    hostPath: ./extras/controller
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+- name: etcd
+  extraArgs:
+  - key: log-level
+    value: "debug"
+  extraVolumes:
+  - name: tmp-etcd
+    hostPath: ./extras/etcd
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+- name: prometheus
+  extraArgs:
+  - key: log.level
+    value: "debug"
+  extraVolumes:
+  - name: tmp-prometheus
+    hostPath: ./extras/prometheus
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+EOF
     test_prometheus || failed+=("prometheus_${name}")
     delete_cluster "${name}"
   done

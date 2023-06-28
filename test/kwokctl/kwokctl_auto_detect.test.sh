@@ -15,12 +15,20 @@
 
 DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
-source "${DIR}/helper.sh"
+source "${DIR}/suite.sh"
 
 function main() {
   local all_releases=("${@}")
   for release in "${all_releases[@]}"; do
-    KWOK_KUBE_VERSION="${release}" kwokctl -v=-4 create cluster --timeout 30m --wait 30m --quiet-pull --config "${DIR}"/kwokctl-config-runtimes.yaml || exit 1
+    name="test-kwokctl-auto-detect-${release}"
+    create_cluster "${name}" "${release}" --config - <<EOF
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokctlConfiguration
+options:
+  runtimes:
+  - none
+  - binary
+EOF
     kwokctl delete cluster || exit 1
   done
 }

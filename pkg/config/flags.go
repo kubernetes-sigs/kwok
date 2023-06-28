@@ -42,6 +42,10 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 	}
 	configPaths := make([]string, 0, len(*config))
 	for _, c := range *config {
+		if c == "-" {
+			configPaths = append(configPaths, c)
+			continue
+		}
 		configPath, err := path.Expand(c)
 		if err != nil {
 			return nil, err

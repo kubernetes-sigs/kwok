@@ -46,11 +46,19 @@ func loadRawMessages(src []string) ([]json.RawMessage, error) {
 	var raws []json.RawMessage
 
 	for _, p := range src {
+		if p == "-" {
+			r, err := loadRaw(os.Stdin)
+			if err != nil {
+				return nil, err
+			}
+			raws = append(raws, r...)
+			continue
+		}
 		p, err := path.Expand(p)
 		if err != nil {
 			return nil, err
 		}
-		r, err := loadRawConfig(p)
+		r, err := loadRawFromFile(p)
 		if err != nil {
 			return nil, err
 		}
@@ -426,8 +434,7 @@ func FilterWithoutTypeFromContext[T InternalObject](ctx context.Context) (out []
 	return FilterWithoutType[T](objs)
 }
 
-func loadRawConfig(p string) ([]json.RawMessage, error) {
-	var raws []json.RawMessage
+func loadRawFromFile(p string) ([]json.RawMessage, error) {
 	file, err := os.Open(p)
 	if err != nil {
 		return nil, err
@@ -435,10 +442,15 @@ func loadRawConfig(p string) ([]json.RawMessage, error) {
 	defer func() {
 		_ = file.Close()
 	}()
-	decoder := utilyaml.NewYAMLToJSONDecoder(file)
+	return loadRaw(file)
+}
+
+func loadRaw(r io.Reader) ([]json.RawMessage, error) {
+	var raws []json.RawMessage
+	decoder := utilyaml.NewYAMLToJSONDecoder(r)
 	for {
 		var raw json.RawMessage
-		err = decoder.Decode(&raw)
+		err := decoder.Decode(&raw)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
