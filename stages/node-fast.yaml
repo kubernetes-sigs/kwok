@@ -17,26 +17,26 @@ spec:
       {{ $now := Now }}
       {{ $lastTransitionTime := or .creationTimestamp $now }}
       conditions:
-        {{ range NodeConditions }}
-        - lastHeartbeatTime: "{{ $now }}"
-          lastTransitionTime: "{{ $lastTransitionTime }}"
-          message: "{{ .message }}"
-          reason: "{{ .reason }}"
-          status: "{{ .status }}"
-          type: "{{ .type }}"
-        {{ end }}
+      {{ range NodeConditions }}
+      - lastHeartbeatTime: {{ $now | Quote }}
+        lastTransitionTime: {{ $lastTransitionTime | Quote }}
+        message: {{ .message | Quote }}
+        reason: {{ .reason | Quote }}
+        status: {{ .status | Quote }}
+        type: {{ .type  | Quote}}
+      {{ end }}
 
       addresses:
       {{ with .status.addresses }}
       {{ YAML . 1 }}
       {{ else }}
       {{ with NodeIP }}
-        - address: {{ . }}
-          type: InternalIP
+      - address: {{ . | Quote }}
+        type: InternalIP
       {{ end }}
       {{ with NodeName }}
-        - address: {{ . }}
-          type: Hostname
+      - address: {{ . | Quote }}
+        type: Hostname
       {{ end }}
       {{ end }}
 

@@ -24,12 +24,12 @@ spec:
       {{ $now := Now }}
       {{ $lastTransitionTime := or .creationTimestamp $now }}
       conditions:
-        {{ range NodeConditions }}
-        - lastHeartbeatTime: "{{ $now }}"
-          lastTransitionTime: "{{ $lastTransitionTime }}"
-          message: "{{ .message }}"
-          reason: "{{ .reason }}"
-          status: "{{ .status }}"
-          type: "{{ .type }}"
-        {{ end }}
+      {{ range NodeConditions }}
+      - lastHeartbeatTime: {{ $now | Quote }}
+        lastTransitionTime: {{ $lastTransitionTime | Quote }}
+        message: {{ .message | Quote }}
+        reason: {{ .reason | Quote }}
+        status: {{ .status | Quote }}
+        type: {{ .type | Quote }}
+      {{ end }}
   immediateNextStage: true

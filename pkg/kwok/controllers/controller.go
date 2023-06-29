@@ -18,8 +18,10 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -43,6 +45,19 @@ var (
 	startTime = time.Now().Format(time.RFC3339Nano)
 
 	defaultFuncMap = gotpl.FuncMap{
+		"Quote": func(s any) string {
+			data, err := json.Marshal(s)
+			if err != nil {
+				return strconv.Quote(fmt.Sprint(s))
+			}
+			if len(data) == 0 {
+				return `""`
+			}
+			if data[0] == '"' {
+				return string(data)
+			}
+			return strconv.Quote(string(data))
+		},
 		"Now": func() string {
 			return time.Now().Format(time.RFC3339Nano)
 		},
