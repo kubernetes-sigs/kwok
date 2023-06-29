@@ -57,10 +57,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		conf.EtcdPort = 2379
 	}
 
-	if conf.Port == 0 {
-		conf.Port = 6443
-	}
-
 	kubeApiserverArgs := []string{
 		"--etcd-prefix=/registry",
 		"--allow-privileged=true",

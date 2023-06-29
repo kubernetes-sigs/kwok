@@ -235,12 +235,16 @@ func (c *Cluster) Install(ctx context.Context) error {
 	inClusterAdminKeyPath := path.Join(inClusterPkiPath, "admin.key")
 	inClusterAdminCertPath := path.Join(inClusterPkiPath, "admin.crt")
 
-	inClusterPort := uint32(8080)
+	// inClusterPort := uint32(8080)
 	scheme := "http"
 	if conf.SecurePort {
 		scheme = "https"
-		inClusterPort = 6443
+		// inClusterPort = 6443
 	}
+
+	// if conf.KubeApiserverPort == 0 {
+	// 	conf.KubeApiserverPort = 6443
+	// }
 
 	err = c.setupPorts(ctx,
 		&conf.KubeApiserverPort,
@@ -518,7 +522,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	inClusterKubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
-		Address:      scheme + "://" + c.Name() + "-kube-apiserver:" + format.String(inClusterPort),
+		Address:      scheme + "://" + c.Name() + "-kube-apiserver:" + format.String(conf.KubeApiserverPort),
 		CACrtPath:    inClusterCaCertPath,
 		AdminCrtPath: inClusterAdminCertPath,
 		AdminKeyPath: inClusterAdminKeyPath,

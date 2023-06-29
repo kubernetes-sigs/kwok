@@ -104,7 +104,7 @@ func (c *Cluster) setupComponentPorts(ctx context.Context) error {
 	if err = c.setupPorts(ctx,
 		&conf.EtcdPeerPort,
 		&conf.EtcdPort,
-		&conf.KubeApiserverPort,
+		// &conf.KubeApiserverPort,
 		&conf.KwokControllerPort,
 	); err != nil {
 		return err
