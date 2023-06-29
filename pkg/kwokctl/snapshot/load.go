@@ -64,8 +64,8 @@ type loader struct {
 	exist   map[uniqueKey]types.UID
 	pending map[uniqueKey][]*unstructured.Unstructured
 
-	restMapper meta.RESTMapper
-	dynClient  *dynamic.DynamicClient
+	restMapper    meta.RESTMapper
+	dynamicClient dynamic.Interface
 }
 
 func newLoader(kubeconfigPath string) (*loader, error) {
@@ -84,11 +84,11 @@ func newLoader(kubeconfigPath string) (*loader, error) {
 	}
 
 	return &loader{
-		filterMap:  make(map[schema.GroupKind]struct{}),
-		exist:      make(map[uniqueKey]types.UID),
-		pending:    make(map[uniqueKey][]*unstructured.Unstructured),
-		restMapper: restMapper,
-		dynClient:  dynClient,
+		filterMap:     make(map[schema.GroupKind]struct{}),
+		exist:         make(map[uniqueKey]types.UID),
+		pending:       make(map[uniqueKey][]*unstructured.Unstructured),
+		restMapper:    restMapper,
+		dynamicClient: dynClient,
 	}, nil
 }
 
@@ -246,7 +246,7 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 
 	clearUnstructured(obj)
 
-	nri := l.dynClient.Resource(gvr)
+	nri := l.dynamicClient.Resource(gvr)
 	var ri dynamic.ResourceInterface = nri
 
 	if ns := obj.GetNamespace(); ns != "" {

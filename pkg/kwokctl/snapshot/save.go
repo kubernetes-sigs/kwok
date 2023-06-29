@@ -63,7 +63,7 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 	if err != nil {
 		return fmt.Errorf("failed to get rest mapper: %w", err)
 	}
-	dynClient, err := clientset.ToDynamicClient()
+	dynamicClient, err := clientset.ToDynamicClient()
 	if err != nil {
 		return fmt.Errorf("failed to create dynamic client: %w", err)
 	}
@@ -84,7 +84,7 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 	totalCount := 0
 	start := time.Now()
 	for _, gvr := range gvrs {
-		nri := dynClient.Resource(gvr)
+		nri := dynamicClient.Resource(gvr)
 		logger := logger.With("resource", gvr.Resource)
 
 		start := time.Now()

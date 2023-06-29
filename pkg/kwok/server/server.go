@@ -30,10 +30,10 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
 )
 
@@ -43,7 +43,8 @@ const (
 
 // Server is a server that can serve HTTP/HTTPS requests.
 type Server struct {
-	client     *client.Clientset
+	typedKwokClient versioned.Interface
+
 	enableCRDs []string
 
 	restfulCont *restful.Container
@@ -67,8 +68,8 @@ type Server struct {
 
 // Config holds configurations needed by the server handlers.
 type Config struct {
-	Client     *client.Clientset
-	EnableCRDs []string
+	TypedKwokClient versioned.Interface
+	EnableCRDs      []string
 
 	ClusterPortForwards []*internalversion.ClusterPortForward
 	PortForwards        []*internalversion.PortForward
@@ -87,7 +88,7 @@ func NewServer(config Config) (*Server, error) {
 	container := restful.NewContainer()
 
 	s := &Server{
-		client:                config.Client,
+		typedKwokClient:       config.TypedKwokClient,
 		enableCRDs:            config.EnableCRDs,
 		restfulCont:           container,
 		idleTimeout:           1 * time.Hour,
@@ -114,10 +115,7 @@ func NewServer(config Config) (*Server, error) {
 }
 
 func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) {
-	cli, err := s.client.ToTypedKwokClient()
-	if err != nil {
-		return nil, err
-	}
+	cli := s.typedKwokClient
 
 	starters := []resources.Starter{}
 

@@ -72,7 +72,7 @@ func TestNodeController(t *testing.T) {
 	nodeHeartbeatStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
 	nodeStages = append(nodeStages, nodeHeartbeatStages...)
 	nodes, err := NewNodeController(NodeControllerConfig{
-		ClientSet:            clientset,
+		TypedClient:          clientset,
 		NodeIP:               "10.0.0.1",
 		NodeSelectorFunc:     nodeSelectorFunc,
 		Stages:               nodeStages,

@@ -89,14 +89,14 @@ type Controller struct {
 	pods        *PodController
 	nodeLeases  *NodeLeaseController
 	broadcaster record.EventBroadcaster
-	clientSet   kubernetes.Interface
+	typedClient kubernetes.Interface
 }
 
 // Config is the configuration for the controller
 type Config struct {
 	Clock                                 clock.Clock
 	EnableCNI                             bool
-	ClientSet                             kubernetes.Interface
+	TypedClient                           kubernetes.Interface
 	ManageAllNodes                        bool
 	ManageNodesWithAnnotationSelector     string
 	ManageNodesWithLabelSelector          string
@@ -162,7 +162,7 @@ func NewController(conf Config) (*Controller, error) {
 		renewIntervalJitter := 0.04
 		l, err := NewNodeLeaseController(NodeLeaseControllerConfig{
 			Clock:                conf.Clock,
-			ClientSet:            conf.ClientSet,
+			TypedClient:          conf.TypedClient,
 			LeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 			LeaseParallelism:     conf.NodeLeaseParallelism,
 			RenewInterval:        renewInterval,
@@ -189,7 +189,7 @@ func NewController(conf Config) (*Controller, error) {
 
 	nodes, err := NewNodeController(NodeControllerConfig{
 		Clock:                                 conf.Clock,
-		ClientSet:                             conf.ClientSet,
+		TypedClient:                           conf.TypedClient,
 		NodeIP:                                conf.NodeIP,
 		NodeName:                              conf.NodeName,
 		NodePort:                              conf.NodePort,
@@ -217,7 +217,7 @@ func NewController(conf Config) (*Controller, error) {
 	pods, err := NewPodController(PodControllerConfig{
 		Clock:                                 conf.Clock,
 		EnableCNI:                             conf.EnableCNI,
-		ClientSet:                             conf.ClientSet,
+		TypedClient:                           conf.TypedClient,
 		NodeIP:                                conf.NodeIP,
 		CIDR:                                  conf.CIDR,
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
@@ -265,7 +265,7 @@ func NewController(conf Config) (*Controller, error) {
 		nodes:       nodes,
 		nodeLeases:  nodeLeases,
 		broadcaster: eventBroadcaster,
-		clientSet:   conf.ClientSet,
+		typedClient: conf.TypedClient,
 	}
 
 	return n, nil
@@ -273,7 +273,7 @@ func NewController(conf Config) (*Controller, error) {
 
 // Start starts the controller
 func (c *Controller) Start(ctx context.Context) error {
-	c.broadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{Interface: c.clientSet.CoreV1().Events("")})
+	c.broadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{Interface: c.typedClient.CoreV1().Events("")})
 	if c.nodeLeases != nil {
 		err := c.nodeLeases.Start(ctx)
 		if err != nil {

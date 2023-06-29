@@ -71,7 +71,7 @@ func TestNodeLeaseController(t *testing.T) {
 	)
 
 	nodeLeases, err := NewNodeLeaseController(NodeLeaseControllerConfig{
-		ClientSet:            clientset,
+		TypedClient:          clientset,
 		HolderIdentity:       "test",
 		LeaseDurationSeconds: 40,
 		LeaseParallelism:     2,

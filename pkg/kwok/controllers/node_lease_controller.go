@@ -38,7 +38,7 @@ import (
 
 // NodeLeaseController is responsible for creating and renewing a lease object
 type NodeLeaseController struct {
-	clientSet            clientset.Interface
+	typedClient          clientset.Interface
 	leaseNamespace       string
 	leaseDurationSeconds uint
 	leaseParallelism     uint
@@ -65,7 +65,7 @@ type NodeLeaseController struct {
 type NodeLeaseControllerConfig struct {
 	Clock                clock.Clock
 	HolderIdentity       string
-	ClientSet            clientset.Interface
+	TypedClient          clientset.Interface
 	LeaseDurationSeconds uint
 	LeaseParallelism     uint
 	RenewInterval        time.Duration
@@ -87,7 +87,7 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 
 	c := &NodeLeaseController{
 		clock:                conf.Clock,
-		clientSet:            conf.ClientSet,
+		typedClient:          conf.TypedClient,
 		leaseNamespace:       conf.LeaseNamespace,
 		leaseDurationSeconds: conf.LeaseDurationSeconds,
 		leaseParallelism:     conf.LeaseParallelism,
@@ -128,7 +128,7 @@ func (c *NodeLeaseController) Start(ctx context.Context) error {
 // watchResources watch resources and send to preprocessChan
 func (c *NodeLeaseController) watchResources(ctx context.Context, opt metav1.ListOptions) error {
 	// Watch node leases in the cluster
-	watcher, err := c.clientSet.CoordinationV1().Leases(c.leaseNamespace).Watch(ctx, opt)
+	watcher, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Watch(ctx, opt)
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (c *NodeLeaseController) watchResources(ctx context.Context, opt metav1.Lis
 			case event, ok := <-rc:
 				if !ok {
 					for {
-						watcher, err := c.clientSet.CoordinationV1().Leases(c.leaseNamespace).Watch(ctx, opt)
+						watcher, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Watch(ctx, opt)
 						if err == nil {
 							rc = watcher.ResultChan()
 							continue loop
@@ -177,7 +177,7 @@ func (c *NodeLeaseController) watchResources(ctx context.Context, opt metav1.Lis
 // listResources lists all resources and sends to preprocessChan
 func (c *NodeLeaseController) listResources(ctx context.Context, opt metav1.ListOptions) error {
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
-		return c.clientSet.CoordinationV1().Leases(c.leaseNamespace).List(ctx, opts)
+		return c.typedClient.CoordinationV1().Leases(c.leaseNamespace).List(ctx, opts)
 	})
 
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
@@ -322,7 +322,7 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 		}
 	}
 
-	lease, err := c.clientSet.CoordinationV1().Leases(c.leaseNamespace).Create(ctx, lease, metav1.CreateOptions{})
+	lease, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Create(ctx, lease, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +348,7 @@ func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordination
 		}
 	}
 
-	lease, err := c.clientSet.CoordinationV1().Leases(c.leaseNamespace).Update(ctx, lease, metav1.UpdateOptions{})
+	lease, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Update(ctx, lease, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, false, err
 	}
