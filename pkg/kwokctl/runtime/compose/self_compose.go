@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"strings"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -34,31 +35,105 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
-func (c *Cluster) networkName() string {
-	return c.Name()
+// Network
+type Network struct {
+	Name   string `json:"Name"`
+	Driver string `json:"Driver"`
+}
+
+func (c *Cluster) networkName(ctx context.Context) (string, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return "", err
+	}
+	conf := &config.Options
+	return conf.Network, nil
 }
 
 func (c *Cluster) createNetwork(ctx context.Context) error {
-	network := c.networkName()
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
 	logger := log.FromContext(ctx)
-	logger = logger.With("network", network)
-	if exist := c.inspectNetwork(ctx, network); exist {
-		logger.Debug("Network already exists")
-		return nil
+	logger = logger.With("network", conf.Network)
+
+	if conf.Network != "" {
+		if exist, network := c.inspectNetwork(ctx, conf.Network); exist {
+			logger.Debug("Network already exists")
+			if network.Driver == "host" {
+				if runtime.GOOS != "linux" {
+					return fmt.Errorf("host networking feature is not supported on %s", runtime.GOOS)
+				}
+				conf.IsHostNetwork = true
+				err = c.setupComponentPorts(ctx)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		return fmt.Errorf("network %s does not exist", conf.Network)
+	}
+
+	config.Options.Network = c.Name()
+	err = c.SetConfig(ctx, config)
+	if err != nil {
+		return err
+	}
+	err = c.Save(ctx)
+	if err != nil {
+		return err
 	}
 	args := []string{
-		"network", "create", network,
+		"network", "create", conf.Network,
 	}
 	args = append(args, c.labelArgs()...)
 	logger.Debug("Creating network")
 	return exec.Exec(ctx, c.runtime, args...)
 }
 
+func (c *Cluster) setupComponentPorts(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+
+	if err = c.setupPorts(ctx,
+		&conf.EtcdPeerPort,
+		&conf.EtcdPort,
+		&conf.KubeApiserverPort,
+		&conf.KwokControllerPort,
+	); err != nil {
+		return err
+	}
+	if !conf.DisableKubeControllerManager {
+		if err = c.setupPorts(ctx,
+			&conf.KubeControllerManagerPort,
+		); err != nil {
+			return err
+		}
+	}
+	if !conf.DisableKubeScheduler {
+		if err = c.setupPorts(ctx,
+			&conf.KubeSchedulerPort,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *Cluster) deleteNetwork(ctx context.Context) error {
-	network := c.networkName()
+	network, err := c.networkName(ctx)
+	if err != nil {
+		return err
+	}
 	logger := log.FromContext(ctx)
 	logger = logger.With("network", network)
-	if exist := c.inspectNetwork(ctx, network); !exist {
+	if exist, _ := c.inspectNetwork(ctx, network); !exist {
 		logger.Debug("Network does not exist")
 		return nil
 	}
@@ -66,7 +141,7 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 		"network", "rm", network,
 	}
 	logger.Debug("Deleting network")
-	err := exec.Exec(ctx, c.runtime, args...)
+	err = exec.Exec(ctx, c.runtime, args...)
 	if err != nil {
 		if c.runtime != consts.RuntimeTypeNerdctl {
 			return err
@@ -84,7 +159,7 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 
 		err = wait.Poll(ctx,
 			func(ctx context.Context) (bool, error) {
-				if exist := c.inspectNetwork(ctx, network); !exist {
+				if exist, _ := c.inspectNetwork(ctx, network); !exist {
 					return true, nil
 				}
 				logger.Warn("Retrying to delete network")
@@ -101,14 +176,19 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) inspectNetwork(ctx context.Context, name string) (exist bool) {
-	err := exec.Exec(ctx, c.runtime, "network", "inspect", name)
-	//nolint:gosimple
+func (c *Cluster) inspectNetwork(ctx context.Context, name string) (bool, *Network) {
+	var network bytes.Buffer
+	err := exec.Exec(exec.WithAllWriteTo(ctx, &network), c.runtime, "network", "inspect", name)
 	if err != nil {
-		// TODO: check if network exists or other error
-		return false
+		return false, nil
 	}
-	return true
+	var networks []Network
+	err = json.Unmarshal(network.Bytes(), &networks)
+	// TODO: check if network exists or other error
+	if err != nil {
+		return false, nil
+	}
+	return true, &networks[0]
 }
 
 // On Nerdctl, need to check if --restart=unless-stopped is supported
@@ -189,18 +269,23 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 		return fmt.Errorf("component %s not found", componentName)
 	}
 
+	network, err := c.networkName(ctx)
+	if err != nil {
+		return err
+	}
+
 	args := []string{"create",
 		"--name=" + c.Name() + "-" + componentName,
 		"--pull=never",
 		"--entrypoint=" + strings.Join(component.Command, " "),
-		"--network=" + c.networkName(),
+		"--network=" + network,
 	}
 
 	switch c.runtime {
 	case consts.RuntimeTypeDocker:
-		for _, link := range component.Links {
-			args = append(args, "--link="+c.Name()+"-"+link)
-		}
+		// for _, link := range component.Links {
+		// 	args = append(args, "--link="+c.Name()+"-"+link)
+		// }
 	case consts.RuntimeTypePodman:
 		for _, link := range component.Links {
 			args = append(args, "--requires="+c.Name()+"-"+link)
@@ -226,13 +311,16 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 
 	args = append(args, c.labelArgs()...)
 
-	for _, port := range component.Ports {
-		protocol := port.Protocol
-		if protocol == "" {
-			protocol = internalversion.ProtocolTCP
+	if !conf.Options.IsHostNetwork {
+		for _, port := range component.Ports {
+			protocol := port.Protocol
+			if protocol == "" {
+				protocol = internalversion.ProtocolTCP
+			}
+			args = append(args, "--publish="+format.String(port.HostPort)+":"+format.String(port.Port)+"/"+strings.ToLower(string(protocol)))
 		}
-		args = append(args, "--publish="+format.String(port.HostPort)+":"+format.String(port.Port)+"/"+strings.ToLower(string(protocol)))
 	}
+
 	for _, volume := range component.Volumes {
 		if volume.ReadOnly {
 			args = append(args, "--volume="+volume.HostPath+":"+volume.MountPath+":ro")

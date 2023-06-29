@@ -82,7 +82,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 				ports,
 				internalversion.Port{
 					HostPort: conf.PeerPort,
-					Port:     2380,
+					Port:     conf.PeerPort,
 				},
 			)
 		}
@@ -91,29 +91,24 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 				ports,
 				internalversion.Port{
 					HostPort: conf.Port,
-					Port:     2379,
+					Port:     conf.Port,
 				},
 			)
 		}
-		etcdArgs = append(etcdArgs,
-			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":2380",
-			"--listen-peer-urls=http://"+conf.BindAddress+":2380",
-			"--advertise-client-urls=http://"+conf.BindAddress+":2379",
-			"--listen-client-urls=http://"+conf.BindAddress+":2379",
-			"--initial-cluster=node0=http://"+conf.BindAddress+":2380",
-		)
 	} else {
-		etcdPeerPortStr := format.String(conf.PeerPort)
-		etcdClientPortStr := format.String(conf.Port)
 		etcdArgs = append(etcdArgs,
 			"--data-dir="+conf.DataPath,
-			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
-			"--listen-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
-			"--advertise-client-urls=http://"+conf.BindAddress+":"+etcdClientPortStr,
-			"--listen-client-urls=http://"+conf.BindAddress+":"+etcdClientPortStr,
-			"--initial-cluster=node0=http://"+conf.BindAddress+":"+etcdPeerPortStr,
 		)
 	}
+	etcdPeerPortStr := format.String(conf.PeerPort)
+	etcdClientPortStr := format.String(conf.Port)
+	etcdArgs = append(etcdArgs,
+		"--initial-advertise-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
+		"--listen-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
+		"--advertise-client-urls=http://"+conf.BindAddress+":"+etcdClientPortStr,
+		"--listen-client-urls=http://"+conf.BindAddress+":"+etcdClientPortStr,
+		"--initial-cluster=node0=http://"+conf.BindAddress+":"+etcdPeerPortStr,
+	)
 
 	if conf.Version.GTE(version.NewVersion(3, 4, 0)) {
 		if conf.Verbosity != log.LevelInfo {

@@ -218,6 +218,12 @@ type KwokctlConfigurationOptions struct {
 	// BindAddress is the address to bind to.
 	BindAddress string
 
+	// Network is the network to use in docker/nerdctl/podman
+	Network string `json:"network,omitempty"`
+
+	// IsHostNetwork is the network to use in docker/nerdctl/podman
+	IsHostNetwork bool `json:"isHostNetwork,omitempty"`
+
 	// KubeApiserverCertSANs sets extra Subject Alternative Names for the API Server signing cert.
 	KubeApiserverCertSANs []string
 

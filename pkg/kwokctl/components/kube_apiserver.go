@@ -57,6 +57,10 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		conf.EtcdPort = 2379
 	}
 
+	if conf.Port == 0 {
+		conf.Port = 6443
+	}
+
 	kubeApiserverArgs := []string{
 		"--etcd-prefix=/registry",
 		"--allow-privileged=true",
@@ -104,15 +108,9 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	volumes = append(volumes, conf.ExtraVolumes...)
 
 	inContainer := conf.Image != ""
-	if inContainer {
-		kubeApiserverArgs = append(kubeApiserverArgs,
-			"--etcd-servers=http://"+conf.EtcdAddress+":2379",
-		)
-	} else {
-		kubeApiserverArgs = append(kubeApiserverArgs,
-			"--etcd-servers=http://"+conf.EtcdAddress+":"+format.String(conf.EtcdPort),
-		)
-	}
+	kubeApiserverArgs = append(kubeApiserverArgs,
+		"--etcd-servers=http://"+conf.EtcdAddress+":"+format.String(conf.EtcdPort),
+	)
 
 	if conf.SecurePort {
 		if conf.KubeAuthorization {
@@ -125,7 +123,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			ports = []internalversion.Port{
 				{
 					HostPort: conf.Port,
-					Port:     6443,
+					Port:     conf.Port,
 				},
 			}
 			volumes = append(volumes,
@@ -146,8 +144,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				},
 			)
 			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--bind-address="+conf.BindAddress,
-				"--secure-port=6443",
 				"--tls-cert-file=/etc/kubernetes/pki/admin.crt",
 				"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
 				"--client-ca-file=/etc/kubernetes/pki/ca.crt",
@@ -157,8 +153,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			)
 		} else {
 			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--bind-address="+conf.BindAddress,
-				"--secure-port="+format.String(conf.Port),
 				"--tls-cert-file="+conf.AdminCertPath,
 				"--tls-private-key-file="+conf.AdminKeyPath,
 				"--client-ca-file="+conf.CaCertPath,
@@ -167,25 +161,23 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--service-account-issuer=https://kubernetes.default.svc.cluster.local",
 			)
 		}
+		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--bind-address="+conf.BindAddress,
+			"--secure-port="+format.String(conf.Port),
+		)
 	} else {
 		if inContainer {
 			ports = []internalversion.Port{
 				{
 					HostPort: conf.Port,
-					Port:     8080,
+					Port:     conf.Port,
 				},
 			}
-
-			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--insecure-bind-address="+conf.BindAddress,
-				"--insecure-port=8080",
-			)
-		} else {
-			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--insecure-bind-address="+conf.BindAddress,
-				"--insecure-port="+format.String(conf.Port),
-			)
 		}
+		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--insecure-bind-address="+conf.BindAddress,
+			"--insecure-port="+format.String(conf.Port),
+		)
 	}
 
 	if conf.AuditPolicyPath != "" {

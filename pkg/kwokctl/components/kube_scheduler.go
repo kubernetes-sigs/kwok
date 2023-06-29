@@ -47,6 +47,12 @@ type BuildKubeSchedulerComponentConfig struct {
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
 func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (component internalversion.Component, err error) {
+	exposePort := true
+	if conf.Port == 0 {
+		conf.Port = 10259
+		exposePort = false
+	}
+
 	kubeSchedulerArgs := []string{}
 	kubeSchedulerArgs = append(kubeSchedulerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
@@ -121,50 +127,40 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		}
 
 		if inContainer {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--bind-address="+conf.BindAddress,
-				"--secure-port=10259",
-			)
-			if conf.Port != 0 {
+			if exposePort {
 				ports = append(
 					ports,
 					internalversion.Port{
 						HostPort: conf.Port,
-						Port:     10259,
+						Port:     conf.Port,
 					},
 				)
 			}
-		} else {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--bind-address="+conf.BindAddress,
-				"--secure-port="+format.String(conf.Port),
-			)
 		}
+		kubeSchedulerArgs = append(kubeSchedulerArgs,
+			"--bind-address="+conf.BindAddress,
+			"--secure-port="+format.String(conf.Port),
+		)
 		// TODO: Support disable insecure port
 		//	kubeSchedulerArgs = append(kubeSchedulerArgs,
 		//		"--port=0",
 		//	)
 	} else {
 		if inContainer {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--address="+conf.BindAddress,
-				"--port=10251",
-			)
-			if conf.Port != 0 {
+			if exposePort {
 				ports = append(
 					ports,
 					internalversion.Port{
 						HostPort: conf.Port,
-						Port:     10251,
+						Port:     conf.Port,
 					},
 				)
 			}
-		} else {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--address="+conf.BindAddress,
-				"--port="+format.String(conf.Port),
-			)
 		}
+		kubeSchedulerArgs = append(kubeSchedulerArgs,
+			"--address="+conf.BindAddress,
+			"--port="+format.String(conf.Port),
+		)
 
 		// TODO: Support disable secure port
 		//	kubeSchedulerArgs = append(kubeSchedulerArgs,

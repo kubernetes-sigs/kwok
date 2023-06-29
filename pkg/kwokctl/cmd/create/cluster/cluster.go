@@ -118,6 +118,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&flags.Options.KubeAuthorization, "kube-authorization", flags.Options.KubeAuthorization, "Enable authorization for kube-apiserver, only for non kind/kind-podman runtime")
 	cmd.Flags().BoolVar(&flags.Options.KubeAdmission, "kube-admission", flags.Options.KubeAdmission, "Enable admission for kube-apiserver, only for non kind/kind-podman runtime")
 	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
+	cmd.Flags().StringVar(&flags.Options.Network, "network", flags.Options.Network, `Network is to use in docker/nerdctl/podman`)
 	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 0, "Timeout for waiting for the cluster to be created")
 	cmd.Flags().DurationVar(&flags.Wait, "wait", 0, "Wait for the cluster to be ready")
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "The path to the kubeconfig file will be added to the newly created cluster and set to current-context")

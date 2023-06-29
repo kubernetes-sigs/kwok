@@ -41,6 +41,10 @@ type BuildPrometheusComponentConfig struct {
 
 // BuildPrometheusComponent builds a prometheus component.
 func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component internalversion.Component, err error) {
+	if conf.Port == 0 {
+		conf.Port = 9090
+	}
+
 	prometheusArgs := []string{}
 	prometheusArgs = append(prometheusArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
@@ -69,19 +73,21 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		ports = []internalversion.Port{
 			{
 				HostPort: conf.Port,
-				Port:     9090,
+				Port:     conf.Port,
 			},
 		}
 		prometheusArgs = append(prometheusArgs,
 			"--config.file=/etc/prometheus/prometheus.yaml",
-			"--web.listen-address="+conf.BindAddress+":9090",
 		)
 	} else {
 		prometheusArgs = append(prometheusArgs,
 			"--config.file="+conf.ConfigPath,
-			"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),
 		)
 	}
+
+	prometheusArgs = append(prometheusArgs,
+		"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),
+	)
 
 	if conf.Verbosity != log.LevelInfo {
 		prometheusArgs = append(prometheusArgs, "--log.level="+log.ToLogSeverityLevel(conf.Verbosity))

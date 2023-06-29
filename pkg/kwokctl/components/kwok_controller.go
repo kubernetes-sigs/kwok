@@ -45,6 +45,12 @@ type BuildKwokControllerComponentConfig struct {
 
 // BuildKwokControllerComponent builds a kwok controller component.
 func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (component internalversion.Component) {
+	exposePort := true
+	if conf.Port == 0 {
+		conf.Port = 10247
+		exposePort = false
+	}
+
 	kwokControllerArgs := []string{
 		"--manage-all-nodes=true",
 	}
@@ -84,11 +90,11 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			},
 		)
 
-		if conf.Port != 0 {
+		if exposePort {
 			ports = append(ports,
 				internalversion.Port{
 					HostPort: conf.Port,
-					Port:     10247,
+					Port:     conf.Port,
 				},
 			)
 		}
@@ -98,8 +104,6 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--tls-cert-file=/etc/kubernetes/pki/admin.crt",
 			"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
 			"--node-name="+conf.NodeName,
-			"--node-port=10247",
-			"--server-address="+conf.BindAddress+":10247",
 			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
 	} else {
@@ -109,11 +113,13 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--tls-cert-file="+conf.AdminCertPath,
 			"--tls-private-key-file="+conf.AdminKeyPath,
 			"--node-name=localhost",
-			"--node-port="+format.String(conf.Port),
-			"--server-address="+conf.BindAddress+":"+format.String(conf.Port),
 			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
 	}
+	kwokControllerArgs = append(kwokControllerArgs,
+		"--node-port="+format.String(conf.Port),
+		"--server-address="+conf.BindAddress+":"+format.String(conf.Port),
+	)
 
 	if conf.Verbosity != log.LevelInfo {
 		kwokControllerArgs = append(kwokControllerArgs, "--v="+format.String(conf.Verbosity))

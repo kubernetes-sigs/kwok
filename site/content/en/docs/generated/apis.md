@@ -2681,6 +2681,28 @@ string
 </tr>
 <tr>
 <td>
+<code>network</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Network is the network to use in docker/nerdctl/podman</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>isHostNetwork</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>IsHostNetwork is the network to use in docker/nerdctl/podman</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kubeApiserverCertSANs</code>
 <em>
 []string

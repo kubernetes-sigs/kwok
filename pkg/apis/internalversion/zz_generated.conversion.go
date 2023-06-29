@@ -1417,6 +1417,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.BindAddress = in.BindAddress
+	out.Network = in.Network
+	out.IsHostNetwork = in.IsHostNetwork
 	out.KubeApiserverCertSANs = *(*[]string)(unsafe.Pointer(&in.KubeApiserverCertSANs))
 	if err := v1.Convert_bool_To_Pointer_bool(&in.DisableQPSLimits, &out.DisableQPSLimits, s); err != nil {
 		return err
@@ -1504,6 +1506,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.NodeStatusUpdateFrequencyMilliseconds = in.NodeStatusUpdateFrequencyMilliseconds
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.BindAddress = in.BindAddress
+	out.Network = in.Network
+	out.IsHostNetwork = in.IsHostNetwork
 	out.KubeApiserverCertSANs = *(*[]string)(unsafe.Pointer(&in.KubeApiserverCertSANs))
 	if err := v1.Convert_Pointer_bool_To_bool(&in.DisableQPSLimits, &out.DisableQPSLimits, s); err != nil {
 		return err

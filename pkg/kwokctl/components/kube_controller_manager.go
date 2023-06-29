@@ -51,6 +51,12 @@ type BuildKubeControllerManagerComponentConfig struct {
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
 func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponentConfig) (component internalversion.Component, err error) {
+	exposePort := true
+	if conf.Port == 0 {
+		conf.Port = 10257
+		exposePort = false
+	}
+
 	kubeControllerManagerArgs := []string{}
 	kubeControllerManagerArgs = append(kubeControllerManagerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
@@ -117,25 +123,20 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		}
 
 		if inContainer {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--bind-address="+conf.BindAddress,
-				"--secure-port=10257",
-			)
-			if conf.Port > 0 {
+			if exposePort {
 				ports = append(
 					ports,
 					internalversion.Port{
 						HostPort: conf.Port,
-						Port:     10257,
+						Port:     conf.Port,
 					},
 				)
 			}
-		} else {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--bind-address="+conf.BindAddress,
-				"--secure-port="+format.String(conf.Port),
-			)
 		}
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			"--bind-address="+conf.BindAddress,
+			"--secure-port="+format.String(conf.Port),
+		)
 
 		// TODO: Support disable insecure port
 		//	kubeControllerManagerArgs = append(kubeControllerManagerArgs,
@@ -143,25 +144,20 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		//	)
 	} else {
 		if inContainer {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--address="+conf.BindAddress,
-				"--port=10252",
-			)
-			if conf.Port > 0 {
+			if exposePort {
 				ports = append(
 					ports,
 					internalversion.Port{
 						HostPort: conf.Port,
-						Port:     10252,
+						Port:     conf.Port,
 					},
 				)
 			}
-		} else {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--address="+conf.BindAddress,
-				"--port="+format.String(conf.Port),
-			)
 		}
+		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			"--address="+conf.BindAddress,
+			"--port="+format.String(conf.Port),
+		)
 
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 			"--secure-port=0",

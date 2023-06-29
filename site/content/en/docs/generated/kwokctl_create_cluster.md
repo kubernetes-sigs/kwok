@@ -56,6 +56,7 @@ kwokctl create cluster [flags]
       --kwok-controller-image string            Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
                                                  (default "registry.k8s.io/kwok/kwok:v0.3.0")
+      --network string                          Network is to use in docker/nerdctl/podman
       --prometheus-binary string                Binary of Prometheus, only for binary runtime
       --prometheus-binary-tar string            Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
                                                  (default "https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.linux-amd64.tar.gz")

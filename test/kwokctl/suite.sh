@@ -34,9 +34,10 @@ function create_cluster() {
     create cluster \
     --name "${name}" \
     --timeout 30m \
-    --wait 30m \
+    --wait 1m \
     --quiet-pull \
     --disable-qps-limits \
+    --network=host \
     "$@"; then
     echo "Error: Cluster ${name} creation failed"
     exit 1
