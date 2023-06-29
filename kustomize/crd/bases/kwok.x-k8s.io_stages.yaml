@@ -1,0 +1,278 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.12.0
+  name: stages.kwok.x-k8s.io
+spec:
+  group: kwok.x-k8s.io
+  names:
+    kind: Stage
+    listKind: StageList
+    plural: stages
+    singular: stage
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Stage is an API that describes the staged change of a resource
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec holds information about the request being evaluated.
+            properties:
+              delay:
+                description: Delay means there is a delay in this stage.
+                properties:
+                  durationFrom:
+                    description: DurationFrom is the expression used to get the value.
+                      If it is a time.Time type, getting the value will be minus time.Now()
+                      to get DurationMilliseconds If it is a string type, the value
+                      get will be parsed by time.ParseDuration.
+                    properties:
+                      expressionFrom:
+                        description: ExpressionFrom is the expression used to get
+                          the value.
+                        type: string
+                    type: object
+                  durationMilliseconds:
+                    description: DurationMilliseconds indicates the stage delay time.
+                      If JitterDurationMilliseconds is less than DurationMilliseconds,
+                      then JitterDurationMilliseconds is used.
+                    format: int64
+                    minimum: 0
+                    type: integer
+                  jitterDurationFrom:
+                    description: JitterDurationFrom is the expression used to get
+                      the value. If it is a time.Time type, getting the value will
+                      be minus time.Now() to get JitterDurationMilliseconds If it
+                      is a string type, the value get will be parsed by time.ParseDuration.
+                    properties:
+                      expressionFrom:
+                        description: ExpressionFrom is the expression used to get
+                          the value.
+                        type: string
+                    type: object
+                  jitterDurationMilliseconds:
+                    description: JitterDurationMilliseconds is the duration plus an
+                      additional amount chosen uniformly at random from the interval
+                      between DurationMilliseconds and JitterDurationMilliseconds.
+                    format: int64
+                    minimum: 0
+                    type: integer
+                type: object
+              immediateNextStage:
+                description: ImmediateNextStage means that the next stage of matching
+                  is performed immediately, without waiting for the Apiserver to push.
+                type: boolean
+              next:
+                description: Next indicates that this stage will be moved to.
+                properties:
+                  delete:
+                    description: Delete means that the resource will be deleted if
+                      true.
+                    type: boolean
+                  event:
+                    description: Event means that an event will be sent.
+                    properties:
+                      message:
+                        description: Message is a human-readable description of the
+                          status of this operation.
+                        type: string
+                      reason:
+                        description: Reason is why the action was taken. It is human-readable.
+                        type: string
+                      type:
+                        description: Type is the type of this event (Normal, Warning),
+                          It is machine-readable.
+                        type: string
+                    type: object
+                  finalizers:
+                    description: Finalizers means that finalizers will be modified.
+                    properties:
+                      add:
+                        description: Add means that the Finalizers will be added to
+                          the resource.
+                        items:
+                          description: FinalizerItem  describes the one of the finalizers.
+                          properties:
+                            value:
+                              description: Value is the value of the finalizer.
+                              type: string
+                          type: object
+                        type: array
+                      empty:
+                        description: Empty means that the Finalizers for that resource
+                          will be emptied.
+                        type: boolean
+                      remove:
+                        description: Remove means that the Finalizers will be removed
+                          from the resource.
+                        items:
+                          description: FinalizerItem  describes the one of the finalizers.
+                          properties:
+                            value:
+                              description: Value is the value of the finalizer.
+                              type: string
+                          type: object
+                        type: array
+                    type: object
+                  statusTemplate:
+                    description: StatusTemplate indicates the template for modifying
+                      the status of the resource in the next.
+                    type: string
+                type: object
+              resourceRef:
+                description: ResourceRef specifies the Kind and version of the resource.
+                properties:
+                  apiGroup:
+                    default: v1
+                    description: APIGroup of the referent.
+                    type: string
+                  kind:
+                    description: Kind of the referent.
+                    enum:
+                    - Pod
+                    - Node
+                    type: string
+                required:
+                - kind
+                type: object
+              selector:
+                description: Selector specifies the stags will be applied to the selected
+                  resource.
+                properties:
+                  matchAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: MatchAnnotations is a map of {key,value} pairs. A
+                      single {key,value} in the matchAnnotations map is equivalent
+                      to an element of matchExpressions, whose key field is ".metadata.annotations[key]",
+                      the operator is "In", and the values array contains only "value".
+                      The requirements are ANDed.
+                    type: object
+                  matchExpressions:
+                    description: MatchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: SelectorRequirement is a resource selector requirement
+                        is a selector that contains values, a key, and an operator
+                        that relates the key and values.
+                      properties:
+                        key:
+                          description: The name of the scope that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: Represents a scope's relationship to a set
+                            of values.
+                          type: string
+                        values:
+                          description: An array of string values. If the operator
+                            is In, NotIn, Intersection or NotIntersection, the values
+                            array must be non-empty. If the operator is Exists or
+                            DoesNotExist, the values array must be empty.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: MatchLabels is a map of {key,value} pairs. A single
+                      {key,value} in the matchLabels map is equivalent to an element
+                      of matchExpressions, whose key field is ".metadata.labels[key]",
+                      the operator is "In", and the values array contains only "value".
+                      The requirements are ANDed.
+                    type: object
+                type: object
+              weight:
+                default: 0
+                description: Weight means the current stage, in case of multiple stages,
+                  a random stage will be matched as the next stage based on the weight.
+                minimum: 0
+                type: integer
+            required:
+            - next
+            - resourceRef
+            type: object
+          status:
+            description: Status holds status for the Stage
+            properties:
+              conditions:
+                description: Conditions holds conditions for the Stage.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time the condition
+                        transitioned from one status to another. This should be when
+                        the underlying condition changed.  If that is not known, then
+                        using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: Message is a human readable message indicating
+                        details about the transition. This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    reason:
+                      description: Reason contains a programmatic identifier indicating
+                        the reason for the condition's last transition. Producers
+                        of specific condition types may define expected values and
+                        meanings for this field, and whether the values are considered
+                        a guaranteed API. The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: Status of the condition
+                      type: string
+                    type:
+                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources
+                        like Available, but because arbitrary conditions can be useful
+                        (see .node.status.conditions), the ability to deconflict is
+                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

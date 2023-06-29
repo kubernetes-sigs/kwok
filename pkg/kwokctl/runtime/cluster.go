@@ -26,10 +26,13 @@ import (
 
 	"github.com/nxadm/tail"
 
+	"sigs.k8s.io/kwok/kustomize/crd"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
+	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -403,4 +406,43 @@ func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
 	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
 	ctx = exec.WithEnv(ctx, []string{"ETCDCTL_API=3"})
 	return exec.Exec(ctx, etcdctlPath, args...)
+}
+
+// InitCRDs initializes the CRDs.
+func (c *Cluster) InitCRDs(ctx context.Context) error {
+	kwokConfigs := config.FilterWithTypeFromContext[*internalversion.KwokConfiguration](ctx)
+	if len(kwokConfigs) == 0 {
+		return nil
+	}
+	crds := kwokConfigs[0].Options.EnableCRDs
+	if len(crds) == 0 {
+		return nil
+	}
+
+	buf := bytes.NewBuffer(nil)
+	for _, name := range crds {
+		c, ok := crdDefines[name]
+		if !ok {
+			return fmt.Errorf("no crd define found for %s", name)
+		}
+		_, _ = buf.WriteString("\n---\n")
+		_, _ = buf.Write(c)
+	}
+
+	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
+	filters := []string{"customresourcedefinition.apiextensions.k8s.io"}
+	return snapshot.Load(ctx, kubeconfigPath, buf, filters)
+}
+
+var crdDefines = map[string][]byte{
+	v1alpha1.StageKind:              crd.Stage,
+	v1alpha1.AttachKind:             crd.Attach,
+	v1alpha1.ClusterAttachKind:      crd.ClusterAttach,
+	v1alpha1.ExecKind:               crd.Exec,
+	v1alpha1.ClusterExecKind:        crd.ClusterExec,
+	v1alpha1.PortForwardKind:        crd.PortForward,
+	v1alpha1.ClusterPortForwardKind: crd.ClusterPortForward,
+	v1alpha1.LogsKind:               crd.Logs,
+	v1alpha1.ClusterLogsKind:        crd.ClusterLogs,
+	v1alpha1.MetricKind:             crd.Metric,
 }

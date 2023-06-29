@@ -101,7 +101,7 @@ func (s *Server) getPortForward(req *restful.Request, resp *restful.Response) {
 }
 
 func (s *Server) getPodsForward(podName, podNamespace string, port int32) (*internalversion.Forward, error) {
-	pf, has := slices.Find(s.config.PortForwards, func(pf *internalversion.PortForward) bool {
+	pf, has := slices.Find(s.portForwards.Get(), func(pf *internalversion.PortForward) bool {
 		return pf.Name == podName && pf.Namespace == podNamespace
 	})
 	if has {
@@ -112,7 +112,7 @@ func (s *Server) getPodsForward(podName, podNamespace string, port int32) (*inte
 		return nil, fmt.Errorf("forward not found for port %q in pod %q", port, log.KRef(podNamespace, podName))
 	}
 
-	for _, cfw := range s.config.ClusterPortForwards {
+	for _, cfw := range s.clusterPortForwards.Get() {
 		if !cfw.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}

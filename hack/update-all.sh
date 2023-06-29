@@ -28,6 +28,11 @@ if [[ "${UPDATE_CODEGEN:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/update-codegen.sh || failed+=(codegen)
 fi
 
+if [[ "${UPDATE_CONTROLLERGEN:-true}" == "true" ]]; then
+  echo "[*] Update controllergen..."
+  "${ROOT_DIR}"/hack/update-controllergen.sh || failed+=(controllergen)
+fi
+
 if [[ "${UPDATE_GO_FORMAT:-true}" == "true" ]]; then
   echo "[*] Update go format..."
   "${ROOT_DIR}"/hack/update-go-format.sh || failed+=(go-format)

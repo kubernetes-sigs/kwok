@@ -30,7 +30,7 @@ func (s *Server) InstallMetrics() error {
 	promHandler := promhttp.Handler()
 	s.restfulCont.Handle("/metrics", promHandler)
 
-	controller := s.config.Controller
+	controller := s.controller
 	env, err := cel.NewEnvironment(cel.NodeEvaluatorConfig{
 		StartedContainersTotal: func(nodeName string) int64 {
 			nodeInfo, ok := controller.GetNode(nodeName)
@@ -43,7 +43,7 @@ func (s *Server) InstallMetrics() error {
 	if err != nil {
 		return fmt.Errorf("failed to create CEL environment: %w", err)
 	}
-	for _, m := range s.config.Metrics {
+	for _, m := range s.metrics {
 		handler, err := metrics.NewMetricsUpdateHandler(metrics.UpdateHandlerConfig{
 			NodeName:    m.Name,
 			Metrics:     m,

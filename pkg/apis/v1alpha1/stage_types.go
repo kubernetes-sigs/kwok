@@ -26,6 +26,11 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// +genclient:nonNamespaced
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=stages,verbs=create;delete;get;list;patch;update;watch
 
 // Stage is an API that describes the staged change of a resource
 type Stage struct {
@@ -35,7 +40,20 @@ type Stage struct {
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Spec holds information about the request being evaluated.
-	Spec StageSpec `json:"spec,omitempty"`
+	Spec StageSpec `json:"spec"`
+	// Status holds status for the Stage
+	//+k8s:conversion-gen=false
+	Status StageStatus `json:"status,omitempty"`
+}
+
+// StageStatus holds status for the Stage
+type StageStatus struct {
+	// Conditions holds conditions for the Stage.
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // StageSpec defines the specification for Stage.
@@ -47,6 +65,8 @@ type StageSpec struct {
 	// Weight means the current stage, in case of multiple stages,
 	// a random stage will be matched as the next stage based on the weight.
 	// +default=0
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
 	Weight int `json:"weight,omitempty"`
 	// Delay means there is a delay in this stage.
 	Delay *StageDelay `json:"delay,omitempty"`
@@ -60,8 +80,10 @@ type StageSpec struct {
 type StageResourceRef struct {
 	// APIGroup of the referent.
 	// +default="v1"
+	// +kubebuilder:default="v1"
 	APIGroup string `json:"apiGroup,omitempty"`
 	// Kind of the referent.
+	// +kubebuilder:validation:Enum=Pod;Node
 	Kind string `json:"kind"`
 }
 
@@ -69,6 +91,7 @@ type StageResourceRef struct {
 type StageDelay struct {
 	// DurationMilliseconds indicates the stage delay time.
 	// If JitterDurationMilliseconds is less than DurationMilliseconds, then JitterDurationMilliseconds is used.
+	// +kubebuilder:validation:Minimum=0
 	DurationMilliseconds *int64 `json:"durationMilliseconds,omitempty"`
 	// DurationFrom is the expression used to get the value.
 	// If it is a time.Time type, getting the value will be minus time.Now() to get DurationMilliseconds
@@ -77,6 +100,7 @@ type StageDelay struct {
 
 	// JitterDurationMilliseconds is the duration plus an additional amount chosen uniformly
 	// at random from the interval between DurationMilliseconds and JitterDurationMilliseconds.
+	// +kubebuilder:validation:Minimum=0
 	JitterDurationMilliseconds *int64 `json:"jitterDurationMilliseconds,omitempty"`
 	// JitterDurationFrom is the expression used to get the value.
 	// If it is a time.Time type, getting the value will be minus time.Now() to get JitterDurationMilliseconds
@@ -171,4 +195,18 @@ const (
 type ExpressionFromSource struct {
 	// ExpressionFrom is the expression used to get the value.
 	ExpressionFrom string `json:"expressionFrom,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// StageList contains a list of Stage
+type StageList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Stage `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Stage{}, &StageList{})
 }

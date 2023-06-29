@@ -26,6 +26,11 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// +genclient:nonNamespaced
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=metrics,verbs=create;delete;get;list;patch;update;watch
 
 // Metric provides metrics configuration.
 type Metric struct {
@@ -36,11 +41,26 @@ type Metric struct {
 	metav1.ObjectMeta `json:"metadata"`
 	// Spec holds spec for metrics.
 	Spec MetricSpec `json:"spec"`
+	// Status holds status for metrics
+	//+k8s:conversion-gen=false
+	Status MetricStatus `json:"status,omitempty"`
+}
+
+// MetricStatus holds status for metrics
+type MetricStatus struct {
+	// Conditions holds conditions for metrics.
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // MetricSpec holds spec for metrics.
 type MetricSpec struct {
 	// Path is a restful service path.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	Path string `json:"path"`
 	// Metrics is a list of metric configurations.
 	Metrics []MetricConfig `json:"metrics"`
@@ -49,34 +69,67 @@ type MetricSpec struct {
 // MetricConfig provides metric configuration to a single metric
 type MetricConfig struct {
 	// Name is the fully-qualified name of the metric.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Help provides information about this metric.
-	Help string `json:"help"`
-	// Kind is kind of metric (ex. counter, gauge, histogram).
+	Help string `json:"help,omitempty"`
+	// Kind is kind of metric
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=counter;gauge;histogram
 	Kind string `json:"kind"`
 	// Labels are metric labels.
-	Labels []MetricLabel `json:"labels"`
+	// +patchMergeKey=name
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=name
+	Labels []MetricLabel `json:"labels,omitempty"`
 	// Value is a CEL expression.
-	Value string `json:"value"`
+	Value string `json:"value,omitempty"`
 	// Buckets is a list of buckets for a histogram metric.
-	Buckets []MetricBucket `json:"buckets"`
+	// +patchMergeKey=le
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=le
+	Buckets []MetricBucket `json:"buckets,omitempty"`
 }
 
 // MetricLabel holds label name and the value of the label.
 type MetricLabel struct {
 	// Name is a label name.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Value is a CEL expression.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	Value string `json:"value"`
 }
 
 // MetricBucket is a single bucket for a metric.
 type MetricBucket struct {
 	// Le is less-than or equal.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=0
 	Le float64 `json:"le"`
 	// Value is a CEL expression.
+	// +kubebuilder:validation:Required
 	Value string `json:"value"`
 	// Hidden is means that this bucket not shown in the metric.
 	// but value will be calculated and cumulative into the next bucket.
-	Hidden bool `json:"hidden"`
+	Hidden bool `json:"hidden,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// MetricList contains a list of Metric
+type MetricList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Metric `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Metric{}, &MetricList{})
 }

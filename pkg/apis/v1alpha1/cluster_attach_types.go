@@ -26,6 +26,11 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// +genclient:nonNamespaced
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterattaches,verbs=create;delete;get;list;patch;update;watch
 
 // ClusterAttach provides cluster-wide logging configuration
 type ClusterAttach struct {
@@ -36,6 +41,15 @@ type ClusterAttach struct {
 	metav1.ObjectMeta `json:"metadata"`
 	// Spec holds spec for cluster attach.
 	Spec ClusterAttachSpec `json:"spec"`
+	// Status holds status for cluster attach
+	//+k8s:conversion-gen=false
+	Status ClusterAttachStatus `json:"status,omitempty"`
+}
+
+// ClusterAttachStatus holds status for cluster attach
+type ClusterAttachStatus struct {
+	// Conditions holds conditions for cluster attach.
+	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // ClusterAttachSpec holds spec for cluster attach.
@@ -44,4 +58,18 @@ type ClusterAttachSpec struct {
 	Selector *ObjectSelector `json:"selector,omitempty"`
 	// Attaches is a list of attach configurations.
 	Attaches []AttachConfig `json:"attaches"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// ClusterAttachList contains a list of ClusterAttach
+type ClusterAttachList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ClusterAttach `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&ClusterAttach{}, &ClusterAttachList{})
 }

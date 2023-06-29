@@ -1,13 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-commonLabels:
-  app: kwok-controller
-
 namespace: kube-system
 
 resources:
-  - kwok-deployment.yaml
-  - kwok-serviceaccount.yaml
-  - kwok-clusterrole.yaml
-  - kwok-clusterrolebinding.yaml
+- ../crd
+- ../rbac
+- service.yaml
+- deployment.yaml
+
+labels:
+- includeSelectors: true
+  pairs:
+    app: kwok-controller

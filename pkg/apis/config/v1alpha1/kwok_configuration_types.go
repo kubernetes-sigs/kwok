@@ -40,6 +40,10 @@ type KwokConfiguration struct {
 
 // KwokConfigurationOptions holds information about the options.
 type KwokConfigurationOptions struct {
+	// EnableCRDs is a list of CRDs to enable.
+	// Once listed in this field, it will no longer be supported by the --config flag.
+	EnableCRDs []string `json:"enableCRDs,omitempty"`
+
 	// The default IP assigned to the Pod on maintained Nodes.
 	// is the default value for flag --cidr
 	// +default="10.0.0.1/24"

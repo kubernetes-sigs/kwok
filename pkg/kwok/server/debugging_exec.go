@@ -91,7 +91,7 @@ func (s *Server) execInContainer(ctx context.Context, cmd []string, in io.Reader
 }
 
 func (s *Server) getExecTarget(podName, podNamespace string, containerName string) (*internalversion.ExecTarget, error) {
-	pf, has := slices.Find(s.config.Execs, func(pf *internalversion.Exec) bool {
+	pf, has := slices.Find(s.execs.Get(), func(pf *internalversion.Exec) bool {
 		return pf.Name == podName && pf.Namespace == podNamespace
 	})
 	if has {
@@ -102,7 +102,7 @@ func (s *Server) getExecTarget(podName, podNamespace string, containerName strin
 		return nil, fmt.Errorf("exec target not found for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 	}
 
-	for _, ce := range s.config.ClusterExecs {
+	for _, ce := range s.clusterExecs.Get() {
 		if !ce.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}

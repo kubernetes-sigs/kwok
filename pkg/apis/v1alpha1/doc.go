@@ -18,5 +18,11 @@ limitations under the License.
 // +k8s:defaulter-gen=TypeMeta
 // +groupName=kwok.x-k8s.io
 
+// +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=nodes/status,verbs=patch;update
+// +kubebuilder:rbac:groups="",resources=pods,verbs=delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups="",resources=pods/status,verbs=patch;update
+// +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=create;get;list;patch;update;watch
+
 // Package v1alpha1 implements the v1alpha1 apiVersion of kwok's configuration
 package v1alpha1

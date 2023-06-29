@@ -121,4 +121,7 @@ type Runtime interface {
 
 	// GetWorkdirPath get the workdir path of cluster
 	GetWorkdirPath(name string) string
+
+	// InitCRDs init the crds of cluster
+	InitCRDs(ctx context.Context) error
 }
