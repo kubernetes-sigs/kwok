@@ -49,6 +49,7 @@ type BuildKubeApiserverComponentConfig struct {
 	DisableQPSLimits  bool
 	ExtraArgs         []internalversion.ExtraArgs
 	ExtraVolumes      []internalversion.Volume
+	ExtraEnvs         []internalversion.Env
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -218,6 +219,9 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		kubeApiserverArgs = append(kubeApiserverArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
 
+	envs := []internalversion.Env{}
+	envs = append(envs, conf.ExtraEnvs...)
+
 	return internalversion.Component{
 		Name:    "kube-apiserver",
 		Version: conf.Version.String(),
@@ -231,5 +235,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Envs:    envs,
 	}, nil
 }

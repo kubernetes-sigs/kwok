@@ -134,6 +134,13 @@ spec:
   containers:
     - name: prometheus
       image: {{ .PrometheusImage }}
+      {{ with .ExtraEnvs }}
+      env:
+      {{ range . }}
+      - name: {{ .Name }}
+        value: {{ .Value }}
+      {{ end }}
+      {{ end }}
       args:
         - --config.file=/etc/prometheus/prometheus.yaml
         {{ if .LogLevel }}

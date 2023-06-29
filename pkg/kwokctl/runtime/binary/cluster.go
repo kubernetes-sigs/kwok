@@ -32,11 +32,13 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -281,6 +283,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Verbosity:    verbosity,
 		ExtraArgs:    etcdComponentPatches.ExtraArgs,
 		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
+		ExtraEnvs:    etcdComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -316,6 +319,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
 		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
+		ExtraEnvs:         kubeApiserverComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -356,6 +360,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			DisableQPSLimits:                   conf.DisableQPSLimits,
 			ExtraArgs:                          kubeControllerManagerPatches.ExtraArgs,
 			ExtraVolumes:                       kubeControllerManagerPatches.ExtraVolumes,
+			ExtraEnvs:                          kubeControllerManagerPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -404,6 +409,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			DisableQPSLimits: conf.DisableQPSLimits,
 			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
 			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
+			ExtraEnvs:        kubeSchedulerComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -434,6 +440,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Verbosity:                verbosity,
 		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
+		ExtraEnvs:                kwokControllerComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -482,6 +489,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Verbosity:    verbosity,
 			ExtraArgs:    prometheusComponentPatches.ExtraArgs,
 			ExtraVolumes: prometheusComponentPatches.ExtraVolumes,
+			ExtraEnvs:    prometheusComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -539,6 +547,13 @@ func (c *Cluster) startComponent(ctx context.Context, component internalversion.
 		logger.Debug("Component already started")
 		return nil
 	}
+
+	if len(component.Envs) > 0 {
+		ctx = exec.WithEnv(ctx, slices.Map(component.Envs, func(c internalversion.Env) string {
+			return fmt.Sprintf("%s=%s", c.Name, c.Value)
+		}))
+	}
+
 	logger.Debug("Starting component")
 	return c.ForkExec(ctx, component.WorkDir, component.Binary, component.Args...)
 }

@@ -56,5 +56,6 @@ type BuildPrometheusDeploymentConfig struct {
 	LogLevel        string
 	ExtraArgs       []internalversion.ExtraArgs
 	ExtraVolumes    []internalversion.Volume
+	ExtraEnvs       []internalversion.Env
 	Metrics         []*internalversion.Metric
 }

@@ -326,6 +326,11 @@ func (in *ComponentPatches) DeepCopyInto(out *ComponentPatches) {
 		*out = make([]Volume, len(*in))
 		copy(*out, *in)
 	}
+	if in.ExtraEnvs != nil {
+		in, out := &in.ExtraEnvs, &out.ExtraEnvs
+		*out = make([]Env, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

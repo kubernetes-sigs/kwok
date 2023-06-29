@@ -64,4 +64,5 @@ type BuildKwokControllerPodConfig struct {
 	NodeLeaseDurationSeconds uint
 	ExtraArgs                []internalversion.ExtraArgs
 	ExtraVolumes             []internalversion.Volume
+	ExtraEnvs                []internalversion.Env
 }

@@ -47,6 +47,7 @@ type BuildKubeControllerManagerComponentConfig struct {
 	DisableQPSLimits                   bool
 	ExtraArgs                          []internalversion.ExtraArgs
 	ExtraVolumes                       []internalversion.Volume
+	ExtraEnvs                          []internalversion.Env
 }
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
@@ -193,6 +194,9 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
 
+	envs := []internalversion.Env{}
+	envs = append(envs, conf.ExtraEnvs...)
+
 	return internalversion.Component{
 		Name:    "kube-controller-manager",
 		Version: conf.Version.String(),
@@ -206,5 +210,6 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Envs:    envs,
 	}, nil
 }

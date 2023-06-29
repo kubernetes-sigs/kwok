@@ -247,6 +247,7 @@ type BuildKindConfig struct {
 	Verbosity                     log.Level
 	ControllerManagerExtraVolumes []internalversion.Volume
 	KwokControllerExtraVolumes    []internalversion.Volume
+	KwokControllerExtraExtraEnvs  []internalversion.Env
 
 	BindAddress      string
 	DisableQPSLimits bool

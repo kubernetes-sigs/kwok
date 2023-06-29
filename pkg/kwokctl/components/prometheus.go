@@ -37,6 +37,7 @@ type BuildPrometheusComponentConfig struct {
 	Verbosity     log.Level
 	ExtraArgs     []internalversion.ExtraArgs
 	ExtraVolumes  []internalversion.Volume
+	ExtraEnvs     []internalversion.Env
 }
 
 // BuildPrometheusComponent builds a prometheus component.
@@ -87,6 +88,9 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		prometheusArgs = append(prometheusArgs, "--log.level="+log.ToLogSeverityLevel(conf.Verbosity))
 	}
 
+	envs := []internalversion.Env{}
+	envs = append(envs, conf.ExtraEnvs...)
+
 	return internalversion.Component{
 		Name:    "prometheus",
 		Version: conf.Version.String(),
@@ -104,5 +108,6 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Envs:    envs,
 	}, nil
 }

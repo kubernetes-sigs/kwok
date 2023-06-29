@@ -38,6 +38,7 @@ type BuildEtcdComponentConfig struct {
 	Verbosity    log.Level
 	ExtraArgs    []internalversion.ExtraArgs
 	ExtraVolumes []internalversion.Volume
+	ExtraEnvs    []internalversion.Env
 }
 
 // BuildEtcdComponent builds an etcd component.
@@ -132,6 +133,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			Value: runtime.GOARCH,
 		})
 	}
+	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
 		Name:    "etcd",

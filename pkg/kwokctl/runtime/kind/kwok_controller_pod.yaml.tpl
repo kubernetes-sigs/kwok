@@ -30,6 +30,10 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
+    {{ range .ExtraEnvs }}
+    - name: {{ .Name }}
+      value: {{ .Value }}
+    {{ end }}
     image: '{{.KwokControllerImageName}}:{{.KwokControllerImageTag}}'
     imagePullPolicy: IfNotPresent
     livenessProbe:

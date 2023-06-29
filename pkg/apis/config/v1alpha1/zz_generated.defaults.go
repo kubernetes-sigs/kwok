@@ -116,4 +116,13 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 			}
 		}
 	}
+	for i := range in.ComponentsPatches {
+		a := &in.ComponentsPatches[i]
+		for j := range a.ExtraEnvs {
+			b := &a.ExtraEnvs[j]
+			if b.Value == "" {
+				b.Value = ""
+			}
+		}
+	}
 }

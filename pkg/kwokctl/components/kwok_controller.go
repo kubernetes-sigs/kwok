@@ -41,6 +41,7 @@ type BuildKwokControllerComponentConfig struct {
 	NodeLeaseDurationSeconds uint
 	ExtraArgs                []internalversion.ExtraArgs
 	ExtraVolumes             []internalversion.Volume
+	ExtraEnvs                []internalversion.Env
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
@@ -119,6 +120,9 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		kwokControllerArgs = append(kwokControllerArgs, "--v="+format.String(conf.Verbosity))
 	}
 
+	envs := []internalversion.Env{}
+	envs = append(envs, conf.ExtraEnvs...)
+
 	return internalversion.Component{
 		Name:    "kwok-controller",
 		Version: conf.Version.String(),
@@ -132,5 +136,6 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Envs:    envs,
 	}
 }

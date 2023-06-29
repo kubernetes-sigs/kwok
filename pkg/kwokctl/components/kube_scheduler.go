@@ -43,6 +43,7 @@ type BuildKubeSchedulerComponentConfig struct {
 	DisableQPSLimits bool
 	ExtraArgs        []internalversion.ExtraArgs
 	ExtraVolumes     []internalversion.Volume
+	ExtraEnvs        []internalversion.Env
 }
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
@@ -183,6 +184,9 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		kubeSchedulerArgs = append(kubeSchedulerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
 
+	envs := []internalversion.Env{}
+	envs = append(envs, conf.ExtraEnvs...)
+
 	return internalversion.Component{
 		Name:    "kube-scheduler",
 		Version: conf.Version.String(),
@@ -196,5 +200,6 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		Image:   conf.Image,
 		Ports:   ports,
 		WorkDir: conf.Workdir,
+		Envs:    envs,
 	}, nil
 }

@@ -1498,6 +1498,19 @@ string
 <p>ExtraVolumes is the extra volumes to be patched on the component.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>extraEnvs</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.Env">
+[]Env
+</a>
+</em>
+</td>
+<td>
+<p>ExtraEnvs is the extra environment variables to be patched on the component.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.Env">
@@ -1507,6 +1520,8 @@ Env
 <p>
 <em>Appears on: </em>
 <a href="#config.kwok.x-k8s.io/v1alpha1.Component">Component</a>
+, 
+<a href="#config.kwok.x-k8s.io/v1alpha1.ComponentPatches">ComponentPatches</a>
 </p>
 <p>
 <p>Env represents an environment variable present in a Container.</p>

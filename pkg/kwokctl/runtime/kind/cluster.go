@@ -151,6 +151,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 	extraLogVolumes := runtime.GetLogVolumes(ctx)
 	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, extraLogVolumes...)
+	if len(etcdComponentPatches.ExtraEnvs) > 0 ||
+		len(kubeApiserverComponentPatches.ExtraEnvs) > 0 ||
+		len(kubeSchedulerComponentPatches.ExtraEnvs) > 0 ||
+		len(kubeControllerManagerComponentPatches.ExtraEnvs) > 0 {
+		logger.Warn("extraEnvs config in etcd, kube-apiserver, kube-scheduler or kube-controller-manager is not supported in kind")
+	}
 	kindYaml, err := BuildKind(BuildKindConfig{
 		BindAddress:                   conf.BindAddress,
 		KubeApiserverPort:             conf.KubeApiserverPort,
@@ -173,6 +179,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		ControllerManagerExtraArgs:    kubeControllerManagerComponentPatches.ExtraArgs,
 		ControllerManagerExtraVolumes: kubeControllerManagerComponentPatches.ExtraVolumes,
 		KwokControllerExtraVolumes:    kwokControllerExtraVolumes,
+		KwokControllerExtraExtraEnvs:  kwokControllerComponentPatches.ExtraEnvs,
 		DisableQPSLimits:              conf.DisableQPSLimits,
 		KubeVersion:                   kubeVersion,
 	})
@@ -191,6 +198,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		NodeLeaseDurationSeconds: 40,
 		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
 		ExtraVolumes:             kwokControllerExtraVolumes,
+		ExtraEnvs:                kwokControllerComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -207,6 +215,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Name:            c.Name(),
 			ExtraArgs:       prometheusPatches.ExtraArgs,
 			ExtraVolumes:    prometheusPatches.ExtraVolumes,
+			ExtraEnvs:       prometheusPatches.ExtraEnvs,
 			Metrics:         runtime.GetMetrics(ctx),
 		}
 		if verbosity != log.LevelInfo {

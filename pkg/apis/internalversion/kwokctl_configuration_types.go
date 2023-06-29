@@ -57,6 +57,8 @@ type ComponentPatches struct {
 	ExtraArgs []ExtraArgs
 	// ExtraVolumes is the extra volumes to be patched on the component.
 	ExtraVolumes []Volume
+	// ExtraEnvs is the extra environment variables to be patched on the component.
+	ExtraEnvs []Env
 }
 
 // KwokctlConfigurationOptions holds information about the options.

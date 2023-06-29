@@ -115,6 +115,8 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
+    - name: TEST_KEY
+      value: TEST_VALUE
     image: 'localhost/kwok:test'
     imagePullPolicy: IfNotPresent
     livenessProbe:
@@ -295,6 +297,9 @@ spec:
   containers:
     - name: prometheus
       image: docker.io/prom/prometheus:v2.44.0
+      env:
+      - name: TEST_KEY
+        value: TEST_VALUE
       args:
         - --config.file=/etc/prometheus/prometheus.yaml
         - --log.level=debug
