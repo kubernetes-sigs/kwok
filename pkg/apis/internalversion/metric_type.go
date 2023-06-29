@@ -43,7 +43,7 @@ type MetricConfig struct {
 	Name string
 	// Help provides information about this metric.
 	Help string
-	// Kind is kind of metric (ex. counter, gauge, histogram).
+	// Kind is kind of metric
 	Kind string
 	// Labels are metric labels.
 	Labels []MetricLabel

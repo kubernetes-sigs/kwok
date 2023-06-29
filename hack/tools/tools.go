@@ -25,6 +25,9 @@ import (
 	// code-generator
 	_ "k8s.io/code-generator"
 
+	// controller-gen
+	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
+
 	// gen-crd-api-reference-docs
 	_ "github.com/ahmetb/gen-crd-api-reference-docs"
 

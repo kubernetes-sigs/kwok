@@ -310,6 +310,19 @@ AttachSpec
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.AttachStatus">
+AttachStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for attach</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ClusterAttach">
@@ -400,6 +413,19 @@ ObjectSelector
 </td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterAttachStatus">
+ClusterAttachStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for cluster attach</p>
 </td>
 </tr>
 </tbody>
@@ -494,6 +520,19 @@ ObjectSelector
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterExecStatus">
+ClusterExecStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for cluster exec</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ClusterLogs">
@@ -584,6 +623,19 @@ ObjectSelector
 </td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterLogsStatus">
+ClusterLogsStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for cluster logs</p>
 </td>
 </tr>
 </tbody>
@@ -678,6 +730,19 @@ ObjectSelector
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterPortForwardStatus">
+ClusterPortForwardStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for cluster port forward</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.Exec">
@@ -757,6 +822,19 @@ ExecSpec
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExecStatus">
+ExecStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for exec</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.Logs">
@@ -834,6 +912,19 @@ LogsSpec
 </td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.LogsStatus">
+LogsStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for logs</p>
 </td>
 </tr>
 </tbody>
@@ -926,6 +1017,19 @@ string
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MetricStatus">
+MetricStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for metrics</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.PortForward">
@@ -1003,6 +1107,19 @@ PortForwardSpec
 </td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.PortForwardStatus">
+PortForwardStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for port forward</p>
 </td>
 </tr>
 </tbody>
@@ -1144,6 +1261,19 @@ bool
 </td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageStatus">
+StageStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for the Stage</p>
 </td>
 </tr>
 </tbody>
@@ -1540,6 +1670,18 @@ KwokConfigurationOptions
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>enableCRDs</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>EnableCRDs is a list of CRDs to enable.
+Once listed in this field, it will no longer be supported by the &ndash;config flag.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>cidr</code>
@@ -2863,6 +3005,40 @@ AttachSpec
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.AttachStatus">
+AttachStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.AttachStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.Attach">Attach</a>
+</p>
+<p>
+<p>AttachStatus holds status for attach</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for attach</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ClusterAttachSpec">
 ClusterAttachSpec
 <a href="#kwok.x-k8s.io%2fv1alpha1.ClusterAttachSpec"> #</a>
@@ -2906,6 +3082,40 @@ ObjectSelector
 </td>
 <td>
 <p>Attaches is a list of attach configurations.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ClusterAttachStatus">
+ClusterAttachStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.ClusterAttachStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterAttach">ClusterAttach</a>
+</p>
+<p>
+<p>ClusterAttachStatus holds status for cluster attach</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for cluster attach.</p>
 </td>
 </tr>
 </tbody>
@@ -2957,6 +3167,40 @@ ObjectSelector
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ClusterExecStatus">
+ClusterExecStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.ClusterExecStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterExec">ClusterExec</a>
+</p>
+<p>
+<p>ClusterExecStatus holds status for cluster exec</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for cluster exec.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ClusterLogsSpec">
 ClusterLogsSpec
 <a href="#kwok.x-k8s.io%2fv1alpha1.ClusterLogsSpec"> #</a>
@@ -3004,6 +3248,40 @@ ObjectSelector
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ClusterLogsStatus">
+ClusterLogsStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.ClusterLogsStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterLogs">ClusterLogs</a>
+</p>
+<p>
+<p>ClusterLogsStatus holds status for cluster logs</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for cluster logs.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ClusterPortForwardSpec">
 ClusterPortForwardSpec
 <a href="#kwok.x-k8s.io%2fv1alpha1.ClusterPortForwardSpec"> #</a>
@@ -3047,6 +3325,184 @@ ObjectSelector
 </td>
 <td>
 <p>Forwards is a list of forwards to configure.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ClusterPortForwardStatus">
+ClusterPortForwardStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.ClusterPortForwardStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterPortForward">ClusterPortForward</a>
+</p>
+<p>
+<p>ClusterPortForwardStatus holds status for cluster port forward</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for cluster port forward.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.Condition">
+Condition
+<a href="#kwok.x-k8s.io%2fv1alpha1.Condition"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.AttachStatus">AttachStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterAttachStatus">ClusterAttachStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterExecStatus">ClusterExecStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterLogsStatus">ClusterLogsStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterPortForwardStatus">ClusterPortForwardStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ExecStatus">ExecStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.LogsStatus">LogsStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.MetricStatus">MetricStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.PortForwardStatus">PortForwardStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.StageStatus">StageStatus</a>
+</p>
+<p>
+<p>Condition contains details for one aspect of the current state of this API Resource.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Type of condition in CamelCase or in foo.example.com/CamelCase.
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ConditionStatus">
+ConditionStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status of the condition</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lastTransitionTime</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>LastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reason</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Reason contains a programmatic identifier indicating the reason for the condition&rsquo;s last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Message is a human readable message indicating details about the transition.
+This may be an empty string.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ConditionStatus">
+ConditionStatus
+(<code>string</code> alias)
+<a href="#kwok.x-k8s.io%2fv1alpha1.ConditionStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">Condition</a>
+</p>
+<p>
+<p>ConditionStatus is the status of a condition.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&#34;False&#34;</code></td>
+<td><p>ConditionFalse means a resource is not in the condition.</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;True&#34;</code></td>
+<td><p>ConditionTrue means a resource is in the condition.</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;Unknown&#34;</code></td>
+<td><p>ConditionUnknown means kubernetes can&rsquo;t decide if a resource is in the condition or not.</p>
 </td>
 </tr>
 </tbody>
@@ -3124,6 +3580,40 @@ ExecSpec
 </td>
 <td>
 <p>Execs is a list of execs to configure.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExecStatus">
+ExecStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExecStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.Exec">Exec</a>
+</p>
+<p>
+<p>ExecStatus holds status for exec</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for exec</p>
 </td>
 </tr>
 </tbody>
@@ -3478,6 +3968,40 @@ LogsSpec
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.LogsStatus">
+LogsStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.LogsStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.Logs">Logs</a>
+</p>
+<p>
+<p>LogsStatus holds status for logs</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for logs</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.MetricBucket">
 MetricBucket
 <a href="#kwok.x-k8s.io%2fv1alpha1.MetricBucket"> #</a>
@@ -3582,7 +4106,7 @@ string
 </em>
 </td>
 <td>
-<p>Kind is kind of metric (ex. counter, gauge, histogram).</p>
+<p>Kind is kind of metric</p>
 </td>
 </tr>
 <tr>
@@ -3712,6 +4236,40 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.MetricStatus">
+MetricStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.MetricStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.Metric">Metric</a>
+</p>
+<p>
+<p>MetricStatus holds status for metrics</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for metrics.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ObjectSelector">
 ObjectSelector
 <a href="#kwok.x-k8s.io%2fv1alpha1.ObjectSelector"> #</a>
@@ -3793,6 +4351,40 @@ PortForwardSpec
 </td>
 <td>
 <p>Forwards is a list of forwards to configure.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.PortForwardStatus">
+PortForwardStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.PortForwardStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.PortForward">PortForward</a>
+</p>
+<p>
+<p>PortForwardStatus holds status for port forward</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for port forward</p>
 </td>
 </tr>
 </tbody>
@@ -4351,6 +4943,40 @@ bool
 </td>
 <td>
 <p>ImmediateNextStage means that the next stage of matching is performed immediately, without waiting for the Apiserver to push.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.StageStatus">
+StageStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.StageStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.Stage">Stage</a>
+</p>
+<p>
+<p>StageStatus holds status for the Stage</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for the Stage.</p>
 </td>
 </tr>
 </tbody>

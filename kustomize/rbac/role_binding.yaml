@@ -7,6 +7,6 @@ roleRef:
   kind: ClusterRole
   name: kwok-controller
 subjects:
-  - kind: ServiceAccount
-    name: kwok-controller
-    namespace: kube-system
+- kind: ServiceAccount
+  name: kwok-controller
+  namespace: kube-system

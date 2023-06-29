@@ -126,7 +126,7 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 }
 
 func (s *Server) getPodLogs(podName, podNamespace, containerName string) (*internalversion.Log, error) {
-	l, has := slices.Find(s.config.Logs, func(l *internalversion.Logs) bool {
+	l, has := slices.Find(s.logs.Get(), func(l *internalversion.Logs) bool {
 		return l.Name == podName && l.Namespace == podNamespace
 	})
 	if has {
@@ -137,7 +137,7 @@ func (s *Server) getPodLogs(podName, podNamespace, containerName string) (*inter
 		return nil, fmt.Errorf("not found log target for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 	}
 
-	for _, cl := range s.config.ClusterLogs {
+	for _, cl := range s.clusterLogs.Get() {
 		if !cl.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}

@@ -93,6 +93,21 @@ function main() {
     test_exec "${name}" other pod/fake-pod "pwd" "/tmp" || failed+=("${name}_target_exec")
     test_exec "${name}" default deploy/fake-pod "env" "TEST_ENV=test" || failed+=("${name}_cluster_default_exec")
     delete_cluster "${name}"
+
+    name="crd-exec-cluster-${KWOK_RUNTIME}-${release//./-}"
+    create_cluster "${name}" "${release}" --config - <<EOF
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokConfiguration
+options:
+  enableCRDs:
+  - ClusterExec
+  - Exec
+EOF
+    test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
+    kwokctl --name "${name}" kubectl apply -f "${DIR}/exec.yaml"
+    test_exec "${name}" other pod/fake-pod "pwd" "/tmp" || failed+=("${name}_target_exec")
+    test_exec "${name}" default deploy/fake-pod "env" "TEST_ENV=test" || failed+=("${name}_cluster_default_exec")
+    delete_cluster "${name}"
   done
 
   if [[ "${#failed[@]}" -ne 0 ]]; then

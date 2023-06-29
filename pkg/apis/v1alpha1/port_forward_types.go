@@ -26,6 +26,9 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// +kubebuilder:subresource:status
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=portforwards,verbs=create;delete;get;list;patch;update;watch
 
 // PortForward provides port forward configuration for a single pod.
 type PortForward struct {
@@ -36,6 +39,19 @@ type PortForward struct {
 	metav1.ObjectMeta `json:"metadata"`
 	// Spec holds spec for port forward.
 	Spec PortForwardSpec `json:"spec"`
+	// Status holds status for port forward
+	//+k8s:conversion-gen=false
+	Status PortForwardStatus `json:"status,omitempty"`
+}
+
+// PortForwardStatus holds status for port forward
+type PortForwardStatus struct {
+	// Conditions holds conditions for port forward
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // PortForwardSpec holds spec for port forward.
@@ -59,7 +75,26 @@ type Forward struct {
 // ForwardTarget holds information how to forward to a target.
 type ForwardTarget struct {
 	// Port is the port to forward to.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	Port int32 `json:"port"`
 	// Address is the address to forward to.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	Address string `json:"address"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// PortForwardList contains a list of PortForward
+type PortForwardList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []PortForward `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&PortForward{}, &PortForwardList{})
 }

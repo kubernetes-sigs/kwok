@@ -26,6 +26,11 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// +genclient:nonNamespaced
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterportforwards,verbs=create;delete;get;list;patch;update;watch
 
 // ClusterPortForward provides cluster-wide port forward configuration.
 type ClusterPortForward struct {
@@ -36,6 +41,19 @@ type ClusterPortForward struct {
 	metav1.ObjectMeta `json:"metadata"`
 	// Spec holds spec for cluster port forward.
 	Spec ClusterPortForwardSpec `json:"spec"`
+	// Status holds status for cluster port forward
+	//+k8s:conversion-gen=false
+	Status ClusterPortForwardStatus `json:"status,omitempty"`
+}
+
+// ClusterPortForwardStatus holds status for cluster port forward
+type ClusterPortForwardStatus struct {
+	// Conditions holds conditions for cluster port forward.
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // ClusterPortForwardSpec holds spec for cluster port forward.
@@ -44,4 +62,18 @@ type ClusterPortForwardSpec struct {
 	Selector *ObjectSelector `json:"selector,omitempty"`
 	// Forwards is a list of forwards to configure.
 	Forwards []Forward `json:"forwards"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// ClusterPortForwardList contains a list of ClusterPortForward
+type ClusterPortForwardList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ClusterPortForward `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&ClusterPortForward{}, &ClusterPortForwardList{})
 }

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kwok-controller
+  labels:
+    app: kwok-controller
+spec:
+  ports:
+  - name: http
+    port: 10247
+    protocol: TCP
+    targetPort: 10247
+  selector:
+    app: kwok-controller
+  type: ClusterIP

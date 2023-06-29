@@ -73,7 +73,7 @@ func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
 }
 
 func (s *Server) getPodAttach(podName, podNamespace, containerName string) (*internalversion.AttachConfig, error) {
-	a, has := slices.Find(s.config.Attaches, func(a *internalversion.Attach) bool {
+	a, has := slices.Find(s.attaches.Get(), func(a *internalversion.Attach) bool {
 		return a.Name == podName && a.Namespace == podNamespace
 	})
 	if has {
@@ -84,7 +84,7 @@ func (s *Server) getPodAttach(podName, podNamespace, containerName string) (*int
 		return nil, fmt.Errorf("not found log target for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 	}
 
-	for _, cl := range s.config.ClusterAttaches {
+	for _, cl := range s.clusterAttaches.Get() {
 		if !cl.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}

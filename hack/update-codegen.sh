@@ -21,27 +21,58 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
-CODEGEN_PKG_VENDOR="${ROOT_DIR}"/vendor/k8s.io/code-generator
-CODEGEN_PKG=${CODEGEN_PKG:-${CODEGEN_PKG_VENDOR}}
-if [[ "${CODEGEN_PKG}" == "${CODEGEN_PKG_VENDOR}" ]]; then
-  ls "${CODEGEN_PKG_VENDOR}" >/dev/null 2>&1 || go mod vendor
-fi
-
-KWOK_PROJECT="sigs.k8s.io/kwok"
-KWOK_API_PACKAGE="${KWOK_PROJECT}/pkg/apis"
-
-function codegen() {
-  echo "Update codegen"
-
-  bash "${CODEGEN_PKG}"/generate-internal-groups.sh \
-    "deepcopy,defaulter,conversion" \
-    "${KWOK_API_PACKAGE}" \
-    "${KWOK_API_PACKAGE}" \
-    "${KWOK_API_PACKAGE}" \
-    ":v1alpha1,config/v1alpha1,internalversion" \
-    --trim-path-prefix "${KWOK_PROJECT}" \
-    --output-base "./" \
-    --go-header-file "${ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
+function deepcopy-gen() {
+  go run k8s.io/code-generator/cmd/deepcopy-gen "$@"
 }
 
-cd "${ROOT_DIR}" && codegen
+function defaulter-gen() {
+  go run k8s.io/code-generator/cmd/defaulter-gen "$@"
+}
+
+function conversion-gen() {
+  go run k8s.io/code-generator/cmd/conversion-gen "$@"
+}
+
+function client-gen() {
+  go run k8s.io/code-generator/cmd/client-gen "$@"
+}
+
+function gen() {
+  rm -rf \
+    "${ROOT_DIR}/pkg/apis/internalversion"/zz_generated.*.go \
+    "${ROOT_DIR}/pkg/apis/v1alpha1"/zz_generated.*.go \
+    "${ROOT_DIR}/pkg/apis/config/v1alpha1"/zz_generated.*.go
+  echo "Generating deepcopy"
+  deepcopy-gen \
+    --input-dirs ./pkg/apis/internalversion/ \
+    --input-dirs ./pkg/apis/v1alpha1/ \
+    --input-dirs ./pkg/apis/config/v1alpha1/ \
+    --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
+    --output-file-base zz_generated.deepcopy \
+    --go-header-file ./hack/boilerplate/boilerplate.go.txt
+  echo "Generating defaulter"
+  defaulter-gen \
+    --input-dirs ./pkg/apis/v1alpha1/ \
+    --input-dirs ./pkg/apis/config/v1alpha1/ \
+    --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
+    --output-file-base zz_generated.defaults \
+    --go-header-file ./hack/boilerplate/boilerplate.go.txt
+  echo "Generating conversion"
+  conversion-gen \
+    --input-dirs ./pkg/apis/internalversion/ \
+    --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
+    --output-file-base zz_generated.conversion \
+    --go-header-file ./hack/boilerplate/boilerplate.go.txt
+
+  rm -rf "${ROOT_DIR}/pkg/client"
+  echo "Generating client"
+  client-gen \
+    --clientset-name versioned \
+    --input-base "" \
+    --input sigs.k8s.io/kwok/pkg/apis/v1alpha1 \
+    --output-package sigs.k8s.io/kwok/pkg/client/clientset \
+    --go-header-file ./hack/boilerplate/boilerplate.go.txt \
+    --plural-exceptions="Logs:Logs,ClusterLogs:ClusterLogs"
+}
+
+cd "${ROOT_DIR}" && gen

@@ -212,6 +212,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
 		attaches := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
 		config := server.Config{
+			Client:              clientset,
+			EnableCRDs:          flags.Options.EnableCRDs,
 			ClusterPortForwards: clusterPortForwards,
 			PortForwards:        portForwards,
 			ClusterExecs:        clusterExecs,
@@ -223,8 +225,13 @@ func runE(ctx context.Context, flags *flagpole) error {
 			Metrics:             metrics,
 			Controller:          ctr,
 		}
-		svc := server.NewServer(config)
-		if err := svc.InstallMetrics(); err != nil {
+		svc, err := server.NewServer(config)
+		if err != nil {
+			return fmt.Errorf("failed to create server: %w", err)
+		}
+
+		err = svc.InstallMetrics()
+		if err != nil {
 			return fmt.Errorf("failed to install metrics: %w", err)
 		}
 		svc.InstallHealthz()

@@ -29,6 +29,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/flowcontrol"
 
+	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -42,6 +43,7 @@ type Clientset struct {
 	restClient      *rest.RESTClient
 	clientConfig    clientcmd.ClientConfig
 	typedClient     *kubernetes.Clientset
+	kwokClient      *versioned.Clientset
 	dynamicClient   *dynamic.DynamicClient
 
 	opts []Option
@@ -147,6 +149,22 @@ func (g *Clientset) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 			&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: g.masterURL}})
 	}
 	return g.clientConfig
+}
+
+// ToTypedKwokClient returns a typed kwok client.
+func (g *Clientset) ToTypedKwokClient() (*versioned.Clientset, error) {
+	if g.kwokClient == nil {
+		restConfig, err := g.ToRESTConfig()
+		if err != nil {
+			return nil, err
+		}
+		typedKwokClient, err := versioned.NewForConfig(restConfig)
+		if err != nil {
+			return nil, fmt.Errorf("could not get Kubernetes typedClient: %w", err)
+		}
+		g.kwokClient = typedKwokClient
+	}
+	return g.kwokClient, nil
 }
 
 // ToTypedClient returns a typed Kubernetes client.

@@ -30,6 +30,7 @@ import (
 // All generated defaulters are covering - they call all nested defaulters.
 func RegisterDefaults(scheme *runtime.Scheme) error {
 	scheme.AddTypeDefaultingFunc(&Stage{}, func(obj interface{}) { SetObjectDefaults_Stage(obj.(*Stage)) })
+	scheme.AddTypeDefaultingFunc(&StageList{}, func(obj interface{}) { SetObjectDefaults_StageList(obj.(*StageList)) })
 	return nil
 }
 
@@ -39,5 +40,12 @@ func SetObjectDefaults_Stage(in *Stage) {
 	}
 	if in.Spec.Weight == 0 {
 		in.Spec.Weight = 0
+	}
+}
+
+func SetObjectDefaults_StageList(in *StageList) {
+	for i := range in.Items {
+		a := &in.Items[i]
+		SetObjectDefaults_Stage(a)
 	}
 }

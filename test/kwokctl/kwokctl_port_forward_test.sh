@@ -114,6 +114,24 @@ function main() {
     test_port_forward "${name}" default deploy/fake-pod "8004" || failed+=("${name}_cluster_default_forward")
     test_port_forward_failed "${name}" default deploy/fake-pod "8005" || failed+=("${name}_cluster_failed")
     delete_cluster "${name}"
+
+    name="crd-port-forward-cluster-${KWOK_RUNTIME}-${release//./-}"
+    create_cluster "${name}" "${release}" --config - <<EOF
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokConfiguration
+options:
+  enableCRDs:
+  - ClusterPortForward
+  - PortForward
+EOF
+    test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
+    kwokctl --name "${name}" kubectl apply -f "${DIR}/port-forward.yaml"
+    test_port_forward "${name}" other pod/fake-pod "8001" || failed+=("${name}_target_forward")
+    test_port_forward "${name}" other pod/fake-pod "8002" || failed+=("${name}_command_forward")
+    test_port_forward_failed "${name}" other pod/fake-pod "8003" || failed+=("${name}_failed")
+    test_port_forward "${name}" default deploy/fake-pod "8004" || failed+=("${name}_cluster_default_forward")
+    test_port_forward_failed "${name}" default deploy/fake-pod "8005" || failed+=("${name}_cluster_failed")
+    delete_cluster "${name}"
   done
 
   if [[ "${#failed[@]}" -ne 0 ]]; then

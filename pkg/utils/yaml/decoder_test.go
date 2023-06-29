@@ -46,6 +46,7 @@ metadata:
 spec:
   containers: []
 ---
+---
 apiVersion: v1
 kind: Pod
 metadata:

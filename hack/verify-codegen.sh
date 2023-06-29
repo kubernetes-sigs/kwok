@@ -23,7 +23,6 @@ ROOT_DIR="$(realpath "${DIR}/..")"
 
 function check() {
   echo "Verify codegen"
-  rm -rf "${ROOT_DIR}/pkg/apis/**/zz_generated.*.go"
   "${ROOT_DIR}"/hack/update-codegen.sh
   git --no-pager diff --exit-code
 }

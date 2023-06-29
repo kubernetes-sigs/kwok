@@ -570,6 +570,7 @@ func autoConvert_v1alpha1_Attach_To_internalversion_Attach(in *v1alpha1.Attach, 
 	if err := Convert_v1alpha1_AttachSpec_To_internalversion_AttachSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -639,6 +640,7 @@ func autoConvert_v1alpha1_ClusterAttach_To_internalversion_ClusterAttach(in *v1a
 	if err := Convert_v1alpha1_ClusterAttachSpec_To_internalversion_ClusterAttachSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -688,6 +690,7 @@ func autoConvert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(in *v1alpha
 	if err := Convert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -737,6 +740,7 @@ func autoConvert_v1alpha1_ClusterLogs_To_internalversion_ClusterLogs(in *v1alpha
 	if err := Convert_v1alpha1_ClusterLogsSpec_To_internalversion_ClusterLogsSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -786,6 +790,7 @@ func autoConvert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForwa
 	if err := Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -983,6 +988,7 @@ func autoConvert_v1alpha1_Exec_To_internalversion_Exec(in *v1alpha1.Exec, out *E
 	if err := Convert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -1191,6 +1197,7 @@ func Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(in 
 }
 
 func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in *KwokConfigurationOptions, out *configv1alpha1.KwokConfigurationOptions, s conversion.Scope) error {
+	out.EnableCRDs = *(*[]string)(unsafe.Pointer(&in.EnableCRDs))
 	out.CIDR = in.CIDR
 	out.NodeIP = in.NodeIP
 	out.NodeName = in.NodeName
@@ -1230,6 +1237,7 @@ func Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurat
 }
 
 func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(in *configv1alpha1.KwokConfigurationOptions, out *KwokConfigurationOptions, s conversion.Scope) error {
+	out.EnableCRDs = *(*[]string)(unsafe.Pointer(&in.EnableCRDs))
 	out.CIDR = in.CIDR
 	out.NodeIP = in.NodeIP
 	out.NodeName = in.NodeName
@@ -1571,6 +1579,7 @@ func autoConvert_v1alpha1_Logs_To_internalversion_Logs(in *v1alpha1.Logs, out *L
 	if err := Convert_v1alpha1_LogsSpec_To_internalversion_LogsSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -1618,6 +1627,7 @@ func autoConvert_v1alpha1_Metric_To_internalversion_Metric(in *v1alpha1.Metric, 
 	if err := Convert_v1alpha1_MetricSpec_To_internalversion_MetricSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -1791,6 +1801,7 @@ func autoConvert_v1alpha1_PortForward_To_internalversion_PortForward(in *v1alpha
 	if err := Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 
@@ -1862,6 +1873,7 @@ func autoConvert_v1alpha1_Stage_To_internalversion_Stage(in *v1alpha1.Stage, out
 	if err := Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	// INFO: in.Status opted out of conversion generation
 	return nil
 }
 

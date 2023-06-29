@@ -48,6 +48,11 @@ if [[ "${VERIFY_CODEGEN:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-codegen.sh || failed+=(codegen)
 fi
 
+if [[ "${VERIFY_CONTROLLERGEN:-true}" == "true" ]]; then
+  echo "[*] Verifying controllergen..."
+  "${ROOT_DIR}"/hack/verify-controllergen.sh || failed+=(controllergen)
+fi
+
 if [[ "${VERIFY_CMD_DOCS:-true}" == "true" ]]; then
   echo "[*] Verifying cmd docs..."
   "${ROOT_DIR}"/hack/verify-cmd-docs.sh || failed+=(cmd-docs)

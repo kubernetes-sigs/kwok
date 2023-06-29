@@ -49,6 +49,9 @@ func (d *Decoder) Decode(visitFunc func(obj *unstructured.Unstructured) error) e
 			}
 			return err
 		}
+		if len(tmp) == 0 {
+			continue
+		}
 		data, err := yamlv3.Marshal(tmp)
 		if err != nil {
 			return err

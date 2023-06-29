@@ -26,6 +26,9 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// +kubebuilder:subresource:status
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=execs,verbs=create;delete;get;list;patch;update;watch
 
 // Exec provides exec configuration for a single pod.
 type Exec struct {
@@ -36,6 +39,19 @@ type Exec struct {
 	metav1.ObjectMeta `json:"metadata"`
 	// Spec holds spec for exec
 	Spec ExecSpec `json:"spec"`
+	// Status holds status for exec
+	//+k8s:conversion-gen=false
+	Status ExecStatus `json:"status,omitempty"`
+}
+
+// ExecStatus holds status for exec
+type ExecStatus struct {
+	// Conditions holds conditions for exec
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // ExecSpec holds spec for exec
@@ -64,7 +80,23 @@ type ExecTargetLocal struct {
 // EnvVar represents an environment variable present in a Container.
 type EnvVar struct {
 	// Name of the environment variable.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Value of the environment variable.
 	Value string `json:"value,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// ExecList contains a list of Exec
+type ExecList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Exec `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Exec{}, &ExecList{})
 }

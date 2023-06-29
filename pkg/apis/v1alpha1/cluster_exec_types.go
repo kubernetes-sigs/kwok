@@ -26,6 +26,11 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// +genclient:nonNamespaced
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterexecs,verbs=create;delete;get;list;patch;update;watch
 
 // ClusterExec provides cluster-wide exec configuration.
 type ClusterExec struct {
@@ -36,6 +41,19 @@ type ClusterExec struct {
 	metav1.ObjectMeta `json:"metadata"`
 	// Spec holds spec for cluster exec.
 	Spec ClusterExecSpec `json:"spec"`
+	// Status holds status for cluster exec
+	//+k8s:conversion-gen=false
+	Status ClusterExecStatus `json:"status,omitempty"`
+}
+
+// ClusterExecStatus holds status for cluster exec
+type ClusterExecStatus struct {
+	// Conditions holds conditions for cluster exec.
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // ClusterExecSpec holds spec for cluster exec.
@@ -44,4 +62,18 @@ type ClusterExecSpec struct {
 	Selector *ObjectSelector `json:"selector,omitempty"`
 	// Execs is a list of exec to configure.
 	Execs []ExecTarget `json:"execs"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// ClusterExecList contains a list of ClusterExec
+type ClusterExecList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ClusterExec `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&ClusterExec{}, &ClusterExecList{})
 }

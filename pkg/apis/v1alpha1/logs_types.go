@@ -26,6 +26,9 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// +kubebuilder:subresource:status
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=logs,verbs=create;delete;get;list;patch;update;watch
 
 // Logs provides logging configuration for a single pod.
 type Logs struct {
@@ -36,6 +39,19 @@ type Logs struct {
 	metav1.ObjectMeta `json:"metadata"`
 	// Spec holds spec for logs
 	Spec LogsSpec `json:"spec"`
+	// Status holds status for logs
+	//+k8s:conversion-gen=false
+	Status LogsStatus `json:"status,omitempty"`
+}
+
+// LogsStatus holds status for logs
+type LogsStatus struct {
+	// Conditions holds conditions for logs
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // LogsSpec holds spec for logs.
@@ -49,7 +65,23 @@ type Log struct {
 	// Containers is list of container names.
 	Containers []string `json:"containers"`
 	// LogsFile is the file from which the log forward starts
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	LogsFile string `json:"logsFile"`
 	// Follow up if true
 	Follow bool `json:"follow"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// LogsList contains a list of Logs
+type LogsList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Logs `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Logs{}, &LogsList{})
 }
