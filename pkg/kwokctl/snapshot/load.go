@@ -44,17 +44,8 @@ func Load(ctx context.Context, kubeconfigPath string, r io.Reader, filters []str
 		return err
 	}
 	l.addResource(ctx, filters)
-	start := time.Now()
-	err = l.Load(ctx, r)
-	if err != nil {
-		return err
-	}
 
-	logger := log.FromContext(ctx)
-	logger.Info("Load Snapshot",
-		"elapsed", time.Since(start),
-	)
-	return nil
+	return l.Load(ctx, r)
 }
 
 type uniqueKey struct {
@@ -116,6 +107,8 @@ func (l *loader) addResource(ctx context.Context, resources []string) {
 func (l *loader) Load(ctx context.Context, r io.Reader) error {
 	logger := log.FromContext(ctx)
 
+	start := time.Now()
+	totalCount := 0
 	decoder := yaml.NewDecoder(r)
 
 	err := decoder.Decode(func(obj *unstructured.Unstructured) error {
@@ -131,6 +124,7 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 			return nil
 		}
 
+		totalCount++
 		l.load(ctx, obj)
 		return nil
 	})
@@ -171,6 +165,11 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 			"name", log.KObj(pendingObj),
 		)
 	}
+
+	logger.Info("Load resources",
+		"count", totalCount,
+		"elapsed", time.Since(start),
+	)
 	return nil
 }
 

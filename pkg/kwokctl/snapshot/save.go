@@ -131,9 +131,10 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 			"count", count,
 			"elapsed", time.Since(start),
 		)
+		totalCount += count
 	}
 
-	logger.Info("Saved snapshot",
+	logger.Info("Saved resources",
 		"count", totalCount,
 		"elapsed", time.Since(start),
 	)
