@@ -81,7 +81,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage all nodes",
 			conf: Config{
-				ClientSet:                fake.NewSimpleClientset(nodes...),
+				TypedClient:              fake.NewSimpleClientset(nodes...),
 				ManageAllNodes:           true,
 				NodeStages:               nodeStages,
 				PodStages:                podStages,
@@ -99,7 +99,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage nodes with label selector `manage-by-kwok=true`",
 			conf: Config{
-				ClientSet:                    fake.NewSimpleClientset(nodes...),
+				TypedClient:                  fake.NewSimpleClientset(nodes...),
 				ManageNodesWithLabelSelector: "manage-by-kwok",
 				NodeStages:                   nodeStages,
 				PodStages:                    podStages,
@@ -117,7 +117,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage nodes with annotation selector `manage-by-kwok=true`",
 			conf: Config{
-				ClientSet:                         fake.NewSimpleClientset(nodes...),
+				TypedClient:                       fake.NewSimpleClientset(nodes...),
 				ManageNodesWithAnnotationSelector: "manage-by-kwok=true",
 				NodeStages:                        nodeStages,
 				PodStages:                         podStages,
@@ -155,7 +155,7 @@ func TestController(t *testing.T) {
 
 			// wait for nodes to be right phase indicated by `tt.wantNodePhase`
 			err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
-				list, err := ctr.clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+				list, err := ctr.typedClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 				if err != nil {
 					return false, fmt.Errorf("failed to list nodes, err: %w", err)
 				}

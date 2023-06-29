@@ -34,7 +34,19 @@ import (
 )
 
 // Clientset is a set of Kubernetes clients.
-type Clientset struct {
+type Clientset interface {
+	ToRESTConfig() (*rest.Config, error)
+	ToRawKubeConfigLoader() clientcmd.ClientConfig
+	ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
+	ToRESTMapper() (meta.RESTMapper, error)
+	ToRESTClient() (*rest.RESTClient, error)
+	ToTypedClient() (kubernetes.Interface, error)
+	ToTypedKwokClient() (versioned.Interface, error)
+	ToDynamicClient() (dynamic.Interface, error)
+}
+
+// clientset is a set of Kubernetes clients.
+type clientset struct {
 	masterURL       string
 	kubeconfigPath  string
 	restConfig      *rest.Config
@@ -49,19 +61,19 @@ type Clientset struct {
 	opts []Option
 }
 
-// Option is a function that configures a Clientset.
-type Option func(*Clientset)
+// Option is a function that configures a clientset.
+type Option func(*clientset)
 
 // WithImpersonate sets the impersonation config.
 func WithImpersonate(impersonateConfig rest.ImpersonationConfig) Option {
-	return func(c *Clientset) {
+	return func(c *clientset) {
 		c.restConfig.Impersonate = impersonateConfig
 	}
 }
 
-// NewClientset creates a new Clientset.
-func NewClientset(masterURL, kubeconfigPath string, opts ...Option) (*Clientset, error) {
-	return &Clientset{
+// NewClientset creates a new clientset.
+func NewClientset(masterURL, kubeconfigPath string, opts ...Option) (Clientset, error) {
+	return &clientset{
 		masterURL:      masterURL,
 		kubeconfigPath: kubeconfigPath,
 		opts:           opts,
@@ -69,7 +81,7 @@ func NewClientset(masterURL, kubeconfigPath string, opts ...Option) (*Clientset,
 }
 
 // ToRESTConfig returns a REST config.
-func (g *Clientset) ToRESTConfig() (*rest.Config, error) {
+func (g *clientset) ToRESTConfig() (*rest.Config, error) {
 	if g.restConfig == nil {
 		var restConfig *rest.Config
 		if g.kubeconfigPath == "" && g.masterURL == "" {
@@ -98,20 +110,20 @@ func (g *Clientset) ToRESTConfig() (*rest.Config, error) {
 }
 
 // ToDiscoveryClient returns a discovery client.
-func (g *Clientset) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
+func (g *clientset) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
 	if g.discoveryClient == nil {
-		clientset, err := g.ToTypedClient()
+		typedClient, err := g.ToTypedClient()
 		if err != nil {
 			return nil, err
 		}
-		discoveryClient := &cachedDiscoveryInterface{clientset.DiscoveryClient}
+		discoveryClient := &cachedDiscoveryInterface{typedClient.Discovery()}
 		g.discoveryClient = discoveryClient
 	}
 	return g.discoveryClient, nil
 }
 
 // ToRESTMapper returns a REST mapper.
-func (g *Clientset) ToRESTMapper() (meta.RESTMapper, error) {
+func (g *clientset) ToRESTMapper() (meta.RESTMapper, error) {
 	if g.restMapper == nil {
 		discoveryClient, err := g.ToDiscoveryClient()
 		if err != nil {
@@ -126,7 +138,7 @@ func (g *Clientset) ToRESTMapper() (meta.RESTMapper, error) {
 }
 
 // ToRESTClient returns a REST client.
-func (g *Clientset) ToRESTClient() (*rest.RESTClient, error) {
+func (g *clientset) ToRESTClient() (*rest.RESTClient, error) {
 	if g.restClient == nil {
 		restConfig, err := g.ToRESTConfig()
 		if err != nil {
@@ -142,7 +154,7 @@ func (g *Clientset) ToRESTClient() (*rest.RESTClient, error) {
 }
 
 // ToRawKubeConfigLoader returns a raw kubeconfig loader.
-func (g *Clientset) ToRawKubeConfigLoader() clientcmd.ClientConfig {
+func (g *clientset) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 	if g.clientConfig == nil {
 		g.clientConfig = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 			&clientcmd.ClientConfigLoadingRules{ExplicitPath: g.kubeconfigPath},
@@ -152,7 +164,7 @@ func (g *Clientset) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 }
 
 // ToTypedKwokClient returns a typed kwok client.
-func (g *Clientset) ToTypedKwokClient() (*versioned.Clientset, error) {
+func (g *clientset) ToTypedKwokClient() (versioned.Interface, error) {
 	if g.kwokClient == nil {
 		restConfig, err := g.ToRESTConfig()
 		if err != nil {
@@ -160,7 +172,7 @@ func (g *Clientset) ToTypedKwokClient() (*versioned.Clientset, error) {
 		}
 		typedKwokClient, err := versioned.NewForConfig(restConfig)
 		if err != nil {
-			return nil, fmt.Errorf("could not get Kubernetes typedClient: %w", err)
+			return nil, fmt.Errorf("could not get kwok typedClient: %w", err)
 		}
 		g.kwokClient = typedKwokClient
 	}
@@ -168,7 +180,7 @@ func (g *Clientset) ToTypedKwokClient() (*versioned.Clientset, error) {
 }
 
 // ToTypedClient returns a typed Kubernetes client.
-func (g *Clientset) ToTypedClient() (*kubernetes.Clientset, error) {
+func (g *clientset) ToTypedClient() (kubernetes.Interface, error) {
 	if g.typedClient == nil {
 		restConfig, err := g.ToRESTConfig()
 		if err != nil {
@@ -184,7 +196,7 @@ func (g *Clientset) ToTypedClient() (*kubernetes.Clientset, error) {
 }
 
 // ToDynamicClient returns a dynamic Kubernetes client.
-func (g *Clientset) ToDynamicClient() (*dynamic.DynamicClient, error) {
+func (g *clientset) ToDynamicClient() (dynamic.Interface, error) {
 	if g.dynamicClient == nil {
 		restConfig, err := g.ToRESTConfig()
 		if err != nil {

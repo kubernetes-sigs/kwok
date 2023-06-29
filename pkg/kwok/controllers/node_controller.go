@@ -90,7 +90,7 @@ var (
 // NodeController is a fake nodes implementation that can be used to test
 type NodeController struct {
 	clock                                 clock.Clock
-	clientSet                             kubernetes.Interface
+	typedClient                           kubernetes.Interface
 	nodeIP                                string
 	nodeName                              string
 	nodePort                              int
@@ -115,7 +115,7 @@ type NodeController struct {
 // NodeControllerConfig is the configuration for the NodeController
 type NodeControllerConfig struct {
 	Clock                                 clock.Clock
-	ClientSet                             kubernetes.Interface
+	TypedClient                           kubernetes.Interface
 	NodeSelectorFunc                      func(node *corev1.Node) bool
 	OnNodeManagedFunc                     func(nodeName string)
 	DisregardStatusWithAnnotationSelector string
@@ -167,7 +167,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 
 	c := &NodeController{
 		clock:                                 conf.Clock,
-		clientSet:                             conf.ClientSet,
+		typedClient:                           conf.TypedClient,
 		nodeSelectorFunc:                      conf.NodeSelectorFunc,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
@@ -248,7 +248,7 @@ func (c *NodeController) need(node *corev1.Node) bool {
 // watchResources watch resources and send to preprocessChan
 func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOptions) error {
 	// Watch nodes in the cluster
-	watcher, err := c.clientSet.CoreV1().Nodes().Watch(ctx, opt)
+	watcher, err := c.typedClient.CoreV1().Nodes().Watch(ctx, opt)
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 			case event, ok := <-rc:
 				if !ok {
 					for {
-						watcher, err := c.clientSet.CoreV1().Nodes().Watch(ctx, opt)
+						watcher, err := c.typedClient.CoreV1().Nodes().Watch(ctx, opt)
 						if err == nil {
 							rc = watcher.ResultChan()
 							continue loop
@@ -334,7 +334,7 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 // listResources lists all resources and sends to preprocessChan
 func (c *NodeController) listResources(ctx context.Context, opt metav1.ListOptions) error {
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
-		return c.clientSet.CoreV1().Nodes().List(ctx, opts)
+		return c.typedClient.CoreV1().Nodes().List(ctx, opts)
 	})
 
 	logger := log.FromContext(ctx)
@@ -372,7 +372,7 @@ func (c *NodeController) finalizersModify(ctx context.Context, node *corev1.Node
 		"node", node.Name,
 	)
 
-	result, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
+	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch node finalizers",
@@ -393,7 +393,7 @@ func (c *NodeController) deleteResource(ctx context.Context, node *corev1.Node) 
 		"node", node.Name,
 	)
 
-	err := c.clientSet.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
+	err := c.typedClient.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Delete node",
@@ -599,7 +599,7 @@ func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, p
 		"node", node.Name,
 	)
 
-	result, err := c.clientSet.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch node",

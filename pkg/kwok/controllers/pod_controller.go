@@ -55,7 +55,7 @@ var (
 type PodController struct {
 	clock                                 clock.Clock
 	enableCNI                             bool
-	clientSet                             kubernetes.Interface
+	typedClient                           kubernetes.Interface
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
 	nodeIP                                string
@@ -80,7 +80,7 @@ type PodController struct {
 type PodControllerConfig struct {
 	Clock                                 clock.Clock
 	EnableCNI                             bool
-	ClientSet                             kubernetes.Interface
+	TypedClient                           kubernetes.Interface
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
 	NodeIP                                string
@@ -123,7 +123,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 	c := &PodController{
 		clock:                                 conf.Clock,
 		enableCNI:                             conf.EnableCNI,
-		clientSet:                             conf.ClientSet,
+		typedClient:                           conf.TypedClient,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		nodeIP:                                conf.NodeIP,
@@ -196,7 +196,7 @@ func (c *PodController) finalizersModify(ctx context.Context, pod *corev1.Pod, f
 		"node", pod.Spec.NodeName,
 	)
 
-	result, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
+	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch pod finalizers",
@@ -218,7 +218,7 @@ func (c *PodController) deleteResource(ctx context.Context, pod *corev1.Pod) err
 		"node", pod.Spec.NodeName,
 	)
 
-	err := c.clientSet.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
+	err := c.typedClient.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Delete pod",
@@ -422,7 +422,7 @@ func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patc
 		"node", pod.Spec.NodeName,
 	)
 
-	result, err := c.clientSet.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch pod",
@@ -457,7 +457,7 @@ func (c *PodController) need(pod *corev1.Pod) bool {
 
 // watchResources watch resources and send to preprocessChan
 func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptions) error {
-	watcher, err := c.clientSet.CoreV1().Pods(c.namespace).Watch(ctx, opt)
+	watcher, err := c.typedClient.CoreV1().Pods(c.namespace).Watch(ctx, opt)
 	if err != nil {
 		return err
 	}
@@ -471,7 +471,7 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 			case event, ok := <-rc:
 				if !ok {
 					for {
-						watcher, err := c.clientSet.CoreV1().Pods(c.namespace).Watch(ctx, opt)
+						watcher, err := c.typedClient.CoreV1().Pods(c.namespace).Watch(ctx, opt)
 						if err == nil {
 							rc = watcher.ResultChan()
 							continue loop
@@ -546,7 +546,7 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 // listResources lists all resources and sends to preprocessChan
 func (c *PodController) listResources(ctx context.Context, opt metav1.ListOptions) error {
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
-		return c.clientSet.CoreV1().Pods(c.namespace).List(ctx, opts)
+		return c.typedClient.CoreV1().Pods(c.namespace).List(ctx, opts)
 	})
 
 	logger := log.FromContext(ctx)

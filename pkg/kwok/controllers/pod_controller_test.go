@@ -167,7 +167,7 @@ func TestPodController(t *testing.T) {
 	podStages, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
-		ClientSet:                             clientset,
+		TypedClient:                           clientset,
 		NodeIP:                                defaultNodeIP,
 		CIDR:                                  defaultPodCIDR,
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
