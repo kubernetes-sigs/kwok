@@ -62,7 +62,7 @@ function test_snapshot_etcd() {
       diff -u <(echo "${want}") <(echo "${got}")
       echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_save_etcd.txt"
       echo "Error: dry run snapshot save etcd failed"
-      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+      if [[ "${UPDATE_DRY_RUN_TESTDATA}" == "true" ]]; then
         echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_save_etcd.txt"
       fi
       echo "------------------------------"
@@ -105,7 +105,7 @@ function test_snapshot_etcd() {
       diff -u <(echo "${want}") <(echo "${got}")
       echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_restore_etcd.txt"
       echo "Error: dry run snapshot restore etcd failed"
-      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+      if [[ "${UPDATE_DRY_RUN_TESTDATA}" == "true" ]]; then
         echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_restore_etcd.txt"
       fi
       echo "------------------------------"

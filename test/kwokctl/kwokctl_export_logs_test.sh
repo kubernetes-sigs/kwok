@@ -48,7 +48,7 @@ function test_export_logs() {
       echo "------------------------------"
       diff -u <(echo "${want}") <(echo "${got}")
       echo "Error: dry run export logs failed"
-      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+      if [[ "${UPDATE_DRY_RUN_TESTDATA}" == "true" ]]; then
         echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/export_logs.txt"
       fi
       echo "------------------------------"

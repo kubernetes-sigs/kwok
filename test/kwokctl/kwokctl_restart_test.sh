@@ -81,7 +81,7 @@ function test_restart() {
       echo "------------------------------"
       diff -u <(echo "${want}") <(echo "${got}")
       echo "Error: dry run stop cluster ${name} failed"
-      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+      if [[ "${UPDATE_DRY_RUN_TESTDATA}" == "true" ]]; then
         echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/stop_cluster.txt"
       fi
       echo "------------------------------"
@@ -111,7 +111,7 @@ function test_restart() {
       echo "------------------------------"
       diff -u <(echo "${want}") <(echo "${got}")
       echo "Error: dry run start cluster ${name} failed"
-      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+      if [[ "${UPDATE_DRY_RUN_TESTDATA}" == "true" ]]; then
         echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/start_cluster.txt"
       fi
       echo "------------------------------"
