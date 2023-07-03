@@ -41,14 +41,14 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 	if err != nil {
 		return err
 	}
-	cache := path.Join(filepath.Dir(cacheTar), match)
+	cache := path.Join(path.Dir(cacheTar), match)
 	if _, err = os.Stat(cache); err != nil {
 		cacheTar, err = getCacheOrDownload(ctx, cacheDir, src, 0644, quiet)
 		if err != nil {
 			return err
 		}
 		err = untar(ctx, cacheTar, func(file string) (string, bool) {
-			if filepath.Base(file) == match {
+			if path.Base(file) == match {
 				return cache, true
 			}
 			return "", false
@@ -68,7 +68,7 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 		}
 	}
 
-	err = os.MkdirAll(filepath.Dir(dest), 0750)
+	err = MkdirAll(path.Dir(dest))
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 			return "", fmt.Errorf("%s: %s", u.String(), resp.Status)
 		}
 
-		err = os.MkdirAll(filepath.Dir(cache), 0750)
+		err = os.MkdirAll(path.Dir(cache), 0750)
 		if err != nil {
 			return "", err
 		}

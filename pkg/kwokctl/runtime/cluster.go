@@ -32,10 +32,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
-	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -68,6 +68,7 @@ var (
 type Cluster struct {
 	workdir string
 	name    string
+	dryRun  bool
 	conf    *internalversion.KwokctlConfiguration
 }
 
@@ -76,6 +77,7 @@ func NewCluster(name, workdir string) *Cluster {
 	return &Cluster{
 		name:    name,
 		workdir: workdir,
+		dryRun:  dryrun.DryRun,
 	}
 }
 
@@ -151,13 +153,18 @@ func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfigurati
 
 // SetConfig sets the cluster config
 func (c *Cluster) SetConfig(ctx context.Context, conf *internalversion.KwokctlConfiguration) error {
-	c.conf = conf
+	c.conf = conf.DeepCopy()
 	return nil
 }
 
 // Save saves the cluster config
 func (c *Cluster) Save(ctx context.Context) error {
 	if c.conf == nil {
+		return nil
+	}
+
+	if c.IsDryRun() {
+		dryrun.PrintMessage("# Save cluster config to %s", c.GetWorkdirPath(ConfigName))
 		return nil
 	}
 
@@ -219,7 +226,7 @@ func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
 	kubectlPath, err := exec.LookPath("kubectl")
 	if err != nil {
 		kubectlPath = c.GetBinPath("kubectl" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0750, conf.QuietPull)
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0750, conf.QuietPull)
 		if err != nil {
 			return "", err
 		}
@@ -229,14 +236,13 @@ func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
 
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
-	_, err := c.kubectlPath(ctx)
-	return err
+	return c.MkdirAll(c.Workdir())
 }
 
 // Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
 	// cleanup workdir
-	return os.RemoveAll(c.Workdir())
+	return c.RemoveAll(c.Workdir())
 }
 
 // Ready returns true if the cluster is ready
@@ -306,7 +312,7 @@ func (c *Cluster) Kubectl(ctx context.Context, args ...string) error {
 		return err
 	}
 
-	return exec.Exec(ctx, kubectlPath, args...)
+	return c.Exec(ctx, kubectlPath, args...)
 }
 
 // KubectlInCluster runs kubectl in the cluster.
@@ -316,12 +322,20 @@ func (c *Cluster) KubectlInCluster(ctx context.Context, args ...string) error {
 		return err
 	}
 
-	return exec.Exec(ctx, kubectlPath, append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
+	return c.Exec(ctx, kubectlPath, append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
 }
 
 // AuditLogs returns the audit logs of the cluster.
 func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 	logs := c.GetLogPath(AuditLogName)
+	if c.IsDryRun() {
+		if file, ok := dryrun.IsCatToFileWriter(out); ok {
+			dryrun.PrintMessage("cp %s %s", logs, file)
+		} else {
+			dryrun.PrintMessage("cat %s", logs)
+		}
+		return nil
+	}
 
 	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
 	if err != nil {
@@ -342,6 +356,10 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 // AuditLogsFollow follows the audit logs of the cluster.
 func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 	logs := c.GetLogPath(AuditLogName)
+	if c.IsDryRun() {
+		dryrun.PrintMessage("tail -f %s", logs)
+		return nil
+	}
 
 	t, err := tail.TailFile(logs, tail.Config{ReOpen: true, Follow: true})
 	if err != nil {
@@ -389,7 +407,7 @@ func (c *Cluster) etcdctlPath(ctx context.Context) (string, error) {
 	}
 	conf := &config.Options
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
-	err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0750, conf.QuietPull, true)
+	err = c.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0750, conf.QuietPull, true)
 	if err != nil {
 		return "", err
 	}
@@ -405,7 +423,12 @@ func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
 
 	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
 	ctx = exec.WithEnv(ctx, []string{"ETCDCTL_API=3"})
-	return exec.Exec(ctx, etcdctlPath, args...)
+	return c.Exec(ctx, etcdctlPath, args...)
+}
+
+// IsDryRun returns true if the runtime is in dry-run mode
+func (c *Cluster) IsDryRun() bool {
+	return c.dryRun
 }
 
 // InitCRDs initializes the CRDs.

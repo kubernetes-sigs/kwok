@@ -30,7 +30,6 @@ import (
 	"math/big"
 	"net"
 	"os"
-	"path/filepath"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/utils/path"
@@ -226,7 +225,7 @@ func ReadCertAndKey(pkiPath string, name string) (*x509.Certificate, crypto.Sign
 // readCert reads certificate from the specified location
 func readCert(pkiPath, name string) (*x509.Certificate, error) {
 	certificatePath := pathForCert(pkiPath, name)
-	certBytes, err := os.ReadFile(certificatePath)
+	certBytes, err := readFile(certificatePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read certificate from file %s: %w", certificatePath, err)
 	}
@@ -236,7 +235,7 @@ func readCert(pkiPath, name string) (*x509.Certificate, error) {
 // readKey reads key from the specified location
 func readKey(pkiPath, name string) (crypto.Signer, error) {
 	keyPath := pathForKey(pkiPath, name)
-	keyBytes, err := os.ReadFile(keyPath)
+	keyBytes, err := readFile(keyPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read key from file %s: %w", keyPath, err)
 	}
@@ -332,10 +331,11 @@ func EncodePrivateKeyToPEM(privateKey crypto.PrivateKey) ([]byte, error) {
 	}
 }
 
+func readFile(certPath string) ([]byte, error) {
+	return os.ReadFile(certPath)
+}
+
 func writeFile(certPath string, data []byte) error {
-	if err := os.MkdirAll(filepath.Dir(certPath), os.FileMode(0750)); err != nil {
-		return err
-	}
 	return os.WriteFile(certPath, data, os.FileMode(0644))
 }
 

@@ -21,8 +21,8 @@ export KWOK_LOGS_DIR="${ROOT_DIR}/logs"
 
 function save_logs() {
   local name="${1}"
-  mkdir -p "${KWOK_LOGS_DIR}"
-  kwokctl --name="${name}" export logs "${KWOK_LOGS_DIR}"
+  shift 1
+  kwokctl --name="${name}" export logs "${KWOK_LOGS_DIR}" "$@"
 }
 
 function create_cluster() {
@@ -85,4 +85,23 @@ function retry() {
     ((start++))
     sleep 1
   done
+}
+
+function clear_testdata() {
+  local name="${1}"
+  local arch
+  local os
+  arch="$(go env GOARCH)"
+  os="$(go env GOOS)"
+
+  sed '/^ *$/d' |
+    sed "s|${ROOT_DIR}|<ROOT_DIR>|g" |
+    sed "s|${HOME}|~|g" |
+    sed 's|/root/|~/|g' |
+    sed "s|${arch}|<ARCH>|g" |
+    sed "s|${os}|<OS>|g" |
+    sed "s|${name}|<CLUSTER_NAME>|g" |
+    sed 's|\.tar\.gz|.<TAR>|g' |
+    sed 's|\.zip|.<TAR>|g' |
+    sed 's| --env=ETCD_UNSUPPORTED_ARCH=<ARCH> ||g'
 }

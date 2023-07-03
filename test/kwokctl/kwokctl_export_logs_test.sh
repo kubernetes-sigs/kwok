@@ -41,14 +41,31 @@ function test_export_logs() {
   local name="${1}"
   local root_dir="${KWOK_LOGS_DIR}/kwok-${name}"
 
+  if [[ "${SKIP_DRY_RUN}" != "true" ]]; then
+    got="$(save_logs "${name}" --dry-run | clear_testdata "${name}")"
+    want="$(<"${DIR}/testdata/${KWOK_RUNTIME}/export_logs.txt")"
+    if [[ "${got}" != "${want}" ]]; then
+      echo "------------------------------"
+      diff -u <(echo "${want}") <(echo "${got}")
+      echo "Error: dry run export logs failed"
+      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+        echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/export_logs.txt"
+      fi
+      echo "------------------------------"
+      echo "cat <<ALL >${DIR}/testdata/${KWOK_RUNTIME}/export_logs.txt"
+      echo "${got}"
+      echo "ALL"
+      echo "------------------------------"
+      return 1
+    fi
+  fi
+
   if ! save_logs "${name}"; then
     echo "Error: export logs failed"
     return 1
   fi
 
-  tree "${KWOK_LOGS_DIR}"
-
-  if [ ! -d "${root_dir}" ]; then
+  if [[ ! -d "${root_dir}" ]]; then
     echo "Required directory ${root_dir} does not exist."
     return 1
   fi
@@ -79,13 +96,13 @@ function test_export_logs() {
     "kwok-controller.log"
   )
   for file in "${LOG_FILES[@]}"; do
-    if [ ! -f "${root_dir}/components/$file" ]; then
-      echo "Required file ${root_dir}/components/$file does not exist."
+    if [[ ! -f "${root_dir}/components/${file}" ]]; then
+      echo "Required file ${root_dir}/components/${file} does not exist."
       return 1
     fi
   done
 
-  echo "Directory $KWOK_LOGS_DIR is correct."
+  echo "Directory ${KWOK_LOGS_DIR} is correct."
 }
 
 function main() {

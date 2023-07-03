@@ -21,6 +21,7 @@ import (
 
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
@@ -30,6 +31,11 @@ import (
 
 // AddContext add the context of cluster to kubeconfig
 func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
+	if c.IsDryRun() {
+		dryrun.PrintMessage("# Add context %s to %s", c.Name(), kubeconfigPath)
+		return nil
+	}
+
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -72,6 +78,11 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 
 // RemoveContext remove the context of cluster from kubeconfig
 func (c *Cluster) RemoveContext(ctx context.Context, kubeconfigPath string) error {
+	if c.IsDryRun() {
+		dryrun.PrintMessage("# Remove context %s from %s", c.Name(), kubeconfigPath)
+		return nil
+	}
+
 	err := kubeconfig.RemoveContext(kubeconfigPath, c.Name())
 	if err != nil {
 		return err

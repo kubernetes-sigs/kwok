@@ -62,11 +62,11 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	}
 
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
-	err = os.RemoveAll(etcdDataPath)
+	err = c.RemoveAll(etcdDataPath)
 	if err != nil {
 		return err
 	}
-	err = os.Rename(etcdDataTmp, etcdDataPath)
+	err = c.RenameFile(etcdDataTmp, etcdDataPath)
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, *Log
 	flags.VarP(&level, "v", "v", "number for the log level verbosity (DEBUG, INFO, WARN, ERROR) or (-4, 0, 4, 8)")
 	_ = flags.Parse(os.Args[1:])
 	l := Level(level)
-	logger := NewLogger(os.Stdout, l)
+	logger := NewLogger(os.Stderr, l)
 	return NewContext(ctx, logger), logger
 }
 

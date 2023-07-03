@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/start"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/stop"
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -51,6 +52,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVar(&config.DefaultCluster, "name", config.DefaultCluster, "cluster name")
+	cmd.PersistentFlags().BoolVar(&dryrun.DryRun, "dry-run", dryrun.DryRun, "Print the command that would be executed, but do not execute it")
 	cmd.TraverseChildren = true
 
 	cmd.AddCommand(

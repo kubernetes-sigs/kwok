@@ -74,23 +74,59 @@ function test_restart() {
   sleep 15
   expect_info="$(get_resource_info "${name}")"
 
+  if [[ "${SKIP_DRY_RUN}" != "true" ]]; then
+    got="$(kwokctl --name "${name}" stop cluster --dry-run | clear_testdata "${name}")"
+    want="$(<"${DIR}/testdata/${KWOK_RUNTIME}/stop_cluster.txt")"
+    if [[ "${got}" != "${want}" ]]; then
+      echo "------------------------------"
+      diff -u <(echo "${want}") <(echo "${got}")
+      echo "Error: dry run stop cluster ${name} failed"
+      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+        echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/stop_cluster.txt"
+      fi
+      echo "------------------------------"
+      echo "cat <<ALL >${DIR}/testdata/${KWOK_RUNTIME}/stop_cluster.txt"
+      echo "${got}"
+      echo "ALL"
+      echo "------------------------------"
+      return 1
+    fi
+  fi
   echo kwokctl --name "${name}" stop cluster
   if kwokctl --name "${name}" stop cluster; then
     echo "Cluster ${name} stopped successfully."
   else
-    echo "Error: cluster ${name} stop error"
+    echo "Error: stop cluster ${name} failed"
     return 1
   fi
-  if kwokctl --name "${name}" kubectl get no; then
+  if kwokctl --name "${name}" kubectl get node; then
     echo "Error: cluster ${name} do not stop"
     return 1
   fi
 
+  if [[ "${SKIP_DRY_RUN}" != "true" ]]; then
+    got="$(kwokctl --name "${name}" start cluster --timeout 30m --wait 30m --dry-run | clear_testdata "${name}")"
+    want="$(<"${DIR}/testdata/${KWOK_RUNTIME}/start_cluster.txt")"
+    if [[ "${got}" != "${want}" ]]; then
+      echo "------------------------------"
+      diff -u <(echo "${want}") <(echo "${got}")
+      echo "Error: dry run start cluster ${name} failed"
+      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+        echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/start_cluster.txt"
+      fi
+      echo "------------------------------"
+      echo "cat <<ALL >${DIR}/testdata/${KWOK_RUNTIME}/start_cluster.txt"
+      echo "${got}"
+      echo "ALL"
+      echo "------------------------------"
+      return 1
+    fi
+  fi
   echo kwokctl --name "${name}" start cluster --timeout 30m --wait 30m
   if kwokctl --name "${name}" start cluster --timeout 30m --wait 30m; then
     echo "Cluster ${name} started successfully."
   else
-    echo "Error: cluster ${name} start error"
+    echo "Error: start cluster ${name} start failed"
     return 1
   fi
   if ! test_prometheus; then

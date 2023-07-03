@@ -1,0 +1,6 @@
+pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/prometheus
+pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
+pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-scheduler
+pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/kwok-controller
+pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-apiserver
+pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/etcd

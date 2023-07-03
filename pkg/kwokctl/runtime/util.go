@@ -21,12 +21,78 @@ import (
 	"fmt"
 	"sort"
 
+	"golang.org/x/sync/errgroup"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
+	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
+
+// ForeachComponents starts components.
+func (c *Cluster) ForeachComponents(ctx context.Context, reverse, order bool, fun func(ctx context.Context, component internalversion.Component) error) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	groups, err := components.GroupByLinks(config.Components)
+	if err != nil {
+		return err
+	}
+	if reverse {
+		groups = slices.Reverse(groups)
+	}
+
+	if c.IsDryRun() {
+		for _, group := range groups {
+			for _, component := range group {
+				err := fun(ctx, component)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	if order {
+		for _, group := range groups {
+			if len(group) == 1 {
+				if err := fun(ctx, group[0]); err != nil {
+					return err
+				}
+			} else {
+				g, ctx := errgroup.WithContext(ctx)
+				for _, component := range group {
+					component := component
+					g.Go(func() error {
+						return fun(ctx, component)
+					})
+				}
+				if err := g.Wait(); err != nil {
+					return err
+				}
+			}
+		}
+	} else {
+		g, ctx := errgroup.WithContext(ctx)
+		for _, group := range groups {
+			for _, component := range group {
+				component := component
+				g.Go(func() error {
+					return fun(ctx, component)
+				})
+			}
+		}
+		if err := g.Wait(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // GetComponentPatches returns the patches for a component.
 func GetComponentPatches(conf *internalversion.KwokctlConfiguration, componentName string) internalversion.ComponentPatches {

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	rt "runtime"
 	"time"
 
@@ -30,8 +29,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
-	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
-	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
@@ -40,7 +38,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -69,14 +66,14 @@ func (c *Cluster) download(ctx context.Context) error {
 	conf := &config.Options
 
 	kubeApiserverPath := c.GetBinPath("kube-apiserver" + conf.BinSuffix)
-	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeApiserverBinary, kubeApiserverPath, 0750, conf.QuietPull)
+	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KubeApiserverBinary, kubeApiserverPath, 0750, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
 	if !conf.DisableKubeControllerManager {
 		kubeControllerManagerPath := c.GetBinPath("kube-controller-manager" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeControllerManagerBinary, kubeControllerManagerPath, 0750, conf.QuietPull)
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KubeControllerManagerBinary, kubeControllerManagerPath, 0750, conf.QuietPull)
 		if err != nil {
 			return err
 		}
@@ -84,26 +81,26 @@ func (c *Cluster) download(ctx context.Context) error {
 
 	if !conf.DisableKubeScheduler {
 		kubeSchedulerPath := c.GetBinPath("kube-scheduler" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KubeSchedulerBinary, kubeSchedulerPath, 0750, conf.QuietPull)
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KubeSchedulerBinary, kubeSchedulerPath, 0750, conf.QuietPull)
 		if err != nil {
 			return err
 		}
 	}
 
 	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
-	err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KwokControllerBinary, kwokControllerPath, 0750, conf.QuietPull)
+	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KwokControllerBinary, kwokControllerPath, 0750, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 
 	etcdPath := c.GetBinPath("etcd" + conf.BinSuffix)
 	if conf.EtcdBinary == "" {
-		err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdPath, "etcd"+conf.BinSuffix, 0750, conf.QuietPull, true)
+		err = c.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdPath, "etcd"+conf.BinSuffix, 0750, conf.QuietPull, true)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdBinary, etcdPath, 0750, conf.QuietPull)
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdBinary, etcdPath, 0750, conf.QuietPull)
 		if err != nil {
 			return err
 		}
@@ -112,12 +109,12 @@ func (c *Cluster) download(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		prometheusPath := c.GetBinPath("prometheus" + conf.BinSuffix)
 		if conf.PrometheusBinary == "" {
-			err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.PrometheusBinaryTar, prometheusPath, "prometheus"+conf.BinSuffix, 0750, conf.QuietPull, true)
+			err = c.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.PrometheusBinaryTar, prometheusPath, "prometheus"+conf.BinSuffix, 0750, conf.QuietPull, true)
 			if err != nil {
 				return err
 			}
 		} else {
-			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.PrometheusBinary, prometheusPath, 0750, conf.QuietPull)
+			err = c.DownloadWithCache(ctx, conf.CacheDir, conf.PrometheusBinary, prometheusPath, 0750, conf.QuietPull)
 			if err != nil {
 				return err
 			}
@@ -147,7 +144,11 @@ func (c *Cluster) setup(ctx context.Context) error {
 		if len(conf.KubeApiserverCertSANs) != 0 {
 			sans = append(sans, conf.KubeApiserverCertSANs...)
 		}
-		err = pki.GeneratePki(pkiPath, sans...)
+		err = c.MkdirAll(pkiPath)
+		if err != nil {
+			return fmt.Errorf("failed to create pki dir: %w", err)
+		}
+		err = c.GeneratePki(pkiPath, sans...)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %w", err)
 		}
@@ -155,20 +156,20 @@ func (c *Cluster) setup(ctx context.Context) error {
 
 	if conf.KubeAuditPolicy != "" {
 		auditLogPath := c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0644)
+		err = c.CreateFile(auditLogPath)
 		if err != nil {
 			return err
 		}
 
 		auditPolicyPath := c.GetWorkdirPath(runtime.AuditPolicyName)
-		err = file.Copy(conf.KubeAuditPolicy, auditPolicyPath)
+		err = c.CopyFile(conf.KubeAuditPolicy, auditPolicyPath)
 		if err != nil {
 			return err
 		}
 	}
 
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
-	err = os.MkdirAll(etcdDataPath, 0750)
+	err = c.MkdirAll(etcdDataPath)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
@@ -191,6 +192,24 @@ func (c *Cluster) setupPorts(ctx context.Context, ports ...*uint32) error {
 
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
+	err := c.Cluster.Install(ctx)
+	if err != nil {
+		return err
+	}
+
+	dirs := []string{
+		"cmdline",
+		"pids",
+		"logs",
+	}
+
+	for _, dir := range dirs {
+		err = c.MkdirAll(c.GetWorkdirPath(dir))
+		if err != nil {
+			return err
+		}
+	}
+
 	logger := log.FromContext(ctx)
 	verbosity := logger.Level()
 	config, err := c.Config(ctx)
@@ -247,7 +266,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Configure the etcd
-	etcdVersion, err := version.ParseFromBinary(ctx, etcdPath)
+	etcdVersion, err := c.ParseVersionFromBinary(ctx, etcdPath)
 	if err != nil {
 		return err
 	}
@@ -271,7 +290,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	config.Components = append(config.Components, etcdComponent)
 
 	// Configure the kube-apiserver
-	kubeApiserverVersion, err := version.ParseFromBinary(ctx, kubeApiserverPath)
+	kubeApiserverVersion, err := c.ParseVersionFromBinary(ctx, kubeApiserverPath)
 	if err != nil {
 		return err
 	}
@@ -314,7 +333,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
-		kubeControllerManagerVersion, err := version.ParseFromBinary(ctx, kubeControllerManagerPath)
+		kubeControllerManagerVersion, err := c.ParseVersionFromBinary(ctx, kubeControllerManagerPath)
 		if err != nil {
 			return err
 		}
@@ -351,7 +370,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		schedulerConfigPath := ""
 		if conf.KubeSchedulerConfig != "" {
 			schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
-			err = k8s.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, kubeconfigPath)
+			err = c.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, kubeconfigPath)
 			if err != nil {
 				return err
 			}
@@ -364,7 +383,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
-		kubeSchedulerVersion, err := version.ParseFromBinary(ctx, kubeSchedulerPath)
+		kubeSchedulerVersion, err := c.ParseVersionFromBinary(ctx, kubeSchedulerPath)
 		if err != nil {
 			return err
 		}
@@ -395,7 +414,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Configure the kwok-controller
-	kwokControllerVersion, err := version.ParseFromBinary(ctx, kwokControllerPath)
+	kwokControllerVersion, err := c.ParseVersionFromBinary(ctx, kwokControllerPath)
 	if err != nil {
 		return err
 	}
@@ -444,12 +463,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
 		}
 		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
-		err = os.WriteFile(prometheusConfigPath, []byte(prometheusData), 0640)
+		err = c.WriteFile(prometheusConfigPath, []byte(prometheusData))
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
 
-		prometheusVersion, err := version.ParseFromBinary(ctx, prometheusPath)
+		prometheusVersion, err := c.ParseVersionFromBinary(ctx, prometheusPath)
 		if err != nil {
 			return err
 		}
@@ -484,7 +503,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(kubeconfigPath, kubeconfigData, 0640)
+	err = c.WriteFile(kubeconfigPath, kubeconfigData)
 	if err != nil {
 		return err
 	}
@@ -523,11 +542,11 @@ func (c *Cluster) startComponent(ctx context.Context, component internalversion.
 		return nil
 	}
 	logger.Debug("Starting component")
-	return exec.ForkExec(ctx, component.WorkDir, component.Binary, component.Args...)
+	return c.ForkExec(ctx, component.WorkDir, component.Binary, component.Args...)
 }
 
-func (c *Cluster) startComponents(ctx context.Context, cs []internalversion.Component) error {
-	err := components.ForeachComponents(ctx, cs, false, true, func(ctx context.Context, component internalversion.Component) error {
+func (c *Cluster) startComponents(ctx context.Context) error {
+	err := c.ForeachComponents(ctx, false, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.startComponent(ctx, component)
 	})
 	if err != nil {
@@ -544,11 +563,11 @@ func (c *Cluster) stopComponent(ctx context.Context, component internalversion.C
 		return nil
 	}
 	logger.Debug("Stopping component")
-	return exec.ForkExecKill(ctx, component.WorkDir, component.Binary)
+	return c.ForkExecKill(ctx, component.WorkDir, component.Binary)
 }
 
-func (c *Cluster) stopComponents(ctx context.Context, cs []internalversion.Component) error {
-	err := components.ForeachComponents(ctx, cs, true, true, func(ctx context.Context, component internalversion.Component) error {
+func (c *Cluster) stopComponents(ctx context.Context) error {
+	err := c.ForeachComponents(ctx, true, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.stopComponent(ctx, component)
 	})
 	if err != nil {
@@ -578,13 +597,8 @@ func (c *Cluster) Stop(ctx context.Context) error {
 }
 
 func (c *Cluster) start(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		err := c.startComponents(ctx, config.Components)
+	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.startComponents(ctx)
 		return err == nil, err
 	},
 		wait.WithContinueOnError(5),
@@ -594,10 +608,12 @@ func (c *Cluster) start(ctx context.Context) error {
 		return err
 	}
 
-	logger := log.FromContext(ctx)
-	err = c.waitServed(ctx, 2*time.Minute)
-	if err != nil {
-		logger.Warn("Cluster is not served yet", "err", err)
+	if !c.IsDryRun() {
+		logger := log.FromContext(ctx)
+		err = c.waitServed(ctx, 2*time.Minute)
+		if err != nil {
+			logger.Warn("Cluster is not served yet", "err", err)
+		}
 	}
 	return nil
 }
@@ -640,13 +656,8 @@ func (c *Cluster) waitServed(ctx context.Context, timeout time.Duration) error {
 }
 
 func (c *Cluster) stop(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		err := c.stopComponents(ctx, config.Components)
+	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.stopComponents(ctx)
 		return err == nil, err
 	},
 		wait.WithContinueOnError(5),
@@ -696,7 +707,15 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 
 	logger := log.FromContext(ctx)
 
-	logs := c.GetLogPath(filepath.Base(name) + ".log")
+	logs := c.GetLogPath(name + ".log")
+	if c.IsDryRun() {
+		if file, ok := dryrun.IsCatToFileWriter(out); ok {
+			dryrun.PrintMessage("cp %s %s", logs, file)
+		} else {
+			dryrun.PrintMessage("cat %s", logs)
+		}
+		return nil
+	}
 
 	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
 	if err != nil {
@@ -725,7 +744,11 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 
 	logger := log.FromContext(ctx)
 
-	logs := c.GetLogPath(filepath.Base(name) + ".log")
+	logs := c.GetLogPath(name + ".log")
+	if c.IsDryRun() {
+		dryrun.PrintMessage("tail -f %s", logs)
+		return nil
+	}
 
 	t, err := tail.TailFile(logs, tail.Config{ReOpen: true, Follow: true})
 	if err != nil {
@@ -751,18 +774,41 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 }
 
 // CollectLogs returns the logs of the specified component.
-func (c *Cluster) CollectLogs(ctx context.Context, name string, dir string) error {
+func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
+	logger := log.FromContext(ctx)
+
+	kwokConfigPath := path.Join(dir, "kwok.yaml")
+	if file.Exists(kwokConfigPath) {
+		return fmt.Errorf("%s already exists", kwokConfigPath)
+	}
+
+	if err := c.MkdirAll(dir); err != nil {
+		return fmt.Errorf("failed to create tmp directory: %w", err)
+	}
+	logger.Info("Exporting logs", "dir", dir)
+
+	err := c.CopyFile(c.GetWorkdirPath(runtime.ConfigName), kwokConfigPath)
+	if err != nil {
+		return err
+	}
+
 	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 
-	path := filepath.Join(dir, consts.RuntimeTypeBinary+"-info.txt")
-	f, err := file.Open(path, 0640)
+	componentsDir := path.Join(dir, "components")
+	err = c.MkdirAll(componentsDir)
 	if err != nil {
 		return err
 	}
-	_, err = f.WriteString(fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH))
+
+	infoPath := path.Join(dir, consts.RuntimeTypeBinary+"-info.txt")
+	f, err := c.OpenFile(infoPath)
+	if err != nil {
+		return err
+	}
+	_, err = f.Write([]byte(fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH)))
 	if err != nil {
 		return err
 	}
@@ -770,19 +816,17 @@ func (c *Cluster) CollectLogs(ctx context.Context, name string, dir string) erro
 		return err
 	}
 
-	componentsDir := filepath.Join(dir, "components")
-	logger := log.FromContext(ctx)
 	for _, component := range conf.Components {
-		src := c.GetLogPath(filepath.Base(component.Name) + ".log")
-		dest := filepath.Join(componentsDir, component.Name+".log")
-		if err = file.Copy(src, dest); err != nil {
+		src := c.GetLogPath(component.Name + ".log")
+		dest := path.Join(componentsDir, component.Name+".log")
+		if err = c.CopyFile(src, dest); err != nil {
 			logger.Error("Failed to copy file", err)
 		}
 	}
 	if conf.Options.KubeAuditPolicy != "" {
 		src := c.GetLogPath(runtime.AuditLogName)
-		dest := filepath.Join(componentsDir, runtime.AuditLogName)
-		if err = file.Copy(src, dest); err != nil {
+		dest := path.Join(componentsDir, runtime.AuditLogName)
+		if err = c.CopyFile(src, dest); err != nil {
 			logger.Error("Failed to copy file", err)
 		}
 	}
@@ -842,6 +886,10 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 
 // WaitReady waits for the cluster to be ready.
 func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
+	if c.IsDryRun() {
+		return nil
+	}
+
 	var (
 		err     error
 		waitErr error

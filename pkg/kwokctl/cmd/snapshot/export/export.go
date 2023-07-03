@@ -20,12 +20,14 @@ package export
 import (
 	"context"
 	"fmt"
-	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/rest"
 
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
+	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
 type flagpole struct {
@@ -64,19 +66,21 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if flags.Path == "" {
 		return fmt.Errorf("path is required")
 	}
-	if _, err := os.Stat(flags.Path); err == nil {
+	if file.Exists(flags.Path) {
 		return fmt.Errorf("file %q already exists", flags.Path)
 	}
 
-	file, err := os.Create(flags.Path)
+	if dryrun.DryRun {
+		dryrun.PrintMessage("kubectl --kubeconfig %s get %s -o yaml >%s", flags.Kubeconfig, strings.Join(flags.Filters, ","), flags.Path)
+		return nil
+	}
+
+	f, err := file.Open(flags.Path)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		_ = file.Close()
-		if err != nil {
-			_ = os.Remove(flags.Path)
-		}
+		_ = f.Close()
 	}()
 
 	impersonateConfig := rest.ImpersonationConfig{
@@ -94,7 +98,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		ImpersonationConfig: impersonateConfig,
 	}
 
-	err = snapshot.Save(ctx, flags.Kubeconfig, file, flags.Filters, snapshotSaveConfig)
+	err = snapshot.Save(ctx, flags.Kubeconfig, f, flags.Filters, snapshotSaveConfig)
 	if err != nil {
 		return err
 	}

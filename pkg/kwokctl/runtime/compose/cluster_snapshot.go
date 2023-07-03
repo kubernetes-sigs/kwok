@@ -18,11 +18,9 @@ package compose
 
 import (
 	"context"
-	"os"
 
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
 // SnapshotSave save the snapshot of cluster
@@ -42,7 +40,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 	etcdContainerName := c.Name() + "-etcd"
 	// Copy to host path from container
-	err = exec.Exec(ctx, conf.Runtime, "cp", etcdContainerName+":"+tmpFile, path)
+	err = c.Exec(ctx, conf.Runtime, "cp", etcdContainerName+":"+tmpFile, path)
 	if err != nil {
 		return err
 	}
@@ -65,7 +63,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		return err
 	}
 	defer func() {
-		err = os.RemoveAll(etcdDataTmp)
+		err = c.RemoveAll(etcdDataTmp)
 		if err != nil {
 			logger.Error("Failed to clear etcd temporary data", err)
 		}
@@ -86,7 +84,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}()
 
 		// Copy to container from host temporary directory
-		err = exec.Exec(ctx, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
+		err = c.Exec(ctx, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
 		if err != nil {
 			return err
 		}
@@ -107,7 +105,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}()
 
 		// Copy to container from host temporary directory
-		err = exec.Exec(ctx, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
+		err = c.Exec(ctx, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
 		if err != nil {
 			return err
 		}

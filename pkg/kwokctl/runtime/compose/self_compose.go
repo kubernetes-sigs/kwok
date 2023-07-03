@@ -25,7 +25,6 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -42,31 +41,36 @@ func (c *Cluster) createNetwork(ctx context.Context) error {
 	network := c.networkName()
 	logger := log.FromContext(ctx)
 	logger = logger.With("network", network)
-	if exist := c.inspectNetwork(ctx, network); exist {
-		logger.Debug("Network already exists")
-		return nil
+
+	if !c.IsDryRun() {
+		if exist := c.inspectNetwork(ctx, network); exist {
+			logger.Debug("Network already exists")
+			return nil
+		}
 	}
 	args := []string{
 		"network", "create", network,
 	}
 	args = append(args, c.labelArgs()...)
 	logger.Debug("Creating network")
-	return exec.Exec(ctx, c.runtime, args...)
+	return c.Exec(ctx, c.runtime, args...)
 }
 
 func (c *Cluster) deleteNetwork(ctx context.Context) error {
 	network := c.networkName()
 	logger := log.FromContext(ctx)
 	logger = logger.With("network", network)
-	if exist := c.inspectNetwork(ctx, network); !exist {
-		logger.Debug("Network does not exist")
-		return nil
+	if !c.IsDryRun() {
+		if exist := c.inspectNetwork(ctx, network); !exist {
+			logger.Debug("Network does not exist")
+			return nil
+		}
 	}
 	args := []string{
 		"network", "rm", network,
 	}
 	logger.Debug("Deleting network")
-	err := exec.Exec(ctx, c.runtime, args...)
+	err := c.Exec(ctx, c.runtime, args...)
 	if err != nil {
 		if c.runtime != consts.RuntimeTypeNerdctl {
 			return err
@@ -88,7 +92,7 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 					return true, nil
 				}
 				logger.Warn("Retrying to delete network")
-				err := exec.Exec(ctx, c.runtime, args...)
+				err := c.Exec(ctx, c.runtime, args...)
 				return err == nil, err
 			},
 			wait.WithContinueOnError(2),
@@ -102,7 +106,7 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 }
 
 func (c *Cluster) inspectNetwork(ctx context.Context, name string) (exist bool) {
-	err := exec.Exec(ctx, c.runtime, "network", "inspect", name)
+	err := c.Exec(ctx, c.runtime, "network", "inspect", name)
 	//nolint:gosimple
 	if err != nil {
 		// TODO: check if network exists or other error
@@ -118,13 +122,17 @@ func (c *Cluster) isCanNerdctlUnlessStopped(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("canNerdctlUnlessStopped only for nerdctl")
 	}
 
+	if c.IsDryRun() {
+		return true, nil
+	}
+
 	if c.canNerdctlUnlessStopped != nil {
 		return *c.canNerdctlUnlessStopped, nil
 	}
 
 	var canNerdctlUnlessStopped *bool
 	logger := log.FromContext(ctx)
-	nerdctlVersion, err := version.ParseFromBinary(ctx, c.runtime)
+	nerdctlVersion, err := c.ParseVersionFromBinary(ctx, c.runtime)
 	if err != nil {
 		logger.Warn("Failed to parse nerdctl version", "err", err)
 	} else if nerdctlVersion.LE(version.NewVersion(1, 3, 0)) {
@@ -134,7 +142,7 @@ func (c *Cluster) isCanNerdctlUnlessStopped(ctx context.Context) (bool, error) {
 
 	if canNerdctlUnlessStopped == nil {
 		buf := bytes.NewBuffer(nil)
-		err = exec.Exec(exec.WithWriteTo(ctx, buf), c.runtime, "create", "--help")
+		err = c.Exec(exec.WithWriteTo(ctx, buf), c.runtime, "create", "--help")
 		if err != nil {
 			return false, fmt.Errorf("canNerdctlUnlessStopped failed: %w", err)
 		}
@@ -173,11 +181,12 @@ func (c *Cluster) labelArgs() []string {
 func (c *Cluster) createComponent(ctx context.Context, componentName string) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With("component", componentName)
-	if _, exist := c.inspectComponent(ctx, componentName); exist {
-		logger.Debug("Component already exists")
-		return nil
+	if !c.IsDryRun() {
+		if _, exist := c.inspectComponent(ctx, componentName); exist {
+			logger.Debug("Component already exists")
+			return nil
+		}
 	}
-
 	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -248,16 +257,11 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 	args = append(args, component.Args...)
 
 	logger.Debug("Creating component")
-	return exec.Exec(ctx, c.runtime, args...)
+	return c.Exec(ctx, c.runtime, args...)
 }
 
 func (c *Cluster) createComponents(ctx context.Context) error {
-	conf, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = components.ForeachComponents(ctx, conf.Components, false, true, func(ctx context.Context, component internalversion.Component) error {
+	err := c.ForeachComponents(ctx, false, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.createComponent(ctx, component.Name)
 	})
 	if err != nil {
@@ -270,18 +274,20 @@ func (c *Cluster) createComponents(ctx context.Context) error {
 func (c *Cluster) deleteComponent(ctx context.Context, componentName string) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With("component", componentName)
-	if running, exist := c.inspectComponent(ctx, componentName); !exist {
-		logger.Debug("Component does not exist")
-		return nil
-	} else if running {
-		if c.runtime == consts.RuntimeTypeNerdctl {
-			// TODO: Remove this after nerdctl fix
-			// https://github.com/containerd/nerdctl/issues/1980
-			if canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx); canNerdctlUnlessStopped {
+	if !c.IsDryRun() {
+		if running, exist := c.inspectComponent(ctx, componentName); !exist {
+			logger.Debug("Component does not exist")
+			return nil
+		} else if running {
+			if c.runtime == consts.RuntimeTypeNerdctl {
+				// TODO: Remove this after nerdctl fix
+				// https://github.com/containerd/nerdctl/issues/1980
+				if canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx); canNerdctlUnlessStopped {
+					return fmt.Errorf("component %s is running, need to stop it first", componentName)
+				}
+			} else {
 				return fmt.Errorf("component %s is running, need to stop it first", componentName)
 			}
-		} else {
-			return fmt.Errorf("component %s is running, need to stop it first", componentName)
 		}
 	}
 
@@ -291,16 +297,11 @@ func (c *Cluster) deleteComponent(ctx context.Context, componentName string) err
 	}
 
 	logger.Debug("Deleting component")
-	return exec.Exec(ctx, c.runtime, args...)
+	return c.Exec(ctx, c.runtime, args...)
 }
 
 func (c *Cluster) deleteComponents(ctx context.Context) error {
-	conf, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = components.ForeachComponents(ctx, conf.Components, true, true, func(ctx context.Context, component internalversion.Component) error {
+	err := c.ForeachComponents(ctx, true, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.deleteComponent(ctx, component.Name)
 	})
 	if err != nil {
@@ -352,7 +353,7 @@ func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (r
 
 	args = append(args, "--format={{ json . }}")
 
-	err := exec.Exec(exec.WithWriteTo(ctx, buf), c.runtime, args...)
+	err := c.Exec(exec.WithWriteTo(ctx, buf), c.runtime, args...)
 	if err != nil {
 		// TODO: check if component exists or other error
 		return false, false
@@ -370,11 +371,13 @@ func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (r
 func (c *Cluster) startComponent(ctx context.Context, componentName string) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With("component", componentName)
-	if running, exist := c.inspectComponent(ctx, componentName); !exist {
-		return fmt.Errorf("component %s does not exist", componentName)
-	} else if running {
-		logger.Debug("Component already started")
-		return nil
+	if !c.IsDryRun() {
+		if running, exist := c.inspectComponent(ctx, componentName); !exist {
+			return fmt.Errorf("component %s does not exist", componentName)
+		} else if running {
+			logger.Debug("Component already started")
+			return nil
+		}
 	}
 
 	args := []string{
@@ -383,7 +386,7 @@ func (c *Cluster) startComponent(ctx context.Context, componentName string) erro
 	}
 
 	logger.Debug("Starting component")
-	err := exec.Exec(ctx, c.runtime, args...)
+	err := c.Exec(ctx, c.runtime, args...)
 	if err != nil {
 		// TODO: Remove this after nerdctl fix
 		// https://github.com/containerd/nerdctl/issues/2270
@@ -413,12 +416,7 @@ func (c *Cluster) startComponent(ctx context.Context, componentName string) erro
 }
 
 func (c *Cluster) startComponents(ctx context.Context) error {
-	conf, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = components.ForeachComponents(ctx, conf.Components, false, true, func(ctx context.Context, component internalversion.Component) error {
+	err := c.ForeachComponents(ctx, false, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.startComponent(ctx, component.Name)
 	})
 	if err != nil {
@@ -430,12 +428,14 @@ func (c *Cluster) startComponents(ctx context.Context) error {
 func (c *Cluster) stopComponent(ctx context.Context, componentName string) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With("component", componentName)
-	if running, exist := c.inspectComponent(ctx, componentName); !exist {
-		logger.Debug("Component does not exist")
-		return nil
-	} else if !running {
-		logger.Debug("Component already stopped")
-		return nil
+	if !c.IsDryRun() {
+		if running, exist := c.inspectComponent(ctx, componentName); !exist {
+			logger.Debug("Component does not exist")
+			return nil
+		} else if !running {
+			logger.Debug("Component already stopped")
+			return nil
+		}
 	}
 
 	args := []string{"stop",
@@ -444,16 +444,11 @@ func (c *Cluster) stopComponent(ctx context.Context, componentName string) error
 	}
 
 	logger.Debug("Stopping component")
-	return exec.Exec(ctx, c.runtime, args...)
+	return c.Exec(ctx, c.runtime, args...)
 }
 
 func (c *Cluster) stopComponents(ctx context.Context) error {
-	conf, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = components.ForeachComponents(ctx, conf.Components, true, false, func(ctx context.Context, component internalversion.Component) error {
+	err := c.ForeachComponents(ctx, true, false, func(ctx context.Context, component internalversion.Component) error {
 		return c.stopComponent(ctx, component.Name)
 	})
 	if err != nil {

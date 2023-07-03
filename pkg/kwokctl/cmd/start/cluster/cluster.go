@@ -79,11 +79,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	if ready, err := rt.Ready(ctx); err == nil && ready {
-		logger.Info("Cluster is already ready")
-		return nil
-	}
-
 	start := time.Now()
 	logger.Info("Cluster is starting")
 	err = rt.Start(ctx)

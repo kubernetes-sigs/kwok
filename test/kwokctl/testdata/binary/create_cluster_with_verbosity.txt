@@ -1,0 +1,125 @@
+# Save cluster config to ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
+mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>
+mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>/cmdline
+mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>/pids
+mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>/logs
+# Download https://dl.k8s.io/release/v1.27.3/bin/<OS>/<ARCH>/kube-apiserver to ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-apiserver
+# Download https://dl.k8s.io/release/v1.27.3/bin/<OS>/<ARCH>/kube-controller-manager to ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
+# Download https://dl.k8s.io/release/v1.27.3/bin/<OS>/<ARCH>/kube-scheduler to ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-scheduler
+# Download <ROOT_DIR>/bin/<OS>/<ARCH>/kwok to ~/.kwok/clusters/<CLUSTER_NAME>/bin/kwok-controller
+# Download https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-<OS>-<ARCH>.<TAR> and extract etcd to ~/.kwok/clusters/<CLUSTER_NAME>/bin/etcd
+# Download https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.<OS>-<ARCH>.<TAR> and extract prometheus to ~/.kwok/clusters/<CLUSTER_NAME>/bin/prometheus
+mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>/pki
+# Generate PKI to ~/.kwok/clusters/<CLUSTER_NAME>/pki
+mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>/etcd
+cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/prometheus.yaml
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+alerting:
+  alertmanagers:
+  - follow_redirects: true
+    enable_http2: true
+    scheme: http
+    timeout: 10s
+    api_version: v2
+    static_configs:
+    - targets: []
+scrape_configs:
+- job_name: "prometheus"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - localhost:9090
+- job_name: "etcd"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - localhost:32765
+- job_name: "kwok-controller"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - localhost:32763
+- job_name: "kube-apiserver"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.crt"
+    key_file: "~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - localhost:32764
+- job_name: "kube-controller-manager"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.crt"
+    key_file: "~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - localhost:32762
+- job_name: "kube-scheduler"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.crt"
+    key_file: "~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - localhost:32761
+EOF
+cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kubeconfig.yaml
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: ~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.crt
+    server: https://127.0.0.1:32764
+  name: kwok-<CLUSTER_NAME>
+contexts:
+- context:
+    cluster: kwok-<CLUSTER_NAME>
+    user: kwok-<CLUSTER_NAME>
+  name: kwok-<CLUSTER_NAME>
+current-context: kwok-<CLUSTER_NAME>
+kind: Config
+preferences: {}
+users:
+- name: kwok-<CLUSTER_NAME>
+  user:
+    client-certificate: ~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.crt
+    client-key: ~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key
+EOF
+# Save cluster config to ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
+# Add context kwok-<CLUSTER_NAME> to ~/.kube/config
+~/.kwok/clusters/<CLUSTER_NAME>/bin/etcd --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=~/.kwok/clusters/<CLUSTER_NAME>/etcd --initial-advertise-peer-urls=http://0.0.0.0:32766 --listen-peer-urls=http://0.0.0.0:32766 --advertise-client-urls=http://0.0.0.0:32765 --listen-client-urls=http://0.0.0.0:32765 --initial-cluster=node0=http://0.0.0.0:32766 --log-level=debug &
+~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-apiserver --etcd-prefix=/registry --allow-privileged=true --max-requests-inflight=0 --max-mutating-requests-inflight=0 --enable-priority-and-fairness=false --etcd-servers=http://127.0.0.1:32765 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --secure-port=32764 --tls-cert-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key --client-ca-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-key-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-signing-key-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-issuer=https://kubernetes.default.svc.cluster.local --v=4 &
+~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-controller-manager --node-monitor-period=10m0s --node-monitor-grace-period=1h0m0s --kubeconfig=~/.kwok/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32762 --root-ca-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-private-key-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key --kube-api-qps=5000 --kube-api-burst=10000 --v=4 &
+~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-scheduler --kubeconfig=~/.kwok/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32761 --kube-api-qps=5000 --kube-api-burst=10000 --v=4 &
+~/.kwok/clusters/<CLUSTER_NAME>/bin/kwok-controller --manage-all-nodes=true --kubeconfig=~/.kwok/clusters/<CLUSTER_NAME>/kubeconfig.yaml --config=~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml --tls-cert-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=~/.kwok/clusters/<CLUSTER_NAME>/pki/admin.key --node-name=localhost --node-port=32763 --server-address=0.0.0.0:32763 --node-lease-duration-seconds=1200 --v=DEBUG &
+~/.kwok/clusters/<CLUSTER_NAME>/bin/prometheus --config.file=~/.kwok/clusters/<CLUSTER_NAME>/prometheus.yaml --web.listen-address=0.0.0.0:9090 --log.level=debug &
