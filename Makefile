@@ -215,6 +215,18 @@ cross-cluster-image:
 		--builder=${BUILDER} \
 		--push=${PUSH}
 
+## manifest: Generate manifest to deploy kwok
+.PHONY: manifests
+manifests:
+	@./hack/manifests.sh \
+        --kustomize=kwok \
+		--bucket=${BUCKET} \
+		--gh-release=${GH_RELEASE} \
+		--image-prefix=${IMAGE_PREFIX} \
+		--version=${VERSION} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
+
 ## integration-tests: Run integration tests
 .PHONY: integration-test
 integration-test:

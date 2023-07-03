@@ -37,7 +37,7 @@ jobs:
           BINARY_PREFIX: https://github.com/${{ github.repository }}/releases/download
         run: |
           REF=${{ github.ref }}
-          GIT_TAG="${REF##*/}" make cross-build
+          GIT_TAG="${REF##*/}" make manifests cross-build
       - name: Build binary for ghcr.io
         if: ${{ github.repository != 'kubernetes-sigs/kwok' }}
         env:
@@ -46,7 +46,7 @@ jobs:
           BINARY_PREFIX: https://github.com/${{ github.repository }}/releases/download
         run: |
           REF=${{ github.ref }}
-          GIT_TAG="${REF##*/}" make cross-build
+          GIT_TAG="${REF##*/}" make manifests cross-build
       - name: Build kwok image
         env:
           IMAGE_PREFIX: ghcr.io/${{ github.repository }}
