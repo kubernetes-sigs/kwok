@@ -36,7 +36,7 @@ function main() {
       echo "------------------------------"
       diff -u <(echo "${want}") <(echo "${got}")
       failed+=("create-cluster-runtime-${runtime}-dry-run")
-      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+      if [[ "${UPDATE_DRY_RUN_TESTDATA}" == "true" ]]; then
         echo "${got}" >"${DIR}/testdata/${runtime}/create_cluster.txt"
       fi
       echo "------------------------------"
@@ -53,7 +53,7 @@ function main() {
       echo "------------------------------"
       diff -u <(echo "${want}") <(echo "${got}")
       failed+=("create-cluster-${runtime}-with-extra-dry-run")
-      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+      if [[ "${UPDATE_DRY_RUN_TESTDATA}" == "true" ]]; then
         echo "${got}" >"${DIR}/testdata/${runtime}/create_cluster_with_extra.txt"
       fi
       echo "------------------------------"
@@ -70,7 +70,7 @@ function main() {
       echo "------------------------------"
       diff -u <(echo "${want}") <(echo "${got}")
       failed+=("create-cluster-${runtime}-with-verbosity-dry-run")
-      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+      if [[ "${UPDATE_DRY_RUN_TESTDATA}" == "true" ]]; then
         echo "${got}" >"${DIR}/testdata/${runtime}/create_cluster_with_verbosity.txt"
       fi
       echo "------------------------------"
