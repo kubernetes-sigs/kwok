@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
@@ -198,7 +197,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	dirs := []string{
-		"cmdline",
 		"pids",
 		"logs",
 	}
@@ -531,7 +529,7 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 }
 
 func (c *Cluster) isRunning(ctx context.Context, component internalversion.Component) bool {
-	return exec.IsRunning(ctx, component.WorkDir, component.Binary)
+	return c.ForkExecIsRunning(ctx, component.WorkDir, component.Binary)
 }
 
 func (c *Cluster) startComponent(ctx context.Context, component internalversion.Component) error {

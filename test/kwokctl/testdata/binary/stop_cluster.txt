@@ -1,6 +1,12 @@
-pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/prometheus
-pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
-pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-scheduler
-pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/kwok-controller
-pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/kube-apiserver
-pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/etcd
+kill $(cat ~/.kwok/clusters/<CLUSTER_NAME>/pids/prometheus.pid)
+rm ~/.kwok/clusters/<CLUSTER_NAME>/pids/prometheus.pid
+kill $(cat ~/.kwok/clusters/<CLUSTER_NAME>/pids/kube-controller-manager.pid)
+rm ~/.kwok/clusters/<CLUSTER_NAME>/pids/kube-controller-manager.pid
+kill $(cat ~/.kwok/clusters/<CLUSTER_NAME>/pids/kube-scheduler.pid)
+rm ~/.kwok/clusters/<CLUSTER_NAME>/pids/kube-scheduler.pid
+kill $(cat ~/.kwok/clusters/<CLUSTER_NAME>/pids/kwok-controller.pid)
+rm ~/.kwok/clusters/<CLUSTER_NAME>/pids/kwok-controller.pid
+kill $(cat ~/.kwok/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid)
+rm ~/.kwok/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid
+kill $(cat ~/.kwok/clusters/<CLUSTER_NAME>/pids/etcd.pid)
+rm ~/.kwok/clusters/<CLUSTER_NAME>/pids/etcd.pid

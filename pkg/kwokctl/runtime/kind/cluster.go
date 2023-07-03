@@ -716,7 +716,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	args = append(args, componentName)
 	if c.IsDryRun() && !follow {
 		if file, ok := dryrun.IsCatToFileWriter(out); ok {
-			dryrun.PrintMessage("%s >%s", exec.FormatExec(ctx, name, args...), file)
+			dryrun.PrintMessage("%s >%s", runtime.FormatExec(ctx, name, args...), file)
 			return nil
 		}
 	}

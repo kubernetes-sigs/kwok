@@ -18,7 +18,6 @@ package binary
 
 import (
 	"context"
-	"os"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -51,7 +50,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	}()
 
 	etcdDataTmp := c.GetWorkdirPath("etcd-data")
-	err = os.RemoveAll(etcdDataTmp)
+	err = c.RemoveAll(etcdDataTmp)
 	if err != nil {
 		return err
 	}

@@ -19,33 +19,123 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // ForkExec forks a new process and execs the given command.
 // The process will be terminated when the context is canceled.
-func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, arg ...string) error {
-	if c.IsDryRun() {
-		dryrun.PrintMessage("%s %s &", name, strings.Join(arg, " "))
-		return nil
+func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ...string) error {
+	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	if file.Exists(pidPath) {
+		pidData, err := os.ReadFile(pidPath)
+		if err == nil {
+			pid, err := strconv.Atoi(string(pidData))
+			if err == nil {
+				if exec.IsRunning(pid) {
+					return nil
+				}
+			}
+		}
+	}
+	ctx = exec.WithDir(ctx, dir)
+	ctx = exec.WithFork(ctx, true)
+	logPath := path.Join(dir, "logs", filepath.Base(name)+".log")
+	logFile, err := c.OpenFile(logPath)
+	if err != nil {
+		return fmt.Errorf("open log file %s: %w", logPath, err)
 	}
 
-	return exec.ForkExec(ctx, dir, name, arg...)
+	ctx = exec.WithIOStreams(ctx, exec.IOStreams{
+		Out:    logFile,
+		ErrOut: logFile,
+	})
+
+	if c.IsDryRun() {
+		dryrun.PrintMessage("%s", FormatExec(ctx, name, args...))
+		dryrun.PrintMessage("echo $! >%s", pidPath)
+		return nil
+	}
+	cmd, err := exec.Command(ctx, name, args...)
+	if err != nil {
+		return err
+	}
+	err = c.WriteFile(pidPath, []byte(strconv.Itoa(cmd.Process.Pid)))
+	if err != nil {
+		return fmt.Errorf("write pid file %s: %w", pidPath, err)
+	}
+
+	return nil
 }
 
 // ForkExecKill kills the process if it is running.
 func (c *Cluster) ForkExecKill(ctx context.Context, dir string, name string) error {
-	if c.IsDryRun() {
-		dryrun.PrintMessage("pkill %s", name)
+	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	if !file.Exists(pidPath) {
+		// No pid file exists, which means the process has been terminated
+		logger := log.FromContext(ctx)
+		logger.Debug("Stat file not exists",
+			"path", pidPath,
+		)
 		return nil
 	}
 
-	return exec.ForkExecKill(ctx, dir, name)
+	if c.IsDryRun() {
+		dryrun.PrintMessage("kill $(cat %s)", pidPath)
+	} else {
+		raw, err := os.ReadFile(pidPath)
+		if err != nil {
+			return fmt.Errorf("read pid file %s: %w", pidPath, err)
+		}
+		pid, err := strconv.Atoi(string(raw))
+		if err != nil {
+			return fmt.Errorf("parse pid file %s: %w", pidPath, err)
+		}
+		err = exec.KillProcess(pid)
+		if err != nil {
+			return err
+		}
+	}
+	err := c.Remove(pidPath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ForkExecIsRunning checks if the process is running.
+func (c *Cluster) ForkExecIsRunning(ctx context.Context, dir string, name string) bool {
+	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	if !file.Exists(pidPath) {
+		logger := log.FromContext(ctx)
+		logger.Debug("Stat file not exists",
+			"path", pidPath,
+		)
+		return false
+	}
+
+	pidData, err := os.ReadFile(pidPath)
+	if err != nil {
+		logger := log.FromContext(ctx)
+		logger.Error("Read pid file", err)
+		return false
+	}
+	pid, err := strconv.Atoi(string(pidData))
+	if err != nil {
+		return false
+	}
+	return exec.IsRunning(pid)
 }
 
 // PullImages is a helper function to pull images
@@ -63,7 +153,7 @@ func (c *Cluster) PullImages(ctx context.Context, command string, images []strin
 // Exec executes the given command and returns the output.
 func (c *Cluster) Exec(ctx context.Context, name string, args ...string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("%s", exec.FormatExec(ctx, name, args...))
+		dryrun.PrintMessage("%s", FormatExec(ctx, name, args...))
 		return nil
 	}
 
@@ -102,4 +192,41 @@ func (c *Cluster) WriteToPath(ctx context.Context, path string, commands []strin
 	}
 
 	return file.Write(path, buf.Bytes())
+}
+
+// FormatExec prints the command to be executed to the output stream.
+func FormatExec(ctx context.Context, name string, args ...string) string {
+	opt := exec.GetExecOptions(ctx)
+	out := bytes.NewBuffer(nil)
+	if opt.Dir != "" {
+		_, _ = fmt.Fprintf(out, "cd %s && ", opt.Dir)
+	}
+
+	if len(opt.Env) != 0 {
+		_, _ = fmt.Fprintf(out, "%s ", strings.Join(opt.Env, " "))
+	}
+
+	_, _ = fmt.Fprintf(out, "%s", path.Base(name))
+
+	for _, arg := range args {
+		_, _ = fmt.Fprintf(out, " %s", arg)
+	}
+
+	outfile, ok := dryrun.IsCatToFileWriter(opt.Out)
+	if ok {
+		_, _ = fmt.Fprintf(out, " >%s", outfile)
+	}
+
+	if erroutfile, ok := dryrun.IsCatToFileWriter(opt.ErrOut); ok {
+		if erroutfile == outfile {
+			_, _ = fmt.Fprintf(out, " 2>&1")
+		} else {
+			_, _ = fmt.Fprintf(out, " 2>%s", outfile)
+		}
+	}
+
+	if opt.Fork {
+		_, _ = fmt.Fprintf(out, " &")
+	}
+	return out.String()
 }
