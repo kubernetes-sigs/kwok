@@ -54,6 +54,25 @@ function test_snapshot_etcd() {
 
   empty_info="$(get_snapshot_info "${name}")"
 
+  if [[ "${SKIP_DRY_RUN}" != "true" ]]; then
+    got="$(kwokctl snapshot save --name "${name}" --path "${empty_path}" --format etcd --dry-run | clear_testdata "${name}")"
+    want="$(<"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_save_etcd.txt")"
+    if [[ "${got}" != "${want}" ]]; then
+      echo "------------------------------"
+      diff -u <(echo "${want}") <(echo "${got}")
+      echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_save_etcd.txt"
+      echo "Error: dry run snapshot save etcd failed"
+      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+        echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_save_etcd.txt"
+      fi
+      echo "------------------------------"
+      echo "cat <<ALL >${DIR}/testdata/${KWOK_RUNTIME}/snapshot_save_etcd.txt"
+      echo "${got}"
+      echo "ALL"
+      echo "------------------------------"
+      return 1
+    fi
+  fi
   kwokctl snapshot save --name "${name}" --path "${empty_path}" --format etcd
 
   for ((i = 0; i < 120; i++)); do
@@ -77,6 +96,26 @@ function test_snapshot_etcd() {
   kwokctl snapshot save --name "${name}" --path "${full_path}" --format etcd
 
   sleep 1
+
+  if [[ "${SKIP_DRY_RUN}" != "true" ]]; then
+    got="$(kwokctl snapshot restore --name "${name}" --path "${empty_path}" --format etcd --dry-run | clear_testdata "${name}")"
+    want="$(<"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_restore_etcd.txt")"
+    if [[ "${got}" != "${want}" ]]; then
+      echo "------------------------------"
+      diff -u <(echo "${want}") <(echo "${got}")
+      echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_restore_etcd.txt"
+      echo "Error: dry run snapshot restore etcd failed"
+      if [[ "${UPDATE_DRY_RUN_TESTDATE}" == "true" ]]; then
+        echo "${got}" >"${DIR}/testdata/${KWOK_RUNTIME}/snapshot_restore_etcd.txt"
+      fi
+      echo "------------------------------"
+      echo "cat <<ALL >${DIR}/testdata/${KWOK_RUNTIME}/snapshot_restore_etcd.txt"
+      echo "${got}"
+      echo "ALL"
+      echo "------------------------------"
+      return 1
+    fi
+  fi
   kwokctl snapshot restore --name "${name}" --path "${empty_path}" --format etcd
   for ((i = 0; i < 120; i++)); do
     restore_empty_info="$(get_snapshot_info "${name}")"

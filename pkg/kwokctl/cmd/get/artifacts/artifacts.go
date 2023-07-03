@@ -105,11 +105,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if len(artifacts) == 0 {
 		if flags.Filter == "" {
 			if log.IsTerminal() {
-				_, _ = fmt.Fprintf(os.Stderr, "No artifacts found for runtime %q", flags.Options.Runtime)
+				_, _ = fmt.Fprintf(os.Stderr, "No artifacts found for runtime %q\n", flags.Options.Runtime)
 			}
 		} else {
 			if log.IsTerminal() {
-				_, _ = fmt.Fprintf(os.Stderr, "No artifacts found for runtime %q and filter %q", flags.Options.Runtime, flags.Filter)
+				_, _ = fmt.Fprintf(os.Stderr, "No artifacts found for runtime %q and filter %q\n", flags.Options.Runtime, flags.Filter)
 			}
 		}
 	} else {

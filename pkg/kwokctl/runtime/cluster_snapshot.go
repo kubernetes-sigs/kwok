@@ -19,21 +19,27 @@ package runtime
 import (
 	"bytes"
 	"context"
-	"os"
+	"strings"
 
 	"k8s.io/client-go/rest"
 
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
+	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
 // SnapshotSaveWithYAML save the snapshot of cluster
 func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters []string) error {
-	file, err := os.Create(path)
+	if c.IsDryRun() {
+		dryrun.PrintMessage("kubectl get %s -o yaml >%s", strings.Join(filters, ","), path)
+		return nil
+	}
+	f, err := c.OpenFile(path)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		_ = file.Close()
+		_ = f.Close()
 	}()
 	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
 	// In most cases, the user should have full privileges on the clusters created by kwokctl,
@@ -41,12 +47,16 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 	snapshotSaveConfig := snapshot.SaveConfig{
 		ImpersonationConfig: rest.ImpersonationConfig{},
 	}
-	return snapshot.Save(ctx, kubeconfigPath, file, filters, snapshotSaveConfig)
+	return snapshot.Save(ctx, kubeconfigPath, f, filters, snapshotSaveConfig)
 }
 
 // SnapshotRestoreWithYAML restore the snapshot of cluster
 func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error {
-	data, err := os.ReadFile(path)
+	if c.IsDryRun() {
+		dryrun.PrintMessage("kubectl create -f %s", path)
+		return nil
+	}
+	data, err := file.Read(path)
 	if err != nil {
 		return err
 	}

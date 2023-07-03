@@ -22,7 +22,7 @@ ROOT_DIR="$(realpath "${DIR}/../..")"
 source "${ROOT_DIR}/hack/requirements.sh"
 source "${DIR}/suite.sh"
 
-VERSION="$("${ROOT_DIR}/hack/get-version.sh")"
+VERSION="test"
 
 GOOS="$(go env GOOS)"
 GOARCH="$(go env GOARCH)"

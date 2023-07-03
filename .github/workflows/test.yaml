@@ -259,6 +259,20 @@ jobs:
           ./hack/requirements.sh kubectl
           kubectl version || :
 
+      - name: Test Dry Run
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh kwokctl/kwokctl_with_dryrun
+
+      - name: Test Export Logs
+        shell: bash
+        run: |
+          if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest' ]]; then
+            export SKIP_DRY_RUN=true
+          fi
+          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_export_logs
+
       - name: Test Workable
         shell: bash
         run: |
@@ -283,12 +297,6 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_audit
 
-      - name: Test Verbosity
-        if: ${{ matrix.os == 'ubuntu-latest' || matrix.kwokctl-runtime != 'binary' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_verbosity
-
       - name: Test Scheduler
         shell: bash
         run: |
@@ -302,6 +310,9 @@ jobs:
       - name: Test Restart
         shell: bash
         run: |
+          if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest'  || ( "${{ matrix.kwokctl-runtime }}" == "nerdctl" && "${{ matrix.nerdctl-version }}" != "1.4.0" ) ]]; then
+            export SKIP_DRY_RUN=true
+          fi
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
 
       - name: Test Port Forward
@@ -319,20 +330,10 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_logs
 
-      - name: Test Export Logs
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_export_logs
-
       - name: Test Attach
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_attach
-
-      - name: Test Extra
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_extra
 
       - name: Test Metrics
         shell: bash

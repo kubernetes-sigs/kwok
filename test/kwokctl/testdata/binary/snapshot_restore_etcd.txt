@@ -1,0 +1,5 @@
+pkill ~/.kwok/clusters/<CLUSTER_NAME>/bin/etcd
+# Download https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-<OS>-<ARCH>.<TAR> and extract etcdctl to ~/.kwok/clusters/<CLUSTER_NAME>/bin/etcdctl
+ETCDCTL_API=3 etcdctl --endpoints 127.0.0.1:32765 snapshot restore ./snapshot-empty-<CLUSTER_NAME> --data-dir ~/.kwok/clusters/<CLUSTER_NAME>/etcd-data
+rm -rf ~/.kwok/clusters/<CLUSTER_NAME>/etcd
+mv ~/.kwok/clusters/<CLUSTER_NAME>/etcd-data ~/.kwok/clusters/<CLUSTER_NAME>/etcd

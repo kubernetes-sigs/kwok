@@ -20,17 +20,14 @@ package logs
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
 type flagpole struct {
@@ -70,34 +67,12 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	// get the optional directory argument, or create a tempdir under the kwok default working directory
 	var dir string
 	if len(args) == 0 || args[0] == "" {
-		tmp := filepath.Join(workdir, "tmp")
-		if err := os.MkdirAll(tmp, 0750); err != nil {
-			return fmt.Errorf("failed to create tmp directory: %w", err)
-		}
-		t, err := os.MkdirTemp(tmp, "log-")
-		if err != nil {
-			return err
-		}
-		dir = t
+		dir = path.Join(workdir, "export", "logs")
 	} else {
-		dir = filepath.Join(args[0], name)
-	}
-	if err := os.MkdirAll(dir, 0750); err != nil {
-		return fmt.Errorf("failed to create logs directory: %w", err)
+		dir = path.Join(args[0], name)
 	}
 
-	kwokConfigPath := filepath.Join(dir, "kwok.yaml")
-	if _, err := os.Stat(kwokConfigPath); err == nil {
-		return fmt.Errorf("%s already exists", kwokConfigPath)
-	}
-	logger.Info("Exporting logs", "dir", dir)
-
-	err = file.Copy(rt.GetWorkdirPath(runtime.ConfigName), kwokConfigPath)
-	if err != nil {
-		return err
-	}
-
-	if err = rt.CollectLogs(ctx, name, dir); err != nil {
+	if err = rt.CollectLogs(ctx, dir); err != nil {
 		return err
 	}
 

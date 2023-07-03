@@ -19,16 +19,11 @@ package file
 import (
 	"io"
 	"os"
-	"path/filepath"
 )
 
-// Create creates a file at path with the given content.
-func Create(name string, perm os.FileMode) error {
-	err := os.MkdirAll(filepath.Dir(name), 0750)
-	if err != nil {
-		return err
-	}
-	file, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
+// Create creates a file.
+func Create(name string) error {
+	file, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
 	if err != nil {
 		return err
 	}
@@ -41,11 +36,6 @@ func Create(name string, perm os.FileMode) error {
 
 // Copy copies a file from src to dst.
 func Copy(oldpath, newpath string) error {
-	err := os.MkdirAll(filepath.Dir(newpath), 0750)
-	if err != nil {
-		return err
-	}
-
 	oldFile, err := os.OpenFile(oldpath, os.O_RDONLY, 0)
 	if err != nil {
 		return err
@@ -72,6 +62,11 @@ func Copy(oldpath, newpath string) error {
 		return err
 	}
 	return nil
+}
+
+// Rename renames a file.
+func Rename(oldpath, newpath string) error {
+	return os.Rename(oldpath, newpath)
 }
 
 // Append appends content to a file.
@@ -102,11 +97,32 @@ func Remove(name string) error {
 	return os.Remove(name)
 }
 
-// Open open or create the file
-func Open(name string, perm os.FileMode) (*os.File, error) {
-	err := os.MkdirAll(filepath.Dir(name), 0750)
-	if err != nil {
-		return nil, err
-	}
-	return os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
+// RemoveAll removes a directory and all its contents.
+func RemoveAll(name string) error {
+	return os.RemoveAll(name)
+}
+
+// Open opens/creates a file for writing.
+func Open(name string) (io.WriteCloser, error) {
+	return os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
+}
+
+// Read reads the content of a file.
+func Read(name string) ([]byte, error) {
+	return os.ReadFile(name)
+}
+
+// Write writes content to a file.
+func Write(name string, content []byte) error {
+	return os.WriteFile(name, content, 0640)
+}
+
+// WriteWithMode writes content to a file with the given mode.
+func WriteWithMode(name string, content []byte, mode os.FileMode) error {
+	return os.WriteFile(name, content, mode)
+}
+
+// MkdirAll creates a directory.
+func MkdirAll(name string) error {
+	return os.MkdirAll(name, 0750)
 }

@@ -10,6 +10,7 @@ kwokctl [command] [flags]
 
 ```
   -c, --config stringArray   config path (default [~/.kwok/kwok.yaml])
+      --dry-run              Print the command that would be executed, but do not execute it
   -h, --help                 help for kwokctl
       --name string          cluster name (default "kwok")
   -v, --v log-level          number for the log level verbosity (DEBUG, INFO, WARN, ERROR) or (-4, 0, 4, 8) (default INFO)

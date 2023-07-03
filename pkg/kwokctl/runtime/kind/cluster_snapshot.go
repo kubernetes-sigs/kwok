@@ -18,10 +18,8 @@ package kind
 
 import (
 	"context"
-	"os"
 
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -39,7 +37,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 		return err
 	}
 	defer func() {
-		err = exec.Exec(ctx, c.runtime, "exec", "-i", kindName, "rm", "-f", tmpFile)
+		err = c.Exec(ctx, c.runtime, "exec", "-i", kindName, "rm", "-f", tmpFile)
 		if err != nil {
 			logger.Error("Failed to clean snapshot", err)
 		}
@@ -47,7 +45,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 
 	// Copy to host path from container of Kind use Docker
 	// Etcd image does not have `tar`, can't use `kubectl cp`, so we use `docker cp` instead
-	err = exec.Exec(ctx, c.runtime, "cp", kindName+":"+tmpFile, path)
+	err = c.Exec(ctx, c.runtime, "cp", kindName+":"+tmpFile, path)
 	if err != nil {
 		return err
 	}
@@ -76,7 +74,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		return err
 	}
 	defer func() {
-		err = os.RemoveAll(etcdDataTmp)
+		err = c.RemoveAll(etcdDataTmp)
 		if err != nil {
 			logger.Error("Failed to clear etcd temporary data", err)
 		}
@@ -84,7 +82,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	kindName := c.getClusterName()
 	// Copy to kind container from host temporary directory
-	err = exec.Exec(ctx, c.runtime, "cp", etcdDataTmp, kindName+":/var/lib/")
+	err = c.Exec(ctx, c.runtime, "cp", etcdDataTmp, kindName+":/var/lib/")
 	if err != nil {
 		return err
 	}

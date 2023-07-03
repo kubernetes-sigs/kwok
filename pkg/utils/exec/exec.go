@@ -24,8 +24,7 @@ import (
 	"os"
 	"strings"
 
-	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // IOStreams contains the standard streams.
@@ -49,6 +48,15 @@ type execOptions struct {
 	IOStreams
 	// PipeStdin is true if the command's stdin should be piped.
 	PipeStdin bool
+}
+
+func (e *execOptions) DeepCopy() *execOptions {
+	return &execOptions{
+		Dir:       e.Dir,
+		Env:       append([]string(nil), e.Env...),
+		IOStreams: e.IOStreams,
+		PipeStdin: e.PipeStdin,
+	}
 }
 
 // WithPipeStdin returns a context with the given pipeStdin option.
@@ -122,7 +130,8 @@ func withExecOptions(ctx context.Context) (context.Context, *execOptions) {
 		opt := &execOptions{}
 		return context.WithValue(ctx, optCtx(0), opt), opt
 	}
-	return ctx, v.(*execOptions)
+	opt := v.(*execOptions).DeepCopy()
+	return context.WithValue(ctx, optCtx(0), opt), opt
 }
 
 func fromExecOptions(ctx context.Context) *execOptions {
@@ -134,14 +143,15 @@ func fromExecOptions(ctx context.Context) *execOptions {
 }
 
 // Exec executes the given command and returns the output.
-func Exec(ctx context.Context, name string, arg ...string) error {
-	cmd := command(ctx, name, arg...)
+func Exec(ctx context.Context, name string, args ...string) error {
+	cmd := command(ctx, name, args...)
 	opt := fromExecOptions(ctx)
 	if opt.Env != nil {
 		cmd.Env = opt.Env
 		cmd.Env = append(os.Environ(), cmd.Env...)
 	}
 	cmd.Dir = opt.Dir
+
 	if opt.In != nil {
 		if opt.PipeStdin {
 			inPipe, err := cmd.StdinPipe()
@@ -166,35 +176,35 @@ func Exec(ctx context.Context, name string, arg ...string) error {
 
 	err := cmd.Start()
 	if err != nil {
-		return fmt.Errorf("cmd start: %s %s: %w", name, strings.Join(arg, " "), err)
+		return fmt.Errorf("cmd start: %s %s: %w", name, strings.Join(args, " "), err)
 	}
 
 	err = cmd.Wait()
 	if err != nil {
 		if buf, ok := cmd.Stderr.(*bytes.Buffer); ok {
-			return fmt.Errorf("cmd wait: %s %s: %w\n%s", name, strings.Join(arg, " "), err, buf.String())
+			return fmt.Errorf("cmd wait: %s %s: %w\n%s", name, strings.Join(args, " "), err, buf.String())
 		}
-		return fmt.Errorf("cmd wait: %s %s: %w", name, strings.Join(arg, " "), err)
+		return fmt.Errorf("cmd wait: %s %s: %w", name, strings.Join(args, " "), err)
 	}
 	return nil
 }
 
-// WriteToPath writes the output of a command to a specified file
-func WriteToPath(ctx context.Context, path string, commands []string) error {
-	f, err := file.Open(path, 0640)
-	if err != nil {
-		return err
+// FormatExec prints the command to be executed to the output stream.
+func FormatExec(ctx context.Context, name string, args ...string) string {
+	opt := fromExecOptions(ctx)
+	out := bytes.NewBuffer(nil)
+	if opt.Dir != "" {
+		_, _ = fmt.Fprintf(out, "cd %s && ", opt.Dir)
 	}
-	defer func() {
-		err = f.Close()
-		if err != nil {
-			logger := log.FromContext(ctx)
-			logger.Error("Failed to close file", err)
-			err := os.Remove(path)
-			if err != nil {
-				logger.Error("Failed to remove file", err)
-			}
-		}
-	}()
-	return Exec(WithAllWriteTo(ctx, f), commands[0], commands[1:]...)
+
+	if len(opt.Env) != 0 {
+		_, _ = fmt.Fprintf(out, "%s ", strings.Join(opt.Env, " "))
+	}
+
+	_, _ = fmt.Fprintf(out, "%s", path.Base(name))
+
+	for _, arg := range args {
+		_, _ = fmt.Fprintf(out, " %s", arg)
+	}
+	return out.String()
 }

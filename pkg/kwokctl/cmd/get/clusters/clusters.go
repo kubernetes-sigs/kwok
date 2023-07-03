@@ -49,7 +49,7 @@ func runE(ctx context.Context) error {
 	}
 	if len(clusters) == 0 {
 		if log.IsTerminal() {
-			_, _ = fmt.Fprintf(os.Stderr, "No clusters found")
+			_, _ = fmt.Fprintf(os.Stderr, "No clusters found\n")
 		}
 	} else {
 		for _, cluster := range clusters {

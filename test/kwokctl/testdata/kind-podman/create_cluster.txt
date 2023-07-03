@@ -1,0 +1,128 @@
+# Save cluster config to ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
+mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>
+cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kind.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      extraArgs:
+        "max-requests-inflight": "0"
+        "max-mutating-requests-inflight": "0"
+        "enable-priority-and-fairness": "false"
+  - |
+    kind: ClusterConfiguration
+    controllerManager:
+      extraArgs:
+        "kube-api-qps": "5000"
+        "kube-api-burst": "10000"
+  - |
+    kind: ClusterConfiguration
+    scheduler:
+      extraArgs:
+        "kube-api-qps": "5000"
+        "kube-api-burst": "10000"
+  # mount the local file on the control plane
+  extraMounts:
+  - hostPath: ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
+    containerPath: /etc/kwok/kwok.yaml
+    readOnly: true
+EOF
+cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: kwok-controller
+  name: kwok-controller
+  namespace: kube-system
+spec:
+  containers:
+  - args:
+    - --config=/etc/kwok/kwok.yaml
+    - --v=INFO
+    - --manage-all-nodes=false
+    - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
+    - --manage-nodes-with-label-selector=
+    - --disregard-status-with-annotation-selector=kwok.x-k8s.io/status=custom
+    - --disregard-status-with-label-selector=
+    - --kubeconfig=/etc/kubernetes/admin.conf
+    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    - --node-ip=$(POD_IP)
+    - --node-name=kwok-controller.kube-system.svc
+    - --node-port=10247
+    - --node-lease-duration-seconds=40
+    env:
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    image: 'localhost/kwok:test'
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: /healthz
+        port: 10247
+        scheme: HTTP
+      initialDelaySeconds: 2
+      periodSeconds: 10
+      timeoutSeconds: 2
+    name: kwok-controller
+    readinessProbe:
+      failureThreshold: 5
+      httpGet:
+        path: /healthz
+        port: 10247
+        scheme: HTTP
+      initialDelaySeconds: 2
+      periodSeconds: 20
+      timeoutSeconds: 2
+    volumeMounts:
+    - mountPath: /etc/kubernetes/admin.conf
+      name: kubeconfig
+      readOnly: true
+    - mountPath: /etc/kwok/kwok.yaml
+      name: config
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki
+      name: k8s-certs
+      readOnly: true
+  hostNetwork: true
+  restartPolicy: Always
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/admin.conf
+      type: FileOrCreate
+    name: kubeconfig
+  - hostPath:
+      path: /etc/kwok/kwok.yaml
+      type: FileOrCreate
+    name: config
+  - hostPath:
+      path: /etc/kubernetes/pki
+      type: DirectoryOrCreate
+    name: k8s-certs
+EOF
+podman pull docker.io/kindest/node:v1.27.3
+podman pull localhost/kwok:test
+# Save cluster config to ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
+KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config ~/.kwok/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.27.3 --wait 29m
+mkdir -p ~/.kwok/cache/image-archive/localhost/kwok
+podman save localhost/kwok:test -o ~/.kwok/cache/image-archive/localhost/kwok/test.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive ~/.kwok/cache/image-archive/localhost/kwok/test.tar --name kwok-<CLUSTER_NAME>
+rm ~/.kwok/cache/image-archive/localhost/kwok/test.tar
+kubectl config view --minify=true --raw=true
+cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kubeconfig.yaml
+EOF
+podman cp ~/.kwok/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml
+mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>/pki
+podman cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.crt ~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.crt
+podman cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.key ~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.key
+kubectl cordon kwok-<CLUSTER_NAME>-control-plane
+# Add context kwok-<CLUSTER_NAME> to ~/.kube/config

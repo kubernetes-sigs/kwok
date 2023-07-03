@@ -17,10 +17,8 @@ limitations under the License.
 package components
 
 import (
-	"context"
 	"fmt"
 
-	"golang.org/x/sync/errgroup"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -72,50 +70,4 @@ func extraArgsToStrings(args []internalversion.ExtraArgs) []string {
 	return slices.Map(args, func(arg internalversion.ExtraArgs) string {
 		return fmt.Sprintf("--%s=%s", arg.Key, arg.Value)
 	})
-}
-
-// ForeachComponents starts components.
-func ForeachComponents(ctx context.Context, cs []internalversion.Component, reverse, order bool, fun func(ctx context.Context, component internalversion.Component) error) error {
-	groups, err := GroupByLinks(cs)
-	if err != nil {
-		return err
-	}
-	if reverse {
-		groups = slices.Reverse(groups)
-	}
-
-	if order {
-		for _, group := range groups {
-			if len(group) == 1 {
-				if err := fun(ctx, group[0]); err != nil {
-					return err
-				}
-			} else {
-				g, ctx := errgroup.WithContext(ctx)
-				for _, component := range group {
-					component := component
-					g.Go(func() error {
-						return fun(ctx, component)
-					})
-				}
-				if err := g.Wait(); err != nil {
-					return err
-				}
-			}
-		}
-	} else {
-		g, ctx := errgroup.WithContext(ctx)
-		for _, group := range groups {
-			for _, component := range group {
-				component := component
-				g.Go(func() error {
-					return fun(ctx, component)
-				})
-			}
-		}
-		if err := g.Wait(); err != nil {
-			return err
-		}
-	}
-	return nil
 }

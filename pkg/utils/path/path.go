@@ -91,3 +91,8 @@ func Join(elem ...string) string {
 func Dir(path string) string {
 	return filepath.Dir(path)
 }
+
+// Base is a wrapper around filepath.Base.
+func Base(path string) string {
+	return filepath.Base(path)
+}

@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -31,13 +30,12 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/image"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -70,15 +68,12 @@ func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
 
 // Available  checks whether the runtime is available.
 func (c *Cluster) Available(ctx context.Context) error {
-	return exec.Exec(ctx, c.runtime, "version")
+	return c.Exec(ctx, c.runtime, "version")
 }
 
 // https://github.com/kubernetes-sigs/kind/blob/7b017b2ce14a7fdea9d3ed2fa259c38c927e2dd1/pkg/internal/runtime/runtime.go
 func (c *Cluster) withProviderEnv(ctx context.Context) context.Context {
-	provider := ""
-	if c.runtime == consts.RuntimeTypePodman {
-		provider = c.runtime
-	}
+	provider := c.runtime
 	ctx = exec.WithEnv(ctx, []string{
 		"KIND_EXPERIMENTAL_PROVIDER=" + provider,
 	})
@@ -87,6 +82,11 @@ func (c *Cluster) withProviderEnv(ctx context.Context) context.Context {
 
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
+	err := c.Cluster.Install(ctx)
+	if err != nil {
+		return err
+	}
+
 	logger := log.FromContext(ctx)
 	verbosity := logger.Level()
 	config, err := c.Config(ctx)
@@ -109,14 +109,19 @@ func (c *Cluster) Install(ctx context.Context) error {
 	auditLogPath := ""
 	auditPolicyPath := ""
 	if conf.KubeAuditPolicy != "" {
+		err = c.MkdirAll(c.GetWorkdirPath("logs"))
+		if err != nil {
+			return err
+		}
+
 		auditLogPath = c.GetLogPath(runtime.AuditLogName)
-		err = file.Create(auditLogPath, 0640)
+		err = c.CreateFile(auditLogPath)
 		if err != nil {
 			return err
 		}
 
 		auditPolicyPath = c.GetWorkdirPath(runtime.AuditPolicyName)
-		err = file.Copy(conf.KubeAuditPolicy, auditPolicyPath)
+		err = c.CopyFile(conf.KubeAuditPolicy, auditPolicyPath)
 		if err != nil {
 			return err
 		}
@@ -125,7 +130,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	schedulerConfigPath := ""
 	if !conf.DisableKubeScheduler && conf.KubeSchedulerConfig != "" {
 		schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
-		err = k8s.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, inClusterKubeconfig)
+		err = c.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, inClusterKubeconfig)
 		if err != nil {
 			return err
 		}
@@ -174,7 +179,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(c.GetWorkdirPath(runtime.KindName), []byte(kindYaml), 0640)
+	err = c.WriteFile(c.GetWorkdirPath(runtime.KindName), []byte(kindYaml))
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", runtime.KindName, err)
 	}
@@ -190,7 +195,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(c.GetWorkdirPath(runtime.KwokPod), []byte(kwokControllerPod), 0640)
+	err = c.WriteFile(c.GetWorkdirPath(runtime.KwokPod), []byte(kwokControllerPod))
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", runtime.KwokPod, err)
 	}
@@ -211,7 +216,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(c.GetWorkdirPath(runtime.PrometheusDeploy), []byte(prometheusDeploy), 0640)
+		err = c.WriteFile(c.GetWorkdirPath(runtime.PrometheusDeploy), []byte(prometheusDeploy))
 		if err != nil {
 			return fmt.Errorf("failed to write %s: %w", runtime.PrometheusDeploy, err)
 		}
@@ -224,7 +229,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
-	err = image.PullImages(ctx, c.runtime, images, conf.QuietPull)
+	err = c.PullImages(ctx, c.runtime, images, conf.QuietPull)
 	if err != nil {
 		return err
 	}
@@ -234,8 +239,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 // Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
-	ctx = c.withProviderEnv(ctx)
-
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
@@ -314,7 +317,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		args = append(args, "--wait", "1m")
 	}
 
-	err = exec.Exec(exec.WithAllWriteToErrOut(ctx), kindPath, args...)
+	err = c.Exec(exec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath, args...)
 	if err != nil {
 		return err
 	}
@@ -331,9 +334,9 @@ func (c *Cluster) Up(ctx context.Context) error {
 	}
 
 	if c.runtime == consts.RuntimeTypeDocker {
-		err = loadDockerImages(ctx, kindPath, c.Name(), images)
+		err = c.loadDockerImages(ctx, kindPath, c.Name(), images)
 	} else {
-		err = loadArchiveImages(ctx, kindPath, c.Name(), images, c.runtime, conf.CacheDir)
+		err = c.loadArchiveImages(ctx, kindPath, c.Name(), images, c.runtime, conf.CacheDir)
 	}
 	if err != nil {
 		return err
@@ -347,28 +350,28 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	err = os.WriteFile(kubeconfigPath, kubeconfigBuf.Bytes(), 0640)
+	err = c.WriteFile(kubeconfigPath, kubeconfigBuf.Bytes())
 	if err != nil {
 		return err
 	}
 
 	kindName := c.getClusterName()
-	err = exec.Exec(ctx, c.runtime, "cp", c.GetWorkdirPath(runtime.KwokPod), kindName+":/etc/kubernetes/manifests/kwok-controller.yaml")
+	err = c.Exec(ctx, c.runtime, "cp", c.GetWorkdirPath(runtime.KwokPod), kindName+":/etc/kubernetes/manifests/kwok-controller.yaml")
 	if err != nil {
 		return err
 	}
 
 	// Copy ca.crt and ca.key to host's workdir
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
-	err = os.MkdirAll(pkiPath, 0750)
+	err = c.MkdirAll(pkiPath)
 	if err != nil {
 		return err
 	}
-	err = exec.Exec(ctx, c.runtime, "cp", kindName+":/etc/kubernetes/pki/ca.crt", path.Join(pkiPath, "ca.crt"))
+	err = c.Exec(ctx, c.runtime, "cp", kindName+":/etc/kubernetes/pki/ca.crt", path.Join(pkiPath, "ca.crt"))
 	if err != nil {
 		return err
 	}
-	err = exec.Exec(ctx, c.runtime, "cp", kindName+":/etc/kubernetes/pki/ca.key", path.Join(pkiPath, "ca.key"))
+	err = c.Exec(ctx, c.runtime, "cp", kindName+":/etc/kubernetes/pki/ca.key", path.Join(pkiPath, "ca.key"))
 	if err != nil {
 		return err
 	}
@@ -405,10 +408,10 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 // loadDockerImages loads docker images into the cluster.
 // `kind load docker-image`
-func loadDockerImages(ctx context.Context, command string, kindCluster string, images []string) error {
+func (c *Cluster) loadDockerImages(ctx context.Context, command string, kindCluster string, images []string) error {
 	logger := log.FromContext(ctx)
 	for _, image := range images {
-		err := exec.Exec(ctx,
+		err := c.Exec(c.withProviderEnv(ctx),
 			command, "load", "docker-image",
 			image,
 			"--name", kindCluster,
@@ -423,20 +426,20 @@ func loadDockerImages(ctx context.Context, command string, kindCluster string, i
 
 // loadArchiveImages loads docker images into the cluster.
 // `kind load image-archive`
-func loadArchiveImages(ctx context.Context, command string, kindCluster string, images []string, runtime string, tmpDir string) error {
+func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindCluster string, images []string, runtime string, tmpDir string) error {
 	logger := log.FromContext(ctx)
 	for _, image := range images {
 		archive := path.Join(tmpDir, "image-archive", strings.ReplaceAll(image, ":", "/")+".tar")
-		err := os.MkdirAll(filepath.Dir(archive), 0750)
+		err := c.MkdirAll(filepath.Dir(archive))
 		if err != nil {
 			return err
 		}
 
-		err = exec.Exec(ctx, runtime, "save", image, "-o", archive)
+		err = c.Exec(ctx, runtime, "save", image, "-o", archive)
 		if err != nil {
 			return err
 		}
-		err = exec.Exec(ctx,
+		err = c.Exec(c.withProviderEnv(ctx),
 			command, "load", "image-archive",
 			archive,
 			"--name", kindCluster,
@@ -445,7 +448,7 @@ func loadArchiveImages(ctx context.Context, command string, kindCluster string, 
 			return err
 		}
 		logger.Info("Loaded image", "image", image)
-		err = file.Remove(archive)
+		err = c.Remove(archive)
 		if err != nil {
 			return err
 		}
@@ -455,6 +458,10 @@ func loadArchiveImages(ctx context.Context, command string, kindCluster string, 
 
 // WaitReady waits for the cluster to be ready.
 func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
+	if c.IsDryRun() {
+		return nil
+	}
+
 	var (
 		err     error
 		waitErr error
@@ -525,15 +532,13 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
-	ctx = c.withProviderEnv(ctx)
-
 	kindPath, err := c.preDownloadKind(ctx)
 	if err != nil {
 		return err
 	}
 
 	logger := log.FromContext(ctx)
-	err = exec.Exec(exec.WithAllWriteToErrOut(ctx), kindPath, "delete", "cluster", "--name", c.Name())
+	err = c.Exec(exec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath, "delete", "cluster", "--name", c.Name())
 	if err != nil {
 		logger.Error("Failed to delete cluster", err)
 	}
@@ -543,7 +548,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
-	err := exec.Exec(ctx, c.runtime, "start", c.getClusterName())
+	err := c.Exec(ctx, c.runtime, "start", c.getClusterName())
 	if err != nil {
 		return err
 	}
@@ -552,7 +557,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
-	err := exec.Exec(ctx, c.runtime, "stop", c.getClusterName())
+	err := c.Exec(ctx, c.runtime, "stop", c.getClusterName())
 	if err != nil {
 		return err
 	}
@@ -569,18 +574,23 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With("component", name)
 	if _, important := importantComponents[name]; !important {
-		if _, exist, err := c.inspectComponent(ctx, name); err != nil {
-			return err
-		} else if exist {
-			logger.Debug("Component already started")
-			return nil
+		if !c.IsDryRun() {
+			if _, exist, err := c.inspectComponent(ctx, name); err != nil {
+				return err
+			} else if exist {
+				logger.Debug("Component already started")
+				return nil
+			}
 		}
 	}
 
 	logger.Debug("Starting component")
-	err := exec.Exec(ctx, c.runtime, "exec", c.getClusterName(), "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
+	err := c.Exec(ctx, c.runtime, "exec", c.getClusterName(), "mv", "/etc/kubernetes/"+name+".yaml.bak", "/etc/kubernetes/manifests/"+name+".yaml")
 	if err != nil {
 		return err
+	}
+	if c.IsDryRun() {
+		return nil
 	}
 	return c.waitComponentReady(ctx, name, true, 120*time.Second)
 }
@@ -590,21 +600,26 @@ func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With("component", name)
 	if _, important := importantComponents[name]; !important {
-		if _, exist, err := c.inspectComponent(ctx, name); err != nil {
-			return err
-		} else if !exist {
-			logger.Debug("Component already stopped")
-			return nil
+		if !c.IsDryRun() {
+			if _, exist, err := c.inspectComponent(ctx, name); err != nil {
+				return err
+			} else if !exist {
+				logger.Debug("Component already stopped")
+				return nil
+			}
 		}
 	}
 
 	logger.Debug("Stopping component")
-	err := exec.Exec(ctx, c.runtime, "exec", c.getClusterName(), "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
+	err := c.Exec(ctx, c.runtime, "exec", c.getClusterName(), "mv", "/etc/kubernetes/manifests/"+name+".yaml", "/etc/kubernetes/"+name+".yaml.bak")
 	if err != nil {
 		return err
 	}
 	// Once etcd and kube-apiserver are stopped, the cluster will go down
 	if _, important := importantComponents[name]; important {
+		return nil
+	}
+	if c.IsDryRun() {
 		return nil
 	}
 	return c.waitComponentReady(ctx, name, false, 120*time.Second)
@@ -699,6 +714,12 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 		args = append(args, "-f")
 	}
 	args = append(args, componentName)
+	if c.IsDryRun() && !follow {
+		if file, ok := dryrun.IsCatToFileWriter(out); ok {
+			dryrun.PrintMessage("%s >%s", exec.FormatExec(ctx, name, args...), file)
+			return nil
+		}
+	}
 
 	err := c.Kubectl(exec.WithAllWriteTo(ctx, out), args...)
 	if err != nil {
@@ -718,8 +739,31 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 }
 
 // CollectLogs returns the logs of the specified component.
-func (c *Cluster) CollectLogs(ctx context.Context, name string, dir string) error {
+func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
+	logger := log.FromContext(ctx)
+
+	kwokConfigPath := path.Join(dir, "kwok.yaml")
+	if file.Exists(kwokConfigPath) {
+		return fmt.Errorf("%s already exists", kwokConfigPath)
+	}
+
+	if err := c.MkdirAll(dir); err != nil {
+		return fmt.Errorf("failed to create tmp directory: %w", err)
+	}
+	logger.Info("Exporting logs", "dir", dir)
+
+	err := c.CopyFile(c.GetWorkdirPath(runtime.ConfigName), kwokConfigPath)
+	if err != nil {
+		return err
+	}
+
 	conf, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	componentsDir := path.Join(dir, "components")
+	err = c.MkdirAll(componentsDir)
 	if err != nil {
 		return err
 	}
@@ -728,17 +772,16 @@ func (c *Cluster) CollectLogs(ctx context.Context, name string, dir string) erro
 	if err != nil {
 		return err
 	}
-	ctx = c.withProviderEnv(ctx)
-	err = exec.WriteToPath(ctx, filepath.Join(dir, conf.Options.Runtime+"-info.txt"), []string{kindPath, "version"})
+
+	infoPath := path.Join(dir, conf.Options.Runtime+"-info.txt")
+	err = c.WriteToPath(c.withProviderEnv(ctx), infoPath, []string{kindPath, "version"})
 	if err != nil {
 		return err
 	}
 
-	componentsDir := filepath.Join(dir, "components")
-	logger := log.FromContext(ctx)
 	for _, component := range conf.Components {
-		path := filepath.Join(componentsDir, component.Name+".log")
-		f, err := file.Open(path, 0640)
+		logPath := path.Join(componentsDir, component.Name+".log")
+		f, err := c.OpenFile(logPath)
 		if err != nil {
 			logger.Error("Failed to open file", err)
 			continue
@@ -747,22 +790,22 @@ func (c *Cluster) CollectLogs(ctx context.Context, name string, dir string) erro
 			logger.Error("Failed to get log", err)
 			if err = f.Close(); err != nil {
 				logger.Error("Failed to close file", err)
-				if err = os.Remove(path); err != nil {
+				if err = c.Remove(logPath); err != nil {
 					logger.Error("Failed to remove file", err)
 				}
 			}
 		}
 		if err = f.Close(); err != nil {
 			logger.Error("Failed to close file", err)
-			if err = os.Remove(path); err != nil {
+			if err = c.Remove(logPath); err != nil {
 				logger.Error("Failed to remove file", err)
 			}
 		}
 	}
 
 	if conf.Options.KubeAuditPolicy != "" {
-		filePath := filepath.Join(componentsDir, "audit.log")
-		f, err := file.Open(filePath, 0640)
+		filePath := path.Join(componentsDir, "audit.log")
+		f, err := c.OpenFile(filePath)
 		if err != nil {
 			logger.Error("Failed to open file", err)
 		} else {
@@ -771,7 +814,7 @@ func (c *Cluster) CollectLogs(ctx context.Context, name string, dir string) erro
 			}
 			if err = f.Close(); err != nil {
 				logger.Error("Failed to close file", err)
-				if err = os.Remove(filePath); err != nil {
+				if err = c.Remove(filePath); err != nil {
 					logger.Error("Failed to remove file", err)
 				}
 			}
@@ -839,7 +882,7 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	if err != nil {
 		// kind does not exist, try to download it
 		kindPath := c.GetBinPath("kind" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0750, conf.QuietPull)
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0750, conf.QuietPull)
 		if err != nil {
 			return "", err
 		}

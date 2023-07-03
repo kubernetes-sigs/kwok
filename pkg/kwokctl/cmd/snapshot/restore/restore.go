@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
@@ -64,7 +65,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if flags.Path == "" {
 		return fmt.Errorf("path is required")
 	}
-	if _, err := os.Stat(flags.Path); err != nil {
+	if !file.Exists(flags.Path) {
 		return fmt.Errorf("path %q does not exist", flags.Path)
 	}
 
@@ -79,12 +80,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 		return err
 	}
-
-	defer func() {
-		if err != nil {
-			_ = os.Remove(flags.Path)
-		}
-	}()
 
 	switch flags.Format {
 	case "etcd":

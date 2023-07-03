@@ -57,7 +57,7 @@ func (c *Cluster) upCompose(ctx context.Context) error {
 
 	logger := log.FromContext(ctx)
 	for i := 0; ctx.Err() == nil; i++ {
-		err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
+		err = c.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 		if err != nil {
 			logger.Debug("Failed to start cluster",
 				"times", i,
@@ -95,7 +95,7 @@ func (c *Cluster) downCompose(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
+	err = c.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (c *Cluster) startCompose(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
+	err = c.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 	if err != nil {
 		return fmt.Errorf("failed to start cluster: %w", err)
 	}
@@ -130,7 +130,7 @@ func (c *Cluster) startCompose(ctx context.Context) error {
 			if err := c.SnapshotRestore(ctx, backupFilename); err != nil {
 				return fmt.Errorf("failed to restore cluster data: %w", err)
 			}
-			if err := os.Remove(backupFilename); err != nil {
+			if err := c.Remove(backupFilename); err != nil {
 				return fmt.Errorf("failed to remove backup file: %w", err)
 			}
 		} else if !os.IsNotExist(err) {
@@ -156,7 +156,7 @@ func (c *Cluster) stopCompose(ctx context.Context) error {
 		return err
 	}
 
-	err = exec.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
+	err = c.Exec(exec.WithAllWriteToErrOut(exec.WithDir(ctx, c.Workdir())), commands[0], commands[1:]...)
 	if err != nil {
 		return fmt.Errorf("failed to stop cluster: %w", err)
 	}
@@ -216,7 +216,7 @@ func (c *Cluster) preInstallPodmanCompose(ctx context.Context) ([]string, error)
 	target := path.Join(conf.CacheDir, "py", "podman-compose")
 	bin := path.Join(target, "podman_compose.py")
 	if !file.Exists(bin) {
-		err = exec.Exec(exec.WithStdIO(ctx), pybin, "-m", "pip", "install", "-t", target, "podman-compose")
+		err = c.Exec(exec.WithStdIO(ctx), pybin, "-m", "pip", "install", "-t", target, "podman-compose")
 		if err != nil {
 			return nil, err
 		}
@@ -235,11 +235,11 @@ func (c *Cluster) preInstallDockerCompose(ctx context.Context) ([]string, error)
 	}
 	conf := &config.Options
 
-	err = exec.Exec(ctx, c.runtime, "compose", "version")
+	err = c.Exec(ctx, c.runtime, "compose", "version")
 	if err != nil {
 		// docker compose subcommand does not exist, try to download it
 		dockerComposePath := c.GetBinPath("docker-compose" + conf.BinSuffix)
-		err = file.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0750, conf.QuietPull)
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.DockerComposeBinary, dockerComposePath, 0750, conf.QuietPull)
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +264,7 @@ func (c *Cluster) isRunning(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	out := bytes.NewBuffer(nil)
-	err = exec.Exec(exec.WithWriteTo(exec.WithDir(ctx, c.Workdir()), out), commands[0], commands[1:]...)
+	err = c.Exec(exec.WithWriteTo(exec.WithDir(ctx, c.Workdir()), out), commands[0], commands[1:]...)
 	if err != nil {
 		return false, err
 	}
