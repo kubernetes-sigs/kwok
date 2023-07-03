@@ -29,6 +29,7 @@ import (
 	"k8s.io/utils/clock"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/server"
@@ -84,6 +85,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Master, "master", flags.Master, "The address of the Kubernetes API server (overrides any value in kubeconfig).")
 	cmd.Flags().StringVar(&flags.Options.ServerAddress, "server-address", flags.Options.ServerAddress, "Address to expose the server on")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease seconds")
+	cmd.Flags().StringArrayVar(&flags.Options.EnableCRDs, "enable-crd", flags.Options.EnableCRDs, "List of CRDs to enable")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
 	if config.GOOS != "linux" {
@@ -145,26 +147,34 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	stagesData := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
+	var nodeStages []*internalversion.Stage
+	var podStages []*internalversion.Stage
 
-	nodeStages := filterStages(stagesData, "v1", "Node")
-	if len(nodeStages) == 0 {
-		nodeStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
-		if err != nil {
-			return err
+	if slices.Contains(flags.Options.EnableCRDs, v1alpha1.StageKind) {
+		if len(stagesData) != 0 {
+			return fmt.Errorf("stage already exists, cannot watch CRD")
 		}
-		if flags.Options.NodeLeaseDurationSeconds == 0 {
-			nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+	} else {
+		nodeStages = filterStages(stagesData, "v1", "Node")
+		if len(nodeStages) == 0 {
+			nodeStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
 			if err != nil {
 				return err
 			}
-			nodeStages = append(nodeStages, nodeHeartbeatStages...)
+			if flags.Options.NodeLeaseDurationSeconds == 0 {
+				nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+				if err != nil {
+					return err
+				}
+				nodeStages = append(nodeStages, nodeHeartbeatStages...)
+			}
 		}
-	}
-	podStages := filterStages(stagesData, "v1", "Pod")
-	if len(podStages) == 0 {
-		podStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultPodStages))
-		if err != nil {
-			return err
+		podStages = filterStages(stagesData, "v1", "Pod")
+		if len(podStages) == 0 {
+			podStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultPodStages))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -179,6 +189,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	ctr, err := controllers.NewController(controllers.Config{
 		Clock:                                 clock.RealClock{},
 		TypedClient:                           typedClient,
+		TypedKwokClient:                       typedKwokClient,
 		EnableCNI:                             flags.Options.EnableCNI,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,

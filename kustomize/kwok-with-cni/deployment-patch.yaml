@@ -29,6 +29,7 @@ spec:
           - --node-ip=$(POD_IP)
           - --node-port=10247
           - --node-lease-duration-seconds=40
+          - --enable-crd=Stage,Attach,Exec,PortForward,Logs,ClusterAttach,ClusterExec,ClusterPortForward,ClusterLogs
           - --experimental-enable-cni=true
           volumeMounts:
           - name: etc-cni

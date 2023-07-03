@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
+	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/stages"
@@ -71,11 +72,12 @@ func TestNodeController(t *testing.T) {
 	nodeStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
 	nodeHeartbeatStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
 	nodeStages = append(nodeStages, nodeHeartbeatStages...)
+	lifecycle, _ := NewLifecycle(nodeStages)
 	nodes, err := NewNodeController(NodeControllerConfig{
 		TypedClient:          clientset,
 		NodeIP:               "10.0.0.1",
 		NodeSelectorFunc:     nodeSelectorFunc,
-		Stages:               nodeStages,
+		Lifecycle:            resources.NewStaticGetter(lifecycle),
 		FuncMap:              defaultFuncMap,
 		PlayStageParallelism: 2,
 	})

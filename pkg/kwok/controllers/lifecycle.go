@@ -61,7 +61,7 @@ func NewStagesFromYaml(data []byte) ([]*internalversion.Stage, error) {
 func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {
 	lcs := Lifecycle{}
 	for _, stage := range stages {
-		lc, err := newLifecycleFromStage(stage)
+		lc, err := NewLifecycleStage(stage)
 		if err != nil {
 			return nil, fmt.Errorf("lifecycle stage: %w", err)
 		}
@@ -129,7 +129,8 @@ func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*Lifec
 	return stages[len(stages)-1], nil
 }
 
-func newLifecycleFromStage(s *internalversion.Stage) (*LifecycleStage, error) {
+// NewLifecycleStage returns a new LifecycleStage.
+func NewLifecycleStage(s *internalversion.Stage) (*LifecycleStage, error) {
 	stage := &LifecycleStage{
 		name: s.Name,
 	}

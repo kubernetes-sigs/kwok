@@ -41,6 +41,7 @@ import (
 	netutils "k8s.io/utils/net"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
@@ -104,7 +105,7 @@ type NodeController struct {
 	preprocessChan                        chan *corev1.Node
 	playStageChan                         chan resourceStageJob[*corev1.Node]
 	playStageParallelism                  uint
-	lifecycle                             Lifecycle
+	lifecycle                             resources.Getter[Lifecycle]
 	cronjob                               *cron.Cron
 	delayJobs                             jobInfoMap
 	recorder                              record.EventRecorder
@@ -124,7 +125,7 @@ type NodeControllerConfig struct {
 	NodeIP                                string
 	NodeName                              string
 	NodePort                              int
-	Stages                                []*internalversion.Stage
+	Lifecycle                             resources.Getter[Lifecycle]
 	PlayStageParallelism                  uint
 	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
@@ -156,11 +157,6 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		return nil, err
 	}
 
-	lifecycles, err := NewLifecycle(conf.Stages)
-	if err != nil {
-		return nil, err
-	}
-
 	if conf.Clock == nil {
 		conf.Clock = clock.RealClock{}
 	}
@@ -177,7 +173,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		nodeName:                              conf.NodeName,
 		nodePort:                              conf.NodePort,
 		cronjob:                               cron.NewCron(),
-		lifecycle:                             lifecycles,
+		lifecycle:                             conf.Lifecycle,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Node),
 		triggerPreprocessChan:                 make(chan string, 16),
@@ -474,7 +470,8 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		return err
 	}
 
-	stage, err := c.lifecycle.Match(node.Labels, node.Annotations, data)
+	lifecycle := c.lifecycle.Get()
+	stage, err := lifecycle.Match(node.Labels, node.Annotations, data)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}

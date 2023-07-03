@@ -28,3 +28,7 @@ func NewStaticGetter[T any](data T) Getter[T] {
 func (s *staticGetter[T]) Get() T {
 	return s.data
 }
+
+func (s *staticGetter[T]) Version() string {
+	return ""
+}
