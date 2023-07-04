@@ -147,6 +147,20 @@ function install_buildx() {
   fi
 }
 
+function install_kustomize() {
+  if command_exist kustomize; then
+    return 0
+  fi
+
+  cd /usr/local/bin/ && curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+  if ! command_exist kustomize; then
+    echo kustomize is installed but not effective >&2
+    return 1
+  fi
+
+  kustomize version
+}
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   function usage() {
     local requirements=(

@@ -20,7 +20,7 @@ steps:
     args:
       - -c
       - |
-        ./hack/requirements.sh gsutil buildx
+        ./hack/requirements.sh gsutil buildx kustomize
         make manifests cross-build cross-image cross-cluster-image
 
 substitutions:
