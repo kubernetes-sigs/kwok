@@ -22,9 +22,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
-
-	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // IOStreams contains the standard streams.
@@ -39,7 +38,8 @@ type IOStreams struct {
 
 type optCtx int
 
-type execOptions struct {
+// Options is the options for executing a command.
+type Options struct {
 	// Dir is the working directory of the command.
 	Dir string
 	// Env is the environment variables of the command.
@@ -48,14 +48,17 @@ type execOptions struct {
 	IOStreams
 	// PipeStdin is true if the command's stdin should be piped.
 	PipeStdin bool
+	// Fork is true if the command should be forked.
+	Fork bool
 }
 
-func (e *execOptions) DeepCopy() *execOptions {
-	return &execOptions{
+func (e *Options) deepCopy() *Options {
+	return &Options{
 		Dir:       e.Dir,
 		Env:       append([]string(nil), e.Env...),
 		IOStreams: e.IOStreams,
 		PipeStdin: e.PipeStdin,
+		Fork:      e.Fork,
 	}
 }
 
@@ -124,39 +127,58 @@ func WithAllWriteToErrOut(ctx context.Context) context.Context {
 	return WithAllWriteTo(ctx, os.Stderr)
 }
 
-func withExecOptions(ctx context.Context) (context.Context, *execOptions) {
+// WithFork returns a context with the given fork option.
+func WithFork(ctx context.Context, fork bool) context.Context {
+	ctx, opt := withExecOptions(ctx)
+	opt.Fork = fork
+	return ctx
+}
+
+func withExecOptions(ctx context.Context) (context.Context, *Options) {
 	v := ctx.Value(optCtx(0))
 	if v == nil {
-		opt := &execOptions{}
+		opt := &Options{}
 		return context.WithValue(ctx, optCtx(0), opt), opt
 	}
-	opt := v.(*execOptions).DeepCopy()
+	opt := v.(*Options).deepCopy()
 	return context.WithValue(ctx, optCtx(0), opt), opt
 }
 
-func fromExecOptions(ctx context.Context) *execOptions {
+// GetExecOptions returns the ExecOptions for the given context.
+func GetExecOptions(ctx context.Context) *Options {
 	v := ctx.Value(optCtx(0))
 	if v == nil {
-		return &execOptions{}
+		return &Options{}
 	}
-	return v.(*execOptions)
+	return v.(*Options).deepCopy()
 }
 
 // Exec executes the given command and returns the output.
 func Exec(ctx context.Context, name string, args ...string) error {
-	cmd := command(ctx, name, args...)
-	opt := fromExecOptions(ctx)
-	if opt.Env != nil {
-		cmd.Env = opt.Env
-		cmd.Env = append(os.Environ(), cmd.Env...)
+	_, err := Command(ctx, name, args...)
+	return err
+}
+
+// Command executes the given command and return the command.
+func Command(ctx context.Context, name string, args ...string) (cmd *exec.Cmd, err error) {
+	opt := GetExecOptions(ctx)
+	if opt.Fork {
+		subCtx := context.Background()
+		cmd = startProcess(subCtx, name, args...)
+	} else {
+		cmd = command(ctx, name, args...)
 	}
+	if opt.Env != nil {
+		cmd.Env = append(os.Environ(), opt.Env...)
+	}
+
 	cmd.Dir = opt.Dir
 
 	if opt.In != nil {
 		if opt.PipeStdin {
 			inPipe, err := cmd.StdinPipe()
 			if err != nil {
-				return err
+				return nil, err
 			}
 			go func() {
 				_, _ = io.Copy(inPipe, opt.In)
@@ -169,42 +191,24 @@ func Exec(ctx context.Context, name string, args ...string) error {
 	cmd.Stdout = opt.Out
 	cmd.Stderr = opt.ErrOut
 
-	if cmd.Stderr == nil {
+	if !opt.Fork && cmd.Stderr == nil {
 		buf := bytes.NewBuffer(nil)
 		cmd.Stderr = buf
 	}
 
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
-		return fmt.Errorf("cmd start: %s %s: %w", name, strings.Join(args, " "), err)
+		return nil, fmt.Errorf("cmd start: %s %s: %w", name, strings.Join(args, " "), err)
 	}
 
-	err = cmd.Wait()
-	if err != nil {
-		if buf, ok := cmd.Stderr.(*bytes.Buffer); ok {
-			return fmt.Errorf("cmd wait: %s %s: %w\n%s", name, strings.Join(args, " "), err, buf.String())
+	if !opt.Fork {
+		err = cmd.Wait()
+		if err != nil {
+			if buf, ok := cmd.Stderr.(*bytes.Buffer); ok {
+				return nil, fmt.Errorf("cmd wait: %s %s: %w\n%s", name, strings.Join(args, " "), err, buf.String())
+			}
+			return nil, fmt.Errorf("cmd wait: %s %s: %w", name, strings.Join(args, " "), err)
 		}
-		return fmt.Errorf("cmd wait: %s %s: %w", name, strings.Join(args, " "), err)
 	}
-	return nil
-}
-
-// FormatExec prints the command to be executed to the output stream.
-func FormatExec(ctx context.Context, name string, args ...string) string {
-	opt := fromExecOptions(ctx)
-	out := bytes.NewBuffer(nil)
-	if opt.Dir != "" {
-		_, _ = fmt.Fprintf(out, "cd %s && ", opt.Dir)
-	}
-
-	if len(opt.Env) != 0 {
-		_, _ = fmt.Fprintf(out, "%s ", strings.Join(opt.Env, " "))
-	}
-
-	_, _ = fmt.Fprintf(out, "%s", path.Base(name))
-
-	for _, arg := range args {
-		_, _ = fmt.Fprintf(out, " %s", arg)
-	}
-	return out.String()
+	return cmd, nil
 }
