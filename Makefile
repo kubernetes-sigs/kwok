@@ -224,6 +224,7 @@ manifests:
 		--gh-release=${GH_RELEASE} \
 		--image-prefix=${IMAGE_PREFIX} \
 		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
