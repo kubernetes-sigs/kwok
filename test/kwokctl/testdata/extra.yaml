@@ -12,6 +12,9 @@ componentsPatches:
         mountPath: /extras/tmp
         readOnly: false
         pathType: DirectoryOrCreate
+    extraEnvs:
+      - name: TEST_KEY
+        value: TEST_VALUE
   - name: kube-controller-manager
     extraArgs:
       - key: v
@@ -22,6 +25,9 @@ componentsPatches:
         mountPath: /extras/tmp
         readOnly: false
         pathType: DirectoryOrCreate
+    extraEnvs:
+      - name: TEST_KEY
+        value: TEST_VALUE
   - name: kube-scheduler
     extraArgs:
       - key: v
@@ -32,6 +38,9 @@ componentsPatches:
         mountPath: /extras/tmp
         readOnly: false
         pathType: DirectoryOrCreate
+    extraEnvs:
+      - name: TEST_KEY
+        value: TEST_VALUE
   - name: kwok-controller
     extraArgs:
       - key: v
@@ -42,6 +51,9 @@ componentsPatches:
         mountPath: /extras/tmp
         readOnly: false
         pathType: DirectoryOrCreate
+    extraEnvs:
+      - name: TEST_KEY
+        value: TEST_VALUE
   - name: etcd
     extraArgs:
       - key: log-level
@@ -52,6 +64,9 @@ componentsPatches:
         mountPath: /extras/tmp
         readOnly: false
         pathType: DirectoryOrCreate
+    extraEnvs:
+      - name: TEST_KEY
+        value: TEST_VALUE
   - name: prometheus
     extraArgs:
       - key: log.level
@@ -62,3 +77,6 @@ componentsPatches:
         mountPath: /extras/tmp
         readOnly: false
         pathType: DirectoryOrCreate
+    extraEnvs:
+      - name: TEST_KEY
+        value: TEST_VALUE

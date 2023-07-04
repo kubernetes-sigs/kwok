@@ -299,6 +299,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		Verbosity:    verbosity,
 		ExtraArgs:    etcdComponentPatches.ExtraArgs,
 		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
+		ExtraEnvs:    etcdComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -338,6 +339,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
 		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
+		ExtraEnvs:         kubeApiserverComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -375,6 +377,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
 			ExtraArgs:                          kubeControllerManagerComponentPatches.ExtraArgs,
 			ExtraVolumes:                       kubeControllerManagerComponentPatches.ExtraVolumes,
+			ExtraEnvs:                          kubeControllerManagerComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -420,6 +423,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			DisableQPSLimits: conf.DisableQPSLimits,
 			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
 			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
+			ExtraEnvs:        kubeSchedulerComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -459,6 +463,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
 		ExtraVolumes:             kwokControllerExtraVolumes,
+		ExtraEnvs:                kwokControllerComponentPatches.ExtraEnvs,
 	})
 	config.Components = append(config.Components, kwokControllerComponent)
 
@@ -505,6 +510,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 			Verbosity:     verbosity,
 			ExtraArgs:     prometheusComponentPatches.ExtraArgs,
 			ExtraVolumes:  prometheusComponentPatches.ExtraVolumes,
+			ExtraEnvs:     prometheusComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err

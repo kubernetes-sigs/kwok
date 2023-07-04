@@ -88,6 +88,11 @@ func (in *ComponentPatches) DeepCopyInto(out *ComponentPatches) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.ExtraEnvs != nil {
+		in, out := &in.ExtraEnvs, &out.ExtraEnvs
+		*out = make([]Env, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

@@ -895,6 +895,7 @@ func autoConvert_internalversion_ComponentPatches_To_v1alpha1_ComponentPatches(i
 	} else {
 		out.ExtraVolumes = nil
 	}
+	out.ExtraEnvs = *(*[]configv1alpha1.Env)(unsafe.Pointer(&in.ExtraEnvs))
 	return nil
 }
 
@@ -917,6 +918,7 @@ func autoConvert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(i
 	} else {
 		out.ExtraVolumes = nil
 	}
+	out.ExtraEnvs = *(*[]Env)(unsafe.Pointer(&in.ExtraEnvs))
 	return nil
 }
 
