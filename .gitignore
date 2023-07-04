@@ -1,5 +1,6 @@
 # build and test outputs
 /bin/
+/artifacts/
 
 # used for the code generators only
 /vendor/
