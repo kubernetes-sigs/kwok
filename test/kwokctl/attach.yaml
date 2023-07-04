@@ -6,9 +6,9 @@ metadata:
   namespace: other
 spec:
   attaches:
-    - containers:
-      - fake-pod
-      logsFile: ./logs/kwok.log
+  - containers:
+    - fake-pod
+    logsFile: ./logs/kwok.log
 ---
 # Match pods
 kind: ClusterAttach
@@ -18,8 +18,8 @@ metadata:
 spec:
   selector:
     matchNamespaces:
-      - default
+    - default
   attaches:
-    - containers:
-      - fake-pod
-      logsFile: ./logs/kwok.log
+  - containers:
+    - fake-pod
+    logsFile: ./logs/kwok.log

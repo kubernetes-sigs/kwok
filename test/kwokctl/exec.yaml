@@ -5,10 +5,10 @@ metadata:
   namespace: other
 spec:
   execs:
-    - containers:
-        - fake-pod
-      local:
-        workDir: /tmp
+  - containers:
+    - fake-pod
+    local:
+      workDir: /tmp
 
 ---
 kind: ClusterExec
@@ -18,9 +18,9 @@ metadata:
 spec:
   selector:
     matchNamespaces:
-      - default
+    - default
   execs:
-    - local:
-        envs:
-          - name: TEST_ENV
-            value: test
+  - local:
+      envs:
+      - name: TEST_ENV
+        value: test

@@ -8,14 +8,14 @@ spec:
     kind: Node
   selector:
     matchExpressions:
-      - key: '.status.phase'
-        operator: 'In'
-        values:
-          - Running
-      - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
-        operator: 'In'
-        values:
-          - 'True'
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - Running
+    - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+      operator: 'In'
+      values:
+      - 'True'
   delay:
     durationMilliseconds: 20000
     jitterDurationMilliseconds: 25000

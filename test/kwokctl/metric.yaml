@@ -5,47 +5,47 @@ metadata:
 spec:
   path: "/metrics/nodes/fake-node"
   metrics:
-    - name: kubelet_node_name
-      help: "[ALPHA] The node's name. The count is always 1."
-      kind: gauge
-      labels:
-        - name: node
-          value: 'node.metadata.name'
-      value: '1.0'
-    - name: kubelet_started_containers_total
-      help: "[ALPHA] Cumulative number of containers started"
-      kind: counter
-      value: 'startedContainersTotal( node.metadata.name )'
-    - name: kubelet_pleg_relist_duration_seconds
-      help: "[ALPHA] Duration in seconds of a single pod list and pod events list call."
-      kind: histogram
-      buckets:
-        - le: 0.005
-          value: '0'
+  - name: kubelet_node_name
+    help: "[ALPHA] The node's name. The count is always 1."
+    kind: gauge
+    labels:
+    - name: node
+      value: 'node.metadata.name'
+    value: '1.0'
+  - name: kubelet_started_containers_total
+    help: "[ALPHA] Cumulative number of containers started"
+    kind: counter
+    value: 'startedContainersTotal( node.metadata.name )'
+  - name: kubelet_pleg_relist_duration_seconds
+    help: "[ALPHA] Duration in seconds of a single pod list and pod events list call."
+    kind: histogram
+    buckets:
+    - le: 0.005
+      value: '0'
 
-        - le: 0.01
-          value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 10'
-        - le: 0.025
-          value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 9'
-        - le: 0.05
-          value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 9'
-        - le: 0.1
-          value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 8'
-        - le: 0.25
-          value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 8'
-        - le: 0.5
-          value: 'unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)'
-        - le: 1
-          value: 'unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)'
-        - le: 2.5
-          value: 'unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)'
-        - le: 5
-          value: '1'
-        - le: 7.5
-          value: '1'
-          hidden: true
-        - le: 10
-          value: '1'
-        - le: 20
-          value: '1'
-          hidden: true
+    - le: 0.01
+      value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 10'
+    - le: 0.025
+      value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 9'
+    - le: 0.05
+      value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 9'
+    - le: 0.1
+      value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 8'
+    - le: 0.25
+      value: '(unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)) / 8'
+    - le: 0.5
+      value: 'unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)'
+    - le: 1
+      value: 'unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)'
+    - le: 2.5
+      value: 'unixSecond(now()) - unixSecond(node.metadata.creationTimestamp)'
+    - le: 5
+      value: '1'
+    - le: 7.5
+      value: '1'
+      hidden: true
+    - le: 10
+      value: '1'
+    - le: 20
+      value: '1'
+      hidden: true

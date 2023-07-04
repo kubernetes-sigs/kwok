@@ -4,24 +4,24 @@ options:
   # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
   machineType: E2_HIGHCPU_32
 steps:
-  - name: "gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20230424-910a2a439d"
-    entrypoint: "bash"
-    env:
-      - DOCKER_CLI_EXPERIMENTAL=enabled
-      - GIT_TAG=$_GIT_TAG
-      - BASE_REF=$_PULL_BASE_REF
-      - PUSH=true
-      - BUCKET=gs://k8s-staging-kwok
-      - STAGING=true
-      - STAGING_IMAGE_PREFIX=gcr.io/k8s-staging-kwok
-      - IMAGE_PREFIX=registry.k8s.io/kwok
-      - NUMBER_SUPPORTED_KUBE_RELEASES=6
-      - PRE_RELEASE=GA
-    args:
-      - -c
-      - |
-        ./hack/requirements.sh gsutil buildx kustomize
-        make manifests cross-build cross-image cross-cluster-image
+- name: "gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20230424-910a2a439d"
+  entrypoint: "bash"
+  env:
+  - DOCKER_CLI_EXPERIMENTAL=enabled
+  - GIT_TAG=$_GIT_TAG
+  - BASE_REF=$_PULL_BASE_REF
+  - PUSH=true
+  - BUCKET=gs://k8s-staging-kwok
+  - STAGING=true
+  - STAGING_IMAGE_PREFIX=gcr.io/k8s-staging-kwok
+  - IMAGE_PREFIX=registry.k8s.io/kwok
+  - NUMBER_SUPPORTED_KUBE_RELEASES=6
+  - PRE_RELEASE=GA
+  args:
+  - -c
+  - |
+    ./hack/requirements.sh gsutil buildx kustomize
+    make manifests cross-build cross-image cross-cluster-image
 
 substitutions:
   # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and

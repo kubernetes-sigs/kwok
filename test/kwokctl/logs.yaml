@@ -5,10 +5,10 @@ metadata:
   namespace: other
 spec:
   logs:
-    - containers:
-      - fake-pod
-      logsFile: ./logs/kwok.log
-      follow: true
+  - containers:
+    - fake-pod
+    logsFile: ./logs/kwok.log
+    follow: true
 ---
 
 kind: ClusterLogs
@@ -18,9 +18,9 @@ metadata:
 spec:
   selector:
     matchNamespaces:
-      - default
+    - default
   logs:
-    - containers:
-      - fake-pod
-      logsFile: ./logs/kwok.log
-      follow: true
+  - containers:
+    - fake-pod
+    logsFile: ./logs/kwok.log
+    follow: true

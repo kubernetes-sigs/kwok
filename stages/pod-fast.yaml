@@ -8,10 +8,10 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'DoesNotExist'
-      - key: '.status.podIP'
-        operator: 'DoesNotExist'
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.podIP'
+      operator: 'DoesNotExist'
   next:
     statusTemplate: |
       {{ $now := Now }}
@@ -72,16 +72,16 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'DoesNotExist'
-      - key: '.status.phase'
-        operator: 'In'
-        values:
-          - 'Running'
-      - key: '.metadata.ownerReferences.[].kind'
-        operator: 'In'
-        values:
-          - 'Job'
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - 'Running'
+    - key: '.metadata.ownerReferences.[].kind'
+      operator: 'In'
+      values:
+      - 'Job'
   next:
     statusTemplate: |
       {{ $now := Now }}
@@ -113,8 +113,8 @@ spec:
     kind: Pod
   selector:
     matchExpressions:
-      - key: '.metadata.deletionTimestamp'
-        operator: 'Exists'
+    - key: '.metadata.deletionTimestamp'
+      operator: 'Exists'
   next:
     finalizers:
       empty: true

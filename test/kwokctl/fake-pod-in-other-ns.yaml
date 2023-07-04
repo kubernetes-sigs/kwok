@@ -10,5 +10,5 @@ metadata:
   namespace: other
 spec:
   containers:
-    - name: fake-pod
-      image: fake
+  - name: fake-pod
+    image: fake

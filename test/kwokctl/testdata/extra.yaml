@@ -2,81 +2,81 @@ kind: KwokctlConfiguration
 options:
   prometheusPort: 9090
 componentsPatches:
-  - name: kube-apiserver
-    extraArgs:
-      - key: v
-        value: "5"
-    extraVolumes:
-      - name: tmp-apiserver
-        hostPath: ./extras/apiserver
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-    extraEnvs:
-      - name: TEST_KEY
-        value: TEST_VALUE
-  - name: kube-controller-manager
-    extraArgs:
-      - key: v
-        value: "5"
-    extraVolumes:
-      - name: tmp-controller-manager
-        hostPath: ./extras/controller-manager
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-    extraEnvs:
-      - name: TEST_KEY
-        value: TEST_VALUE
-  - name: kube-scheduler
-    extraArgs:
-      - key: v
-        value: "5"
-    extraVolumes:
-      - name: tmp-scheduler
-        hostPath: ./extras/scheduler
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-    extraEnvs:
-      - name: TEST_KEY
-        value: TEST_VALUE
-  - name: kwok-controller
-    extraArgs:
-      - key: v
-        value: "-4"
-    extraVolumes:
-      - name: tmp-controller
-        hostPath: ./extras/controller
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-    extraEnvs:
-      - name: TEST_KEY
-        value: TEST_VALUE
-  - name: etcd
-    extraArgs:
-      - key: log-level
-        value: "debug"
-    extraVolumes:
-      - name: tmp-etcd
-        hostPath: ./extras/etcd
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-    extraEnvs:
-      - name: TEST_KEY
-        value: TEST_VALUE
-  - name: prometheus
-    extraArgs:
-      - key: log.level
-        value: "debug"
-    extraVolumes:
-      - name: tmp-prometheus
-        hostPath: ./extras/prometheus
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-    extraEnvs:
-      - name: TEST_KEY
-        value: TEST_VALUE
+- name: kube-apiserver
+  extraArgs:
+  - key: v
+    value: "5"
+  extraVolumes:
+  - name: tmp-apiserver
+    hostPath: ./extras/apiserver
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+  extraEnvs:
+  - name: TEST_KEY
+    value: TEST_VALUE
+- name: kube-controller-manager
+  extraArgs:
+  - key: v
+    value: "5"
+  extraVolumes:
+  - name: tmp-controller-manager
+    hostPath: ./extras/controller-manager
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+  extraEnvs:
+  - name: TEST_KEY
+    value: TEST_VALUE
+- name: kube-scheduler
+  extraArgs:
+  - key: v
+    value: "5"
+  extraVolumes:
+  - name: tmp-scheduler
+    hostPath: ./extras/scheduler
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+  extraEnvs:
+  - name: TEST_KEY
+    value: TEST_VALUE
+- name: kwok-controller
+  extraArgs:
+  - key: v
+    value: "-4"
+  extraVolumes:
+  - name: tmp-controller
+    hostPath: ./extras/controller
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+  extraEnvs:
+  - name: TEST_KEY
+    value: TEST_VALUE
+- name: etcd
+  extraArgs:
+  - key: log-level
+    value: "debug"
+  extraVolumes:
+  - name: tmp-etcd
+    hostPath: ./extras/etcd
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+  extraEnvs:
+  - name: TEST_KEY
+    value: TEST_VALUE
+- name: prometheus
+  extraArgs:
+  - key: log.level
+    value: "debug"
+  extraVolumes:
+  - name: tmp-prometheus
+    hostPath: ./extras/prometheus
+    mountPath: /extras/tmp
+    readOnly: false
+    pathType: DirectoryOrCreate
+  extraEnvs:
+  - name: TEST_KEY
+    value: TEST_VALUE

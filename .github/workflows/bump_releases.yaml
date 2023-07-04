@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: "0 0 * * *"
+  - cron: "0 0 * * *"
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'kubernetes-sigs/kwok' }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Update
-        env:
-          SEND_PR: 'true'
-        run: |
-          ./hack/supported_releases.sh
+    - uses: actions/checkout@v3
+    - name: Update
+      env:
+        SEND_PR: 'true'
+      run: |
+        ./hack/supported_releases.sh

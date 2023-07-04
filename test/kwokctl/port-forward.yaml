@@ -5,20 +5,20 @@ metadata:
   namespace: other
 spec:
   forwards:
-    # match the port 8001 forwards to the targetAddress:targetPort
-    - ports:
-        - 8001
-      target:
-        port: 10247
-        address: localhost
+  # match the port 8001 forwards to the targetAddress:targetPort
+  - ports:
+    - 8001
+    target:
+      port: 10247
+      address: localhost
 
-    # match the port 8002 forwards with the stdin/stdout of nc
-    - ports:
-        - 8002
-      command:
-        - nc
-        - localhost
-        - "10247"
+  # match the port 8002 forwards with the stdin/stdout of nc
+  - ports:
+    - 8002
+    command:
+    - nc
+    - localhost
+    - "10247"
 
 ---
 
@@ -29,15 +29,15 @@ metadata:
 spec:
   selector:
     matchNamespaces:
-      - default
+    - default
   forwards:
-    # invalid port
-    - ports:
-        - 8005
-      target:
-        port: 0
-        address: localhost
+  # invalid port
+  - ports:
+    - 8005
+    target:
+      port: 0
+      address: localhost
 
-    - target:
-        port: 10247
-        address: localhost
+  - target:
+      port: 10247
+      address: localhost

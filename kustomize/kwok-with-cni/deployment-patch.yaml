@@ -15,30 +15,30 @@ spec:
         app: kwok-controller
     spec:
       containers:
-        - name: kwok-controller
-          securityContext:
-            capabilities:
-              add:
-              - ALL
-          args:
-          - --manage-all-nodes=false
-          - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-          - --manage-nodes-with-label-selector=
-          - --disregard-status-with-annotation-selector=kwok.x-k8s.io/status=custom
-          - --disregard-status-with-label-selector=
-          - --node-ip=$(POD_IP)
-          - --node-port=10247
-          - --node-lease-duration-seconds=40
-          - --experimental-enable-cni=true
-          volumeMounts:
-          - name: etc-cni
-            mountPath: /etc/cni
-          - name: opt-cni
-            mountPath: /opt/cni
-          - name: var-lib-cni
-            mountPath: /var/lib/cni
-          - name: var-run-netns
-            mountPath: /var/run/netns
+      - name: kwok-controller
+        securityContext:
+          capabilities:
+            add:
+            - ALL
+        args:
+        - --manage-all-nodes=false
+        - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
+        - --manage-nodes-with-label-selector=
+        - --disregard-status-with-annotation-selector=kwok.x-k8s.io/status=custom
+        - --disregard-status-with-label-selector=
+        - --node-ip=$(POD_IP)
+        - --node-port=10247
+        - --node-lease-duration-seconds=40
+        - --experimental-enable-cni=true
+        volumeMounts:
+        - name: etc-cni
+          mountPath: /etc/cni
+        - name: opt-cni
+          mountPath: /opt/cni
+        - name: var-lib-cni
+          mountPath: /var/lib/cni
+        - name: var-run-netns
+          mountPath: /var/run/netns
       volumes:
       - name: etc-cni
         hostPath:

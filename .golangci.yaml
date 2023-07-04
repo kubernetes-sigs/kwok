@@ -2,63 +2,62 @@
 linters:
   disable-all: true
   enable:
-    - asciicheck
-    - bodyclose
-    - depguard
-    - dogsled
-    - errcheck
-    - errorlint
-    - exportloopref
-    - gci
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - importas
-    - ineffassign
-    - misspell
-    - nakedret
-    - nilerr
-    - nolintlint
-    - prealloc
-    - revive
-    # - rowserrcheck
-    - staticcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - usestdlibvars
-    - whitespace
+  - asciicheck
+  - bodyclose
+  - depguard
+  - dogsled
+  - errcheck
+  - errorlint
+  - exportloopref
+  - gci
+  - goconst
+  - gocritic
+  - gocyclo
+  - gofmt
+  - goimports
+  - goprintffuncname
+  - gosec
+  - gosimple
+  - govet
+  - importas
+  - ineffassign
+  - misspell
+  - nakedret
+  - nilerr
+  - nolintlint
+  - prealloc
+  - revive
+  - staticcheck
+  - stylecheck
+  - typecheck
+  - unconvert
+  - unparam
+  - unused
+  - usestdlibvars
+  - whitespace
 
 linters-settings:
   gci:
     sections:
-      - standard
-      - default
-      - prefix(sigs.k8s.io/kwok)
-      - blank
-      - dot
+    - standard
+    - default
+    - prefix(sigs.k8s.io/kwok)
+    - blank
+    - dot
     skip-generated: true
     custom-order: true
   importas:
     no-unaliased: true
     alias:
-      # Kubernetes
-      - pkg: k8s.io/api/core/v1
-        alias: corev1
-      - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
-        alias: apiextensionsv1
-      - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
-        alias: metav1
-      - pkg: k8s.io/apimachinery/pkg/api/errors
-        alias: apierrors
+    # Kubernetes
+    - pkg: k8s.io/api/core/v1
+      alias: corev1
+    - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
+      alias: apiextensionsv1
+    - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+      alias: metav1
+    - pkg: k8s.io/apimachinery/pkg/api/errors
+      alias: apierrors
   staticcheck:
     go: "1.20"
   stylecheck:
@@ -68,23 +67,23 @@ linters-settings:
   depguard:
     include-go-root: true
     packages:
-      - io/ioutil # https://go.dev/doc/go1.16#ioutil
+    - io/ioutil # https://go.dev/doc/go1.16#ioutil
     packages-with-error-message:
-      # Use sigs.k8s.io/kwok/pkg/log, which is a wrapper around slog
-      - k8s.io/klog/v2: "please use `sigs.k8s.io/kwok/pkg/log`instead"
-      - k8s.io/klog: "please use `sigs.k8s.io/kwok/pkg/log instead"
-      - golang.org/x/exp/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-      - log: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-      # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
-      - k8s.io/apimachinery/pkg/util/wait: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
-      # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
-      - k8s.io/utils/strings/slices: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
+    # Use sigs.k8s.io/kwok/pkg/log, which is a wrapper around slog
+    - k8s.io/klog/v2: "please use `sigs.k8s.io/kwok/pkg/log`instead"
+    - k8s.io/klog: "please use `sigs.k8s.io/kwok/pkg/log instead"
+    - golang.org/x/exp/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+    - log: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+    # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
+    - k8s.io/apimachinery/pkg/util/wait: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
+    # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
+    - k8s.io/utils/strings/slices: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
   gocyclo:
     min-complexity: 50
   gosec:
     excludes:
-      - G110
-      - G304
+    - G110
+    - G304
     config:
       G301: "0750"
       G302: "0640"
@@ -99,15 +98,15 @@ issues:
   # List of regexps of issue texts to exclude, empty list by default.
   exclude: []
   exclude-rules:
-    # With Go 1.16, the new embed directive can be used with an un-named import,
-    # revive (previously, golint) only allows these to be imported in a main.go, which wouldn't work for us.
-    # This directive allows the embed package to be imported with an underscore everywhere.
-    - linters:
-        - revive
-      source: _ "embed"
+  # With Go 1.16, the new embed directive can be used with an un-named import,
+  # revive (previously, golint) only allows these to be imported in a main.go, which wouldn't work for us.
+  # This directive allows the embed package to be imported with an underscore everywhere.
+  - linters:
+    - revive
+    source: _ "embed"
 run:
   timeout: 10m
   allow-parallel-runners: true
   skip-dirs-use-default: true
   skip-files:
-    - ".*\\.zz_generated\\..*"
+  - ".*\\.zz_generated\\..*"

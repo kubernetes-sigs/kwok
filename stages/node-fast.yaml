@@ -8,10 +8,10 @@ spec:
     kind: Node
   selector:
     matchExpressions:
-      - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
-        operator: 'NotIn'
-        values:
-          - 'True'
+    - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+      operator: 'NotIn'
+      values:
+      - 'True'
   next:
     statusTemplate: |
       {{ $now := Now }}
