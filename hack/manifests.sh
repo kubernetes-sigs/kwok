@@ -22,6 +22,7 @@ BUCKET=""
 GH_RELEASE=""
 IMAGE_PREFIX="${DEFAULT_IMAGE_PREFIX}"
 VERSION=""
+STAGING_PREFIX=""
 DRY_RUN=false
 PUSH=false
 KUSTOMIZES=()
@@ -33,6 +34,7 @@ function usage() {
   echo "  --gh-release <gh-release> is github release"
   echo "  --image-prefix <image-prefix> is kwok image prefix"
   echo "  --version <version> is version of binary"
+  echo "  --staging-prefix <staging-prefix> is staging prefix for bucket"
   echo "  --push will push binary to bucket"
   echo "  --dry-run just show what would be done"
 }
@@ -60,6 +62,10 @@ function args() {
       ;;
     --version | --version=*)
       [[ "${arg#*=}" != "${arg}" ]] && VERSION="${arg#*=}" || { VERSION="${2}" && shift; } || :
+      shift
+      ;;
+    --staging-prefix | --staging-prefix=*)
+      [[ "${arg#*=}" != "${arg}" ]] && STAGING_PREFIX="${arg#*=}" || { STAGING_PREFIX="${2}" && shift; } || :
       shift
       ;;
     --push | --push=*)
@@ -107,7 +113,11 @@ function main() {
     dry_run rm -r "./artifacts/kustomize"
     if [[ "${PUSH}" == "true" ]]; then
       if [[ "${BUCKET}" != "" ]]; then
-        dry_run gsutil cp -P "./artifacts/${kustomize}.yaml" "${BUCKET}/releases/${VERSION}/manifests/${kustomize}.yaml"
+        prefix="${BUCKET}/releases/"
+        if [[ "${STAGING_PREFIX}" != "" ]]; then
+          prefix="${BUCKET}/releases/${STAGING_PREFIX}-"
+        fi
+        dry_run gsutil cp -P "./artifacts/${kustomize}.yaml" "${prefix}${VERSION}/manifests/${kustomize}.yaml"
       fi
       if [[ "${GH_RELEASE}" != "" ]]; then
         dry_run gh -R "${GH_RELEASE}" release upload "${VERSION}" "./artifacts/${kustomize}.yaml"

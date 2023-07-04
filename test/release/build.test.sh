@@ -448,7 +448,7 @@ function manifests_with_push_bucket() {
   echo "kustomize build . -o ../../kwok.yaml"
   echo "cd -"
   echo "rm -r ./artifacts/kustomize"
-  echo "gsutil cp -P ./artifacts/kwok.yaml bucket/releases/${VERSION}/manifests/kwok.yaml"
+  echo "gsutil cp -P ./artifacts/kwok.yaml bucket/releases/${PREFIX}-${VERSION}/manifests/kwok.yaml"
 }
 
 function main() {
@@ -515,7 +515,7 @@ function main() {
 
   make --no-print-directory -C "${ROOT_DIR}" IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(want_manifests) - || failed+=("manifests")
   make --no-print-directory -C "${ROOT_DIR}" PUSH=true GH_RELEASE=ghrelease IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(manifests_with_push_ghrelease) - || failed+=("manifests-with-push-ghrelease")
-  make --no-print-directory -C "${ROOT_DIR}" PUSH=true BUCKET=bucket IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(manifests_with_push_bucket) - || failed+=("manifests-with-push-bucket")
+  make --no-print-directory -C "${ROOT_DIR}" PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(manifests_with_push_bucket) - || failed+=("manifests-with-push-bucket")
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
     echo "Error: Some tests failed"
