@@ -732,7 +732,7 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 
 	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open %s: %w", logs, err)
 	}
 	defer func() {
 		err = f.Close()

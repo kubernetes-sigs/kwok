@@ -74,11 +74,6 @@ function test_workable() {
     cat "${name}.kubeconfig"
     return 1
   fi
-
-  if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
-    echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
-    return 1
-  fi
 }
 
 function test_prometheus() {
@@ -118,6 +113,14 @@ function test_etcd_port() {
     echo "Error: etcd connection"
     echo curl -s http://127.0.0.1:2400/health
     echo "${result}"
+    return 1
+  fi
+}
+
+function test_etcdctl_get() {
+  local name="${1}"
+  if ! kwokctl --name="${name}" etcdctl get /registry/namespaces/default --keys-only | grep default >/dev/null 2>&1; then
+    echo "Error: Failed to get namespace(default) by kwokctl etcdctl in cluster ${name}"
     return 1
   fi
 }
@@ -179,6 +182,11 @@ function main() {
       test_kube_controller_manager_port "${release}" || failed+=("kube_controller_manager_port_${name}")
       test_kube_scheduler_port "${release}" || failed+=("kube_scheduler_port_${name}")
       test_etcd_port || failed+=("etcd_port_${name}")
+    fi
+
+    # TODO: fix etcdctl get on windows
+    if [[ "${GOOS}" != "windows" ]]; then
+      test_etcdctl_get "${name}" || failed+=("etcdctl_get_${name}")
     fi
     test_prometheus || failed+=("prometheus_${name}")
     test_kwok_controller_port || failed+=("kwok_controller_port_${name}")

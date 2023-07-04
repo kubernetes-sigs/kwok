@@ -66,7 +66,11 @@ func Expand(path string) (string, error) {
 		}
 	}
 
-	return filepath.Abs(path)
+	p, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	return Clean(p), nil
 }
 
 // RelFromHome returns a path relative to the home directory.
@@ -89,10 +93,20 @@ func Join(elem ...string) string {
 
 // Dir is a wrapper around filepath.Dir.
 func Dir(path string) string {
-	return filepath.Dir(path)
+	return Clean(filepath.Dir(path))
 }
 
 // Base is a wrapper around filepath.Base.
 func Base(path string) string {
 	return filepath.Base(path)
+}
+
+// Ext is a wrapper around filepath.Ext.
+func Ext(path string) string {
+	return filepath.Ext(path)
+}
+
+// OnlyName returns the file name without extension.
+func OnlyName(path string) string {
+	return strings.TrimSuffix(Base(path), Ext(path))
 }
