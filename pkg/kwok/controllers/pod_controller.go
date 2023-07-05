@@ -39,6 +39,7 @@ import (
 	"k8s.io/utils/clock"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
@@ -68,7 +69,7 @@ type PodController struct {
 	preprocessChan                        chan *corev1.Pod
 	playStageChan                         chan resourceStageJob[*corev1.Pod]
 	playStageParallelism                  uint
-	lifecycle                             Lifecycle
+	lifecycle                             resources.Getter[Lifecycle]
 	cronjob                               *cron.Cron
 	delayJobs                             jobInfoMap
 	recorder                              record.EventRecorder
@@ -88,7 +89,7 @@ type PodControllerConfig struct {
 	Namespace                             string
 	NodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	NodeHasMetric                         func(nodeName string) bool
-	Stages                                []*internalversion.Stage
+	Lifecycle                             resources.Getter[Lifecycle]
 	PlayStageParallelism                  uint
 	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
@@ -111,11 +112,6 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		return nil, err
 	}
 
-	lifecycles, err := NewLifecycle(conf.Stages)
-	if err != nil {
-		return nil, err
-	}
-
 	if conf.Clock == nil {
 		conf.Clock = clock.RealClock{}
 	}
@@ -131,7 +127,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		namespace:                             conf.Namespace,
 		nodeGetFunc:                           conf.NodeGetFunc,
 		cronjob:                               cron.NewCron(),
-		lifecycle:                             lifecycles,
+		lifecycle:                             conf.Lifecycle,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Pod),
 		triggerPreprocessChan:                 make(chan string, 16),
@@ -294,7 +290,8 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		return err
 	}
 
-	stage, err := c.lifecycle.Match(pod.Labels, pod.Annotations, data)
+	lifecycle := c.lifecycle.Get()
+	stage, err := lifecycle.Match(pod.Labels, pod.Annotations, data)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}

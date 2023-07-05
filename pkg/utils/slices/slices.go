@@ -46,6 +46,18 @@ func Filter[S ~[]T, T any](s S, f func(T) bool) []T {
 	return out
 }
 
+// FilterAndMap returns a new slice containing the results of applying the given function
+// to all elements in the slice that satisfy the predicate f.
+func FilterAndMap[S ~[]T, T any, O any](s S, f func(T) (O, bool)) []O {
+	out := make([]O, 0, len(s))
+	for _, v := range s {
+		if o, ok := f(v); ok {
+			out = append(out, o)
+		}
+	}
+	return out
+}
+
 // Contains returns true if the slice contains the given element.
 func Contains[S ~[]T, T comparable](s S, t T) bool {
 	for _, v := range s {

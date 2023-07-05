@@ -16,23 +16,20 @@ limitations under the License.
 
 package resources
 
-import (
-	"context"
-)
-
-// Getter is an interface for getting resources.
-type Getter[O any] interface {
-	Get() O
-	Version() string
+type filterGetter[O any, T any] struct {
+	getter     Getter[T]
+	filterFunc func(T) O
 }
 
-// DynamicGetter is an interface for getting resources.
-type DynamicGetter[O any] interface {
-	Getter[O]
-	Starter
+// NewFilter returns a new Getter that returns the given list.
+func NewFilter[O any, T any](getter Getter[T], filterFunc func(T) O) Getter[O] {
+	return withCache[O](&filterGetter[O, T]{getter: getter, filterFunc: filterFunc})
 }
 
-// Starter is an interface for starting resources.
-type Starter interface {
-	Start(ctx context.Context) error
+func (f *filterGetter[O, T]) Get() O {
+	return f.filterFunc(f.getter.Get())
+}
+
+func (f *filterGetter[O, T]) Version() string {
+	return f.getter.Version()
 }

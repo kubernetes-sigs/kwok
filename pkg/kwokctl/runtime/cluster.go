@@ -181,39 +181,52 @@ func (c *Cluster) Save(ctx context.Context) error {
 	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
 	objs = append(objs, others...)
 
-	if conf.Options.NodeLeaseDurationSeconds == 0 {
-		if updateFrequency := conf.Options.NodeStatusUpdateFrequencyMilliseconds; updateFrequency > 0 &&
-			conf.Options.Runtime != consts.RuntimeTypeKind &&
-			conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
-			len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
-			nodeStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
-			if err != nil {
-				return err
-			}
-			for _, stage := range nodeStages {
-				objs = append(objs, stage)
-			}
-
-			nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
-			if err != nil {
-				return err
-			}
-			hasUpdate := false
-			for _, stage := range nodeHeartbeatStages {
-				if stage.Name == "node-heartbeat" {
-					stage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
-					stage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
-					hasUpdate = true
-				}
-				objs = append(objs, stage)
-			}
-			if !hasUpdate {
-				return fmt.Errorf("failed to update node heartbeat stage")
-			}
+	kwokConfigs := config.FilterWithTypeFromContext[*internalversion.KwokConfiguration](ctx)
+	if (len(kwokConfigs) == 0 || !slices.Contains(kwokConfigs[0].Options.EnableCRDs, v1alpha1.StageKind)) &&
+		conf.Options.NodeLeaseDurationSeconds == 0 &&
+		conf.Options.NodeStatusUpdateFrequencyMilliseconds > 0 &&
+		conf.Options.Runtime != consts.RuntimeTypeKind &&
+		conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
+		len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
+		defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds == 0)
+		if err != nil {
+			return err
 		}
+		objs = append(objs, defaultStages...)
 	}
 
 	return config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)
+}
+
+func (c *Cluster) getDefaultStages(updateFrequency int64, nodeHeartbeat bool) ([]config.InternalObject, error) {
+	objs := []config.InternalObject{}
+	nodeStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+	if err != nil {
+		return nil, err
+	}
+	for _, stage := range nodeStages {
+		objs = append(objs, stage)
+	}
+
+	if nodeHeartbeat {
+		nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+		if err != nil {
+			return nil, err
+		}
+		hasUpdate := false
+		for _, stage := range nodeHeartbeatStages {
+			if stage.Name == "node-heartbeat" {
+				stage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
+				stage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
+				hasUpdate = true
+			}
+			objs = append(objs, stage)
+		}
+		if !hasUpdate {
+			return nil, fmt.Errorf("failed to update node heartbeat stage")
+		}
+	}
+	return objs, nil
 }
 
 func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {

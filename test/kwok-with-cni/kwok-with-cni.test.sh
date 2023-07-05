@@ -35,6 +35,7 @@ function start_cluster() {
   kind load docker-image --name="${CLUSTER_NAME}" "${KWOK_IMAGE}:${KWOK_VERSION}"
 
   kubectl kustomize "${DIR}" | kubectl apply -f -
+  kubectl kustomize "${ROOT_DIR}/stages" | kubectl apply -f -
 }
 
 # Check for normal heartbeat

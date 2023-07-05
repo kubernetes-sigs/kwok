@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 
+	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -165,13 +166,14 @@ func TestPodController(t *testing.T) {
 		return false
 	}
 	podStages, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
+	lifecycle, _ := NewLifecycle(podStages)
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
 		TypedClient:                           clientset,
 		NodeIP:                                defaultNodeIP,
 		CIDR:                                  defaultPodCIDR,
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
-		Stages:                                podStages,
+		Lifecycle:                             resources.NewStaticGetter(lifecycle),
 		NodeGetFunc:                           nodeGetFunc,
 		NodeHasMetric:                         nodeHasMetric,
 		FuncMap:                               defaultFuncMap,

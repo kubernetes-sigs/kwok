@@ -37,8 +37,13 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
+	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 var (
@@ -85,6 +90,7 @@ var (
 
 // Controller is a fake kubelet implementation that can be used to test
 type Controller struct {
+	conf        Config
 	nodes       *NodeController
 	pods        *PodController
 	nodeLeases  *NodeLeaseController
@@ -97,6 +103,7 @@ type Config struct {
 	Clock                                 clock.Clock
 	EnableCNI                             bool
 	TypedClient                           kubernetes.Interface
+	TypedKwokClient                       versioned.Interface
 	ManageAllNodes                        bool
 	ManageNodesWithAnnotationSelector     string
 	ManageNodesWithLabelSelector          string
@@ -118,18 +125,52 @@ type Config struct {
 
 // NewController creates a new fake kubelet controller
 func NewController(conf Config) (*Controller, error) {
-	var nodeSelectorFunc func(node *corev1.Node) bool
+	switch {
+	case conf.ManageAllNodes:
+		conf.ManageNodesWithAnnotationSelector = ""
+		conf.ManageNodesWithLabelSelector = ""
+	case conf.ManageNodesWithAnnotationSelector != "":
+	case conf.ManageNodesWithLabelSelector != "":
+	default:
+		return nil, fmt.Errorf("no nodes are managed")
+	}
+
+	n := &Controller{
+		conf:        conf,
+		broadcaster: record.NewBroadcaster(),
+		typedClient: conf.TypedClient,
+	}
+
+	return n, nil
+}
+
+// Start starts the controller
+func (c *Controller) Start(ctx context.Context) error {
+	if c.pods != nil || c.nodes != nil || c.nodeLeases != nil {
+		return fmt.Errorf("controller already started")
+	}
+
+	conf := c.conf
+
+	recorder := c.broadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "kwok_controller"})
+
+	var (
+		nodeLeases            *NodeLeaseController
+		getNodeOwnerFunc      func(nodeName string) []metav1.OwnerReference
+		onLeaseNodeManageFunc func(nodeName string)
+		onNodeManagedFunc     func(nodeName string)
+		readOnlyFunc          func(nodeName string) bool
+		nodeSelectorFunc      func(node *corev1.Node) bool
+	)
 	switch {
 	case conf.ManageAllNodes:
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return true
 		}
-		conf.ManageNodesWithAnnotationSelector = ""
-		conf.ManageNodesWithLabelSelector = ""
 	case conf.ManageNodesWithAnnotationSelector != "":
 		selector, err := labels.Parse(conf.ManageNodesWithAnnotationSelector)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return selector.Matches(labels.Set(node.Annotations))
@@ -139,20 +180,7 @@ func NewController(conf Config) (*Controller, error) {
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return true
 		}
-	default:
-		return nil, fmt.Errorf("no nodes are managed")
 	}
-
-	eventBroadcaster := record.NewBroadcaster()
-	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "kwok_controller"})
-
-	var (
-		nodeLeases            *NodeLeaseController
-		getNodeOwnerFunc      func(nodeName string) []metav1.OwnerReference
-		onLeaseNodeManageFunc func(nodeName string)
-		onNodeManagedFunc     func(nodeName string)
-		readOnlyFunc          func(nodeName string) bool
-	)
 
 	if conf.NodeLeaseDurationSeconds != 0 {
 		leaseDuration := time.Duration(conf.NodeLeaseDurationSeconds) * time.Second
@@ -177,7 +205,7 @@ func NewController(conf Config) (*Controller, error) {
 			},
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to create node leases controller: %w", err)
+			return fmt.Errorf("failed to create node leases controller: %w", err)
 		}
 		nodeLeases = l
 
@@ -185,6 +213,75 @@ func NewController(conf Config) (*Controller, error) {
 		readOnlyFunc = func(nodeName string) bool {
 			return !nodeLeases.Held(nodeName)
 		}
+	}
+
+	logger := log.FromContext(ctx)
+
+	var nodeLifecycleGetter resources.Getter[Lifecycle]
+	var podLifecycleGetter resources.Getter[Lifecycle]
+
+	if len(conf.PodStages) == 0 && len(conf.NodeStages) == 0 {
+		getter := resources.NewDynamicGetter[
+			[]*internalversion.Stage,
+			*v1alpha1.Stage,
+			*v1alpha1.StageList,
+		](
+			conf.TypedKwokClient.KwokV1alpha1().Stages(),
+			func(objs []*v1alpha1.Stage) []*internalversion.Stage {
+				return slices.FilterAndMap(objs, func(obj *v1alpha1.Stage) (*internalversion.Stage, bool) {
+					r, err := internalversion.ConvertToInternalStage(obj)
+					if err != nil {
+						logger.Error("failed to convert to internal stage", err, "obj", obj)
+						return nil, false
+					}
+					return r, true
+				})
+			},
+		)
+
+		nodeLifecycleGetter = resources.NewFilter[Lifecycle, []*internalversion.Stage](getter, func(stages []*internalversion.Stage) Lifecycle {
+			lifecycle := slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
+				if stage.Spec.ResourceRef.Kind != "Node" {
+					return nil, false
+				}
+
+				lifecycleStage, err := NewLifecycleStage(stage)
+				if err != nil {
+					logger.Error("failed to create node lifecycle stage", err, "stage", stage)
+					return nil, false
+				}
+				return lifecycleStage, true
+			})
+			return lifecycle
+		})
+
+		podLifecycleGetter = resources.NewFilter[Lifecycle, []*internalversion.Stage](getter, func(stages []*internalversion.Stage) Lifecycle {
+			lifecycle := slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
+				if stage.Spec.ResourceRef.Kind != "Pod" {
+					return nil, false
+				}
+
+				lifecycleStage, err := NewLifecycleStage(stage)
+				if err != nil {
+					logger.Error("failed to create node lifecycle stage", err, "stage", stage)
+					return nil, false
+				}
+				return lifecycleStage, true
+			})
+			return lifecycle
+		})
+	} else {
+		lifecycle, err := NewLifecycle(conf.PodStages)
+		if err != nil {
+			return fmt.Errorf("failed to create pod lifecycle: %w", err)
+		}
+		podLifecycleGetter = resources.NewStaticGetter(lifecycle)
+
+		lifecycle, err = NewLifecycle(conf.NodeStages)
+		if err != nil {
+			return fmt.Errorf("failed to create node lifecycle: %w", err)
+		}
+		nodeLifecycleGetter = resources.NewStaticGetter(lifecycle)
 	}
 
 	nodes, err := NewNodeController(NodeControllerConfig{
@@ -200,14 +297,14 @@ func NewController(conf Config) (*Controller, error) {
 		OnNodeManagedFunc: func(nodeName string) {
 			onNodeManagedFunc(nodeName)
 		},
-		Stages:               conf.NodeStages,
+		Lifecycle:            nodeLifecycleGetter,
 		PlayStageParallelism: conf.NodePlayStageParallelism,
 		FuncMap:              defaultFuncMap,
 		Recorder:             recorder,
 		ReadOnlyFunc:         readOnlyFunc,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create nodes controller: %w", err)
+		return fmt.Errorf("failed to create nodes controller: %w", err)
 	}
 
 	nodeHasMetric := func(nodeName string) bool {
@@ -222,7 +319,7 @@ func NewController(conf Config) (*Controller, error) {
 		CIDR:                                  conf.CIDR,
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
-		Stages:                                conf.PodStages,
+		Lifecycle:                             podLifecycleGetter,
 		PlayStageParallelism:                  conf.PodPlayStageParallelism,
 		Namespace:                             corev1.NamespaceAll,
 		NodeGetFunc:                           nodes.Get,
@@ -232,7 +329,7 @@ func NewController(conf Config) (*Controller, error) {
 		ReadOnlyFunc:                          readOnlyFunc,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create pods controller: %w", err)
+		return fmt.Errorf("failed to create pods controller: %w", err)
 	}
 
 	if nodeLeases != nil {
@@ -260,34 +357,25 @@ func NewController(conf Config) (*Controller, error) {
 		}
 	}
 
-	n := &Controller{
-		pods:        pods,
-		nodes:       nodes,
-		nodeLeases:  nodeLeases,
-		broadcaster: eventBroadcaster,
-		typedClient: conf.TypedClient,
-	}
-
-	return n, nil
-}
-
-// Start starts the controller
-func (c *Controller) Start(ctx context.Context) error {
 	c.broadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{Interface: c.typedClient.CoreV1().Events("")})
-	if c.nodeLeases != nil {
-		err := c.nodeLeases.Start(ctx)
+	if nodeLeases != nil {
+		err := nodeLeases.Start(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to start node leases controller: %w", err)
 		}
 	}
-	err := c.pods.Start(ctx)
+	err = pods.Start(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start pods controller: %w", err)
 	}
-	err = c.nodes.Start(ctx)
+	err = nodes.Start(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start nodes controller: %w", err)
 	}
+
+	c.pods = pods
+	c.nodes = nodes
+	c.nodeLeases = nodeLeases
 	return nil
 }
 

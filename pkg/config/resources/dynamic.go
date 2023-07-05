@@ -18,7 +18,6 @@ package resources
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,9 +38,17 @@ type ConvertFunc[O any, T runtime.Object, S ~[]T] func(objs S) O
 
 // NewDynamicGetter returns a new Getter that returns the latest list of resources.
 func NewDynamicGetter[O any, T runtime.Object, L runtime.Object](syncer Syncer[T, L], convertFunc ConvertFunc[O, T, []T]) DynamicGetter[O] {
-	return &dynamicGetter[O, T, L]{
+	getter := &dynamicGetter[O, T, L]{
 		syncer:      syncer,
 		convertFunc: convertFunc,
+	}
+
+	return struct {
+		Getter[O]
+		Starter
+	}{
+		Getter:  withCache[O](getter),
+		Starter: getter,
 	}
 }
 
@@ -52,11 +59,6 @@ type dynamicGetter[O any, T runtime.Object, L runtime.Object] struct {
 
 	store      cache.Store
 	controller cache.Controller
-
-	currentVer string
-	data       O
-
-	mut sync.RWMutex
 }
 
 func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
@@ -82,25 +84,6 @@ func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
 }
 
 func (c *dynamicGetter[O, T, L]) Get() O {
-	latestVer := c.controller.LastSyncResourceVersion()
-
-	c.mut.RLock()
-	if latestVer == c.currentVer {
-		data := c.data
-		c.mut.RUnlock()
-		return data
-	}
-	c.mut.RUnlock()
-	return c.updateAndReturn(latestVer)
-}
-
-func (c *dynamicGetter[O, T, L]) updateAndReturn(latestVer string) O {
-	c.mut.Lock()
-	defer c.mut.Unlock()
-	if latestVer == c.currentVer {
-		return c.data
-	}
-
 	list := c.store.List()
 	currentList := make([]T, 0, len(list))
 	for _, obj := range list {
@@ -108,7 +91,9 @@ func (c *dynamicGetter[O, T, L]) updateAndReturn(latestVer string) O {
 	}
 
 	data := c.convertFunc(currentList)
-	c.data = data
-	c.currentVer = latestVer
 	return data
+}
+
+func (c *dynamicGetter[O, T, L]) Version() string {
+	return c.controller.LastSyncResourceVersion()
 }
