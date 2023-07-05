@@ -183,8 +183,6 @@ func (c *Cluster) Save(ctx context.Context) error {
 
 	kwokConfigs := config.FilterWithTypeFromContext[*internalversion.KwokConfiguration](ctx)
 	if (len(kwokConfigs) == 0 || !slices.Contains(kwokConfigs[0].Options.EnableCRDs, v1alpha1.StageKind)) &&
-		conf.Options.NodeLeaseDurationSeconds == 0 &&
-		conf.Options.NodeStatusUpdateFrequencyMilliseconds > 0 &&
 		conf.Options.Runtime != consts.RuntimeTypeKind &&
 		conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
 		len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
@@ -213,17 +211,20 @@ func (c *Cluster) getDefaultStages(updateFrequency int64, nodeHeartbeat bool) ([
 		if err != nil {
 			return nil, err
 		}
-		hasUpdate := false
-		for _, stage := range nodeHeartbeatStages {
-			if stage.Name == "node-heartbeat" {
-				stage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
-				stage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
-				hasUpdate = true
+
+		if updateFrequency > 0 {
+			hasUpdate := false
+			for _, stage := range nodeHeartbeatStages {
+				if stage.Name == "node-heartbeat" {
+					stage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
+					stage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
+					hasUpdate = true
+				}
+				objs = append(objs, stage)
 			}
-			objs = append(objs, stage)
-		}
-		if !hasUpdate {
-			return nil, fmt.Errorf("failed to update node heartbeat stage")
+			if !hasUpdate {
+				return nil, fmt.Errorf("failed to update node heartbeat stage")
+			}
 		}
 	}
 	return objs, nil

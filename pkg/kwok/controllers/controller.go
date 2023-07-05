@@ -270,6 +270,11 @@ func (c *Controller) Start(ctx context.Context) error {
 			})
 			return lifecycle
 		})
+
+		err := getter.Start(ctx)
+		if err != nil {
+			return err
+		}
 	} else {
 		lifecycle, err := NewLifecycle(conf.PodStages)
 		if err != nil {
