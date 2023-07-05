@@ -198,7 +198,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		logger.Info("Cluster is not ready yet, continue it")
 	} else {
 		cleanUp = func() {
-			err := rt.Uninstall(ctx)
+			subCtx := context.Background()
+			err := rt.Uninstall(subCtx)
 			if err != nil {
 				logger.Error("Failed to clean up cluster", err)
 			} else {
