@@ -24,10 +24,15 @@ brew install kwok
 
 ## Install with Golang
 
-also, you can install `kwokctl` and `kwok` binaries via [golang].
+Also, you can install `kwokctl` and `kwok` binaries via [golang].
 
 ``` bash
-go install sigs.k8s.io/kwok/cmd/{kwok,kwokctl}@v0.2.0
+# KWOK repository
+KWOK_REPO=kubernetes-sigs/kwok
+# Get latest
+KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
+
+go install sigs.k8s.io/kwok/cmd/{kwok,kwokctl}@${KWOK_LATEST_RELEASE}
 ```
 
 ## Binary Releases
