@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -36,7 +35,7 @@ import (
 // ForkExec forks a new process and execs the given command.
 // The process will be terminated when the context is canceled.
 func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ...string) error {
-	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	pidPath := path.Join(dir, "pids", path.OnlyName(name)+".pid")
 	if file.Exists(pidPath) {
 		pidData, err := os.ReadFile(pidPath)
 		if err == nil {
@@ -50,7 +49,7 @@ func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ..
 	}
 	ctx = exec.WithDir(ctx, dir)
 	ctx = exec.WithFork(ctx, true)
-	logPath := path.Join(dir, "logs", filepath.Base(name)+".log")
+	logPath := path.Join(dir, "logs", path.OnlyName(name)+".log")
 	logFile, err := c.OpenFile(logPath)
 	if err != nil {
 		return fmt.Errorf("open log file %s: %w", logPath, err)
@@ -80,7 +79,7 @@ func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ..
 
 // ForkExecKill kills the process if it is running.
 func (c *Cluster) ForkExecKill(ctx context.Context, dir string, name string) error {
-	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	pidPath := path.Join(dir, "pids", path.OnlyName(name)+".pid")
 	if !file.Exists(pidPath) {
 		// No pid file exists, which means the process has been terminated
 		logger := log.FromContext(ctx)
@@ -116,7 +115,7 @@ func (c *Cluster) ForkExecKill(ctx context.Context, dir string, name string) err
 
 // ForkExecIsRunning checks if the process is running.
 func (c *Cluster) ForkExecIsRunning(ctx context.Context, dir string, name string) bool {
-	pidPath := path.Join(dir, "pids", filepath.Base(name)+".pid")
+	pidPath := path.Join(dir, "pids", path.OnlyName(name)+".pid")
 	if !file.Exists(pidPath) {
 		logger := log.FromContext(ctx)
 		logger.Debug("Stat file not exists",
@@ -206,7 +205,7 @@ func FormatExec(ctx context.Context, name string, args ...string) string {
 		_, _ = fmt.Fprintf(out, "%s ", strings.Join(opt.Env, " "))
 	}
 
-	_, _ = fmt.Fprintf(out, "%s", path.Base(name))
+	_, _ = fmt.Fprintf(out, "%s", path.OnlyName(name))
 
 	for _, arg := range args {
 		_, _ = fmt.Fprintf(out, " %s", arg)

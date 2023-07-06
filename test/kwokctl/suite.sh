@@ -87,19 +87,18 @@ function retry() {
   done
 }
 
+GOOS="$(go env GOOS)"
+GOARCH="$(go env GOARCH)"
+
 function clear_testdata() {
   local name="${1}"
-  local arch
-  local os
-  arch="$(go env GOARCH)"
-  os="$(go env GOOS)"
 
   sed '/^ *$/d' |
     sed "s|${ROOT_DIR}|<ROOT_DIR>|g" |
     sed "s|${HOME}|~|g" |
     sed 's|/root/|~/|g' |
-    sed "s|${arch}|<ARCH>|g" |
-    sed "s|${os}|<OS>|g" |
+    sed "s|${GOARCH}|<ARCH>|g" |
+    sed "s|${GOOS}|<OS>|g" |
     sed "s|${name}|<CLUSTER_NAME>|g" |
     sed 's|\.tar\.gz|.<TAR>|g' |
     sed 's|\.zip|.<TAR>|g' |

@@ -455,7 +455,7 @@ func loadRaw(r io.Reader) ([]json.RawMessage, error) {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			return nil, err
+			return nil, fmt.Errorf("failed to decode %q: %w", raw, err)
 		}
 		if len(raw) == 0 {
 			// Ignore empty documents
