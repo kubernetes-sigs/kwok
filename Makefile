@@ -237,11 +237,18 @@ integration-test:
 .PHONY: e2e-test
 e2e-test:
 	@./hack/requirements.sh kubectl buildx kind
-	@./hack/e2e-test.sh \
+	@PATH=$(PWD)/bin:${PATH} ./hack/e2e-test.sh \
 		--skip=nerdctl \
 		--skip=podman \
 		--skip=kind \
 		--skip=kwokctl_binary_port_forward
+
+## release: Release kwok
+.PHONY: release
+release:
+	@./hack/requirements.sh gsutil buildx kustomize
+	@PATH=$(PWD)/bin:${PATH} make manifests cross-build cross-image cross-cluster-image
+
 
 ## help: Show this help message
 .PHONY: help

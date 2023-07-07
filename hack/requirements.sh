@@ -13,6 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+DIR="$(realpath "${DIR}")"
+
+ROOT_DIR="$(realpath "${DIR}/..")"
+
+LOCAL_BIN_DIR="${ROOT_DIR}/bin"
+
+export PATH="${LOCAL_BIN_DIR}:${PATH}"
+
 KIND_VERSION=0.19.0
 
 KUBE_VERSION=1.27.3
@@ -71,8 +81,8 @@ function _install_gcloud() {
     --bash-completion=false \
     --usage-reporting=false \
     --quiet
-  ln -s /usr/local/lib/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud
-  ln -s /usr/local/lib/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil
+  ln -s /usr/local/lib/google-cloud-sdk/bin/gcloud "${LOCAL_BIN_DIR}/gcloud"
+  ln -s /usr/local/lib/google-cloud-sdk/bin/gsutil "${LOCAL_BIN_DIR}/gsutil"
   gcloud info
   gcloud config list
   gcloud auth list
@@ -83,6 +93,7 @@ function install_gsutil() {
     return 0
   fi
 
+  mkdir -p "${LOCAL_BIN_DIR}"
   _install_gcloud
 
   if ! command_exist gsutil; then
@@ -98,8 +109,9 @@ function install_kind() {
     return 0
   fi
 
-  curl -SL -o "/usr/local/bin/kind" "https://kind.sigs.k8s.io/dl/v${KIND_VERSION}/kind-$(runtime_os)-$(runtime_arch)" &&
-    chmod +x "/usr/local/bin/kind"
+  mkdir -p "${LOCAL_BIN_DIR}"
+  curl -SL -o "${LOCAL_BIN_DIR}/kind" "https://kind.sigs.k8s.io/dl/v${KIND_VERSION}/kind-$(runtime_os)-$(runtime_arch)" &&
+    chmod +x "${LOCAL_BIN_DIR}/kind"
 
   if ! command_exist kind; then
     echo kind is installed but not effective >&2
@@ -113,8 +125,10 @@ function install_kubectl() {
   if command_exist kubectl; then
     return 0
   fi
-  curl -SL -o "/usr/local/bin/kubectl" "https://dl.k8s.io/release/v${KUBE_VERSION}/bin/$(runtime_os)/$(runtime_arch)/kubectl" &&
-    chmod +x "/usr/local/bin/kubectl"
+
+  mkdir -p "${LOCAL_BIN_DIR}"
+  curl -SL -o "${LOCAL_BIN_DIR}/kubectl" "https://dl.k8s.io/release/v${KUBE_VERSION}/bin/$(runtime_os)/$(runtime_arch)/kubectl" &&
+    chmod +x "${LOCAL_BIN_DIR}/kubectl"
 
   if ! command_exist kubectl; then
     echo kubectl is installed but not effective >&2
@@ -152,7 +166,8 @@ function install_kustomize() {
     return 0
   fi
 
-  cd /usr/local/bin/ && curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+  mkdir -p "${LOCAL_BIN_DIR}"
+  cd "${LOCAL_BIN_DIR}" && curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
   if ! command_exist kustomize; then
     echo kustomize is installed but not effective >&2
     return 1

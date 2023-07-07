@@ -1,3 +1,3 @@
-kubectl --kubeconfig ~/.kwok/clusters/<CLUSTER_NAME>/kubeconfig.yaml exec -i -n kube-system etcd-kwok-<CLUSTER_NAME>-control-plane -- etcdctl --endpoints=127.0.0.1:2379 --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --cacert=/etc/kubernetes/pki/etcd/ca.crt snapshot save /var/lib/etcd/snapshot.db
+kubectl --kubeconfig <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml exec -i -n kube-system etcd-kwok-<CLUSTER_NAME>-control-plane -- etcdctl --endpoints=127.0.0.1:2379 --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --cacert=/etc/kubernetes/pki/etcd/ca.crt snapshot save /var/lib/etcd/snapshot.db
 podman cp kwok-<CLUSTER_NAME>-control-plane:/var/lib/etcd/snapshot.db ./snapshot-empty-<CLUSTER_NAME>
 podman exec -i kwok-<CLUSTER_NAME>-control-plane rm -f /var/lib/etcd/snapshot.db

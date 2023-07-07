@@ -1,6 +1,7 @@
 # build and test outputs
 /bin/
 /artifacts/
+/workdir/
 
 # used for the code generators only
 /vendor/

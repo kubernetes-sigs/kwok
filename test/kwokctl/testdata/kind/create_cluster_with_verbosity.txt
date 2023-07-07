@@ -1,6 +1,6 @@
-# Save cluster config to ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
-mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>
-cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kind.yaml
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
@@ -41,11 +41,11 @@ nodes:
         "kube-api-burst": "10000"
   # mount the local file on the control plane
   extraMounts:
-  - hostPath: ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
     containerPath: /etc/kwok/kwok.yaml
     readOnly: true
 EOF
-cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -122,7 +122,7 @@ spec:
       type: DirectoryOrCreate
     name: k8s-certs
 EOF
-cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/prometheus-deployment.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus-deployment.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -280,17 +280,17 @@ EOF
 docker pull docker.io/kindest/node:v1.27.3
 docker pull localhost/kwok:test
 docker pull docker.io/prom/prometheus:v2.44.0
-# Save cluster config to ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
-KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config ~/.kwok/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.27.3 --wait 29m
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.27.3 --wait 29m
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image localhost/kwok:test --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v2.44.0 --name kwok-<CLUSTER_NAME>
 kubectl config view --minify=true --raw=true
-cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kubeconfig.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
-docker cp ~/.kwok/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml
-mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>/pki
-docker cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.crt ~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.crt
-docker cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.key ~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.key
-kubectl apply -f ~/.kwok/clusters/<CLUSTER_NAME>/prometheus-deployment.yaml
+docker cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+docker cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.crt <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
+docker cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.key <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.key
+kubectl apply -f <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus-deployment.yaml
 kubectl cordon kwok-<CLUSTER_NAME>-control-plane
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config

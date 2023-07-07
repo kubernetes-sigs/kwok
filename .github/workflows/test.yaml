@@ -177,22 +177,22 @@ jobs:
         run: |
           export GOBIN="$(go env GOPATH)/bin"
           cd "${GITHUB_WORKSPACE}/kubernetes" && go install ./cmd/{kube-apiserver,kube-controller-manager,kube-scheduler}
-          mkdir -p ~/.kwok && cat > ~/.kwok/kwok.yaml << EOF
+          mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir" && cat >"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml" << EOF
           kind: KwokctlConfiguration
           apiVersion: config.kwok.x-k8s.io/v1alpha1
           options:
-            kubeBinaryPrefix: '${GOBIN//\\//}'
+            kubeBinaryPrefix: "${GOBIN//\\//}"
           EOF
       - name: Build Kubernetes Binary for MacOS
         if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'macos-latest' }}
         shell: bash
         run: |
           cd "${GITHUB_WORKSPACE}/kubernetes" && make WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler"
-          mkdir -p ~/.kwok && cat > ~/.kwok/kwok.yaml << EOF
+          mkdir -p "${GITHUB_WORKSPACE}/workdir" && cat >"${GITHUB_WORKSPACE}/workdir/kwok.yaml" << EOF
           kind: KwokctlConfiguration
           apiVersion: config.kwok.x-k8s.io/v1alpha1
           options:
-            kubeBinaryPrefix: '${GITHUB_WORKSPACE}/kubernetes/_output/bin'
+            kubeBinaryPrefix: "${GITHUB_WORKSPACE}/kubernetes/_output/bin"
           EOF
 
         # TODO: workaround for https://github.com/actions/runner-images/issues/7753 (caused by https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394).
@@ -257,7 +257,6 @@ jobs:
         shell: bash
         run: |
           ./hack/requirements.sh kubectl
-          kubectl version || :
 
       - name: Test Dry Run
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}

@@ -1,6 +1,6 @@
-# Save cluster config to ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
-mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>
-cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kind.yaml
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
@@ -28,11 +28,11 @@ nodes:
         "kube-api-burst": "10000"
   # mount the local file on the control plane
   extraMounts:
-  - hostPath: ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
     containerPath: /etc/kwok/kwok.yaml
     readOnly: true
 EOF
-cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -111,18 +111,18 @@ spec:
 EOF
 podman pull docker.io/kindest/node:v1.27.3
 podman pull localhost/kwok:test
-# Save cluster config to ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml
-KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config ~/.kwok/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.27.3 --wait 29m
-mkdir -p ~/.kwok/cache/image-archive/localhost/kwok
-podman save localhost/kwok:test -o ~/.kwok/cache/image-archive/localhost/kwok/test.tar
-KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive ~/.kwok/cache/image-archive/localhost/kwok/test.tar --name kwok-<CLUSTER_NAME>
-rm ~/.kwok/cache/image-archive/localhost/kwok/test.tar
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.27.3 --wait 29m
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok
+podman save localhost/kwok:test -o <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar
 kubectl config view --minify=true --raw=true
-cat <<EOF >~/.kwok/clusters/<CLUSTER_NAME>/kubeconfig.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
-podman cp ~/.kwok/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml
-mkdir -p ~/.kwok/clusters/<CLUSTER_NAME>/pki
-podman cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.crt ~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.crt
-podman cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.key ~/.kwok/clusters/<CLUSTER_NAME>/pki/ca.key
+podman cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+podman cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.crt <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
+podman cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.key <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.key
 kubectl cordon kwok-<CLUSTER_NAME>-control-plane
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config

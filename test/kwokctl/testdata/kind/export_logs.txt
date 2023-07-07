@@ -1,5 +1,5 @@
 mkdir -p <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>
-cp ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/kwok.yaml
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/kwok.yaml
 mkdir -p <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components
 kind version ><ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/kind-info.txt
 etcd logs -n kube-system etcd-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/etcd.log
@@ -7,4 +7,4 @@ kube-apiserver logs -n kube-system kube-apiserver-kwok-<CLUSTER_NAME>-control-pl
 kwok-controller logs -n kube-system kwok-controller-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kwok-controller.log
 kube-scheduler logs -n kube-system kube-scheduler-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kube-scheduler.log
 kube-controller-manager logs -n kube-system kube-controller-manager-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kube-controller-manager.log
-cp ~/.kwok/clusters/<CLUSTER_NAME>/logs/audit.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/audit.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/audit.log
