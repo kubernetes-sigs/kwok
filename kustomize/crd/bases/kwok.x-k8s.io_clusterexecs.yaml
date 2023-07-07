@@ -67,6 +67,20 @@ spec:
                             - name
                             type: object
                           type: array
+                        securityContext:
+                          description: SecurityContext is the user context to exec.
+                          properties:
+                            runAsGroup:
+                              description: RunAsGroup is the existing gid to run exec
+                                command in container process.
+                              format: int64
+                              type: integer
+                            runAsUser:
+                              description: RunAsUser is the existing uid to run exec
+                                command in container process.
+                              format: int64
+                              type: integer
+                          type: object
                         workDir:
                           description: WorkDir is the working directory to exec with.
                           type: string

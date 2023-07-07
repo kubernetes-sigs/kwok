@@ -104,3 +104,18 @@ function clear_testdata() {
     sed 's|\.zip|.<TAR>|g' |
     sed 's| --env=ETCD_UNSUPPORTED_ARCH=<ARCH> | |g'
 }
+
+function create_user() {
+  local runtime="${1}"
+  local name="${2}"
+  local component="${3}"
+  local uid="${4}"
+  local username="${5}"
+  local gid="${6}"
+  local groupname="${7}"
+  local home="${8}"
+  local shell="${9}"
+  container=kwok-"${name}"-"${component}"
+  "${runtime}" exec "${container}" addgroup --gid "${gid}" "${groupname}"
+  "${runtime}" exec "${container}" adduser -u "${uid}" -G "${groupname}" -h "${home}" -s "${shell}" "${username}" -D
+}

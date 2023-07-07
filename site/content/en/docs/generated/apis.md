@@ -3724,6 +3724,19 @@ string
 <p>Envs is a list of environment variables to exec with.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>securityContext</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.SecurityContext">
+SecurityContext
+</a>
+</em>
+</td>
+<td>
+<p>SecurityContext is the user context to exec.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ExpressionFromSource">
@@ -4400,6 +4413,49 @@ PortForwardStatus
 </td>
 <td>
 <p>Conditions holds conditions for port forward</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.SecurityContext">
+SecurityContext
+<a href="#kwok.x-k8s.io%2fv1alpha1.SecurityContext"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExecTargetLocal">ExecTargetLocal</a>
+</p>
+<p>
+<p>SecurityContext specifies the existing uid and gid to run exec command in container process.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>runAsUser</code>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>RunAsUser is the existing uid to run exec command in container process.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runAsGroup</code>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>RunAsGroup is the existing gid to run exec command in container process.</p>
 </td>
 </tr>
 </tbody>

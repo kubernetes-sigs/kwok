@@ -75,6 +75,8 @@ type ExecTargetLocal struct {
 	WorkDir string `json:"workDir,omitempty"`
 	// Envs is a list of environment variables to exec with.
 	Envs []EnvVar `json:"envs,omitempty"`
+	// SecurityContext is the user context to exec.
+	SecurityContext *SecurityContext `json:"securityContext,omitempty"`
 }
 
 // EnvVar represents an environment variable present in a Container.
@@ -85,6 +87,14 @@ type EnvVar struct {
 	Name string `json:"name"`
 	// Value of the environment variable.
 	Value string `json:"value,omitempty"`
+}
+
+// SecurityContext specifies the existing uid and gid to run exec command in container process.
+type SecurityContext struct {
+	// RunAsUser is the existing uid to run exec command in container process.
+	RunAsUser *int64 `json:"runAsUser,omitempty"`
+	// RunAsGroup is the existing gid to run exec command in container process.
+	RunAsGroup *int64 `json:"runAsGroup,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

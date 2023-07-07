@@ -38,14 +38,16 @@ function args() {
 }
 
 function test_exec() {
+  local cmds=()
   local name="${1}"
   local namespace="${2}"
   local target="${3}"
   local cmd="${4}"
   local want="${5}"
   local result
+  mapfile -t cmds < <(echo "${cmd}" | tr " " "\n")
   for ((i = 0; i < 10; i++)); do
-    result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmd}" || :)
+    result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmds[@]}" || :)
     if [[ "${result}" == *"${want}"* ]]; then
       break
     fi
@@ -88,10 +90,30 @@ function main() {
     echo "------------------------------"
     echo "Testing exec on ${KWOK_RUNTIME} for ${release}"
     name="exec-cluster-${KWOK_RUNTIME}-${release//./-}"
-    create_cluster "${name}" "${release}" --config "${DIR}/exec.yaml"
+    if [[ "${KWOK_RUNTIME}" != "binary" && "${KWOK_RUNTIME}" != "kind" && "${KWOK_RUNTIME}" != "kind-podman" ]]; then
+      yaml="${DIR}/exec-security-context.yaml"
+    else
+      yaml="${DIR}/exec.yaml"
+    fi
+    create_cluster "${name}" "${release}" --config - <<EOF
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokConfiguration
+options:
+  enableCRDs:
+  - ClusterExec
+  - Exec
+EOF
+    if [[ "${KWOK_RUNTIME}" != "binary" && "${KWOK_RUNTIME}" != "kind" && "${KWOK_RUNTIME}" != "kind-podman" ]]; then
+      create_user "${KWOK_RUNTIME}" "${name}" "kwok-controller" 1001 "test" 1002 "test" "/home/test" "/bin/sh"
+    fi
     test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
+    kwokctl --name "${name}" kubectl apply -f "${yaml}"
     test_exec "${name}" other pod/fake-pod "pwd" "/tmp" || failed+=("${name}_target_exec")
     test_exec "${name}" default deploy/fake-pod "env" "TEST_ENV=test" || failed+=("${name}_cluster_default_exec")
+    if [[ "${KWOK_RUNTIME}" != "binary" && "${KWOK_RUNTIME}" != "kind" && "${KWOK_RUNTIME}" != "kind-podman" ]]; then
+      test_exec "${name}" default deploy/fake-pod "id -u" "1001" || failed+=("${name}_cluster_default_exec")
+      test_exec "${name}" default deploy/fake-pod "id -g" "1002" || failed+=("${name}_cluster_default_exec")
+    fi
     delete_cluster "${name}"
 
     name="crd-exec-cluster-${KWOK_RUNTIME}-${release//./-}"

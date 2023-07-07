@@ -22,6 +22,8 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"os/user"
+	"strconv"
 	"syscall"
 )
 
@@ -46,4 +48,61 @@ func isRunning(pid int) bool {
 	}
 	err = process.Signal(syscall.Signal(0))
 	return err == nil
+}
+
+func setUser(cmd *exec.Cmd, uid, gid *int64) error {
+	if uid == nil && gid == nil {
+		return nil
+	}
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	if cmd.SysProcAttr.Credential == nil {
+		cmd.SysProcAttr.Credential = &syscall.Credential{}
+	}
+	// If both uid and gid are both set, use them directly
+	if uid != nil && gid != nil {
+		_, err := user.LookupId(strconv.Itoa(int(*uid)))
+		if err != nil {
+			return err
+		}
+		_, err = user.LookupGroupId(strconv.Itoa(int(*gid)))
+		if err != nil {
+			return err
+		}
+		cmd.SysProcAttr.Credential.Uid = uint32(*uid)
+		cmd.SysProcAttr.Credential.Gid = uint32(*gid)
+		return nil
+	}
+	// If only uid is set, use that user's gid
+	if uid != nil {
+		userInfo, err := user.LookupId(strconv.Itoa(int(*uid)))
+		if err != nil {
+			return err
+		}
+		u, err := strconv.Atoi(userInfo.Uid)
+		if err != nil {
+			return err
+		}
+		g, err := strconv.Atoi(userInfo.Gid)
+		if err != nil {
+			return err
+		}
+		cmd.SysProcAttr.Credential.Uid = uint32(u)
+		cmd.SysProcAttr.Credential.Gid = uint32(g)
+	}
+	// If only gid is set, use the current user's uid
+	if gid != nil {
+		userInfo, err := user.Current()
+		if err != nil {
+			return err
+		}
+		u, err := strconv.Atoi(userInfo.Uid)
+		if err != nil {
+			return err
+		}
+		cmd.SysProcAttr.Credential.Uid = uint32(u)
+		cmd.SysProcAttr.Credential.Gid = uint32(*gid)
+	}
+	return nil
 }
