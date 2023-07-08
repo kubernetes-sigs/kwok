@@ -102,7 +102,8 @@ function clear_testdata() {
     sed "s|${name}|<CLUSTER_NAME>|g" |
     sed 's|\.tar\.gz|.<TAR>|g' |
     sed 's|\.zip|.<TAR>|g' |
-    sed 's| --env=ETCD_UNSUPPORTED_ARCH=<ARCH> | |g'
+    sed 's| --env=ETCD_UNSUPPORTED_ARCH=<ARCH> | |g' |
+    sed 's| ETCD_UNSUPPORTED_ARCH=<ARCH> | |g'
 }
 
 function create_user() {

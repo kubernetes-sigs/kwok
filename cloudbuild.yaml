@@ -20,8 +20,7 @@ steps:
     args:
       - -c
       - |
-        ./hack/requirements.sh gsutil buildx kustomize
-        make manifests cross-build cross-image cross-cluster-image
+        make release
 
 substitutions:
   # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and

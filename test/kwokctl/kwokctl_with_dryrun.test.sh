@@ -17,8 +17,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 DIR="$(realpath "${DIR}")"
 
-source "${DIR}/suite.sh"
 source "${DIR}/helper.sh"
+source "${DIR}/suite.sh"
 
 function main() {
   local runtimes=("${@}")

@@ -24,6 +24,8 @@ CLUSTER_NAME=kwok-test
 KWOK_IMAGE="kwok-with-cni"
 KWOK_VERSION="test"
 
+export PATH="${ROOT_DIR}/bin:${PATH}"
+
 function start_cluster() {
   local linux_platform
   linux_platform="linux/$(go env GOARCH)"

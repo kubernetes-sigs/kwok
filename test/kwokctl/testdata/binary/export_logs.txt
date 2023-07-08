@@ -1,10 +1,10 @@
 mkdir -p <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>
-cp ~/.kwok/clusters/<CLUSTER_NAME>/kwok.yaml <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/kwok.yaml
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/kwok.yaml
 mkdir -p <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components
 echo <OS>/<ARCH> ><ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/binary-info.txt
-cp ~/.kwok/clusters/<CLUSTER_NAME>/logs/etcd.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/etcd.log
-cp ~/.kwok/clusters/<CLUSTER_NAME>/logs/kube-apiserver.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kube-apiserver.log
-cp ~/.kwok/clusters/<CLUSTER_NAME>/logs/kube-controller-manager.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kube-controller-manager.log
-cp ~/.kwok/clusters/<CLUSTER_NAME>/logs/kube-scheduler.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kube-scheduler.log
-cp ~/.kwok/clusters/<CLUSTER_NAME>/logs/kwok-controller.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kwok-controller.log
-cp ~/.kwok/clusters/<CLUSTER_NAME>/logs/audit.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/audit.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/etcd.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/etcd.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-apiserver.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kube-apiserver.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-controller-manager.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kube-controller-manager.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-scheduler.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kube-scheduler.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kwok-controller.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/kwok-controller.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log <ROOT_DIR>/logs/kwok-<CLUSTER_NAME>/components/audit.log

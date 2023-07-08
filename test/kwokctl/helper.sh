@@ -19,7 +19,6 @@ DIR="$(realpath "${DIR}")"
 
 ROOT_DIR="$(realpath "${DIR}/../..")"
 
-source "${ROOT_DIR}/hack/requirements.sh"
 source "${DIR}/suite.sh"
 
 VERSION="test"
@@ -38,7 +37,8 @@ if [[ "${GOOS}" == "windows" ]]; then
 fi
 
 export KWOK_CONTROLLER_IMAGE="localhost/kwok:${VERSION}"
-export PATH="${LOCAL_PATH}:${PATH}"
+export PATH="${LOCAL_PATH}:${ROOT_DIR}/bin:${PATH}"
+export KWOK_WORKDIR="${ROOT_DIR}/workdir"
 
 function test_all() {
   local runtime="${1}"
@@ -90,26 +90,25 @@ function build_image() {
 }
 
 function requirements() {
-  install_kubectl
-  install_buildx
+  "${ROOT_DIR}/hack/requirements.sh" kubectl buildx
   build_kwokctl
   build_image
 }
 
 function requirements_for_podman() {
-  install_kubectl
+  "${ROOT_DIR}/hack/requirements.sh" kubectl
   build_kwokctl
   build_image podman
 }
 
 function requirements_for_nerdctl() {
-  install_kubectl
+  "${ROOT_DIR}/hack/requirements.sh" kubectl
   build_kwokctl
   build_image nerdctl
 }
 
 function requirements_for_binary() {
-  install_kubectl
+  "${ROOT_DIR}/hack/requirements.sh" kubectl
   build_kwokctl
   build_kwok
 }
