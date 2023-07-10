@@ -32,7 +32,7 @@ import (
 // InitFlags initializes the flags for the configuration.
 func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, error) {
 	defaultConfigPath := path.RelFromHome(path.Join(WorkDir, consts.ConfigName))
-	config := flags.StringArrayP("config", "c", []string{defaultConfigPath}, "config path")
+	config := flags.StringSliceP("config", "c", []string{defaultConfigPath}, "config path")
 	_ = flags.Parse(os.Args[1:])
 
 	// Expand the all config paths.
