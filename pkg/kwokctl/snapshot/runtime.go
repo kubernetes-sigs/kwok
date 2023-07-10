@@ -104,3 +104,6 @@ func mappingFor(restMapper meta.RESTMapper, resourceOrKindArg string) (*meta.RES
 
 	return mapping, nil
 }
+
+// ErrNotHandled is returned when a resource is not handled
+var ErrNotHandled = fmt.Errorf("resource not handled")

@@ -61,6 +61,9 @@ type uniqueKey struct {
 type loader struct {
 	filterMap map[schema.GroupKind]struct{}
 
+	successCounter int
+	failedCounter  int
+
 	exist   map[uniqueKey]types.UID
 	pending map[uniqueKey][]*unstructured.Unstructured
 
@@ -108,7 +111,6 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 	logger := log.FromContext(ctx)
 
 	start := time.Now()
-	totalCount := 0
 	decoder := yaml.NewDecoder(r)
 
 	err := decoder.Decode(func(obj *unstructured.Unstructured) error {
@@ -124,7 +126,6 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 			return nil
 		}
 
-		totalCount++
 		l.load(ctx, obj)
 		return nil
 	})
@@ -166,10 +167,23 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 		)
 	}
 
-	logger.Info("Load resources",
-		"count", totalCount,
-		"elapsed", time.Since(start),
-	)
+	if l.successCounter == 0 {
+		return ErrNotHandled
+	}
+
+	if l.failedCounter != 0 {
+		logger.Info("Load resources",
+			"counter", l.successCounter+l.failedCounter,
+			"successCounter", l.successCounter,
+			"failedCounter", l.failedCounter,
+			"elapsed", time.Since(start),
+		)
+	} else {
+		logger.Info("Load resources",
+			"counter", l.successCounter,
+			"elapsed", time.Since(start),
+		)
+	}
 	return nil
 }
 
@@ -240,6 +254,7 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 
 	gvr, err := l.restMapper.ResourceFor(gvr)
 	if err != nil {
+		l.failedCounter++
 		logger.Error("Failed to get resource", err)
 		return nil
 	}
@@ -255,11 +270,13 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 	newObj, err := ri.Create(ctx, obj, metav1.CreateOptions{FieldValidation: "Ignore"})
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
+			l.failedCounter++
 			logger.Error("Failed to create resource", err)
 			return nil
 		}
 		newObj, err = ri.Update(ctx, obj, metav1.UpdateOptions{FieldValidation: "Ignore"})
 		if err != nil {
+			l.failedCounter++
 			if apierrors.IsConflict(err) {
 				logger.Warn("Conflict")
 				return nil
@@ -271,6 +288,7 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 	} else {
 		logger.Debug("Created")
 	}
+	l.successCounter++
 	return newObj
 }
 
