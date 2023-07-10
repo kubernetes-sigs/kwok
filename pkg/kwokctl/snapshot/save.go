@@ -81,7 +81,7 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 	}
 
 	encoder := yaml.NewEncoder(w)
-	totalCount := 0
+	totalCounter := 0
 	start := time.Now()
 	for _, gvr := range gvrs {
 		nri := dynamicClient.Resource(gvr)
@@ -128,14 +128,18 @@ func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []s
 		}
 
 		logger.Debug("Listed resource",
-			"count", count,
+			"counter", count,
 			"elapsed", time.Since(start),
 		)
-		totalCount += count
+		totalCounter += count
+	}
+
+	if totalCounter == 0 {
+		return ErrNotHandled
 	}
 
 	logger.Info("Saved resources",
-		"count", totalCount,
+		"counter", totalCounter,
 		"elapsed", time.Since(start),
 	)
 	return nil
