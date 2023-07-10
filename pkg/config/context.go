@@ -49,8 +49,8 @@ func addToContext(ctx context.Context, objs ...InternalObject) {
 	val.Objects = append(val.Objects, objs...)
 }
 
-// getFromContext returns the objects from the context.
-func getFromContext(ctx context.Context) []InternalObject {
+// GetFromContext returns the objects from the context.
+func GetFromContext(ctx context.Context) []InternalObject {
 	v := ctx.Value(configCtx(0))
 	val, ok := v.(*configValue)
 	if !ok {

@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/config"
+	conf "sigs.k8s.io/kwok/pkg/kwokctl/cmd/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/create"
 	del "sigs.k8s.io/kwok/pkg/kwokctl/cmd/delete"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/etcdctl"
@@ -56,6 +57,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.TraverseChildren = true
 
 	cmd.AddCommand(
+		conf.NewCommand(ctx),
 		create.NewCommand(ctx),
 		del.NewCommand(ctx),
 		get.NewCommand(ctx),

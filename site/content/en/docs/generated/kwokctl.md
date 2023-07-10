@@ -18,6 +18,7 @@ kwokctl [command] [flags]
 
 ### SEE ALSO
 
+* [kwokctl config](kwokctl_config.md)	 - Manage [reset, tidy, view] default config
 * [kwokctl create](kwokctl_create.md)	 - Creates one of [cluster]
 * [kwokctl delete](kwokctl_delete.md)	 - Deletes one of [cluster]
 * [kwokctl etcdctl](kwokctl_etcdctl.md)	 - etcdctl in cluster

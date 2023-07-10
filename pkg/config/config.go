@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"reflect"
 	"sort"
 
@@ -37,6 +36,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config/compatibility"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/patch"
 	"sigs.k8s.io/kwok/pkg/utils/path"
@@ -329,27 +329,32 @@ func Load(ctx context.Context, src ...string) ([]InternalObject, error) {
 }
 
 // Save saves the given objects to the given path.
-func Save(ctx context.Context, path string, objs []InternalObject) error {
-	err := os.MkdirAll(filepath.Dir(path), 0750)
+func Save(ctx context.Context, dist string, objs []InternalObject) error {
+	dist = path.Clean(dist)
+	err := file.MkdirAll(path.Dir(dist))
 	if err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
+	f, err := file.Open(dist)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		_ = file.Close()
+		_ = f.Close()
 		if err != nil {
-			_ = os.Remove(path)
+			_ = file.Remove(dist)
 		}
 	}()
+	return SaveTo(ctx, f, objs)
+}
 
+// SaveTo saves the given objects to the given writer.
+func SaveTo(ctx context.Context, w io.Writer, objs []InternalObject) error {
 	logger := log.FromContext(ctx)
 	for i, obj := range objs {
 		if i != 0 {
-			_, err = file.WriteString("\n---\n")
+			_, err := w.Write([]byte("\n---\n"))
 			if err != nil {
 				return err
 			}
@@ -386,7 +391,7 @@ func Save(ctx context.Context, path string, objs []InternalObject) error {
 			return err
 		}
 
-		_, err = file.Write(data)
+		_, err = w.Write(data)
 		if err != nil {
 			return err
 		}
@@ -418,7 +423,7 @@ func FilterWithoutType[T InternalObject](objs []InternalObject) (out []InternalO
 
 // FilterWithTypeFromContext returns all objects of the given type from the context.
 func FilterWithTypeFromContext[T metav1.Object](ctx context.Context) (out []T) {
-	objs := getFromContext(ctx)
+	objs := GetFromContext(ctx)
 	if len(objs) == 0 {
 		return nil
 	}
@@ -427,7 +432,7 @@ func FilterWithTypeFromContext[T metav1.Object](ctx context.Context) (out []T) {
 
 // FilterWithoutTypeFromContext returns all objects from the context that are not of the given type.
 func FilterWithoutTypeFromContext[T InternalObject](ctx context.Context) (out []InternalObject) {
-	objs := getFromContext(ctx)
+	objs := GetFromContext(ctx)
 	if len(objs) == 0 {
 		return nil
 	}

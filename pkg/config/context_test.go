@@ -36,7 +36,7 @@ func TestContext(t *testing.T) {
 		Name: "second",
 	})
 
-	objs := getFromContext(ctx)
+	objs := GetFromContext(ctx)
 	if len(objs) != 2 {
 		t.Errorf("expected 2 objects, got %d", len(objs))
 	}
