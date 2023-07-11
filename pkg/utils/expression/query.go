@@ -26,7 +26,7 @@ import (
 
 // Query is wrapper of gojq.Query.
 type Query struct {
-	jq *gojq.Query
+	code *gojq.Code
 }
 
 // NewQuery returns a new Query.
@@ -35,8 +35,12 @@ func NewQuery(src string) (*Query, error) {
 	if err != nil {
 		return nil, err
 	}
+	code, err := gojq.Compile(q)
+	if err != nil {
+		return nil, err
+	}
 	return &Query{
-		jq: q,
+		code: code,
 	}, nil
 }
 
@@ -47,7 +51,7 @@ func (q *Query) Execute(ctx context.Context, v interface{}) ([]interface{}, erro
 		return nil, err
 	}
 	out := []interface{}{}
-	iter := q.jq.RunWithContext(ctx, v)
+	iter := q.code.RunWithContext(ctx, v)
 	for {
 		v, ok := iter.Next()
 		if !ok {
