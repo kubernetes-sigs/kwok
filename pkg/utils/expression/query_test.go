@@ -107,6 +107,43 @@ func TestQuery_Execute(t *testing.T) {
 				"test",
 			},
 		},
+		{
+			args: args{
+				src: ".a = 1",
+				v: map[string]any{
+					"a": 2,
+				},
+			},
+			want: []interface{}{
+				map[string]any{
+					"a": 1,
+				},
+			},
+		},
+		{
+			args: args{
+				src: `.a += [{b:2}]`,
+				v: map[string]any{
+					"a": []any{
+						map[string]any{
+							"b": 1,
+						},
+					},
+				},
+			},
+			want: []interface{}{
+				map[string]any{
+					"a": []any{
+						map[string]any{
+							"b": 1,
+						},
+						map[string]any{
+							"b": 2,
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

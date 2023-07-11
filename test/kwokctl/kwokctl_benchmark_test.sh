@@ -57,74 +57,26 @@ function wait_resource() {
   done
 }
 
-function gen_pods() {
-  local size="${1}"
-  local node_name="${2}"
-  for ((i = 0; i < "${size}"; i++)); do
-    cat <<EOF
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: fake-pod-${i}
-  namespace: default
-  labels:
-    app: fake-pod
-spec:
-  containers:
-  - name: fake-pod
-    image: fake
-  nodeName: ${node_name}
-EOF
-  done
-}
-
-function gen_nodes() {
-  local size="${1}"
-  local node_name="${2}"
-  for ((i = 0; i < "${size}"; i++)); do
-    cat <<EOF
----
-apiVersion: v1
-kind: Node
-metadata:
-  annotations:
-    kwok.x-k8s.io/node: fake
-    node.alpha.kubernetes.io/ttl: "0"
-  labels:
-    beta.kubernetes.io/arch: amd64
-    beta.kubernetes.io/os: linux
-    kubernetes.io/arch: amd64
-    kubernetes.io/hostname: ${node_name}-${i}
-    kubernetes.io/os: linux
-    kubernetes.io/role: agent
-    node-role.kubernetes.io/agent: ""
-    type: kwok-controller
-  name: ${node_name}-${i}
-EOF
-  done
-}
-
 function scale_create_pod() {
   local name="${1}"
   local size="${2}"
   local node_name
   node_name="$(kwokctl --name "${name}" kubectl get node -o jsonpath='{.items.*.metadata.name}' | tr ' ' '\n' | grep fake- | head -n 1)"
-  gen_pods "${size}" "${node_name}" | kwokctl --name "${name}" kubectl apply -f - >/dev/null &
+  kwokctl --name "${name}" scale pod fake-pod --replicas "${size}" --param ".nodeName=\"${node_name}\"" >/dev/null &
   wait_resource "${name}" Pod Running "${size}"
 }
 
 function scale_delete_pod() {
   local name="${1}"
   local size="${2}"
-  kwokctl --name "${name}" kubectl delete pod -l app=fake-pod --grace-period 1 >/dev/null &
+  kwokctl --name "${name}" scale pod fake-pod --replicas "${size}" >/dev/null &
   wait_resource "${name}" Pod fake-pod- "${size}"
 }
 
 function scale_create_node() {
   local name="${1}"
   local size="${2}"
-  gen_nodes "${size}" "fake-node" | kwokctl --name "${name}" kubectl apply -f - >/dev/null &
+  kwokctl --name "${name}" scale node fake-node --replicas "${size}" >/dev/null &
   wait_resource "${name}" Node Ready "${size}"
 }
 

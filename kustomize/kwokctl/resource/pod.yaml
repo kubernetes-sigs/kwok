@@ -1,0 +1,30 @@
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokctlResource
+metadata:
+  name: pod
+parameters:
+  initContainers: []
+  containers:
+  - name: container-0
+    image: busybox
+  hostNetwork: false
+  nodeName: ""
+template: |-
+  kind: Pod
+  apiVersion: v1
+  metadata:
+    name: {{ Name }}
+    namespace: {{ or Namespace "default" }}
+  spec:
+    containers:
+    {{ range $index, $container := .containers }}
+    - name: {{ $container.name }}
+      image: {{ $container.image }}
+    {{ end }}
+    initContainers:
+    {{ range $index, $container := .initContainers }}
+    - name: {{ $container.name }}
+      image: {{ $container.image }}
+    {{ end }}
+    hostNetwork: {{ .hostNetwork }}
+    nodeName: {{ .nodeName }}

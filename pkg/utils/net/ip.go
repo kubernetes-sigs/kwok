@@ -17,6 +17,7 @@ limitations under the License.
 package net
 
 import (
+	"encoding/binary"
 	"net"
 )
 
@@ -43,4 +44,41 @@ func GetAllIPs() ([]string, error) {
 		}
 	}
 	return ips, nil
+}
+
+// AddIP adds or subtracts the IP.
+func AddIP(ip net.IP, add uint64) net.IP {
+	if len(ip) < 8 || add == 0 {
+		return ip
+	}
+
+	out := make(net.IP, len(ip))
+	copy(out, ip)
+
+	i := binary.BigEndian.Uint64(out[len(out)-8:])
+	i += add
+
+	binary.BigEndian.PutUint64(out[len(out)-8:], i)
+	return out
+}
+
+// ParseCIDR parses a CIDR string.
+func ParseCIDR(s string) (*net.IPNet, error) {
+	ip, ipnet, err := net.ParseCIDR(s)
+	if err != nil {
+		return nil, err
+	}
+	ipnet.IP = ip
+	return ipnet, nil
+}
+
+// AddCIDR adds the CIDR.
+func AddCIDR(cidr string, index int) (string, error) {
+	ipnet, err := ParseCIDR(cidr)
+	if err != nil {
+		return "", err
+	}
+	ones, bits := ipnet.Mask.Size()
+	ipnet.IP = AddIP(ipnet.IP, uint64((1<<(bits-ones))*index))
+	return ipnet.String(), nil
 }

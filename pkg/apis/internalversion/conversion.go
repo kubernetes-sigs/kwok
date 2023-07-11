@@ -44,6 +44,28 @@ func ConvertToInternalKwokctlConfiguration(in *configv1alpha1.KwokctlConfigurati
 	return &out, nil
 }
 
+// ConvertToV1alpha1KwokctlResource converts an internal version KwokctlResource to a v1alpha1.KwokctlResource.
+func ConvertToV1alpha1KwokctlResource(in *KwokctlResource) (*configv1alpha1.KwokctlResource, error) {
+	var out configv1alpha1.KwokctlResource
+	out.APIVersion = configv1alpha1.GroupVersion.String()
+	out.Kind = configv1alpha1.KwokctlResourceKind
+	err := Convert_internalversion_KwokctlResource_To_v1alpha1_KwokctlResource(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalKwokctlResource converts a v1alpha1.KwokctlResource to an internal version.
+func ConvertToInternalKwokctlResource(in *configv1alpha1.KwokctlResource) (*KwokctlResource, error) {
+	var out KwokctlResource
+	err := Convert_v1alpha1_KwokctlResource_To_internalversion_KwokctlResource(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ConvertToV1alpha1KwokConfiguration converts an internal version KwokConfiguration to a v1alpha1.KwokConfiguration.
 func ConvertToV1alpha1KwokConfiguration(in *KwokConfiguration) (*configv1alpha1.KwokConfiguration, error) {
 	var out configv1alpha1.KwokConfiguration

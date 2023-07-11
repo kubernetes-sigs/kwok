@@ -49,19 +49,20 @@ function test_workable() {
     return 1
   fi
 
-  for ((i = 0; i < 120; i++)); do
-    kubectl kustomize "${DIR}" | kwokctl --name "${name}" kubectl apply -f - && break
-    sleep 1
-  done
+  if ! retry 120 kwokctl --name "${name}" scale node fake-node --replicas=1; then
+    echo "Error: failed to scale node"
+    return 1
+  fi
+
+  if ! retry 120 kwokctl --name "${name}" scale pod fake-pod --replicas=1; then
+    echo "Error: failed to scale pod"
+    return 1
+  fi
 
   for ((i = 0; i < 120; i++)); do
     kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1 && break
     sleep 1
   done
-
-  echo kwokctl --name="${name}" kubectl config view --minify
-  kwokctl --name="${name}" kubectl config view --minify
-
   if ! kwokctl --name="${name}" kubectl get pod | grep Running >/dev/null 2>&1; then
     echo "Error: cluster not ready"
     return 1
