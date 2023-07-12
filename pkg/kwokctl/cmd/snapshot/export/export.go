@@ -27,6 +27,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
@@ -75,6 +76,16 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return nil
 	}
 
+	clientset, err := client.NewClientset("", flags.Kubeconfig,
+		client.WithImpersonate(rest.ImpersonationConfig{
+			UserName: flags.ImpersonateUser,
+			Groups:   flags.ImpersonateGroups,
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
 	f, err := file.Open(flags.Path)
 	if err != nil {
 		return err
@@ -83,22 +94,16 @@ func runE(ctx context.Context, flags *flagpole) error {
 		_ = f.Close()
 	}()
 
-	impersonateConfig := rest.ImpersonationConfig{
-		UserName: flags.ImpersonateUser,
-		Groups:   flags.ImpersonateGroups,
-	}
-
 	pagerConfig := &snapshot.PagerConfig{
 		PageSize:       flags.PageSize,
 		PageBufferSize: flags.PageBufferSize,
 	}
 
 	snapshotSaveConfig := snapshot.SaveConfig{
-		PagerConfig:         pagerConfig,
-		ImpersonationConfig: impersonateConfig,
+		PagerConfig: pagerConfig,
 	}
 
-	err = snapshot.Save(ctx, flags.Kubeconfig, f, flags.Filters, snapshotSaveConfig)
+	err = snapshot.Save(ctx, clientset, f, flags.Filters, snapshotSaveConfig)
 	if err != nil {
 		return err
 	}
