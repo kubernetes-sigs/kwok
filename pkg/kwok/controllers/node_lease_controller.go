@@ -23,6 +23,7 @@ import (
 
 	"github.com/wzshiming/cron"
 	coordinationv1 "k8s.io/api/coordination/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -287,8 +288,19 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 		logger.Info("Creating lease")
 		latestLease, err := c.ensureLease(ctx, nodeName)
 		if err != nil {
-			logger.Error("failed to create lease", err)
-			return
+			if !apierrors.IsNotFound(err) || c.latestLease.Size() != 0 {
+				logger.Error("failed to create lease", err)
+				return
+			}
+
+			// kube-apiserver will not have finished initializing the resources when the cluster has just been created.
+			logger.Error("lease namespace not found, retrying in 1 second", err)
+			time.Sleep(1 * time.Second)
+			latestLease, err = c.ensureLease(ctx, nodeName)
+			if err != nil {
+				logger.Error("failed to create lease secondly", err)
+				return
+			}
 		}
 
 		c.latestLease.Store(nodeName, latestLease)
