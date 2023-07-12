@@ -89,6 +89,7 @@ func (i *ipPool) Get() string {
 	if len(i.usable) != 0 {
 		for s := range i.usable {
 			ip = s
+			break
 		}
 	}
 	if ip == "" {
