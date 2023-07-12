@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/pager"
 	"k8s.io/client-go/util/retry"
 
@@ -46,19 +45,11 @@ type PagerConfig struct {
 // SaveConfig is the a combination of the impersonation config
 // and the PagerConfig.
 type SaveConfig struct {
-	PagerConfig         *PagerConfig
-	ImpersonationConfig rest.ImpersonationConfig
+	PagerConfig *PagerConfig
 }
 
 // Save saves the snapshot of cluster
-func Save(ctx context.Context, kubeconfigPath string, w io.Writer, resources []string, saveConfig SaveConfig) error {
-	clientset, err := client.NewClientset("", kubeconfigPath,
-		client.WithImpersonate(saveConfig.ImpersonationConfig),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create clientset: %w", err)
-	}
-
+func Save(ctx context.Context, clientset client.Clientset, w io.Writer, resources []string, saveConfig SaveConfig) error {
 	restMapper, err := clientset.ToRESTMapper()
 	if err != nil {
 		return fmt.Errorf("failed to get rest mapper: %w", err)

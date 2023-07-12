@@ -38,8 +38,8 @@ import (
 )
 
 // Load loads the resources to cluster from the reader
-func Load(ctx context.Context, kubeconfigPath string, r io.Reader, filters []string) error {
-	l, err := newLoader(kubeconfigPath)
+func Load(ctx context.Context, clientset client.Clientset, r io.Reader, filters []string) error {
+	l, err := newLoader(clientset)
 	if err != nil {
 		return err
 	}
@@ -71,12 +71,7 @@ type loader struct {
 	dynamicClient dynamic.Interface
 }
 
-func newLoader(kubeconfigPath string) (*loader, error) {
-	clientset, err := client.NewClientset("", kubeconfigPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create clientset: %w", err)
-	}
-
+func newLoader(clientset client.Clientset) (*loader, error) {
 	restMapper, err := clientset.ToRESTMapper()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rest mapper: %w", err)

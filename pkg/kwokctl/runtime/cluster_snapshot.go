@@ -17,15 +17,12 @@ limitations under the License.
 package runtime
 
 import (
-	"bytes"
 	"context"
+	"os"
 	"strings"
-
-	"k8s.io/client-go/rest"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
-	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
 // SnapshotSaveWithYAML save the snapshot of cluster
@@ -34,6 +31,12 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 		dryrun.PrintMessage("kubectl get %s -o yaml >%s", strings.Join(filters, ","), path)
 		return nil
 	}
+
+	clientset, err := c.GetClientset(ctx)
+	if err != nil {
+		return err
+	}
+
 	f, err := c.OpenFile(path)
 	if err != nil {
 		return err
@@ -41,13 +44,11 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 	defer func() {
 		_ = f.Close()
 	}()
-	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
+
 	// In most cases, the user should have full privileges on the clusters created by kwokctl,
 	// so no need to expose impersonation args to "snapshot save" command.
-	snapshotSaveConfig := snapshot.SaveConfig{
-		ImpersonationConfig: rest.ImpersonationConfig{},
-	}
-	return snapshot.Save(ctx, kubeconfigPath, f, filters, snapshotSaveConfig)
+	snapshotSaveConfig := snapshot.SaveConfig{}
+	return snapshot.Save(ctx, clientset, f, filters, snapshotSaveConfig)
 }
 
 // SnapshotRestoreWithYAML restore the snapshot of cluster
@@ -56,10 +57,19 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filt
 		dryrun.PrintMessage("kubectl create -f %s", path)
 		return nil
 	}
-	data, err := file.Read(path)
+
+	clientset, err := c.GetClientset(ctx)
 	if err != nil {
 		return err
 	}
-	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
-	return snapshot.Load(ctx, kubeconfigPath, bytes.NewBuffer(data), filters)
+
+	f, err := os.OpenFile(path, os.O_RDONLY, 0)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	return snapshot.Load(ctx, clientset, f, filters)
 }

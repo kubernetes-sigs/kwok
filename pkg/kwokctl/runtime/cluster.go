@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
@@ -70,6 +71,8 @@ type Cluster struct {
 	name    string
 	dryRun  bool
 	conf    *internalversion.KwokctlConfiguration
+
+	clientset client.Clientset
 }
 
 // NewCluster creates a new cluster
@@ -440,6 +443,20 @@ func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
 	return c.Exec(ctx, etcdctlPath, args...)
 }
 
+// GetClientset returns the clientset of the cluster.
+func (c *Cluster) GetClientset(ctx context.Context) (client.Clientset, error) {
+	if c.clientset != nil {
+		return c.clientset, nil
+	}
+	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
+	clientset, err := client.NewClientset("", kubeconfigPath)
+	if err != nil {
+		return nil, err
+	}
+	c.clientset = clientset
+	return clientset, nil
+}
+
 // IsDryRun returns true if the runtime is in dry-run mode
 func (c *Cluster) IsDryRun() bool {
 	return c.dryRun
@@ -456,6 +473,11 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 		return nil
 	}
 
+	clientset, err := c.GetClientset(ctx)
+	if err != nil {
+		return err
+	}
+
 	buf := bytes.NewBuffer(nil)
 	for _, name := range crds {
 		c, ok := crdDefines[name]
@@ -466,9 +488,8 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 		_, _ = buf.Write(c)
 	}
 
-	kubeconfigPath := c.GetWorkdirPath(InHostKubeconfigName)
 	filters := []string{"customresourcedefinition.apiextensions.k8s.io"}
-	return snapshot.Load(ctx, kubeconfigPath, buf, filters)
+	return snapshot.Load(ctx, clientset, buf, filters)
 }
 
 var crdDefines = map[string][]byte{
