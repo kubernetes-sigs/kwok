@@ -263,6 +263,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		TypedClient:                           typedClient,
 		TypedKwokClient:                       typedKwokClient,
 		EnableCNI:                             flags.Options.EnableCNI,
+		EnableMetrics:                         len(metrics) != 0,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
 		ManageNodesWithLabelSelector:          flags.Options.ManageNodesWithLabelSelector,

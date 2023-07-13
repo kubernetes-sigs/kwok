@@ -59,8 +59,8 @@ type HistogramOpts struct {
 	Buckets     []float64
 }
 
-// Histogram is custom type emulating prometheus.Histogram
-type Histogram struct {
+// histogram is custom type emulating prometheus.Histogram
+type histogram struct {
 	desc *prometheus.Desc
 
 	// buckets are the upper bounds of the buckets
@@ -70,8 +70,15 @@ type Histogram struct {
 	stored maps.SyncMap[float64, uint64]
 }
 
+// Histogram is a metric to track distributions of events.
+type Histogram interface {
+	prometheus.Metric
+	prometheus.Collector
+	Set(le float64, val uint64)
+}
+
 // NewHistogram creates new Histogram based on Histogram options
-func NewHistogram(opts HistogramOpts) *Histogram {
+func NewHistogram(opts HistogramOpts) Histogram {
 	desc := prometheus.NewDesc(
 		prometheus.BuildFQName(opts.Namespace, opts.Subsystem, opts.Name),
 		opts.Help,
@@ -82,23 +89,22 @@ func NewHistogram(opts HistogramOpts) *Histogram {
 	buckets := opts.Buckets
 	sort.Float64s(buckets)
 
-	his := &Histogram{
+	his := &histogram{
 		desc:    desc,
 		buckets: buckets,
 	}
-	prometheus.NewHistogram(prometheus.HistogramOpts{})
 	return his
 }
 
 // Desc returns prometheus.Desc used by every Prometheus Metric.
-func (h *Histogram) Desc() *prometheus.Desc {
+func (h *histogram) Desc() *prometheus.Desc {
 	return h.desc
 }
 
 var inf = math.Inf(1)
 
-// Write writes out Histogram data to the Metric dto.
-func (h *Histogram) Write(out *dto.Metric) error {
+// Write writes out histogram data to the Metric dto.
+func (h *histogram) Write(out *dto.Metric) error {
 	buckets := slices.Map(h.buckets, func(le float64) *dto.Bucket {
 		return &dto.Bucket{
 			CumulativeCount: format.Ptr[uint64](0),
@@ -145,16 +151,16 @@ func (h *Histogram) Write(out *dto.Metric) error {
 }
 
 // Describe sends metric description to a channel.
-func (h *Histogram) Describe(ch chan<- *prometheus.Desc) {
+func (h *histogram) Describe(ch chan<- *prometheus.Desc) {
 	ch <- h.desc
 }
 
 // Collect sends histogram to a prometheus Metric channel.
-func (h *Histogram) Collect(ch chan<- prometheus.Metric) {
+func (h *histogram) Collect(ch chan<- prometheus.Metric) {
 	ch <- h
 }
 
 // Set sets value for a given le.
-func (h *Histogram) Set(le float64, val uint64) {
+func (h *histogram) Set(le float64, val uint64) {
 	h.stored.Store(le, val)
 }

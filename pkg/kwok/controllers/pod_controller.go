@@ -63,9 +63,10 @@ type PodController struct {
 	defaultCIDR                           string
 	namespace                             string
 	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
-	nodeHasMetric                         func(nodeName string) bool
 	ipPools                               maps.SyncMap[string, *ipPool]
 	renderer                              gotpl.Renderer
+	podsSets                              maps.SyncMap[log.ObjectRef, *PodInfo]
+	podsOnNode                            maps.SyncMap[string, *maps.SyncMap[log.ObjectRef, *PodInfo]]
 	preprocessChan                        chan *corev1.Pod
 	playStageChan                         chan resourceStageJob[*corev1.Pod]
 	playStageParallelism                  uint
@@ -75,6 +76,12 @@ type PodController struct {
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
 	triggerPreprocessChan                 chan string
+	enableMetrics                         bool
+}
+
+// PodInfo is the collection of necessary pod information
+type PodInfo struct {
+	Pod *corev1.Pod
 }
 
 // PodControllerConfig is the configuration for the PodController
@@ -94,6 +101,7 @@ type PodControllerConfig struct {
 	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
 	ReadOnlyFunc                          func(nodeName string) bool
+	EnableMetrics                         bool
 }
 
 // NewPodController creates a new fake pods controller
@@ -134,6 +142,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		playStageChan:                         make(chan resourceStageJob[*corev1.Pod]),
 		recorder:                              conf.Recorder,
 		readOnlyFunc:                          conf.ReadOnlyFunc,
+		enableMetrics:                         conf.EnableMetrics,
 	}
 	funcMap := gotpl.FuncMap{
 		"NodeIP":     c.funcNodeIP,
@@ -486,6 +495,9 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 				switch event.Type {
 				case watch.Added, watch.Modified:
 					pod := event.Object.(*corev1.Pod)
+					if c.enableMetrics {
+						c.putPodInfo(pod)
+					}
 					if c.need(pod) {
 						if c.readOnly(pod.Spec.NodeName) {
 							logger.Debug("Skip pod",
@@ -506,9 +518,8 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 						)
 					}
 
-					if event.Type == watch.Added &&
-						c.nodeHasMetric != nil &&
-						c.nodeHasMetric(pod.Spec.NodeName) &&
+					if c.enableMetrics &&
+						event.Type == watch.Added &&
 						c.nodeGetFunc != nil {
 						nodeInfo, ok := c.nodeGetFunc(pod.Spec.NodeName)
 						if ok {
@@ -517,6 +528,9 @@ func (c *PodController) watchResources(ctx context.Context, opt metav1.ListOptio
 					}
 				case watch.Deleted:
 					pod := event.Object.(*corev1.Pod)
+					if c.enableMetrics {
+						c.deletePodInfo(pod)
+					}
 					if c.need(pod) {
 						// Recycling PodIP
 						c.recyclingPodIP(ctx, pod)
@@ -550,6 +564,9 @@ func (c *PodController) listResources(ctx context.Context, opt metav1.ListOption
 
 	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
 		pod := obj.(*corev1.Pod)
+		if c.enableMetrics {
+			c.putPodInfo(pod)
+		}
 		if c.need(pod) {
 			if c.readOnly(pod.Spec.NodeName) {
 				logger.Debug("Skip pod",
@@ -736,4 +753,48 @@ func (c *PodController) funcPodIPWith(nodeName string, hostNetwork bool, uid, na
 		return pool.Get(), nil
 	}
 	return c.nodeIP, nil
+}
+
+// putPodInfo puts pod info
+func (c *PodController) putPodInfo(pod *corev1.Pod) {
+	podInfo := &PodInfo{
+		Pod: pod,
+	}
+	key := log.KObj(pod)
+	c.podsSets.Store(key, podInfo)
+	m, ok := c.podsOnNode.Load(pod.Spec.NodeName)
+	if !ok {
+		m = &maps.SyncMap[log.ObjectRef, *PodInfo]{}
+		c.podsOnNode.Store(pod.Spec.NodeName, m)
+	}
+	m.Store(key, podInfo)
+}
+
+// deletePodInfo deletes pod info
+func (c *PodController) deletePodInfo(pod *corev1.Pod) {
+	key := log.KObj(pod)
+	c.podsSets.Delete(key)
+	m, ok := c.podsOnNode.Load(pod.Spec.NodeName)
+	if !ok {
+		return
+	}
+	m.Delete(key)
+}
+
+// Get gets pod info
+func (c *PodController) Get(namespace, name string) (*PodInfo, bool) {
+	podInfo, ok := c.podsSets.Load(log.KRef(namespace, name))
+	if !ok {
+		return nil, false
+	}
+	return podInfo, true
+}
+
+// List lists pod info
+func (c *PodController) List(nodeName string) ([]*PodInfo, bool) {
+	m, ok := c.podsOnNode.Load(nodeName)
+	if !ok {
+		return nil, false
+	}
+	return m.Values(), true
 }

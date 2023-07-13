@@ -111,6 +111,7 @@ type NodeController struct {
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
 	triggerPreprocessChan                 chan string
+	enableMetrics                         bool
 }
 
 // NodeControllerConfig is the configuration for the NodeController
@@ -130,6 +131,7 @@ type NodeControllerConfig struct {
 	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
 	ReadOnlyFunc                          func(nodeName string) bool
+	EnableMetrics                         bool
 }
 
 // NodeInfo is the collection of necessary node information
@@ -180,6 +182,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		playStageChan:                         make(chan resourceStageJob[*corev1.Node]),
 		recorder:                              conf.Recorder,
 		readOnlyFunc:                          conf.ReadOnlyFunc,
+		enableMetrics:                         conf.EnableMetrics,
 	}
 	funcMap := gotpl.FuncMap{
 		"NodeIP":   c.funcNodeIP,
@@ -307,7 +310,7 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 				case watch.Deleted:
 					node := event.Object.(*corev1.Node)
 					if _, has := c.nodesSets.Load(node.Name); has {
-						c.nodesSets.Delete(node.Name)
+						c.deleteNodeInfo(node)
 
 						// Cancel delay job
 						key := node.Name
@@ -646,7 +649,7 @@ func (c *NodeController) computePatch(node *corev1.Node, tpl string) ([]byte, er
 	})
 }
 
-// putNodeInfo puts node info (HostIPs and PodCIDRs)
+// putNodeInfo puts node info
 func (c *NodeController) putNodeInfo(node *corev1.Node) {
 	nodeIPs := getNodeHostIPs(node)
 	hostIps := slices.Map(nodeIPs, func(ip net.IP) string {
@@ -672,6 +675,11 @@ func (c *NodeController) putNodeInfo(node *corev1.Node) {
 		},
 	}
 	c.nodesSets.Store(node.Name, nodeInfo)
+}
+
+// deleteNodeInfo deletes node info
+func (c *NodeController) deleteNodeInfo(node *corev1.Node) {
+	c.nodesSets.Delete(node.Name)
 }
 
 // Manage manages the node
@@ -732,7 +740,7 @@ func (c *NodeController) Size() int {
 	return c.nodesSets.Size()
 }
 
-// Get returns Has bool and corev1.Node if the node is existed
+// Get returns Has bool and node info
 func (c *NodeController) Get(nodeName string) (*NodeInfo, bool) {
 	nodeInfo, has := c.nodesSets.Load(nodeName)
 	if has {

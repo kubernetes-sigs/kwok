@@ -17,26 +17,20 @@ limitations under the License.
 package metrics
 
 import (
+	"context"
 	"fmt"
 	"net/http"
-	"sync"
-	"sync/atomic"
+	"sort"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 	"sigs.k8s.io/kwok/pkg/log"
-)
-
-// Constants holding metric kinds.
-const (
-	KindGauge     = "gauge"
-	KindHistogram = "histogram"
-	KindCounter   = "counter"
+	"sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 // UpdateHandler handles updating metrics on request
@@ -48,7 +42,10 @@ type UpdateHandler struct {
 
 	handler  http.Handler
 	registry *prometheus.Registry
-	updates  []func() error
+
+	gauges     maps.SyncMap[string, Gauge]
+	counters   maps.SyncMap[string, Counter]
+	histograms maps.SyncMap[string, Histogram]
 }
 
 // UpdateHandlerConfig is configuration for a single node
@@ -60,7 +57,7 @@ type UpdateHandlerConfig struct {
 }
 
 // NewMetricsUpdateHandler creates new metric update handler based on the config
-func NewMetricsUpdateHandler(conf UpdateHandlerConfig) (*UpdateHandler, error) {
+func NewMetricsUpdateHandler(conf UpdateHandlerConfig) *UpdateHandler {
 	registry := prometheus.NewRegistry()
 	handler := promhttp.InstrumentMetricHandler(
 		prometheus.DefaultRegisterer, promhttp.HandlerFor(registry, promhttp.HandlerOpts{Registry: registry}),
@@ -74,11 +71,7 @@ func NewMetricsUpdateHandler(conf UpdateHandlerConfig) (*UpdateHandler, error) {
 		registry:    registry,
 		handler:     handler,
 	}
-	err := h.init()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize metrics update handler: %w", err)
-	}
-	return h, nil
+	return h
 }
 
 func (h *UpdateHandler) getNodeInfo(nodeName string) (*controllers.NodeInfo, bool) {
@@ -86,269 +79,477 @@ func (h *UpdateHandler) getNodeInfo(nodeName string) (*controllers.NodeInfo, boo
 	return nodeInfo, ok
 }
 
-func (h *UpdateHandler) init() error {
-	metric := h.metric
+func (h *UpdateHandler) getPodsInfo(nodeName string) ([]*controllers.PodInfo, bool) {
+	podsInfo, ok := h.controller.ListPods(nodeName)
+	return podsInfo, ok
+}
 
-	for _, m := range metric.Spec.Metrics {
-		m := m
+func (h *UpdateHandler) getOrRegisterGauge(metricConfig *internalversion.MetricConfig, data cel.Data) (Gauge, string, error) {
+	key, labels, err := h.createKeyAndLabels(metricConfig, data)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
+	}
+	val, ok := h.gauges.Load(key)
+	if ok {
+		return val, key, nil
+	}
 
-		preparedLabels, err := h.prepareLabels(&m)
+	val = NewGauge(
+		GaugeOpts{
+			Name:        metricConfig.Name,
+			Help:        metricConfig.Help,
+			ConstLabels: labels,
+		},
+	)
+	h.gauges.Store(key, val)
+	err = h.registry.Register(val)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to register gauge %q: %w", metricConfig.Name, err)
+	}
+	return val, key, nil
+}
+
+func (h *UpdateHandler) getOrRegisterCounter(metricConfig *internalversion.MetricConfig, data cel.Data) (Counter, string, error) {
+	key, labels, err := h.createKeyAndLabels(metricConfig, data)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
+	}
+	val, ok := h.counters.Load(key)
+	if ok {
+		return val, key, nil
+	}
+
+	val = NewCounter(
+		CounterOpts{
+			Name:        metricConfig.Name,
+			Help:        metricConfig.Help,
+			ConstLabels: labels,
+		},
+	)
+	h.counters.Store(key, val)
+	err = h.registry.Register(val)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to register counter %q: %w", metricConfig.Name, err)
+	}
+
+	return val, key, nil
+}
+
+func (h *UpdateHandler) getOrRegisterHistogram(metricConfig *internalversion.MetricConfig, data cel.Data) (Histogram, string, error) {
+	key, labels, err := h.createKeyAndLabels(metricConfig, data)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
+	}
+	val, ok := h.histograms.Load(key)
+	if ok {
+		return val, key, nil
+	}
+
+	buckets := make([]float64, 0, len(metricConfig.Buckets))
+	for _, b := range metricConfig.Buckets {
+		if b.Hidden {
+			continue
+		}
+		buckets = append(buckets, b.Le)
+	}
+
+	val = NewHistogram(
+		HistogramOpts{
+			Name:        metricConfig.Name,
+			Help:        metricConfig.Help,
+			ConstLabels: labels,
+			Buckets:     buckets,
+		},
+	)
+	h.histograms.Store(key, val)
+	err = h.registry.Register(val)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to register histogram %q: %w", metricConfig.Name, err)
+	}
+
+	return val, key, nil
+}
+
+func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalversion.MetricConfig, nodeName string) ([]string, error) {
+	eval, err := h.environment.Compile(metricConfig.Value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile metric value %s: %w", metricConfig.Value, err)
+	}
+
+	nodeInfo, ok := h.getNodeInfo(nodeName)
+	if !ok {
+		logger := log.FromContext(ctx)
+		logger.Warn("node not found", "node", nodeName)
+		return nil, nil
+	}
+	data := cel.Data{
+		Node: nodeInfo.Node,
+	}
+
+	switch metricConfig.Dimension {
+	case internalversion.DimensionNode:
+		gauge, key, err := h.getOrRegisterGauge(metricConfig, data)
 		if err != nil {
-			return fmt.Errorf("failed to prepare labels for metric %q: %w", m.Name, err)
+			return nil, err
 		}
 
-		switch m.Kind {
-		case KindGauge:
-			var val prometheus.Gauge
+		result, err := eval.EvaluateFloat64(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
+		}
+		gauge.Set(result)
+		return []string{key}, nil
+	case internalversion.DimensionPod:
+		pods, ok := h.getPodsInfo(nodeName)
+		if !ok {
+			logger := log.FromContext(ctx)
+			logger.Warn("pods not found", "node", nodeName)
+			return nil, nil
+		}
 
-			registerFunc := func(node *corev1.Node) error {
-				labels, err := h.createLabels(preparedLabels, node)
-				if err != nil {
-					return fmt.Errorf("failed to evaluate labels: %w", err)
-				}
-				val = prometheus.NewGauge(
-					prometheus.GaugeOpts{
-						Name:        m.Name,
-						Help:        m.Help,
-						ConstLabels: labels,
-					},
-				)
-
-				err = h.registry.Register(val)
-				if err != nil {
-					return fmt.Errorf("failed to register gauge %q: %w", m.Name, err)
-				}
-				return nil
-			}
-
-			eval, err := h.environment.Compile(m.Value)
+		keys := make([]string, 0, len(pods))
+		for _, pod := range pods {
+			data.Pod = pod.Pod
+			gauge, key, err := h.getOrRegisterGauge(metricConfig, data)
 			if err != nil {
-				return fmt.Errorf("failed to compile metric %q: %w", metric.Name, err)
+				return nil, err
 			}
 
-			var once sync.Once
-			registered := false
-			updateFunc := func() error {
-				nodeInfo, ok := h.getNodeInfo(metric.Name)
-				if !ok {
-					if !registered {
-						return fmt.Errorf("failed to find node %q", metric.Name)
-					}
-					val.Set(0)
-					return nil
-				}
-
-				var err error
-				once.Do(func() {
-					err = registerFunc(nodeInfo.Node)
-					if err != nil {
-						registered = true
-					}
-				})
-				if err != nil {
-					return err
-				}
-
-				result, err := eval.EvaluateFloat64(nodeInfo.Node)
-				if err != nil {
-					return fmt.Errorf("failed to evaluate metric %q: %w", m.Name, err)
-				}
-				val.Set(result)
-				return nil
-			}
-			h.updates = append(h.updates, updateFunc)
-		case KindCounter:
-			counter := atomic.Int64{}
-
-			registerFunc := func(node *corev1.Node) error {
-				labels, err := h.createLabels(preparedLabels, node)
-				if err != nil {
-					return fmt.Errorf("failed to evaluate labels: %w", err)
-				}
-				val := prometheus.NewCounterFunc(
-					prometheus.CounterOpts{
-						Name:        m.Name,
-						Help:        m.Help,
-						ConstLabels: labels,
-					},
-					func() float64 {
-						return float64(counter.Load())
-					},
-				)
-
-				err = h.registry.Register(val)
-				if err != nil {
-					return fmt.Errorf("failed to register counter %q: %w", m.Name, err)
-				}
-				return nil
-			}
-
-			eval, err := h.environment.Compile(m.Value)
+			result, err := eval.EvaluateFloat64(data)
 			if err != nil {
-				return fmt.Errorf("failed to compile metric %q: %w", metric.Name, err)
+				return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
+			}
+			gauge.Set(result)
+			keys = append(keys, key)
+		}
+		return keys, nil
+	case internalversion.DimensionContainer:
+		pods, ok := h.getPodsInfo(nodeName)
+		if !ok {
+			logger := log.FromContext(ctx)
+			logger.Warn("pods not found", "node", nodeName)
+			return nil, nil
+		}
+
+		keys := make([]string, 0, len(pods))
+		for _, pod := range pods {
+			data.Pod = pod.Pod
+			for _, container := range pod.Pod.Spec.Containers {
+				container := container
+				data.Container = &container
+				gauge, key, err := h.getOrRegisterGauge(metricConfig, data)
+				if err != nil {
+					return nil, err
+				}
+				result, err := eval.EvaluateFloat64(data)
+				if err != nil {
+					return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
+				}
+				gauge.Set(result)
+				keys = append(keys, key)
+			}
+		}
+		return keys, nil
+	default:
+		return nil, fmt.Errorf("unknown dimension %q", metricConfig.Dimension)
+	}
+}
+
+func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *internalversion.MetricConfig, nodeName string) ([]string, error) {
+	eval, err := h.environment.Compile(metricConfig.Value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile metric value %s: %w", metricConfig.Value, err)
+	}
+
+	nodeInfo, ok := h.getNodeInfo(nodeName)
+	if !ok {
+		logger := log.FromContext(ctx)
+		logger.Warn("node not found", "node", nodeName)
+		return nil, nil
+	}
+	data := cel.Data{
+		Node: nodeInfo.Node,
+	}
+	switch metricConfig.Dimension {
+	case internalversion.DimensionNode:
+		counter, key, err := h.getOrRegisterCounter(metricConfig, data)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := eval.EvaluateFloat64(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
+		}
+		counter.Set(result)
+		return []string{key}, nil
+	case internalversion.DimensionPod:
+		pods, ok := h.getPodsInfo(nodeName)
+		if !ok {
+			logger := log.FromContext(ctx)
+			logger.Warn("pods not found", "node", nodeName)
+			return nil, nil
+		}
+
+		keys := make([]string, 0, len(pods))
+		for _, pod := range pods {
+			data.Pod = pod.Pod
+			counter, key, err := h.getOrRegisterCounter(metricConfig, data)
+			if err != nil {
+				return nil, err
 			}
 
-			var once sync.Once
-			registered := false
-			updateFunc := func() error {
-				nodeInfo, ok := h.getNodeInfo(metric.Name)
-				if !ok {
-					if !registered {
-						return fmt.Errorf("failed to find node %q", metric.Name)
-					}
-
-					counter.Store(0)
-					return nil
-				}
-
-				var err error
-				once.Do(func() {
-					err = registerFunc(nodeInfo.Node)
-					if err != nil {
-						registered = true
-					}
-				})
-				if err != nil {
-					return err
-				}
-
-				result, err := eval.EvaluateFloat64(nodeInfo.Node)
-				if err != nil {
-					return fmt.Errorf("failed to evaluate metric %q: %w", m.Name, err)
-				}
-				counter.Store(int64(result))
-				return nil
+			result, err := eval.EvaluateFloat64(data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
 			}
-			h.updates = append(h.updates, updateFunc)
-		case KindHistogram:
-			var his *Histogram
-			registerFunc := func(node *corev1.Node) error {
-				labels, err := h.createLabels(preparedLabels, node)
+			counter.Set(result)
+			keys = append(keys, key)
+		}
+		return keys, nil
+	case internalversion.DimensionContainer:
+		pods, ok := h.getPodsInfo(nodeName)
+		if !ok {
+			logger := log.FromContext(ctx)
+			logger.Warn("pods not found", "node", nodeName)
+			return nil, nil
+		}
+
+		keys := make([]string, 0, len(pods))
+		for _, pod := range pods {
+			data.Pod = pod.Pod
+			for _, container := range pod.Pod.Spec.Containers {
+				container := container
+				data.Container = &container
+				counter, key, err := h.getOrRegisterCounter(metricConfig, data)
 				if err != nil {
-					return fmt.Errorf("failed to evaluate labels: %w", err)
+					return nil, err
 				}
-
-				buckets := make([]float64, 0, len(m.Buckets))
-				for _, b := range m.Buckets {
-					if b.Hidden {
-						continue
-					}
-					buckets = append(buckets, b.Le)
-				}
-
-				his = NewHistogram(
-					HistogramOpts{
-						Name:        m.Name,
-						Help:        m.Help,
-						ConstLabels: labels,
-						Buckets:     buckets,
-					})
-
-				err = h.registry.Register(his)
+				result, err := eval.EvaluateFloat64(data)
 				if err != nil {
-					return fmt.Errorf("failed to register histogram %q: %w", m.Name, err)
+					return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
 				}
-				return nil
+				counter.Set(result)
+				keys = append(keys, key)
+			}
+		}
+		return keys, nil
+	default:
+		return nil, fmt.Errorf("unknown dimension %q", metricConfig.Dimension)
+	}
+}
+
+func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *internalversion.MetricConfig, nodeName string) ([]string, error) {
+	nodeInfo, ok := h.getNodeInfo(nodeName)
+	if !ok {
+		logger := log.FromContext(ctx)
+		logger.Warn("node not found", "node", nodeName)
+		return nil, nil
+	}
+	data := cel.Data{
+		Node: nodeInfo.Node,
+	}
+	switch metricConfig.Dimension {
+	case internalversion.DimensionNode:
+		histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, b := range metricConfig.Buckets {
+			eval, err := h.environment.Compile(b.Value)
+			if err != nil {
+				return nil, fmt.Errorf("failed to compile program for Le(%v) %q: %w", b.Le, b.Value, err)
+			}
+			value, err := eval.EvaluateFloat64(data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to evaluate metric with Le(%v): %w", b.Le, err)
+			}
+			histogram.Set(b.Le, uint64(value))
+		}
+		return []string{key}, nil
+	case internalversion.DimensionPod:
+		pods, ok := h.getPodsInfo(nodeName)
+		if !ok {
+			logger := log.FromContext(ctx)
+			logger.Warn("pods not found", "node", nodeName)
+			return nil, nil
+		}
+
+		keys := make([]string, 0, len(pods))
+		for _, pod := range pods {
+			data.Pod = pod.Pod
+			histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
+			if err != nil {
+				return nil, err
 			}
 
-			programs := make(map[float64]*cel.Evaluator, len(m.Buckets))
-			for _, b := range m.Buckets {
+			for _, b := range metricConfig.Buckets {
 				eval, err := h.environment.Compile(b.Value)
 				if err != nil {
-					return fmt.Errorf("failed to compile program for Le(%v) %q: %w", b.Le, b.Value, err)
+					return nil, fmt.Errorf("failed to compile program for Le(%v) %q: %w", b.Le, b.Value, err)
 				}
-
-				programs[b.Le] = eval
-			}
-
-			var once sync.Once
-			registered := false
-			updateFunc := func() error {
-				nodeInfo, ok := h.getNodeInfo(metric.Name)
-				if !ok {
-					if !registered {
-						return fmt.Errorf("failed to find node %q", metric.Name)
-					}
-
-					for _, b := range m.Buckets {
-						his.Set(b.Le, 0)
-					}
-
-					return nil
-				}
-
-				var err error
-				once.Do(func() {
-					err = registerFunc(nodeInfo.Node)
-					if err != nil {
-						registered = true
-					}
-				})
+				value, err := eval.EvaluateFloat64(data)
 				if err != nil {
-					return err
+					return nil, fmt.Errorf("failed to evaluate metric with Le(%v): %w", b.Le, err)
 				}
-
-				for _, b := range m.Buckets {
-					prog, ok := programs[b.Le]
-					if !ok {
-						return fmt.Errorf("failed to find program for metric %v", b.Le)
-					}
-					value, err := prog.EvaluateFloat64(nodeInfo.Node)
-					if err != nil {
-						return fmt.Errorf("failed to evaluate metric with Le(%v): %w", b.Le, err)
-					}
-					his.Set(b.Le, uint64(value))
-				}
-				return nil
+				histogram.Set(b.Le, uint64(value))
 			}
-			h.updates = append(h.updates, updateFunc)
+			keys = append(keys, key)
 		}
-	}
+		return keys, nil
+	case internalversion.DimensionContainer:
+		pods, ok := h.getPodsInfo(nodeName)
+		if !ok {
+			logger := log.FromContext(ctx)
+			logger.Warn("pods not found", "node", nodeName)
+			return nil, nil
+		}
 
-	return nil
+		keys := make([]string, 0, len(pods))
+		for _, pod := range pods {
+			data.Pod = pod.Pod
+			for _, container := range pod.Pod.Spec.Containers {
+				container := container
+				data.Container = &container
+				histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, b := range metricConfig.Buckets {
+					eval, err := h.environment.Compile(b.Value)
+					if err != nil {
+						return nil, fmt.Errorf("failed to compile program for Le(%v) %q: %w", b.Le, b.Value, err)
+					}
+					value, err := eval.EvaluateFloat64(data)
+					if err != nil {
+						return nil, fmt.Errorf("failed to evaluate metric with Le(%v): %w", b.Le, err)
+					}
+					histogram.Set(b.Le, uint64(value))
+				}
+				keys = append(keys, key)
+			}
+		}
+		return keys, nil
+	default:
+		return nil, fmt.Errorf("unknown dimension %q", metricConfig.Dimension)
+	}
 }
 
-func (h *UpdateHandler) prepareLabels(m *internalversion.MetricConfig) (map[string]*cel.Evaluator, error) {
-	var labels map[string]*cel.Evaluator
-	if len(m.Labels) > 0 {
-		labels = make(map[string]*cel.Evaluator, len(m.Labels))
+func (h *UpdateHandler) updateMetric(ctx context.Context, metricConfig *internalversion.MetricConfig, nodeName string) ([]string, error) {
+	switch metricConfig.Kind {
+	case internalversion.KindGauge:
+		return h.updateGauge(ctx, metricConfig, nodeName)
+	case internalversion.KindCounter:
+		return h.updateCounter(ctx, metricConfig, nodeName)
+	case internalversion.KindHistogram:
+		return h.updateHistogram(ctx, metricConfig, nodeName)
+	default:
+		return nil, fmt.Errorf("unknown metric kind %q", metricConfig.Kind)
 	}
-
-	for _, lbl := range m.Labels {
-		eval, err := h.environment.Compile(lbl.Value)
-		if err != nil {
-			return nil, fmt.Errorf("failed to compile metric label value %q: %w", lbl.Value, err)
-		}
-		labels[lbl.Name] = eval
-	}
-
-	return labels, nil
 }
 
-func (h *UpdateHandler) createLabels(labels map[string]*cel.Evaluator, node *corev1.Node) (prometheus.Labels, error) {
-	var constLabels prometheus.Labels
-	if labels != nil {
-		constLabels = make(prometheus.Labels, len(labels))
+// createKeyAndLabels creates a key and labels for a metric.
+// The key is used to unregister the metric.
+// The labels are used to set a value to the metric.
+func (h *UpdateHandler) createKeyAndLabels(metricConfig *internalversion.MetricConfig, data cel.Data) (string, prometheus.Labels, error) {
+	if len(metricConfig.Labels) == 0 {
+		return uniqueKey(metricConfig.Name, metricConfig.Kind, nil), nil, nil
 	}
-	for name, eval := range labels {
-		var err error
-		constLabels[name], err = eval.EvaluateString(node)
+
+	labels := prometheus.Labels{}
+	for _, label := range metricConfig.Labels {
+		eval, err := h.environment.Compile(label.Value)
 		if err != nil {
-			return nil, fmt.Errorf("failed to evaluate metric label %q for node \"%s/%s\": %w", name, node.Namespace, node.Name, err)
+			return "", nil, fmt.Errorf("failed to compile metric label value %q: %w", label.Value, err)
+		}
+
+		value, err := eval.EvaluateString(data)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to evaluate metric label %q: %w", label.Name, err)
+		}
+
+		key := label.Name
+		labels[key] = value
+	}
+
+	return uniqueKey(metricConfig.Name, metricConfig.Kind, labels), labels, nil
+}
+
+func uniqueKey(name string, kind internalversion.Kind, labels map[string]string) string {
+	builder := strings.Builder{}
+	_, _ = builder.WriteString(name)
+	_, _ = builder.WriteString("|")
+	_, _ = builder.WriteString(string(kind))
+	if len(labels) != 0 {
+		_, _ = builder.WriteString("|")
+		keys := maps.Keys(labels)
+		sort.Strings(keys)
+		for _, k := range keys {
+			v := labels[k]
+			_, _ = builder.WriteString(k)
+			_, _ = builder.WriteString(":")
+			_, _ = builder.WriteString(v)
+			_, _ = builder.WriteString(",")
 		}
 	}
-	return constLabels, nil
+	return builder.String()
+}
+
+func (h *UpdateHandler) update(ctx context.Context) {
+	logger := log.FromContext(ctx)
+	has := map[string]struct{}{}
+	// Update metrics
+	h.environment.ClearResultCache()
+	metrics := h.metric.Spec.Metrics
+	nodeName := h.metric.Name
+	for _, metric := range metrics {
+		metric := metric
+		metricName := metric.Name
+		keys, err := h.updateMetric(ctx, &metric, nodeName)
+		if err != nil {
+			logger.Error("failed to update metrics", err,
+				"metric", metricName,
+				"node", nodeName,
+			)
+		}
+		for _, key := range keys {
+			has[key] = struct{}{}
+		}
+	}
+
+	// Remove old metrics
+
+	for _, key := range h.gauges.Keys() {
+		if _, ok := has[key]; !ok {
+			old, ok := h.gauges.LoadAndDelete(key)
+			if ok {
+				h.registry.Unregister(old)
+			}
+		}
+	}
+	for _, key := range h.counters.Keys() {
+		if _, ok := has[key]; !ok {
+			old, ok := h.counters.LoadAndDelete(key)
+			if ok {
+				h.registry.Unregister(old)
+			}
+		}
+	}
+	for _, key := range h.histograms.Keys() {
+		if _, ok := has[key]; !ok {
+			old, ok := h.histograms.LoadAndDelete(key)
+			if ok {
+				h.registry.Unregister(old)
+			}
+		}
+	}
 }
 
 func (h *UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	logger := log.FromContext(r.Context())
-	// Update metrics
-	for _, u := range h.updates {
-		err := u()
-		if err != nil {
-			logger.Error("failed to update metrics", err)
-		}
-	}
+	ctx := r.Context()
+	h.update(ctx)
 
 	// Serve metrics
 	h.handler.ServeHTTP(w, r)

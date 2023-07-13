@@ -18,10 +18,13 @@ package cel
 
 import (
 	"fmt"
+	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
+	"github.com/google/cel-go/common/types/ref"
 	"github.com/wzshiming/easycel"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +32,9 @@ import (
 
 // NodeEvaluatorConfig holds configuration for a cel program
 type NodeEvaluatorConfig struct {
+	EnableEvaluatorCache bool
+	EnableResultCache    bool
+
 	Now                    func() time.Time
 	StartedContainersTotal func(nodeName string) int64
 }
@@ -40,10 +46,18 @@ func NewEnvironment(conf NodeEvaluatorConfig) (*Environment, error) {
 	)
 
 	e := &Environment{
-		registry:       registry,
-		conf:           conf,
-		cacheEvaluator: make(map[string]*Evaluator),
+		registry: registry,
+		conf:     conf,
 	}
+
+	if conf.EnableEvaluatorCache {
+		e.cacheEvaluator = map[string]*Evaluator{}
+	}
+
+	if conf.EnableResultCache {
+		e.resultCacheVer = new(int64)
+	}
+
 	err := e.init()
 	if err != nil {
 		return nil, err
@@ -64,6 +78,7 @@ type Environment struct {
 	env            *easycel.Environment
 	conf           NodeEvaluatorConfig
 	cacheEvaluator map[string]*Evaluator
+	resultCacheVer *int64
 }
 
 func (e *Environment) init() error {
@@ -71,39 +86,79 @@ func (e *Environment) init() error {
 		func(t metav1.Time) types.Timestamp {
 			return types.Timestamp{Time: t.Time}
 		},
+		func(t *metav1.Time) types.Timestamp {
+			if t == nil {
+				return types.Timestamp{}
+			}
+			return types.Timestamp{Time: t.Time}
+		},
+		func(t metav1.Duration) types.Duration {
+			return types.Duration{Duration: t.Duration}
+		},
+		func(t *metav1.Duration) types.Duration {
+			if t == nil {
+				return types.Duration{}
+			}
+			return types.Duration{Duration: t.Duration}
+		},
 	}
 	types := []any{
 		corev1.Node{},
+		corev1.NodeSpec{},
+		corev1.NodeStatus{},
+		corev1.Pod{},
+		corev1.PodSpec{},
+		corev1.PodStatus{},
+		corev1.Container{},
 		metav1.ObjectMeta{},
 	}
 
 	vars := map[string]any{
-		"node": corev1.Node{},
+		"node":      corev1.Node{},
+		"pod":       corev1.Pod{},
+		"container": corev1.Container{},
 	}
 
 	funcs := map[string][]any{}
 
 	methods := map[string][]any{}
 
+	const (
+		nowOldName                    = "now"                    // deprecated
+		startedContainersTotalOldName = "startedContainersTotal" // deprecated
+
+		nowName                    = "Now"
+		startedContainersTotalName = "StartedContainersTotal"
+		mathRandName               = "Rand"
+		sinceSecondName            = "SinceSecond"
+		unixSecondName             = "UnixSecond"
+	)
 	if e.conf.Now != nil {
-		funcs["now"] = append(funcs["now"], e.conf.Now)
+		funcs[nowOldName] = append(funcs[nowOldName], e.conf.Now)
+		funcs[nowName] = append(funcs[nowName], e.conf.Now)
 	} else {
-		funcs["now"] = append(funcs["now"], time.Now)
+		funcs[nowOldName] = append(funcs[nowOldName], timeNow)
+		funcs[nowName] = append(funcs[nowName], timeNow)
 	}
 
-	unixSecond := func(t time.Time) int64 {
-		return t.Unix()
-	}
-	methods["unixSecond"] = append(methods["unixSecond"], unixSecond)
-	funcs["unixSecond"] = append(funcs["unixSecond"], unixSecond)
+	funcs[mathRandName] = append(funcs[mathRandName], mathRand)
+
+	methods[sinceSecondName] = append(methods[sinceSecondName], sinceSecond[*corev1.Node], sinceSecond[*corev1.Pod])
+	funcs[sinceSecondName] = append(funcs[sinceSecondName], sinceSecond[*corev1.Node], sinceSecond[*corev1.Pod])
+
+	methods[unixSecondName] = append(methods[unixSecondName], unixSecond)
+	funcs[unixSecondName] = append(funcs[unixSecondName], unixSecond)
 
 	if e.conf.StartedContainersTotal != nil {
 		startedContainersTotal := e.conf.StartedContainersTotal
-		startedContainersTotalByNode := func(node corev1.Node) int64 {
-			return e.conf.StartedContainersTotal(node.Name)
+		startedContainersTotalByNode := func(node corev1.Node) float64 {
+			return float64(e.conf.StartedContainersTotal(node.Name))
 		}
-		methods["startedContainersTotal"] = append(methods["startedContainersTotal"], startedContainersTotal, startedContainersTotalByNode)
-		funcs["startedContainersTotal"] = append(funcs["startedContainersTotal"], startedContainersTotal, startedContainersTotalByNode)
+		methods[startedContainersTotalOldName] = append(methods[startedContainersTotalOldName], startedContainersTotal, startedContainersTotalByNode)
+		funcs[startedContainersTotalOldName] = append(funcs[startedContainersTotalOldName], startedContainersTotal, startedContainersTotalByNode)
+
+		methods[startedContainersTotalName] = append(methods[startedContainersTotalName], startedContainersTotal, startedContainersTotalByNode)
+		funcs[startedContainersTotalName] = append(funcs[startedContainersTotalName], startedContainersTotal, startedContainersTotalByNode)
 	}
 
 	for _, convert := range conversions {
@@ -146,8 +201,10 @@ func (e *Environment) init() error {
 
 // Compile is responsible for compiling a cel program
 func (e *Environment) Compile(src string) (*Evaluator, error) {
-	if evaluator, ok := e.cacheEvaluator[src]; ok {
-		return evaluator, nil
+	if e.cacheEvaluator != nil {
+		if evaluator, ok := e.cacheEvaluator[src]; ok {
+			return evaluator, nil
+		}
 	}
 	program, err := e.env.Program(src)
 	if err != nil {
@@ -155,24 +212,78 @@ func (e *Environment) Compile(src string) (*Evaluator, error) {
 	}
 
 	evaluator := &Evaluator{
-		program: program,
+		latestCacheVer: e.resultCacheVer,
+		program:        program,
 	}
-	e.cacheEvaluator[src] = evaluator
+	if e.cacheEvaluator != nil {
+		e.cacheEvaluator[src] = evaluator
+	}
 	return evaluator, nil
+}
+
+// ClearResultCache clears the result cache
+func (e *Environment) ClearResultCache() {
+	if e.resultCacheVer == nil {
+		return
+	}
+	atomic.AddInt64(e.resultCacheVer, 1)
 }
 
 // Evaluator evaluates a cel program
 type Evaluator struct {
+	latestCacheVer *int64
+	cacheVer       int64
+
+	cache   map[string]ref.Val
 	program cel.Program
 }
 
-// EvaluateFloat64 evaluates a cel program and returns a metric value and returns float64.
-func (e *Evaluator) EvaluateFloat64(node *corev1.Node) (float64, error) {
+func resultUniqueKey(node *corev1.Node, pod *corev1.Pod, container *corev1.Container) string {
+	tmp := make([]string, 0, 5)
+	if node != nil {
+		tmp = append(tmp, string(node.UID), node.ResourceVersion)
+	}
+	if pod != nil {
+		tmp = append(tmp, string(pod.UID), pod.ResourceVersion)
+	}
+	if container != nil {
+		tmp = append(tmp, container.Name)
+	}
+	return strings.Join(tmp, "/")
+}
+
+func (e *Evaluator) evaluate(data Data) (ref.Val, error) {
+	var key string
+	if e.latestCacheVer != nil {
+		if e.cache == nil || *e.latestCacheVer != e.cacheVer {
+			e.cache = map[string]ref.Val{}
+			e.cacheVer = *e.latestCacheVer
+		}
+
+		key = resultUniqueKey(data.Node, data.Pod, data.Container)
+		if val, ok := e.cache[key]; ok {
+			return val, nil
+		}
+	}
 	refVal, _, err := e.program.Eval(map[string]any{
-		"node": node,
+		"node":      data.Node,
+		"pod":       data.Pod,
+		"container": data.Container,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("failed to evaluate metric expression: %w", err)
+		return nil, fmt.Errorf("failed to evaluate metric expression: %w", err)
+	}
+	if key != "" {
+		e.cache[key] = refVal
+	}
+	return refVal, nil
+}
+
+// EvaluateFloat64 evaluates a cel program and returns a float64.
+func (e *Evaluator) EvaluateFloat64(data Data) (float64, error) {
+	refVal, err := e.evaluate(data)
+	if err != nil {
+		return 0, err
 	}
 
 	switch v := refVal.(type) {
@@ -195,12 +306,10 @@ func (e *Evaluator) EvaluateFloat64(node *corev1.Node) (float64, error) {
 }
 
 // EvaluateString evaluates a cel program and returns a string
-func (e *Evaluator) EvaluateString(node *corev1.Node) (string, error) {
-	refVal, _, err := e.program.Eval(map[string]any{
-		"node": node,
-	})
+func (e *Evaluator) EvaluateString(data Data) (string, error) {
+	refVal, err := e.evaluate(data)
 	if err != nil {
-		return "", fmt.Errorf("failed to evaluate metric expression: %w", err)
+		return "", err
 	}
 
 	v, ok := refVal.(types.String)
@@ -208,4 +317,11 @@ func (e *Evaluator) EvaluateString(node *corev1.Node) (string, error) {
 		return "", fmt.Errorf("unsupported metric type: %T", v)
 	}
 	return string(v), nil
+}
+
+// Data is a data structure that is passed to the cel program
+type Data struct {
+	Node      *corev1.Node
+	Pod       *corev1.Pod
+	Container *corev1.Container
 }

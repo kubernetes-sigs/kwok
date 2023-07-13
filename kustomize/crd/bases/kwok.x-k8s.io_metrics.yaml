@@ -65,6 +65,9 @@ spec:
                       x-kubernetes-list-map-keys:
                       - le
                       x-kubernetes-list-type: map
+                    dimension:
+                      description: Dimension is a dimension of the metric.
+                      type: string
                     help:
                       description: Help provides information about this metric.
                       type: string

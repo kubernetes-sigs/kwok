@@ -162,9 +162,7 @@ func TestPodController(t *testing.T) {
 		}
 		return nodeInfo, true
 	}
-	nodeHasMetric := func(nodeName string) bool {
-		return false
-	}
+
 	podStages, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
 	lifecycle, _ := NewLifecycle(podStages)
 	annotationSelector, _ := labels.Parse("fake=custom")
@@ -175,7 +173,6 @@ func TestPodController(t *testing.T) {
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
 		Lifecycle:                             resources.NewStaticGetter(lifecycle),
 		NodeGetFunc:                           nodeGetFunc,
-		NodeHasMetric:                         nodeHasMetric,
 		FuncMap:                               defaultFuncMap,
 		PlayStageParallelism:                  2,
 	})

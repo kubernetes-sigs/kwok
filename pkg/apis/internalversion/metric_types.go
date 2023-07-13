@@ -44,14 +44,40 @@ type MetricConfig struct {
 	// Help provides information about this metric.
 	Help string
 	// Kind is kind of metric
-	Kind string
+	Kind Kind
 	// Labels are metric labels.
 	Labels []MetricLabel
 	// Value is a CEL expression.
 	Value string
 	// Buckets is a list of buckets for a histogram metric.
 	Buckets []MetricBucket
+	// Dimension is a dimension of the metric.
+	Dimension Dimension
 }
+
+// Kind is kind of metric configuration.
+type Kind string
+
+const (
+	// KindCounter is a counter metric.
+	KindCounter Kind = "counter"
+	// KindGauge is a gauge metric.
+	KindGauge Kind = "gauge"
+	// KindHistogram is a histogram metric.
+	KindHistogram Kind = "histogram"
+)
+
+// Dimension is a dimension of the metric.
+type Dimension string
+
+const (
+	// DimensionNode is a node dimension.
+	DimensionNode Dimension = "node"
+	// DimensionPod is a pod dimension.
+	DimensionPod Dimension = "pod"
+	// DimensionContainer is a container dimension.
+	DimensionContainer Dimension = "container"
+)
 
 // MetricLabel holds label name and the value of the label.
 type MetricLabel struct {

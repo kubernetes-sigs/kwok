@@ -32,6 +32,8 @@ func (s *Server) InstallMetrics() error {
 
 	controller := s.controller
 	env, err := cel.NewEnvironment(cel.NodeEvaluatorConfig{
+		EnableEvaluatorCache: true,
+		EnableResultCache:    true,
 		StartedContainersTotal: func(nodeName string) int64 {
 			nodeInfo, ok := controller.GetNode(nodeName)
 			if !ok {
@@ -44,15 +46,12 @@ func (s *Server) InstallMetrics() error {
 		return fmt.Errorf("failed to create CEL environment: %w", err)
 	}
 	for _, m := range s.metrics {
-		handler, err := metrics.NewMetricsUpdateHandler(metrics.UpdateHandlerConfig{
+		handler := metrics.NewMetricsUpdateHandler(metrics.UpdateHandlerConfig{
 			NodeName:    m.Name,
 			Metrics:     m,
 			Controller:  controller,
 			Environment: env,
 		})
-		if err != nil {
-			return fmt.Errorf("failed to create metrics update handler: %w", err)
-		}
 		s.restfulCont.Handle(m.Spec.Path, handler)
 	}
 	return nil
