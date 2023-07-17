@@ -167,7 +167,7 @@ function install_kustomize() {
   fi
 
   mkdir -p "${LOCAL_BIN_DIR}"
-  cd "${LOCAL_BIN_DIR}" && curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+  GOBIN="${LOCAL_BIN_DIR}" go install sigs.k8s.io/kustomize/kustomize/v4
   if ! command_exist kustomize; then
     echo kustomize is installed but not effective >&2
     return 1
