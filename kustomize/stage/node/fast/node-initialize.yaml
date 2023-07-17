@@ -1,0 +1,78 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: node-initialize
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Node
+  selector:
+    matchExpressions:
+    - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+      operator: 'NotIn'
+      values:
+      - 'True'
+  next:
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $lastTransitionTime := or .creationTimestamp $now }}
+      conditions:
+      {{ range NodeConditions }}
+      - lastHeartbeatTime: {{ $now | Quote }}
+        lastTransitionTime: {{ $lastTransitionTime | Quote }}
+        message: {{ .message | Quote }}
+        reason: {{ .reason | Quote }}
+        status: {{ .status | Quote }}
+        type: {{ .type  | Quote}}
+      {{ end }}
+
+      addresses:
+      {{ with .status.addresses }}
+      {{ YAML . 1 }}
+      {{ else }}
+      {{ with NodeIP }}
+      - address: {{ . | Quote }}
+        type: InternalIP
+      {{ end }}
+      {{ with NodeName }}
+      - address: {{ . | Quote }}
+        type: Hostname
+      {{ end }}
+      {{ end }}
+
+      {{ with NodePort }}
+      daemonEndpoints:
+        kubeletEndpoint:
+          Port: {{ . }}
+      {{ end }}
+
+      allocatable:
+      {{ with .status.allocatable }}
+      {{ YAML . 1 }}
+      {{ else }}
+        cpu: 1k
+        memory: 1Ti
+        pods: 1M
+      {{ end }}
+      capacity:
+      {{ with .status.capacity }}
+      {{ YAML . 1 }}
+      {{ else }}
+        cpu: 1k
+        memory: 1Ti
+        pods: 1M
+      {{ end }}
+      {{ with .status.nodeInfo }}
+      nodeInfo:
+        architecture: {{ with .architecture }} {{ . }} {{ else }} "amd64" {{ end }}
+        bootID: {{ with .bootID }} {{ . }} {{ else }} "" {{ end }}
+        containerRuntimeVersion: {{ with .containerRuntimeVersion }} {{ . }} {{ else }} "kwok-{{ Version }}" {{ end }}
+        kernelVersion: {{ with .kernelVersion }} {{ . }} {{ else }} "kwok-{{ Version }}" {{ end }}
+        kubeProxyVersion: {{ with .kubeProxyVersion }} {{ . }} {{ else }} "kwok-{{ Version }}" {{ end }}
+        kubeletVersion: {{ with .kubeletVersion }} {{ . }} {{ else }} "kwok-{{ Version }}" {{ end }}
+        machineID: {{ with .machineID }} {{ . }} {{ else }} "" {{ end }}
+        operatingSystem: {{ with .operatingSystem }} {{ . }} {{ else }} "linux" {{ end }}
+        osImage: {{ with .osImage }} {{ . }} {{ else }} "" {{ end }}
+        systemUUID: {{ with .systemUUID }} {{ . }} {{ else }} "" {{ end }}
+      {{ end }}
+      phase: Running

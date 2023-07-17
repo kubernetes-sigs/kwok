@@ -82,32 +82,6 @@ This example shows how to configure the simplest and fastest stages of Node reso
 
 [Default Node Stages]
 
-``` goat { height=300 width=400 }
-         o
-         |
-         | Node be created that managed by kwok
-         v
- .---------------.
-| node-initialize |
- '-------+-------'
-         |
-         | Update heartbeat
-         v
- .---------------.
-|  node-heartbeat |
- '-------+-------'
-         |    ^
-         |    | Update heartbeat
-          '--'
-```
-
-The `node-initialize` Stage is applied to nodes that do not have any conditions set in their `status.conditions` field.
-When applied, this Stage sets the `status.conditions` field for the node, as well as the `status.addresses`, `status.allocatable`,
-and `status.capacity` fields.
-
-The `node-heartbeat` Stage is applied to nodes that have the `Ready` condition set to `True` in their `status.conditions` field.
-When applied, this Stage maintains the `status.conditions` field for the node.
-
 ### Pod Stages
 
 This example shows how to configure the simplest and fastest stages of Pod resource, which is also the default Pod stages for `kwok`.
@@ -148,33 +122,18 @@ This example shows how to configure the simplest and fastest stages of Pod resou
       o
 ```
 
-The `pod-ready` Stage is applied to pods that do not have a `status.podIP` set and do not have a `metadata.deletionTimestamp` set.
-When applied, this Stage sets the `status.conditions`, `status.containerStatuses`, and `status.initContainerStatuses` fields for the pod,
-as well as the `status.hostIP` and `status.podIP` fields. It will also set the phase and startTime fields, indicating that the pod is running and has been started.
-
-The `pod-complete` Stage is applied to pods that are running, do not have a `metadata.deletionTimestamp` set,
-and are owned by a Job. When applied, this Stage updates the `status.containerStatuses` field for the pod,
-setting the ready and started fields to true and the `state.terminated` field to indicate that the pod has completed.
-It also sets the phase field to Succeeded, indicating that the pod has completed successfully.
-
-The `pod-delete` Stage is applied to pods that have a `metadata.deletionTimestamp` set.
-When applied, this Stage empties the `metadata.finalizers` field for the pod, allowing it to be deleted, and then delete the pod.
-
 <img width="700px" src="/img/demo/stages-pod-fast.svg">
 
 ### Pod Stages that simulate real behavior as closely as possible
 
 [General Pod Stages]
 
-These Stages simulate real Pod behavior as closely as possible in the future,
-which is not perfect at the moment, so the refinement of this configuration is still a **Work In Progress**.
-
 <img width="700px" src="/img/demo/stages-pod-general.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
 [Go Implementation]: https://github.com/itchyny/gojq
 [JQ Expressions]: https://stedolan.github.io/jq/manual/#Basicfilters
-[Default Node Stages]: https://github.com/kubernetes-sigs/kwok/blob/main/stages/node-fast.yaml
-[Default Pod Stages]: https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-fast.yaml
-[General Pod Stages]: https://github.com/kubernetes-sigs/kwok/blob/main/stages/pod-general.yaml
+[Default Node Stages]: https://github.com/kubernetes-sigs/kwok/tree/release/manifests/kustomize/stage/node/fast
+[Default Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/release/manifests/kustomize/stage/pod/fast
+[General Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/release/manifests/kustomize/stage/pod/general
 [Stage API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Stage

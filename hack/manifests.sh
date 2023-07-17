@@ -106,24 +106,25 @@ function main() {
   dry_run mkdir -p "./artifacts"
   dry_run cp -r "./kustomize" "./artifacts/"
   for kustomize in "${KUSTOMIZES[@]}"; do
+    outfile="${kustomize//\//-}"
     dry_run cd "./artifacts/kustomize/${kustomize}"
     dry_run kustomize edit set image "${DEFAULT_IMAGE_PREFIX}/kwok=${IMAGE_PREFIX}/kwok:${VERSION}"
-    dry_run kustomize build "." -o "../../${kustomize}.yaml"
     dry_run cd -
-    dry_run rm -r "./artifacts/kustomize"
+    dry_run kustomize build "./artifacts/kustomize/${kustomize}" -o "./artifacts/${outfile}.yaml"
     if [[ "${PUSH}" == "true" ]]; then
       if [[ "${BUCKET}" != "" ]]; then
         prefix="${BUCKET}/releases/"
         if [[ "${STAGING_PREFIX}" != "" ]]; then
           prefix="${BUCKET}/releases/${STAGING_PREFIX}-"
         fi
-        dry_run gsutil cp -P "./artifacts/${kustomize}.yaml" "${prefix}${VERSION}/manifests/${kustomize}.yaml"
+        dry_run gsutil cp -P "./artifacts/${outfile}.yaml" "${prefix}${VERSION}/manifests/${outfile}.yaml"
       fi
       if [[ "${GH_RELEASE}" != "" ]]; then
-        dry_run gh -R "${GH_RELEASE}" release upload "${VERSION}" "./artifacts/${kustomize}.yaml"
+        dry_run gh -R "${GH_RELEASE}" release upload "${VERSION}" "./artifacts/${outfile}.yaml"
       fi
     fi
   done
+  dry_run rm -r "./artifacts/kustomize"
 }
 
 args "$@"

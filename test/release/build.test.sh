@@ -424,8 +424,8 @@ function want_manifests() {
   echo "cp -r ./kustomize ./artifacts/"
   echo "cd ./artifacts/kustomize/kwok"
   echo "kustomize edit set image registry.k8s.io/kwok/kwok=${IMAGE_PREFIX}/kwok:${VERSION}"
-  echo "kustomize build . -o ../../kwok.yaml"
   echo "cd -"
+  echo "kustomize build ./artifacts/kustomize/kwok -o ./artifacts/kwok.yaml"
   echo "rm -r ./artifacts/kustomize"
 }
 
@@ -434,10 +434,10 @@ function manifests_with_push_ghrelease() {
   echo "cp -r ./kustomize ./artifacts/"
   echo "cd ./artifacts/kustomize/kwok"
   echo "kustomize edit set image registry.k8s.io/kwok/kwok=${IMAGE_PREFIX}/kwok:${VERSION}"
-  echo "kustomize build . -o ../../kwok.yaml"
   echo "cd -"
-  echo "rm -r ./artifacts/kustomize"
+  echo "kustomize build ./artifacts/kustomize/kwok -o ./artifacts/kwok.yaml"
   echo "gh -R ghrelease release upload ${VERSION} ./artifacts/kwok.yaml"
+  echo "rm -r ./artifacts/kustomize"
 }
 
 function manifests_with_push_bucket() {
@@ -445,10 +445,10 @@ function manifests_with_push_bucket() {
   echo "cp -r ./kustomize ./artifacts/"
   echo "cd ./artifacts/kustomize/kwok"
   echo "kustomize edit set image registry.k8s.io/kwok/kwok=${IMAGE_PREFIX}/kwok:${VERSION}"
-  echo "kustomize build . -o ../../kwok.yaml"
   echo "cd -"
-  echo "rm -r ./artifacts/kustomize"
+  echo "kustomize build ./artifacts/kustomize/kwok -o ./artifacts/kwok.yaml"
   echo "gsutil cp -P ./artifacts/kwok.yaml bucket/releases/${PREFIX}-${VERSION}/manifests/kwok.yaml"
+  echo "rm -r ./artifacts/kustomize"
 }
 
 function main() {
@@ -513,9 +513,9 @@ function main() {
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true cross-cluster-image | diff -u <(want_cross_cluster_image_podman_with_push) - || failed+=("cross-cluster-image-podman-with-push")
   make --no-print-directory -C "${ROOT_DIR}" BUILDER=podman PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} STAGING_IMAGE_PREFIX=${IMAGE_PREFIX} cross-cluster-image | diff -u <(want_cross_cluster_image_podman_with_push_staging) - || failed+=("cross-cluster-image-podman-with-push-staging")
 
-  make --no-print-directory -C "${ROOT_DIR}" IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(want_manifests) - || failed+=("manifests")
-  make --no-print-directory -C "${ROOT_DIR}" PUSH=true GH_RELEASE=ghrelease IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(manifests_with_push_ghrelease) - || failed+=("manifests-with-push-ghrelease")
-  make --no-print-directory -C "${ROOT_DIR}" PUSH=true BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(manifests_with_push_bucket) - || failed+=("manifests-with-push-bucket")
+  make --no-print-directory -C "${ROOT_DIR}" MANIFESTS=kwok IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(want_manifests) - || failed+=("manifests")
+  make --no-print-directory -C "${ROOT_DIR}" PUSH=true MANIFESTS=kwok GH_RELEASE=ghrelease IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(manifests_with_push_ghrelease) - || failed+=("manifests-with-push-ghrelease")
+  make --no-print-directory -C "${ROOT_DIR}" PUSH=true MANIFESTS=kwok BUCKET=bucket STAGING=true STAGING_PREFIX=${PREFIX} IMAGE_PREFIX=${IMAGE_PREFIX} manifests | diff -u <(manifests_with_push_bucket) - || failed+=("manifests-with-push-bucket")
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
     echo "Error: Some tests failed"

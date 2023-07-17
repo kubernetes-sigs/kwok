@@ -76,6 +76,8 @@ IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
 
 BINARY_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
 
+MANIFESTS ?= kwok kwokctl stage/fast
+
 BUILDER ?= docker
 DOCKER_CLI_EXPERIMENTAL ?= enabled
 
@@ -219,7 +221,7 @@ cross-cluster-image:
 .PHONY: manifests
 manifests:
 	@./hack/manifests.sh \
-        --kustomize=kwok \
+        $(addprefix --kustomize=, $(MANIFESTS)) \
 		--bucket=${BUCKET} \
 		--gh-release=${GH_RELEASE} \
 		--image-prefix=${IMAGE_PREFIX} \
