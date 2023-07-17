@@ -36,4 +36,7 @@ import (
 
 	// misspell
 	_ "github.com/client9/misspell/cmd/misspell"
+
+	// kustomize
+	_ "sigs.k8s.io/kustomize/kustomize/v4"
 )
