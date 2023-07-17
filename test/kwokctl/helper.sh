@@ -66,6 +66,18 @@ function supported_releases() {
   head <"${ROOT_DIR}/supported_releases.txt" -n "${LAST_RELEASE_SIZE}"
 }
 
+function build_kwokctl_config() {
+  "${ROOT_DIR}/hack/manifests.sh" --kustomize=kwokctl
+  if [[ -f "${ROOT_DIR}/workdir/kwok.yaml" ]]; then
+    if [[ "$(cat "${ROOT_DIR}/workdir/kwok.yaml")" == *"$(cat "${ROOT_DIR}/artifacts/kwokctl.yaml")"* ]]; then
+      cat "${ROOT_DIR}/artifacts/kwokctl.yaml" >>"${ROOT_DIR}/workdir/kwok.yaml"
+    fi
+  else
+    mkdir -p "${ROOT_DIR}/workdir"
+    cat "${ROOT_DIR}/artifacts/kwokctl.yaml" >"${ROOT_DIR}/workdir/kwok.yaml"
+  fi
+}
+
 function build_kwokctl() {
   if [[ -f "${KWOKCTL_CONTROLLER_BINARY}" ]]; then
     return
@@ -93,22 +105,26 @@ function requirements() {
   "${ROOT_DIR}/hack/requirements.sh" kubectl buildx
   build_kwokctl
   build_image
+  build_kwokctl_config
 }
 
 function requirements_for_podman() {
   "${ROOT_DIR}/hack/requirements.sh" kubectl
   build_kwokctl
   build_image podman
+  build_kwokctl_config
 }
 
 function requirements_for_nerdctl() {
   "${ROOT_DIR}/hack/requirements.sh" kubectl
   build_kwokctl
   build_image nerdctl
+  build_kwokctl_config
 }
 
 function requirements_for_binary() {
   "${ROOT_DIR}/hack/requirements.sh" kubectl
   build_kwokctl
   build_kwok
+  build_kwokctl_config
 }

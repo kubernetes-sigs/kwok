@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"encoding/binary"
 	"net"
 	"sync"
 
@@ -25,30 +24,15 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 )
 
 func parseCIDR(s string) (*net.IPNet, error) {
-	ip, ipnet, err := net.ParseCIDR(s)
-	if err != nil {
-		return nil, err
-	}
-	ipnet.IP = ip
-	return ipnet, nil
+	return utilsnet.ParseCIDR(s)
 }
 
 func addIP(ip net.IP, add uint64) net.IP {
-	if len(ip) < 8 {
-		return ip
-	}
-
-	out := make(net.IP, len(ip))
-	copy(out, ip)
-
-	i := binary.BigEndian.Uint64(out[len(out)-8:])
-	i += add
-
-	binary.BigEndian.PutUint64(out[len(out)-8:], i)
-	return out
+	return utilsnet.AddIP(ip, add)
 }
 
 type ipPool struct {

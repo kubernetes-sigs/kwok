@@ -253,10 +253,10 @@ jobs:
           sudo mkdir -p /var/run/kubernetes
           sudo chmod 777 /var/run/kubernetes
 
-      - name: Install kubectl
+      - name: Install kubectl and kustomize
         shell: bash
         run: |
-          ./hack/requirements.sh kubectl
+          ./hack/requirements.sh kubectl kustomize
 
       - name: Test Dry Run
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}

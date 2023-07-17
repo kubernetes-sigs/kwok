@@ -1,0 +1,47 @@
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokctlResource
+metadata:
+  name: node
+parameters:
+  podCIDR: "10.0.0.1/24"
+  allocatable:
+    cpu: 32
+    memory: 256Gi
+    pods: 110
+  capacity: {}
+  nodeInfo:
+    architecture: amd64
+    operatingSystem: linux
+template: |-
+  kind: Node
+  apiVersion: v1
+  metadata:
+    name: {{ Name }}
+    annotations:
+      kwok.x-k8s.io/node: fake
+      node.alpha.kubernetes.io/ttl: "0"
+    labels:
+      beta.kubernetes.io/arch: {{ .nodeInfo.architecture }}
+      beta.kubernetes.io/os: {{ .nodeInfo.operatingSystem }}
+      kubernetes.io/arch: {{ .nodeInfo.architecture }}
+      kubernetes.io/hostname: {{ Name }}
+      kubernetes.io/os: {{ .nodeInfo.operatingSystem }}
+      kubernetes.io/role: agent
+      node-role.kubernetes.io/agent: ""
+      type: kwok
+  spec:
+    podCIDR: {{ AddCIDR .podCIDR Index }}
+  status:
+    allocatable:
+    {{ range $key, $value := .allocatable }}
+      {{ $key }}: {{ $value }}
+    {{ end }}
+    {{ $capacity := .capacity }}
+    capacity:
+    {{ range $key, $value := .allocatable }}
+      {{ $key }}: {{ or ( index $capacity $key ) $value }}
+    {{ end }}
+    nodeInfo:
+    {{ range $key, $value := .nodeInfo }}
+      {{ $key }}: {{ $value }}
+    {{ end }}
