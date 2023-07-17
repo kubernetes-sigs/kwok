@@ -12,7 +12,7 @@ The Argo Workflow is a custom resource for creating Pods, not using Job.
 So we need to change the behavior of the Pod to make it work.
 
 ``` bash
-wget https://github.com/kubernetes-sigs/kwok/raw/main/stages/pod-fast.yaml
+wget https://raw.githubusercontent.com/kubernetes-sigs/kwok/release-0.3/stages/pod-fast.yaml
 sed 's/Job/Workflow/g' pod-fast.yaml > workflow-fast.yaml
 ```
 
