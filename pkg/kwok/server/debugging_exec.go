@@ -21,20 +21,28 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/apimachinery/pkg/types"
-	clientremotecommand "k8s.io/client-go/tools/remotecommand"
+	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
+	remotecommandclient "k8s.io/client-go/tools/remotecommand"
+	remotecommandserver "k8s.io/kubelet/pkg/cri/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwok/server/remotecommand"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // ExecInContainer executes a command in a container.
-func (s *Server) ExecInContainer(ctx context.Context, podName, podNamespace string, uid types.UID, container string, cmd []string, in io.Reader, out, errOut io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize) error {
+func (s *Server) ExecInContainer(ctx context.Context, name string, uid types.UID, container string, cmd []string, in io.Reader, out, errOut io.WriteCloser, tty bool, resize <-chan remotecommandclient.TerminalSize, timeout time.Duration) error {
+	pod := strings.Split(name, "/")
+	if len(pod) != 2 {
+		return fmt.Errorf("invalid pod name %q", name)
+	}
+	podName, podNamespace := pod[0], pod[1]
 	execTarget, err := s.getExecTarget(podName, podNamespace, container)
 	if err != nil {
 		return err
@@ -137,24 +145,23 @@ func findContainerInExecs(containerName string, execs []internalversion.ExecTarg
 func (s *Server) getExec(req *restful.Request, resp *restful.Response) {
 	params := getExecRequestParams(req)
 
-	streamOpts, err := remotecommand.NewOptions(req.Request)
+	streamOpts, err := remotecommandserver.NewOptions(req.Request)
 	if err != nil {
 		http.Error(resp, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	remotecommand.ServeExec(
-		req.Request.Context(),
+	remotecommandserver.ServeExec(
 		resp.ResponseWriter,
 		req.Request,
 		s,
-		params.podName,
-		params.podNamespace,
+		params.podName+"/"+params.podNamespace,
 		params.podUID,
 		params.containerName,
 		params.cmd,
 		streamOpts,
 		s.idleTimeout,
 		s.streamCreationTimeout,
-		remotecommand.SupportedStreamingProtocols)
+		remotecommandconsts.SupportedStreamingProtocols,
+	)
 }
