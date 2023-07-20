@@ -167,7 +167,7 @@ function install_kustomize() {
   fi
 
   mkdir -p "${LOCAL_BIN_DIR}"
-  GOBIN="${LOCAL_BIN_DIR}" go install sigs.k8s.io/kustomize/kustomize/v4
+  GOBIN="${LOCAL_BIN_DIR}" go install sigs.k8s.io/kustomize/kustomize/v5
   if ! command_exist kustomize; then
     echo kustomize is installed but not effective >&2
     return 1
