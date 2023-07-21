@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,16 +31,18 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/util/retry"
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // Load loads the resources to cluster from the reader
 func Load(ctx context.Context, clientset client.Clientset, r io.Reader, filters []string) error {
-	l, err := newLoader(clientset)
+	l, err := newLoader(clientset, filters == nil)
 	if err != nil {
 		return err
 	}
@@ -71,7 +74,7 @@ type loader struct {
 	dynamicClient dynamic.Interface
 }
 
-func newLoader(clientset client.Clientset) (*loader, error) {
+func newLoader(clientset client.Clientset, noFilter bool) (*loader, error) {
 	restMapper, err := clientset.ToRESTMapper()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rest mapper: %w", err)
@@ -81,16 +84,22 @@ func newLoader(clientset client.Clientset) (*loader, error) {
 		return nil, fmt.Errorf("failed to create dynamic client: %w", err)
 	}
 
-	return &loader{
-		filterMap:     make(map[schema.GroupKind]struct{}),
+	l := &loader{
 		exist:         make(map[uniqueKey]types.UID),
 		pending:       make(map[uniqueKey][]*unstructured.Unstructured),
 		restMapper:    restMapper,
 		dynamicClient: dynClient,
-	}, nil
+	}
+	if !noFilter {
+		l.filterMap = make(map[schema.GroupKind]struct{})
+	}
+	return l, nil
 }
 
 func (l *loader) addResource(ctx context.Context, resources []string) {
+	if l.filterMap == nil {
+		return
+	}
 	logger := log.FromContext(ctx)
 	for _, resource := range resources {
 		mapping, err := mappingFor(l.restMapper, resource)
@@ -234,6 +243,9 @@ func (l *loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 }
 
 func (l *loader) filter(obj *unstructured.Unstructured) bool {
+	if l.filterMap == nil {
+		return true
+	}
 	_, ok := l.filterMap[obj.GroupVersionKind().GroupKind()]
 	return ok
 }
@@ -262,7 +274,12 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 	if ns := obj.GetNamespace(); ns != "" {
 		ri = nri.Namespace(ns)
 	}
-	newObj, err := ri.Create(ctx, obj, metav1.CreateOptions{FieldValidation: "Ignore"})
+
+	var newObj *unstructured.Unstructured
+	err = retry.OnError(defaultRetry, isNotFound, func() error {
+		newObj, err = ri.Create(ctx, obj, metav1.CreateOptions{FieldValidation: "Ignore"})
+		return err
+	})
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			l.failedCounter++
@@ -285,6 +302,18 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 	}
 	l.successCounter++
 	return newObj
+}
+
+func isNotFound(err error) bool {
+	return apierrors.IsNotFound(err) ||
+		(apierrors.IsForbidden(err) && strings.Contains(err.Error(), "not found"))
+}
+
+var defaultRetry = wait.Backoff{
+	Steps:    10,
+	Duration: 1 * time.Second,
+	Factor:   1.0,
+	Jitter:   0.1,
 }
 
 func (l *loader) hasAllOwnerReferences(obj *unstructured.Unstructured) bool {
