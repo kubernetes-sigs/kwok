@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -87,11 +86,6 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	gv, err := schema.ParseGroupVersion(u.GetAPIVersion())
 	if err != nil {
 		return err
-	}
-
-	gk := schema.GroupKind{
-		Group: gv.Group,
-		Kind:  u.GetKind(),
 	}
 
 	dynamicClient, err := clientset.ToDynamicClient()
@@ -278,13 +272,8 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		return buf.Bytes(), nil
 	}, wantCreate)
 
-	gkStr := strings.ToLower(gk.String())
-	filters := []string{
-		gkStr,
-	}
-
 	ctx = log.NewContext(ctx, logger)
-	err = snapshot.Load(ctx, clientset, gen, filters)
+	err = snapshot.Load(ctx, clientset, gen, nil)
 	if err != nil {
 		return err
 	}

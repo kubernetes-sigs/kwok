@@ -488,8 +488,7 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 		_, _ = buf.Write(c)
 	}
 
-	filters := []string{"customresourcedefinition.apiextensions.k8s.io"}
-	return snapshot.Load(ctx, clientset, buf, filters)
+	return snapshot.Load(ctx, clientset, buf, nil)
 }
 
 var crdDefines = map[string][]byte{
