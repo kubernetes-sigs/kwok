@@ -34,7 +34,7 @@ require (
 	k8s.io/apimachinery v0.27.3
 	k8s.io/apiserver v0.27.3
 	k8s.io/client-go v0.27.3
-	k8s.io/code-generator v0.27.3
+	k8s.io/code-generator v0.27.4
 	k8s.io/cri-api v0.27.3
 	k8s.io/utils v0.0.0-20230209194617-a36077c30491
 	mvdan.cc/sh/v3 v3.7.0
