@@ -18,7 +18,6 @@ package resources
 
 import (
 	"context"
-	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,7 +37,10 @@ type ConvertFunc[O any, T runtime.Object, S ~[]T] func(objs S) O
 
 // NewDynamicGetter returns a new Getter that returns the latest list of resources.
 func NewDynamicGetter[O any, T runtime.Object, L runtime.Object](syncer Syncer[T, L], convertFunc ConvertFunc[O, T, []T]) DynamicGetter[O] {
+	syncCh := make(chan struct{}, 1)
+	syncCh <- struct{}{}
 	getter := &dynamicGetter[O, T, L]{
+		syncCh:      syncCh,
 		syncer:      syncer,
 		convertFunc: convertFunc,
 	}
@@ -46,14 +48,17 @@ func NewDynamicGetter[O any, T runtime.Object, L runtime.Object](syncer Syncer[T
 	return struct {
 		Getter[O]
 		Starter
+		Synced
 	}{
 		Getter:  withCache[O](getter),
 		Starter: getter,
+		Synced:  getter,
 	}
 }
 
 type dynamicGetter[O any, T runtime.Object, L runtime.Object] struct {
 	syncer Syncer[T, L]
+	syncCh chan struct{}
 
 	convertFunc ConvertFunc[O, T, []T]
 
@@ -73,8 +78,18 @@ func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
 			},
 		},
 		t,
-		10*time.Second,
-		cache.ResourceEventHandlerFuncs{},
+		0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				c.sync()
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				c.sync()
+			},
+			DeleteFunc: func(obj interface{}) {
+				c.sync()
+			},
+		},
 	)
 
 	c.store = store
@@ -96,4 +111,15 @@ func (c *dynamicGetter[O, T, L]) Get() O {
 
 func (c *dynamicGetter[O, T, L]) Version() string {
 	return c.controller.LastSyncResourceVersion()
+}
+
+func (c *dynamicGetter[O, T, L]) Sync() <-chan struct{} {
+	return c.syncCh
+}
+
+func (c *dynamicGetter[O, T, L]) sync() {
+	select {
+	case c.syncCh <- struct{}{}:
+	default:
+	}
 }

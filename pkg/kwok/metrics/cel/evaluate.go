@@ -19,6 +19,7 @@ package cel
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -78,6 +79,7 @@ type Environment struct {
 	env            *easycel.Environment
 	conf           NodeEvaluatorConfig
 	cacheEvaluator map[string]*Evaluator
+	cacheMut       sync.Mutex
 	resultCacheVer *int64
 }
 
@@ -202,6 +204,9 @@ func (e *Environment) init() error {
 // Compile is responsible for compiling a cel program
 func (e *Environment) Compile(src string) (*Evaluator, error) {
 	if e.cacheEvaluator != nil {
+		e.cacheMut.Lock()
+		defer e.cacheMut.Unlock()
+
 		if evaluator, ok := e.cacheEvaluator[src]; ok {
 			return evaluator, nil
 		}
@@ -234,8 +239,9 @@ type Evaluator struct {
 	latestCacheVer *int64
 	cacheVer       int64
 
-	cache   map[string]ref.Val
-	program cel.Program
+	cache    map[string]ref.Val
+	cacheMut sync.Mutex
+	program  cel.Program
 }
 
 func resultUniqueKey(node *corev1.Node, pod *corev1.Pod, container *corev1.Container) string {
@@ -255,6 +261,9 @@ func resultUniqueKey(node *corev1.Node, pod *corev1.Pod, container *corev1.Conta
 func (e *Evaluator) evaluate(data Data) (ref.Val, error) {
 	var key string
 	if e.latestCacheVer != nil {
+		e.cacheMut.Lock()
+		defer e.cacheMut.Unlock()
+
 		if e.cache == nil || *e.latestCacheVer != e.cacheVer {
 			e.cache = map[string]ref.Val{}
 			e.cacheVer = *e.latestCacheVer

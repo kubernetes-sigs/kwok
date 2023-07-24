@@ -30,9 +30,20 @@ type Getter[O any] interface {
 type DynamicGetter[O any] interface {
 	Getter[O]
 	Starter
+	Synced
 }
 
 // Starter is an interface for starting resources.
 type Starter interface {
 	Start(ctx context.Context) error
+}
+
+// CacheGetter is an interface for getting resources that are cached.
+type CacheGetter[O any] interface {
+	Getter[O]
+}
+
+// Synced is an interface for getting resources that are synced.
+type Synced interface {
+	Sync() <-chan struct{}
 }

@@ -35,8 +35,6 @@ import (
 
 // UpdateHandler handles updating metrics on request
 type UpdateHandler struct {
-	name        string
-	metric      *internalversion.Metric
 	controller  *controllers.Controller
 	environment *cel.Environment
 
@@ -50,8 +48,6 @@ type UpdateHandler struct {
 
 // UpdateHandlerConfig is configuration for a single node
 type UpdateHandlerConfig struct {
-	NodeName    string
-	Metrics     *internalversion.Metric
 	Controller  *controllers.Controller
 	Environment *cel.Environment
 }
@@ -64,8 +60,6 @@ func NewMetricsUpdateHandler(conf UpdateHandlerConfig) *UpdateHandler {
 	)
 
 	h := &UpdateHandler{
-		name:        conf.NodeName,
-		metric:      conf.Metrics,
 		controller:  conf.Controller,
 		environment: conf.Environment,
 		registry:    registry,
@@ -497,13 +491,12 @@ func uniqueKey(name string, kind internalversion.Kind, labels map[string]string)
 	return builder.String()
 }
 
-func (h *UpdateHandler) update(ctx context.Context) {
+// Update updates metrics for a node
+func (h *UpdateHandler) Update(ctx context.Context, nodeName string, metrics []internalversion.MetricConfig) {
 	logger := log.FromContext(ctx)
 	has := map[string]struct{}{}
 	// Update metrics
 	h.environment.ClearResultCache()
-	metrics := h.metric.Spec.Metrics
-	nodeName := h.metric.Name
 	for _, metric := range metrics {
 		metric := metric
 		metricName := metric.Name
@@ -548,9 +541,6 @@ func (h *UpdateHandler) update(ctx context.Context) {
 }
 
 func (h *UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	h.update(ctx)
-
 	// Serve metrics
 	h.handler.ServeHTTP(w, r)
 }
