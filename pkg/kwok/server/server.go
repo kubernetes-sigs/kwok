@@ -33,7 +33,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
+	"sigs.k8s.io/kwok/pkg/kwok/metrics"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
@@ -62,8 +64,11 @@ type Server struct {
 	logs                resources.Getter[[]*internalversion.Logs]
 	clusterAttaches     resources.Getter[[]*internalversion.ClusterAttach]
 	attaches            resources.Getter[[]*internalversion.Attach]
+	metrics             resources.Getter[[]*internalversion.Metric]
 
-	metrics    []*internalversion.Metric
+	metricsWebService    *restful.WebService
+	metricsUpdateHandler maps.SyncMap[string, *metrics.UpdateHandler]
+
 	controller *controllers.Controller
 }
 
@@ -103,8 +108,8 @@ func NewServer(config Config) (*Server, error) {
 		logs:                resources.NewStaticGetter(config.Logs),
 		clusterAttaches:     resources.NewStaticGetter(config.ClusterAttaches),
 		attaches:            resources.NewStaticGetter(config.Attaches),
+		metrics:             resources.NewStaticGetter(config.Metrics),
 
-		metrics:    config.Metrics,
 		controller: config.Controller,
 
 		bufPool: pools.NewPool(func() []byte {
@@ -308,6 +313,29 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			)
 			starters = append(starters, attaches)
 			s.attaches = attaches
+		case v1alpha1.MetricKind:
+			if len(s.metrics.Get()) != 0 {
+				return nil, fmt.Errorf("metrics already exists, cannot watch CRD")
+			}
+			metrics := resources.NewDynamicGetter[
+				[]*internalversion.Metric,
+				*v1alpha1.Metric,
+				*v1alpha1.MetricList,
+			](
+				cli.KwokV1alpha1().Metrics(),
+				func(objs []*v1alpha1.Metric) []*internalversion.Metric {
+					return slices.FilterAndMap(objs, func(obj *v1alpha1.Metric) (*internalversion.Metric, bool) {
+						r, err := internalversion.ConvertToInternalMetric(obj)
+						if err != nil {
+							logger.Error("failed to convert to internal metric", err, "obj", obj)
+							return nil, false
+						}
+						return r, true
+					})
+				},
+			)
+			starters = append(starters, metrics)
+			s.metrics = metrics
 		}
 	}
 	return starters, nil
@@ -319,20 +347,26 @@ func getHandlerForDisabledEndpoint(errorMessage string) http.HandlerFunc {
 	}
 }
 
+// InstallCRD installs the CRD resources
+func (s *Server) InstallCRD(ctx context.Context) error {
+	if len(s.enableCRDs) == 0 {
+		return nil
+	}
+	starters, err := s.initWatchCRD(ctx)
+	if err != nil {
+		return fmt.Errorf("init enable crd: %w", err)
+	}
+	for _, starter := range starters {
+		if err := starter.Start(ctx); err != nil {
+			return fmt.Errorf("start crd getter: %w", err)
+		}
+	}
+	return nil
+}
+
 // Run runs the specified Server.
 // This should never exit.
 func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFile string) error {
-	if len(s.enableCRDs) != 0 {
-		starters, err := s.initWatchCRD(ctx)
-		if err != nil {
-			return fmt.Errorf("init enable crd: %w", err)
-		}
-		for _, starter := range starters {
-			if err := starter.Start(ctx); err != nil {
-				return fmt.Errorf("start crd getter: %w", err)
-			}
-		}
-	}
 	logger := log.FromContext(ctx)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {

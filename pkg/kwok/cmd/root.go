@@ -263,7 +263,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		TypedClient:                           typedClient,
 		TypedKwokClient:                       typedKwokClient,
 		EnableCNI:                             flags.Options.EnableCNI,
-		EnableMetrics:                         len(metrics) != 0,
+		EnableMetrics:                         len(metrics) != 0 || slices.Contains(flags.Options.EnableCRDs, v1alpha1.MetricKind),
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
 		ManageNodesWithLabelSelector:          flags.Options.ManageNodesWithLabelSelector,
@@ -309,11 +309,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 		if err != nil {
 			return fmt.Errorf("failed to create server: %w", err)
 		}
-
-		err = svc.InstallMetrics()
-		if err != nil {
-			return fmt.Errorf("failed to install metrics: %w", err)
-		}
 		svc.InstallHealthz()
 
 		if flags.Options.EnableDebuggingHandlers {
@@ -322,6 +317,17 @@ func runE(ctx context.Context, flags *flagpole) error {
 		} else {
 			svc.InstallDebuggingDisabledHandlers()
 		}
+
+		err = svc.InstallCRD(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to install crd: %w", err)
+		}
+
+		err = svc.InstallMetrics(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to install metrics: %w", err)
+		}
+
 		go func() {
 			err := svc.Run(ctx, serverAddress, flags.Options.TLSCertFile, flags.Options.TLSPrivateKeyFile)
 			if err != nil {
