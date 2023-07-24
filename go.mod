@@ -30,10 +30,10 @@ require (
 	golang.org/x/sys v0.10.0
 	golang.org/x/term v0.10.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.27.3
-	k8s.io/apimachinery v0.27.3
+	k8s.io/api v0.27.4
+	k8s.io/apimachinery v0.27.4
 	k8s.io/apiserver v0.27.3
-	k8s.io/client-go v0.27.3
+	k8s.io/client-go v0.27.4
 	k8s.io/code-generator v0.27.3
 	k8s.io/cri-api v0.27.3
 	k8s.io/utils v0.0.0-20230209194617-a36077c30491
