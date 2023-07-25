@@ -464,7 +464,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 			KubeControllerManagerPort: conf.KubeControllerManagerPort,
 			KubeSchedulerPort:         conf.KubeSchedulerPort,
 			KwokControllerPort:        conf.KwokControllerPort,
-			Metrics:                   runtime.GetMetrics(ctx),
 		})
 		if err != nil {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)

@@ -386,6 +386,11 @@ func (c *Controller) GetNode(nodeName string) (*NodeInfo, bool) {
 	return c.nodes.Get(nodeName)
 }
 
+// ListNodes returns all nodes
+func (c *Controller) ListNodes() []*NodeInfo {
+	return c.nodes.List()
+}
+
 // ListPods returns all pods on the given node
 func (c *Controller) ListPods(nodeName string) ([]*PodInfo, bool) {
 	return c.pods.List(nodeName)

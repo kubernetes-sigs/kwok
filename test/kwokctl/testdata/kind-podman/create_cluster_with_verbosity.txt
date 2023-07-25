@@ -171,6 +171,9 @@ data:
           static_configs:
             - targets: [ ]
     scrape_configs:
+      - job_name: "kwok-service-discovery"
+        http_sd_configs:
+        - url: http://localhost:10247/discovery/prometheus
       - job_name: "prometheus"
         scheme: http
         honor_timestamps: true

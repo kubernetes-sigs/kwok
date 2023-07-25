@@ -46,6 +46,9 @@ data:
           static_configs:
             - targets: [ ]
     scrape_configs:
+      - job_name: "kwok-service-discovery"
+        http_sd_configs:
+        - url: http://localhost:10247/discovery/prometheus
       - job_name: "prometheus"
         scheme: http
         honor_timestamps: true
@@ -77,17 +80,6 @@ data:
         static_configs:
           - targets:
               - "localhost:10247"
-      {{ range .Metrics }}
-      - job_name: "kwok-metric-{{ .Name }}"
-        scheme: http
-        honor_timestamps: true
-        metrics_path: {{ .Spec.Path }}
-        follow_redirects: true
-        enable_http2: true
-        static_configs:
-        - targets:
-            - "localhost:10247"
-      {{ end }}
       - job_name: "kube-apiserver"
         scheme: https
         honor_timestamps: true

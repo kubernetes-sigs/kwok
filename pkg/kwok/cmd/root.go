@@ -311,6 +311,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 		svc.InstallHealthz()
 
+		svc.InstallServiceDiscovery()
+
 		if flags.Options.EnableDebuggingHandlers {
 			svc.InstallDebuggingHandlers()
 			svc.InstallProfilingHandler(flags.Options.EnableProfilingHandler, flags.Options.EnableContentionProfiling)
