@@ -848,6 +848,7 @@ func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, 
 	out.Binary = in.Binary
 	out.Image = in.Image
 	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
+	out.User = in.User
 	out.Args = *(*[]string)(unsafe.Pointer(&in.Args))
 	out.WorkDir = in.WorkDir
 	out.Ports = *(*[]configv1alpha1.Port)(unsafe.Pointer(&in.Ports))
@@ -878,6 +879,7 @@ func autoConvert_v1alpha1_Component_To_internalversion_Component(in *configv1alp
 	out.Binary = in.Binary
 	out.Image = in.Image
 	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
+	out.User = in.User
 	out.Args = *(*[]string)(unsafe.Pointer(&in.Args))
 	out.WorkDir = in.WorkDir
 	out.Ports = *(*[]Port)(unsafe.Pointer(&in.Ports))

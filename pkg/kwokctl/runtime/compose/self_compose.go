@@ -201,8 +201,20 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 	args := []string{"create",
 		"--name=" + c.Name() + "-" + componentName,
 		"--pull=never",
-		"--entrypoint=" + strings.Join(component.Command, " "),
-		"--network=" + c.networkName(),
+	}
+
+	entrypoint := strings.Join(component.Command, " ")
+	if entrypoint != "" {
+		args = append(args, "--entrypoint="+entrypoint)
+	}
+
+	network := c.networkName()
+	if network != "" {
+		args = append(args, "--network="+network)
+	}
+
+	if component.User != "" {
+		args = append(args, "--user="+component.User)
 	}
 
 	switch c.runtime {
