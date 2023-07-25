@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	rt "runtime"
+	"strconv"
 	"time"
 
 	"github.com/nxadm/tail"
@@ -552,6 +554,22 @@ func (c *Cluster) startComponent(ctx context.Context, component internalversion.
 		ctx = exec.WithEnv(ctx, slices.Map(component.Envs, func(c internalversion.Env) string {
 			return fmt.Sprintf("%s=%s", c.Name, c.Value)
 		}))
+	}
+
+	if component.User != "" {
+		u, err := user.Lookup(component.User)
+		if err != nil {
+			return err
+		}
+		uid, err := strconv.ParseInt(u.Uid, 0, 64)
+		if err != nil {
+			return err
+		}
+		gid, err := strconv.ParseInt(u.Gid, 0, 64)
+		if err != nil {
+			return err
+		}
+		ctx = exec.WithUser(ctx, &uid, &gid)
 	}
 
 	logger.Debug("Starting component")

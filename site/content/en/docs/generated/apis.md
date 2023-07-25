@@ -1440,6 +1440,18 @@ string
 </tr>
 <tr>
 <td>
+<code>user</code>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>User is the user for the component.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>args</code>
 <em>
 []string

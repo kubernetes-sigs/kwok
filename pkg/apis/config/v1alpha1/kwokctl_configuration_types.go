@@ -369,6 +369,10 @@ type Component struct {
 	// +optional
 	Command []string `json:"command,omitempty"`
 
+	// User is the user for the component.
+	// +optional
+	User string `json:"user,omitempty"`
+
 	// Args is Arguments to the entrypoint.
 	// +optional
 	Args []string `json:"args,omitempty"`

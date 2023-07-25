@@ -246,6 +246,9 @@ type Component struct {
 	// Command is Entrypoint array. Not executed within a shell. Only works with Image.
 	Command []string
 
+	// User is the user for the component.
+	User string
+
 	// Args is Arguments to the entrypoint.
 	Args []string
 
