@@ -58,6 +58,7 @@ var (
 	KindName                = "kind.yaml"
 	KwokPod                 = "kwok-controller-pod.yaml"
 	DashboardDeploy         = "dashboard-deployment.yaml"
+	MetricsServerDeploy     = "metrics-server-deployment.yaml"
 	PrometheusDeploy        = "prometheus-deployment.yaml"
 	JaegerDeploy            = "jaeger-deployment.yaml"
 	AuditPolicyName         = "audit.yaml"
@@ -540,6 +541,11 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 
 	crds := conf.EnableCRDs
 	if len(crds) == 0 {
+		return nil
+	}
+
+	if c.IsDryRun() {
+		dryrun.PrintMessage("# Init CRDs %s", strings.Join(crds, ","))
 		return nil
 	}
 

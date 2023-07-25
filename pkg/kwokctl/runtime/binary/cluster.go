@@ -17,6 +17,7 @@ limitations under the License.
 package binary
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -34,6 +35,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -100,6 +102,14 @@ func (c *Cluster) download(ctx context.Context, env *env) error {
 	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KwokControllerBinary, kwokControllerPath, 0750, conf.QuietPull)
 	if err != nil {
 		return err
+	}
+
+	if conf.EnableMetricsServer {
+		metricsServerPath := c.GetBinPath("metrics-server" + conf.BinSuffix)
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.MetricsServerBinary, metricsServerPath, 0750, conf.QuietPull)
+		if err != nil {
+			return err
+		}
 	}
 
 	etcdPath := c.GetBinPath(consts.ComponentEtcd + conf.BinSuffix)
@@ -339,6 +349,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	err = c.addKwokController(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addMetricsServer(ctx, env)
 	if err != nil {
 		return err
 	}
@@ -603,9 +618,49 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	return nil
 }
 
-func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
+func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
+	if conf.EnableMetricsServer {
+		metricsServerPath := c.GetBinPath("metrics-server" + conf.BinSuffix)
+		metricsServerVersion, err := c.ParseVersionFromBinary(ctx, metricsServerPath)
+		if err != nil {
+			return err
+		}
+
+		err = c.setupPorts(ctx,
+			&conf.MetricsServerPort,
+		)
+		if err != nil {
+			return err
+		}
+
+		metricsServerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, "metrics-server")
+		metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
+			Workdir:        env.workdir,
+			Binary:         metricsServerPath,
+			Version:        metricsServerVersion,
+			BindAddress:    conf.BindAddress,
+			Port:           conf.MetricsServerPort,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			KubeconfigPath: env.kubeconfigPath,
+			Verbosity:      env.verbosity,
+			ExtraArgs:      metricsServerComponentPatches.ExtraArgs,
+			ExtraVolumes:   metricsServerComponentPatches.ExtraVolumes,
+			ExtraEnvs:      metricsServerComponentPatches.ExtraEnvs,
+		})
+		if err != nil {
+			return err
+		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, metricsServerComponent)
+	}
+	return nil
+}
+
+func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
 	// Configure the prometheus
 	if conf.PrometheusPort != 0 {
 		prometheusPath := c.GetBinPath(consts.ComponentPrometheus + conf.BinSuffix)
@@ -1066,7 +1121,7 @@ func (c *Cluster) ListBinaries(ctx context.Context) ([]string, error) {
 	}
 	conf := &config.Options
 
-	return []string{
+	list := []string{
 		conf.EtcdBinaryTar,
 		conf.KubeApiserverBinary,
 		conf.KubeControllerManagerBinary,
@@ -1074,7 +1129,11 @@ func (c *Cluster) ListBinaries(ctx context.Context) ([]string, error) {
 		conf.KwokControllerBinary,
 		conf.PrometheusBinaryTar,
 		conf.KubectlBinary,
-	}, nil
+	}
+	if conf.MetricsServerBinary != "" {
+		list = append(list, conf.MetricsServerBinary)
+	}
+	return list, nil
 }
 
 // ListImages list images in the cluster
@@ -1140,4 +1199,44 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		return waitErr
 	}
 	return nil
+}
+
+// InitCRs initializes the CRs.
+func (c *Cluster) InitCRs(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := config.Options
+
+	if c.IsDryRun() {
+		if conf.EnableMetricsServer {
+			dryrun.PrintMessage("# Set up apiservice for metrics server")
+		}
+
+		return nil
+	}
+
+	buf := bytes.NewBuffer(nil)
+	if conf.EnableMetricsServer {
+		apiserve, err := BuildMetricsServerAPIService(BuildMetricsServerAPIServiceConfig{
+			Port: conf.MetricsServerPort,
+		})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(apiserve)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if buf.Len() == 0 {
+		return nil
+	}
+
+	clientset, err := c.GetClientset(ctx)
+	if err != nil {
+		return err
+	}
+
+	return snapshot.Load(ctx, clientset, bytes.NewBuffer(buf.Bytes()), nil)
 }

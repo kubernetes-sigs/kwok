@@ -172,22 +172,58 @@ jobs:
         run: |
           export GOBIN="$(go env GOPATH)/bin"
           cd "${GITHUB_WORKSPACE}/kubernetes" && go install ./cmd/{kube-apiserver,kube-controller-manager,kube-scheduler}
-          mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir" && cat >"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml" << EOF
+          mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir" && cat >>"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml" << EOF
           kind: KwokctlConfiguration
           apiVersion: config.kwok.x-k8s.io/v1alpha1
           options:
             kubeBinaryPrefix: "${GOBIN//\\//}"
+          ---
           EOF
       - name: Build Kubernetes Binary for MacOS
         if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'macos-latest' }}
         shell: bash
         run: |
           cd "${GITHUB_WORKSPACE}/kubernetes" && make WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler"
-          mkdir -p "${GITHUB_WORKSPACE}/workdir" && cat >"${GITHUB_WORKSPACE}/workdir/kwok.yaml" << EOF
+          mkdir -p "${GITHUB_WORKSPACE}/workdir" && cat >>"${GITHUB_WORKSPACE}/workdir/kwok.yaml" << EOF
           kind: KwokctlConfiguration
           apiVersion: config.kwok.x-k8s.io/v1alpha1
           options:
             kubeBinaryPrefix: "${GITHUB_WORKSPACE}/kubernetes/_output/bin"
+          ---
+          EOF
+
+        # Build metrics-server binary
+      - name: Download Metrics Server Source Code
+        uses: actions/checkout@v3
+        if: ${{ matrix.kwokctl-runtime == 'binary' }}
+        with:
+          repository: kubernetes-sigs/metrics-server
+          path: metrics-server
+          ref: v0.6.3
+      - name: Build Metrics Server Binary for Linux and MacOS
+        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os != 'windows-latest' }}
+        shell: bash
+        run: |
+          cd "${GITHUB_WORKSPACE}/metrics-server" && make metrics-server
+          mkdir -p "${GITHUB_WORKSPACE}/workdir" && cat >>"${GITHUB_WORKSPACE}/workdir/kwok.yaml" << EOF
+          kind: KwokctlConfiguration
+          apiVersion: config.kwok.x-k8s.io/v1alpha1
+          options:
+            metricsServerBinary: "${GITHUB_WORKSPACE}/metrics-server/metrics-server"
+          ---
+          EOF
+      - name: Build Metrics Server Binary for Windows
+        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'windows-latest' }}
+        shell: bash
+        run: |
+          export GOBIN="$(go env GOPATH)/bin"
+          cd "${GITHUB_WORKSPACE}/metrics-server" && go install ./cmd/metrics-server
+          mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir" && cat >>"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml" << EOF
+          kind: KwokctlConfiguration
+          apiVersion: config.kwok.x-k8s.io/v1alpha1
+          options:
+            metricsServerBinary: "${GOBIN//\\//}/metrics-server.exe"
+          ---
           EOF
 
         # TODO: workaround for https://github.com/actions/runner-images/issues/7753 (caused by https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394).

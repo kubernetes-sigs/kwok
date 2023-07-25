@@ -127,6 +127,9 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for env KWOK_JAEGER_VERSION
 	JaegerVersion string `json:"jaegerVersion,omitempty"`
 
+	// MetricsServerVersion is the version of metrics-server to use.
+	MetricsServerVersion string `json:"metricsServerVersion,omitempty"`
+
 	// DockerComposeVersion is the version of docker-compose to use.
 	// is the default value for env KWOK_DOCKER_COMPOSE_VERSION
 	// Deprecated: docker compose will be removed in a future release
@@ -160,6 +163,10 @@ type KwokctlConfigurationOptions struct {
 	// +default=false
 	DisableKubeControllerManager *bool `json:"disableKubeControllerManager,omitempty"`
 
+	// EnableMetricsServer is the flag to enable metrics-server.
+	// +default=false
+	EnableMetricsServer *bool `json:"enableMetricsServer,omitempty"`
+
 	// KubeImagePrefix is the prefix of the kubernetes image.
 	// is the default value for env KWOK_KUBE_IMAGE_PREFIX
 	//+k8s:conversion-gen=false
@@ -188,6 +195,10 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for env KWOK_JAEGER_IMAGE_PREFIX
 	//+k8s:conversion-gen=false
 	JaegerImagePrefix string `json:"jaegerImagePrefix,omitempty"`
+
+	// MetricsServerImagePrefix is the prefix of the metrics-server image.
+	//+k8s:conversion-gen=false
+	MetricsServerImagePrefix string `json:"metricsServerImagePrefix,omitempty"`
 
 	// EtcdImage is the image of etcd.
 	// is the default value for flag --etcd-image and env KWOK_ETCD_IMAGE
@@ -219,6 +230,9 @@ type KwokctlConfigurationOptions struct {
 	// JaegerImage is the image of Jaeger.
 	// is the default value for flag --jaeger-image and env KWOK_JAEGER_IMAGE
 	JaegerImage string `json:"jaegerImage,omitempty"`
+
+	// MetricsServerImage is the image of metrics-server.
+	MetricsServerImage string `json:"metricsServerImage,omitempty"`
 
 	// KindNodeImagePrefix is the prefix of the kind node image.
 	// is the default value for env KWOK_KIND_NODE_IMAGE_PREFIX
@@ -310,6 +324,13 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for env KWOK_JAEGER_TAR
 	JaegerBinaryTar string `json:"jaegerBinaryTar,omitempty"`
 
+	// MetricsServerBinaryPrefix is the prefix of the metrics-server binary.
+	//+k8s:conversion-gen=false
+	MetricsServerBinaryPrefix string `json:"metricsServerBinaryPrefix,omitempty"`
+
+	// MetricsServerBinary is the binary of metrics-server.
+	MetricsServerBinary string `json:"metricsServerBinary,omitempty"`
+
 	// DockerComposeBinaryPrefix is the binary of docker-compose.
 	// is the default value for env KWOK_DOCKER_COMPOSE_BINARY_PREFIX
 	// Deprecated: docker compose will be removed in a future release
@@ -372,6 +393,9 @@ type KwokctlConfigurationOptions struct {
 	// KwokControllerPort is kwok-controller port that is exposed to the host.
 	// is the default value for flag --controller-port and env KWOK_CONTROLLER_PORT
 	KwokControllerPort uint32 `json:"kwokControllerPort,omitempty"`
+
+	// MetricsServerPort is metrics-server port that is exposed to the host.
+	MetricsServerPort uint32 `json:"metricsServerPort,omitempty"`
 
 	// CacheDir is the directory of the cache.
 	CacheDir string `json:"cacheDir,omitempty"`

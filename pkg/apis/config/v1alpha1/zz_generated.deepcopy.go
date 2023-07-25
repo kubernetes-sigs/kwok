@@ -288,6 +288,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableMetricsServer != nil {
+		in, out := &in.EnableMetricsServer, &out.EnableMetricsServer
+		*out = new(bool)
+		**out = **in
+	}
 	if in.KubeAuthorization != nil {
 		in, out := &in.KubeAuthorization, &out.KubeAuthorization
 		*out = new(bool)

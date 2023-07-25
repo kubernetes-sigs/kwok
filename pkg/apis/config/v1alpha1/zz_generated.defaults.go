@@ -82,6 +82,10 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		var ptrVar1 bool = false
 		in.Options.DisableKubeControllerManager = &ptrVar1
 	}
+	if in.Options.EnableMetricsServer == nil {
+		var ptrVar1 bool = false
+		in.Options.EnableMetricsServer = &ptrVar1
+	}
 	if in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds == 0 {
 		in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds = 600000
 	}

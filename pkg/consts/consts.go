@@ -61,6 +61,10 @@ var (
 	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
 	JaegerImagePrefix  = "docker.io/jaegertracing"
 
+	MetricsServerVersion      = "0.6.3"
+	MetricsServerBinaryPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
+	MetricsServerImagePrefix  = "registry.k8s.io/metrics-server"
+
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000
 )

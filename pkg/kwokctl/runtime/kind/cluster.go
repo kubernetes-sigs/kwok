@@ -137,6 +137,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addMetricsServer(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.addPrometheus(ctx, env)
 	if err != nil {
 		return err
@@ -312,9 +317,32 @@ func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
 	return nil
 }
 
+func (c *Cluster) addMetricsServer(_ context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
+	if conf.EnableMetricsServer {
+		metricsServerPatches := runtime.GetComponentPatches(env.kwokctlConfig, "metrics-server")
+		metricsServerConf := BuildMetricsServerDeploymentConfig{
+			MetricsServerImage: conf.MetricsServerImage,
+			Name:               c.Name(),
+			Verbosity:          log.ToKlogLevel(env.verbosity),
+			ExtraArgs:          metricsServerPatches.ExtraArgs,
+			ExtraVolumes:       metricsServerPatches.ExtraVolumes,
+			ExtraEnvs:          metricsServerPatches.ExtraEnvs,
+		}
+		metricsServerDeploy, err := BuildMetricsServerDeployment(metricsServerConf)
+		if err != nil {
+			return err
+		}
+		err = c.WriteFile(c.GetWorkdirPath(runtime.MetricsServerDeploy), []byte(metricsServerDeploy))
+		if err != nil {
+			return fmt.Errorf("failed to write %s: %w", runtime.MetricsServerDeploy, err)
+		}
+	}
+	return nil
+}
+
 func (c *Cluster) addPrometheus(_ context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
-
 	if conf.PrometheusPort != 0 {
 		prometheusPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentPrometheus)
 		prometheusConf := BuildPrometheusDeploymentConfig{
@@ -406,6 +434,14 @@ func (c *Cluster) Up(ctx context.Context) error {
 		config.Components = append(config.Components,
 			internalversion.Component{
 				Name: consts.ComponentJaeger,
+			},
+		)
+	}
+
+	if conf.EnableMetricsServer {
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "metrics-server",
 			},
 		)
 	}
@@ -519,6 +555,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 	}
 
+	if conf.EnableMetricsServer {
+		err = c.Kubectl(exec.WithAllWriteToErrOut(ctx), "apply", "-f", c.GetWorkdirPath(runtime.MetricsServerDeploy))
+		if err != nil {
+			return err
+		}
+	}
+
 	if conf.PrometheusPort != 0 {
 		err = c.Kubectl(exec.WithAllWriteToErrOut(ctx), "apply", "-f", c.GetWorkdirPath(runtime.PrometheusDeploy))
 		if err != nil {
@@ -564,6 +607,9 @@ func (c *Cluster) pullAllImages(ctx context.Context, env *env) error {
 	if conf.DashboardPort != 0 {
 		images = append(images, conf.DashboardImage)
 	}
+	if conf.EnableMetricsServer {
+		images = append(images, conf.MetricsServerImage)
+	}
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
@@ -591,6 +637,9 @@ func (c *Cluster) loadAllImages(ctx context.Context) error {
 	images := []string{conf.KwokControllerImage}
 	if conf.DashboardPort != 0 {
 		images = append(images, conf.DashboardImage)
+	}
+	if conf.EnableMetricsServer {
+		images = append(images, conf.MetricsServerImage)
 	}
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
@@ -1053,6 +1102,7 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 		conf.KindNodeImage,
 		conf.KwokControllerImage,
 		conf.PrometheusImage,
+		conf.MetricsServerImage,
 	}, nil
 }
 
@@ -1094,4 +1144,9 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	}
 
 	return "kind", nil
+}
+
+// InitCRs initializes the CRs.
+func (c *Cluster) InitCRs(ctx context.Context) error {
+	return nil
 }

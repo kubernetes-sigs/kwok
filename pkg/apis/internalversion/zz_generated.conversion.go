@@ -1460,6 +1460,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.DashboardVersion = in.DashboardVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
+	out.MetricsServerVersion = in.MetricsServerVersion
 	out.DockerComposeVersion = in.DockerComposeVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_bool_To_Pointer_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
@@ -1475,6 +1476,9 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	if err := v1.Convert_bool_To_Pointer_bool(&in.DisableKubeControllerManager, &out.DisableKubeControllerManager, s); err != nil {
 		return err
 	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableMetricsServer, &out.EnableMetricsServer, s); err != nil {
+		return err
+	}
 	out.EtcdImage = in.EtcdImage
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
@@ -1483,6 +1487,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.DashboardImage = in.DashboardImage
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
+	out.MetricsServerImage = in.MetricsServerImage
 	out.KindNodeImage = in.KindNodeImage
 	out.BinSuffix = in.BinSuffix
 	out.KubeApiserverBinary = in.KubeApiserverBinary
@@ -1496,6 +1501,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.PrometheusBinaryTar = in.PrometheusBinaryTar
 	out.JaegerBinary = in.JaegerBinary
 	out.JaegerBinaryTar = in.JaegerBinaryTar
+	out.MetricsServerBinary = in.MetricsServerBinary
 	out.DockerComposeBinary = in.DockerComposeBinary
 	out.KindBinary = in.KindBinary
 	out.Mode = in.Mode
@@ -1514,6 +1520,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeSchedulerPort = in.KubeSchedulerPort
 	out.DashboardPort = in.DashboardPort
 	out.KwokControllerPort = in.KwokControllerPort
+	out.MetricsServerPort = in.MetricsServerPort
 	out.CacheDir = in.CacheDir
 	out.KubeControllerManagerNodeMonitorPeriodMilliseconds = in.KubeControllerManagerNodeMonitorPeriodMilliseconds
 	out.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = in.KubeControllerManagerNodeMonitorGracePeriodMilliseconds
@@ -1546,6 +1553,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.DashboardVersion = in.DashboardVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
+	out.MetricsServerVersion = in.MetricsServerVersion
 	out.DockerComposeVersion = in.DockerComposeVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_Pointer_bool_To_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
@@ -1561,12 +1569,16 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	if err := v1.Convert_Pointer_bool_To_bool(&in.DisableKubeControllerManager, &out.DisableKubeControllerManager, s); err != nil {
 		return err
 	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableMetricsServer, &out.EnableMetricsServer, s); err != nil {
+		return err
+	}
 	// INFO: in.KubeImagePrefix opted out of conversion generation
 	// INFO: in.EtcdImagePrefix opted out of conversion generation
 	// INFO: in.KwokImagePrefix opted out of conversion generation
 	// INFO: in.DashboardImagePrefix opted out of conversion generation
 	// INFO: in.PrometheusImagePrefix opted out of conversion generation
 	// INFO: in.JaegerImagePrefix opted out of conversion generation
+	// INFO: in.MetricsServerImagePrefix opted out of conversion generation
 	out.EtcdImage = in.EtcdImage
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
@@ -1575,6 +1587,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.DashboardImage = in.DashboardImage
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
+	out.MetricsServerImage = in.MetricsServerImage
 	// INFO: in.KindNodeImagePrefix opted out of conversion generation
 	out.KindNodeImage = in.KindNodeImage
 	out.BinSuffix = in.BinSuffix
@@ -1594,6 +1607,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.JaegerBinaryPrefix opted out of conversion generation
 	out.JaegerBinary = in.JaegerBinary
 	out.JaegerBinaryTar = in.JaegerBinaryTar
+	// INFO: in.MetricsServerBinaryPrefix opted out of conversion generation
+	out.MetricsServerBinary = in.MetricsServerBinary
 	// INFO: in.DockerComposeBinaryPrefix opted out of conversion generation
 	out.DockerComposeBinary = in.DockerComposeBinary
 	// INFO: in.KindBinaryPrefix opted out of conversion generation
@@ -1614,6 +1629,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeSchedulerPort = in.KubeSchedulerPort
 	out.DashboardPort = in.DashboardPort
 	out.KwokControllerPort = in.KwokControllerPort
+	out.MetricsServerPort = in.MetricsServerPort
 	out.CacheDir = in.CacheDir
 	out.KubeControllerManagerNodeMonitorPeriodMilliseconds = in.KubeControllerManagerNodeMonitorPeriodMilliseconds
 	out.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = in.KubeControllerManagerNodeMonitorGracePeriodMilliseconds

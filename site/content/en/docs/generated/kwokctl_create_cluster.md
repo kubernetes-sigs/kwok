@@ -18,6 +18,7 @@ kwokctl create cluster [flags]
       --disable-kube-scheduler                  Disable the kube-scheduler
       --disable-qps-limits                      Disable QPS limits for components
       --enable-crds strings                     List of CRDs to enable
+      --enable-metrics-server                   Enable the metrics-server
       --etcd-binary string                      Binary of etcd, only for binary runtime
       --etcd-binary-tar string                  Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
                                                  (default "https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-amd64.tar.gz")
@@ -68,6 +69,10 @@ kwokctl create cluster [flags]
       --kwok-controller-image string            Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
                                                  (default "registry.k8s.io/kwok/kwok:v0.4.0")
+      --metrics-server-binary string            Binary of metrics-server, only for binary runtime (default "https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.3/metrics-server-linux-amd64")
+      --metrics-server-image string             Image of metrics-server, only for docker/podman/nerdctl/kind/kind-podman runtime
+                                                '${KWOK_METRICS_SERVER_IMAGE_PREFIX}/metrics-server:${KWOK_METRICS_SERVER_VERSION}'
+                                                 (default "registry.k8s.io/metrics-server/metrics-server:v0.6.3")
       --prometheus-binary string                Binary of Prometheus, only for binary runtime
       --prometheus-binary-tar string            Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
                                                  (default "https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.linux-amd64.tar.gz")

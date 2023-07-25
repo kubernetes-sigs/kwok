@@ -104,6 +104,9 @@ type KwokctlConfigurationOptions struct {
 	// JaegerVersion is the version of Jaeger to use.
 	JaegerVersion string
 
+	// MetricsServerVersion is the version of metrics-server to use.
+	MetricsServerVersion string
+
 	// DockerComposeVersion is the version of docker-compose to use.
 	DockerComposeVersion string
 
@@ -125,6 +128,9 @@ type KwokctlConfigurationOptions struct {
 
 	// DisableKubeControllerManager is the flag to disable kube-controller-manager.
 	DisableKubeControllerManager bool
+
+	// EnableMetricsServer is the flag to enable metrics-server.
+	EnableMetricsServer bool
 
 	// EtcdImage is the image of etcd.
 	EtcdImage string
@@ -149,6 +155,9 @@ type KwokctlConfigurationOptions struct {
 
 	// JaegerImage is the image of Jaeger
 	JaegerImage string
+
+	// MetricsServerImage is the image of metrics-server.
+	MetricsServerImage string
 
 	// KindNodeImage is the image of kind node.
 	KindNodeImage string
@@ -194,6 +203,9 @@ type KwokctlConfigurationOptions struct {
 	// JaegerBinaryTar is the tar of binary of Jaeger.
 	JaegerBinaryTar string
 
+	// MetricsServerBinary is the binary of metrics-server.
+	MetricsServerBinary string
+
 	// DockerComposeBinary is the binary of Docker compose.
 	DockerComposeBinary string
 
@@ -235,6 +247,9 @@ type KwokctlConfigurationOptions struct {
 
 	// KwokControllerPort is kwok-controller port that is exposed to the host.
 	KwokControllerPort uint32
+
+	// MetricsServerPort is metrics-server port that is exposed to the host.
+	MetricsServerPort uint32
 
 	// CacheDir is the directory of the cache.
 	CacheDir string
