@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"text/template"
 
-	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-
 	_ "embed"
 )
 
@@ -53,5 +51,4 @@ type BuildPrometheusConfig struct {
 	KubeControllerManagerPort uint32
 	KubeSchedulerPort         uint32
 	KwokControllerPort        uint32
-	Metrics                   []*internalversion.Metric
 }

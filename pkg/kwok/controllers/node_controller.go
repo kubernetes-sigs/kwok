@@ -749,6 +749,16 @@ func (c *NodeController) Get(nodeName string) (*NodeInfo, bool) {
 	return nil, has
 }
 
+// List returns all nodes
+func (c *NodeController) List() []*NodeInfo {
+	nodes := []*NodeInfo{}
+	c.nodesSets.Range(func(key string, value *NodeInfo) bool {
+		nodes = append(nodes, value)
+		return true
+	})
+	return nodes
+}
+
 func (c *NodeController) funcNodeIP() string {
 	return c.nodeIP
 }

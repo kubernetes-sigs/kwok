@@ -57,5 +57,4 @@ type BuildPrometheusDeploymentConfig struct {
 	ExtraArgs       []internalversion.ExtraArgs
 	ExtraVolumes    []internalversion.Volume
 	ExtraEnvs       []internalversion.Env
-	Metrics         []*internalversion.Metric
 }
