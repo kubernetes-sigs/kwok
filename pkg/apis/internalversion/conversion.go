@@ -322,6 +322,50 @@ func ConvertToInternalAttach(in *v1alpha1.Attach) (*Attach, error) {
 	return &out, nil
 }
 
+// ConvertToV1Alpha1ResourceUsage converts an internal version ResourceUsage to a v1alpha1.ResourceUsage.
+func ConvertToV1Alpha1ResourceUsage(in *ResourceUsage) (*v1alpha1.ResourceUsage, error) {
+	var out v1alpha1.ResourceUsage
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.ResourceUsageKind
+	err := Convert_internalversion_ResourceUsage_To_v1alpha1_ResourceUsage(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalResourceUsage converts a v1alpha1.ResourceUsage to an internal version.
+func ConvertToInternalResourceUsage(in *v1alpha1.ResourceUsage) (*ResourceUsage, error) {
+	var out ResourceUsage
+	err := Convert_v1alpha1_ResourceUsage_To_internalversion_ResourceUsage(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToV1Alpha1ClusterResourceUsage converts an internal version ClusterResourceUsage to a v1alpha1.ClusterResourceUsage.
+func ConvertToV1Alpha1ClusterResourceUsage(in *ClusterResourceUsage) (*v1alpha1.ClusterResourceUsage, error) {
+	var out v1alpha1.ClusterResourceUsage
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.ClusterResourceUsageKind
+	err := Convert_internalversion_ClusterResourceUsage_To_v1alpha1_ClusterResourceUsage(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalClusterResourceUsage converts a v1alpha1.ClusterResourceUsage to an internal version.
+func ConvertToInternalClusterResourceUsage(in *v1alpha1.ClusterResourceUsage) (*ClusterResourceUsage, error) {
+	var out ClusterResourceUsage
+	err := Convert_v1alpha1_ClusterResourceUsage_To_internalversion_ClusterResourceUsage(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ConvertToV1Alpha1Metric converts an internal version Metric to a v1alpha1.Metric.
 func ConvertToV1Alpha1Metric(in *Metric) (*v1alpha1.Metric, error) {
 	var out v1alpha1.Metric

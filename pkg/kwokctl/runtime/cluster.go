@@ -571,14 +571,16 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 }
 
 var crdDefines = map[string][]byte{
-	v1alpha1.StageKind:              crd.Stage,
-	v1alpha1.AttachKind:             crd.Attach,
-	v1alpha1.ClusterAttachKind:      crd.ClusterAttach,
-	v1alpha1.ExecKind:               crd.Exec,
-	v1alpha1.ClusterExecKind:        crd.ClusterExec,
-	v1alpha1.PortForwardKind:        crd.PortForward,
-	v1alpha1.ClusterPortForwardKind: crd.ClusterPortForward,
-	v1alpha1.LogsKind:               crd.Logs,
-	v1alpha1.ClusterLogsKind:        crd.ClusterLogs,
-	v1alpha1.MetricKind:             crd.Metric,
+	v1alpha1.StageKind:                crd.Stage,
+	v1alpha1.AttachKind:               crd.Attach,
+	v1alpha1.ClusterAttachKind:        crd.ClusterAttach,
+	v1alpha1.ExecKind:                 crd.Exec,
+	v1alpha1.ClusterExecKind:          crd.ClusterExec,
+	v1alpha1.PortForwardKind:          crd.PortForward,
+	v1alpha1.ClusterPortForwardKind:   crd.ClusterPortForward,
+	v1alpha1.LogsKind:                 crd.Logs,
+	v1alpha1.ClusterLogsKind:          crd.ClusterLogs,
+	v1alpha1.ResourceUsageKind:        crd.ResourceUsage,
+	v1alpha1.ClusterResourceUsageKind: crd.ClusterResourceUsage,
+	v1alpha1.MetricKind:               crd.Metric,
 }

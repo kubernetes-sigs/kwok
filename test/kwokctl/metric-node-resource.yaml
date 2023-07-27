@@ -35,7 +35,7 @@ spec:
       value: 'pod.metadata.namespace'
     - name: pod
       value: 'pod.metadata.name'
-    value: 'pod.SinceSecond() / 10.0'
+    value: 'pod.CumulativeUsage("cpu", container.name)'
   - name: pod_cpu_usage_seconds_total
     dimension: pod
     help: "[ALPHA] Cumulative cpu time consumed by the pod in core-seconds"
@@ -45,14 +45,12 @@ spec:
       value: 'pod.metadata.namespace'
     - name: pod
       value: 'pod.metadata.name'
-    # TODO: sum(container_cpu_usage_seconds_total) by (pod)
-    value: 'pod.SinceSecond()'
+    value: 'pod.CumulativeUsage("cpu")'
   - name: node_cpu_usage_seconds_total
     dimension: node
     help: "[ALPHA] Cumulative cpu time consumed by the node in core-seconds"
     kind: counter
-    # TODO: sum(pod_cpu_usage_seconds_total) by (node)
-    value: '10.0 * node.SinceSecond()'
+    value: 'node.CumulativeUsage("cpu")'
 
   # Memory
   - name: container_memory_working_set_bytes
@@ -66,7 +64,7 @@ spec:
       value: 'pod.metadata.namespace'
     - name: pod
       value: 'pod.metadata.name'
-    value: '1024.0 * 1024.0 * 1024.0'
+    value: 'pod.Usage("memory", container.name)'
   - name: pod_memory_working_set_bytes
     dimension: pod
     help: "[ALPHA] Current working set of the pod in bytes"
@@ -76,11 +74,35 @@ spec:
       value: 'pod.metadata.namespace'
     - name: pod
       value: 'pod.metadata.name'
-    # TODO: sum(container_memory_working_set_bytes) by (pod)
-    value: '10.0 * 1024.0 * 1024.0 * 1024.0'
+    value: 'pod.Usage("memory")'
   - name: node_memory_working_set_bytes
     dimension: node
     help: "[ALPHA] Current working set of the node in bytes"
     kind: gauge
-    # TODO: sum(pod_memory_working_set_bytes) by (node)
-    value: '100.0 * 1024.0 * 1024.0 * 1024.0'
+    value: 'node.Usage("memory")'
+
+---
+kind: ClusterResourceUsage
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: cluster-resource-usage
+spec:
+  usages:
+  - usage:
+      cpu:
+        expression: '"cpu" in container.resources.requests ? container.resources.requests["cpu"] : Quantity("10m")'
+      memory:
+        expression: '"memory" in  container.resources.requests ? container.resources.requests["memory"] : Quantity("10Mi")'
+---
+kind: ResourceUsage
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: pod-000000
+  namespace: default
+spec:
+  usages:
+  - usage:
+      cpu:
+        expression: '"cpu" in container.resources.requests ? container.resources.requests["cpu"] * 2 : Quantity("10m")'
+      memory:
+        expression: '"memory" in  container.resources.requests ? container.resources.requests["memory"] * 2 : Quantity("10Mi")'

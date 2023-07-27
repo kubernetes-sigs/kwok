@@ -32,21 +32,42 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
-// InstallMetrics registers the metrics handler on the given mux.
-func (s *Server) InstallMetrics(ctx context.Context) error {
-	promHandler := promhttp.Handler()
-
-	selfMetric := func(req *restful.Request, resp *restful.Response) {
-		promHandler.ServeHTTP(resp.ResponseWriter, req.Request)
+func (s *Server) initCEL() error {
+	if s.env != nil {
+		return fmt.Errorf("CEL environment already initialized")
 	}
 
 	env, err := cel.NewEnvironment(cel.NodeEvaluatorConfig{
 		EnableEvaluatorCache:   true,
 		EnableResultCache:      true,
 		StartedContainersTotal: s.dataSource.StartedContainersTotal,
+
+		ContainerResourceUsage: s.containerResourceUsage,
+		PodResourceUsage:       s.podResourceUsage,
+		NodeResourceUsage:      s.nodeResourceUsage,
+
+		ContainerResourceCumulativeUsage: s.containerResourceCumulativeUsage,
+		PodResourceCumulativeUsage:       s.podResourceCumulativeUsage,
+		NodeResourceCumulativeUsage:      s.nodeResourceCumulativeUsage,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create CEL environment: %w", err)
+	}
+	s.env = env
+	return nil
+}
+
+// InstallMetrics registers the metrics handler on the given mux.
+func (s *Server) InstallMetrics(ctx context.Context) error {
+	err := s.initCEL()
+	if err != nil {
+		return err
+	}
+
+	promHandler := promhttp.Handler()
+
+	selfMetric := func(req *restful.Request, resp *restful.Response) {
+		promHandler.ServeHTTP(resp.ResponseWriter, req.Request)
 	}
 
 	const rootPath = "/metrics"
@@ -77,7 +98,7 @@ func (s *Server) InstallMetrics(ctx context.Context) error {
 						}
 					}
 					ws.Route(ws.GET(path).
-						To(s.getMetrics(m, env)))
+						To(s.getMetrics(m, s.env)))
 				}
 
 				for path := range hasPaths {
@@ -98,7 +119,7 @@ func (s *Server) InstallMetrics(ctx context.Context) error {
 				return fmt.Errorf("metric path %q does not start with %q", m.Spec.Path, rootPath)
 			}
 			ws.Route(ws.GET(strings.TrimPrefix(m.Spec.Path, rootPath)).
-				To(s.getMetrics(m, env)))
+				To(s.getMetrics(m, s.env)))
 		}
 	}
 

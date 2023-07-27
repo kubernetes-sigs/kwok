@@ -295,6 +295,9 @@ Resource Types:
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterPortForward">ClusterPortForward</a>
 </li>
 <li>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage">ClusterResourceUsage</a>
+</li>
+<li>
 <a href="#kwok.x-k8s.io/v1alpha1.Exec">Exec</a>
 </li>
 <li>
@@ -305,6 +308,9 @@ Resource Types:
 </li>
 <li>
 <a href="#kwok.x-k8s.io/v1alpha1.PortForward">PortForward</a>
+</li>
+<li>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsage">ResourceUsage</a>
 </li>
 <li>
 <a href="#kwok.x-k8s.io/v1alpha1.Stage">Stage</a>
@@ -821,6 +827,111 @@ ClusterPortForwardStatus
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ClusterResourceUsage">
+ClusterResourceUsage
+<a href="#kwok.x-k8s.io%2fv1alpha1.ClusterResourceUsage"> #</a>
+</h3>
+<p>
+<p>ClusterResourceUsage provides cluster-wide resource usage.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>ClusterResourceUsage</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>Standard list metadata.
+More info: <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageSpec">
+ClusterResourceUsageSpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec holds spec for cluster resource usage.</p>
+<table>
+<tr>
+<td>
+<code>selector</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ObjectSelector">
+ObjectSelector
+</a>
+</em>
+</td>
+<td>
+<p>Selector is a selector to filter pods to configure.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>usages</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageContainer">
+[]ResourceUsageContainer
+</a>
+</em>
+</td>
+<td>
+<p>Usages is a list of resource usage for the pod.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageStatus">
+ClusterResourceUsageStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for cluster resource usage</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.Exec">
 Exec
 <a href="#kwok.x-k8s.io%2fv1alpha1.Exec"> #</a>
@@ -1196,6 +1307,98 @@ PortForwardStatus
 </td>
 <td>
 <p>Status holds status for port forward</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ResourceUsage">
+ResourceUsage
+<a href="#kwok.x-k8s.io%2fv1alpha1.ResourceUsage"> #</a>
+</h3>
+<p>
+<p>ResourceUsage provides resource usage for a single pod.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>ResourceUsage</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>Standard list metadata.
+More info: <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageSpec">
+ResourceUsageSpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec holds spec for resource usage.</p>
+<table>
+<tr>
+<td>
+<code>usages</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageContainer">
+[]ResourceUsageContainer
+</a>
+</em>
+</td>
+<td>
+<p>Usages is a list of resource usage for the pod.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageStatus">
+ResourceUsageStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for resource usage</p>
 </td>
 </tr>
 </tbody>
@@ -3716,6 +3919,87 @@ ClusterPortForwardStatus
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ClusterResourceUsageSpec">
+ClusterResourceUsageSpec
+<a href="#kwok.x-k8s.io%2fv1alpha1.ClusterResourceUsageSpec"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage">ClusterResourceUsage</a>
+</p>
+<p>
+<p>ClusterResourceUsageSpec holds spec for cluster resource usage.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>selector</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ObjectSelector">
+ObjectSelector
+</a>
+</em>
+</td>
+<td>
+<p>Selector is a selector to filter pods to configure.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>usages</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageContainer">
+[]ResourceUsageContainer
+</a>
+</em>
+</td>
+<td>
+<p>Usages is a list of resource usage for the pod.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ClusterResourceUsageStatus">
+ClusterResourceUsageStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.ClusterResourceUsageStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage">ClusterResourceUsage</a>
+</p>
+<p>
+<p>ClusterResourceUsageStatus holds status for cluster resource usage</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for cluster resource usage</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.Condition">
 Condition
 <a href="#kwok.x-k8s.io%2fv1alpha1.Condition"> #</a>
@@ -3732,6 +4016,8 @@ Condition
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterPortForwardStatus">ClusterPortForwardStatus</a>
 , 
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageStatus">ClusterResourceUsageStatus</a>
+, 
 <a href="#kwok.x-k8s.io/v1alpha1.ExecStatus">ExecStatus</a>
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.LogsStatus">LogsStatus</a>
@@ -3739,6 +4025,8 @@ Condition
 <a href="#kwok.x-k8s.io/v1alpha1.MetricStatus">MetricStatus</a>
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.PortForwardStatus">PortForwardStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageStatus">ResourceUsageStatus</a>
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.StageStatus">StageStatus</a>
 </p>
@@ -4738,6 +5026,8 @@ ObjectSelector
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterLogsSpec">ClusterLogsSpec</a>
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterPortForwardSpec">ClusterPortForwardSpec</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageSpec">ClusterResourceUsageSpec</a>
 </p>
 <p>
 <p>ObjectSelector holds information how to match based on namespace and name.</p>
@@ -4840,6 +5130,164 @@ PortForwardStatus
 </td>
 <td>
 <p>Conditions holds conditions for port forward</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ResourceUsageContainer">
+ResourceUsageContainer
+<a href="#kwok.x-k8s.io%2fv1alpha1.ResourceUsageContainer"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageSpec">ClusterResourceUsageSpec</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageSpec">ResourceUsageSpec</a>
+</p>
+<p>
+<p>ResourceUsageContainer holds spec for resource usage container.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>containers</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Containers is list of container names.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>usage</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageValue">
+map[string]sigs.k8s.io/kwok/pkg/apis/v1alpha1.ResourceUsageValue
+</a>
+</em>
+</td>
+<td>
+<p>Usage is a list of resource usage for the container.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ResourceUsageSpec">
+ResourceUsageSpec
+<a href="#kwok.x-k8s.io%2fv1alpha1.ResourceUsageSpec"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsage">ResourceUsage</a>
+</p>
+<p>
+<p>ResourceUsageSpec holds spec for resource usage.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>usages</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageContainer">
+[]ResourceUsageContainer
+</a>
+</em>
+</td>
+<td>
+<p>Usages is a list of resource usage for the pod.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ResourceUsageStatus">
+ResourceUsageStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.ResourceUsageStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsage">ResourceUsage</a>
+</p>
+<p>
+<p>ResourceUsageStatus holds status for resource usage</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for resource usage</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ResourceUsageValue">
+ResourceUsageValue
+<a href="#kwok.x-k8s.io%2fv1alpha1.ResourceUsageValue"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceUsageContainer">ResourceUsageContainer</a>
+</p>
+<p>
+<p>ResourceUsageValue holds value for resource usage.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>value</code>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<p>Value is the value for resource usage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>expression</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Expression is the expression for resource usage.</p>
 </td>
 </tr>
 </tbody>

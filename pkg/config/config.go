@@ -161,6 +161,18 @@ var configHandlers = map[string]configHandler{
 		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalClusterAttach),
 		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1Alpha1ClusterAttach),
 	},
+	v1alpha1.ResourceUsageKind: {
+		Unmarshal:        unmarshalConfig[*v1alpha1.ResourceUsage],
+		Marshal:          marshalConfig,
+		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalResourceUsage),
+		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1Alpha1ResourceUsage),
+	},
+	v1alpha1.ClusterResourceUsageKind: {
+		Unmarshal:        unmarshalConfig[*v1alpha1.ClusterResourceUsage],
+		Marshal:          marshalConfig,
+		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalClusterResourceUsage),
+		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1Alpha1ClusterResourceUsage),
+	},
 	v1alpha1.MetricKind: {
 		Unmarshal:        unmarshalConfig[*v1alpha1.Metric],
 		Marshal:          marshalConfig,

@@ -48,6 +48,10 @@ func (c *FakeKwokV1alpha1) ClusterPortForwards() v1alpha1.ClusterPortForwardInte
 	return &FakeClusterPortForwards{c}
 }
 
+func (c *FakeKwokV1alpha1) ClusterResourceUsages() v1alpha1.ClusterResourceUsageInterface {
+	return &FakeClusterResourceUsages{c}
+}
+
 func (c *FakeKwokV1alpha1) Execs(namespace string) v1alpha1.ExecInterface {
 	return &FakeExecs{c, namespace}
 }
@@ -62,6 +66,10 @@ func (c *FakeKwokV1alpha1) Metrics() v1alpha1.MetricInterface {
 
 func (c *FakeKwokV1alpha1) PortForwards(namespace string) v1alpha1.PortForwardInterface {
 	return &FakePortForwards{c, namespace}
+}
+
+func (c *FakeKwokV1alpha1) ResourceUsages(namespace string) v1alpha1.ResourceUsageInterface {
+	return &FakeResourceUsages{c, namespace}
 }
 
 func (c *FakeKwokV1alpha1) Stages() v1alpha1.StageInterface {

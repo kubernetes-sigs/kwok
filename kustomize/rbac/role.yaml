@@ -123,6 +123,18 @@ rules:
 - apiGroups:
   - kwok.x-k8s.io
   resources:
+  - clusterresourceusages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
   - execs
   verbs:
   - create
@@ -160,6 +172,18 @@ rules:
   - kwok.x-k8s.io
   resources:
   - portforwards
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - resourceusages
   verbs:
   - create
   - delete

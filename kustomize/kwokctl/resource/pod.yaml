@@ -20,11 +20,48 @@ template: |-
     {{ range $index, $container := .containers }}
     - name: {{ $container.name }}
       image: {{ $container.image }}
+      {{ if and $container $container.resources }}
+      {{ $resources := $container.resources }}
+      resources:
+        requests:
+        {{ range $key, $value := $resources.requests }}
+          {{ $key }}: {{ $value }}
+        {{ end }}
+        limits:
+        {{ if $resources.limits  }}
+        {{ range $key, $value := $resources.requests }}
+          {{ $key }}: {{ or ( index $resources.limits  $key ) $value }}
+        {{ end }}
+        {{ else }}
+        {{ range $key, $value := $resources.requests }}
+          {{ $key }}: {{ $value }}
+        {{ end }}
+        {{ end }}
+      {{ end }}
     {{ end }}
+  
     initContainers:
     {{ range $index, $container := .initContainers }}
     - name: {{ $container.name }}
       image: {{ $container.image }}
+      {{ if and $container $container.resources }}
+      {{ $resources := $container.resources }}
+      resources:
+        requests:
+        {{ range $key, $value := $resources.requests }}
+          {{ $key }}: {{ $value }}
+        {{ end }}
+        limits:
+        {{ if $resources.limits  }}
+        {{ range $key, $value := $resources.requests }}
+          {{ $key }}: {{ or ( index $resources.limits  $key ) $value }}
+        {{ end }}
+        {{ else }}
+        {{ range $key, $value := $resources.requests }}
+          {{ $key }}: {{ $value }}
+        {{ end }}
+        {{ end }}
+      {{ end }}
     {{ end }}
     hostNetwork: {{ .hostNetwork }}
     nodeName: {{ .nodeName }}
