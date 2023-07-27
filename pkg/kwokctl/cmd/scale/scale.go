@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/kwok/kustomize/kwokctl/resource"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/scale"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -126,6 +127,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		Namespace:    flags.Namespace,
 		Replicas:     int(flags.Replicas),
 		SerialLength: flags.SerialLength,
+		DryRun:       dryrun.DryRun,
 	})
 	if err != nil {
 		return err
