@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/pager"
 
+	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
@@ -49,6 +50,7 @@ type Config struct {
 	Namespace    string
 	Replicas     int
 	SerialLength int
+	DryRun       bool
 }
 
 // Scale scales a resource in a cluster.
@@ -78,6 +80,13 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	if err != nil {
 		return err
 	}
+
+	if conf.DryRun {
+		dryrun.PrintMessage("# Scale resource %s to %d replicas", conf.Name, conf.Replicas)
+		dryrun.PrintMessage("# Resource example: %s", string(data))
+		return nil
+	}
+
 	var u *unstructured.Unstructured
 	err = json.Unmarshal(data, &u)
 	if err != nil {
