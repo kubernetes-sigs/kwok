@@ -17,45 +17,17 @@ limitations under the License.
 package controllers
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"math/rand"
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 )
-
-// NewStagesFromYaml returns stages from yaml data.
-func NewStagesFromYaml(data []byte) ([]*internalversion.Stage, error) {
-	var stages []*internalversion.Stage
-	decoder := yaml.NewYAMLToJSONDecoder(bytes.NewBuffer(data))
-	for {
-		var stage v1alpha1.Stage
-		err := decoder.Decode(&stage)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return nil, err
-		}
-
-		internalStage, err := internalversion.ConvertToInternalStage(&stage)
-		if err != nil {
-			return nil, err
-		}
-		stages = append(stages, internalStage)
-	}
-	return stages, nil
-}
 
 // NewLifecycle returns a new Lifecycle.
 func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {

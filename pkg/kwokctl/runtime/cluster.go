@@ -27,11 +27,12 @@ import (
 	"github.com/nxadm/tail"
 
 	"sigs.k8s.io/kwok/kustomize/crd"
+	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
+	heartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -42,7 +43,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/stages"
 )
 
 // The following functions are used to get the path of the cluster
@@ -201,34 +201,32 @@ func (c *Cluster) Save(ctx context.Context) error {
 
 func (c *Cluster) getDefaultStages(updateFrequency int64, nodeHeartbeat bool) ([]config.InternalObject, error) {
 	objs := []config.InternalObject{}
-	nodeStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+
+	nodeInit, err := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
 	if err != nil {
 		return nil, err
 	}
-	for _, stage := range nodeStages {
-		objs = append(objs, stage)
+	if _, ok := nodeInit.(*internalversion.Stage); !ok {
+		return nil, fmt.Errorf("failed to get node init stage %T", nodeInit)
 	}
+	objs = append(objs, nodeInit)
 
 	if nodeHeartbeat {
-		nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+		nodeHeartbeat, err := config.Unmarshal([]byte(heartbeat.DefaultNodeHeartbeat))
 		if err != nil {
 			return nil, err
 		}
 
-		if updateFrequency > 0 {
-			hasUpdate := false
-			for _, stage := range nodeHeartbeatStages {
-				if stage.Name == "node-heartbeat" {
-					stage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
-					stage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
-					hasUpdate = true
-				}
-				objs = append(objs, stage)
-			}
-			if !hasUpdate {
-				return nil, fmt.Errorf("failed to update node heartbeat stage")
-			}
+		nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
+		if !ok {
+			return nil, fmt.Errorf("failed to get node heartbeat stage %T", nodeHeartbeat)
 		}
+		if updateFrequency > 0 {
+			nodeHeartbeatStage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
+			nodeHeartbeatStage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
+		}
+
+		objs = append(objs, nodeHeartbeatStage)
 	}
 	return objs, nil
 }
