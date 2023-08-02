@@ -58,10 +58,10 @@ Runtime indicates which medium `kwokctl` will use to start the cluster
 |    OS/Arch    | binary | docker | podman | nerdctl | kind  | kind-podman |
 |:-------------:|:------:|:------:|:------:|:-------:|:-----:|:-----------:|
 |  linux/amd64  |   🟢   |   🟢   |   🟢   |   🟢    |  🟢   |     🟢      |
-|  linux/arm64  |   🔵   |   🔵   |   🟣   |   🟣    |  🟣   |     🟣      |
+|  linux/arm64  |   🔵   |   🔵   |   🔵   |   🔵    |  🔵   |     🔵      |
 | darwin/amd64  | 🟢/🟠  |   🟢   |   🔵   |  🔵/🟡  |  🟢   |     🔵      |
 | darwin/arm64  | 🔵/🟠  |   🔵   |   🔵   |  🔵/🟡  |  🔵   |     🔵      |
-| windows/amd64 | 🟣/🟠  |   🟣   |   🟤   |  🟤/🟡  |  🟤   |     🟤      |
+| windows/amd64 | 🟢/🟠  |   🟣   |   🟤   |  🟤/🟡  |  🟤   |     🟤      |
 | windows/arm64 | 🟣/🟠  |   🟣   |   🔴   |   🔴    |  🔴   |     🔴      |
 
 - 🟢 Supported and test covered by CI

@@ -133,7 +133,7 @@ This example shows how to configure the simplest and fastest stages of Pod resou
 [configuration]: {{< relref "/docs/user/configuration" >}}
 [Go Implementation]: https://github.com/itchyny/gojq
 [JQ Expressions]: https://stedolan.github.io/jq/manual/#Basicfilters
-[Default Node Stages]: https://github.com/kubernetes-sigs/kwok/tree/release/manifests/kustomize/stage/node/fast
-[Default Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/release/manifests/kustomize/stage/pod/fast
-[General Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/release/manifests/kustomize/stage/pod/general
+[Default Node Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/node/fast
+[Default Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/fast
+[General Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/general
 [Stage API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Stage
