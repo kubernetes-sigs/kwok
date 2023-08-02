@@ -42,6 +42,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
+var (
+	errUnsupportedType = errors.New("unsupported type")
+)
+
 func loadRawMessages(src []string) ([]json.RawMessage, error) {
 	var raws []json.RawMessage
 
@@ -366,34 +370,14 @@ func SaveTo(ctx context.Context, w io.Writer, objs []InternalObject) error {
 			}
 		}
 
-		typ := reflect.TypeOf(obj)
-		if typ.Kind() == reflect.Ptr {
-			typ = typ.Elem()
-		}
-		kind := typ.Name()
-		handler, ok := configHandlers[kind]
-		if !ok {
-			logger.Warn("Unsupported type",
-				"type", kind,
-			)
-			continue
-		}
-
-		versiondObj, err := handler.MutateToVersiond([]InternalObject{obj})
+		data, err := Marshal(obj)
 		if err != nil {
-			return err
-		}
-		if len(versiondObj) != 1 {
-			return fmt.Errorf("unexpected length of versiond object: %d", len(versiondObj))
-		}
-
-		data, err := handler.Marshal(versiondObj[0])
-		if err != nil {
-			return err
-		}
-
-		data, err = yaml.JSONToYAML(data)
-		if err != nil {
+			if errors.Is(err, errUnsupportedType) {
+				logger.Warn("Unsupported type", err,
+					"obj", obj,
+				)
+				continue
+			}
 			return err
 		}
 
@@ -403,6 +387,80 @@ func SaveTo(ctx context.Context, w io.Writer, objs []InternalObject) error {
 		}
 	}
 	return nil
+}
+
+// Unmarshal unmarshals the given raw message into the internal object.
+func Unmarshal(raw []byte) (InternalObject, error) {
+	meta := metav1.TypeMeta{}
+
+	raw, err := yaml.YAMLToJSON(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(raw, &meta)
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := meta.GroupVersionKind()
+
+	handler, ok := configHandlers[gvk.Kind]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errUnsupportedType, gvk.Kind)
+	}
+
+	vobj, err := handler.Unmarshal(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal %s: %w", gvk.Kind, err)
+	}
+
+	iobj, err := handler.MutateToInternal([]versiondObject{vobj})
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert %s: %w", gvk.Kind, err)
+	}
+
+	if len(iobj) == 0 {
+		return nil, fmt.Errorf("failed to convert %s: no object", gvk.Kind)
+	}
+
+	if len(iobj) > 1 {
+		return nil, fmt.Errorf("failed to convert %s: too many objects", gvk.Kind)
+	}
+
+	return iobj[0], nil
+}
+
+// Marshal marshals the given internal object into a raw message.
+func Marshal(obj InternalObject) ([]byte, error) {
+	typ := reflect.TypeOf(obj)
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+	kind := typ.Name()
+	handler, ok := configHandlers[kind]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errUnsupportedType, kind)
+	}
+
+	versiondObj, err := handler.MutateToVersiond([]InternalObject{obj})
+	if err != nil {
+		return nil, err
+	}
+	if len(versiondObj) != 1 {
+		return nil, fmt.Errorf("unexpected length of versiond object: %d", len(versiondObj))
+	}
+
+	data, err := handler.Marshal(versiondObj[0])
+	if err != nil {
+		return nil, err
+	}
+
+	data, err = yaml.JSONToYAML(data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // FilterWithType returns a list of objects with the given type.

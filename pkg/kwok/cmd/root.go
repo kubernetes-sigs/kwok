@@ -28,6 +28,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/clock"
 
+	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
+	nodeheartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
+	podfast "sigs.k8s.io/kwok/kustomize/stage/pod/fast"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -41,7 +44,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/stages"
 )
 
 type flagpole struct {
@@ -140,22 +142,14 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if !slices.Contains(flags.Options.EnableCRDs, v1alpha1.StageKind) {
 		if len(nodeStages) == 0 {
 			logger.Warn("No node stages found, using default node stages")
-			nodeStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+			nodeStages, err = getDefaultNodeStages(flags.Options.NodeLeaseDurationSeconds == 0)
 			if err != nil {
 				return err
-			}
-			if flags.Options.NodeLeaseDurationSeconds == 0 {
-				nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
-				if err != nil {
-					return err
-				}
-				nodeStages = append(nodeStages, nodeHeartbeatStages...)
 			}
 		}
 
 		if len(podStages) == 0 {
-			logger.Warn("No pod stages found, using default pod stages")
-			podStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultPodStages))
+			podStages, err = getDefaultPodStages()
 			if err != nil {
 				return err
 			}
@@ -389,4 +383,49 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 		return err
 	}
 	return nil
+}
+
+func getDefaultNodeStages(heartbeat bool) ([]*internalversion.Stage, error) {
+	nodeStages := []*internalversion.Stage{}
+	nodeInit, err := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
+	if err != nil {
+		return nil, err
+	}
+	nodeInitStage, ok := nodeInit.(*internalversion.Stage)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert node init to stage")
+	}
+	nodeStages = append(nodeStages, nodeInitStage)
+
+	if heartbeat {
+		nodeHeartbeat, err := config.Unmarshal([]byte(nodeheartbeat.DefaultNodeHeartbeat))
+		if err != nil {
+			return nil, err
+		}
+		nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert node init to stage")
+		}
+		nodeStages = append(nodeStages, nodeHeartbeatStage)
+	}
+	return nodeStages, nil
+}
+
+func getDefaultPodStages() ([]*internalversion.Stage, error) {
+	return slices.MapWithError([]string{
+		podfast.DefaultPodReady,
+		podfast.DefaultPodComplete,
+		podfast.DefaultPodDelete,
+	}, func(s string) (*internalversion.Stage, error) {
+		iobj, err := config.Unmarshal([]byte(s))
+		if err != nil {
+			return nil, err
+		}
+		stage, ok := iobj.(*internalversion.Stage)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert pod init to stage")
+		}
+
+		return stage, nil
+	})
 }

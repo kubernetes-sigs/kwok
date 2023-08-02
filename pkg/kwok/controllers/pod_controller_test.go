@@ -29,11 +29,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 
+	podfast "sigs.k8s.io/kwok/kustomize/stage/pod/fast"
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/stages"
 )
 
 const (
@@ -163,7 +165,18 @@ func TestPodController(t *testing.T) {
 		return nodeInfo, true
 	}
 
-	podStages, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
+	podStages, _ := slices.MapWithError([]string{
+		podfast.DefaultPodReady,
+		podfast.DefaultPodComplete,
+		podfast.DefaultPodDelete,
+	}, func(s string) (*internalversion.Stage, error) {
+		iobj, err := config.Unmarshal([]byte(s))
+		if err != nil {
+			return nil, err
+		}
+		return iobj.(*internalversion.Stage), nil
+	})
+
 	lifecycle, _ := NewLifecycle(podStages)
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{

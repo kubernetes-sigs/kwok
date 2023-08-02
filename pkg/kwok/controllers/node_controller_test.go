@@ -29,10 +29,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
+	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/stages"
 )
 
 func TestNodeController(t *testing.T) {
@@ -69,9 +71,10 @@ func TestNodeController(t *testing.T) {
 	nodeSelectorFunc := func(node *corev1.Node) bool {
 		return strings.HasPrefix(node.Name, "node")
 	}
-	nodeStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
-	nodeHeartbeatStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
-	nodeStages = append(nodeStages, nodeHeartbeatStages...)
+
+	nodeInit, _ := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
+	nodeStages := []*internalversion.Stage{nodeInit.(*internalversion.Stage)}
+
 	lifecycle, _ := NewLifecycle(nodeStages)
 	nodes, err := NewNodeController(NodeControllerConfig{
 		TypedClient:          clientset,

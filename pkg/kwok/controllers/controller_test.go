@@ -28,9 +28,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 
+	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
+	podfast "sigs.k8s.io/kwok/kustomize/stage/pod/fast"
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/stages"
 )
 
 func TestController(t *testing.T) {
@@ -67,10 +71,19 @@ func TestController(t *testing.T) {
 		},
 	}
 
-	nodeStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeStages))
-	nodeHeartbeatStages, _ := NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
-	nodeStages = append(nodeStages, nodeHeartbeatStages...)
-	podStages, _ := NewStagesFromYaml([]byte(stages.DefaultPodStages))
+	nodeInit, _ := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
+	nodeStages := []*internalversion.Stage{nodeInit.(*internalversion.Stage)}
+	podStages, _ := slices.MapWithError([]string{
+		podfast.DefaultPodReady,
+		podfast.DefaultPodComplete,
+		podfast.DefaultPodDelete,
+	}, func(s string) (*internalversion.Stage, error) {
+		iobj, err := config.Unmarshal([]byte(s))
+		if err != nil {
+			return nil, err
+		}
+		return iobj.(*internalversion.Stage), nil
+	})
 
 	tests := []struct {
 		name          string

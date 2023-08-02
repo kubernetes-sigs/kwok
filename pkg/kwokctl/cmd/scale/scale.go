@@ -25,7 +25,6 @@ import (
 	"path"
 
 	"github.com/spf13/cobra"
-	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
 
 	"sigs.k8s.io/kwok/kustomize/kwokctl/resource"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -99,19 +98,24 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return krc.Name == resourceKind
 	})
 	if !ok {
+		var resourceData []byte
 		switch resourceKind {
 		default:
 			return fmt.Errorf("resource %s is not exists", resourceKind)
 		case "pod":
-			err = utilyaml.Unmarshal([]byte(resource.DefaultPod), &krc)
-			if err != nil {
-				return err
-			}
+			resourceData = []byte(resource.DefaultPod)
 		case "node":
-			err = utilyaml.Unmarshal([]byte(resource.DefaultNode), &krc)
-			if err != nil {
-				return err
-			}
+			resourceData = []byte(resource.DefaultNode)
+		}
+
+		logger.Info("No resource found, use default resource", "resource", resourceKind)
+		iobj, err := config.Unmarshal(resourceData)
+		if err != nil {
+			return err
+		}
+		krc, ok = iobj.(*internalversion.KwokctlResource)
+		if !ok {
+			return fmt.Errorf("resource %T is not a kwokctl resource", iobj)
 		}
 	}
 
