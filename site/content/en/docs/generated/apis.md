@@ -2022,6 +2022,18 @@ uint
 <p>NodeLeaseParallelism is the number of NodeLeases that are allowed to be processed in parallel.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableNodeLeaseShareable</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>EnableNodeLeaseShareable is the flag to enable shareable node lease.
+means that the controller will share the node lease with others.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlConfigurationOptions">

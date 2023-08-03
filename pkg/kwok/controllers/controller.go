@@ -121,6 +121,7 @@ type Config struct {
 	NodeLeaseParallelism                  uint
 	ID                                    string
 	EnableMetrics                         bool
+	EnableNodeLeaseShareable              bool
 }
 
 // NewController creates a new fake kubelet controller
@@ -203,6 +204,7 @@ func (c *Controller) Start(ctx context.Context) error {
 			OnNodeManagedFunc: func(nodeName string) {
 				onLeaseNodeManageFunc(nodeName)
 			},
+			EnableShareable: conf.EnableNodeLeaseShareable,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create node leases controller: %w", err)

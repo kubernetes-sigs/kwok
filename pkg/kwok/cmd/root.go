@@ -89,6 +89,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.ServerAddress, "server-address", flags.Options.ServerAddress, "Address to expose the server on")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease seconds")
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crd", flags.Options.EnableCRDs, "List of CRDs to enable")
+	cmd.Flags().BoolVar(&flags.Options.EnableNodeLeaseShareable, "enable-node-lease-shareable", flags.Options.EnableNodeLeaseShareable, "Enable node lease shareable, means that the controller will share the node lease with others")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
 	if config.GOOS != "linux" {
@@ -274,6 +275,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		PodStages:                             podStages,
 		NodeLeaseParallelism:                  flags.Options.NodeLeaseParallelism,
 		NodeLeaseDurationSeconds:              flags.Options.NodeLeaseDurationSeconds,
+		EnableNodeLeaseShareable:              flags.Options.EnableNodeLeaseShareable,
 		ID:                                    id,
 	})
 	if err != nil {

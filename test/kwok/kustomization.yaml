@@ -22,9 +22,7 @@ patches:
 
 replicas:
 - name: kwok-controller
-  count: 2
+  count: 4
 
 resources:
 - ../../kustomize/kwok
-- fake-deployment.yaml
-- fake-node.yaml

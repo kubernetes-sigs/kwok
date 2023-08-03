@@ -129,4 +129,9 @@ type KwokConfigurationOptions struct {
 	// NodeLeaseParallelism is the number of NodeLeases that are allowed to be processed in parallel.
 	// +default=4
 	NodeLeaseParallelism uint `json:"nodeLeaseParallelism,omitempty"`
+
+	// EnableNodeLeaseShareable is the flag to enable shareable node lease.
+	// means that the controller will share the node lease with others.
+	// +default=false
+	EnableNodeLeaseShareable *bool `json:"enableNodeLeaseShareable,omitempty"`
 }

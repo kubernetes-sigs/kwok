@@ -50,6 +50,8 @@ type NodeLeaseController struct {
 	// latestLease is the latest lease which the NodeLeaseController updated or created
 	latestLease maps.SyncMap[string, *coordinationv1.Lease]
 
+	heldLease maps.SyncMap[string, *coordinationv1.Lease]
+
 	// mutateLeaseFunc allows customizing a lease object
 	mutateLeaseFunc func(*coordinationv1.Lease) error
 
@@ -60,6 +62,8 @@ type NodeLeaseController struct {
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)
+
+	enableShareable bool
 }
 
 // NodeLeaseControllerConfig is the configuration for NodeLeaseController
@@ -74,6 +78,7 @@ type NodeLeaseControllerConfig struct {
 	LeaseNamespace       string
 	MutateLeaseFunc      func(*coordinationv1.Lease) error
 	OnNodeManagedFunc    func(nodeName string)
+	EnableShareable      bool
 }
 
 // NewNodeLeaseController constructs and returns a NodeLeaseController
@@ -99,6 +104,7 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 		leaseChan:            make(chan string),
 		holderIdentity:       conf.HolderIdentity,
 		onNodeManagedFunc:    conf.OnNodeManagedFunc,
+		enableShareable:      conf.EnableShareable,
 	}
 
 	return c, nil
@@ -106,8 +112,20 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 
 // Start starts the NodeLeaseController
 func (c *NodeLeaseController) Start(ctx context.Context) error {
-	for i := uint(0); i < c.leaseParallelism; i++ {
-		go c.syncWorker(ctx)
+	go c.syncWorker(ctx)
+
+	if c.leaseParallelism > 1 {
+		go func() {
+			// Wait for the first lease to be held, then start the rest of the workers.
+			// Because if these have nothing, will try to get one from shared by another,
+			// Avoid taking too much.
+			for c.heldLease.IsEmpty() {
+				time.Sleep(1 * time.Second)
+			}
+			for i := uint(0); i < c.leaseParallelism-1; i++ {
+				go c.syncWorker(ctx)
+			}
+		}()
 	}
 
 	opt := metav1.ListOptions{}
@@ -160,7 +178,7 @@ func (c *NodeLeaseController) watchResources(ctx context.Context, opt metav1.Lis
 				switch event.Type {
 				case watch.Added, watch.Modified:
 					lease := event.Object.(*coordinationv1.Lease)
-					c.latestLease.Store(lease.Name, lease)
+					c.put(lease.Name, lease)
 				case watch.Deleted:
 					lease := event.Object.(*coordinationv1.Lease)
 					c.remove(lease.Name)
@@ -241,47 +259,84 @@ func (c *NodeLeaseController) TryHold(name string) {
 	c.leaseChan <- name
 }
 
+// put puts a lease into the NodeLeaseController
+func (c *NodeLeaseController) put(name string, lease *coordinationv1.Lease) {
+	c.latestLease.Store(name, lease)
+	if held(lease, c.holderIdentity) {
+		c.heldLease.Store(name, lease)
+	} else {
+		c.heldLease.Delete(name)
+	}
+}
+
 // remove removes a lease from the NodeLeaseController
 func (c *NodeLeaseController) remove(name string) {
 	cancel, ok := c.cancelJob.LoadAndDelete(name)
 	if ok {
 		cancel()
 		c.latestLease.Delete(name)
+		c.heldLease.Delete(name)
 	}
 }
 
 // Held returns true if the NodeLeaseController holds the lease
 func (c *NodeLeaseController) Held(name string) bool {
-	lease, ok := c.latestLease.Load(name)
-	if !ok || lease == nil || lease.Spec.HolderIdentity == nil {
+	_, ok := c.heldLease.Load(name)
+	return ok
+}
+
+func held(lease *coordinationv1.Lease, holderIdentity string) bool {
+	if lease == nil || lease.Spec.HolderIdentity == nil {
 		return false
 	}
 
-	return *lease.Spec.HolderIdentity == c.holderIdentity
+	return *lease.Spec.HolderIdentity == holderIdentity
 }
 
 // sync syncs a lease for a node
 func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 	logger := log.FromContext(ctx)
-	logger = logger.With("node", nodeName)
+
+	share := c.enableShareable
+	if share && c.heldLease.IsEmpty() {
+		// if we have noting, we should not share the lease
+		share = false
+	}
+	logger = logger.With(
+		"node", nodeName,
+		"share", share,
+	)
 
 	latestLease, ok := c.latestLease.Load(nodeName)
 	if ok && latestLease != nil {
 		if !tryAcquireOrRenew(latestLease, c.holderIdentity, c.clock.Now()) {
-			logger.Debug("Lease already acquired by another holder")
-			return
+			if !c.enableShareable ||
+				share ||
+				latestLease.Annotations == nil ||
+				latestLease.Annotations[annotationShareKey] != annotationShareVal {
+				logger.Debug("Lease already acquired by another holder")
+				return
+			}
+
+			logger.Debug("Lease already acquired by another holder, but shared, try to obtain it")
 		}
+
+		transitions := format.ElemOrDefault(latestLease.Spec.HolderIdentity) != c.holderIdentity
+
+		logger = logger.With(
+			"transitions", transitions,
+		)
+
 		logger.Info("Syncing lease")
-		lease, transitions, err := c.renewLease(ctx, latestLease)
+		lease, err := c.renewLease(ctx, latestLease, transitions, share)
 		if err != nil {
 			logger.Error("failed to update lease using latest lease", err)
 			return
 		}
-		c.latestLease.Store(nodeName, lease)
+
+		c.put(nodeName, lease)
 		if transitions {
-			logger.Debug("Lease transitioned",
-				"transitions", transitions,
-			)
+			logger.Debug("Lease transitioned")
 			if c.onNodeManagedFunc != nil {
 				if c.Held(nodeName) {
 					c.onNodeManagedFunc(nodeName)
@@ -292,9 +347,9 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 		}
 	} else {
 		logger.Info("Creating lease")
-		latestLease, err := c.ensureLease(ctx, nodeName)
+		lease, err := c.ensureLease(ctx, nodeName, share)
 		if err != nil {
-			if !apierrors.IsNotFound(err) || c.latestLease.Size() != 0 {
+			if !apierrors.IsNotFound(err) || !c.latestLease.IsEmpty() {
 				logger.Error("failed to create lease", err)
 				return
 			}
@@ -302,14 +357,13 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 			// kube-apiserver will not have finished initializing the resources when the cluster has just been created.
 			logger.Error("lease namespace not found, retrying in 1 second", err)
 			time.Sleep(1 * time.Second)
-			latestLease, err = c.ensureLease(ctx, nodeName)
 			if err != nil {
 				logger.Error("failed to create lease secondly", err)
 				return
 			}
 		}
 
-		c.latestLease.Store(nodeName, latestLease)
+		c.put(nodeName, lease)
 		if c.onNodeManagedFunc != nil {
 			if c.Held(nodeName) {
 				c.onNodeManagedFunc(nodeName)
@@ -320,8 +374,13 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 	}
 }
 
+var (
+	annotationShareKey = "kwok.x-k8s.io/node-lease-share"
+	annotationShareVal = "true"
+)
+
 // ensureLease creates a lease if it does not exist
-func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string) (*coordinationv1.Lease, error) {
+func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string, share bool) (*coordinationv1.Lease, error) {
 	lease := &coordinationv1.Lease{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      leaseName,
@@ -333,6 +392,13 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 			RenewTime:            format.Ptr(metav1.NewMicroTime(c.clock.Now())),
 		},
 	}
+	if share {
+		if lease.Annotations == nil {
+			lease.Annotations = map[string]string{}
+		}
+		lease.Annotations[annotationShareKey] = annotationShareVal
+	}
+
 	if c.mutateLeaseFunc != nil {
 		err := c.mutateLeaseFunc(lease)
 		if err != nil {
@@ -348,29 +414,38 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 }
 
 // renewLease attempts to update the lease for maxUpdateRetries, call this once you're sure the lease has been created
-func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordinationv1.Lease) (*coordinationv1.Lease, bool, error) {
+func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordinationv1.Lease, transitions bool, share bool) (*coordinationv1.Lease, error) {
 	lease := base.DeepCopy()
 
-	transitions := format.ElemOrDefault(lease.Spec.HolderIdentity) != c.holderIdentity
 	if transitions {
 		lease.Spec.HolderIdentity = &c.holderIdentity
 		lease.Spec.LeaseDurationSeconds = format.Ptr(int32(c.leaseDurationSeconds))
 		lease.Spec.LeaseTransitions = format.Ptr(format.ElemOrDefault(lease.Spec.LeaseTransitions) + 1)
+
+		if share {
+			if lease.Annotations == nil {
+				lease.Annotations = map[string]string{}
+			}
+			lease.Annotations[annotationShareKey] = annotationShareVal
+		} else if lease.Annotations != nil {
+			delete(lease.Annotations, annotationShareKey)
+		}
 	}
+
 	lease.Spec.RenewTime = format.Ptr(metav1.NewMicroTime(c.clock.Now()))
 
 	if c.mutateLeaseFunc != nil {
 		err := c.mutateLeaseFunc(lease)
 		if err != nil {
-			return nil, false, err
+			return nil, err
 		}
 	}
 
 	lease, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Update(ctx, lease, metav1.UpdateOptions{})
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
-	return lease, transitions, nil
+	return lease, nil
 }
 
 // setNodeOwnerFunc helps construct a mutateLeaseFunc which sets a node OwnerReference to the given lease object

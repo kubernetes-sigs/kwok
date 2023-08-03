@@ -1255,6 +1255,9 @@ func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfig
 	out.NodePlayStageParallelism = in.NodePlayStageParallelism
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.NodeLeaseParallelism = in.NodeLeaseParallelism
+	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableNodeLeaseShareable, &out.EnableNodeLeaseShareable, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1295,6 +1298,9 @@ func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfig
 	out.NodePlayStageParallelism = in.NodePlayStageParallelism
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.NodeLeaseParallelism = in.NodeLeaseParallelism
+	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableNodeLeaseShareable, &out.EnableNodeLeaseShareable, s); err != nil {
+		return err
+	}
 	return nil
 }
 

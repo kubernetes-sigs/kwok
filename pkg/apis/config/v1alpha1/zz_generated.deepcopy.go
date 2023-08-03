@@ -200,6 +200,11 @@ func (in *KwokConfigurationOptions) DeepCopyInto(out *KwokConfigurationOptions) 
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableNodeLeaseShareable != nil {
+		in, out := &in.EnableNodeLeaseShareable, &out.EnableNodeLeaseShareable
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

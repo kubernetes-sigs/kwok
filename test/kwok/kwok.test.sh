@@ -31,28 +31,21 @@ function start_cluster() {
   "${ROOT_DIR}"/hack/releases.sh --bin kwok --platform "${linux_platform}"
   "${ROOT_DIR}"/images/kwok/build.sh --image "${KWOK_IMAGE}" --version="${KWOK_VERSION}" --platform "${linux_platform}"
 
-  kind create cluster --name="${CLUSTER_NAME}"
-
+  kind create cluster --name="${CLUSTER_NAME}" --wait=5m
   kind load docker-image --name="${CLUSTER_NAME}" "${KWOK_IMAGE}:${KWOK_VERSION}"
 
-  kubectl kustomize "${DIR}" | kubectl apply -f -
-  kubectl kustomize "${ROOT_DIR}/stages" | kubectl apply -f -
+  kubectl apply -k "${DIR}"
+  kubectl apply -f "${ROOT_DIR}/stages"
+
+  kubectl apply -f "${DIR}/fake-deployment.yaml"
+  kubectl apply -f "${DIR}/fake-node.yaml"
 }
 
 # Check for normal heartbeat
 function test_node_ready() {
-  for ((i = 0; i < 30; i++)); do
-    if [[ ! "$(kubectl get node fake-node)" =~ "Ready" ]]; then
-      echo "Waiting for fake-node to be ready..."
-      sleep 1
-    else
-      break
-    fi
-  done
-
-  if [[ ! "$(kubectl get node fake-node)" =~ "Ready" ]]; then
-    echo "Error: fake-node is not ready"
-    kubectl get node fake-node
+  if ! kubectl wait --for=condition=Ready=true node --all --timeout=30s; then
+    echo "Error: Node is not ready"
+    kubectl get node
     return 1
   fi
 }
@@ -103,17 +96,17 @@ function test_pod_running() {
 
 # Check for the status of the Node is modified by Kubectl
 function test_modify_node_status() {
-  kubectl annotate node fake-node --overwrite kwok.x-k8s.io/status=custom
-  kubectl patch node fake-node --subresource=status -p '{"status":{"nodeInfo":{"kubeletVersion":"fake-new"}}}'
+  kubectl annotate node fake-node-0 --overwrite kwok.x-k8s.io/status=custom
+  kubectl patch node fake-node-0 --subresource=status -p '{"status":{"nodeInfo":{"kubeletVersion":"fake-new"}}}'
 
   sleep 2
 
-  if [[ ! "$(kubectl get node fake-node)" =~ "fake-new" ]]; then
-    echo "Error: fake-node is not updated"
-    kubectl get node fake-node
+  if [[ ! "$(kubectl get node fake-node-0)" =~ "fake-new" ]]; then
+    echo "Error: fake-node-0 is not updated"
+    kubectl get node fake-node-0
     return 1
   fi
-  kubectl annotate node fake-node --overwrite kwok.x-k8s.io/status-
+  kubectl annotate node fake-node-0 --overwrite kwok.x-k8s.io/status-
 }
 
 # Check for the status of the Pod is modified by Kubectl
@@ -138,9 +131,44 @@ function test_modify_pod_status() {
 function test_check_node_lease_transitions() {
   local want="${1}"
   local node_leases_transitions
-  node_leases_transitions="$(kubectl get leases fake-node -n kube-node-lease -ojson | jq -r '.spec.leaseTransitions // 0')"
+  node_leases_transitions="$(kubectl get leases fake-node-0 -n kube-node-lease -ojson | jq -r '.spec.leaseTransitions // 0')"
   if [[ "${node_leases_transitions}" != "${want}" ]]; then
-    echo "Error: fake-node lease transitions is not ${want}, got ${node_leases_transitions}"
+    echo "Error: fake-node-0 lease transitions is not ${want}, got ${node_leases_transitions}"
+    return 1
+  fi
+}
+
+function test_node_lease_count() {
+  local holder_count
+  holder_count="$(kubectl get lease -n kube-node-lease --no-headers | wc -l)"
+  if [[ "${holder_count}" != 4 ]]; then
+    echo "Error: node lease count is not 4"
+    kubectl get lease -n kube-node-lease
+    return 1
+  fi
+}
+
+function test_node_lease_shareable() {
+  local holder
+  local uniq_holder
+  holder="$(kubectl get lease -n kube-node-lease --no-headers | awk '{print $2}' | sort)"
+  uniq_holder="$(echo "${holder}" | uniq)"
+  if [[ "${holder}" != "${uniq_holder}" ]]; then
+    echo "Error: node lease is not unique"
+    kubectl get lease -n kube-node-lease
+    return 1
+  fi
+}
+
+function test_node_lease_stable_held() {
+  local holder
+  local last_holder
+  holder="$(kubectl get lease -n kube-node-lease --no-headers | awk '{print $2}')"
+  sleep 10
+  last_holder="$(kubectl get lease -n kube-node-lease --no-headers | awk '{print $2}')"
+  if [[ "${holder}" != "${last_holder}" ]]; then
+    echo "Error: node lease is not stable held"
+    kubectl get lease -n kube-node-lease
     return 1
   fi
 }
@@ -149,7 +177,8 @@ function recreate_kwok() {
   kubectl scale deployment/kwok-controller -n kube-system --replicas=0
   kubectl wait --for=delete pod -l app=kwok-controller -n kube-system --timeout=60s
 
-  kubectl scale deployment/kwok-controller -n kube-system --replicas=2
+  kubectl scale deployment/kwok-controller -n kube-system --replicas=4
+  kubectl wait --for=condition=available deployment/kwok-controller -n kube-system --timeout=60s
 }
 
 function recreate_pods() {
@@ -182,8 +211,11 @@ function main() {
   test_node_ready || failed+=("node_ready_again")
   test_pod_running || failed+=("pod_running_again")
   test_check_pod_status || failed+=("check_pod_status_again")
-
   test_check_node_lease_transitions 1 || failed+=("check_node_lease_transitions_again")
+
+  test_node_lease_count || failed+=("node_lease_count")
+  test_node_lease_shareable || failed+=("node_lease_shareable")
+  test_node_lease_stable_held || failed+=("node_lease_stable_held")
 
   if [[ "${#failed[@]}" -ne 0 ]]; then
     echo "Error: Some tests failed"

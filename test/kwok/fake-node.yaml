@@ -8,14 +8,58 @@ metadata:
     beta.kubernetes.io/arch: amd64
     beta.kubernetes.io/os: linux
     kubernetes.io/arch: amd64
-    kubernetes.io/hostname: fake-node
+    kubernetes.io/hostname: fake-node-0
     kubernetes.io/os: linux
     kubernetes.io/role: agent
     node-role.kubernetes.io/agent: ""
     type: kwok-controller
-  name: fake-node
+  name: fake-node-0
 spec:
   taints:
-    - effect: NoSchedule
-      key: kwok-controller/provider
-      value: fake
+  - effect: NoSchedule
+    key: kwok-controller/provider
+    value: fake
+---
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    kwok.x-k8s.io/node: fake
+    node.alpha.kubernetes.io/ttl: "0"
+  labels:
+    beta.kubernetes.io/arch: amd64
+    beta.kubernetes.io/os: linux
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: fake-node-1
+    kubernetes.io/os: linux
+    kubernetes.io/role: agent
+    node-role.kubernetes.io/agent: ""
+    type: kwok-controller
+  name: fake-node-1
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok-controller/provider
+    value: fake
+---
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    kwok.x-k8s.io/node: fake
+    node.alpha.kubernetes.io/ttl: "0"
+  labels:
+    beta.kubernetes.io/arch: amd64
+    beta.kubernetes.io/os: linux
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: fake-node-2
+    kubernetes.io/os: linux
+    kubernetes.io/role: agent
+    node-role.kubernetes.io/agent: ""
+    type: kwok-controller
+  name: fake-node-2
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok-controller/provider
+    value: fake

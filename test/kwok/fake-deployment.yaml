@@ -29,4 +29,3 @@ spec:
       containers:
         - name: fake-container
           image: fake
-      nodeName: fake-node
