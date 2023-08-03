@@ -22,6 +22,7 @@ limitations under the License.
 // +kubebuilder:rbac:groups="",resources=nodes/status,verbs=patch;update
 // +kubebuilder:rbac:groups="",resources=pods,verbs=delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=patch;update
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=create;get;list;patch;update;watch
 
 // Package v1alpha1 implements the v1alpha1 apiVersion of kwok's configuration
