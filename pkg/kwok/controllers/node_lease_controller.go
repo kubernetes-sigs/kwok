@@ -25,6 +25,7 @@ import (
 	coordinationv1 "k8s.io/api/coordination/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	informers "k8s.io/client-go/informers/coordination/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	listers "k8s.io/client-go/listers/coordination/v1"
@@ -118,6 +119,12 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 		onNodeManagedFunc:    conf.OnNodeManagedFunc,
 	}
 
+	if _, err := leaseInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		DeleteFunc: c.deleteLeaseEventHandler,
+	}); err != nil {
+		return nil, fmt.Errorf("failed to add delete event handler for node lease: %w", err)
+	}
+
 	return c, nil
 }
 
@@ -192,16 +199,28 @@ func (c *NodeLeaseController) TryHold(name string) {
 	}
 }
 
-// remove removes a lease from the NodeLeaseController
-func (c *NodeLeaseController) remove(name string) {
-	cancel, ok := c.cancelJob.LoadAndDelete(name)
+func (c *NodeLeaseController) deleteLeaseEventHandler(obj interface{}) {
+	lease, ok := obj.(*coordinationv1.Lease)
+
+	// When a delete is dropped, the relist will notice a lease in the store
+	// not in the list, leading to the insertion of a tombstone object which
+	// contains the deleted key/value. Note that this value might be stale.
+	if !ok {
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			utilruntime.HandleError(fmt.Errorf("couldn't get object from tombstone %#v", obj))
+			return
+		}
+		lease, ok = tombstone.Obj.(*coordinationv1.Lease)
+		if !ok {
+			utilruntime.HandleError(fmt.Errorf("tombstone contained object that is not a lease %#v", obj))
+			return
+		}
+	}
+
+	cancel, ok := c.cancelJob.LoadAndDelete(lease.Name)
 	if ok {
 		cancel()
-
-		// XXX: Should we need to delete it since we add managedBy node?
-		c.typedClient.CoordinationV1().
-			Leases(c.leaseNamespace).
-			Delete(context.TODO(), name, metav1.DeleteOptions{})
 	}
 }
 
