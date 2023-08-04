@@ -276,7 +276,7 @@ func (c *NodeLeaseController) sync(ctx context.Context, name string) {
 	}
 
 	logger.Info("Syncing lease")
-	lease, transitions, err := c.renewLease(ctx, lease)
+	_, transitions, err := c.renewLease(ctx, lease)
 	if err != nil {
 		logger.Error("failed to update lease using latest lease", err)
 		return
