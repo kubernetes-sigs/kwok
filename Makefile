@@ -84,12 +84,9 @@ DOCKER_CLI_EXPERIMENTAL ?= enabled
 .PHONY: default
 default: help
 
-vendor:
-	@$(GO_CMD) mod vendor
-
 ## unit-test: Run unit tests
 .PHONY: unit-test
-unit-test: vendor
+unit-test:
 	@$(GO_CMD) test ./pkg/...
 
 ## verify: Verify code
@@ -104,7 +101,7 @@ update:
 
 ## build: Build binary
 .PHONY: build
-build: vendor
+build:
 	@./hack/releases.sh \
 		$(addprefix --bin=, $(BINARY)) \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
@@ -148,7 +145,7 @@ endif
 
 ## cross-build: Build kwok and kwokctl for all supported platforms
 .PHONY: cross-build
-cross-build: vendor
+cross-build:
 	@./hack/releases.sh \
 		$(addprefix --bin=, $(BINARY)) \
 		$(addprefix --platform=, $(BINARY_PLATFORMS)) \
