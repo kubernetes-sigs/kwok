@@ -138,7 +138,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		lifecycle:                             conf.Lifecycle,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Pod),
-		triggerPreprocessChan:                 make(chan string, 16),
+		triggerPreprocessChan:                 make(chan string, 64),
 		playStageChan:                         make(chan resourceStageJob[*corev1.Pod]),
 		recorder:                              conf.Recorder,
 		readOnlyFunc:                          conf.ReadOnlyFunc,

@@ -178,7 +178,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		lifecycle:                             conf.Lifecycle,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Node),
-		triggerPreprocessChan:                 make(chan string, 16),
+		triggerPreprocessChan:                 make(chan string, 64),
 		playStageChan:                         make(chan resourceStageJob[*corev1.Node]),
 		recorder:                              conf.Recorder,
 		readOnlyFunc:                          conf.ReadOnlyFunc,
@@ -252,9 +252,6 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 		return err
 	}
 
-	// TODO: should record last resourceVersion for next round
-	opt.AllowWatchBookmarks = true
-
 	logger := log.FromContext(ctx)
 	go func() {
 		rc := watcher.ResultChan()
@@ -283,9 +280,10 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 				case watch.Added:
 					node := event.Object.(*corev1.Node)
 					if c.need(node) {
-						exist := c.Has(node.Name)
-
 						c.putNodeInfo(node)
+						if c.onNodeManagedFunc != nil {
+							c.onNodeManagedFunc(node.Name)
+						}
 						if c.readOnly(node.Name) {
 							logger.Debug("Skip node",
 								"reason", "read only",
@@ -294,10 +292,6 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 							)
 						} else {
 							c.preprocessChan <- node
-						}
-
-						if c.onNodeManagedFunc != nil && !exist {
-							c.onNodeManagedFunc(node.Name)
 						}
 					}
 				case watch.Modified:
