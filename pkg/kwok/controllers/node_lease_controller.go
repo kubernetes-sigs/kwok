@@ -215,8 +215,11 @@ func (c *NodeLeaseController) nextTryTime(name string, now time.Time) time.Time 
 
 // TryHold tries to hold a lease for the NodeLeaseController
 func (c *NodeLeaseController) TryHold(name string) {
-	// trigger a sync immediately
-	c.leaseChan <- name
+	// if already has a cron job, return
+	_, ok := c.cancelJob.Load(name)
+	if ok {
+		return
+	}
 
 	// add a cron job to sync the lease periodically
 	cancel, ok := c.cronjob.AddWithCancel(
@@ -228,11 +231,14 @@ func (c *NodeLeaseController) TryHold(name string) {
 		},
 	)
 	if ok {
-		old, ok := c.cancelJob.LoadOrStore(name, cancel)
+		old, ok := c.cancelJob.Swap(name, cancel)
 		if ok {
 			old()
 		}
 	}
+
+	// trigger a sync immediately
+	c.leaseChan <- name
 }
 
 // remove removes a lease from the NodeLeaseController
