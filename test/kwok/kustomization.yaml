@@ -6,16 +6,25 @@ images:
     newName: kwok
     newTag: test
 
-patchesStrategicMerge:
-  - |-
-    apiVersion: apps/v1
+patches:
+- target:
+    group: apps
+    version: v1
     kind: Deployment
-    metadata:
-      name: kwok-controller
-    spec:
-      replicas: 2
+    name: kwok-controller
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --master=https://127.0.0.1:6443
+    - op: replace
+      path: /spec/template/spec/hostNetwork
+      value: true
+
+replicas:
+- name: kwok-controller
+  count: 2
 
 resources:
-  - ../../kustomize/kwok
-  - fake-deployment.yaml
-  - fake-node.yaml
+- ../../kustomize/kwok
+- fake-deployment.yaml
+- fake-node.yaml

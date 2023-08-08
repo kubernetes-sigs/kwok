@@ -4,15 +4,7 @@ metadata:
   name: kwok-controller
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      app: kwok-controller
   template:
-    metadata:
-      name: kwok-controller
-      namespace: kube-system
-      labels:
-        app: kwok-controller
     spec:
       containers:
         - name: kwok-controller
@@ -42,6 +34,19 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 10247
+              scheme: HTTP
+            initialDelaySeconds: 2
+            timeoutSeconds: 2
+            periodSeconds: 10
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /healthz
@@ -60,6 +65,5 @@ spec:
             timeoutSeconds: 2
             periodSeconds: 20
             failureThreshold: 5
-      serviceAccount: kwok-controller
       serviceAccountName: kwok-controller
       restartPolicy: Always

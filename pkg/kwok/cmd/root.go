@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/server"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/path"
@@ -327,8 +328,15 @@ func runE(ctx context.Context, flags *flagpole) error {
 		go func() {
 			err := svc.Run(ctx, serverAddress, flags.Options.TLSCertFile, flags.Options.TLSPrivateKeyFile)
 			if err != nil {
-				logger.Error("Failed to run server", err)
-				os.Exit(1)
+				// allow the server exit when work on host network
+				podIP := envs.GetEnv("POD_IP", "")
+				hostIP := envs.GetEnv("HOST_IP", "")
+				if podIP == "" || hostIP == "" || podIP != hostIP {
+					logger.Error("Failed to run server", err)
+					os.Exit(1)
+				} else {
+					logger.Warn("Failed to run server, but allow the server exit when work on host network", "err", err)
+				}
 			}
 		}()
 	}
