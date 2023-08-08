@@ -84,10 +84,13 @@ func NewClientset(masterURL, kubeconfigPath string, opts ...Option) (Clientset, 
 func (g *clientset) ToRESTConfig() (*rest.Config, error) {
 	if g.restConfig == nil {
 		var restConfig *rest.Config
-		if g.kubeconfigPath == "" && g.masterURL == "" {
+		if g.kubeconfigPath == "" {
 			clientConfig, err := rest.InClusterConfig()
 			if err != nil {
 				return nil, fmt.Errorf("could not get in ClusterConfig: %w", err)
+			}
+			if g.masterURL != "" {
+				clientConfig.Host = g.masterURL
 			}
 			restConfig = clientConfig
 		} else {

@@ -5,4 +5,44 @@ resources:
 - ../kwok
 
 patches:
-- path: deployment-patch.yaml
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: kwok-controller
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --experimental-enable-cni=true
+    - op: add
+      path: /spec/template/spec/containers/0/securityContext
+      value:
+        capabilities:
+          add:
+          - ALL
+    - op: add
+      path: /spec/template/spec/containers/0/volumeMounts
+      value:
+      - name: etc-cni
+        mountPath: /etc/cni
+      - name: opt-cni
+        mountPath: /opt/cni
+      - name: var-lib-cni
+        mountPath: /var/lib/cni
+      - name: var-run-netns
+        mountPath: /var/run/netns
+    - op: add
+      path: /spec/template/spec/volumes
+      value:
+      - name: etc-cni
+        hostPath:
+          path: /etc/cni
+      - name: opt-cni
+        hostPath:
+          path: /opt/cni
+      - name: var-lib-cni
+        hostPath:
+          path: /var/lib/cni
+      - name: var-run-netns
+        hostPath:
+          path: /var/run/netns
