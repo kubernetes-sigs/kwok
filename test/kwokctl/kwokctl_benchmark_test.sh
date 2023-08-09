@@ -89,7 +89,7 @@ function main() {
   echo "Benchmarking on ${KWOK_RUNTIME}"
   name="benchmark-${KWOK_RUNTIME}"
 
-  create_cluster "${name}" "${release}"
+  create_cluster "${name}" "${release}" --disable-qps-limits
   child_timeout 120 scale_create_node "${name}" 1000 || failed+=("scale_create_node_timeout_${name}")
   child_timeout 120 scale_create_pod "${name}" 1000 || failed+=("scale_create_pod_timeout_${name}")
   child_timeout 120 scale_delete_pod "${name}" 0 || failed+=("scale_delete_pod_timeout_${name}")

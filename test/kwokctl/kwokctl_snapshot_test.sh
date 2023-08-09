@@ -82,7 +82,7 @@ function test_snapshot_etcd() {
 
   for ((i = 0; i < 120; i++)); do
     full_info="$(get_snapshot_info "${name}")"
-    if [[ "${full_info}" != "${empty_info}" && "${full_info}" =~ "default pod/" ]]; then
+    if [[ "${full_info}" != "${empty_info}" && "${full_info}" =~ "fake-pod-" ]]; then
       break
     fi
     sleep 1
@@ -166,11 +166,16 @@ function test_snapshot_k8s() {
 
   for ((i = 0; i < 120; i++)); do
     full_info="$(get_snapshot_info "${name}")"
-    if [[ "${full_info}" =~ "default pod/" ]]; then
+    if [[ "${full_info}" =~ "fake-pod-" ]]; then
       break
     fi
     sleep 1
   done
+
+  if [[ ! "${full_info}" =~ "fake-pod-" ]]; then
+    echo "Error: Resource creation failed"
+    return 1
+  fi
 
   kwokctl snapshot save --name "${name}" --path "${full_path}" --format k8s
 
@@ -181,7 +186,7 @@ function test_snapshot_k8s() {
 
   for ((i = 0; i < 120; i++)); do
     restore_full_info="$(get_snapshot_info "${name}")"
-    if [[ ! "${restore_full_info}" =~ "default pod/" ]]; then
+    if [[ ! "${restore_full_info}" =~ "fake-pod-" ]]; then
       break
     fi
     sleep 1
@@ -191,7 +196,7 @@ function test_snapshot_k8s() {
 
   for ((i = 0; i < 120; i++)); do
     restore_full_info="$(get_snapshot_info "${name}")"
-    if [[ "${restore_full_info}" =~ "default pod/" ]]; then
+    if [[ "${restore_full_info}" =~ "fake-pod-" ]]; then
       break
     fi
     sleep 1
