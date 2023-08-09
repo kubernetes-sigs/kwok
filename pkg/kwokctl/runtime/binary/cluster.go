@@ -128,12 +128,12 @@ func (c *Cluster) download(ctx context.Context) error {
 	if conf.JaegerPort != 0 {
 		jaegerPath := c.GetBinPath("jaeger-all-in-one" + conf.BinSuffix)
 		if conf.JaegerBinary == "" {
-			err = file.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.JaegerBinaryTar, jaegerPath, "jaeger-all-in-one"+conf.BinSuffix, 0750, conf.QuietPull, true)
+			err = c.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.JaegerBinaryTar, jaegerPath, "jaeger-all-in-one"+conf.BinSuffix, 0750, conf.QuietPull, true)
 			if err != nil {
 				return err
 			}
 		} else {
-			err = file.DownloadWithCache(ctx, conf.CacheDir, conf.JaegerBinary, jaegerPath, 0750, conf.QuietPull)
+			err = c.DownloadWithCache(ctx, conf.CacheDir, conf.JaegerBinary, jaegerPath, 0750, conf.QuietPull)
 			if err != nil {
 				return err
 			}

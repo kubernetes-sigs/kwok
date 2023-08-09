@@ -8,6 +8,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
 # Download <ROOT_DIR>/bin/<OS>/<ARCH>/kwok to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
 # Download https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-<OS>-<ARCH>.<TAR> and extract etcd to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd
 # Download https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
+# Download https://github.com/jaegertracing/jaeger/releases/download/v1.45.0/jaeger-1.45.0-<OS>-<ARCH>.<TAR> and extract jaeger-all-in-one to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger-all-in-one
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
