@@ -93,6 +93,13 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for flag --prometheus-port and env KWOK_PROMETHEUS_PORT
 	PrometheusPort uint32 `json:"prometheusPort,omitempty"`
 
+	// JaegerPort is the port to expose Jaeger UI.
+	// is the default value for flag --jaeger-port and env KWOK_JAEGER_PORT
+	JaegerPort uint32 `json:"jaegerPort,omitempty"`
+
+	// JaegerOtlpGrpcPort is the port to expose OTLP GRPC collector.
+	JaegerOtlpGrpcPort uint32 `json:"jaegerOtlpGrpcPort,omitempty"`
+
 	// KwokVersion is the version of Kwok to use.
 	// is the default value for env KWOK_VERSION
 	KwokVersion string `json:"kwokVersion,omitempty"`
@@ -108,6 +115,10 @@ type KwokctlConfigurationOptions struct {
 	// PrometheusVersion is the version of Prometheus to use.
 	// is the default value for env KWOK_PROMETHEUS_VERSION
 	PrometheusVersion string `json:"prometheusVersion,omitempty"`
+
+	// JaegerVersion is the version of Jaeger to use.
+	// is the default value for env KWOK_JAEGER_VERSION
+	JaegerVersion string `json:"jaegerVersion,omitempty"`
 
 	// DockerComposeVersion is the version of docker-compose to use.
 	// is the default value for env KWOK_DOCKER_COMPOSE_VERSION
@@ -162,6 +173,11 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	PrometheusImagePrefix string `json:"prometheusImagePrefix,omitempty"`
 
+	// JaegerImagePrefix is the prefix of the Jaeger image.
+	// is the default value for env KWOK_JAEGER_IMAGE_PREFIX
+	//+k8s:conversion-gen=false
+	JaegerImagePrefix string `json:"jaegerImagePrefix,omitempty"`
+
 	// EtcdImage is the image of etcd.
 	// is the default value for flag --etcd-image and env KWOK_ETCD_IMAGE
 	EtcdImage string `json:"etcdImage,omitempty"`
@@ -185,6 +201,10 @@ type KwokctlConfigurationOptions struct {
 	// PrometheusImage is the image of Prometheus.
 	// is the default value for flag --prometheus-image and env KWOK_PROMETHEUS_IMAGE
 	PrometheusImage string `json:"prometheusImage,omitempty"`
+
+	// JaegerImage is the image of Jaeger.
+	// is the default value for flag --jaeger-image and env KWOK_JAEGER_IMAGE
+	JaegerImage string `json:"jaegerImage,omitempty"`
 
 	// KindNodeImagePrefix is the prefix of the kind node image.
 	// is the default value for env KWOK_KIND_NODE_IMAGE_PREFIX
@@ -254,6 +274,19 @@ type KwokctlConfigurationOptions struct {
 	// PrometheusBinaryTar is the tar of binary of Prometheus.
 	// is the default value for env KWOK_PROMETHEUS_BINARY_TAR
 	PrometheusBinaryTar string `json:"prometheusBinaryTar,omitempty"`
+
+	// JaegerBinaryPrefix is the prefix of the Jaeger binary.
+	// is the default value for env KWOK_JAEGER_PREFIX
+	//+k8s:conversion-gen=false
+	JaegerBinaryPrefix string `json:"jaegerBinaryPrefix,omitempty"`
+
+	// JaegerBinary  is the binary of Jaeger.
+	// is the default value for flag --jaeger-binary and env KWOK_JAEGER_BINARY
+	JaegerBinary string `json:"jaegerBinary,omitempty"`
+
+	// JaegerBinaryTar is the tar of binary of Jaeger.
+	// is the default value for env KWOK_JAEGER_TAR
+	JaegerBinaryTar string `json:"jaegerBinaryTar,omitempty"`
 
 	// DockerComposeBinaryPrefix is the binary of docker-compose.
 	// is the default value for env KWOK_DOCKER_COMPOSE_BINARY_PREFIX

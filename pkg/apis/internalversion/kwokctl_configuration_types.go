@@ -77,6 +77,12 @@ type KwokctlConfigurationOptions struct {
 	// PrometheusPort is the port to expose Prometheus metrics.
 	PrometheusPort uint32
 
+	// JaegerPort is the port to expose Jaeger UI.
+	JaegerPort uint32
+
+	// JaegerOtlpGrpcPort is the port to expose OTLP GRPC collector.
+	JaegerOtlpGrpcPort uint32
+
 	// KwokVersion is the version of Kwok to use.
 	KwokVersion string
 
@@ -88,6 +94,9 @@ type KwokctlConfigurationOptions struct {
 
 	// PrometheusVersion is the version of Prometheus to use.
 	PrometheusVersion string
+
+	// JaegerVersion is the version of Jaeger to use.
+	JaegerVersion string
 
 	// DockerComposeVersion is the version of docker-compose to use.
 	DockerComposeVersion string
@@ -129,6 +138,9 @@ type KwokctlConfigurationOptions struct {
 	// PrometheusImage is the image of Prometheus.
 	PrometheusImage string
 
+	// JaegerImage is the image of Jaeger
+	JaegerImage string
+
 	// KindNodeImage is the image of kind node.
 	KindNodeImage string
 
@@ -162,6 +174,12 @@ type KwokctlConfigurationOptions struct {
 
 	// PrometheusBinaryTar is the tar of binary of Prometheus.
 	PrometheusBinaryTar string
+
+	// JaegerBinary  is the binary of Jaeger.
+	JaegerBinary string
+
+	// JaegerBinaryTar is the tar of binary of Jaeger.
+	JaegerBinaryTar string
 
 	// DockerComposeBinary is the binary of Docker compose.
 	DockerComposeBinary string

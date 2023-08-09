@@ -18,6 +18,7 @@ package components
 
 import (
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -47,6 +48,7 @@ type BuildKubeApiserverComponentConfig struct {
 	AdminKeyPath      string
 	Verbosity         log.Level
 	DisableQPSLimits  bool
+	TracingConfigPath string
 	ExtraArgs         []internalversion.ExtraArgs
 	ExtraVolumes      []internalversion.Volume
 	ExtraEnvs         []internalversion.Env
@@ -80,9 +82,23 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			"--runtime-config="+conf.KubeRuntimeConfig,
 		)
 	}
+
+	var featureGates []string
 	if conf.KubeFeatureGates != "" {
+		featureGates = append(featureGates, strings.Split(conf.KubeFeatureGates, ",")...)
+	}
+
+	if conf.TracingConfigPath != "" {
+		if conf.Version.LT(version.NewVersion(1, 22, 0)) {
+			return component, fmt.Errorf("the kube-apiserver version is less than 1.22.0, so the --jaeger-port cannot be enabled")
+		} else if conf.Version.LT(version.NewVersion(1, 27, 0)) {
+			featureGates = append(featureGates, "APIServerTracing=true")
+		}
+	}
+
+	if len(featureGates) != 0 {
 		kubeApiserverArgs = append(kubeApiserverArgs,
-			"--feature-gates="+conf.KubeFeatureGates,
+			"--feature-gates="+strings.Join(featureGates, ","),
 		)
 	}
 
@@ -215,6 +231,25 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		}
 	}
 
+	if conf.TracingConfigPath != "" {
+		if inContainer {
+			volumes = append(volumes,
+				internalversion.Volume{
+					HostPath:  conf.TracingConfigPath,
+					MountPath: "/etc/kubernetes/apiserver-tracing-config.yaml",
+					ReadOnly:  true,
+				},
+			)
+			kubeApiserverArgs = append(kubeApiserverArgs,
+				"--tracing-config-file=/etc/kubernetes/apiserver-tracing-config.yaml",
+			)
+		} else {
+			kubeApiserverArgs = append(kubeApiserverArgs,
+				"--tracing-config-file="+conf.TracingConfigPath,
+			)
+		}
+	}
+
 	if conf.Verbosity != log.LevelInfo {
 		kubeApiserverArgs = append(kubeApiserverArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
@@ -222,12 +257,15 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	envs := []internalversion.Env{}
 	envs = append(envs, conf.ExtraEnvs...)
 
+	links := []string{"etcd"}
+	if conf.TracingConfigPath != "" {
+		links = append(links, "jaeger")
+	}
+
 	return internalversion.Component{
 		Name:    "kube-apiserver",
 		Version: conf.Version.String(),
-		Links: []string{
-			"etcd",
-		},
+		Links:   links,
 		Command: []string{"kube-apiserver"},
 		Ports:   ports,
 		Volumes: volumes,

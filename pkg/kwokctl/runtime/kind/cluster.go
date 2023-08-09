@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
@@ -136,6 +137,22 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 	}
 
+	kubeApiserverTracingConfigPath := ""
+	if conf.JaegerPort != 0 {
+		kubeApiserverTracingConfigData, err := k8s.BuildKubeApiserverTracingConfig(k8s.BuildKubeApiserverTracingConfigParam{
+			Endpoint: conf.BindAddress + ":4317",
+		})
+		if err != nil {
+			return fmt.Errorf("failed to generate kubeApiserverTracingConfig yaml: %w", err)
+		}
+		kubeApiserverTracingConfigPath = c.GetWorkdirPath(runtime.ApiserverTracingConfig)
+
+		err = c.WriteFile(kubeApiserverTracingConfigPath, []byte(kubeApiserverTracingConfigData))
+		if err != nil {
+			return fmt.Errorf("failed to write kubeApiserverTracingConfig yaml: %w", err)
+		}
+	}
+
 	configPath := c.GetWorkdirPath(runtime.ConfigName)
 
 	kubeVersion, err := version.ParseVersion(conf.KubeVersion)
@@ -161,6 +178,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		BindAddress:                   conf.BindAddress,
 		KubeApiserverPort:             conf.KubeApiserverPort,
 		EtcdPort:                      conf.EtcdPort,
+		JaegerPort:                    conf.JaegerPort,
 		PrometheusPort:                conf.PrometheusPort,
 		KwokControllerPort:            conf.KwokControllerPort,
 		FeatureGates:                  featureGates,
@@ -169,6 +187,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		AuditLog:                      auditLogPath,
 		SchedulerConfig:               schedulerConfigPath,
 		ConfigPath:                    configPath,
+		TracingConfigPath:             kubeApiserverTracingConfigPath,
 		Verbosity:                     verbosity,
 		EtcdExtraArgs:                 etcdComponentPatches.ExtraArgs,
 		EtcdExtraVolumes:              etcdComponentPatches.ExtraVolumes,
@@ -230,12 +249,37 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 	}
 
+	if conf.JaegerPort != 0 {
+		jaegerPatches := runtime.GetComponentPatches(config, "jaeger")
+		jaegerConf := BuildJaegerDeploymentConfig{
+			JaegerImage:  conf.JaegerImage,
+			Name:         c.Name(),
+			ExtraArgs:    jaegerPatches.ExtraArgs,
+			ExtraVolumes: jaegerPatches.ExtraVolumes,
+			ExtraEnvs:    jaegerPatches.ExtraEnvs,
+		}
+		if verbosity != log.LevelInfo {
+			jaegerConf.LogLevel = log.ToLogSeverityLevel(verbosity)
+		}
+		jaegerDeploy, err := BuildJaegerDeployment(jaegerConf)
+		if err != nil {
+			return err
+		}
+		err = c.WriteFile(c.GetWorkdirPath(runtime.JaegerDeploy), []byte(jaegerDeploy))
+		if err != nil {
+			return fmt.Errorf("failed to write %s: %w", runtime.JaegerDeploy, err)
+		}
+	}
+
 	images := []string{
 		conf.KindNodeImage,
 		conf.KwokControllerImage,
 	}
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
+	}
+	if conf.JaegerPort != 0 {
+		images = append(images, conf.JaegerImage)
 	}
 	err = c.PullImages(ctx, c.runtime, images, conf.QuietPull)
 	if err != nil {
@@ -269,6 +313,14 @@ func (c *Cluster) Up(ctx context.Context) error {
 		config.Components = append(config.Components,
 			internalversion.Component{
 				Name: "prometheus",
+			},
+		)
+	}
+
+	if conf.JaegerPort != 0 {
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "jaeger",
 			},
 		)
 	}
@@ -340,6 +392,9 @@ func (c *Cluster) Up(ctx context.Context) error {
 	if conf.PrometheusPort != 0 {
 		images = append(images, conf.PrometheusImage)
 	}
+	if conf.JaegerPort != 0 {
+		images = append(images, conf.JaegerImage)
+	}
 
 	if c.runtime == consts.RuntimeTypeDocker {
 		err = c.loadDockerImages(ctx, kindPath, c.Name(), images)
@@ -386,6 +441,12 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	if conf.PrometheusPort != 0 {
 		err = c.Kubectl(exec.WithAllWriteToErrOut(ctx), "apply", "-f", c.GetWorkdirPath(runtime.PrometheusDeploy))
+		if err != nil {
+			return err
+		}
+	}
+	if conf.JaegerPort != 0 {
+		err = c.Kubectl(exec.WithAllWriteToErrOut(ctx), "apply", "-f", c.GetWorkdirPath(runtime.JaegerDeploy))
 		if err != nil {
 			return err
 		}

@@ -95,6 +95,30 @@ function test_prometheus() {
   fi
 }
 
+function test_jaeger() {
+  local version="${1}"
+  local minor="${version#*.}"
+  minor="${minor%.*}"
+
+  if [[ $minor -lt 22 ]]; then
+    return 0
+  fi
+
+  local targets
+  for ((i = 0; i < 120; i++)); do
+    targets="$(curl -is http://127.0.0.1:16686/api/services)"
+    if [[ "$(echo "${targets}" | grep -o 'HTTP/1.1 200 OK' | wc -c)" != 0 ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "Error: jaeger is not health"
+  echo curl -is http://127.0.0.1:16686/api/services
+  echo "${targets}"
+  return 1
+}
+
 function test_kwok_controller_port() {
   local result
   result="$(curl -s http://127.0.0.1:10247/healthz)"
@@ -177,7 +201,16 @@ function main() {
     echo "------------------------------"
     echo "Testing workable on ${KWOK_RUNTIME} for ${release}"
     name="cluster-${KWOK_RUNTIME}-${release//./-}"
-    create_cluster "${name}" "${release}" -v=debug --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
+
+    local minor="${release#*.}"
+    minor="${minor%.*}"
+
+    if [[ $minor -lt 22 ]]; then
+      create_cluster "${name}" "${release}" -v=debug --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
+    else
+      create_cluster "${name}" "${release}" -v=debug --prometheus-port 9090 --jaeger-port 16686 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260
+    fi
+
     test_workable "${name}" || failed+=("workable_${name}")
     if [[ "${KWOK_RUNTIME}" != "kind" && "${KWOK_RUNTIME}" != "kind-podman" ]]; then
       test_kube_controller_manager_port "${release}" || failed+=("kube_controller_manager_port_${name}")
@@ -190,6 +223,7 @@ function main() {
       test_etcdctl_get "${name}" || failed+=("etcdctl_get_${name}")
     fi
     test_prometheus || failed+=("prometheus_${name}")
+    test_jaeger "${release}" || failed+=("jaeger_${name}")
     test_kwok_controller_port || failed+=("kwok_controller_port_${name}")
     delete_cluster "${name}"
   done

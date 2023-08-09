@@ -21,6 +21,13 @@ kwokctl create cluster [flags]
                                                  (default "registry.k8s.io/etcd:3.5.9-0")
       --etcd-port uint32                        Port of etcd given to the host. The behavior is unstable for kind/kind-podman runtime and may be modified in the future
   -h, --help                                    help for cluster
+      --jaeger-binary string                    Binary of Jaeger, only for binary runtime
+      --jaeger-binary-tar string                Tar of Jaeger, if --jaeger-binary is set, this is ignored, only for binary runtime
+                                                 (default "https://github.com/jaegertracing/jaeger/releases/download/v1.45.0/jaeger-1.45.0-linux-amd64.tar.gz")
+      --jaeger-image string                     Image of Jaeger, only for docker/podman/nerdctl/kind/kind-podman runtime
+                                                '${KWOK_JAEGER_IMAGE_PREFIX}/all-in-one:${KWOK_JAEGER_VERSION}'
+                                                 (default "docker.io/jaegertracing/all-in-one:1.45.0")
+      --jaeger-port uint32                      Port to expose Jaeger UI
       --kind-binary string                      Binary of kind, only for kind/kind-podman runtime
                                                  (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.19.0/kind-linux-amd64")
       --kind-node-image string                  Image of kind node, only for kind/kind-podman runtime

@@ -56,9 +56,11 @@ var (
 	KindName                = "kind.yaml"
 	KwokPod                 = "kwok-controller-pod.yaml"
 	PrometheusDeploy        = "prometheus-deployment.yaml"
+	JaegerDeploy            = "jaeger-deployment.yaml"
 	AuditPolicyName         = "audit.yaml"
 	AuditLogName            = "audit.log"
 	SchedulerConfigName     = "scheduler.yaml"
+	ApiserverTracingConfig  = "apiserver-tracing-config.yaml"
 
 	// ComposeName is the default name of the docker-compose file
 	// Deprecated: *-compose will be removed in the future
