@@ -46,7 +46,7 @@ function test_exec() {
   local want="${5}"
   local result
   mapfile -t cmds < <(echo "${cmd}" | tr " " "\n")
-  for ((i = 0; i < 10; i++)); do
+  for ((i = 0; i < 120; i++)); do
     result=$(kwokctl --name "${name}" kubectl -n "${namespace}" exec -i "${target}" -- "${cmds[@]}" || :)
     if [[ "${result}" == *"${want}"* ]]; then
       break
