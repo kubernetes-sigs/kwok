@@ -21,7 +21,6 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/wzshiming/cmux v0.3.2
-	github.com/wzshiming/cron v0.2.1
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.4.0
 	go.uber.org/atomic v1.11.0
@@ -95,7 +94,6 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
-	github.com/wzshiming/llrb v0.2.1 // indirect
 	github.com/wzshiming/trie v0.1.1 // indirect
 	github.com/wzshiming/winseq v0.0.0-20200112104235-db357dc107ae // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect

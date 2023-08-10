@@ -21,26 +21,25 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wzshiming/cron"
 	coordinationv1 "k8s.io/api/coordination/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/pager"
 	"k8s.io/utils/clock"
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
+	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 // NodeLeaseController is responsible for creating and renewing a lease object
 type NodeLeaseController struct {
 	typedClient          clientset.Interface
-	leaseNamespace       string
+	nodeCacheGetter      informer.Getter[*corev1.Node]
 	leaseDurationSeconds uint
 	leaseParallelism     uint
 	renewInterval        time.Duration
@@ -53,10 +52,7 @@ type NodeLeaseController struct {
 	// mutateLeaseFunc allows customizing a lease object
 	mutateLeaseFunc func(*coordinationv1.Lease) error
 
-	cronjob   *cron.Cron
-	cancelJob maps.SyncMap[string, cron.DoFunc]
-
-	leaseChan chan string
+	delayQueue queue.DelayingQueue[string]
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)
@@ -67,11 +63,11 @@ type NodeLeaseControllerConfig struct {
 	Clock                clock.Clock
 	HolderIdentity       string
 	TypedClient          clientset.Interface
+	NodeCacheGetter      informer.Getter[*corev1.Node]
 	LeaseDurationSeconds uint
 	LeaseParallelism     uint
 	RenewInterval        time.Duration
 	RenewIntervalJitter  float64
-	LeaseNamespace       string
 	MutateLeaseFunc      func(*coordinationv1.Lease) error
 	OnNodeManagedFunc    func(nodeName string)
 }
@@ -89,14 +85,13 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 	c := &NodeLeaseController{
 		clock:                conf.Clock,
 		typedClient:          conf.TypedClient,
-		leaseNamespace:       conf.LeaseNamespace,
+		nodeCacheGetter:      conf.NodeCacheGetter,
 		leaseDurationSeconds: conf.LeaseDurationSeconds,
 		leaseParallelism:     conf.LeaseParallelism,
 		renewInterval:        conf.RenewInterval,
 		renewIntervalJitter:  conf.RenewIntervalJitter,
 		mutateLeaseFunc:      conf.MutateLeaseFunc,
-		cronjob:              cron.NewCron(),
-		leaseChan:            make(chan string),
+		delayQueue:           queue.NewDelayingQueue[string](conf.Clock),
 		holderIdentity:       conf.HolderIdentity,
 		onNodeManagedFunc:    conf.OnNodeManagedFunc,
 	}
@@ -105,99 +100,53 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 }
 
 // Start starts the NodeLeaseController
-func (c *NodeLeaseController) Start(ctx context.Context) error {
+func (c *NodeLeaseController) Start(ctx context.Context, events <-chan informer.Event[*coordinationv1.Lease]) error {
 	for i := uint(0); i < c.leaseParallelism; i++ {
 		go c.syncWorker(ctx)
 	}
-
-	opt := metav1.ListOptions{}
-	err := c.watchResources(ctx, opt)
-	if err != nil {
-		return fmt.Errorf("failed watch node leases: %w", err)
-	}
-
-	logger := log.FromContext(ctx)
-	go func() {
-		err = c.listResources(ctx, opt)
-		if err != nil {
-			logger.Error("Failed list node leases", err)
-		}
-	}()
+	go c.watchResources(ctx, events)
 	return nil
 }
 
 // watchResources watch resources and send to preprocessChan
-func (c *NodeLeaseController) watchResources(ctx context.Context, opt metav1.ListOptions) error {
-	// Watch node leases in the cluster
-	watcher, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Watch(ctx, opt)
-	if err != nil {
-		return err
-	}
-
+func (c *NodeLeaseController) watchResources(ctx context.Context, events <-chan informer.Event[*coordinationv1.Lease]) {
 	logger := log.FromContext(ctx)
-	go func() {
-		rc := watcher.ResultChan()
-	loop:
-		for {
-			select {
-			case event, ok := <-rc:
-				if !ok {
-					for {
-						watcher, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Watch(ctx, opt)
-						if err == nil {
-							rc = watcher.ResultChan()
-							continue loop
-						}
-
-						logger.Error("Failed to watch node leases", err)
-						select {
-						case <-ctx.Done():
-							break loop
-						case <-c.clock.After(time.Second * 5):
-						}
-					}
-				}
-				switch event.Type {
-				case watch.Added, watch.Modified:
-					lease := event.Object.(*coordinationv1.Lease)
-					c.latestLease.Store(lease.Name, lease)
-				case watch.Deleted:
-					lease := event.Object.(*coordinationv1.Lease)
-					c.remove(lease.Name)
-				}
-			case <-ctx.Done():
-				watcher.Stop()
+loop:
+	for {
+		select {
+		case event, ok := <-events:
+			if !ok {
 				break loop
 			}
+			switch event.Type {
+			case informer.Added, informer.Modified, informer.Sync:
+				lease := event.Object.DeepCopy()
+				c.latestLease.Store(lease.Name, lease)
+			case informer.Deleted:
+				lease := event.Object
+				c.remove(lease.Name)
+			}
+		case <-ctx.Done():
+			break loop
 		}
-		logger.Info("Stop watch node leases")
-	}()
-	return nil
-}
-
-// listResources lists all resources and sends to preprocessChan
-func (c *NodeLeaseController) listResources(ctx context.Context, opt metav1.ListOptions) error {
-	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
-		return c.typedClient.CoordinationV1().Leases(c.leaseNamespace).List(ctx, opts)
-	})
-
-	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
-		lease := obj.(*coordinationv1.Lease)
-		c.latestLease.Store(lease.Name, lease)
-		return nil
-	})
+	}
+	logger.Info("Stop watch node leases")
 }
 
 func (c *NodeLeaseController) syncWorker(ctx context.Context) {
-	logger := log.FromContext(ctx)
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Debug("Stop sync worker")
-			return
-		case nodeName := <-c.leaseChan:
-			c.sync(ctx, nodeName)
+	for ctx.Err() == nil {
+		nodeName := c.delayQueue.GetOrWait()
+		if c.nodeCacheGetter != nil {
+			_, ok := c.nodeCacheGetter.Get(nodeName)
+			if !ok {
+				continue
+			}
 		}
+
+		now := c.clock.Now()
+		c.sync(ctx, nodeName)
+		nextTime := c.nextTryTime(nodeName, now)
+		_ = c.delayQueue.AddAfter(nodeName, nextTime.Sub(now))
 	}
 }
 
@@ -215,39 +164,13 @@ func (c *NodeLeaseController) nextTryTime(name string, now time.Time) time.Time 
 
 // TryHold tries to hold a lease for the NodeLeaseController
 func (c *NodeLeaseController) TryHold(name string) {
-	// if already has a cron job, return
-	_, ok := c.cancelJob.Load(name)
-	if ok {
-		return
-	}
-
-	// add a cron job to sync the lease periodically
-	cancel, ok := c.cronjob.AddWithCancel(
-		func(now time.Time) (time.Time, bool) {
-			return c.nextTryTime(name, now), true
-		},
-		func() {
-			c.leaseChan <- name
-		},
-	)
-	if ok {
-		old, ok := c.cancelJob.Swap(name, cancel)
-		if ok {
-			old()
-		}
-	}
-
-	// trigger a sync immediately
-	c.leaseChan <- name
+	c.delayQueue.Add(name)
 }
 
 // remove removes a lease from the NodeLeaseController
 func (c *NodeLeaseController) remove(name string) {
-	cancel, ok := c.cancelJob.LoadAndDelete(name)
-	if ok {
-		cancel()
-		c.latestLease.Delete(name)
-	}
+	_ = c.delayQueue.Cancel(name)
+	c.latestLease.Delete(name)
 }
 
 // Held returns true if the NodeLeaseController holds the lease
@@ -294,14 +217,14 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 		logger.Info("Creating lease")
 		latestLease, err := c.ensureLease(ctx, nodeName)
 		if err != nil {
-			if !apierrors.IsNotFound(err) || c.latestLease.Size() != 0 {
+			if !apierrors.IsNotFound(err) || !c.latestLease.IsEmpty() {
 				logger.Error("failed to create lease", err)
 				return
 			}
 
 			// kube-apiserver will not have finished initializing the resources when the cluster has just been created.
 			logger.Error("lease namespace not found, retrying in 1 second", err)
-			time.Sleep(1 * time.Second)
+			c.clock.Sleep(1 * time.Second)
 			latestLease, err = c.ensureLease(ctx, nodeName)
 			if err != nil {
 				logger.Error("failed to create lease secondly", err)
@@ -325,7 +248,7 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 	lease := &coordinationv1.Lease{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      leaseName,
-			Namespace: c.leaseNamespace,
+			Namespace: corev1.NamespaceNodeLease,
 		},
 		Spec: coordinationv1.LeaseSpec{
 			HolderIdentity:       &c.holderIdentity,
@@ -340,7 +263,7 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 		}
 	}
 
-	lease, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Create(ctx, lease, metav1.CreateOptions{})
+	lease, err := c.typedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease).Create(ctx, lease, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +289,7 @@ func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordination
 		}
 	}
 
-	lease, err := c.typedClient.CoordinationV1().Leases(c.leaseNamespace).Update(ctx, lease, metav1.UpdateOptions{})
+	lease, err := c.typedClient.CoordinationV1().Leases(lease.Namespace).Update(ctx, lease, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, false, err
 	}

@@ -40,6 +40,7 @@ function wait_resource() {
   local resource="${2}"
   local reason="${3}"
   local want="${4}"
+  local gap="${5}"
   local raw
   local got
   local all
@@ -52,6 +53,10 @@ function wait_resource() {
     else
       all=$(echo "${raw}" | wc -l)
       echo "${resource} ${got}/${all} => ${want}"
+      if [[ "${gap}" != "" && "${got}" -ne 0 && "$((all - got))" -gt "${gap}" ]]; then
+        echo "Error ${resource} gap too large, actual: $((all - got)), expected: ${got}"
+        return 1
+      fi
     fi
     sleep 1
   done
@@ -63,7 +68,7 @@ function scale_create_pod() {
   local node_name
   node_name="$(kwokctl --name "${name}" kubectl get node -o jsonpath='{.items.*.metadata.name}' | tr ' ' '\n' | grep fake- | head -n 1)"
   kwokctl --name "${name}" scale pod fake-pod --replicas "${size}" --param ".nodeName=\"${node_name}\"" >/dev/null &
-  wait_resource "${name}" Pod Running "${size}"
+  wait_resource "${name}" Pod Running "${size}" 10
 }
 
 function scale_delete_pod() {
@@ -77,7 +82,7 @@ function scale_create_node() {
   local name="${1}"
   local size="${2}"
   kwokctl --name "${name}" scale node fake-node --replicas "${size}" >/dev/null &
-  wait_resource "${name}" Node Ready "${size}"
+  wait_resource "${name}" Node Ready "${size}" 10
 }
 
 function main() {
@@ -90,9 +95,9 @@ function main() {
   name="benchmark-${KWOK_RUNTIME}"
 
   create_cluster "${name}" "${release}" --disable-qps-limits
-  child_timeout 120 scale_create_node "${name}" 1000 || failed+=("scale_create_node_timeout_${name}")
-  child_timeout 120 scale_create_pod "${name}" 1000 || failed+=("scale_create_pod_timeout_${name}")
-  child_timeout 120 scale_delete_pod "${name}" 0 || failed+=("scale_delete_pod_timeout_${name}")
+  child_timeout 60 scale_create_node "${name}" 1000 || failed+=("scale_create_node_timeout_${name}")
+  child_timeout 30 scale_create_pod "${name}" 1000 || failed+=("scale_create_pod_timeout_${name}")
+  child_timeout 30 scale_delete_pod "${name}" 0 || failed+=("scale_delete_pod_timeout_${name}")
   delete_cluster "${name}"
 
   if [[ "${#failed[@]}" -ne 0 ]]; then

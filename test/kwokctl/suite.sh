@@ -67,6 +67,11 @@ function child_timeout() {
     ((start++))
     sleep 1
   done
+
+  if ! wait "${wp}"; then
+    echo "Error: Child process failed" >&2
+    return 1
+  fi
   echo "Took ${start}s" >&2
 }
 

@@ -44,7 +44,7 @@ func (s *Server) InstallMetrics(ctx context.Context) error {
 		EnableEvaluatorCache: true,
 		EnableResultCache:    true,
 		StartedContainersTotal: func(nodeName string) int64 {
-			nodeInfo, ok := controller.GetNode(nodeName)
+			nodeInfo, ok := controller.GetNodeInfo(nodeName)
 			if !ok {
 				return 0
 			}

@@ -253,12 +253,14 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 	ctx = log.NewContext(ctx, logger.With("id", id))
 
+	enableMetrics := len(metrics) != 0 || slices.Contains(flags.Options.EnableCRDs, v1alpha1.MetricKind)
 	ctr, err := controllers.NewController(controllers.Config{
 		Clock:                                 clock.RealClock{},
 		TypedClient:                           typedClient,
 		TypedKwokClient:                       typedKwokClient,
 		EnableCNI:                             flags.Options.EnableCNI,
-		EnableMetrics:                         len(metrics) != 0 || slices.Contains(flags.Options.EnableCRDs, v1alpha1.MetricKind),
+		EnableMetrics:                         enableMetrics,
+		EnablePodCache:                        enableMetrics,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
 		ManageNodesWithLabelSelector:          flags.Options.ManageNodesWithLabelSelector,

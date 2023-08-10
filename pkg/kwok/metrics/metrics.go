@@ -25,18 +25,22 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 // UpdateHandler handles updating metrics on request
 type UpdateHandler struct {
-	controller  *controllers.Controller
-	environment *cel.Environment
+	controller      *controllers.Controller
+	environment     *cel.Environment
+	nodeCacheGetter informer.Getter[*corev1.Node]
+	podCacheGetter  informer.Getter[*corev1.Pod]
 
 	handler  http.Handler
 	registry *prometheus.Registry
@@ -60,20 +64,17 @@ func NewMetricsUpdateHandler(conf UpdateHandlerConfig) *UpdateHandler {
 	)
 
 	h := &UpdateHandler{
-		controller:  conf.Controller,
-		environment: conf.Environment,
-		registry:    registry,
-		handler:     handler,
+		controller:      conf.Controller,
+		environment:     conf.Environment,
+		nodeCacheGetter: conf.Controller.GetNodeCache(),
+		podCacheGetter:  conf.Controller.GetPodCache(),
+		registry:        registry,
+		handler:         handler,
 	}
 	return h
 }
 
-func (h *UpdateHandler) getNodeInfo(nodeName string) (*controllers.NodeInfo, bool) {
-	nodeInfo, ok := h.controller.GetNode(nodeName)
-	return nodeInfo, ok
-}
-
-func (h *UpdateHandler) getPodsInfo(nodeName string) ([]*controllers.PodInfo, bool) {
+func (h *UpdateHandler) getPodsInfo(nodeName string) ([]log.ObjectRef, bool) {
 	podsInfo, ok := h.controller.ListPods(nodeName)
 	return podsInfo, ok
 }
@@ -170,14 +171,15 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 		return nil, fmt.Errorf("failed to compile metric value %s: %w", metricConfig.Value, err)
 	}
 
-	nodeInfo, ok := h.getNodeInfo(nodeName)
+	logger := log.FromContext(ctx).With("node", nodeName)
+
+	node, ok := h.nodeCacheGetter.Get(nodeName)
 	if !ok {
-		logger := log.FromContext(ctx)
-		logger.Warn("node not found", "node", nodeName)
+		logger.Warn("node not found")
 		return nil, nil
 	}
 	data := cel.Data{
-		Node: nodeInfo.Node,
+		Node: node,
 	}
 
 	switch metricConfig.Dimension {
@@ -196,14 +198,18 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 	case internalversion.DimensionPod:
 		pods, ok := h.getPodsInfo(nodeName)
 		if !ok {
-			logger := log.FromContext(ctx)
-			logger.Warn("pods not found", "node", nodeName)
+			logger.Warn("pods not found")
 			return nil, nil
 		}
 
 		keys := make([]string, 0, len(pods))
-		for _, pod := range pods {
-			data.Pod = pod.Pod
+		for _, podInfo := range pods {
+			pod, ok := h.podCacheGetter.GetWithNamespace(podInfo.Name, podInfo.Namespace)
+			if !ok {
+				logger.Warn("pod not found", "pod", podInfo)
+				continue
+			}
+			data.Pod = pod
 			gauge, key, err := h.getOrRegisterGauge(metricConfig, data)
 			if err != nil {
 				return nil, err
@@ -220,15 +226,19 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 	case internalversion.DimensionContainer:
 		pods, ok := h.getPodsInfo(nodeName)
 		if !ok {
-			logger := log.FromContext(ctx)
-			logger.Warn("pods not found", "node", nodeName)
+			logger.Warn("pods not found")
 			return nil, nil
 		}
 
 		keys := make([]string, 0, len(pods))
-		for _, pod := range pods {
-			data.Pod = pod.Pod
-			for _, container := range pod.Pod.Spec.Containers {
+		for _, podInfo := range pods {
+			pod, ok := h.podCacheGetter.GetWithNamespace(podInfo.Name, podInfo.Namespace)
+			if !ok {
+				logger.Warn("pod not found", "pod", podInfo)
+				continue
+			}
+			data.Pod = pod
+			for _, container := range pod.Spec.Containers {
 				container := container
 				data.Container = &container
 				gauge, key, err := h.getOrRegisterGauge(metricConfig, data)
@@ -255,15 +265,17 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 		return nil, fmt.Errorf("failed to compile metric value %s: %w", metricConfig.Value, err)
 	}
 
-	nodeInfo, ok := h.getNodeInfo(nodeName)
+	logger := log.FromContext(ctx).With("node", nodeName)
+
+	node, ok := h.nodeCacheGetter.Get(nodeName)
 	if !ok {
-		logger := log.FromContext(ctx)
-		logger.Warn("node not found", "node", nodeName)
+		logger.Warn("node not found")
 		return nil, nil
 	}
 	data := cel.Data{
-		Node: nodeInfo.Node,
+		Node: node,
 	}
+
 	switch metricConfig.Dimension {
 	case internalversion.DimensionNode:
 		counter, key, err := h.getOrRegisterCounter(metricConfig, data)
@@ -280,14 +292,18 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 	case internalversion.DimensionPod:
 		pods, ok := h.getPodsInfo(nodeName)
 		if !ok {
-			logger := log.FromContext(ctx)
-			logger.Warn("pods not found", "node", nodeName)
+			logger.Warn("pods not found")
 			return nil, nil
 		}
 
 		keys := make([]string, 0, len(pods))
-		for _, pod := range pods {
-			data.Pod = pod.Pod
+		for _, podInfo := range pods {
+			pod, ok := h.podCacheGetter.GetWithNamespace(podInfo.Name, podInfo.Namespace)
+			if !ok {
+				logger.Warn("pod not found", "pod", podInfo)
+				continue
+			}
+			data.Pod = pod
 			counter, key, err := h.getOrRegisterCounter(metricConfig, data)
 			if err != nil {
 				return nil, err
@@ -304,15 +320,19 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 	case internalversion.DimensionContainer:
 		pods, ok := h.getPodsInfo(nodeName)
 		if !ok {
-			logger := log.FromContext(ctx)
-			logger.Warn("pods not found", "node", nodeName)
+			logger.Warn("pods not found")
 			return nil, nil
 		}
 
 		keys := make([]string, 0, len(pods))
-		for _, pod := range pods {
-			data.Pod = pod.Pod
-			for _, container := range pod.Pod.Spec.Containers {
+		for _, podInfo := range pods {
+			pod, ok := h.podCacheGetter.GetWithNamespace(podInfo.Name, podInfo.Namespace)
+			if !ok {
+				logger.Warn("pod not found", "pod", podInfo)
+				continue
+			}
+			data.Pod = pod
+			for _, container := range pod.Spec.Containers {
 				container := container
 				data.Container = &container
 				counter, key, err := h.getOrRegisterCounter(metricConfig, data)
@@ -334,15 +354,17 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 }
 
 func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *internalversion.MetricConfig, nodeName string) ([]string, error) {
-	nodeInfo, ok := h.getNodeInfo(nodeName)
+	logger := log.FromContext(ctx).With("node", nodeName)
+
+	node, ok := h.nodeCacheGetter.Get(nodeName)
 	if !ok {
-		logger := log.FromContext(ctx)
-		logger.Warn("node not found", "node", nodeName)
+		logger.Warn("node not found")
 		return nil, nil
 	}
 	data := cel.Data{
-		Node: nodeInfo.Node,
+		Node: node,
 	}
+
 	switch metricConfig.Dimension {
 	case internalversion.DimensionNode:
 		histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
@@ -365,14 +387,18 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 	case internalversion.DimensionPod:
 		pods, ok := h.getPodsInfo(nodeName)
 		if !ok {
-			logger := log.FromContext(ctx)
-			logger.Warn("pods not found", "node", nodeName)
+			logger.Warn("pods not found")
 			return nil, nil
 		}
 
 		keys := make([]string, 0, len(pods))
-		for _, pod := range pods {
-			data.Pod = pod.Pod
+		for _, podInfo := range pods {
+			pod, ok := h.podCacheGetter.GetWithNamespace(podInfo.Name, podInfo.Namespace)
+			if !ok {
+				logger.Warn("pod not found", "pod", podInfo)
+				continue
+			}
+			data.Pod = pod
 			histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
 			if err != nil {
 				return nil, err
@@ -395,15 +421,19 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 	case internalversion.DimensionContainer:
 		pods, ok := h.getPodsInfo(nodeName)
 		if !ok {
-			logger := log.FromContext(ctx)
-			logger.Warn("pods not found", "node", nodeName)
+			logger.Warn("pods not found")
 			return nil, nil
 		}
 
 		keys := make([]string, 0, len(pods))
-		for _, pod := range pods {
-			data.Pod = pod.Pod
-			for _, container := range pod.Pod.Spec.Containers {
+		for _, podInfo := range pods {
+			pod, ok := h.podCacheGetter.GetWithNamespace(podInfo.Name, podInfo.Namespace)
+			if !ok {
+				logger.Warn("pod not found", "pod", podInfo)
+				continue
+			}
+			data.Pod = pod
+			for _, container := range pod.Spec.Containers {
 				container := container
 				data.Container = &container
 				histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
@@ -495,7 +525,7 @@ func uniqueKey(name string, kind internalversion.Kind, labels map[string]string)
 func (h *UpdateHandler) Update(ctx context.Context, nodeName string, metrics []internalversion.MetricConfig) {
 	logger := log.FromContext(ctx)
 	has := map[string]struct{}{}
-	// Update metrics
+	// Sync metrics
 	h.environment.ClearResultCache()
 	for _, metric := range metrics {
 		metric := metric
