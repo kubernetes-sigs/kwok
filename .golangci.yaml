@@ -60,9 +60,9 @@ linters-settings:
       - pkg: k8s.io/apimachinery/pkg/api/errors
         alias: apierrors
   staticcheck:
-    go: "1.20"
+    go: "1.21"
   stylecheck:
-    go: "1.20"
+    go: "1.21"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     checks: ["all", "-ST1000", "-ST1003"]
   depguard:
@@ -74,6 +74,7 @@ linters-settings:
       - k8s.io/klog/v2: "please use `sigs.k8s.io/kwok/pkg/log`instead"
       - k8s.io/klog: "please use `sigs.k8s.io/kwok/pkg/log instead"
       - golang.org/x/exp/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+      - log/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
       - log: "please use `sigs.k8s.io/kwok/pkg/log` instead"
       # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
       - k8s.io/apimachinery/pkg/util/wait: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"

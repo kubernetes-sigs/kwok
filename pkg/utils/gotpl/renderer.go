@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -27,7 +28,6 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // FuncMap is a map of functions that can be used in templates.

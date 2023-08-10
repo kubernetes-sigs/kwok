@@ -18,9 +18,8 @@ package log
 
 import (
 	"context"
-
 	//nolint:depguard
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 var noop = wrapSlog(noopHandler{}, LevelInfo)

@@ -20,11 +20,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	//nolint:depguard
+	"log/slog"
 	"os"
 	"time"
 
-	//nolint:depguard
-	"golang.org/x/exp/slog"
 	"golang.org/x/term"
 )
 

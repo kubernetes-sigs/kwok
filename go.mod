@@ -1,6 +1,6 @@
 module sigs.k8s.io/kwok
 
-go 1.20
+go 1.21
 
 require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.0
@@ -25,10 +25,9 @@ require (
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.4.0
 	go.uber.org/atomic v1.11.0
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	golang.org/x/sync v0.3.0
-	golang.org/x/sys v0.10.0
-	golang.org/x/term v0.10.0
+	golang.org/x/sys v0.11.0
+	golang.org/x/term v0.11.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.27.3
 	k8s.io/apimachinery v0.27.3
@@ -100,12 +99,13 @@ require (
 	github.com/wzshiming/winseq v0.0.0-20200112104235-db357dc107ae // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
+	golang.org/x/exp v0.0.0-20230810033253-352e893a4cad // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/oauth2 v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/oauth2 v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.11.0 // indirect
+	golang.org/x/tools v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
