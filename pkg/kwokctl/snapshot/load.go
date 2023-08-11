@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/util/retry"
 
@@ -259,10 +260,17 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 		"name", log.KObj(obj),
 	)
 
-	gvr, err := l.restMapper.ResourceFor(gvr)
+	err := retry.OnError(retry.DefaultBackoff, discovery.IsGroupDiscoveryFailedError, func() error {
+		g, err := l.restMapper.ResourceFor(gvr)
+		if err != nil {
+			logger.Warn("failed to get resource", "err", err)
+			return err
+		}
+		gvr = g
+		return nil
+	})
 	if err != nil {
 		l.failedCounter++
-		logger.Error("Failed to get resource", err)
 		return nil
 	}
 
