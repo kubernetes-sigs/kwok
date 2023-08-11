@@ -30,7 +30,7 @@ import (
 //go:embed jaeger_deployment.yaml.tpl
 var jaegerDeploymentYamlTpl string
 
-var jaegerDeploymentYamlTemplate = template.Must(template.New("_").Parse(jaegerDeploymentYamlTpl))
+var jaegerDeploymentYamlTemplate = template.Must(template.New("jaeger_deployment").Parse(jaegerDeploymentYamlTpl))
 
 // BuildJaegerDeployment builds the jaeger deployment yaml content.
 func BuildJaegerDeployment(conf BuildJaegerDeploymentConfig) (string, error) {

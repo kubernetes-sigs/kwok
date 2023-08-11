@@ -27,7 +27,7 @@ import (
 //go:embed prometheus.yaml.tpl
 var prometheusYamlTpl string
 
-var prometheusYamlTemplate = template.Must(template.New("_").Parse(prometheusYamlTpl))
+var prometheusYamlTemplate = template.Must(template.New("prometheus_config").Parse(prometheusYamlTpl))
 
 // BuildPrometheus builds the prometheus yaml content.
 func BuildPrometheus(conf BuildPrometheusConfig) (string, error) {
