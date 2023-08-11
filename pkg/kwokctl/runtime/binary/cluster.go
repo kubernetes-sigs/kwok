@@ -91,6 +91,15 @@ func (c *Cluster) download(ctx context.Context) error {
 		}
 	}
 
+	// TODO: Add dashboard binary
+	// if conf.DashboardPort != 0 {
+	// 	kubeDashboardPath := c.GetBinPath("dashboard" + conf.BinSuffix)
+	// 	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.DashboardBinary, kubeDashboardPath, 0750, conf.QuietPull)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+
 	kwokControllerPath := c.GetBinPath("kwok-controller" + conf.BinSuffix)
 	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KwokControllerBinary, kwokControllerPath, 0750, conf.QuietPull)
 	if err != nil {

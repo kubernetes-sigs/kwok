@@ -96,6 +96,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.KindNodeImage, "kind-node-image", flags.Options.KindNodeImage, `Image of kind node, only for kind/kind-podman runtime
 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
 `)
+	cmd.Flags().Uint32Var(&flags.Options.DashboardPort, "dashboard-port", flags.Options.DashboardPort, `Port of dashboard given to the host`)
+	cmd.Flags().StringVar(&flags.Options.DashboardImage, "dashboard-image", flags.Options.DashboardImage, `Image of dashboard, only for docker/podman/nerdctl/kind/kind-podman runtime
+'${KWOK_DASHBOARD_IMAGE_PREFIX}/dashboard:${KWOK_DASHBOARD_VERSION}'
+`)
 	cmd.Flags().StringVar(&flags.Options.KubeApiserverBinary, "kube-apiserver-binary", flags.Options.KubeApiserverBinary, `Binary of kube-apiserver, only for binary runtime
 `)
 	cmd.Flags().StringVar(&flags.Options.KubeControllerManagerBinary, "kube-controller-manager-binary", flags.Options.KubeControllerManagerBinary, `Binary of kube-controller-manager, only for binary runtime

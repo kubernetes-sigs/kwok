@@ -1390,6 +1390,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KwokVersion = in.KwokVersion
 	out.KubeVersion = in.KubeVersion
 	out.EtcdVersion = in.EtcdVersion
+	out.DashboardVersion = in.DashboardVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
 	out.DockerComposeVersion = in.DockerComposeVersion
@@ -1412,6 +1413,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
 	out.KubeSchedulerImage = in.KubeSchedulerImage
 	out.KwokControllerImage = in.KwokControllerImage
+	out.DashboardImage = in.DashboardImage
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
 	out.KindNodeImage = in.KindNodeImage
@@ -1443,6 +1445,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.EtcdPort = in.EtcdPort
 	out.KubeControllerManagerPort = in.KubeControllerManagerPort
 	out.KubeSchedulerPort = in.KubeSchedulerPort
+	out.DashboardPort = in.DashboardPort
 	out.KwokControllerPort = in.KwokControllerPort
 	out.CacheDir = in.CacheDir
 	out.KubeControllerManagerNodeMonitorPeriodMilliseconds = in.KubeControllerManagerNodeMonitorPeriodMilliseconds
@@ -1472,6 +1475,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KwokVersion = in.KwokVersion
 	out.KubeVersion = in.KubeVersion
 	out.EtcdVersion = in.EtcdVersion
+	out.DashboardVersion = in.DashboardVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
 	out.DockerComposeVersion = in.DockerComposeVersion
@@ -1492,6 +1496,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.KubeImagePrefix opted out of conversion generation
 	// INFO: in.EtcdImagePrefix opted out of conversion generation
 	// INFO: in.KwokImagePrefix opted out of conversion generation
+	// INFO: in.DashboardImagePrefix opted out of conversion generation
 	// INFO: in.PrometheusImagePrefix opted out of conversion generation
 	// INFO: in.JaegerImagePrefix opted out of conversion generation
 	out.EtcdImage = in.EtcdImage
@@ -1499,6 +1504,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
 	out.KubeSchedulerImage = in.KubeSchedulerImage
 	out.KwokControllerImage = in.KwokControllerImage
+	out.DashboardImage = in.DashboardImage
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
 	// INFO: in.KindNodeImagePrefix opted out of conversion generation
@@ -1538,6 +1544,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.EtcdPort = in.EtcdPort
 	out.KubeControllerManagerPort = in.KubeControllerManagerPort
 	out.KubeSchedulerPort = in.KubeSchedulerPort
+	out.DashboardPort = in.DashboardPort
 	out.KwokControllerPort = in.KwokControllerPort
 	out.CacheDir = in.CacheDir
 	out.KubeControllerManagerNodeMonitorPeriodMilliseconds = in.KubeControllerManagerNodeMonitorPeriodMilliseconds

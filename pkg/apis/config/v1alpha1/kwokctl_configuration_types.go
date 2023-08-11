@@ -112,6 +112,9 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for env KWOK_ETCD_VERSION
 	EtcdVersion string `json:"etcdVersion,omitempty"`
 
+	// DashboardVersion is the version of Kubernetes dashboard to use.
+	DashboardVersion string `json:"dashboardVersion,omitempty"`
+
 	// PrometheusVersion is the version of Prometheus to use.
 	// is the default value for env KWOK_PROMETHEUS_VERSION
 	PrometheusVersion string `json:"prometheusVersion,omitempty"`
@@ -168,6 +171,10 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	KwokImagePrefix string `json:"kwokImagePrefix,omitempty"`
 
+	// DashboardImagePrefix is the prefix of the dashboard image.
+	//+k8s:conversion-gen=false
+	DashboardImagePrefix string `json:"dashboardImagePrefix,omitempty"`
+
 	// PrometheusImagePrefix is the prefix of the Prometheus image.
 	// is the default value for env KWOK_PROMETHEUS_IMAGE_PREFIX
 	//+k8s:conversion-gen=false
@@ -197,6 +204,9 @@ type KwokctlConfigurationOptions struct {
 	// KwokControllerImage is the image of Kwok.
 	// is the default value for flag --controller-image and env KWOK_CONTROLLER_IMAGE
 	KwokControllerImage string `json:"kwokControllerImage,omitempty"`
+
+	// DashboardImage is the image of dashboard.
+	DashboardImage string `json:"dashboardImage,omitempty"`
 
 	// PrometheusImage is the image of Prometheus.
 	// is the default value for flag --prometheus-image and env KWOK_PROMETHEUS_IMAGE
@@ -261,6 +271,14 @@ type KwokctlConfigurationOptions struct {
 	// KwokControllerBinary is the binary of kwok.
 	// is the default value for flag --controller-binary and env KWOK_CONTROLLER_BINARY
 	KwokControllerBinary string `json:"kwokControllerBinary,omitempty"`
+
+	// TODO: Add dashboard binary
+	// // DashboardBinaryPrefix is the prefix of the dashboard binary.
+	// //+k8s:conversion-gen=false
+	// DashboardBinaryPrefix string `json:"dashboardBinaryPrefix,omitempty"`
+	//
+	// // DashboardBinary is the binary of dashboard.
+	// DashboardBinary string `json:"dashboardBinary,omitempty"`
 
 	// PrometheusBinaryPrefix is the prefix of the Prometheus binary.
 	// is the default value for env KWOK_PROMETHEUS_PREFIX
@@ -343,6 +361,9 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeSchedulerPort is kube-scheduler port in the binary runtime
 	KubeSchedulerPort uint32 `json:"kubeSchedulerPort,omitempty"`
+
+	// DashboardPort is dashboard port in the binary runtime
+	DashboardPort uint32 `json:"dashboardPort,omitempty"`
 
 	// KwokControllerPort is kwok-controller port that is exposed to the host.
 	// is the default value for flag --controller-port and env KWOK_CONTROLLER_PORT

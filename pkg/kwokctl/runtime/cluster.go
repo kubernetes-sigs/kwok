@@ -55,6 +55,7 @@ var (
 	Prometheus              = "prometheus.yaml"
 	KindName                = "kind.yaml"
 	KwokPod                 = "kwok-controller-pod.yaml"
+	DashboardDeploy         = "dashboard-deployment.yaml"
 	PrometheusDeploy        = "prometheus-deployment.yaml"
 	JaegerDeploy            = "jaeger-deployment.yaml"
 	AuditPolicyName         = "audit.yaml"

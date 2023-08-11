@@ -8,8 +8,13 @@ networking:
 nodes:
 - role: control-plane
 
-{{ if or .PrometheusPort .KwokControllerPort .EtcdPort .JaegerPort}}
+{{ if or .DashboardPort .PrometheusPort .KwokControllerPort .EtcdPort .JaegerPort}}
   extraPortMappings:
+  {{ if .DashboardPort }}
+  - containerPort: 8000
+    hostPort: {{ .DashboardPort }}
+    protocol: TCP
+  {{ end }}
   {{ if .PrometheusPort }}
   - containerPort: 9090
     hostPort: {{ .PrometheusPort }}
