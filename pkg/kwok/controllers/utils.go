@@ -20,10 +20,8 @@ import (
 	"net"
 	"sync"
 
-	"github.com/wzshiming/cron"
 	"k8s.io/apimachinery/pkg/labels"
 
-	"sigs.k8s.io/kwok/pkg/utils/maps"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 )
 
@@ -110,14 +108,8 @@ func labelsParse(selector string) (labels.Selector, error) {
 	return labels.Parse(selector)
 }
 
-type jobInfoMap = maps.SyncMap[string, jobInfo]
-
-type jobInfo struct {
-	ResourceVersion string
-	Cancel          cron.DoFunc
-}
-
 type resourceStageJob[T any] struct {
 	Resource T
 	Stage    *LifecycleStage
+	Key      string
 }

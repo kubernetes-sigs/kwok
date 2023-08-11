@@ -31,6 +31,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/informer"
 )
 
 func TestNodeLeaseController(t *testing.T) {
@@ -77,7 +78,6 @@ func TestNodeLeaseController(t *testing.T) {
 		LeaseParallelism:     2,
 		RenewInterval:        10 * time.Second,
 		RenewIntervalJitter:  0.04,
-		LeaseNamespace:       corev1.NamespaceNodeLease,
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("new node leases controller error: %w", err))
@@ -85,12 +85,21 @@ func TestNodeLeaseController(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	t.Cleanup(func() {
 		cancel()
 		time.Sleep(time.Second)
 	})
-	err = nodeLeases.Start(ctx)
+
+	nodeLeasesCh := make(chan informer.Event[*coordinationv1.Lease], 1)
+	nodeLeasesCli := clientset.CoordinationV1().Leases(corev1.NamespaceNodeLease)
+	nodesInformer := informer.NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](nodeLeasesCli)
+	err = nodesInformer.Watch(ctx, informer.Option{}, nodeLeasesCh)
+	if err != nil {
+		t.Fatal(fmt.Errorf("watch node leases error: %w", err))
+	}
+
+	err = nodeLeases.Start(ctx, nodeLeasesCh)
 	if err != nil {
 		t.Fatal(fmt.Errorf("start node leases controller error: %w", err))
 	}

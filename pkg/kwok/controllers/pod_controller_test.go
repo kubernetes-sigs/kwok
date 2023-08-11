@@ -26,6 +26,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -34,6 +35,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -138,30 +140,31 @@ func TestPodController(t *testing.T) {
 		},
 	)
 
-	nodeGetFunc := func(nodeName string) (*NodeInfo, bool) {
-		node, err := clientset.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
-		if err != nil {
-			return nil, false
-		}
-
+	wantHostIPFunc := func(node corev1.Node) string {
 		nodeIP := defaultNodeIP
-		podCIDR := defaultPodCIDR
-
 		for _, addr := range node.Status.Addresses {
 			if addr.Type == corev1.NodeInternalIP {
 				nodeIP = addr.Address
 				break
 			}
 		}
+		return nodeIP
+	}
 
+	wantPodCIDRFunc := func(node corev1.Node) string {
+		podCIDR := defaultPodCIDR
 		if node.Spec.PodCIDR != "" {
 			podCIDR = node.Spec.PodCIDR
 		}
-
-		nodeInfo := &NodeInfo{
-			HostIPs:  []string{nodeIP},
-			PodCIDRs: []string{podCIDR},
+		return podCIDR
+	}
+	nodeGetFunc := func(nodeName string) (*NodeInfo, bool) {
+		_, err := clientset.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
+		if err != nil {
+			return nil, false
 		}
+
+		nodeInfo := &NodeInfo{}
 		return nodeInfo, true
 	}
 
@@ -177,10 +180,27 @@ func TestPodController(t *testing.T) {
 		return iobj.(*internalversion.Stage), nil
 	})
 
+	ctx := context.Background()
+	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	t.Cleanup(func() {
+		cancel()
+		time.Sleep(time.Second)
+	})
+
+	nodeCh := make(chan informer.Event[*corev1.Node], 1)
+	nodesCli := clientset.CoreV1().Nodes()
+	nodesInformer := informer.NewInformer[*corev1.Node, *corev1.NodeList](nodesCli)
+	nodeCache, err := nodesInformer.WatchWithCache(ctx, informer.Option{}, nodeCh)
+	if err != nil {
+		t.Fatal(fmt.Errorf("failed to watch nodes: %w", err))
+	}
+
 	lifecycle, _ := NewLifecycle(podStages)
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
 		TypedClient:                           clientset,
+		NodeCacheGetter:                       nodeCache,
 		NodeIP:                                defaultNodeIP,
 		CIDR:                                  defaultPodCIDR,
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
@@ -193,15 +213,17 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("new pods controller error: %w", err))
 	}
 
-	ctx := context.Background()
-	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	t.Cleanup(func() {
-		cancel()
-		time.Sleep(time.Second)
-	})
+	podsCh := make(chan informer.Event[*corev1.Pod], 1)
+	podsCli := clientset.CoreV1().Pods(corev1.NamespaceAll)
+	podsInformer := informer.NewInformer[*corev1.Pod, *corev1.PodList](podsCli)
+	err = podsInformer.Watch(ctx, informer.Option{
+		FieldSelector: fields.OneTermNotEqualSelector("spec.nodeName", "").String(),
+	}, podsCh)
+	if err != nil {
+		t.Fatal(fmt.Errorf("watch pods error: %w", err))
+	}
 
-	err = pods.Start(ctx)
+	err = pods.Start(ctx, podsCh)
 	if err != nil {
 		t.Fatal(fmt.Errorf("start pods controller error: %w", err))
 	}
@@ -211,24 +233,27 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("list nodes error: %w", err))
 	}
 	for _, node := range listNodes.Items {
-		if nodeInfo, ok := nodeGetFunc(node.Name); ok {
+		if _, ok := nodeGetFunc(node.Name); ok {
+			wantPodCIRD := wantPodCIDRFunc(node)
+			wantHostIP := wantHostIPFunc(node)
+
 			if node.Spec.PodCIDR != "" {
-				if node.Spec.PodCIDR != nodeInfo.PodCIDRs[0] {
-					t.Fatal(fmt.Errorf("want node %s podCIDR=%s, got %s", node.Name, node.Spec.PodCIDR, nodeInfo.PodCIDRs[0]))
+				if node.Spec.PodCIDR != wantPodCIRD {
+					t.Fatal(fmt.Errorf("want node %s podCIDR=%s, got %s", node.Name, node.Spec.PodCIDR, wantPodCIRD))
 				}
 			} else {
-				if defaultPodCIDR != nodeInfo.PodCIDRs[0] {
-					t.Fatal(fmt.Errorf("want node %s podCIDR=%s, got %s", node.Name, defaultPodCIDR, nodeInfo.PodCIDRs[0]))
+				if defaultPodCIDR != wantPodCIRD {
+					t.Fatal(fmt.Errorf("want node %s podCIDR=%s, got %s", node.Name, defaultPodCIDR, wantPodCIRD))
 				}
 			}
 
 			if len(node.Status.Addresses) != 0 {
-				if node.Status.Addresses[0].Address != nodeInfo.HostIPs[0] {
-					t.Fatal(fmt.Errorf("want node %s address=%s, got %s", node.Name, node.Status.Addresses[0].Address, nodeInfo.HostIPs[0]))
+				if node.Status.Addresses[0].Address != wantHostIP {
+					t.Fatal(fmt.Errorf("want node %s address=%s, got %s", node.Name, node.Status.Addresses[0].Address, wantHostIP))
 				}
 			} else {
-				if defaultNodeIP != nodeInfo.HostIPs[0] {
-					t.Fatal(fmt.Errorf("want node %s address=%s, got %s", node.Name, defaultNodeIP, nodeInfo.HostIPs[0]))
+				if defaultNodeIP != wantHostIP {
+					t.Fatal(fmt.Errorf("want node %s address=%s, got %s", node.Name, defaultNodeIP, wantHostIP))
 				}
 			}
 		}
@@ -254,6 +279,54 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("create pod1 error: %w", err))
 	}
 
+	var list *corev1.PodList
+	err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
+		list, err = clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return false, fmt.Errorf("list pods error: %w", err)
+		}
+		if len(list.Items) != 5 {
+			return false, fmt.Errorf("want 5 pods, got %d", len(list.Items))
+		}
+
+		for index, pod := range list.Items {
+			if _, ok := nodeGetFunc(pod.Spec.NodeName); ok {
+				if pod.Status.Phase != corev1.PodRunning {
+					return false, fmt.Errorf("want pod %s phase is running, got %s", pod.Name, pod.Status.Phase)
+				}
+
+				node, err := clientset.CoreV1().Nodes().Get(ctx, pod.Spec.NodeName, metav1.GetOptions{})
+				if err != nil {
+					return false, fmt.Errorf("get node %s error: %w", pod.Spec.NodeName, err)
+				}
+
+				if pods.need(&list.Items[index]) {
+					wantHostIP := wantHostIPFunc(*node)
+					wantPodCIRD := wantPodCIDRFunc(*node)
+					if pod.Status.HostIP != wantHostIP {
+						return false, fmt.Errorf("want pod %s hostIP=%s, got %s", pod.Name, wantHostIP, pod.Status.HostIP)
+					}
+					if pod.Spec.HostNetwork {
+						if pod.Status.PodIP != wantHostIP {
+							return false, fmt.Errorf("want pod %s podIP=%s, got %s", pod.Name, wantHostIP, pod.Status.PodIP)
+						}
+					} else {
+						cidr, _ := parseCIDR(wantPodCIRD)
+						if !cidr.Contains(net.ParseIP(pod.Status.PodIP)) {
+							return false, fmt.Errorf("want pod %s podIP=%s in %s, got not", pod.Name, pod.Status.PodIP, wantPodCIRD)
+						}
+					}
+				}
+			} else if pod.Status.Phase == corev1.PodRunning {
+				return false, fmt.Errorf("want pod %s phase is not running, got %s", pod.Name, pod.Status.Phase)
+			}
+		}
+		return true, nil
+	}, wait.WithContinueOnError(10))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	pod1, err := clientset.CoreV1().Pods("default").Get(ctx, "pod1", metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(fmt.Errorf("get pod1 error: %w", err))
@@ -273,46 +346,6 @@ func TestPodController(t *testing.T) {
 	}
 	if pod1.Status.Reason != "custom" {
 		t.Fatal(fmt.Errorf("pod1 status reason not custom"))
-	}
-
-	var list *corev1.PodList
-	err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
-		list, err = clientset.CoreV1().Pods("default").List(ctx, metav1.ListOptions{})
-		if err != nil {
-			return false, fmt.Errorf("list pods error: %w", err)
-		}
-		if len(list.Items) != 5 {
-			return false, fmt.Errorf("want 5 pods, got %d", len(list.Items))
-		}
-
-		for index, pod := range list.Items {
-			if nodeInfo, ok := nodeGetFunc(pod.Spec.NodeName); ok {
-				if pod.Status.Phase != corev1.PodRunning {
-					return false, fmt.Errorf("want pod %s phase is running, got %s", pod.Name, pod.Status.Phase)
-				}
-				if pods.need(&list.Items[index]) {
-					if pod.Status.HostIP != nodeInfo.HostIPs[0] {
-						return false, fmt.Errorf("want pod %s hostIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.HostIP)
-					}
-					if pod.Spec.HostNetwork {
-						if pod.Status.PodIP != nodeInfo.HostIPs[0] {
-							return false, fmt.Errorf("want pod %s podIP=%s, got %s", pod.Name, nodeInfo.HostIPs[0], pod.Status.PodIP)
-						}
-					} else {
-						cidr, _ := parseCIDR(nodeInfo.PodCIDRs[0])
-						if !cidr.Contains(net.ParseIP(pod.Status.PodIP)) {
-							return false, fmt.Errorf("want pod %s podIP=%s in %s, got not", pod.Name, pod.Status.PodIP, nodeInfo.PodCIDRs[0])
-						}
-					}
-				}
-			} else if pod.Status.Phase == corev1.PodRunning {
-				return false, fmt.Errorf("want pod %s phase is not running, got %s", pod.Name, pod.Status.Phase)
-			}
-		}
-		return true, nil
-	}, wait.WithContinueOnError(5))
-	if err != nil {
-		t.Fatal(err)
 	}
 
 	pod, ok := slices.Find(list.Items, func(pod corev1.Pod) bool {

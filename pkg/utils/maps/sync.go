@@ -108,3 +108,13 @@ func (m *SyncMap[K, V]) Values() []V {
 	})
 	return values
 }
+
+// IsEmpty returns true if the map is empty.
+func (m *SyncMap[K, V]) IsEmpty() bool {
+	empty := true
+	m.m.Range(func(key, value interface{}) bool {
+		empty = false
+		return false
+	})
+	return empty
+}

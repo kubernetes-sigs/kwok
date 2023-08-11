@@ -23,19 +23,14 @@ import (
 	"fmt"
 	"net"
 	"sync/atomic"
-	"time"
 
-	"github.com/wzshiming/cron"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/pager"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 	netutils "k8s.io/utils/net"
@@ -45,12 +40,12 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
+	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/queue"
 )
 
 var (
-
 	// https://kubernetes.io/docs/concepts/architecture/nodes/#condition
 	nodeConditions = []corev1.NodeCondition{
 		{
@@ -85,32 +80,28 @@ var (
 		},
 	}
 	nodeConditionsData, _ = expression.ToJSONStandard(nodeConditions)
-	nodeKind              = corev1.SchemeGroupVersion.WithKind("Node")
 )
 
 // NodeController is a fake nodes implementation that can be used to test
 type NodeController struct {
 	clock                                 clock.Clock
 	typedClient                           kubernetes.Interface
+	nodeCacheGetter                       informer.Getter[*corev1.Node]
 	nodeIP                                string
 	nodeName                              string
 	nodePort                              int
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
-	manageNodesWithLabelSelector          string
-	nodeSelectorFunc                      func(node *corev1.Node) bool
 	onNodeManagedFunc                     func(nodeName string)
 	nodesSets                             maps.SyncMap[string, *NodeInfo]
 	renderer                              gotpl.Renderer
 	preprocessChan                        chan *corev1.Node
-	playStageChan                         chan resourceStageJob[*corev1.Node]
 	playStageParallelism                  uint
 	lifecycle                             resources.Getter[Lifecycle]
-	cronjob                               *cron.Cron
-	delayJobs                             jobInfoMap
+	delayQueue                            queue.DelayingQueue[resourceStageJob[*corev1.Node]]
+	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Node]]
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
-	triggerPreprocessChan                 chan string
 	enableMetrics                         bool
 }
 
@@ -118,11 +109,10 @@ type NodeController struct {
 type NodeControllerConfig struct {
 	Clock                                 clock.Clock
 	TypedClient                           kubernetes.Interface
-	NodeSelectorFunc                      func(node *corev1.Node) bool
+	NodeCacheGetter                       informer.Getter[*corev1.Node]
 	OnNodeManagedFunc                     func(nodeName string)
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
-	ManageNodesWithLabelSelector          string
 	NodeIP                                string
 	NodeName                              string
 	NodePort                              int
@@ -136,10 +126,6 @@ type NodeControllerConfig struct {
 
 // NodeInfo is the collection of necessary node information
 type NodeInfo struct {
-	Node             *corev1.Node
-	HostIPs          []string
-	PodCIDRs         []string
-	OwnerReferences  []metav1.OwnerReference
 	StartedContainer atomic.Int64
 }
 
@@ -166,20 +152,17 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 	c := &NodeController{
 		clock:                                 conf.Clock,
 		typedClient:                           conf.TypedClient,
-		nodeSelectorFunc:                      conf.NodeSelectorFunc,
+		nodeCacheGetter:                       conf.NodeCacheGetter,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
-		manageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
 		onNodeManagedFunc:                     conf.OnNodeManagedFunc,
 		nodeIP:                                conf.NodeIP,
 		nodeName:                              conf.NodeName,
 		nodePort:                              conf.NodePort,
-		cronjob:                               cron.NewCron(),
+		delayQueue:                            queue.NewDelayingQueue[resourceStageJob[*corev1.Node]](conf.Clock),
 		lifecycle:                             conf.Lifecycle,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Node),
-		triggerPreprocessChan:                 make(chan string, 64),
-		playStageChan:                         make(chan resourceStageJob[*corev1.Node]),
 		recorder:                              conf.Recorder,
 		readOnlyFunc:                          conf.ReadOnlyFunc,
 		enableMetrics:                         conf.EnableMetrics,
@@ -201,35 +184,16 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 
 // Start starts the fake nodes controller
 // if nodeSelectorFunc is not nil, it will use it to determine if the node should be managed
-func (c *NodeController) Start(ctx context.Context) error {
+func (c *NodeController) Start(ctx context.Context, events <-chan informer.Event[*corev1.Node]) error {
 	go c.preprocessWorker(ctx)
-	go c.triggerPreprocessWorker(ctx)
 	for i := uint(0); i < c.playStageParallelism; i++ {
 		go c.playStageWorker(ctx)
 	}
-
-	opt := metav1.ListOptions{
-		LabelSelector: c.manageNodesWithLabelSelector,
-	}
-	err := c.watchResources(ctx, opt)
-	if err != nil {
-		return fmt.Errorf("failed watch nodes: %w", err)
-	}
-
-	logger := log.FromContext(ctx)
-	go func() {
-		err = c.listResources(ctx, opt)
-		if err != nil {
-			logger.Error("Failed list nodes", err)
-		}
-	}()
+	go c.watchResources(ctx, events)
 	return nil
 }
 
 func (c *NodeController) need(node *corev1.Node) bool {
-	if !c.nodeSelectorFunc(node) {
-		return false
-	}
 	if c.disregardStatusWithAnnotationSelector != nil &&
 		len(node.Annotations) != 0 &&
 		c.disregardStatusWithAnnotationSelector.Matches(labels.Set(node.Annotations)) {
@@ -245,115 +209,52 @@ func (c *NodeController) need(node *corev1.Node) bool {
 }
 
 // watchResources watch resources and send to preprocessChan
-func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOptions) error {
-	// Watch nodes in the cluster
-	watcher, err := c.typedClient.CoreV1().Nodes().Watch(ctx, opt)
-	if err != nil {
-		return err
-	}
-
+func (c *NodeController) watchResources(ctx context.Context, events <-chan informer.Event[*corev1.Node]) {
 	logger := log.FromContext(ctx)
-	go func() {
-		rc := watcher.ResultChan()
-	loop:
-		for {
-			select {
-			case event, ok := <-rc:
-				if !ok {
-					logger.Warn("Watch channel has been stopped, retrying")
-					for {
-						watcher, err := c.typedClient.CoreV1().Nodes().Watch(ctx, opt)
-						if err == nil {
-							rc = watcher.ResultChan()
-							continue loop
-						}
-
-						logger.Error("Failed to watch nodes", err)
-						select {
-						case <-ctx.Done():
-							break loop
-						case <-c.clock.After(time.Second * 5):
-						}
-					}
-				}
-				switch event.Type {
-				case watch.Added:
-					node := event.Object.(*corev1.Node)
-					if c.need(node) {
-						c.putNodeInfo(node)
-						if c.onNodeManagedFunc != nil {
-							c.onNodeManagedFunc(node.Name)
-						}
-						if c.readOnly(node.Name) {
-							logger.Debug("Skip node",
-								"reason", "read only",
-								"event", event.Type,
-								"node", node.Name,
-							)
-						} else {
-							c.preprocessChan <- node
-						}
-					}
-				case watch.Modified:
-					node := event.Object.(*corev1.Node)
-					if c.need(node) {
-						c.putNodeInfo(node)
-						if c.readOnly(node.Name) {
-							logger.Debug("Skip node",
-								"reason", "read only",
-								"event", event.Type,
-								"node", node.Name,
-							)
-						} else {
-							c.preprocessChan <- node
-						}
-					}
-				case watch.Deleted:
-					node := event.Object.(*corev1.Node)
-					if _, has := c.nodesSets.Load(node.Name); has {
-						c.deleteNodeInfo(node)
-
-						// Cancel delay job
-						key := node.Name
-						resourceJob, ok := c.delayJobs.LoadAndDelete(key)
-						if ok {
-							resourceJob.Cancel()
-						}
-					}
-				}
-			case <-ctx.Done():
-				watcher.Stop()
+loop:
+	for {
+		select {
+		case event, ok := <-events:
+			if !ok {
 				break loop
 			}
-		}
-		logger.Info("Stop watch nodes")
-	}()
-	return nil
-}
+			switch event.Type {
+			case informer.Added, informer.Modified, informer.Sync:
+				node := event.Object
+				if c.need(node) {
+					c.putNodeInfo(node)
+					if c.readOnly(node.Name) {
+						logger.Debug("Skip node",
+							"reason", "read only",
+							"event", event.Type,
+							"node", node.Name,
+						)
+					} else {
+						c.preprocessChan <- node
+					}
+				}
 
-// listResources lists all resources and sends to preprocessChan
-func (c *NodeController) listResources(ctx context.Context, opt metav1.ListOptions) error {
-	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
-		return c.typedClient.CoreV1().Nodes().List(ctx, opts)
-	})
+				if c.onNodeManagedFunc != nil && event.Type != informer.Modified {
+					c.onNodeManagedFunc(node.Name)
+				}
+			case informer.Deleted:
+				node := event.Object
+				if _, has := c.nodesSets.Load(node.Name); has {
+					c.deleteNodeInfo(node)
 
-	logger := log.FromContext(ctx)
-
-	return listPager.EachListItem(ctx, opt, func(obj runtime.Object) error {
-		node := obj.(*corev1.Node)
-		if c.need(node) {
-			c.putNodeInfo(node)
-			if c.readOnly(node.Name) {
-				logger.Debug("Skip node",
-					"node", node.Name,
-					"reason", "read only",
-				)
-			} else {
-				c.preprocessChan <- node
+					// Cancel delay job
+					key := node.Name
+					resourceJob, ok := c.delayQueueMapping.LoadAndDelete(key)
+					if ok {
+						c.delayQueue.Cancel(resourceJob)
+					}
+				}
 			}
+		case <-ctx.Done():
+			break loop
 		}
-		return nil
-	})
+	}
+	logger.Info("Stop watch nodes")
 }
 
 // finalizersModify modify finalizers of node
@@ -427,40 +328,12 @@ func (c *NodeController) preprocessWorker(ctx context.Context) {
 	}
 }
 
-// triggerPreprocessWorker receives the resource from the triggerPreprocessChan and preprocess it
-func (c *NodeController) triggerPreprocessWorker(ctx context.Context) {
-	logger := log.FromContext(ctx)
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Debug("Stop trigger preprocess worker")
-			return
-		case nodeName := <-c.triggerPreprocessChan:
-			nodeInfo, has := c.nodesSets.Load(nodeName)
-			if !has || nodeInfo.Node == nil {
-				logger.Warn("Node not found",
-					"node", nodeName,
-				)
-				continue
-			}
-			if c.readOnly(nodeInfo.Node.Name) {
-				logger.Debug("Skip node",
-					"node", nodeInfo.Node.Name,
-					"reason", "read only",
-				)
-			} else {
-				c.preprocessChan <- nodeInfo.Node
-			}
-		}
-	}
-}
-
 // preprocess the pod and send it to the playStageWorker
 func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) error {
 	key := node.Name
 
-	resourceJob, ok := c.delayJobs.Load(key)
-	if ok && resourceJob.ResourceVersion == node.ResourceVersion {
+	resourceJob, ok := c.delayQueueMapping.Load(key)
+	if ok && resourceJob.Resource.ResourceVersion == node.ResourceVersion {
 		return nil
 	}
 
@@ -497,39 +370,28 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		)
 	}
 
-	cancelFunc, ok := c.cronjob.AddWithCancel(cron.Order(now.Add(delay)), func() {
-		resourceJob, ok := c.delayJobs.LoadAndDelete(key)
-		if ok {
-			resourceJob.Cancel()
-		}
-		c.playStageChan <- resourceStageJob[*corev1.Node]{
-			Resource: node,
-			Stage:    stage,
-		}
-	})
-	if ok {
-		resourceJob, ok := c.delayJobs.LoadOrStore(key, jobInfo{
-			ResourceVersion: node.ResourceVersion,
-			Cancel:          cancelFunc,
-		})
-		if ok {
-			resourceJob.Cancel()
-		}
+	item := resourceStageJob[*corev1.Node]{
+		Resource: node,
+		Stage:    stage,
+		Key:      key,
+	}
+	ok = c.delayQueue.AddAfter(item, delay)
+	if !ok {
+		logger.Debug("Skip node",
+			"reason", "delayed",
+		)
+	} else {
+		c.delayQueueMapping.Store(key, item)
 	}
 	return nil
 }
 
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *NodeController) playStageWorker(ctx context.Context) {
-	logger := log.FromContext(ctx)
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Debug("Stop play stage worker")
-			return
-		case node := <-c.playStageChan:
-			c.playStage(ctx, node.Resource, node.Stage)
-		}
+	for ctx.Err() == nil {
+		node := c.delayQueue.GetOrWait()
+		c.delayQueueMapping.Delete(node.Key)
+		c.playStage(ctx, node.Resource, node.Stage)
 	}
 }
 
@@ -652,40 +514,12 @@ func (c *NodeController) computePatch(node *corev1.Node, tpl string) ([]byte, er
 
 // putNodeInfo puts node info
 func (c *NodeController) putNodeInfo(node *corev1.Node) {
-	nodeIPs := getNodeHostIPs(node)
-	hostIps := slices.Map(nodeIPs, func(ip net.IP) string {
-		return ip.String()
-	})
-
-	podCIDRs := node.Spec.PodCIDRs
-	if len(podCIDRs) == 0 && node.Spec.PodCIDR != "" {
-		podCIDRs = []string{node.Spec.PodCIDR}
-	}
-
-	nodeInfo := &NodeInfo{
-		Node:     node,
-		HostIPs:  hostIps,
-		PodCIDRs: podCIDRs,
-		OwnerReferences: []metav1.OwnerReference{
-			{
-				APIVersion: nodeKind.Version,
-				Kind:       nodeKind.Kind,
-				Name:       node.Name,
-				UID:        node.UID,
-			},
-		},
-	}
-	c.nodesSets.Store(node.Name, nodeInfo)
+	c.nodesSets.Store(node.Name, &NodeInfo{})
 }
 
 // deleteNodeInfo deletes node info
 func (c *NodeController) deleteNodeInfo(node *corev1.Node) {
 	c.nodesSets.Delete(node.Name)
-}
-
-// Manage manages the node
-func (c *NodeController) Manage(nodeName string) {
-	c.triggerPreprocessChan <- nodeName
 }
 
 // getNodeHostIPs returns the provided node's IP(s); either a single "primary IP" for the
@@ -730,17 +564,6 @@ func getNodeHostIPs(node *corev1.Node) []net.IP {
 	return nodeIPs
 }
 
-// Has returns true if the node is existed
-func (c *NodeController) Has(nodeName string) bool {
-	_, has := c.nodesSets.Load(nodeName)
-	return has
-}
-
-// Size returns the number of nodes
-func (c *NodeController) Size() int {
-	return c.nodesSets.Size()
-}
-
 // Get returns Has bool and node info
 func (c *NodeController) Get(nodeName string) (*NodeInfo, bool) {
 	nodeInfo, has := c.nodesSets.Load(nodeName)
@@ -750,14 +573,9 @@ func (c *NodeController) Get(nodeName string) (*NodeInfo, bool) {
 	return nil, has
 }
 
-// List returns all nodes
-func (c *NodeController) List() []*NodeInfo {
-	nodes := []*NodeInfo{}
-	c.nodesSets.Range(func(key string, value *NodeInfo) bool {
-		nodes = append(nodes, value)
-		return true
-	})
-	return nodes
+// List returns all name of nodes
+func (c *NodeController) List() []string {
+	return c.nodesSets.Keys()
 }
 
 func (c *NodeController) funcNodeIP() string {
