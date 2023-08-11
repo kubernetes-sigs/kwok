@@ -131,6 +131,39 @@ func (c *Cluster) Available(ctx context.Context) error {
 	return c.Exec(ctx, c.runtime, "version")
 }
 
+func (c *Cluster) pullAllImages(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+	images := []string{
+		conf.EtcdImage,
+		conf.KubeApiserverImage,
+		conf.KwokControllerImage,
+	}
+	if !conf.DisableKubeControllerManager {
+		images = append(images, conf.KubeControllerManagerImage)
+	}
+	if !conf.DisableKubeScheduler {
+		images = append(images, conf.KubeSchedulerImage)
+	}
+	if conf.DashboardPort != 0 {
+		images = append(images, conf.DashboardImage)
+	}
+	if conf.PrometheusPort != 0 {
+		images = append(images, conf.PrometheusImage)
+	}
+	if conf.JaegerPort != 0 {
+		images = append(images, conf.JaegerImage)
+	}
+	err = c.PullImages(ctx, c.runtime, images, conf.QuietPull)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Cluster) setup(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
@@ -260,24 +293,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	images := []string{
-		conf.EtcdImage,
-		conf.KubeApiserverImage,
-		conf.KwokControllerImage,
-	}
-	if !conf.DisableKubeControllerManager {
-		images = append(images, conf.KubeControllerManagerImage)
-	}
-	if !conf.DisableKubeScheduler {
-		images = append(images, conf.KubeSchedulerImage)
-	}
-	if conf.PrometheusPort != 0 {
-		images = append(images, conf.PrometheusImage)
-	}
-	if conf.JaegerPort != 0 {
-		images = append(images, conf.JaegerImage)
-	}
-	err = c.PullImages(ctx, c.runtime, images, conf.QuietPull)
+	err = c.pullAllImages(ctx)
 	if err != nil {
 		return err
 	}
@@ -537,6 +553,29 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 		config.Components = append(config.Components, prometheusComponent)
+	}
+
+	if conf.DashboardPort != 0 {
+		dashboardComponentPatches := runtime.GetComponentPatches(config, "dashboard")
+		dashboardComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(dashboardComponentPatches.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for dashboard component: %w", err)
+		}
+		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
+			Workdir:        workdir,
+			Image:          conf.DashboardImage,
+			BindAddress:    net.PublicAddress,
+			KubeconfigPath: inClusterOnHostKubeconfigPath,
+			CaCertPath:     caCertPath,
+			AdminCertPath:  adminCertPath,
+			AdminKeyPath:   adminKeyPath,
+			Port:           conf.DashboardPort,
+			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
+		})
+		if err != nil {
+			return err
+		}
+		config.Components = append(config.Components, dashboardComponent)
 	}
 
 	// Configure the jaeger

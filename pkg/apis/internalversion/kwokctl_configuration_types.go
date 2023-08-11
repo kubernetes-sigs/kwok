@@ -92,6 +92,9 @@ type KwokctlConfigurationOptions struct {
 	// EtcdVersion is the version of Etcd to use.
 	EtcdVersion string
 
+	// DashboardVersion is the version of Kubernetes dashboard to use.
+	DashboardVersion string
+
 	// PrometheusVersion is the version of Prometheus to use.
 	PrometheusVersion string
 
@@ -135,6 +138,9 @@ type KwokctlConfigurationOptions struct {
 	// KwokControllerImage is the image of Kwok.
 	KwokControllerImage string
 
+	// DashboardImage is the image of dashboard.
+	DashboardImage string
+
 	// PrometheusImage is the image of Prometheus.
 	PrometheusImage string
 
@@ -168,6 +174,10 @@ type KwokctlConfigurationOptions struct {
 
 	// KwokControllerBinary is the binary of kwok.
 	KwokControllerBinary string
+
+	// TODO: Add dashboard binary
+	// // DashboardBinary is the binary of dashboard.
+	// DashboardBinary string
 
 	// PrometheusBinary  is the binary of Prometheus.
 	PrometheusBinary string
@@ -216,6 +226,9 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeSchedulerPort is kube-scheduler port in the binary runtime
 	KubeSchedulerPort uint32
+
+	// DashboardPort is dashboard port that is exposed to the host.
+	DashboardPort uint32
 
 	// KwokControllerPort is kwok-controller port that is exposed to the host.
 	KwokControllerPort uint32

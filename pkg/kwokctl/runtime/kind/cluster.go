@@ -179,6 +179,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		KubeApiserverPort:             conf.KubeApiserverPort,
 		EtcdPort:                      conf.EtcdPort,
 		JaegerPort:                    conf.JaegerPort,
+		DashboardPort:                 conf.DashboardPort,
 		PrometheusPort:                conf.PrometheusPort,
 		KwokControllerPort:            conf.KwokControllerPort,
 		FeatureGates:                  featureGates,
@@ -227,6 +228,26 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return fmt.Errorf("failed to write %s: %w", runtime.KwokPod, err)
 	}
 
+	if conf.DashboardPort != 0 {
+		dashboardPatches := runtime.GetComponentPatches(config, "dashboard")
+		dashboardConf := BuildDashboardDeploymentConfig{
+			DashboardImage: conf.DashboardImage,
+			Name:           c.Name(),
+			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
+			ExtraArgs:      dashboardPatches.ExtraArgs,
+			ExtraVolumes:   dashboardPatches.ExtraVolumes,
+			ExtraEnvs:      dashboardPatches.ExtraEnvs,
+		}
+		dashboardDeploy, err := BuildDashboardDeployment(dashboardConf)
+		if err != nil {
+			return err
+		}
+		err = c.WriteFile(c.GetWorkdirPath(runtime.DashboardDeploy), []byte(dashboardDeploy))
+		if err != nil {
+			return fmt.Errorf("failed to write %s: %w", runtime.DashboardDeploy, err)
+		}
+	}
+
 	if conf.PrometheusPort != 0 {
 		prometheusPatches := runtime.GetComponentPatches(config, "prometheus")
 		prometheusConf := BuildPrometheusDeploymentConfig{
@@ -271,17 +292,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		}
 	}
 
-	images := []string{
-		conf.KindNodeImage,
-		conf.KwokControllerImage,
-	}
-	if conf.PrometheusPort != 0 {
-		images = append(images, conf.PrometheusImage)
-	}
-	if conf.JaegerPort != 0 {
-		images = append(images, conf.JaegerImage)
-	}
-	err = c.PullImages(ctx, c.runtime, images, conf.QuietPull)
+	err = c.pullAllImages(ctx)
 	if err != nil {
 		return err
 	}
@@ -308,6 +319,14 @@ func (c *Cluster) Up(ctx context.Context) error {
 			Name: "kwok-controller",
 		},
 	)
+
+	if conf.DashboardPort != 0 {
+		config.Components = append(config.Components,
+			internalversion.Component{
+				Name: "dashboard",
+			},
+		)
+	}
 
 	if conf.PrometheusPort != 0 {
 		config.Components = append(config.Components,
@@ -388,19 +407,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
-	images := []string{conf.KwokControllerImage}
-	if conf.PrometheusPort != 0 {
-		images = append(images, conf.PrometheusImage)
-	}
-	if conf.JaegerPort != 0 {
-		images = append(images, conf.JaegerImage)
-	}
-
-	if c.runtime == consts.RuntimeTypeDocker {
-		err = c.loadDockerImages(ctx, kindPath, c.Name(), images)
-	} else {
-		err = c.loadArchiveImages(ctx, kindPath, c.Name(), images, c.runtime, conf.CacheDir)
-	}
+	err = c.loadAllImages(ctx)
 	if err != nil {
 		return err
 	}
@@ -439,6 +446,13 @@ func (c *Cluster) Up(ctx context.Context) error {
 		return err
 	}
 
+	if conf.DashboardPort != 0 {
+		err = c.Kubectl(exec.WithAllWriteToErrOut(ctx), "apply", "-f", c.GetWorkdirPath(runtime.DashboardDeploy))
+		if err != nil {
+			return err
+		}
+	}
+
 	if conf.PrometheusPort != 0 {
 		err = c.Kubectl(exec.WithAllWriteToErrOut(ctx), "apply", "-f", c.GetWorkdirPath(runtime.PrometheusDeploy))
 		if err != nil {
@@ -472,6 +486,65 @@ func (c *Cluster) Up(ctx context.Context) error {
 		}
 	}
 
+	return nil
+}
+
+func (c *Cluster) pullAllImages(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+	images := []string{
+		conf.KindNodeImage,
+		conf.KwokControllerImage,
+	}
+	if conf.DashboardPort != 0 {
+		images = append(images, conf.DashboardImage)
+	}
+	if conf.PrometheusPort != 0 {
+		images = append(images, conf.PrometheusImage)
+	}
+	if conf.JaegerPort != 0 {
+		images = append(images, conf.JaegerImage)
+	}
+	err = c.PullImages(ctx, c.runtime, images, conf.QuietPull)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Cluster) loadAllImages(ctx context.Context) error {
+	kindPath, err := c.preDownloadKind(ctx)
+	if err != nil {
+		return err
+	}
+
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+	images := []string{conf.KwokControllerImage}
+	if conf.DashboardPort != 0 {
+		images = append(images, conf.DashboardImage)
+	}
+	if conf.PrometheusPort != 0 {
+		images = append(images, conf.PrometheusImage)
+	}
+	if conf.JaegerPort != 0 {
+		images = append(images, conf.JaegerImage)
+	}
+
+	if c.runtime == consts.RuntimeTypeDocker {
+		err = c.loadDockerImages(ctx, kindPath, c.Name(), images)
+	} else {
+		err = c.loadArchiveImages(ctx, kindPath, c.Name(), images, c.runtime, conf.CacheDir)
+	}
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -250,6 +250,7 @@ func expandHostVolumePaths(conf BuildKindConfig) (BuildKindConfig, error) {
 type BuildKindConfig struct {
 	KubeApiserverPort  uint32
 	EtcdPort           uint32
+	DashboardPort      uint32
 	PrometheusPort     uint32
 	JaegerPort         uint32
 	KwokControllerPort uint32

@@ -13,6 +13,9 @@ networking:
 nodes:
 - role: control-plane
   extraPortMappings:
+  - containerPort: 8000
+    hostPort: 8000
+    protocol: TCP
   - containerPort: 9090
     hostPort: 9090
     protocol: TCP
@@ -136,6 +139,54 @@ spec:
       path: /etc/kwok/kwok.yaml
       type: FileOrCreate
     name: config
+  - hostPath:
+      path: /etc/kubernetes/pki
+      type: DirectoryOrCreate
+    name: k8s-certs
+EOF
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/dashboard-deployment.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dashboard
+  namespace: kube-system
+  labels:
+    app: dashboard
+spec:
+  containers:
+  - name: dashboard
+    image: docker.io/kubernetesui/dashboard:v2.7.0
+    args:
+    - --kubeconfig=/etc/kubernetes/admin.conf
+    - --insecure-bind-address=0.0.0.0
+    - --insecure-port=8000
+    - --bind-address=127.0.0.1
+    - --port=0
+    - --enable-insecure-login
+    - --enable-skip-login
+    - --disable-settings-authorizer
+    - --metrics-provider=none
+    - --namespace=kube-system
+    - --system-banner=Welcome to kwok-<CLUSTER_NAME>
+    volumeMounts:
+    - mountPath: /etc/kubernetes/admin.conf
+      name: kubeconfig
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki
+      name: k8s-certs
+      readOnly: true
+    securityContext:
+      privileged: true
+      runAsUser: 0
+      runAsGroup: 0
+  restartPolicy: Always
+  hostNetwork: true
+  nodeName: kwok-<CLUSTER_NAME>-control-plane
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/admin.conf
+      type: FileOrCreate
+    name: kubeconfig
   - hostPath:
       path: /etc/kubernetes/pki
       type: DirectoryOrCreate
@@ -335,6 +386,7 @@ spec:
 EOF
 podman pull docker.io/kindest/node:v1.27.3
 podman pull localhost/kwok:test
+podman pull docker.io/kubernetesui/dashboard:v2.7.0
 podman pull docker.io/prom/prometheus:v2.44.0
 podman pull docker.io/jaegertracing/all-in-one:1.45.0
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
@@ -343,6 +395,10 @@ mkdir -p <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok
 podman save localhost/kwok:test -o <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard
+podman save docker.io/kubernetesui/dashboard:v2.7.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard/v2.7.0.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard/v2.7.0.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard/v2.7.0.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus
 podman save docker.io/prom/prometheus:v2.44.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.44.0.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.44.0.tar --name kwok-<CLUSTER_NAME>
@@ -358,6 +414,7 @@ podman cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml kw
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 podman cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.crt <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
 podman cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.key <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.key
+kubectl apply -f <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/dashboard-deployment.yaml
 kubectl apply -f <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus-deployment.yaml
 kubectl apply -f <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/jaeger-deployment.yaml
 kubectl cordon kwok-<CLUSTER_NAME>-control-plane

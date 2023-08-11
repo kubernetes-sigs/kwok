@@ -10,6 +10,10 @@ kwokctl create cluster [flags]
 
 ```
       --controller-port uint32                  Port of kwok-controller given to the host
+      --dashboard-image string                  Image of dashboard, only for docker/podman/nerdctl/kind/kind-podman runtime
+                                                '${KWOK_DASHBOARD_IMAGE_PREFIX}/dashboard:${KWOK_DASHBOARD_VERSION}'
+                                                 (default "docker.io/kubernetesui/dashboard:v2.7.0")
+      --dashboard-port uint32                   Port of dashboard given to the host
       --disable-kube-controller-manager         Disable the kube-controller-manager
       --disable-kube-scheduler                  Disable the kube-scheduler
       --disable-qps-limits                      Disable QPS limits for components
