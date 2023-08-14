@@ -180,7 +180,7 @@ func (m *lazyRESTMapper) addKnownGroupAndReload(groupName string, versions ...st
 	// The number of API calls is equal to the number of versions: /apis/<group>/<version>.
 	groupVersionResources, err := m.fetchGroupVersionResources(groupName, versions...)
 	if err != nil {
-		return fmt.Errorf("failed to get API group resources: %w", err)
+		return err
 	}
 	for version, resources := range groupVersionResources {
 		groupResources.VersionedResources[version.Version] = resources.APIResources

@@ -109,7 +109,7 @@ func (s *Server) getPodsForward(podName, podNamespace string, port int32) (*inte
 		if found {
 			return forward, nil
 		}
-		return nil, fmt.Errorf("forward not found for port %q in pod %q", port, log.KRef(podNamespace, podName))
+		return nil, fmt.Errorf("forward not found for port %d in pod %q", port, log.KRef(podNamespace, podName))
 	}
 
 	for _, cfw := range s.clusterPortForwards.Get() {

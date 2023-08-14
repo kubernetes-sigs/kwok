@@ -44,15 +44,20 @@ function test_port_forward() {
   local port="${4}"
   local pid
   local result
-  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" >/dev/null 2>&1 &
+  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" "${port}:${port}" >/dev/null 2>&1 &
   pid=$!
 
-  # allow some time for port forward to start
-  sleep 5
-  result=$(curl localhost:8888/healthz 2>/dev/null)
+  for ((i = 0; i < 120; i++)); do
+    if [[ "${result}" == "ok" ]]; then
+      break
+    fi
+    sleep 1
+    result=$(curl "localhost:${port}/healthz" 2>/dev/null)
+  done
+
   kill -INT $pid
   if [[ ! "${result}" == "ok" ]]; then
-    echo "Error: failed to port-forward to ${2}"
+    echo "Error: failed to port-forward to ${target}, got ${result}"
     return 1
   fi
   echo "${result}"
@@ -65,13 +70,19 @@ function test_port_forward_failed() {
   local port="${4}"
   local pid
   local result
-  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" 8888:"${port}" >/dev/null 2>&1 &
+  kwokctl --name "${name}" kubectl -n "${namespace}" port-forward "${target}" "${port}:${port}" >/dev/null 2>&1 &
   pid=$!
 
-  # allow some time for port forward to start
-  sleep 5
-  if curl localhost:8888/healthz 2>/dev/null; then
-    echo "Error: port-forward to ${2} should fail"
+  for ((i = 0; i < 120; i++)); do
+    if [[ ! "${result}" == "ok" ]]; then
+      break
+    fi
+    sleep 1
+    result=$(curl "localhost:${port}/healthz" 2>/dev/null)
+  done
+
+  if [[ "${result}" == "ok" ]]; then
+    echo "Error: port-forward to ${target} should fail, got ${result}"
     return 1
   fi
 }
@@ -108,6 +119,7 @@ function main() {
     name="port-forward-cluster-${KWOK_RUNTIME}-${release//./-}"
     create_cluster "${name}" "${release}" --config "${DIR}/port-forward.yaml"
     test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
+    sleep 1
     test_port_forward "${name}" other pod/fake-pod "8001" || failed+=("${name}_target_forward")
     test_port_forward "${name}" other pod/fake-pod "8002" || failed+=("${name}_command_forward")
     test_port_forward_failed "${name}" other pod/fake-pod "8003" || failed+=("${name}_failed")
@@ -126,6 +138,7 @@ options:
 EOF
     test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
     kwokctl --name "${name}" kubectl apply -f "${DIR}/port-forward.yaml"
+    sleep 1
     test_port_forward "${name}" other pod/fake-pod "8001" || failed+=("${name}_target_forward")
     test_port_forward "${name}" other pod/fake-pod "8002" || failed+=("${name}_command_forward")
     test_port_forward_failed "${name}" other pod/fake-pod "8003" || failed+=("${name}_failed")

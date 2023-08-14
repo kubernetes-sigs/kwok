@@ -260,7 +260,7 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 		"name", log.KObj(obj),
 	)
 
-	err := retry.OnError(retry.DefaultBackoff, discovery.IsGroupDiscoveryFailedError, func() error {
+	err := retry.OnError(defaultRetry, discovery.IsGroupDiscoveryFailedError, func() error {
 		g, err := l.restMapper.ResourceFor(gvr)
 		if err != nil {
 			logger.Warn("failed to get resource", "err", err)

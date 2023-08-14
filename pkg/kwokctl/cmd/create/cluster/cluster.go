@@ -273,13 +273,14 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if err != nil {
 		return fmt.Errorf("failed to start cluster %q: %w", name, err)
 	}
+	logger.Info("Cluster is started",
+		"elapsed", time.Since(start),
+	)
+
 	err = rt.InitCRDs(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to init crds %q: %w", name, err)
 	}
-	logger.Info("Cluster is started",
-		"elapsed", time.Since(start),
-	)
 
 	// Wait for cluster to be ready
 	if flags.Wait > 0 {
