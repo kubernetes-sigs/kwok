@@ -8,7 +8,7 @@ networking:
 nodes:
 - role: control-plane
 
-{{ if or .DashboardPort .PrometheusPort .KwokControllerPort .EtcdPort .JaegerPort}}
+  {{ if or .DashboardPort .PrometheusPort .KwokControllerPort .EtcdPort .JaegerPort}}
   extraPortMappings:
   {{ if .DashboardPort }}
   - containerPort: 8000
@@ -35,11 +35,11 @@ nodes:
     hostPort: {{ .EtcdPort }}
     protocol: TCP
   {{ end }}
-{{ end }}
+  {{ end }}
 
   kubeadmConfigPatches:
 
-{{ if or .EtcdExtraArgs .EtcdExtraVolumes }}
+  {{ if or .EtcdExtraArgs .EtcdExtraVolumes }}
   - |
     kind: ClusterConfiguration
     etcd:
@@ -62,9 +62,9 @@ nodes:
         {{ end }}
       {{ end }}
 
-{{ end }}
+  {{ end }}
 
-{{ if or .ApiserverExtraArgs .ApiserverExtraVolumes }}
+  {{ if or .ApiserverExtraArgs .ApiserverExtraVolumes }}
   - |
     kind: ClusterConfiguration
     apiServer:
@@ -85,9 +85,9 @@ nodes:
         pathType: {{ .PathType }}
       {{ end }}
     {{ end }}
-{{ end }}
+  {{ end }}
 
-{{ if or .ControllerManagerExtraArgs .ControllerManagerExtraVolumes }}
+  {{ if or .ControllerManagerExtraArgs .ControllerManagerExtraVolumes }}
   - |
     kind: ClusterConfiguration
     controllerManager:
@@ -108,9 +108,9 @@ nodes:
         pathType: {{ .PathType }}
       {{ end }}
     {{ end }}
-{{ end }}
+  {{ end }}
 
-{{ if or .SchedulerExtraArgs .SchedulerExtraVolumes }}
+  {{ if or .SchedulerExtraArgs .SchedulerExtraVolumes }}
   - |
     kind: ClusterConfiguration
     scheduler:
@@ -131,7 +131,7 @@ nodes:
         pathType: {{ .PathType }}
       {{ end }}
     {{ end }}
-{{ end }}
+  {{ end }}
 
   # mount the local file on the control plane
   extraMounts:
@@ -139,46 +139,46 @@ nodes:
     containerPath: /etc/kwok/kwok.yaml
     readOnly: true
 
-{{ range .EtcdExtraVolumes }}
+  {{ range .EtcdExtraVolumes }}
   - hostPath: {{ .HostPath }}
     containerPath: /var/components/etcd{{ .MountPath }}
     readOnly: {{ .ReadOnly }}
-{{ end }}
+  {{ end }}
 
-{{ range .ApiserverExtraVolumes }}
+  {{ range .ApiserverExtraVolumes }}
   - hostPath: {{ .HostPath }}
     containerPath: /var/components/apiserver{{ .MountPath }}
     readOnly: {{ .ReadOnly }}
-{{ end }}
+  {{ end }}
 
-{{ range .ControllerManagerExtraVolumes }}
+  {{ range .ControllerManagerExtraVolumes }}
   - hostPath: {{ .HostPath }}
     containerPath: /var/components/controller-manager{{ .MountPath }}
     readOnly: {{ .ReadOnly }}
-{{ end }}
+  {{ end }}
 
-{{ range .SchedulerExtraVolumes }}
+  {{ range .SchedulerExtraVolumes }}
   - hostPath: {{ .HostPath }}
     containerPath: /var/components/scheduler{{ .MountPath }}
     readOnly: {{ .ReadOnly }}
-{{ end }}
+  {{ end }}
 
-{{ range .KwokControllerExtraVolumes }}
+  {{ range .KwokControllerExtraVolumes }}
   - hostPath: {{ .HostPath }}
     containerPath: /var/components/controller{{ .MountPath }}
     readOnly: {{ .ReadOnly }}
-{{ end }}
+  {{ end }}
 
 {{ if .FeatureGates }}
 featureGates:
 {{ range .FeatureGates }}
-  - {{ . }}
+- {{ . }}
 {{ end }}
 {{ end }}
 
 {{ if .RuntimeConfig }}
 runtimeConfig:
 {{ range .RuntimeConfig }}
-  - {{ . }}
+- {{ . }}
 {{ end }}
 {{ end }}

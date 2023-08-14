@@ -30,7 +30,7 @@ import (
 //go:embed prometheus_deployment.yaml.tpl
 var prometheusDeploymentYamlTpl string
 
-var prometheusDeploymentYamlTemplate = template.Must(template.New("_").Parse(prometheusDeploymentYamlTpl))
+var prometheusDeploymentYamlTemplate = template.Must(template.New("prometheus_deployment").Parse(prometheusDeploymentYamlTpl))
 
 // BuildPrometheusDeployment builds the prometheus deployment yaml content.
 func BuildPrometheusDeployment(conf BuildPrometheusDeploymentConfig) (string, error) {

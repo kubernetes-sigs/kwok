@@ -34,7 +34,7 @@ import (
 //go:embed kind.yaml.tpl
 var kindYamlTpl string
 
-var kindYamlTemplate = template.Must(template.New("_").Parse(kindYamlTpl))
+var kindYamlTemplate = template.Must(template.New("kind_config").Parse(kindYamlTpl))
 
 // BuildKind builds the kind yaml content.
 func BuildKind(conf BuildKindConfig) (string, error) {

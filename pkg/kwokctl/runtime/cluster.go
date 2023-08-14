@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/nxadm/tail"
@@ -488,6 +489,9 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 		_, _ = buf.WriteString("\n---\n")
 		_, _ = buf.Write(c)
 	}
+
+	logger := log.FromContext(ctx)
+	ctx = log.NewContext(ctx, logger.With("crds", strings.Join(crds, ",")))
 
 	return snapshot.Load(ctx, clientset, buf, nil)
 }

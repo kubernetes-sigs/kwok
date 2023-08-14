@@ -34,7 +34,7 @@ spec:
     - name: {{ .Name }}
       value: {{ .Value }}
     {{ end }}
-    image: '{{.KwokControllerImageName}}:{{.KwokControllerImageTag}}'
+    image: '{{ .KwokControllerImage }}'
     imagePullPolicy: IfNotPresent
     livenessProbe:
       failureThreshold: 3

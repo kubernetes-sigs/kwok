@@ -7,38 +7,40 @@ metadata:
     app: jaeger
 spec:
   containers:
-    - name: jaeger
-      image: {{ .JaegerImage }}
-      {{ with .ExtraEnvs }}
-      env:
-      {{ range . }}
-      - name: {{ .Name }}
-        value: {{ .Value }}
-      {{ end }}
-      {{ end }}
-      args:
-        - --collector.otlp.enabled=true
-        {{ if .LogLevel }}
-        - --log-level={{ .LogLevel }}
-        {{ end }}
-        {{ range .ExtraArgs }}
-        - --{{ .Key }}={{ .Value }}
-        {{ end }}
+  - name: jaeger
+    image: {{ .JaegerImage }}
+    {{ with .ExtraEnvs }}
+    env:
+    {{ range . }}
+    - name: {{ .Name }}
+      value: {{ .Value }}
+    {{ end }}
+    {{ end }}
+    args:
+    - --collector.otlp.enabled=true
+    {{ if .LogLevel }}
+    - --log-level={{ .LogLevel }}
+    {{ end }}
+    {{ range .ExtraArgs }}
+    - --{{ .Key }}={{ .Value }}
+    {{ end }}
+    {{ with .ExtraEnvs }}
+    volumeMounts:
+    {{ range . }}
+    - mountPath: {{ .MountPath }}
+      name: {{ .Name }}
+      readOnly: {{ .ReadOnly }}
+    {{ end }}
+    {{ end }}
   restartPolicy: Always
   hostNetwork: true
   nodeName: {{ .Name }}-control-plane
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: jaeger-query
-spec:
-  selector:
-    app: jaeger
-  ports:
-  - name: query
-    port: 16686
-    targetPort: 16686
-  - name: otlp-grpc
-    port: 4317
-    targetPort: 4317
+  {{ range .ExtraVolumes }}
+  volumes:
+  {{ range . }}
+  - hostPath:
+      path: /var/components/controller{{ .MountPath }}
+      type: {{ .PathType }}
+    name: {{ .Name }}
+  {{ end }}
+  {{ end }}

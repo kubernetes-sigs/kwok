@@ -27,7 +27,7 @@ import (
 //go:embed kube_apiserver_tracing_config.yaml.tpl
 var kubeApiserverTracingConfigYamlTpl string
 
-var kubeApiserverTracingConfigYamlTemplate = template.Must(template.New("_").Parse(kubeApiserverTracingConfigYamlTpl))
+var kubeApiserverTracingConfigYamlTemplate = template.Must(template.New("kube_apiserver_tracing_config").Parse(kubeApiserverTracingConfigYamlTpl))
 
 // BuildKubeApiserverTracingConfig builds a apiserverTracingConfig file from the given parameters.
 func BuildKubeApiserverTracingConfig(conf BuildKubeApiserverTracingConfigParam) (string, error) {
