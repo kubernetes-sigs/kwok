@@ -1860,6 +1860,21 @@ is the default value for flag &ndash;tls-private-key-file</p>
 </tr>
 <tr>
 <td>
+<code>manageSingleNode</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ManageSingleNode is the option to manage a single node name.
+is the default value for flag &ndash;manage-single-node
+Note: when <code>manage-all-nodes</code> is specified as true or
+<code>manage-nodes-with-label-selector</code> or <code>manage-nodes-with-annotation-selector</code> is specified,
+this is a no-op.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>manageAllNodes</code>
 <em>
 bool
@@ -1867,7 +1882,10 @@ bool
 </td>
 <td>
 <p>Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
-is the default value for flag &ndash;manage-all-nodes</p>
+is the default value for flag &ndash;manage-all-nodes
+Note: when <code>manage-single-node</code> is specified as true or
+<code>manage-nodes-with-label-selector</code> or <code>manage-nodes-with-annotation-selector</code> is specified,
+this is a no-op.</p>
 </td>
 </tr>
 <tr>
@@ -1879,8 +1897,10 @@ string
 </td>
 <td>
 <p>Default annotations specified on Nodes to demand manage.
-Note: when <code>all-node-manage</code> is specified as true, this is a no-op.
-is the default value for flag &ndash;manage-nodes-with-annotation-selector</p>
+is the default value for flag &ndash;manage-nodes-with-annotation-selector
+Note: when <code>all-node-manage</code> is specified as true or
+<code>manage-single-node</code> is specified,
+this is a no-op.</p>
 </td>
 </tr>
 <tr>
@@ -1892,8 +1912,10 @@ string
 </td>
 <td>
 <p>Default labels specified on Nodes to demand manage.
-Note: when <code>all-node-manage</code> is specified as true, this is a no-op.
-is the default value for flag &ndash;manage-nodes-with-label-selector</p>
+is the default value for flag &ndash;manage-nodes-with-label-selector
+Note: when <code>all-node-manage</code> is specified as true or
+<code>manage-single-node</code> is specified,
+this is a no-op.</p>
 </td>
 </tr>
 <tr>

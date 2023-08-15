@@ -75,6 +75,7 @@ jobs:
         case:
           - kwok
           - kwok-with-cni
+          - kwok-single-node
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:

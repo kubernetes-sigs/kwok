@@ -112,6 +112,7 @@ type Config struct {
 	EnableCNI                             bool
 	TypedClient                           kubernetes.Interface
 	TypedKwokClient                       versioned.Interface
+	ManageSingleNode                      string
 	ManageAllNodes                        bool
 	ManageNodesWithAnnotationSelector     string
 	ManageNodesWithLabelSelector          string
@@ -132,16 +133,31 @@ type Config struct {
 	EnablePodCache                        bool
 }
 
+func (c Config) validate() error {
+	switch {
+	case c.ManageSingleNode != "":
+		if c.ManageAllNodes {
+			return fmt.Errorf("manage-single-node is conflicted with manage-all-nodes")
+		}
+		if c.ManageNodesWithAnnotationSelector != "" || c.ManageNodesWithLabelSelector != "" {
+			return fmt.Errorf("manage-single-node is conflicted with manage-nodes-with-annotation-selector or manage-nodes-with-label-selector")
+		}
+	case c.ManageAllNodes:
+		if c.ManageNodesWithAnnotationSelector != "" || c.ManageNodesWithLabelSelector != "" {
+			return fmt.Errorf("manage-all-nodes is conflicted with manage-nodes-with-annotation-selector or manage-nodes-with-label-selector")
+		}
+	case c.ManageNodesWithAnnotationSelector != "" || c.ManageNodesWithLabelSelector != "":
+	default:
+		return fmt.Errorf("no nodes are managed")
+	}
+	return nil
+}
+
 // NewController creates a new fake kubelet controller
 func NewController(conf Config) (*Controller, error) {
-	switch {
-	case conf.ManageAllNodes:
-		conf.ManageNodesWithAnnotationSelector = ""
-		conf.ManageNodesWithLabelSelector = ""
-	case conf.ManageNodesWithAnnotationSelector != "":
-	case conf.ManageNodesWithLabelSelector != "":
-	default:
-		return nil, fmt.Errorf("no nodes are managed")
+	err := conf.validate()
+	if err != nil {
+		return nil, err
 	}
 
 	n := &Controller{
@@ -170,14 +186,34 @@ func (c *Controller) Start(ctx context.Context) error {
 		onLeaseNodeManageFunc func(nodeName string)
 		onNodeManagedFunc     func(nodeName string)
 		readOnlyFunc          func(nodeName string) bool
+
+		manageNodesWithLabelSelector      string
+		manageNodesWithAnnotationSelector string
+		manageNodesWithFieldSelector      string
+		manageNodeLeasesWithFieldSelector string
+		managePodsWithFieldSelector       string
 	)
+
+	switch {
+	case conf.ManageSingleNode != "":
+		managePodsWithFieldSelector = fields.OneTermEqualSelector("spec.nodeName", conf.ManageSingleNode).String()
+		manageNodesWithFieldSelector = fields.OneTermEqualSelector("metadata.name", conf.ManageSingleNode).String()
+		manageNodeLeasesWithFieldSelector = fields.OneTermEqualSelector("metadata.name", conf.ManageSingleNode).String()
+	case conf.ManageAllNodes:
+		managePodsWithFieldSelector = fields.OneTermNotEqualSelector("spec.nodeName", "").String()
+	case conf.ManageNodesWithLabelSelector != "" || conf.ManageNodesWithAnnotationSelector != "":
+		manageNodesWithLabelSelector = conf.ManageNodesWithLabelSelector
+		manageNodesWithAnnotationSelector = conf.ManageNodesWithAnnotationSelector
+		managePodsWithFieldSelector = fields.OneTermNotEqualSelector("spec.nodeName", "").String()
+	}
 
 	nodeChan := make(chan informer.Event[*corev1.Node], 1)
 	nodesCli := conf.TypedClient.CoreV1().Nodes()
 	nodesInformer := informer.NewInformer[*corev1.Node, *corev1.NodeList](nodesCli)
 	nodesCache, err := nodesInformer.WatchWithCache(ctx, informer.Option{
-		LabelSelector:      conf.ManageNodesWithLabelSelector,
-		AnnotationSelector: conf.ManageNodesWithAnnotationSelector,
+		LabelSelector:      manageNodesWithLabelSelector,
+		AnnotationSelector: manageNodesWithAnnotationSelector,
+		FieldSelector:      manageNodesWithFieldSelector,
 	}, nodeChan)
 	if err != nil {
 		return fmt.Errorf("failed to watch nodes: %w", err)
@@ -188,7 +224,7 @@ func (c *Controller) Start(ctx context.Context) error {
 	podsInformer := informer.NewInformer[*corev1.Pod, *corev1.PodList](podsCli)
 
 	podWatchOption := informer.Option{
-		FieldSelector: fields.OneTermNotEqualSelector("spec.nodeName", "").String(),
+		FieldSelector: managePodsWithFieldSelector,
 	}
 
 	var podsCache informer.Getter[*corev1.Pod]
@@ -205,7 +241,9 @@ func (c *Controller) Start(ctx context.Context) error {
 		nodeLeasesChan = make(chan informer.Event[*coordinationv1.Lease], 1)
 		nodeLeasesCli := conf.TypedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease)
 		nodeLeasesInformer := informer.NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](nodeLeasesCli)
-		err = nodeLeasesInformer.Watch(ctx, informer.Option{}, nodeLeasesChan)
+		err = nodeLeasesInformer.Watch(ctx, informer.Option{
+			FieldSelector: manageNodeLeasesWithFieldSelector,
+		}, nodeLeasesChan)
 		if err != nil {
 			return fmt.Errorf("failed to watch nodes: %w", err)
 		}
