@@ -1,7 +1,7 @@
 apiVersion: kwok.x-k8s.io/v1alpha1
 kind: Stage
 metadata:
-  name: node-heartbeat
+  name: node-heartbeat-with-lease
 spec:
   resourceRef:
     apiGroup: v1
@@ -17,8 +17,8 @@ spec:
       values:
       - 'True'
   delay:
-    durationMilliseconds: 20000
-    jitterDurationMilliseconds: 25000
+    durationMilliseconds: 600000
+    jitterDurationMilliseconds: 610000
   next:
     statusTemplate: |
       {{ $now := Now }}
@@ -32,4 +32,23 @@ spec:
         status: {{ .status | Quote }}
         type: {{ .type | Quote }}
       {{ end }}
-  immediateNextStage: true
+
+      addresses:
+      {{ with .status.addresses }}
+      {{ YAML . 1 }}
+      {{ else }}
+      {{ with NodeIP }}
+      - address: {{ . | Quote }}
+        type: InternalIP
+      {{ end }}
+      {{ with NodeName }}
+      - address: {{ . | Quote }}
+        type: Hostname
+      {{ end }}
+      {{ end }}
+
+      {{ with NodePort }}
+      daemonEndpoints:
+        kubeletEndpoint:
+          Port: {{ . }}
+      {{ end }}

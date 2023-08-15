@@ -29,7 +29,8 @@ import (
 
 	"sigs.k8s.io/kwok/kustomize/crd"
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
-	heartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
+	nodeheartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
+	nodeheartbeatwithlease "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat-with-lease"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -193,7 +194,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 		conf.Options.Runtime != consts.RuntimeTypeKind &&
 		conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
 		len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
-		defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds == 0)
+		defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds != 0)
 		if err != nil {
 			return err
 		}
@@ -203,7 +204,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 	return config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)
 }
 
-func (c *Cluster) getDefaultStages(updateFrequency int64, nodeHeartbeat bool) ([]config.InternalObject, error) {
+func (c *Cluster) getDefaultStages(updateFrequency int64, lease bool) ([]config.InternalObject, error) {
 	objs := []config.InternalObject{}
 
 	nodeInit, err := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
@@ -215,23 +216,34 @@ func (c *Cluster) getDefaultStages(updateFrequency int64, nodeHeartbeat bool) ([
 	}
 	objs = append(objs, nodeInit)
 
-	if nodeHeartbeat {
-		nodeHeartbeat, err := config.Unmarshal([]byte(heartbeat.DefaultNodeHeartbeat))
-		if err != nil {
-			return nil, err
-		}
-
-		nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
-		if !ok {
-			return nil, fmt.Errorf("failed to get node heartbeat stage %T", nodeHeartbeat)
-		}
-		if updateFrequency > 0 {
-			nodeHeartbeatStage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
-			nodeHeartbeatStage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)
-		}
-
-		objs = append(objs, nodeHeartbeatStage)
+	rawHeartbeat := nodeheartbeat.DefaultNodeHeartbeat
+	if lease {
+		rawHeartbeat = nodeheartbeatwithlease.DefaultNodeHeartbeatWithLease
 	}
+
+	nodeHeartbeat, err := config.Unmarshal([]byte(rawHeartbeat))
+	if err != nil {
+		return nil, err
+	}
+
+	nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
+	if !ok {
+		return nil, fmt.Errorf("failed to get node nodeheartbeat stage %T", nodeHeartbeat)
+	}
+	if updateFrequency > 0 {
+		durationMilliseconds := format.ElemOrDefault(nodeHeartbeatStage.Spec.Delay.DurationMilliseconds)
+		jitterDurationMilliseconds := format.ElemOrDefault(nodeHeartbeatStage.Spec.Delay.JitterDurationMilliseconds)
+		if updateFrequency > durationMilliseconds {
+			durationMilliseconds = updateFrequency
+		}
+		if jitterUpdateFrequency := updateFrequency + updateFrequency/10; jitterUpdateFrequency > jitterDurationMilliseconds {
+			jitterDurationMilliseconds = jitterUpdateFrequency
+		}
+		nodeHeartbeatStage.Spec.Delay.DurationMilliseconds = format.Ptr(durationMilliseconds)
+		nodeHeartbeatStage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(jitterDurationMilliseconds)
+	}
+
+	objs = append(objs, nodeHeartbeatStage)
 	return objs, nil
 }
 

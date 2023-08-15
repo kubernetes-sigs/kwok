@@ -15,7 +15,7 @@ spec:
   next:
     statusTemplate: |
       {{ $now := Now }}
-      {{ $lastTransitionTime := or .creationTimestamp $now }}
+      {{ $lastTransitionTime := or .metadata.creationTimestamp $now }}
       conditions:
       {{ range NodeConditions }}
       - lastHeartbeatTime: {{ $now | Quote }}
