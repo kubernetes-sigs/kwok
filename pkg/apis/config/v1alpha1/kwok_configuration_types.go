@@ -70,19 +70,33 @@ type KwokConfigurationOptions struct {
 	// is the default value for flag --tls-private-key-file
 	TLSPrivateKeyFile string `json:"tlsPrivateKeyFile,omitempty"`
 
+	// ManageSingleNode is the option to manage a single node name.
+	// is the default value for flag --manage-single-node
+	// Note: when `manage-all-nodes` is specified as true or
+	// `manage-nodes-with-label-selector` or `manage-nodes-with-annotation-selector` is specified,
+	// this is a no-op.
+	ManageSingleNode string `json:"manageSingleNode,omitempty"`
+
 	// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
 	// is the default value for flag --manage-all-nodes
+	// Note: when `manage-single-node` is specified as true or
+	// `manage-nodes-with-label-selector` or `manage-nodes-with-annotation-selector` is specified,
+	// this is a no-op.
 	// +default=false
 	ManageAllNodes *bool `json:"manageAllNodes,omitempty"`
 
 	// Default annotations specified on Nodes to demand manage.
-	// Note: when `all-node-manage` is specified as true, this is a no-op.
 	// is the default value for flag --manage-nodes-with-annotation-selector
+	// Note: when `all-node-manage` is specified as true or
+	// `manage-single-node` is specified,
+	// this is a no-op.
 	ManageNodesWithAnnotationSelector string `json:"manageNodesWithAnnotationSelector,omitempty"`
 
 	// Default labels specified on Nodes to demand manage.
-	// Note: when `all-node-manage` is specified as true, this is a no-op.
 	// is the default value for flag --manage-nodes-with-label-selector
+	// Note: when `all-node-manage` is specified as true or
+	// `manage-single-node` is specified,
+	// this is a no-op.
 	ManageNodesWithLabelSelector string `json:"manageNodesWithLabelSelector,omitempty"`
 
 	// If a Node/Pod is on a managed Node and has this annotation status will not be modified

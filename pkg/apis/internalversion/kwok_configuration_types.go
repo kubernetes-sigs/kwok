@@ -53,6 +53,9 @@ type KwokConfigurationOptions struct {
 	// TLSPrivateKeyFile is the ile containing x509 private key
 	TLSPrivateKeyFile string
 
+	// ManageSingleNode is the option to manage a single node name
+	ManageSingleNode string
+
 	// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
 	ManageAllNodes bool
 
@@ -74,11 +77,11 @@ type KwokConfigurationOptions struct {
 	// Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux.
 	EnableCNI bool
 
-	// enableDebuggingHandlers enables server endpoints for log collection
+	// EnableDebuggingHandlers enables server endpoints for log collection
 	// and local running of containers and commands
 	EnableDebuggingHandlers bool
 
-	// enableContentionProfiling enables lock contention profiling, if enableDebuggingHandlers is true.
+	// EnableContentionProfiling enables lock contention profiling, if enableDebuggingHandlers is true.
 	EnableContentionProfiling bool
 
 	// EnableProfiling enables /debug/pprof handler.

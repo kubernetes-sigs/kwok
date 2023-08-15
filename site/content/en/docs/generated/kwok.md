@@ -17,9 +17,10 @@ kwok [flags]
       --experimental-enable-cni                            Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux
   -h, --help                                               help for kwok
       --kubeconfig string                                  Path to the kubeconfig file to use (default "~/.kube/config")
-      --manage-all-nodes                                   All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.
-      --manage-nodes-with-annotation-selector string       Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes.
-      --manage-nodes-with-label-selector string            Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes.
+      --manage-all-nodes                                   All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-single-node.
+      --manage-nodes-with-annotation-selector string       Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes and manage-single-node.
+      --manage-nodes-with-label-selector string            Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes and manage-single-node.
+      --manage-single-node string                          Node that matches the name will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-all-nodes.
       --master string                                      The address of the Kubernetes API server (overrides any value in kubeconfig).
       --node-ip string                                     IP of the node
       --node-lease-duration-seconds uint                   Duration of node lease seconds

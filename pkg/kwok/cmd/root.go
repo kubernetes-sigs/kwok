@@ -79,9 +79,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().IntVar(&flags.Options.NodePort, "node-port", flags.Options.NodePort, "Port of the node")
 	cmd.Flags().StringVar(&flags.Options.TLSCertFile, "tls-cert-file", flags.Options.TLSCertFile, "File containing the default x509 Certificate for HTTPS")
 	cmd.Flags().StringVar(&flags.Options.TLSPrivateKeyFile, "tls-private-key-file", flags.Options.TLSPrivateKeyFile, "File containing the default x509 private key matching --tls-cert-file")
-	cmd.Flags().BoolVar(&flags.Options.ManageAllNodes, "manage-all-nodes", flags.Options.ManageAllNodes, "All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.")
-	cmd.Flags().StringVar(&flags.Options.ManageNodesWithAnnotationSelector, "manage-nodes-with-annotation-selector", flags.Options.ManageNodesWithAnnotationSelector, "Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes.")
-	cmd.Flags().StringVar(&flags.Options.ManageNodesWithLabelSelector, "manage-nodes-with-label-selector", flags.Options.ManageNodesWithLabelSelector, "Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes.")
+	cmd.Flags().StringVar(&flags.Options.ManageSingleNode, "manage-single-node", flags.Options.ManageSingleNode, "Node that matches the name will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-all-nodes.")
+	cmd.Flags().BoolVar(&flags.Options.ManageAllNodes, "manage-all-nodes", flags.Options.ManageAllNodes, "All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-single-node.")
+	cmd.Flags().StringVar(&flags.Options.ManageNodesWithAnnotationSelector, "manage-nodes-with-annotation-selector", flags.Options.ManageNodesWithAnnotationSelector, "Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes and manage-single-node.")
+	cmd.Flags().StringVar(&flags.Options.ManageNodesWithLabelSelector, "manage-nodes-with-label-selector", flags.Options.ManageNodesWithLabelSelector, "Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes and manage-single-node.")
 	cmd.Flags().StringVar(&flags.Options.DisregardStatusWithAnnotationSelector, "disregard-status-with-annotation-selector", flags.Options.DisregardStatusWithAnnotationSelector, "All node/pod status excluding the ones that match the annotation selector will be watched and managed.")
 	cmd.Flags().StringVar(&flags.Options.DisregardStatusWithLabelSelector, "disregard-status-with-label-selector", flags.Options.DisregardStatusWithLabelSelector, "All node/pod status excluding the ones that match the label selector will be watched and managed.")
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "Path to the kubeconfig file to use")
@@ -229,22 +230,18 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	if flags.Options.ManageAllNodes {
-		if flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "" {
-			logger.Error("manage-all-nodes is conflicted with manage-nodes-with-annotation-selector and manage-nodes-with-label-selector.", nil)
-			os.Exit(1)
-		}
+	switch {
+	case flags.Options.ManageSingleNode != "":
+		logger.Info("Watch single node",
+			"node", flags.Options.ManageSingleNode,
+		)
+	case flags.Options.ManageAllNodes:
 		logger.Info("Watch all nodes")
-	} else if flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "" {
+	case flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "":
 		logger.Info("Watch nodes",
 			"annotation", flags.Options.ManageNodesWithAnnotationSelector,
 			"label", flags.Options.ManageNodesWithLabelSelector,
 		)
-	}
-
-	err = waitForReady(ctx, typedClient)
-	if err != nil {
-		return err
 	}
 
 	id, err := controllers.Identity()
@@ -261,6 +258,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		EnableCNI:                             flags.Options.EnableCNI,
 		EnableMetrics:                         enableMetrics,
 		EnablePodCache:                        enableMetrics,
+		ManageSingleNode:                      flags.Options.ManageSingleNode,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
 		ManageNodesWithLabelSelector:          flags.Options.ManageNodesWithLabelSelector,
@@ -278,6 +276,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 		NodeLeaseDurationSeconds:              flags.Options.NodeLeaseDurationSeconds,
 		ID:                                    id,
 	})
+	if err != nil {
+		return err
+	}
+
+	err = waitForReady(ctx, typedClient)
 	if err != nil {
 		return err
 	}

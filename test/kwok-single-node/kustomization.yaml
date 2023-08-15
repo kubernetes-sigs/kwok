@@ -19,10 +19,12 @@ patches:
     - op: replace
       path: /spec/template/spec/hostNetwork
       value: true
-
-replicas:
-- name: kwok-controller
-  count: 2
+    - op: replace
+      path: /spec/template/spec/containers/0/args/1
+      value: --manage-nodes-with-annotation-selector=
+    - op: replace
+      path: /spec/template/spec/containers/0/args/3
+      value: --manage-single-node=fake-node
 
 resources:
 - ../../kustomize/kwok
