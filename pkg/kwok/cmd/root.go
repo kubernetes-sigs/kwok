@@ -30,6 +30,7 @@ import (
 
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
 	nodeheartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
+	nodeheartbeatwithlease "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat-with-lease"
 	podfast "sigs.k8s.io/kwok/kustomize/stage/pod/fast"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
@@ -398,7 +399,7 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 	return nil
 }
 
-func getDefaultNodeStages(heartbeat bool) ([]*internalversion.Stage, error) {
+func getDefaultNodeStages(lease bool) ([]*internalversion.Stage, error) {
 	nodeStages := []*internalversion.Stage{}
 	nodeInit, err := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
 	if err != nil {
@@ -410,17 +411,20 @@ func getDefaultNodeStages(heartbeat bool) ([]*internalversion.Stage, error) {
 	}
 	nodeStages = append(nodeStages, nodeInitStage)
 
-	if heartbeat {
-		nodeHeartbeat, err := config.Unmarshal([]byte(nodeheartbeat.DefaultNodeHeartbeat))
-		if err != nil {
-			return nil, err
-		}
-		nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
-		if !ok {
-			return nil, fmt.Errorf("failed to convert node init to stage")
-		}
-		nodeStages = append(nodeStages, nodeHeartbeatStage)
+	rawHeartbeat := nodeheartbeat.DefaultNodeHeartbeat
+	if lease {
+		rawHeartbeat = nodeheartbeatwithlease.DefaultNodeHeartbeatWithLease
 	}
+
+	nodeHeartbeat, err := config.Unmarshal([]byte(rawHeartbeat))
+	if err != nil {
+		return nil, err
+	}
+	nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert node init to stage")
+	}
+	nodeStages = append(nodeStages, nodeHeartbeatStage)
 	return nodeStages, nil
 }
 
