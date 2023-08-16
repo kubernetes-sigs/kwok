@@ -34,7 +34,7 @@ var (
 
 	// KubeVersion is the version of Kubernetes.
 	// It will be overwritten during the `make build` process.
-	KubeVersion      = "1.27.3"
+	KubeVersion      = "1.28.0"
 	KubeBinaryPrefix = "https://dl.k8s.io/release"
 	KubeImagePrefix  = "registry.k8s.io"
 

@@ -21,7 +21,7 @@ but that only works on Linux.
 Building Kubernetes Binaries and setting up `kwokctl` defaults to use them
 
 ``` bash
-KUBE_VERSION="v1.27.3"
+KUBE_VERSION="v1.28.0"
 SRC_DIR="${HOME}/.kwok/cache/kubernetes/${KUBE_VERSION}"
 mkdir -p "${SRC_DIR}" && cd "${SRC_DIR}" &&
 wget "https://dl.k8s.io/${KUBE_VERSION}/kubernetes-src.tar.gz" -O - | tar xz &&
