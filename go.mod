@@ -12,7 +12,7 @@ require (
 	github.com/creack/pty v1.1.18
 	github.com/emicklei/go-restful/v3 v3.10.2
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/google/cel-go v0.16.0
+	github.com/google/cel-go v0.17.1
 	github.com/google/go-cmp v0.5.9
 	github.com/itchyny/gojq v0.12.13
 	github.com/nxadm/tail v1.4.8
