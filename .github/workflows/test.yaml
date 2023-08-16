@@ -165,7 +165,7 @@ jobs:
         with:
           repository: kubernetes/kubernetes
           path: kubernetes
-          ref: v1.27.3
+          ref: v1.28.0
       - name: Build Kubernetes Binary for Windows
         if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'windows-latest' }}
         shell: bash

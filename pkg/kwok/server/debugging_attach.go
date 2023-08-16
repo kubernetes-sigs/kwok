@@ -21,20 +21,27 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/apimachinery/pkg/types"
-	clientremotecommand "k8s.io/client-go/tools/remotecommand"
+	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
+	remotecommandclient "k8s.io/client-go/tools/remotecommand"
+	remotecommandserver "k8s.io/kubelet/pkg/cri/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwok/server/remotecommand"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // AttachContainer attaches to a container in a pod,
 // copying data between in/out/err and the container's stdin/stdout/stderr.
-func (s *Server) AttachContainer(ctx context.Context, podName, podNamespace string, uid types.UID, containerName string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan clientremotecommand.TerminalSize) error {
+func (s *Server) AttachContainer(ctx context.Context, name string, uid types.UID, containerName string, in io.Reader, out, errOut io.WriteCloser, tty bool, resize <-chan remotecommandclient.TerminalSize) error {
+	pod := strings.Split(name, "/")
+	if len(pod) != 2 {
+		return fmt.Errorf("invalid pod name %q", name)
+	}
+	podName, podNamespace := pod[0], pod[1]
 	attach, err := s.getPodAttach(podName, podNamespace, containerName)
 	if err != nil {
 		return err
@@ -45,31 +52,30 @@ func (s *Server) AttachContainer(ctx context.Context, podName, podNamespace stri
 		follow:    true,
 		timestamp: false,
 	}
-	return readLogs(ctx, attach.LogsFile, opts, stdout, stderr)
+	return readLogs(ctx, attach.LogsFile, opts, out, errOut)
 }
 
 func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
 	params := getExecRequestParams(req)
 
-	streamOpts, err := remotecommand.NewOptions(req.Request)
+	streamOpts, err := remotecommandserver.NewOptions(req.Request)
 	if err != nil {
 		http.Error(resp, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	remotecommand.ServeAttach(
-		req.Request.Context(),
+	remotecommandserver.ServeAttach(
 		resp.ResponseWriter,
 		req.Request,
 		s,
-		params.podName,
-		params.podNamespace,
+		params.podName+"/"+params.podNamespace,
 		params.podUID,
 		params.containerName,
 		streamOpts,
 		s.idleTimeout,
 		s.streamCreationTimeout,
-		remotecommand.SupportedStreamingProtocols)
+		remotecommandconsts.SupportedStreamingProtocols,
+	)
 }
 
 func (s *Server) getPodAttach(podName, podNamespace, containerName string) (*internalversion.AttachConfig, error) {

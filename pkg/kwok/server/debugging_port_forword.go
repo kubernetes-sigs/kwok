@@ -23,22 +23,29 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/kubelet/pkg/cri/streaming/portforward"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwok/server/portforward"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // PortForward handles a port forwarding request.
-func (s *Server) PortForward(ctx context.Context, podName, podNamespace string, uid types.UID, port int32, stream io.ReadWriteCloser) error {
+func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, port int32, stream io.ReadWriteCloser) error {
 	defer func() {
 		_ = stream.Close()
 	}()
+
+	pod := strings.Split(name, "/")
+	if len(pod) != 2 {
+		return fmt.Errorf("invalid pod name %q", name)
+	}
+	podName, podNamespace := pod[0], pod[1]
 
 	forward, err := s.getPodsForward(podName, podNamespace, port)
 	if err != nil {
@@ -87,17 +94,16 @@ func (s *Server) getPortForward(req *restful.Request, resp *restful.Response) {
 	}
 
 	portforward.ServePortForward(
-		req.Request.Context(),
 		resp.ResponseWriter,
 		req.Request,
 		s,
-		params.podName,
-		params.podNamespace,
+		params.podName+"/"+params.podNamespace,
 		params.podUID,
 		portForwardOptions,
 		s.idleTimeout,
 		s.streamCreationTimeout,
-		portforward.SupportedProtocols)
+		portforward.SupportedProtocols,
+	)
 }
 
 func (s *Server) getPodsForward(podName, podNamespace string, port int32) (*internalversion.Forward, error) {

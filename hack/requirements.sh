@@ -25,7 +25,7 @@ export PATH="${LOCAL_BIN_DIR}:${PATH}"
 
 KIND_VERSION=0.19.0
 
-KUBE_VERSION=1.27.3
+KUBE_VERSION=1.28.0
 
 # TODO: Stay at 0.9 in figuring out the Attestations of buildx.
 # https://github.com/docker/buildx/pull/1412
@@ -167,7 +167,7 @@ function install_kustomize() {
   fi
 
   mkdir -p "${LOCAL_BIN_DIR}"
-  GOBIN="${LOCAL_BIN_DIR}" go install sigs.k8s.io/kustomize/kustomize/v4
+  GOBIN="${LOCAL_BIN_DIR}" go install sigs.k8s.io/kustomize/kustomize/v5
   if ! command_exist kustomize; then
     echo kustomize is installed but not effective >&2
     return 1

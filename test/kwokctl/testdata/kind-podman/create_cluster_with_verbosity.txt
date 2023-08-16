@@ -366,13 +366,13 @@ spec:
   hostNetwork: true
   nodeName: kwok-<CLUSTER_NAME>-control-plane
 EOF
-podman pull docker.io/kindest/node:v1.27.3
+podman pull docker.io/kindest/node:v1.28.0
 podman pull localhost/kwok:test
 podman pull docker.io/kubernetesui/dashboard:v2.7.0
 podman pull docker.io/prom/prometheus:v2.44.0
 podman pull docker.io/jaegertracing/all-in-one:1.45.0
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.27.3 --wait 29m
+KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.28.0 --wait 29m
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok
 podman save localhost/kwok:test -o <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar --name kwok-<CLUSTER_NAME>
