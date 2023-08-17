@@ -20,8 +20,7 @@ import (
 	"context"
 	"time"
 
-	//nolint:depguard
-	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/wait" //nolint:depguard
 )
 
 const (

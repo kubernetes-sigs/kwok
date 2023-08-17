@@ -43,6 +43,11 @@ if [[ "${UPDATE_GO_MOD:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/update-go-mod.sh || failed+=(go-mod)
 fi
 
+if [[ "${UPDATE_GO_LINT:-true}" == "true" ]]; then
+  echo "[*] Update go lint..."
+  "${ROOT_DIR}"/hack/update-go-lint.sh || failed+=(go-lint)
+fi
+
 if [[ "${UPDATE_ENDS_NEWLINE:-true}" == "true" ]]; then
   echo "[*] Update ends newline..."
   "${ROOT_DIR}"/hack/update-ends-newline.sh || failed+=(ends-newline)

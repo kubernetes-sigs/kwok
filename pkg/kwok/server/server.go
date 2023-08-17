@@ -26,15 +26,16 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/wzshiming/cmux"
 	"github.com/wzshiming/cmux/pattern"
+	corev1 "k8s.io/api/core/v1"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config/resources"
-	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/metrics"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -69,7 +70,16 @@ type Server struct {
 	metricsWebService    *restful.WebService
 	metricsUpdateHandler maps.SyncMap[string, *metrics.UpdateHandler]
 
-	controller *controllers.Controller
+	dataSource      DataSource
+	nodeCacheGetter informer.Getter[*corev1.Node]
+	podCacheGetter  informer.Getter[*corev1.Pod]
+}
+
+// DataSource is the interface that provides data for the server handlers.
+type DataSource interface {
+	metrics.DataSource
+	ListNodes() []string
+	StartedContainersTotal(nodeName string) int64
 }
 
 // Config holds configurations needed by the server handlers.
@@ -86,31 +96,36 @@ type Config struct {
 	ClusterAttaches     []*internalversion.ClusterAttach
 	Attaches            []*internalversion.Attach
 	Metrics             []*internalversion.Metric
-	Controller          *controllers.Controller
+
+	DataSource      DataSource
+	NodeCacheGetter informer.Getter[*corev1.Node]
+	PodCacheGetter  informer.Getter[*corev1.Pod]
 }
 
 // NewServer creates a new Server.
-func NewServer(config Config) (*Server, error) {
+func NewServer(conf Config) (*Server, error) {
 	container := restful.NewContainer()
 
 	s := &Server{
-		typedKwokClient:       config.TypedKwokClient,
-		enableCRDs:            config.EnableCRDs,
+		typedKwokClient:       conf.TypedKwokClient,
+		enableCRDs:            conf.EnableCRDs,
 		restfulCont:           container,
 		idleTimeout:           1 * time.Hour,
 		streamCreationTimeout: remotecommandconsts.DefaultStreamCreationTimeout,
 
-		clusterPortForwards: resources.NewStaticGetter(config.ClusterPortForwards),
-		portForwards:        resources.NewStaticGetter(config.PortForwards),
-		clusterExecs:        resources.NewStaticGetter(config.ClusterExecs),
-		execs:               resources.NewStaticGetter(config.Execs),
-		clusterLogs:         resources.NewStaticGetter(config.ClusterLogs),
-		logs:                resources.NewStaticGetter(config.Logs),
-		clusterAttaches:     resources.NewStaticGetter(config.ClusterAttaches),
-		attaches:            resources.NewStaticGetter(config.Attaches),
-		metrics:             resources.NewStaticGetter(config.Metrics),
+		clusterPortForwards: resources.NewStaticGetter(conf.ClusterPortForwards),
+		portForwards:        resources.NewStaticGetter(conf.PortForwards),
+		clusterExecs:        resources.NewStaticGetter(conf.ClusterExecs),
+		execs:               resources.NewStaticGetter(conf.Execs),
+		clusterLogs:         resources.NewStaticGetter(conf.ClusterLogs),
+		logs:                resources.NewStaticGetter(conf.Logs),
+		clusterAttaches:     resources.NewStaticGetter(conf.ClusterAttaches),
+		attaches:            resources.NewStaticGetter(conf.Attaches),
+		metrics:             resources.NewStaticGetter(conf.Metrics),
 
-		controller: config.Controller,
+		dataSource:      conf.DataSource,
+		podCacheGetter:  conf.PodCacheGetter,
+		nodeCacheGetter: conf.NodeCacheGetter,
 
 		bufPool: pools.NewPool(func() []byte {
 			return make([]byte, 32*1024)

@@ -98,24 +98,20 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return krc.Name == resourceKind
 	})
 	if !ok {
-		var resourceData []byte
+		var resourceData string
 		switch resourceKind {
 		default:
 			return fmt.Errorf("resource %s is not exists", resourceKind)
 		case "pod":
-			resourceData = []byte(resource.DefaultPod)
+			resourceData = resource.DefaultPod
 		case "node":
-			resourceData = []byte(resource.DefaultNode)
+			resourceData = resource.DefaultNode
 		}
 
 		logger.Info("No resource found, use default resource", "resource", resourceKind)
-		iobj, err := config.Unmarshal(resourceData)
+		krc, err = config.UnmarshalWithType[*internalversion.KwokctlResource](resourceData)
 		if err != nil {
 			return err
-		}
-		krc, ok = iobj.(*internalversion.KwokctlResource)
-		if !ok {
-			return fmt.Errorf("resource %T is not a kwokctl resource", iobj)
 		}
 	}
 

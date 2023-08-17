@@ -28,7 +28,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
@@ -37,7 +36,7 @@ import (
 
 // UpdateHandler handles updating metrics on request
 type UpdateHandler struct {
-	controller      *controllers.Controller
+	dataSource      DataSource
 	environment     *cel.Environment
 	nodeCacheGetter informer.Getter[*corev1.Node]
 	podCacheGetter  informer.Getter[*corev1.Pod]
@@ -50,10 +49,17 @@ type UpdateHandler struct {
 	histograms maps.SyncMap[string, Histogram]
 }
 
+// DataSource is the interface for getting data for metrics
+type DataSource interface {
+	ListPods(nodeName string) ([]log.ObjectRef, bool)
+}
+
 // UpdateHandlerConfig is configuration for a single node
 type UpdateHandlerConfig struct {
-	Controller  *controllers.Controller
-	Environment *cel.Environment
+	DataSource      DataSource
+	Environment     *cel.Environment
+	NodeCacheGetter informer.Getter[*corev1.Node]
+	PodCacheGetter  informer.Getter[*corev1.Pod]
 }
 
 // NewMetricsUpdateHandler creates new metric update handler based on the config
@@ -64,19 +70,14 @@ func NewMetricsUpdateHandler(conf UpdateHandlerConfig) *UpdateHandler {
 	)
 
 	h := &UpdateHandler{
-		controller:      conf.Controller,
+		dataSource:      conf.DataSource,
 		environment:     conf.Environment,
-		nodeCacheGetter: conf.Controller.GetNodeCache(),
-		podCacheGetter:  conf.Controller.GetPodCache(),
+		nodeCacheGetter: conf.NodeCacheGetter,
+		podCacheGetter:  conf.PodCacheGetter,
 		registry:        registry,
 		handler:         handler,
 	}
 	return h
-}
-
-func (h *UpdateHandler) getPodsInfo(nodeName string) ([]log.ObjectRef, bool) {
-	podsInfo, ok := h.controller.ListPods(nodeName)
-	return podsInfo, ok
 }
 
 func (h *UpdateHandler) getOrRegisterGauge(metricConfig *internalversion.MetricConfig, data cel.Data) (Gauge, string, error) {
@@ -196,7 +197,7 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 		gauge.Set(result)
 		return []string{key}, nil
 	case internalversion.DimensionPod:
-		pods, ok := h.getPodsInfo(nodeName)
+		pods, ok := h.dataSource.ListPods(nodeName)
 		if !ok {
 			logger.Warn("pods not found")
 			return nil, nil
@@ -224,7 +225,7 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 		}
 		return keys, nil
 	case internalversion.DimensionContainer:
-		pods, ok := h.getPodsInfo(nodeName)
+		pods, ok := h.dataSource.ListPods(nodeName)
 		if !ok {
 			logger.Warn("pods not found")
 			return nil, nil
@@ -290,7 +291,7 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 		counter.Set(result)
 		return []string{key}, nil
 	case internalversion.DimensionPod:
-		pods, ok := h.getPodsInfo(nodeName)
+		pods, ok := h.dataSource.ListPods(nodeName)
 		if !ok {
 			logger.Warn("pods not found")
 			return nil, nil
@@ -318,7 +319,7 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 		}
 		return keys, nil
 	case internalversion.DimensionContainer:
-		pods, ok := h.getPodsInfo(nodeName)
+		pods, ok := h.dataSource.ListPods(nodeName)
 		if !ok {
 			logger.Warn("pods not found")
 			return nil, nil
@@ -385,7 +386,7 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 		}
 		return []string{key}, nil
 	case internalversion.DimensionPod:
-		pods, ok := h.getPodsInfo(nodeName)
+		pods, ok := h.dataSource.ListPods(nodeName)
 		if !ok {
 			logger.Warn("pods not found")
 			return nil, nil
@@ -419,7 +420,7 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 		}
 		return keys, nil
 	case internalversion.DimensionContainer:
-		pods, ok := h.getPodsInfo(nodeName)
+		pods, ok := h.dataSource.ListPods(nodeName)
 		if !ok {
 			logger.Warn("pods not found")
 			return nil, nil

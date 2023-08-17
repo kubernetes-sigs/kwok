@@ -20,49 +20,37 @@ import (
 	"errors"
 	"io"
 
-	yamlv3 "gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/yaml"
+	"k8s.io/apimachinery/pkg/util/yaml" //nolint:depguard
 )
 
 // Decoder is a YAML decoder.
 type Decoder struct {
-	decoder *yamlv3.Decoder
+	decoder *yaml.YAMLToJSONDecoder
 }
 
 // NewDecoder returns a new YAML decoder.
 func NewDecoder(r io.Reader) *Decoder {
 	return &Decoder{
-		decoder: yamlv3.NewDecoder(r),
+		decoder: yaml.NewYAMLToJSONDecoder(r),
 	}
 }
 
-// Decode decodes YAML into a list of unstructured objects.
-func (d *Decoder) Decode(visitFunc func(obj *unstructured.Unstructured) error) error {
-	var tmp map[string]interface{}
+// Decode decodes YAML into an object.
+func (d *Decoder) Decode(obj any) error {
+	return d.decoder.Decode(obj)
+}
+
+// DecodeToUnstructured decodes YAML into a list of unstructured objects.
+func (d *Decoder) DecodeToUnstructured(visitFunc func(obj *unstructured.Unstructured) error) error {
 	for {
-		err := d.decoder.Decode(&tmp)
+		obj := &unstructured.Unstructured{}
+		err := d.Decode(obj)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
 			}
-			return err
-		}
-		if len(tmp) == 0 {
-			continue
-		}
-		data, err := yamlv3.Marshal(tmp)
-		if err != nil {
-			return err
-		}
-		data, err = yaml.YAMLToJSON(data)
-		if err != nil {
-			return err
-		}
-		obj := &unstructured.Unstructured{}
-		err = obj.UnmarshalJSON(data)
-		if err != nil {
 			return err
 		}
 

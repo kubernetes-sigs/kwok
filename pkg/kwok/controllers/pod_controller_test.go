@@ -172,13 +172,7 @@ func TestPodController(t *testing.T) {
 		podfast.DefaultPodReady,
 		podfast.DefaultPodComplete,
 		podfast.DefaultPodDelete,
-	}, func(s string) (*internalversion.Stage, error) {
-		iobj, err := config.Unmarshal([]byte(s))
-		if err != nil {
-			return nil, err
-		}
-		return iobj.(*internalversion.Stage), nil
-	})
+	}, config.UnmarshalWithType[*internalversion.Stage, string])
 
 	ctx := context.Background()
 	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))

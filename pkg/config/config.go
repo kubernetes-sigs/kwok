@@ -28,8 +28,6 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
-	"sigs.k8s.io/yaml"
 
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -40,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/patch"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 var (
@@ -389,9 +388,24 @@ func SaveTo(ctx context.Context, w io.Writer, objs []InternalObject) error {
 	return nil
 }
 
+// UnmarshalWithType unmarshals the given raw message into the internal object.
+func UnmarshalWithType[T InternalObject, D string | []byte](raw D) (t T, err error) {
+	obj, err := Unmarshal(raw)
+	if err != nil {
+		return t, err
+	}
+	t, ok := obj.(T)
+	if !ok {
+		return t, fmt.Errorf("unexpected type %T %s", obj, log.KObj(obj))
+	}
+	return t, nil
+}
+
 // Unmarshal unmarshals the given raw message into the internal object.
-func Unmarshal(raw []byte) (InternalObject, error) {
+func Unmarshal[D string | []byte](d D) (InternalObject, error) {
 	meta := metav1.TypeMeta{}
+
+	raw := []byte(d)
 
 	raw, err := yaml.YAMLToJSON(raw)
 	if err != nil {
@@ -516,7 +530,7 @@ func loadRawFromFile(p string) ([]json.RawMessage, error) {
 
 func loadRaw(r io.Reader) ([]json.RawMessage, error) {
 	var raws []json.RawMessage
-	decoder := utilyaml.NewYAMLToJSONDecoder(r)
+	decoder := yaml.NewDecoder(r)
 	for {
 		var raw json.RawMessage
 		err := decoder.Decode(&raw)

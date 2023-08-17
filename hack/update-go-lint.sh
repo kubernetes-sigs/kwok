@@ -21,20 +21,6 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
-function gendoc() {
-  local confdir="${ROOT_DIR}/hack/api_docs"
+COMMAND=(go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2)
 
-  go run github.com/ahmetb/gen-crd-api-reference-docs@v0.3.0 \
-    -template-dir "${confdir}" \
-    -config "${confdir}/config.json" \
-    "$@"
-}
-
-function check() {
-  echo "Update api docs"
-  gendoc \
-    -api-dir "sigs.k8s.io/kwok/pkg/apis/" \
-    -out-file "site/content/en/docs/generated/apis.md"
-}
-
-cd "${ROOT_DIR}" && check
+cd "${ROOT_DIR}" && "${COMMAND[@]}" run -c "${ROOT_DIR}/.golangci.yaml" --fix

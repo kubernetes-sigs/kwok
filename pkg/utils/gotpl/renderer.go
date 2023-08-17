@@ -23,11 +23,10 @@ import (
 	"strings"
 	"text/template"
 
-	"sigs.k8s.io/yaml"
-
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // FuncMap is a map of functions that can be used in templates.

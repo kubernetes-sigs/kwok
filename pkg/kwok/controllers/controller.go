@@ -35,7 +35,6 @@ import (
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
-	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
@@ -47,6 +46,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 var (
@@ -483,11 +483,6 @@ func (c *Controller) Start(ctx context.Context) error {
 	return nil
 }
 
-// GetNodeInfo returns the node info for the given node
-func (c *Controller) GetNodeInfo(nodeName string) (*NodeInfo, bool) {
-	return c.nodes.Get(nodeName)
-}
-
 // ListNodes returns all nodes
 func (c *Controller) ListNodes() []string {
 	return c.nodes.List()
@@ -506,6 +501,15 @@ func (c *Controller) GetPodCache() informer.Getter[*corev1.Pod] {
 // GetNodeCache returns the node cache
 func (c *Controller) GetNodeCache() informer.Getter[*corev1.Node] {
 	return c.nodeCacheGetter
+}
+
+// StartedContainersTotal returns the total number of containers started
+func (c *Controller) StartedContainersTotal(nodeName string) int64 {
+	nodeInfo, ok := c.nodes.Get(nodeName)
+	if !ok {
+		return 0
+	}
+	return nodeInfo.StartedContainer.Load()
 }
 
 // Identity returns a unique identifier for this controller

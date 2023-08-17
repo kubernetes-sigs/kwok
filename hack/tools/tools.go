@@ -28,15 +28,6 @@ import (
 	// controller-gen
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 
-	// gen-crd-api-reference-docs
-	_ "github.com/ahmetb/gen-crd-api-reference-docs"
-
-	// shfmt
-	_ "mvdan.cc/sh/v3/cmd/shfmt"
-
-	// misspell
-	_ "github.com/client9/misspell/cmd/misspell"
-
 	// kustomize
 	_ "sigs.k8s.io/kustomize/kustomize/v5"
 )

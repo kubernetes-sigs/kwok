@@ -45,8 +45,9 @@ var (
 	DockerComposeVersion      = "2.17.2"
 	DockerComposeBinaryPrefix = "https://github.com/docker/compose/releases/download"
 
-	KindVersion      = "0.19.0"
-	KindBinaryPrefix = "https://github.com/kubernetes-sigs/kind/releases/download"
+	KindVersion         = "0.19.0"
+	KindBinaryPrefix    = "https://github.com/kubernetes-sigs/kind/releases/download"
+	KindNodeImagePrefix = "docker.io/kindest"
 
 	DashboardVersion      = "2.7.0"
 	DashboardBinaryPrefix = ""
@@ -59,8 +60,6 @@ var (
 	JaegerVersion      = "1.45.0"
 	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
 	JaegerImagePrefix  = "docker.io/jaegertracing"
-
-	KindNodeImagePrefix = "docker.io/kindest"
 
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000

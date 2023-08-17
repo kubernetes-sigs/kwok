@@ -21,7 +21,6 @@ import (
 	"sync/atomic"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/yaml"
 )
 
 // Encoder is a YAML encoder.
@@ -48,7 +47,7 @@ func (p *Encoder) Encode(obj runtime.Object) error {
 		}
 	}
 
-	output, err := yaml.Marshal(obj)
+	output, err := Marshal(obj)
 	if err != nil {
 		return err
 	}

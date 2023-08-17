@@ -23,8 +23,7 @@ import (
 	"os"
 	"time"
 
-	//nolint:depguard
-	"golang.org/x/exp/slog"
+	"golang.org/x/exp/slog" //nolint:depguard
 	"golang.org/x/term"
 )
 

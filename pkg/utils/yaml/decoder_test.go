@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
-func TestDecoder(t *testing.T) {
+func TestDecodeToUnstructured(t *testing.T) {
 	tests := []struct {
 		name    string
 		data    string
@@ -88,12 +88,12 @@ spec:
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := []*unstructured.Unstructured{}
-			err := NewDecoder(bytes.NewBufferString(tt.data)).Decode(func(obj *unstructured.Unstructured) error {
+			err := NewDecoder(bytes.NewBufferString(tt.data)).DecodeToUnstructured(func(obj *unstructured.Unstructured) error {
 				got = append(got, obj)
 				return nil
 			})
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DecodeToUnstructured() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 

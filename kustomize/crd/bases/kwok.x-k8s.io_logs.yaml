@@ -50,12 +50,7 @@ spec:
                     logsFile:
                       description: LogsFile is the file from which the log forward
                         starts
-                      minLength: 1
                       type: string
-                  required:
-                  - containers
-                  - follow
-                  - logsFile
                   type: object
                 type: array
             required:
