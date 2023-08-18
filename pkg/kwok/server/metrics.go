@@ -39,17 +39,10 @@ func (s *Server) InstallMetrics(ctx context.Context) error {
 		promHandler.ServeHTTP(resp.ResponseWriter, req.Request)
 	}
 
-	controller := s.controller
 	env, err := cel.NewEnvironment(cel.NodeEvaluatorConfig{
-		EnableEvaluatorCache: true,
-		EnableResultCache:    true,
-		StartedContainersTotal: func(nodeName string) int64 {
-			nodeInfo, ok := controller.GetNodeInfo(nodeName)
-			if !ok {
-				return 0
-			}
-			return nodeInfo.StartedContainer.Load()
-		},
+		EnableEvaluatorCache:   true,
+		EnableResultCache:      true,
+		StartedContainersTotal: s.dataSource.StartedContainersTotal,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create CEL environment: %w", err)
@@ -115,8 +108,10 @@ func (s *Server) getMetrics(metric *internalversion.Metric, env *cel.Environment
 		handler, ok := s.metricsUpdateHandler.Load(nodeName)
 		if !ok {
 			handler = metrics.NewMetricsUpdateHandler(metrics.UpdateHandlerConfig{
-				Controller:  s.controller,
-				Environment: env,
+				Environment:     env,
+				DataSource:      s.dataSource,
+				NodeCacheGetter: s.nodeCacheGetter,
+				PodCacheGetter:  s.podCacheGetter,
 			})
 			s.metricsUpdateHandler.Store(nodeName, handler)
 		}

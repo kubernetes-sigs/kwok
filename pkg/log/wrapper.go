@@ -24,8 +24,7 @@ import (
 	"strings"
 	"time"
 
-	//nolint:depguard
-	"golang.org/x/exp/slog"
+	"golang.org/x/exp/slog" //nolint:depguard
 )
 
 // Level is the logging level.

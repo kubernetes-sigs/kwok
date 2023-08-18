@@ -100,11 +100,10 @@ func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfigura
 	}
 	c.conf = conf
 	logger := log.FromContext(ctx)
+	logger = logger.With("kwokctlVersion", consts.Version)
 	if conf.Status.Version == "" {
-		logger.Warn("The cluster was created by an older version of kwokctl, "+
+		logger.Warn("The cluster was created by a older version of kwokctl, " +
 			"please recreate the cluster",
-			"createdByVersion", "<0.3.0",
-			"kwokctlVersion", consts.Version,
 		)
 		conf.Status.Version = "0.0.0"
 	} else if conf.Status.Version != consts.Version {
@@ -121,13 +120,11 @@ func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfigura
 			logger.Warn("The cluster was created by a older version of kwokctl, "+
 				"please recreate the cluster",
 				"createdByVersion", conf.Status.Version,
-				"kwokctlVersion", consts.Version,
 			)
 		case currentVer.GT(ver):
 			logger.Warn("The cluster was created by a newer version of kwokctl, "+
 				"please upgrade kwokctl or recreate the cluster",
 				"createdByVersion", conf.Status.Version,
-				"kwokctlVersion", consts.Version,
 			)
 		}
 	}
@@ -182,8 +179,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	if conf.Status.Version == "" {
-		c.conf = c.conf.DeepCopy()
-		c.conf.Status.Version = consts.Version
+		conf.Status.Version = consts.Version
 	}
 
 	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
@@ -207,29 +203,22 @@ func (c *Cluster) Save(ctx context.Context) error {
 func (c *Cluster) getDefaultStages(updateFrequency int64, lease bool) ([]config.InternalObject, error) {
 	objs := []config.InternalObject{}
 
-	nodeInit, err := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
+	nodeInitStage, err := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
 	if err != nil {
 		return nil, err
 	}
-	if _, ok := nodeInit.(*internalversion.Stage); !ok {
-		return nil, fmt.Errorf("failed to get node init stage %T", nodeInit)
-	}
-	objs = append(objs, nodeInit)
+	objs = append(objs, nodeInitStage)
 
 	rawHeartbeat := nodeheartbeat.DefaultNodeHeartbeat
 	if lease {
 		rawHeartbeat = nodeheartbeatwithlease.DefaultNodeHeartbeatWithLease
 	}
 
-	nodeHeartbeat, err := config.Unmarshal([]byte(rawHeartbeat))
+	nodeHeartbeatStage, err := config.UnmarshalWithType[*internalversion.Stage](rawHeartbeat)
 	if err != nil {
 		return nil, err
 	}
 
-	nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
-	if !ok {
-		return nil, fmt.Errorf("failed to get node nodeheartbeat stage %T", nodeHeartbeat)
-	}
 	if updateFrequency > 0 {
 		durationMilliseconds := format.ElemOrDefault(nodeHeartbeatStage.Spec.Delay.DurationMilliseconds)
 		jitterDurationMilliseconds := format.ElemOrDefault(nodeHeartbeatStage.Spec.Delay.JitterDurationMilliseconds)
@@ -286,7 +275,8 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	if !bytes.Equal(out.Bytes(), []byte("ok")) {
 		logger := log.FromContext(ctx)
 		logger.Debug("Check Ready",
-			"method", "get /healthz",
+			"method", "get",
+			"path", "/healthz",
 			"response", out,
 		)
 		return false, nil

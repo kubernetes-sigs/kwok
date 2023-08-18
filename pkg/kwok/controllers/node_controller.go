@@ -167,17 +167,15 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		readOnlyFunc:                          conf.ReadOnlyFunc,
 		enableMetrics:                         conf.EnableMetrics,
 	}
-	funcMap := gotpl.FuncMap{
+
+	funcMap := maps.Merge(gotpl.FuncMap{
 		"NodeIP":   c.funcNodeIP,
 		"NodeName": c.funcNodeName,
 		"NodePort": c.funcNodePort,
 		"NodeConditions": func() interface{} {
 			return nodeConditionsData
 		},
-	}
-	for k, v := range conf.FuncMap {
-		funcMap[k] = v
-	}
+	}, conf.FuncMap)
 	c.renderer = gotpl.NewRenderer(funcMap)
 	return c, nil
 }

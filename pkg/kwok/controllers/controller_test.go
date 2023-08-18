@@ -71,18 +71,18 @@ func TestController(t *testing.T) {
 		},
 	}
 
-	nodeInit, _ := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
-	nodeStages := []*internalversion.Stage{nodeInit.(*internalversion.Stage)}
+	nodeInit, _ := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
+	nodeStages := []*internalversion.Stage{nodeInit}
 	podStages, _ := slices.MapWithError([]string{
 		podfast.DefaultPodReady,
 		podfast.DefaultPodComplete,
 		podfast.DefaultPodDelete,
 	}, func(s string) (*internalversion.Stage, error) {
-		iobj, err := config.Unmarshal([]byte(s))
+		stage, err := config.UnmarshalWithType[*internalversion.Stage](s)
 		if err != nil {
 			return nil, err
 		}
-		return iobj.(*internalversion.Stage), nil
+		return stage, nil
 	})
 
 	tests := []struct {

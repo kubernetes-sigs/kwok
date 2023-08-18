@@ -14,13 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package maps
+package yaml
 
 import (
-	"golang.org/x/exp/maps"
+	"sigs.k8s.io/yaml" //nolint:depguard
 )
 
-// Keys returns the keys of the map.
-func Keys[M ~map[K]V, K comparable, V any](m M) []K {
-	return maps.Keys(m)
-}
+// The following functions are exported for testing purposes only.
+var (
+	YAMLToJSON = yaml.YAMLToJSON
+	JSONToYAML = yaml.JSONToYAML
+	Unmarshal  = yaml.Unmarshal
+	Marshal    = yaml.Marshal
+)

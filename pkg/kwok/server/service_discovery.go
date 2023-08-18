@@ -43,7 +43,7 @@ func (s *Server) prometheusDiscovery(rw http.ResponseWriter, req *http.Request) 
 	for _, m := range metrics {
 		if strings.Contains(m.Spec.Path, "{nodeName}") {
 			if listNode == nil {
-				listNode = s.controller.ListNodes()
+				listNode = s.dataSource.ListNodes()
 			}
 			for _, nodeName := range listNode {
 				targets = append(targets, prometheusStaticConfig{

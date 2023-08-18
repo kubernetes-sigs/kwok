@@ -118,7 +118,7 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 	start := time.Now()
 	decoder := yaml.NewDecoder(r)
 
-	err := decoder.Decode(func(obj *unstructured.Unstructured) error {
+	err := decoder.DecodeToUnstructured(func(obj *unstructured.Unstructured) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}

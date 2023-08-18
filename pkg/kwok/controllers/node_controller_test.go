@@ -75,8 +75,8 @@ func TestNodeController(t *testing.T) {
 		return node.Annotations["node"] == "true"
 	}
 
-	nodeInit, _ := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
-	nodeStages := []*internalversion.Stage{nodeInit.(*internalversion.Stage)}
+	nodeInit, _ := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
+	nodeStages := []*internalversion.Stage{nodeInit}
 
 	lifecycle, _ := NewLifecycle(nodeStages)
 	nodes, err := NewNodeController(NodeControllerConfig{

@@ -21,8 +21,7 @@ import (
 	"sort"
 	"testing"
 
-	//nolint:depguard
-	"golang.org/x/exp/slog"
+	"golang.org/x/exp/slog" //nolint:depguard
 )
 
 func Test_quoteRangeTable(t *testing.T) {

@@ -1,6 +1,6 @@
 ## kwokctl logs
 
-Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, prometheus]
+Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, prometheus, jaeger]
 
 ```
 kwokctl logs [command] [flags]

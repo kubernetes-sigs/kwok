@@ -27,7 +27,6 @@ linters:
     - nolintlint
     - prealloc
     - revive
-    # - rowserrcheck
     - staticcheck
     - stylecheck
     - typecheck
@@ -75,6 +74,9 @@ linters-settings:
       - k8s.io/klog: "please use `sigs.k8s.io/kwok/pkg/log instead"
       - golang.org/x/exp/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
       - log: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+      # Use sigs.k8s.io/kwok/pkg/utils/yaml, which is a wrapper around yaml
+      - k8s.io/apimachinery/pkg/util/yaml: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
+      - sigs.k8s.io/yaml: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
       # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
       - k8s.io/apimachinery/pkg/util/wait: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
       # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
@@ -106,8 +108,10 @@ issues:
         - revive
       source: _ "embed"
 run:
+  concurrency: 1
   timeout: 10m
-  allow-parallel-runners: true
+  allow-parallel-runners: false
   skip-dirs-use-default: true
   skip-files:
     - ".*\\.zz_generated\\..*"
+  go: '1.20'

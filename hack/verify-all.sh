@@ -43,6 +43,11 @@ if [[ "${VERIFY_GO_FORMAT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-go-format.sh || failed+=(go-format)
 fi
 
+if [[ "${VERIFY_GO_LINT:-true}" == "true" ]]; then
+  echo "[*] Verifying go lint..."
+  "${ROOT_DIR}"/hack/verify-go-lint.sh || failed+=(go-lint)
+fi
+
 if [[ "${VERIFY_CODEGEN:-true}" == "true" ]]; then
   echo "[*] Verifying codegen..."
   "${ROOT_DIR}"/hack/verify-codegen.sh || failed+=(codegen)

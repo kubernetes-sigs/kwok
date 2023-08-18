@@ -31,7 +31,7 @@ function format() {
     -o -path ./demo/node_modules/\* \
     -o -path ./site/themes/\* \
     \))
-  go run mvdan.cc/sh/v3/cmd/shfmt -w -i=2 "${findfiles[@]}"
+  go run mvdan.cc/sh/v3/cmd/shfmt@v3.7.0 -w -i=2 "${findfiles[@]}"
 }
 
 cd "${ROOT_DIR}" && format

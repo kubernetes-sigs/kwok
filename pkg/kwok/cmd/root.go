@@ -286,13 +286,18 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
+	err = ctr.Start(ctx)
+	if err != nil {
+		return err
+	}
+
 	serverAddress := flags.Options.ServerAddress
 	if serverAddress == "" && flags.Options.NodePort != 0 {
 		serverAddress = "0.0.0.0:" + format.String(flags.Options.NodePort)
 	}
 
 	if serverAddress != "" {
-		config := server.Config{
+		conf := server.Config{
 			TypedKwokClient:     typedKwokClient,
 			EnableCRDs:          flags.Options.EnableCRDs,
 			ClusterPortForwards: clusterPortForwards,
@@ -304,9 +309,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 			ClusterAttaches:     clusterAttaches,
 			Attaches:            attaches,
 			Metrics:             metrics,
-			Controller:          ctr,
+			DataSource:          ctr,
+			NodeCacheGetter:     ctr.GetNodeCache(),
+			PodCacheGetter:      ctr.GetPodCache(),
 		}
-		svc, err := server.NewServer(config)
+		svc, err := server.NewServer(conf)
 		if err != nil {
 			return fmt.Errorf("failed to create server: %w", err)
 		}
@@ -345,11 +352,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 				}
 			}
 		}()
-	}
-
-	err = ctr.Start(ctx)
-	if err != nil {
-		return err
 	}
 
 	<-ctx.Done()
@@ -401,13 +403,9 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 
 func getDefaultNodeStages(lease bool) ([]*internalversion.Stage, error) {
 	nodeStages := []*internalversion.Stage{}
-	nodeInit, err := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
+	nodeInitStage, err := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
 	if err != nil {
 		return nil, err
-	}
-	nodeInitStage, ok := nodeInit.(*internalversion.Stage)
-	if !ok {
-		return nil, fmt.Errorf("failed to convert node init to stage")
 	}
 	nodeStages = append(nodeStages, nodeInitStage)
 
@@ -416,13 +414,9 @@ func getDefaultNodeStages(lease bool) ([]*internalversion.Stage, error) {
 		rawHeartbeat = nodeheartbeatwithlease.DefaultNodeHeartbeatWithLease
 	}
 
-	nodeHeartbeat, err := config.Unmarshal([]byte(rawHeartbeat))
+	nodeHeartbeatStage, err := config.UnmarshalWithType[*internalversion.Stage](rawHeartbeat)
 	if err != nil {
 		return nil, err
-	}
-	nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
-	if !ok {
-		return nil, fmt.Errorf("failed to convert node init to stage")
 	}
 	nodeStages = append(nodeStages, nodeHeartbeatStage)
 	return nodeStages, nil
@@ -433,16 +427,5 @@ func getDefaultPodStages() ([]*internalversion.Stage, error) {
 		podfast.DefaultPodReady,
 		podfast.DefaultPodComplete,
 		podfast.DefaultPodDelete,
-	}, func(s string) (*internalversion.Stage, error) {
-		iobj, err := config.Unmarshal([]byte(s))
-		if err != nil {
-			return nil, err
-		}
-		stage, ok := iobj.(*internalversion.Stage)
-		if !ok {
-			return nil, fmt.Errorf("failed to convert pod init to stage")
-		}
-
-		return stage, nil
-	})
+	}, config.UnmarshalWithType[*internalversion.Stage, string])
 }

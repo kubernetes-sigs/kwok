@@ -46,11 +46,7 @@ spec:
                       type: array
                     logsFile:
                       description: LogsFile is the file from which the attach starts
-                      minLength: 1
                       type: string
-                  required:
-                  - containers
-                  - logsFile
                   type: object
                 type: array
               selector:

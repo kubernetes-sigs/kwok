@@ -602,7 +602,9 @@ func Convert_v1alpha1_Attach_To_internalversion_Attach(in *v1alpha1.Attach, out 
 
 func autoConvert_internalversion_AttachConfig_To_v1alpha1_AttachConfig(in *AttachConfig, out *v1alpha1.AttachConfig, s conversion.Scope) error {
 	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
-	out.LogsFile = in.LogsFile
+	if err := v1.Convert_string_To_Pointer_string(&in.LogsFile, &out.LogsFile, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -613,7 +615,9 @@ func Convert_internalversion_AttachConfig_To_v1alpha1_AttachConfig(in *AttachCon
 
 func autoConvert_v1alpha1_AttachConfig_To_internalversion_AttachConfig(in *v1alpha1.AttachConfig, out *AttachConfig, s conversion.Scope) error {
 	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
-	out.LogsFile = in.LogsFile
+	if err := v1.Convert_Pointer_string_To_string(&in.LogsFile, &out.LogsFile, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -623,7 +627,17 @@ func Convert_v1alpha1_AttachConfig_To_internalversion_AttachConfig(in *v1alpha1.
 }
 
 func autoConvert_internalversion_AttachSpec_To_v1alpha1_AttachSpec(in *AttachSpec, out *v1alpha1.AttachSpec, s conversion.Scope) error {
-	out.Attaches = *(*[]v1alpha1.AttachConfig)(unsafe.Pointer(&in.Attaches))
+	if in.Attaches != nil {
+		in, out := &in.Attaches, &out.Attaches
+		*out = make([]v1alpha1.AttachConfig, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_AttachConfig_To_v1alpha1_AttachConfig(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Attaches = nil
+	}
 	return nil
 }
 
@@ -633,7 +647,17 @@ func Convert_internalversion_AttachSpec_To_v1alpha1_AttachSpec(in *AttachSpec, o
 }
 
 func autoConvert_v1alpha1_AttachSpec_To_internalversion_AttachSpec(in *v1alpha1.AttachSpec, out *AttachSpec, s conversion.Scope) error {
-	out.Attaches = *(*[]AttachConfig)(unsafe.Pointer(&in.Attaches))
+	if in.Attaches != nil {
+		in, out := &in.Attaches, &out.Attaches
+		*out = make([]AttachConfig, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_AttachConfig_To_internalversion_AttachConfig(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Attaches = nil
+	}
 	return nil
 }
 
@@ -672,7 +696,17 @@ func Convert_v1alpha1_ClusterAttach_To_internalversion_ClusterAttach(in *v1alpha
 
 func autoConvert_internalversion_ClusterAttachSpec_To_v1alpha1_ClusterAttachSpec(in *ClusterAttachSpec, out *v1alpha1.ClusterAttachSpec, s conversion.Scope) error {
 	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Attaches = *(*[]v1alpha1.AttachConfig)(unsafe.Pointer(&in.Attaches))
+	if in.Attaches != nil {
+		in, out := &in.Attaches, &out.Attaches
+		*out = make([]v1alpha1.AttachConfig, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_AttachConfig_To_v1alpha1_AttachConfig(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Attaches = nil
+	}
 	return nil
 }
 
@@ -683,7 +717,17 @@ func Convert_internalversion_ClusterAttachSpec_To_v1alpha1_ClusterAttachSpec(in 
 
 func autoConvert_v1alpha1_ClusterAttachSpec_To_internalversion_ClusterAttachSpec(in *v1alpha1.ClusterAttachSpec, out *ClusterAttachSpec, s conversion.Scope) error {
 	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Attaches = *(*[]AttachConfig)(unsafe.Pointer(&in.Attaches))
+	if in.Attaches != nil {
+		in, out := &in.Attaches, &out.Attaches
+		*out = make([]AttachConfig, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_AttachConfig_To_internalversion_AttachConfig(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Attaches = nil
+	}
 	return nil
 }
 
@@ -772,7 +816,17 @@ func Convert_v1alpha1_ClusterLogs_To_internalversion_ClusterLogs(in *v1alpha1.Cl
 
 func autoConvert_internalversion_ClusterLogsSpec_To_v1alpha1_ClusterLogsSpec(in *ClusterLogsSpec, out *v1alpha1.ClusterLogsSpec, s conversion.Scope) error {
 	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Logs = *(*[]v1alpha1.Log)(unsafe.Pointer(&in.Logs))
+	if in.Logs != nil {
+		in, out := &in.Logs, &out.Logs
+		*out = make([]v1alpha1.Log, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_Log_To_v1alpha1_Log(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Logs = nil
+	}
 	return nil
 }
 
@@ -783,7 +837,17 @@ func Convert_internalversion_ClusterLogsSpec_To_v1alpha1_ClusterLogsSpec(in *Clu
 
 func autoConvert_v1alpha1_ClusterLogsSpec_To_internalversion_ClusterLogsSpec(in *v1alpha1.ClusterLogsSpec, out *ClusterLogsSpec, s conversion.Scope) error {
 	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Logs = *(*[]Log)(unsafe.Pointer(&in.Logs))
+	if in.Logs != nil {
+		in, out := &in.Logs, &out.Logs
+		*out = make([]Log, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_Log_To_internalversion_Log(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Logs = nil
+	}
 	return nil
 }
 
@@ -1613,8 +1677,12 @@ func Convert_v1alpha1_KwokctlResource_To_internalversion_KwokctlResource(in *con
 
 func autoConvert_internalversion_Log_To_v1alpha1_Log(in *Log, out *v1alpha1.Log, s conversion.Scope) error {
 	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
-	out.LogsFile = in.LogsFile
-	out.Follow = in.Follow
+	if err := v1.Convert_string_To_Pointer_string(&in.LogsFile, &out.LogsFile, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.Follow, &out.Follow, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1625,8 +1693,12 @@ func Convert_internalversion_Log_To_v1alpha1_Log(in *Log, out *v1alpha1.Log, s c
 
 func autoConvert_v1alpha1_Log_To_internalversion_Log(in *v1alpha1.Log, out *Log, s conversion.Scope) error {
 	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
-	out.LogsFile = in.LogsFile
-	out.Follow = in.Follow
+	if err := v1.Convert_Pointer_string_To_string(&in.LogsFile, &out.LogsFile, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.Follow, &out.Follow, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1664,7 +1736,17 @@ func Convert_v1alpha1_Logs_To_internalversion_Logs(in *v1alpha1.Logs, out *Logs,
 }
 
 func autoConvert_internalversion_LogsSpec_To_v1alpha1_LogsSpec(in *LogsSpec, out *v1alpha1.LogsSpec, s conversion.Scope) error {
-	out.Logs = *(*[]v1alpha1.Log)(unsafe.Pointer(&in.Logs))
+	if in.Logs != nil {
+		in, out := &in.Logs, &out.Logs
+		*out = make([]v1alpha1.Log, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_Log_To_v1alpha1_Log(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Logs = nil
+	}
 	return nil
 }
 
@@ -1674,7 +1756,17 @@ func Convert_internalversion_LogsSpec_To_v1alpha1_LogsSpec(in *LogsSpec, out *v1
 }
 
 func autoConvert_v1alpha1_LogsSpec_To_internalversion_LogsSpec(in *v1alpha1.LogsSpec, out *LogsSpec, s conversion.Scope) error {
-	out.Logs = *(*[]Log)(unsafe.Pointer(&in.Logs))
+	if in.Logs != nil {
+		in, out := &in.Logs, &out.Logs
+		*out = make([]Log, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_Log_To_internalversion_Log(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Logs = nil
+	}
 	return nil
 }
 
