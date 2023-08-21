@@ -29,10 +29,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -1148,5 +1151,66 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 
 // InitCRs initializes the CRs.
 func (c *Cluster) InitCRs(ctx context.Context) error {
-	return nil
+	kwokConfig := config.GetKwokConfiguration(ctx)
+	enableCustomMetric := slices.Contains(kwokConfig.Options.EnableCRDs, v1alpha1.CustomMetricKind)
+	enableExternalMetric := slices.Contains(kwokConfig.Options.EnableCRDs, v1alpha1.ExternalMetricKind)
+
+	if c.IsDryRun() {
+		if enableCustomMetric {
+			dryrun.PrintMessage("# Set up apiservice for custom metrics")
+		}
+
+		if enableExternalMetric {
+			dryrun.PrintMessage("# Set up apiservice for external metrics")
+		}
+
+		if enableExternalMetric || enableCustomMetric {
+			dryrun.PrintMessage("# Set up service for kwok controller")
+		}
+
+		return nil
+	}
+
+	buf := bytes.NewBuffer(nil)
+
+	if enableCustomMetric {
+		apiservice, err := BuildCustomMetricsApiservice(BuildCustomMetricsApiserviceConfig{
+			KwokControllerPort: 10247,
+		})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(apiservice)
+		_, _ = buf.WriteString("---\n")
+	}
+	if enableExternalMetric {
+		apiservice, err := BuildExternalMetricsApiservice(BuildExternalMetricsApiserviceConfig{
+			KwokControllerPort: 10247,
+		})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(apiservice)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if enableExternalMetric || enableCustomMetric {
+		service, err := BuildKwokService(BuildKwokServiceConfig{})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(service)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if buf.Len() == 0 {
+		return nil
+	}
+
+	clientset, err := c.GetClientset(ctx)
+	if err != nil {
+		return err
+	}
+
+	return snapshot.Load(ctx, clientset, bytes.NewBuffer(buf.Bytes()), nil)
 }

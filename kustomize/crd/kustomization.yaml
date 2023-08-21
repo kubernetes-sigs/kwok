@@ -9,5 +9,7 @@ resources:
 - bases/kwok.x-k8s.io_clusterexecs.yaml
 - bases/kwok.x-k8s.io_portforwards.yaml
 - bases/kwok.x-k8s.io_clusterportforwards.yaml
+- bases/kwok.x-k8s.io_custommetrics.yaml
+- bases/kwok.x-k8s.io_externalmetrics.yaml
 - bases/kwok.x-k8s.io_metrics.yaml
 - bases/kwok.x-k8s.io_stages.yaml

@@ -1,0 +1,60 @@
+kind: ExternalMetric
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: my-external-metric
+  namespace: default
+spec:
+  name: my_external_metric
+  metrics:
+  - value: "100m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-metric
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: external-metric
+  template:
+    metadata:
+      labels:
+        app: external-metric
+    spec:
+      containers:
+      - name: external-metric
+        image: external-metric
+---
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+metadata:
+  name: external-metric-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: external-metric
+  minReplicas: 1
+  maxReplicas: 10
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+  metrics:
+  - type: External
+    external:
+      metric:
+        name: my_external_metric
+      target:
+        type: AverageValue
+        averageValue: 30m

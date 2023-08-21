@@ -52,8 +52,16 @@ func (c *FakeKwokV1alpha1) ClusterResourceUsages() v1alpha1.ClusterResourceUsage
 	return &FakeClusterResourceUsages{c}
 }
 
+func (c *FakeKwokV1alpha1) CustomMetrics() v1alpha1.CustomMetricInterface {
+	return &FakeCustomMetrics{c}
+}
+
 func (c *FakeKwokV1alpha1) Execs(namespace string) v1alpha1.ExecInterface {
 	return &FakeExecs{c, namespace}
+}
+
+func (c *FakeKwokV1alpha1) ExternalMetrics(namespace string) v1alpha1.ExternalMetricInterface {
+	return &FakeExternalMetrics{c, namespace}
 }
 
 func (c *FakeKwokV1alpha1) Logs(namespace string) v1alpha1.LogsInterface {

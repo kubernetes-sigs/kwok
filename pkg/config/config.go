@@ -173,6 +173,18 @@ var configHandlers = map[string]configHandler{
 		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalClusterResourceUsage),
 		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1Alpha1ClusterResourceUsage),
 	},
+	v1alpha1.CustomMetricKind: {
+		Unmarshal:        unmarshalConfig[*v1alpha1.CustomMetric],
+		Marshal:          marshalConfig,
+		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalCustomMetric),
+		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1Alpha1CustomMetric),
+	},
+	v1alpha1.ExternalMetricKind: {
+		Unmarshal:        unmarshalConfig[*v1alpha1.ExternalMetric],
+		Marshal:          marshalConfig,
+		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalExternalMetric),
+		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1Alpha1ExternalMetric),
+	},
 	v1alpha1.MetricKind: {
 		Unmarshal:        unmarshalConfig[*v1alpha1.Metric],
 		Marshal:          marshalConfig,

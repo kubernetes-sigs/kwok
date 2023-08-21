@@ -298,7 +298,13 @@ Resource Types:
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage">ClusterResourceUsage</a>
 </li>
 <li>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetric">CustomMetric</a>
+</li>
+<li>
 <a href="#kwok.x-k8s.io/v1alpha1.Exec">Exec</a>
+</li>
+<li>
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetric">ExternalMetric</a>
 </li>
 <li>
 <a href="#kwok.x-k8s.io/v1alpha1.Logs">Logs</a>
@@ -932,6 +938,124 @@ ClusterResourceUsageStatus
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.CustomMetric">
+CustomMetric
+<a href="#kwok.x-k8s.io%2fv1alpha1.CustomMetric"> #</a>
+</h3>
+<p>
+<p>CustomMetric provides resource usage for a single pod.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>CustomMetric</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>Standard list metadata.
+More info: <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetricSpec">
+CustomMetricSpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec holds spec for resource usage.</p>
+<table>
+<tr>
+<td>
+<code>resourceRef</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceRef">
+ResourceRef
+</a>
+</em>
+</td>
+<td>
+<p>ResourceRef specifies the Kind and version of the resource.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selector</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ObjectSelector">
+ObjectSelector
+</a>
+</em>
+</td>
+<td>
+<p>Selector is a selector to filter pods to configure.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metrics</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetricItem">
+[]CustomMetricItem
+</a>
+</em>
+</td>
+<td>
+<p>Metrics is a list of custom metric.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetricStatus">
+CustomMetricStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for resource usage</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.Exec">
 Exec
 <a href="#kwok.x-k8s.io%2fv1alpha1.Exec"> #</a>
@@ -1020,6 +1144,109 @@ ExecStatus
 </td>
 <td>
 <p>Status holds status for exec</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExternalMetric">
+ExternalMetric
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExternalMetric"> #</a>
+</h3>
+<p>
+<p>ExternalMetric provides resource usage for a single pod.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>ExternalMetric</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>Standard list metadata.
+More info: <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetricSpec">
+ExternalMetricSpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec holds spec for resource usage.</p>
+<table>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of external metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metrics</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetricItem">
+[]ExternalMetricItem
+</a>
+</em>
+</td>
+<td>
+<p>Metrics is a list of external metric.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetricStatus">
+ExternalMetricStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for resource usage</p>
 </td>
 </tr>
 </tbody>
@@ -4018,7 +4245,11 @@ Condition
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageStatus">ClusterResourceUsageStatus</a>
 , 
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetricStatus">CustomMetricStatus</a>
+, 
 <a href="#kwok.x-k8s.io/v1alpha1.ExecStatus">ExecStatus</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetricStatus">ExternalMetricStatus</a>
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.LogsStatus">LogsStatus</a>
 , 
@@ -4144,6 +4375,143 @@ ConditionStatus
 <tr>
 <td><code>&#34;Unknown&#34;</code></td>
 <td><p>ConditionUnknown means kubernetes can&rsquo;t decide if a resource is in the condition or not.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.CustomMetricItem">
+CustomMetricItem
+<a href="#kwok.x-k8s.io%2fv1alpha1.CustomMetricItem"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetricSpec">CustomMetricSpec</a>
+</p>
+<p>
+<p>CustomMetricItem holds spec for custom metric item.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name for custom metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<p>Value is the value for custom metric.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.CustomMetricSpec">
+CustomMetricSpec
+<a href="#kwok.x-k8s.io%2fv1alpha1.CustomMetricSpec"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetric">CustomMetric</a>
+</p>
+<p>
+<p>CustomMetricSpec holds spec for custom metric.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>resourceRef</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ResourceRef">
+ResourceRef
+</a>
+</em>
+</td>
+<td>
+<p>ResourceRef specifies the Kind and version of the resource.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selector</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ObjectSelector">
+ObjectSelector
+</a>
+</em>
+</td>
+<td>
+<p>Selector is a selector to filter pods to configure.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metrics</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetricItem">
+[]CustomMetricItem
+</a>
+</em>
+</td>
+<td>
+<p>Metrics is a list of custom metric.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.CustomMetricStatus">
+CustomMetricStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.CustomMetricStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetric">CustomMetric</a>
+</p>
+<p>
+<p>CustomMetricStatus holds status for custom metric.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for custom metric.</p>
 </td>
 </tr>
 </tbody>
@@ -4430,6 +4798,117 @@ string
 </td>
 <td>
 <p>ExpressionFrom is the expression used to get the value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExternalMetricItem">
+ExternalMetricItem
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExternalMetricItem"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetricSpec">ExternalMetricSpec</a>
+</p>
+<p>
+<p>ExternalMetricItem holds spec for external metric item.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>value</code>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<p>Value is the value for external metric.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExternalMetricSpec">
+ExternalMetricSpec
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExternalMetricSpec"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetric">ExternalMetric</a>
+</p>
+<p>
+<p>ExternalMetricSpec holds spec for external metric.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of external metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metrics</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetricItem">
+[]ExternalMetricItem
+</a>
+</em>
+</td>
+<td>
+<p>Metrics is a list of external metric.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExternalMetricStatus">
+ExternalMetricStatus
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExternalMetricStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExternalMetric">ExternalMetric</a>
+</p>
+<p>
+<p>ExternalMetricStatus holds status for external metric.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for external metric.</p>
 </td>
 </tr>
 </tbody>
@@ -5028,6 +5507,8 @@ ObjectSelector
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterPortForwardSpec">ClusterPortForwardSpec</a>
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageSpec">ClusterResourceUsageSpec</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetricSpec">CustomMetricSpec</a>
 </p>
 <p>
 <p>ObjectSelector holds information how to match based on namespace and name.</p>
@@ -5130,6 +5611,49 @@ PortForwardStatus
 </td>
 <td>
 <p>Conditions holds conditions for port forward</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ResourceRef">
+ResourceRef
+<a href="#kwok.x-k8s.io%2fv1alpha1.ResourceRef"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.CustomMetricSpec">CustomMetricSpec</a>
+</p>
+<p>
+<p>ResourceRef specifies the kind and version of the resource.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiGroup</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>APIGroup of the referent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Kind of the referent.</p>
 </td>
 </tr>
 </tbody>

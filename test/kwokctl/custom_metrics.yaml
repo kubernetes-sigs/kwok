@@ -1,0 +1,74 @@
+kind: CustomMetric
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: cluster-custom-metric-pod-rules
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  metrics:
+  - name: http_requests_total
+    value: "900m"
+---
+kind: CustomMetric
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: cluster-custom-metric-ns-rules
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Namespace
+  metrics:
+  - name: http_requests_total
+    value: "50m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-metric
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: custom-metric
+  template:
+    metadata:
+      labels:
+        app: custom-metric
+    spec:
+      containers:
+      - name: my-pod
+        image: custom-metric
+---
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+metadata:
+  name: custom-metric-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: custom-metric
+  minReplicas: 1
+  maxReplicas: 10
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_total
+      target:
+        type: AverageValue
+        averageValue: 500m

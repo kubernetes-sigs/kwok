@@ -66,6 +66,14 @@ var (
 	//go:embed bases/kwok.x-k8s.io_clusterresourceusages.yaml
 	ClusterResourceUsage []byte
 
+	// CustomMetric is the custom resource definition for custom metrics.
+	//go:embed bases/kwok.x-k8s.io_custommetrics.yaml
+	CustomMetric []byte
+
+	// ExternalMetric is the custom resource definition for external metrics.
+	//go:embed bases/kwok.x-k8s.io_externalmetrics.yaml
+	ExternalMetric []byte
+
 	// Metric is the custom resource definition for metrics.
 	//go:embed bases/kwok.x-k8s.io_metrics.yaml
 	Metric []byte

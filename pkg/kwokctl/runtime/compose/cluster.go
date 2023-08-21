@@ -27,6 +27,8 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
@@ -41,6 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
@@ -1212,22 +1215,38 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 
 // InitCRs initializes the CRs.
 func (c *Cluster) InitCRs(ctx context.Context) error {
-	config, err := c.Config(ctx)
+	conf, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
-	conf := config.Options
+
+	enableMetricsServer := conf.Options.EnableMetricsServer
+	kwokConfig := config.GetKwokConfiguration(ctx)
+	enableCustomMetric := slices.Contains(kwokConfig.Options.EnableCRDs, v1alpha1.CustomMetricKind)
+	enableExternalMetric := slices.Contains(kwokConfig.Options.EnableCRDs, v1alpha1.ExternalMetricKind)
 
 	if c.IsDryRun() {
-		if conf.EnableMetricsServer {
+		if enableMetricsServer {
 			dryrun.PrintMessage("# Set up apiservice for metrics server")
+		}
+
+		if enableCustomMetric {
+			dryrun.PrintMessage("# Set up apiservice for custom metrics")
+		}
+
+		if enableExternalMetric {
+			dryrun.PrintMessage("# Set up apiservice for external metrics")
+		}
+
+		if enableExternalMetric || enableCustomMetric {
+			dryrun.PrintMessage("# Set up service for kwok controller")
 		}
 
 		return nil
 	}
 
 	buf := bytes.NewBuffer(nil)
-	if conf.EnableMetricsServer {
+	if enableMetricsServer {
 		apiserve, err := BuildMetricsServerAPIService(BuildMetricsServerAPIServiceConfig{
 			Name: c.Name(),
 		})
@@ -1235,6 +1254,38 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 			return err
 		}
 		_, _ = buf.WriteString(apiserve)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if enableCustomMetric {
+		apiservice, err := BuildCustomMetricsApiservice(BuildCustomMetricsApiserviceConfig{
+			KwokControllerPort: 10247,
+		})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(apiservice)
+		_, _ = buf.WriteString("---\n")
+	}
+	if enableExternalMetric {
+		apiservice, err := BuildExternalMetricsApiservice(BuildExternalMetricsApiserviceConfig{
+			KwokControllerPort: 10247,
+		})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(apiservice)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if enableExternalMetric || enableCustomMetric {
+		service, err := BuildKwokService(BuildKwokServiceConfig{
+			Name: c.Name(),
+		})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(service)
 		_, _ = buf.WriteString("---\n")
 	}
 

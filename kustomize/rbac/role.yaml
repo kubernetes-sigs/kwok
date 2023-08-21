@@ -135,7 +135,31 @@ rules:
 - apiGroups:
   - kwok.x-k8s.io
   resources:
+  - custommetrics
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
   - execs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - externalmetrics
   verbs:
   - create
   - delete

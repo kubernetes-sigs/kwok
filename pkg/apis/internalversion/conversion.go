@@ -366,6 +366,50 @@ func ConvertToInternalClusterResourceUsage(in *v1alpha1.ClusterResourceUsage) (*
 	return &out, nil
 }
 
+// ConvertToInternalCustomMetric converts a v1alpha1.CustomMetric to an internal version.
+func ConvertToInternalCustomMetric(in *v1alpha1.CustomMetric) (*CustomMetric, error) {
+	var out CustomMetric
+	err := Convert_v1alpha1_CustomMetric_To_internalversion_CustomMetric(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToV1Alpha1CustomMetric converts an internal version CustomMetric to a v1alpha1.CustomMetric.
+func ConvertToV1Alpha1CustomMetric(in *CustomMetric) (*v1alpha1.CustomMetric, error) {
+	var out v1alpha1.CustomMetric
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.CustomMetricKind
+	err := Convert_internalversion_CustomMetric_To_v1alpha1_CustomMetric(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalExternalMetric converts a v1alpha1.ExternalMetric to an internal version.
+func ConvertToInternalExternalMetric(in *v1alpha1.ExternalMetric) (*ExternalMetric, error) {
+	var out ExternalMetric
+	err := Convert_v1alpha1_ExternalMetric_To_internalversion_ExternalMetric(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToV1Alpha1ExternalMetric converts an internal version ExternalMetric to a v1alpha1.ExternalMetric.
+func ConvertToV1Alpha1ExternalMetric(in *ExternalMetric) (*v1alpha1.ExternalMetric, error) {
+	var out v1alpha1.ExternalMetric
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.ExternalMetricKind
+	err := Convert_internalversion_ExternalMetric_To_v1alpha1_ExternalMetric(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ConvertToV1Alpha1Metric converts an internal version Metric to a v1alpha1.Metric.
 func ConvertToV1Alpha1Metric(in *Metric) (*v1alpha1.Metric, error) {
 	var out v1alpha1.Metric

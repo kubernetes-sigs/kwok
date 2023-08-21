@@ -29,11 +29,26 @@ import (
 // Public to allow building arbitrary schemes.
 // All generated defaulters are covering - they call all nested defaulters.
 func RegisterDefaults(scheme *runtime.Scheme) error {
+	scheme.AddTypeDefaultingFunc(&CustomMetric{}, func(obj interface{}) { SetObjectDefaults_CustomMetric(obj.(*CustomMetric)) })
+	scheme.AddTypeDefaultingFunc(&CustomMetricList{}, func(obj interface{}) { SetObjectDefaults_CustomMetricList(obj.(*CustomMetricList)) })
 	scheme.AddTypeDefaultingFunc(&Metric{}, func(obj interface{}) { SetObjectDefaults_Metric(obj.(*Metric)) })
 	scheme.AddTypeDefaultingFunc(&MetricList{}, func(obj interface{}) { SetObjectDefaults_MetricList(obj.(*MetricList)) })
 	scheme.AddTypeDefaultingFunc(&Stage{}, func(obj interface{}) { SetObjectDefaults_Stage(obj.(*Stage)) })
 	scheme.AddTypeDefaultingFunc(&StageList{}, func(obj interface{}) { SetObjectDefaults_StageList(obj.(*StageList)) })
 	return nil
+}
+
+func SetObjectDefaults_CustomMetric(in *CustomMetric) {
+	if in.Spec.ResourceRef.APIGroup == "" {
+		in.Spec.ResourceRef.APIGroup = "v1"
+	}
+}
+
+func SetObjectDefaults_CustomMetricList(in *CustomMetricList) {
+	for i := range in.Items {
+		a := &in.Items[i]
+		SetObjectDefaults_CustomMetric(a)
+	}
 }
 
 func SetObjectDefaults_Metric(in *Metric) {

@@ -21,14 +21,20 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
+	"github.com/gorilla/handlers"
 	"github.com/wzshiming/cmux"
 	"github.com/wzshiming/cmux/pattern"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
+	"k8s.io/apiserver/pkg/endpoints/discovery"
+	"k8s.io/apiserver/pkg/endpoints/filters"
+	"k8s.io/client-go/dynamic"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
@@ -52,6 +58,10 @@ type Server struct {
 	ctx context.Context
 
 	typedKwokClient versioned.Interface
+	dynamicClient   dynamic.Interface
+	restMapper      meta.RESTMapper
+
+	discoveryGroupManager discovery.GroupManager
 
 	enableCRDs []string
 
@@ -71,6 +81,8 @@ type Server struct {
 	attaches              resources.Getter[[]*internalversion.Attach]
 	clusterResourceUsages resources.Getter[[]*internalversion.ClusterResourceUsage]
 	resourceUsages        resources.Getter[[]*internalversion.ResourceUsage]
+	customMetrics         resources.Getter[[]*internalversion.CustomMetric]
+	externalMetrics       resources.Getter[[]*internalversion.ExternalMetric]
 	metrics               resources.Getter[[]*internalversion.Metric]
 
 	metricsUpdateHandler maps.SyncMap[string, *metrics.UpdateHandler]
@@ -95,6 +107,8 @@ type DataSource interface {
 // Config holds configurations needed by the server handlers.
 type Config struct {
 	TypedKwokClient versioned.Interface
+	DynamicClient   dynamic.Interface
+	RestMapper      meta.RESTMapper
 	EnableCRDs      []string
 
 	ClusterPortForwards   []*internalversion.ClusterPortForward
@@ -107,6 +121,8 @@ type Config struct {
 	Attaches              []*internalversion.Attach
 	ClusterResourceUsages []*internalversion.ClusterResourceUsage
 	ResourceUsages        []*internalversion.ResourceUsage
+	CustomMetrics         []*internalversion.CustomMetric
+	ExternalMetrics       []*internalversion.ExternalMetric
 	Metrics               []*internalversion.Metric
 
 	DataSource      DataSource
@@ -120,6 +136,8 @@ func NewServer(conf Config) (*Server, error) {
 
 	s := &Server{
 		typedKwokClient:       conf.TypedKwokClient,
+		dynamicClient:         conf.DynamicClient,
+		restMapper:            conf.RestMapper,
 		enableCRDs:            conf.EnableCRDs,
 		restfulCont:           container,
 		idleTimeout:           1 * time.Hour,
@@ -135,6 +153,8 @@ func NewServer(conf Config) (*Server, error) {
 		attaches:              resources.NewStaticGetter(conf.Attaches),
 		clusterResourceUsages: resources.NewStaticGetter(conf.ClusterResourceUsages),
 		resourceUsages:        resources.NewStaticGetter(conf.ResourceUsages),
+		customMetrics:         resources.NewStaticGetter(conf.CustomMetrics),
+		externalMetrics:       resources.NewStaticGetter(conf.ExternalMetrics),
 		metrics:               resources.NewStaticGetter(conf.Metrics),
 
 		cumulatives: map[string]cumulative{},
@@ -390,6 +410,52 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			)
 			starters = append(starters, resourceUsages)
 			s.resourceUsages = resourceUsages
+		case v1alpha1.CustomMetricKind:
+			if len(s.customMetrics.Get()) != 0 {
+				return nil, fmt.Errorf("custom metrics already exists, cannot watch CRD")
+			}
+			customMetrics := resources.NewDynamicGetter[
+				[]*internalversion.CustomMetric,
+				*v1alpha1.CustomMetric,
+				*v1alpha1.CustomMetricList,
+			](
+				cli.KwokV1alpha1().CustomMetrics(),
+				func(objs []*v1alpha1.CustomMetric) []*internalversion.CustomMetric {
+					return slices.FilterAndMap(objs, func(obj *v1alpha1.CustomMetric) (*internalversion.CustomMetric, bool) {
+						r, err := internalversion.ConvertToInternalCustomMetric(obj)
+						if err != nil {
+							logger.Error("failed to convert to internal custom metric", err, "obj", obj)
+							return nil, false
+						}
+						return r, true
+					})
+				},
+			)
+			starters = append(starters, customMetrics)
+			s.customMetrics = customMetrics
+		case v1alpha1.ExternalMetricKind:
+			if len(s.externalMetrics.Get()) != 0 {
+				return nil, fmt.Errorf("external metrics already exists, cannot watch CRD")
+			}
+			externalMetrics := resources.NewDynamicGetter[
+				[]*internalversion.ExternalMetric,
+				*v1alpha1.ExternalMetric,
+				*v1alpha1.ExternalMetricList,
+			](
+				cli.KwokV1alpha1().ExternalMetrics(""),
+				func(objs []*v1alpha1.ExternalMetric) []*internalversion.ExternalMetric {
+					return slices.FilterAndMap(objs, func(obj *v1alpha1.ExternalMetric) (*internalversion.ExternalMetric, bool) {
+						r, err := internalversion.ConvertToInternalExternalMetric(obj)
+						if err != nil {
+							logger.Error("failed to convert to internal external metric", err, "obj", obj)
+							return nil, false
+						}
+						return r, true
+					})
+				},
+			)
+			starters = append(starters, externalMetrics)
+			s.externalMetrics = externalMetrics
 		case v1alpha1.MetricKind:
 			if len(s.metrics.Get()) != 0 {
 				return nil, fmt.Errorf("metrics already exists, cannot watch CRD")
@@ -467,6 +533,12 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 
 	errCh := make(chan error, 1)
 
+	var handler http.Handler = s.restfulCont
+
+	handler = filters.WithRequestInfo(handler, newRequestInfoResolver())
+
+	handler = handlers.CombinedLoggingHandler(os.Stderr, handler)
+
 	if certFile != "" && privateKeyFile != "" {
 		go func() {
 			logger.Info("Starting HTTPS server",
@@ -480,7 +552,7 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 					return ctx
 				},
 				Addr:    address,
-				Handler: s.restfulCont,
+				Handler: handler,
 			}
 			err = svc.ServeTLS(tlsListener, certFile, privateKeyFile)
 			if err != nil {
@@ -499,7 +571,7 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 				return ctx
 			},
 			Addr:    address,
-			Handler: s.restfulCont,
+			Handler: handler,
 		}
 		err = svc.Serve(unmatchedListener)
 		if err != nil {

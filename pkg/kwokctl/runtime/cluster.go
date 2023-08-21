@@ -582,5 +582,7 @@ var crdDefines = map[string][]byte{
 	v1alpha1.ClusterLogsKind:          crd.ClusterLogs,
 	v1alpha1.ResourceUsageKind:        crd.ResourceUsage,
 	v1alpha1.ClusterResourceUsageKind: crd.ClusterResourceUsage,
+	v1alpha1.CustomMetricKind:         crd.CustomMetric,
+	v1alpha1.ExternalMetricKind:       crd.ExternalMetric,
 	v1alpha1.MetricKind:               crd.Metric,
 }

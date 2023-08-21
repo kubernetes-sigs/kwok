@@ -190,6 +190,36 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*CustomMetric)(nil), (*v1alpha1.CustomMetric)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_CustomMetric_To_v1alpha1_CustomMetric(a.(*CustomMetric), b.(*v1alpha1.CustomMetric), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.CustomMetric)(nil), (*CustomMetric)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_CustomMetric_To_internalversion_CustomMetric(a.(*v1alpha1.CustomMetric), b.(*CustomMetric), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*CustomMetricItem)(nil), (*v1alpha1.CustomMetricItem)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_CustomMetricItem_To_v1alpha1_CustomMetricItem(a.(*CustomMetricItem), b.(*v1alpha1.CustomMetricItem), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.CustomMetricItem)(nil), (*CustomMetricItem)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_CustomMetricItem_To_internalversion_CustomMetricItem(a.(*v1alpha1.CustomMetricItem), b.(*CustomMetricItem), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*CustomMetricSpec)(nil), (*v1alpha1.CustomMetricSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_CustomMetricSpec_To_v1alpha1_CustomMetricSpec(a.(*CustomMetricSpec), b.(*v1alpha1.CustomMetricSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.CustomMetricSpec)(nil), (*CustomMetricSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_CustomMetricSpec_To_internalversion_CustomMetricSpec(a.(*v1alpha1.CustomMetricSpec), b.(*CustomMetricSpec), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*Env)(nil), (*configv1alpha1.Env)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_Env_To_v1alpha1_Env(a.(*Env), b.(*configv1alpha1.Env), scope)
 	}); err != nil {
@@ -257,6 +287,36 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExpressionFromSource)(nil), (*ExpressionFromSource)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(a.(*v1alpha1.ExpressionFromSource), b.(*ExpressionFromSource), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExternalMetric)(nil), (*v1alpha1.ExternalMetric)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExternalMetric_To_v1alpha1_ExternalMetric(a.(*ExternalMetric), b.(*v1alpha1.ExternalMetric), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExternalMetric)(nil), (*ExternalMetric)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExternalMetric_To_internalversion_ExternalMetric(a.(*v1alpha1.ExternalMetric), b.(*ExternalMetric), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExternalMetricItem)(nil), (*v1alpha1.ExternalMetricItem)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExternalMetricItem_To_v1alpha1_ExternalMetricItem(a.(*ExternalMetricItem), b.(*v1alpha1.ExternalMetricItem), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExternalMetricItem)(nil), (*ExternalMetricItem)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExternalMetricItem_To_internalversion_ExternalMetricItem(a.(*v1alpha1.ExternalMetricItem), b.(*ExternalMetricItem), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExternalMetricSpec)(nil), (*v1alpha1.ExternalMetricSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExternalMetricSpec_To_v1alpha1_ExternalMetricSpec(a.(*ExternalMetricSpec), b.(*v1alpha1.ExternalMetricSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExternalMetricSpec)(nil), (*ExternalMetricSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExternalMetricSpec_To_internalversion_ExternalMetricSpec(a.(*v1alpha1.ExternalMetricSpec), b.(*ExternalMetricSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -477,6 +537,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.PortForwardSpec)(nil), (*PortForwardSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(a.(*v1alpha1.PortForwardSpec), b.(*PortForwardSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ResourceRef)(nil), (*v1alpha1.ResourceRef)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ResourceRef_To_v1alpha1_ResourceRef(a.(*ResourceRef), b.(*v1alpha1.ResourceRef), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ResourceRef)(nil), (*ResourceRef)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ResourceRef_To_internalversion_ResourceRef(a.(*v1alpha1.ResourceRef), b.(*ResourceRef), scope)
 	}); err != nil {
 		return err
 	}
@@ -1125,6 +1195,84 @@ func Convert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in *c
 	return autoConvert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in, out, s)
 }
 
+func autoConvert_internalversion_CustomMetric_To_v1alpha1_CustomMetric(in *CustomMetric, out *v1alpha1.CustomMetric, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_CustomMetricSpec_To_v1alpha1_CustomMetricSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_CustomMetric_To_v1alpha1_CustomMetric is an autogenerated conversion function.
+func Convert_internalversion_CustomMetric_To_v1alpha1_CustomMetric(in *CustomMetric, out *v1alpha1.CustomMetric, s conversion.Scope) error {
+	return autoConvert_internalversion_CustomMetric_To_v1alpha1_CustomMetric(in, out, s)
+}
+
+func autoConvert_v1alpha1_CustomMetric_To_internalversion_CustomMetric(in *v1alpha1.CustomMetric, out *CustomMetric, s conversion.Scope) error {
+	// INFO: in.TypeMeta opted out of conversion generation
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_CustomMetricSpec_To_internalversion_CustomMetricSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	// INFO: in.Status opted out of conversion generation
+	return nil
+}
+
+// Convert_v1alpha1_CustomMetric_To_internalversion_CustomMetric is an autogenerated conversion function.
+func Convert_v1alpha1_CustomMetric_To_internalversion_CustomMetric(in *v1alpha1.CustomMetric, out *CustomMetric, s conversion.Scope) error {
+	return autoConvert_v1alpha1_CustomMetric_To_internalversion_CustomMetric(in, out, s)
+}
+
+func autoConvert_internalversion_CustomMetricItem_To_v1alpha1_CustomMetricItem(in *CustomMetricItem, out *v1alpha1.CustomMetricItem, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Value = (*resource.Quantity)(unsafe.Pointer(in.Value))
+	return nil
+}
+
+// Convert_internalversion_CustomMetricItem_To_v1alpha1_CustomMetricItem is an autogenerated conversion function.
+func Convert_internalversion_CustomMetricItem_To_v1alpha1_CustomMetricItem(in *CustomMetricItem, out *v1alpha1.CustomMetricItem, s conversion.Scope) error {
+	return autoConvert_internalversion_CustomMetricItem_To_v1alpha1_CustomMetricItem(in, out, s)
+}
+
+func autoConvert_v1alpha1_CustomMetricItem_To_internalversion_CustomMetricItem(in *v1alpha1.CustomMetricItem, out *CustomMetricItem, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Value = (*resource.Quantity)(unsafe.Pointer(in.Value))
+	return nil
+}
+
+// Convert_v1alpha1_CustomMetricItem_To_internalversion_CustomMetricItem is an autogenerated conversion function.
+func Convert_v1alpha1_CustomMetricItem_To_internalversion_CustomMetricItem(in *v1alpha1.CustomMetricItem, out *CustomMetricItem, s conversion.Scope) error {
+	return autoConvert_v1alpha1_CustomMetricItem_To_internalversion_CustomMetricItem(in, out, s)
+}
+
+func autoConvert_internalversion_CustomMetricSpec_To_v1alpha1_CustomMetricSpec(in *CustomMetricSpec, out *v1alpha1.CustomMetricSpec, s conversion.Scope) error {
+	if err := Convert_internalversion_ResourceRef_To_v1alpha1_ResourceRef(&in.ResourceRef, &out.ResourceRef, s); err != nil {
+		return err
+	}
+	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
+	out.Metrics = *(*[]v1alpha1.CustomMetricItem)(unsafe.Pointer(&in.Metrics))
+	return nil
+}
+
+// Convert_internalversion_CustomMetricSpec_To_v1alpha1_CustomMetricSpec is an autogenerated conversion function.
+func Convert_internalversion_CustomMetricSpec_To_v1alpha1_CustomMetricSpec(in *CustomMetricSpec, out *v1alpha1.CustomMetricSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_CustomMetricSpec_To_v1alpha1_CustomMetricSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_CustomMetricSpec_To_internalversion_CustomMetricSpec(in *v1alpha1.CustomMetricSpec, out *CustomMetricSpec, s conversion.Scope) error {
+	if err := Convert_v1alpha1_ResourceRef_To_internalversion_ResourceRef(&in.ResourceRef, &out.ResourceRef, s); err != nil {
+		return err
+	}
+	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
+	out.Metrics = *(*[]CustomMetricItem)(unsafe.Pointer(&in.Metrics))
+	return nil
+}
+
+// Convert_v1alpha1_CustomMetricSpec_To_internalversion_CustomMetricSpec is an autogenerated conversion function.
+func Convert_v1alpha1_CustomMetricSpec_To_internalversion_CustomMetricSpec(in *v1alpha1.CustomMetricSpec, out *CustomMetricSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_CustomMetricSpec_To_internalversion_CustomMetricSpec(in, out, s)
+}
+
 func autoConvert_internalversion_Env_To_v1alpha1_Env(in *Env, out *configv1alpha1.Env, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Value = in.Value
@@ -1281,6 +1429,76 @@ func autoConvert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFrom
 // Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource is an autogenerated conversion function.
 func Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in *v1alpha1.ExpressionFromSource, out *ExpressionFromSource, s conversion.Scope) error {
 	return autoConvert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in, out, s)
+}
+
+func autoConvert_internalversion_ExternalMetric_To_v1alpha1_ExternalMetric(in *ExternalMetric, out *v1alpha1.ExternalMetric, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_ExternalMetricSpec_To_v1alpha1_ExternalMetricSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_ExternalMetric_To_v1alpha1_ExternalMetric is an autogenerated conversion function.
+func Convert_internalversion_ExternalMetric_To_v1alpha1_ExternalMetric(in *ExternalMetric, out *v1alpha1.ExternalMetric, s conversion.Scope) error {
+	return autoConvert_internalversion_ExternalMetric_To_v1alpha1_ExternalMetric(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExternalMetric_To_internalversion_ExternalMetric(in *v1alpha1.ExternalMetric, out *ExternalMetric, s conversion.Scope) error {
+	// INFO: in.TypeMeta opted out of conversion generation
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_ExternalMetricSpec_To_internalversion_ExternalMetricSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	// INFO: in.Status opted out of conversion generation
+	return nil
+}
+
+// Convert_v1alpha1_ExternalMetric_To_internalversion_ExternalMetric is an autogenerated conversion function.
+func Convert_v1alpha1_ExternalMetric_To_internalversion_ExternalMetric(in *v1alpha1.ExternalMetric, out *ExternalMetric, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExternalMetric_To_internalversion_ExternalMetric(in, out, s)
+}
+
+func autoConvert_internalversion_ExternalMetricItem_To_v1alpha1_ExternalMetricItem(in *ExternalMetricItem, out *v1alpha1.ExternalMetricItem, s conversion.Scope) error {
+	out.Value = (*resource.Quantity)(unsafe.Pointer(in.Value))
+	return nil
+}
+
+// Convert_internalversion_ExternalMetricItem_To_v1alpha1_ExternalMetricItem is an autogenerated conversion function.
+func Convert_internalversion_ExternalMetricItem_To_v1alpha1_ExternalMetricItem(in *ExternalMetricItem, out *v1alpha1.ExternalMetricItem, s conversion.Scope) error {
+	return autoConvert_internalversion_ExternalMetricItem_To_v1alpha1_ExternalMetricItem(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExternalMetricItem_To_internalversion_ExternalMetricItem(in *v1alpha1.ExternalMetricItem, out *ExternalMetricItem, s conversion.Scope) error {
+	out.Value = (*resource.Quantity)(unsafe.Pointer(in.Value))
+	return nil
+}
+
+// Convert_v1alpha1_ExternalMetricItem_To_internalversion_ExternalMetricItem is an autogenerated conversion function.
+func Convert_v1alpha1_ExternalMetricItem_To_internalversion_ExternalMetricItem(in *v1alpha1.ExternalMetricItem, out *ExternalMetricItem, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExternalMetricItem_To_internalversion_ExternalMetricItem(in, out, s)
+}
+
+func autoConvert_internalversion_ExternalMetricSpec_To_v1alpha1_ExternalMetricSpec(in *ExternalMetricSpec, out *v1alpha1.ExternalMetricSpec, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Metrics = *(*[]v1alpha1.ExternalMetricItem)(unsafe.Pointer(&in.Metrics))
+	return nil
+}
+
+// Convert_internalversion_ExternalMetricSpec_To_v1alpha1_ExternalMetricSpec is an autogenerated conversion function.
+func Convert_internalversion_ExternalMetricSpec_To_v1alpha1_ExternalMetricSpec(in *ExternalMetricSpec, out *v1alpha1.ExternalMetricSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_ExternalMetricSpec_To_v1alpha1_ExternalMetricSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExternalMetricSpec_To_internalversion_ExternalMetricSpec(in *v1alpha1.ExternalMetricSpec, out *ExternalMetricSpec, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Metrics = *(*[]ExternalMetricItem)(unsafe.Pointer(&in.Metrics))
+	return nil
+}
+
+// Convert_v1alpha1_ExternalMetricSpec_To_internalversion_ExternalMetricSpec is an autogenerated conversion function.
+func Convert_v1alpha1_ExternalMetricSpec_To_internalversion_ExternalMetricSpec(in *v1alpha1.ExternalMetricSpec, out *ExternalMetricSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExternalMetricSpec_To_internalversion_ExternalMetricSpec(in, out, s)
 }
 
 func autoConvert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out *configv1alpha1.ExtraArgs, s conversion.Scope) error {
@@ -2126,6 +2344,28 @@ func autoConvert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in 
 // Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec is an autogenerated conversion function.
 func Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in *v1alpha1.PortForwardSpec, out *PortForwardSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in, out, s)
+}
+
+func autoConvert_internalversion_ResourceRef_To_v1alpha1_ResourceRef(in *ResourceRef, out *v1alpha1.ResourceRef, s conversion.Scope) error {
+	out.APIGroup = in.APIGroup
+	out.Kind = in.Kind
+	return nil
+}
+
+// Convert_internalversion_ResourceRef_To_v1alpha1_ResourceRef is an autogenerated conversion function.
+func Convert_internalversion_ResourceRef_To_v1alpha1_ResourceRef(in *ResourceRef, out *v1alpha1.ResourceRef, s conversion.Scope) error {
+	return autoConvert_internalversion_ResourceRef_To_v1alpha1_ResourceRef(in, out, s)
+}
+
+func autoConvert_v1alpha1_ResourceRef_To_internalversion_ResourceRef(in *v1alpha1.ResourceRef, out *ResourceRef, s conversion.Scope) error {
+	out.APIGroup = in.APIGroup
+	out.Kind = in.Kind
+	return nil
+}
+
+// Convert_v1alpha1_ResourceRef_To_internalversion_ResourceRef is an autogenerated conversion function.
+func Convert_v1alpha1_ResourceRef_To_internalversion_ResourceRef(in *v1alpha1.ResourceRef, out *ResourceRef, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ResourceRef_To_internalversion_ResourceRef(in, out, s)
 }
 
 func autoConvert_internalversion_ResourceUsage_To_v1alpha1_ResourceUsage(in *ResourceUsage, out *v1alpha1.ResourceUsage, s conversion.Scope) error {

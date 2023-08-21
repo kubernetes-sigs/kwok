@@ -111,6 +111,8 @@ var crdDefines = map[string]struct{}{
 	v1alpha1.ClusterLogsKind:          {},
 	v1alpha1.ResourceUsageKind:        {},
 	v1alpha1.ClusterResourceUsageKind: {},
+	v1alpha1.CustomMetricKind:         {},
+	v1alpha1.ExternalMetricKind:       {},
 	v1alpha1.MetricKind:               {},
 }
 
@@ -221,6 +223,18 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
+	customMetrics := config.FilterWithTypeFromContext[*internalversion.CustomMetric](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.CustomMetricKind, customMetrics)
+	if err != nil {
+		return err
+	}
+
+	externalMetrics := config.FilterWithTypeFromContext[*internalversion.ExternalMetric](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ExternalMetricKind, externalMetrics)
+	if err != nil {
+		return err
+	}
+
 	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
 	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.MetricKind, metrics)
 	if err != nil {
@@ -241,6 +255,16 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 	typedKwokClient, err := clientset.ToTypedKwokClient()
+	if err != nil {
+		return err
+	}
+
+	dynamicClient, err := clientset.ToDynamicClient()
+	if err != nil {
+		return err
+	}
+
+	restMapper, err := clientset.ToRESTMapper()
 	if err != nil {
 		return err
 	}
@@ -313,6 +337,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if serverAddress != "" {
 		conf := server.Config{
 			TypedKwokClient:       typedKwokClient,
+			DynamicClient:         dynamicClient,
+			RestMapper:            restMapper,
 			EnableCRDs:            flags.Options.EnableCRDs,
 			ClusterPortForwards:   clusterPortForwards,
 			PortForwards:          portForwards,
@@ -324,6 +350,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 			Attaches:              attaches,
 			ClusterResourceUsages: clusterResourceUsages,
 			ResourceUsages:        resourceUsages,
+			CustomMetrics:         customMetrics,
+			ExternalMetrics:       externalMetrics,
 			Metrics:               metrics,
 			DataSource:            ctr,
 			NodeCacheGetter:       ctr.GetNodeCache(),
@@ -333,6 +361,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 		if err != nil {
 			return fmt.Errorf("failed to create server: %w", err)
 		}
+		err = svc.InstallAPIServer(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to install apiserver: %w", err)
+		}
+
 		svc.InstallHealthz()
 
 		svc.InstallServiceDiscovery()
@@ -349,9 +382,24 @@ func runE(ctx context.Context, flags *flagpole) error {
 			return fmt.Errorf("failed to install crd: %w", err)
 		}
 
+		err = svc.InstallCustomMetricsAPI(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to install custom metrics: %w", err)
+		}
+
+		err = svc.InstallExternalMetricsAPI(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to install external metrics: %w", err)
+		}
+
 		err = svc.InstallMetrics(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to install metrics: %w", err)
+		}
+
+		err = svc.InstallOpenAPI(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to install openapi: %w", err)
 		}
 
 		go func() {
