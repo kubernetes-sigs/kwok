@@ -56,12 +56,19 @@ func (d *Decoder) DecodeToUnstructured(visitFunc func(obj *unstructured.Unstruct
 
 		if obj.IsList() {
 			err = obj.EachListItem(func(object runtime.Object) error {
+				obj := object.(*unstructured.Unstructured)
+				if len(obj.Object) == 0 {
+					return nil
+				}
 				return visitFunc(object.(*unstructured.Unstructured))
 			})
 			if err != nil {
 				return err
 			}
 		} else {
+			if len(obj.Object) == 0 {
+				continue
+			}
 			err = visitFunc(obj)
 			if err != nil {
 				return err
