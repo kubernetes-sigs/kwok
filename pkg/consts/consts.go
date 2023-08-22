@@ -74,3 +74,15 @@ const (
 	RuntimeTypePodman     = "podman"
 	RuntimeTypeBinary     = "binary"
 )
+
+// The following components is provided.
+const (
+	ComponentEtcd                  = "etcd"
+	ComponentKubeApiserver         = "kube-apiserver"
+	ComponentKubeControllerManager = "kube-controller-manager"
+	ComponentKubeScheduler         = "kube-scheduler"
+	ComponentKwokController        = "kwok-controller"
+	ComponentDashboard             = "dashboard"
+	ComponentPrometheus            = "prometheus"
+	ComponentJaeger                = "jaeger"
+)

@@ -20,6 +20,7 @@ import (
 	"runtime"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -136,10 +137,10 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
-		Name:    "etcd",
+		Name:    consts.ComponentEtcd,
 		Version: conf.Version.String(),
 		Volumes: volumes,
-		Command: []string{"etcd"},
+		Command: []string{consts.ComponentEtcd},
 		Args:    etcdArgs,
 		Binary:  conf.Binary,
 		Ports:   ports,

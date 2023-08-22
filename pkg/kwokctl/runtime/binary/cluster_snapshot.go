@@ -19,6 +19,7 @@ package binary
 import (
 	"context"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -38,12 +39,12 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	logger := log.FromContext(ctx)
 
-	err := c.StopComponent(ctx, "etcd")
+	err := c.StopComponent(ctx, consts.ComponentEtcd)
 	if err != nil {
 		logger.Error("Failed to stop etcd", err)
 	}
 	defer func() {
-		err = c.StartComponent(ctx, "etcd")
+		err = c.StartComponent(ctx, consts.ComponentEtcd)
 		if err != nil {
 			logger.Error("Failed to start etcd", err)
 		}
@@ -85,11 +86,11 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error {
 	logger := log.FromContext(ctx)
 	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		err := c.StopComponent(ctx, "kube-controller-manager")
+		err := c.StopComponent(ctx, consts.ComponentKubeControllerManager)
 		if err != nil {
 			return false, err
 		}
-		component, err := c.GetComponent(ctx, "kube-controller-manager")
+		component, err := c.GetComponent(ctx, consts.ComponentKubeControllerManager)
 		if err != nil {
 			return false, err
 		}
@@ -100,7 +101,7 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filt
 		logger.Error("Failed to stop kube-controller-manager", err)
 	}
 	defer func() {
-		err = c.StartComponent(ctx, "kube-controller-manager")
+		err = c.StartComponent(ctx, consts.ComponentKubeControllerManager)
 		if err != nil {
 			logger.Error("Failed to start kube-controller-manager", err)
 		}

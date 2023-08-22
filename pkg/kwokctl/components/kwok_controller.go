@@ -18,6 +18,7 @@ package components
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -124,10 +125,10 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
-		Name:    "kwok-controller",
+		Name:    consts.ComponentKwokController,
 		Version: conf.Version.String(),
 		Links: []string{
-			"kube-apiserver",
+			consts.ComponentKubeApiserver,
 		},
 		Ports:   ports,
 		Command: []string{"kwok"},

@@ -18,6 +18,7 @@ package components
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/net"
@@ -70,7 +71,7 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 	}
 
 	return internalversion.Component{
-		Name:    "jaeger",
+		Name:    consts.ComponentJaeger,
 		Version: conf.Version.String(),
 		Ports:   ports,
 		Volumes: volumes,

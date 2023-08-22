@@ -104,11 +104,11 @@ func (s *Server) execInContainer(ctx context.Context, cmd []string, in io.Reader
 }
 
 func (s *Server) getExecTarget(podName, podNamespace string, containerName string) (*internalversion.ExecTarget, error) {
-	pf, has := slices.Find(s.execs.Get(), func(pf *internalversion.Exec) bool {
+	e, has := slices.Find(s.execs.Get(), func(pf *internalversion.Exec) bool {
 		return pf.Name == podName && pf.Namespace == podNamespace
 	})
 	if has {
-		exec, found := findContainerInExecs(containerName, pf.Spec.Execs)
+		exec, found := findContainerInExecs(containerName, e.Spec.Execs)
 		if found {
 			return exec, nil
 		}

@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -257,16 +258,16 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	envs := []internalversion.Env{}
 	envs = append(envs, conf.ExtraEnvs...)
 
-	links := []string{"etcd"}
+	links := []string{consts.ComponentEtcd}
 	if conf.TracingConfigPath != "" {
-		links = append(links, "jaeger")
+		links = append(links, consts.ComponentJaeger)
 	}
 
 	return internalversion.Component{
-		Name:    "kube-apiserver",
+		Name:    consts.ComponentKubeApiserver,
 		Version: conf.Version.String(),
 		Links:   links,
-		Command: []string{"kube-apiserver"},
+		Command: []string{consts.ComponentKubeApiserver},
 		Ports:   ports,
 		Volumes: volumes,
 		Args:    kubeApiserverArgs,

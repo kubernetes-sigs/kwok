@@ -18,6 +18,7 @@ package components
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -92,16 +93,16 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
-		Name:    "prometheus",
+		Name:    consts.ComponentPrometheus,
 		Version: conf.Version.String(),
 		Links: []string{
-			"etcd",
-			"kube-apiserver",
-			"kube-controller-manager",
-			"kube-scheduler",
-			"kwok-controller",
+			consts.ComponentEtcd,
+			consts.ComponentKubeApiserver,
+			consts.ComponentKubeControllerManager,
+			consts.ComponentKubeScheduler,
+			consts.ComponentKwokController,
 		},
-		Command: []string{"prometheus"},
+		Command: []string{consts.ComponentPrometheus},
 		Ports:   ports,
 		Volumes: volumes,
 		Args:    prometheusArgs,

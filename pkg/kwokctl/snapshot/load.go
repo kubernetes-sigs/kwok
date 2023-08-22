@@ -103,7 +103,7 @@ func (l *loader) addResource(ctx context.Context, resources []string) {
 	}
 	logger := log.FromContext(ctx)
 	for _, resource := range resources {
-		mapping, err := mappingFor(l.restMapper, resource)
+		mapping, err := client.MappingFor(l.restMapper, resource)
 		if err != nil {
 			logger.Warn("Failed to get mapping for resource", "resource", resource, "err", err)
 			continue

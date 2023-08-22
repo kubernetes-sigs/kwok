@@ -82,7 +82,7 @@ linters-settings:
       # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
       - k8s.io/utils/strings/slices: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
   gocyclo:
-    min-complexity: 60
+    min-complexity: 50
   gosec:
     excludes:
       - G110

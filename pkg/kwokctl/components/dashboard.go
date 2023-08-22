@@ -18,6 +18,7 @@ package components
 
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -101,10 +102,10 @@ func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component inte
 	}
 
 	component = internalversion.Component{
-		Name:  "dashboard",
+		Name:  consts.ComponentDashboard,
 		Image: conf.Image,
 		Links: []string{
-			"kube-apiserver",
+			consts.ComponentKubeApiserver,
 		},
 		WorkDir: conf.Workdir,
 		Ports:   ports,
