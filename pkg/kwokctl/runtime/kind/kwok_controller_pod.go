@@ -58,4 +58,5 @@ type BuildKwokControllerPodConfig struct {
 	ExtraArgs                []internalversion.ExtraArgs
 	ExtraVolumes             []internalversion.Volume
 	ExtraEnvs                []internalversion.Env
+	EnableCRDs               []string
 }

@@ -173,20 +173,17 @@ func (c *Cluster) Save(ctx context.Context) error {
 		return nil
 	}
 
+	var objs []config.InternalObject
 	conf := c.conf.DeepCopy()
-	objs := []config.InternalObject{
-		conf,
-	}
-
 	if conf.Status.Version == "" {
 		conf.Status.Version = consts.Version
 	}
-
-	others := config.FilterWithoutTypeFromContext[*internalversion.KwokctlConfiguration](ctx)
-	objs = append(objs, others...)
+	objs = append(objs, conf)
 
 	kwokConfigs := config.FilterWithTypeFromContext[*internalversion.KwokConfiguration](ctx)
-	if (len(kwokConfigs) == 0 || !slices.Contains(kwokConfigs[0].Options.EnableCRDs, v1alpha1.StageKind)) &&
+	objs = appendIntoInternalObjects(objs, kwokConfigs...)
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.StageKind) &&
 		conf.Options.Runtime != consts.RuntimeTypeKind &&
 		conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
 		len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
@@ -194,10 +191,77 @@ func (c *Cluster) Save(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		objs = append(objs, defaultStages...)
+		objs = appendIntoInternalObjects(objs, defaultStages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.StageKind) {
+		if conf.Options.Runtime != consts.RuntimeTypeKind &&
+			conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
+			len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
+			defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds != 0)
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, defaultStages...)
+		} else {
+			stages := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
+			objs = appendIntoInternalObjects(objs, stages...)
+		}
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.MetricKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.AttachKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterAttachKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ExecKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterExecKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.LogsKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterLogsKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.PortForwardKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
+	}
+
+	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterPortForwardKind) {
+		stages := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
+		objs = appendIntoInternalObjects(objs, stages...)
 	}
 
 	return config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)
+}
+
+func appendIntoInternalObjects[T config.InternalObject](objs []config.InternalObject, a ...T) []config.InternalObject {
+	for _, o := range a {
+		objs = append(objs, o)
+	}
+	return objs
 }
 
 func (c *Cluster) getDefaultStages(updateFrequency int64, lease bool) ([]config.InternalObject, error) {
@@ -468,11 +532,13 @@ func (c *Cluster) IsDryRun() bool {
 
 // InitCRDs initializes the CRDs.
 func (c *Cluster) InitCRDs(ctx context.Context) error {
-	kwokConfigs := config.FilterWithTypeFromContext[*internalversion.KwokConfiguration](ctx)
-	if len(kwokConfigs) == 0 {
-		return nil
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
 	}
-	crds := kwokConfigs[0].Options.EnableCRDs
+	conf := &config.Options
+
+	crds := conf.EnableCRDs
 	if len(crds) == 0 {
 		return nil
 	}

@@ -17,6 +17,8 @@ limitations under the License.
 package components
 
 import (
+	"strings"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -40,6 +42,7 @@ type BuildKwokControllerComponentConfig struct {
 	NodeName                 string
 	Verbosity                log.Level
 	NodeLeaseDurationSeconds uint
+	EnableCRDs               []string
 	ExtraArgs                []internalversion.ExtraArgs
 	ExtraVolumes             []internalversion.Volume
 	ExtraEnvs                []internalversion.Env
@@ -119,6 +122,10 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 
 	if conf.Verbosity != log.LevelInfo {
 		kwokControllerArgs = append(kwokControllerArgs, "--v="+format.String(conf.Verbosity))
+	}
+
+	if len(conf.EnableCRDs) != 0 {
+		kwokControllerArgs = append(kwokControllerArgs, "--enable-crds="+strings.Join(conf.EnableCRDs, ","))
 	}
 
 	envs := []internalversion.Env{}

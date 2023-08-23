@@ -22,6 +22,9 @@ spec:
     - --node-name=kwok-controller.kube-system.svc
     - --node-port=10247
     - --node-lease-duration-seconds={{ .NodeLeaseDurationSeconds }}
+    {{ range .EnableCRDs }}
+    - --enable-crds={{ . }}
+    {{ end }}
     {{ range .ExtraArgs }}
     - --{{ .Key }}={{ .Value }}
     {{ end }}

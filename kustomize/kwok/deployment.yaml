@@ -21,15 +21,16 @@ spec:
             - --node-port=10247
             - --cidr=10.0.0.1/24
             - --node-lease-duration-seconds=40
-            - --enable-crd=Stage
-            - --enable-crd=Attach
-            - --enable-crd=ClusterAttach
-            - --enable-crd=Exec
-            - --enable-crd=ClusterExec
-            - --enable-crd=Logs
-            - --enable-crd=ClusterLogs
-            - --enable-crd=PortForward
-            - --enable-crd=ClusterPortForward
+            - --enable-crds=Stage
+            - --enable-crds=Metric
+            - --enable-crds=Attach
+            - --enable-crds=ClusterAttach
+            - --enable-crds=Exec
+            - --enable-crds=ClusterExec
+            - --enable-crds=Logs
+            - --enable-crds=ClusterLogs
+            - --enable-crds=PortForward
+            - --enable-crds=ClusterPortForward
           env:
             - name: POD_IP
               valueFrom:

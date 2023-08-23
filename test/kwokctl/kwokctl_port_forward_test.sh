@@ -128,14 +128,7 @@ function main() {
     delete_cluster "${name}"
 
     name="crd-port-forward-cluster-${KWOK_RUNTIME}-${release//./-}"
-    create_cluster "${name}" "${release}" --config - <<EOF
-apiVersion: config.kwok.x-k8s.io/v1alpha1
-kind: KwokConfiguration
-options:
-  enableCRDs:
-  - ClusterPortForward
-  - PortForward
-EOF
+    create_cluster "${name}" "${release}" --enable-crds=PortForward,ClusterPortForward
     test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
     kwokctl --name "${name}" kubectl apply -f "${DIR}/port-forward.yaml"
     sleep 1
