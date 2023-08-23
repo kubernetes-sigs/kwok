@@ -19,6 +19,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
@@ -52,47 +53,53 @@ func (s *Server) InstallMetrics(ctx context.Context) error {
 	ws := new(restful.WebService)
 	ws.Path(rootPath)
 	ws.Route(ws.GET("/").To(selfMetric))
-
-	for _, m := range s.metrics.Get() {
-		if !strings.HasPrefix(m.Spec.Path, rootPath) {
-			return fmt.Errorf("metric path %q does not start with %q", m.Spec.Path, rootPath)
-		}
-
-		ws.Route(ws.GET(strings.TrimPrefix(m.Spec.Path, rootPath)).
-			To(s.getMetrics(m, env)))
-	}
-
 	s.restfulCont.Add(ws)
-	s.metricsWebService = ws
 
+	hasPaths := map[string]struct{}{}
 	logger := log.FromContext(ctx)
 	syncd, ok := s.metrics.(resources.Synced)
 	if ok {
-		logger.Info("Starting metrics syncer")
 		go func() {
 			for range syncd.Sync() {
-				logger.Info("Metrics synced, updating metrics web service")
-				ws := new(restful.WebService)
-				ws.Path(rootPath)
-				ws.Route(ws.GET("/").To(selfMetric))
-
+				newHasPaths := map[string]struct{}{}
 				for _, m := range s.metrics.Get() {
 					if !strings.HasPrefix(m.Spec.Path, rootPath) {
 						logger.Warn("metric path does not start with "+rootPath, "path", m.Spec.Path)
 						continue
 					}
-					ws.Route(ws.GET(strings.TrimPrefix(m.Spec.Path, rootPath)).
+
+					path := strings.TrimPrefix(m.Spec.Path, rootPath)
+					newHasPaths[path] = struct{}{}
+					if _, ok := hasPaths[path]; ok {
+						err := ws.RemoveRoute(http.MethodGet, path)
+						if err != nil {
+							logger.Error("Failed to remove route", err, "path", path)
+						}
+					}
+					ws.Route(ws.GET(path).
 						To(s.getMetrics(m, env)))
 				}
 
-				err := s.restfulCont.Remove(s.metricsWebService)
-				if err != nil {
-					logger.Error("failed to remove metrics web service", err)
+				for path := range hasPaths {
+					if _, ok := newHasPaths[path]; !ok {
+						err := ws.RemoveRoute(http.MethodGet, path)
+						if err != nil {
+							logger.Error("Failed to remove route", err, "path", path)
+						}
+					}
 				}
-				s.restfulCont.Add(ws)
-				s.metricsWebService = ws
+
+				hasPaths = newHasPaths
 			}
 		}()
+	} else {
+		for _, m := range s.metrics.Get() {
+			if !strings.HasPrefix(m.Spec.Path, rootPath) {
+				return fmt.Errorf("metric path %q does not start with %q", m.Spec.Path, rootPath)
+			}
+			ws.Route(ws.GET(strings.TrimPrefix(m.Spec.Path, rootPath)).
+				To(s.getMetrics(m, env)))
+		}
 	}
 
 	return nil
