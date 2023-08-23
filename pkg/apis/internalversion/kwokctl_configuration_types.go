@@ -63,6 +63,9 @@ type ComponentPatches struct {
 
 // KwokctlConfigurationOptions holds information about the options.
 type KwokctlConfigurationOptions struct {
+	// EnableCRDs is a list of CRDs to enable.
+	EnableCRDs []string
+
 	// KubeApiserverPort is the port to expose apiserver.
 	KubeApiserverPort uint32
 

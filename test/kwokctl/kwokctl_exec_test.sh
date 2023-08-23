@@ -95,14 +95,7 @@ function main() {
     else
       yaml="${DIR}/exec.yaml"
     fi
-    create_cluster "${name}" "${release}" --config - <<EOF
-apiVersion: config.kwok.x-k8s.io/v1alpha1
-kind: KwokConfiguration
-options:
-  enableCRDs:
-  - ClusterExec
-  - Exec
-EOF
+    create_cluster "${name}" "${release}" --enable-crds=Exec,ClusterExec
     if [[ "${KWOK_RUNTIME}" != "binary" && "${KWOK_RUNTIME}" != "kind" && "${KWOK_RUNTIME}" != "kind-podman" ]]; then
       create_user "${KWOK_RUNTIME}" "${name}" "kwok-controller" 1001 "test" 1002 "test" "/home/test" "/bin/sh"
     fi
@@ -117,14 +110,7 @@ EOF
     delete_cluster "${name}"
 
     name="crd-exec-cluster-${KWOK_RUNTIME}-${release//./-}"
-    create_cluster "${name}" "${release}" --config - <<EOF
-apiVersion: config.kwok.x-k8s.io/v1alpha1
-kind: KwokConfiguration
-options:
-  enableCRDs:
-  - ClusterExec
-  - Exec
-EOF
+    create_cluster "${name}" "${release}" --enable-crds=Exec,ClusterExec
     test_apply_node_and_pod "${name}" || failed+=("apply_node_and_pod")
     kwokctl --name "${name}" kubectl apply -f "${DIR}/exec.yaml"
     test_exec "${name}" other pod/fake-pod "pwd" "/tmp" || failed+=("${name}_target_exec")

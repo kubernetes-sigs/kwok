@@ -17,6 +17,7 @@ kwokctl create cluster [flags]
       --disable-kube-controller-manager         Disable the kube-controller-manager
       --disable-kube-scheduler                  Disable the kube-scheduler
       --disable-qps-limits                      Disable QPS limits for components
+      --enable-crds strings                     List of CRDs to enable
       --etcd-binary string                      Binary of etcd, only for binary runtime
       --etcd-binary-tar string                  Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
                                                  (default "https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-amd64.tar.gz")

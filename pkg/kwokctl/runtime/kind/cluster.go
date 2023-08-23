@@ -272,6 +272,7 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 		Name:                     c.Name(),
 		Verbosity:                env.verbosity,
 		NodeLeaseDurationSeconds: 40,
+		EnableCRDs:               conf.EnableCRDs,
 		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
 		ExtraVolumes:             kwokControllerExtraVolumes,
 		ExtraEnvs:                kwokControllerComponentPatches.ExtraEnvs,

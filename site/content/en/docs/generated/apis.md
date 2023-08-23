@@ -2067,6 +2067,18 @@ KwokctlConfigurationOptions
 <tbody>
 <tr>
 <td>
+<code>enableCRDs</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>EnableCRDs is a list of CRDs to enable.
+Once listed in this field, it will no longer be supported by the &ndash;config flag.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kubeApiserverPort</code>
 <em>
 uint32
