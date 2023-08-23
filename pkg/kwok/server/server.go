@@ -67,7 +67,6 @@ type Server struct {
 	attaches            resources.Getter[[]*internalversion.Attach]
 	metrics             resources.Getter[[]*internalversion.Metric]
 
-	metricsWebService    *restful.WebService
 	metricsUpdateHandler maps.SyncMap[string, *metrics.UpdateHandler]
 
 	dataSource      DataSource
