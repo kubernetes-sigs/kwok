@@ -72,12 +72,12 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	etcdContainerName := c.Name() + "-etcd"
 	if conf.Runtime != consts.RuntimeTypeNerdctl {
 		// Restart etcd container
-		err = c.StopComponent(ctx, "etcd")
+		err = c.StopComponent(ctx, consts.ComponentEtcd)
 		if err != nil {
 			logger.Error("Failed to stop etcd", err)
 		}
 		defer func() {
-			err = c.StartComponent(ctx, "etcd")
+			err = c.StartComponent(ctx, consts.ComponentEtcd)
 			if err != nil {
 				logger.Error("Failed to start etcd", err)
 			}
@@ -93,12 +93,12 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		// https://github.com/containerd/nerdctl/issues/1812
 
 		// Stop the kube-apiserver container to avoid data modification by etcd during restore.
-		err = c.StopComponent(ctx, "kube-apiserver")
+		err = c.StopComponent(ctx, consts.ComponentKubeApiserver)
 		if err != nil {
 			logger.Error("Failed to stop kube-apiserver", err)
 		}
 		defer func() {
-			err = c.StartComponent(ctx, "kube-apiserver")
+			err = c.StartComponent(ctx, consts.ComponentKubeApiserver)
 			if err != nil {
 				logger.Error("Failed to start kube-apiserver", err)
 			}
@@ -111,12 +111,12 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}
 
 		// Restart etcd container
-		err = c.StopComponent(ctx, "etcd")
+		err = c.StopComponent(ctx, consts.ComponentEtcd)
 		if err != nil {
 			logger.Error("Failed to stop etcd", err)
 		}
 		defer func() {
-			err = c.StartComponent(ctx, "etcd")
+			err = c.StartComponent(ctx, consts.ComponentEtcd)
 			if err != nil {
 				logger.Error("Failed to start etcd", err)
 			}
@@ -138,12 +138,12 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 // SnapshotRestoreWithYAML restore the snapshot of cluster
 func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error {
 	logger := log.FromContext(ctx)
-	err := c.StopComponent(ctx, "kube-controller-manager")
+	err := c.StopComponent(ctx, consts.ComponentKubeControllerManager)
 	if err != nil {
 		logger.Error("Failed to stop kube-controller-manager", err)
 	}
 	defer func() {
-		err = c.StartComponent(ctx, "kube-controller-manager")
+		err = c.StartComponent(ctx, consts.ComponentKubeControllerManager)
 		if err != nil {
 			logger.Error("Failed to start kube-controller-manager", err)
 		}

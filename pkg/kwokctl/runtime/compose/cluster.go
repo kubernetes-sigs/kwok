@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
@@ -130,12 +131,8 @@ func (c *Cluster) Available(ctx context.Context) error {
 	return c.Exec(ctx, c.runtime, "version")
 }
 
-func (c *Cluster) pullAllImages(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
+func (c *Cluster) pullAllImages(ctx context.Context, env *env) error {
+	conf := &env.kwokctlConfig.Options
 	images := []string{
 		conf.EtcdImage,
 		conf.KubeApiserverImage,
@@ -156,22 +153,16 @@ func (c *Cluster) pullAllImages(ctx context.Context) error {
 	if conf.JaegerPort != 0 {
 		images = append(images, conf.JaegerImage)
 	}
-	err = c.PullImages(ctx, c.runtime, images, conf.QuietPull)
+	err := c.PullImages(ctx, c.runtime, images, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Cluster) setup(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
-	pkiPath := c.GetWorkdirPath(runtime.PkiName)
-	if !file.Exists(pkiPath) {
+func (c *Cluster) setup(ctx context.Context, env *env) error {
+	conf := &env.kwokctlConfig.Options
+	if !file.Exists(env.pkiPath) {
 		sans := []string{
 			c.Name() + "-kube-apiserver",
 		}
@@ -185,37 +176,34 @@ func (c *Cluster) setup(ctx context.Context) error {
 		if len(conf.KubeApiserverCertSANs) != 0 {
 			sans = append(sans, conf.KubeApiserverCertSANs...)
 		}
-		err = c.MkdirAll(pkiPath)
+		err = c.MkdirAll(env.pkiPath)
 		if err != nil {
 			return fmt.Errorf("failed to create pki dir: %w", err)
 		}
-		err = c.GeneratePki(pkiPath, sans...)
+		err = c.GeneratePki(env.pkiPath, sans...)
 		if err != nil {
 			return fmt.Errorf("failed to generate pki: %w", err)
 		}
 	}
 
 	if conf.KubeAuditPolicy != "" {
-		err = c.MkdirAll(c.GetWorkdirPath("logs"))
+		err := c.MkdirAll(c.GetWorkdirPath("logs"))
 		if err != nil {
 			return err
 		}
 
-		auditLogPath := c.GetLogPath(runtime.AuditLogName)
-		err = c.CreateFile(auditLogPath)
+		err = c.CreateFile(env.auditLogPath)
 		if err != nil {
 			return err
 		}
 
-		auditPolicyPath := c.GetWorkdirPath(runtime.AuditPolicyName)
-		err = c.CopyFile(conf.KubeAuditPolicy, auditPolicyPath)
+		err = c.CopyFile(conf.KubeAuditPolicy, env.auditPolicyPath)
 		if err != nil {
 			return err
 		}
 	}
 
-	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
-	err = c.MkdirAll(etcdDataPath)
+	err := c.MkdirAll(env.etcdDataPath)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
@@ -236,24 +224,33 @@ func (c *Cluster) setupPorts(ctx context.Context, ports ...*uint32) error {
 	return nil
 }
 
-// Install installs the cluster
-func (c *Cluster) Install(ctx context.Context) error {
-	err := c.Cluster.Install(ctx)
-	if err != nil {
-		return err
-	}
+type env struct {
+	kwokctlConfig                 *internalversion.KwokctlConfiguration
+	verbosity                     log.Level
+	inClusterOnHostKubeconfigPath string
+	inClusterKubeconfig           string
+	kubeconfigPath                string
+	etcdDataPath                  string
+	kwokConfigPath                string
+	pkiPath                       string
+	auditLogPath                  string
+	auditPolicyPath               string
+	workdir                       string
+	caCertPath                    string
+	adminKeyPath                  string
+	adminCertPath                 string
+	inClusterPkiPath              string
+	inClusterCaCertPath           string
+	inClusterAdminKeyPath         string
+	inClusterAdminCertPath        string
+	inClusterPort                 uint32
+	scheme                        string
+}
 
-	logger := log.FromContext(ctx)
-	verbosity := logger.Level()
+func (c *Cluster) env(ctx context.Context) (*env, error) {
 	config, err := c.Config(ctx)
 	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
-	err = c.setup(ctx)
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	inClusterOnHostKubeconfigPath := c.GetWorkdirPath(runtime.InClusterKubeconfigName)
@@ -264,7 +261,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	auditLogPath := ""
 	auditPolicyPath := ""
-	if conf.KubeAuditPolicy != "" {
+	if config.Options.KubeAuditPolicy != "" {
 		auditLogPath = c.GetLogPath(runtime.AuditLogName)
 		auditPolicyPath = c.GetWorkdirPath(runtime.AuditPolicyName)
 	}
@@ -280,22 +277,117 @@ func (c *Cluster) Install(ctx context.Context) error {
 
 	inClusterPort := uint32(8080)
 	scheme := "http"
-	if conf.SecurePort {
+	if config.Options.SecurePort {
 		scheme = "https"
 		inClusterPort = 6443
 	}
 
+	logger := log.FromContext(ctx)
+	verbosity := logger.Level()
+
+	return &env{
+		kwokctlConfig:                 config,
+		verbosity:                     verbosity,
+		inClusterOnHostKubeconfigPath: inClusterOnHostKubeconfigPath,
+		inClusterKubeconfig:           inClusterKubeconfig,
+		kubeconfigPath:                kubeconfigPath,
+		etcdDataPath:                  etcdDataPath,
+		kwokConfigPath:                kwokConfigPath,
+		pkiPath:                       pkiPath,
+		auditLogPath:                  auditLogPath,
+		auditPolicyPath:               auditPolicyPath,
+		workdir:                       workdir,
+		caCertPath:                    caCertPath,
+		adminKeyPath:                  adminKeyPath,
+		adminCertPath:                 adminCertPath,
+		inClusterPkiPath:              inClusterPkiPath,
+		inClusterCaCertPath:           inClusterCaCertPath,
+		inClusterAdminKeyPath:         inClusterAdminKeyPath,
+		inClusterAdminCertPath:        inClusterAdminCertPath,
+		inClusterPort:                 inClusterPort,
+		scheme:                        scheme,
+	}, nil
+}
+
+// Install installs the cluster
+func (c *Cluster) Install(ctx context.Context) error {
+	err := c.Cluster.Install(ctx)
+	if err != nil {
+		return err
+	}
+
+	env, err := c.env(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = c.setup(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.setupPorts(ctx,
-		&conf.KubeApiserverPort,
+		&env.kwokctlConfig.Options.KubeApiserverPort,
 	)
 	if err != nil {
 		return err
 	}
 
-	err = c.pullAllImages(ctx)
+	err = c.pullAllImages(ctx, env)
 	if err != nil {
 		return err
 	}
+
+	err = c.addEtcd(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addKubeApiserver(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addKubeControllerManager(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addKubeScheduler(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addKwokController(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addPrometheus(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addJaeger(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addDashboard(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.finishInstall(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
 
 	// Configure the etcd
 	etcdVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.EtcdImage, "etcd")
@@ -303,19 +395,19 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	etcdComponentPatches := runtime.GetComponentPatches(config, "etcd")
+	etcdComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentEtcd)
 	etcdComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(etcdComponentPatches.ExtraVolumes)
 	if err != nil {
 		return fmt.Errorf("failed to expand host volumes for etcd component: %w", err)
 	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Workdir:      workdir,
+		Workdir:      env.workdir,
 		Image:        conf.EtcdImage,
 		Version:      etcdVersion,
 		BindAddress:  net.PublicAddress,
 		Port:         conf.EtcdPort,
-		DataPath:     etcdDataPath,
-		Verbosity:    verbosity,
+		DataPath:     env.etcdDataPath,
+		Verbosity:    env.verbosity,
 		ExtraArgs:    etcdComponentPatches.ExtraArgs,
 		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
 		ExtraEnvs:    etcdComponentPatches.ExtraEnvs,
@@ -323,15 +415,20 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	config.Components = append(config.Components, etcdComponent)
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, etcdComponent)
+	return nil
+}
+
+func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-apiserver
-	kubeApiserverVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeApiserverImage, "kube-apiserver")
+	kubeApiserverVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeApiserverImage, consts.ComponentKubeApiserver)
 	if err != nil {
 		return err
 	}
 
-	kubeApiserverComponentPatches := runtime.GetComponentPatches(config, "kube-apiserver")
+	kubeApiserverComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeApiserver)
 	kubeApiserverComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeApiserverComponentPatches.ExtraVolumes)
 	if err != nil {
 		return fmt.Errorf("failed to expand host volumes for kube api server component: %w", err)
@@ -354,7 +451,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
-		Workdir:           workdir,
+		Workdir:           env.workdir,
 		Image:             conf.KubeApiserverImage,
 		Version:           kubeApiserverVersion,
 		BindAddress:       net.PublicAddress,
@@ -364,14 +461,14 @@ func (c *Cluster) Install(ctx context.Context) error {
 		SecurePort:        conf.SecurePort,
 		KubeAuthorization: conf.KubeAuthorization,
 		KubeAdmission:     conf.KubeAdmission,
-		AuditPolicyPath:   auditPolicyPath,
-		AuditLogPath:      auditLogPath,
-		CaCertPath:        caCertPath,
-		AdminCertPath:     adminCertPath,
-		AdminKeyPath:      adminKeyPath,
+		AuditPolicyPath:   env.auditPolicyPath,
+		AuditLogPath:      env.auditLogPath,
+		CaCertPath:        env.caCertPath,
+		AdminCertPath:     env.adminCertPath,
+		AdminKeyPath:      env.adminKeyPath,
 		EtcdPort:          conf.EtcdPort,
 		EtcdAddress:       c.Name() + "-etcd",
-		Verbosity:         verbosity,
+		Verbosity:         env.verbosity,
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		TracingConfigPath: kubeApiserverTracingConfigPath,
 		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
@@ -381,34 +478,39 @@ func (c *Cluster) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	config.Components = append(config.Components, kubeApiserverComponent)
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeApiserverComponent)
+	return nil
+}
+
+func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-controller-manager
 	if !conf.DisableKubeControllerManager {
-		kubeControllerManagerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeControllerManagerImage, "kube-controller-manager")
+		kubeControllerManagerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeControllerManagerImage, consts.ComponentKubeControllerManager)
 		if err != nil {
 			return err
 		}
 
-		kubeControllerManagerComponentPatches := runtime.GetComponentPatches(config, "kube-controller-manager")
+		kubeControllerManagerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeControllerManager)
 		kubeControllerManagerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeControllerManagerComponentPatches.ExtraVolumes)
 		if err != nil {
 			return fmt.Errorf("failed to expand host volumes for kube controller manager component: %w", err)
 		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
-			Workdir:                            workdir,
+			Workdir:                            env.workdir,
 			Image:                              conf.KubeControllerManagerImage,
 			Version:                            kubeControllerManagerVersion,
 			BindAddress:                        net.PublicAddress,
 			Port:                               conf.KubeControllerManagerPort,
 			SecurePort:                         conf.SecurePort,
-			CaCertPath:                         caCertPath,
-			AdminCertPath:                      adminCertPath,
-			AdminKeyPath:                       adminKeyPath,
+			CaCertPath:                         env.caCertPath,
+			AdminCertPath:                      env.adminCertPath,
+			AdminKeyPath:                       env.adminKeyPath,
 			KubeAuthorization:                  conf.KubeAuthorization,
-			KubeconfigPath:                     inClusterOnHostKubeconfigPath,
+			KubeconfigPath:                     env.inClusterOnHostKubeconfigPath,
 			KubeFeatureGates:                   conf.KubeFeatureGates,
-			Verbosity:                          verbosity,
+			Verbosity:                          env.verbosity,
 			DisableQPSLimits:                   conf.DisableQPSLimits,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
@@ -419,44 +521,49 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		config.Components = append(config.Components, kubeControllerManagerComponent)
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeControllerManagerComponent)
 	}
+	return nil
+}
+
+func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-scheduler
 	if !conf.DisableKubeScheduler {
 		schedulerConfigPath := ""
 		if conf.KubeSchedulerConfig != "" {
 			schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
-			err = c.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, inClusterKubeconfig)
+			err = c.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, env.inClusterKubeconfig)
 			if err != nil {
 				return err
 			}
 		}
 
-		kubeSchedulerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeSchedulerImage, "kube-scheduler")
+		kubeSchedulerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeSchedulerImage, consts.ComponentKubeScheduler)
 		if err != nil {
 			return err
 		}
 
-		kubeSchedulerComponentPatches := runtime.GetComponentPatches(config, "kube-scheduler")
+		kubeSchedulerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeScheduler)
 		kubeSchedulerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeSchedulerComponentPatches.ExtraVolumes)
 		if err != nil {
 			return fmt.Errorf("failed to expand host volumes for kube scheduler component: %w", err)
 		}
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
-			Workdir:          workdir,
+			Workdir:          env.workdir,
 			Image:            conf.KubeSchedulerImage,
 			Version:          kubeSchedulerVersion,
 			BindAddress:      net.PublicAddress,
 			Port:             conf.KubeSchedulerPort,
 			SecurePort:       conf.SecurePort,
-			CaCertPath:       caCertPath,
-			AdminCertPath:    adminCertPath,
-			AdminKeyPath:     adminKeyPath,
+			CaCertPath:       env.caCertPath,
+			AdminCertPath:    env.adminCertPath,
+			AdminKeyPath:     env.adminKeyPath,
 			ConfigPath:       schedulerConfigPath,
-			KubeconfigPath:   inClusterOnHostKubeconfigPath,
+			KubeconfigPath:   env.inClusterOnHostKubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
-			Verbosity:        verbosity,
+			Verbosity:        env.verbosity,
 			DisableQPSLimits: conf.DisableQPSLimits,
 			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
 			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
@@ -465,8 +572,13 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		config.Components = append(config.Components, kubeSchedulerComponent)
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeSchedulerComponent)
 	}
+	return nil
+}
+
+func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
 
 	// Configure the kwok-controller
 	kwokControllerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KwokControllerImage, "kwok")
@@ -474,7 +586,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	kwokControllerComponentPatches := runtime.GetComponentPatches(config, "kwok-controller")
+	kwokControllerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKwokController)
 	kwokControllerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kwokControllerComponentPatches.ExtraVolumes)
 	if err != nil {
 		return fmt.Errorf("failed to expand host volumes for kwok controller component: %w", err)
@@ -485,32 +597,37 @@ func (c *Cluster) Install(ctx context.Context) error {
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, logVolumes...)
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
-		Workdir:                  workdir,
+		Workdir:                  env.workdir,
 		Image:                    conf.KwokControllerImage,
 		Version:                  kwokControllerVersion,
 		BindAddress:              net.PublicAddress,
 		Port:                     conf.KwokControllerPort,
-		ConfigPath:               kwokConfigPath,
-		KubeconfigPath:           inClusterOnHostKubeconfigPath,
-		CaCertPath:               caCertPath,
-		AdminCertPath:            adminCertPath,
-		AdminKeyPath:             adminKeyPath,
+		ConfigPath:               env.kwokConfigPath,
+		KubeconfigPath:           env.inClusterOnHostKubeconfigPath,
+		CaCertPath:               env.caCertPath,
+		AdminCertPath:            env.adminCertPath,
+		AdminKeyPath:             env.adminKeyPath,
 		NodeName:                 c.Name() + "-kwok-controller",
-		Verbosity:                verbosity,
+		Verbosity:                env.verbosity,
 		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
 		ExtraVolumes:             kwokControllerExtraVolumes,
 		ExtraEnvs:                kwokControllerComponentPatches.ExtraEnvs,
 	})
-	config.Components = append(config.Components, kwokControllerComponent)
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kwokControllerComponent)
+	return nil
+}
+
+func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
 
 	// Configure the prometheus
 	if conf.PrometheusPort != 0 {
 		prometheusData, err := BuildPrometheus(BuildPrometheusConfig{
 			ProjectName:  c.Name(),
 			SecurePort:   conf.SecurePort,
-			AdminCrtPath: inClusterAdminCertPath,
-			AdminKeyPath: inClusterAdminKeyPath,
+			AdminCrtPath: env.inClusterAdminCertPath,
+			AdminKeyPath: env.inClusterAdminKeyPath,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
@@ -529,21 +646,21 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
-		prometheusComponentPatches := runtime.GetComponentPatches(config, "prometheus")
+		prometheusComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentPrometheus)
 		prometheusComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(prometheusComponentPatches.ExtraVolumes)
 		if err != nil {
 			return fmt.Errorf("failed to expand host volumes for prometheus component: %w", err)
 		}
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
-			Workdir:       workdir,
+			Workdir:       env.workdir,
 			Image:         conf.PrometheusImage,
 			Version:       prometheusVersion,
 			BindAddress:   net.PublicAddress,
 			Port:          conf.PrometheusPort,
 			ConfigPath:    prometheusConfigPath,
-			AdminCertPath: adminCertPath,
-			AdminKeyPath:  adminKeyPath,
-			Verbosity:     verbosity,
+			AdminCertPath: env.adminCertPath,
+			AdminKeyPath:  env.adminKeyPath,
+			Verbosity:     env.verbosity,
 			ExtraArgs:     prometheusComponentPatches.ExtraArgs,
 			ExtraVolumes:  prometheusComponentPatches.ExtraVolumes,
 			ExtraEnvs:     prometheusComponentPatches.ExtraEnvs,
@@ -551,31 +668,41 @@ func (c *Cluster) Install(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		config.Components = append(config.Components, prometheusComponent)
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, prometheusComponent)
 	}
+	return nil
+}
+
+func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
 
 	if conf.DashboardPort != 0 {
-		dashboardComponentPatches := runtime.GetComponentPatches(config, "dashboard")
+		dashboardComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentDashboard)
 		dashboardComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(dashboardComponentPatches.ExtraVolumes)
 		if err != nil {
 			return fmt.Errorf("failed to expand host volumes for dashboard component: %w", err)
 		}
 		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
-			Workdir:        workdir,
+			Workdir:        env.workdir,
 			Image:          conf.DashboardImage,
 			BindAddress:    net.PublicAddress,
-			KubeconfigPath: inClusterOnHostKubeconfigPath,
-			CaCertPath:     caCertPath,
-			AdminCertPath:  adminCertPath,
-			AdminKeyPath:   adminKeyPath,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
 			Port:           conf.DashboardPort,
 			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
 		})
 		if err != nil {
 			return err
 		}
-		config.Components = append(config.Components, dashboardComponent)
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
 	}
+	return nil
+}
+
+func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
+	conf := &env.kwokctlConfig.Options
 
 	// Configure the jaeger
 	if conf.JaegerPort != 0 {
@@ -584,35 +711,40 @@ func (c *Cluster) Install(ctx context.Context) error {
 			return err
 		}
 
-		jaegerComponentPatches := runtime.GetComponentPatches(config, "jaeger")
+		jaegerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentJaeger)
 		jaegerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(jaegerComponentPatches.ExtraVolumes)
 		if err != nil {
 			return fmt.Errorf("failed to expand host volumes for jaeger component: %w", err)
 		}
 		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
-			Workdir:      workdir,
+			Workdir:      env.workdir,
 			Image:        conf.JaegerImage,
 			Version:      jaegerVersion,
 			BindAddress:  net.PublicAddress,
 			Port:         conf.JaegerPort,
-			Verbosity:    verbosity,
+			Verbosity:    env.verbosity,
 			ExtraArgs:    jaegerComponentPatches.ExtraArgs,
 			ExtraVolumes: jaegerComponentPatches.ExtraVolumes,
 		})
 		if err != nil {
 			return err
 		}
-		config.Components = append(config.Components, jaegerComponent)
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, jaegerComponent)
 	}
+	return nil
+}
+
+func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
+	conf := &env.kwokctlConfig.Options
 
 	// Setup kubeconfig
 	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
-		Address:      scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
-		CACrtPath:    caCertPath,
-		AdminCrtPath: adminCertPath,
-		AdminKeyPath: adminKeyPath,
+		Address:      env.scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
+		CACrtPath:    env.caCertPath,
+		AdminCrtPath: env.adminCertPath,
+		AdminKeyPath: env.adminKeyPath,
 	}))
 	if err != nil {
 		return err
@@ -621,10 +753,10 @@ func (c *Cluster) Install(ctx context.Context) error {
 	inClusterKubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
-		Address:      scheme + "://" + c.Name() + "-kube-apiserver:" + format.String(inClusterPort),
-		CACrtPath:    inClusterCaCertPath,
-		AdminCrtPath: inClusterAdminCertPath,
-		AdminKeyPath: inClusterAdminKeyPath,
+		Address:      env.scheme + "://" + c.Name() + "-kube-apiserver:" + format.String(env.inClusterPort),
+		CACrtPath:    env.inClusterCaCertPath,
+		AdminCrtPath: env.inClusterAdminCertPath,
+		AdminKeyPath: env.inClusterAdminKeyPath,
 	}))
 	if err != nil {
 		return err
@@ -633,7 +765,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	isSelfCompose := c.isSelfCompose(ctx, true)
 	if !isSelfCompose {
 		composePath := c.GetWorkdirPath(runtime.ComposeName)
-		compose := convertToCompose(c.Name(), conf.BindAddress, config.Components)
+		compose := convertToCompose(c.Name(), conf.BindAddress, env.kwokctlConfig.Components)
 		composeData, err := yaml.Marshal(compose)
 		if err != nil {
 			return err
@@ -645,17 +777,17 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	// Save config
-	err = c.WriteFile(kubeconfigPath, kubeconfigData)
+	err = c.WriteFile(env.kubeconfigPath, kubeconfigData)
 	if err != nil {
 		return err
 	}
 
-	err = c.WriteFile(inClusterOnHostKubeconfigPath, inClusterKubeconfigData)
+	err = c.WriteFile(env.inClusterOnHostKubeconfigPath, inClusterKubeconfigData)
 	if err != nil {
 		return err
 	}
 
-	err = c.SetConfig(ctx, config)
+	err = c.SetConfig(ctx, env.kwokctlConfig)
 	if err != nil {
 		return err
 	}

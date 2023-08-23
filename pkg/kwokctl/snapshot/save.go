@@ -63,7 +63,7 @@ func Save(ctx context.Context, clientset client.Clientset, w io.Writer, resource
 
 	gvrs := make([]schema.GroupVersionResource, 0, len(resources))
 	for _, resource := range resources {
-		mapping, err := mappingFor(restMapper, resource)
+		mapping, err := client.MappingFor(restMapper, resource)
 		if err != nil {
 			logger.Warn("Failed to get mapping for resource", "resource", resource, "err", err)
 			continue

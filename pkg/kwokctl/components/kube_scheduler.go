@@ -188,12 +188,12 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
-		Name:    "kube-scheduler",
+		Name:    consts.ComponentKubeScheduler,
 		Version: conf.Version.String(),
 		Links: []string{
-			"kube-apiserver",
+			consts.ComponentKubeApiserver,
 		},
-		Command: []string{"kube-scheduler"},
+		Command: []string{consts.ComponentKubeScheduler},
 		Volumes: volumes,
 		Args:    kubeSchedulerArgs,
 		Binary:  conf.Binary,

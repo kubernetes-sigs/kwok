@@ -198,12 +198,12 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
-		Name:    "kube-controller-manager",
+		Name:    consts.ComponentKubeControllerManager,
 		Version: conf.Version.String(),
 		Links: []string{
-			"kube-apiserver",
+			consts.ComponentKubeApiserver,
 		},
-		Command: []string{"kube-controller-manager"},
+		Command: []string{consts.ComponentKubeControllerManager},
 		Volumes: volumes,
 		Args:    kubeControllerManagerArgs,
 		Ports:   ports,

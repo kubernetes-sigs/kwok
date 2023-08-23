@@ -19,6 +19,7 @@ package kind
 import (
 	"context"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -56,19 +57,19 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 // SnapshotRestore restore the snapshot of cluster
 func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	logger := log.FromContext(ctx)
-	err := c.StopComponent(ctx, "etcd")
+	err := c.StopComponent(ctx, consts.ComponentEtcd)
 	if err != nil {
 		logger.Error("Failed to stop etcd", err)
 	}
 	defer func() {
-		err = c.StartComponent(ctx, "etcd")
+		err = c.StartComponent(ctx, consts.ComponentEtcd)
 		if err != nil {
 			logger.Error("Failed to start etcd", err)
 		}
 	}()
 
 	// Restore snapshot to host temporary directory
-	etcdDataTmp := c.GetWorkdirPath("etcd")
+	etcdDataTmp := c.GetWorkdirPath(consts.ComponentEtcd)
 	err = c.Etcdctl(ctx, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err
@@ -103,14 +104,14 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error {
 	logger := log.FromContext(ctx)
 	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		err := c.StopComponent(ctx, "kube-controller-manager")
+		err := c.StopComponent(ctx, consts.ComponentKubeControllerManager)
 		return err == nil, err
 	})
 	if err != nil {
 		logger.Error("Failed to stop kube-controller-manager", err)
 	}
 	defer func() {
-		err = c.StartComponent(ctx, "kube-controller-manager")
+		err = c.StartComponent(ctx, consts.ComponentKubeControllerManager)
 		if err != nil {
 			logger.Error("Failed to start kube-controller-manager", err)
 		}
