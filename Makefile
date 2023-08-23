@@ -235,7 +235,7 @@ integration-test:
 ## e2e-test: Run e2e tests
 .PHONY: e2e-test
 e2e-test:
-	@./hack/requirements.sh kubectl buildx kind
+	@./hack/requirements.sh kubectl buildx kind kustomize
 	@PATH=$(PWD)/bin:${PATH} ./hack/e2e-test.sh \
 		--skip=nerdctl \
 		--skip=podman \
