@@ -63,10 +63,10 @@ kwokctl create cluster [flags]
       --kube-scheduler-port uint32              Port of kube-scheduler given to the host, only for binary and docker/podman/nerdctl runtime
       --kubeconfig string                       The path to the kubeconfig file will be added to the newly created cluster and set to current-context (default "~/.kube/config")
       --kwok-controller-binary string           Binary of kwok-controller, only for binary runtime
-                                                 (default "https://github.com/kubernetes-sigs/kwok/releases/download/v0.3.0/kwok-linux-amd64")
+                                                 (default "https://github.com/kubernetes-sigs/kwok/releases/download/v0.4.0/kwok-linux-amd64")
       --kwok-controller-image string            Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
-                                                 (default "registry.k8s.io/kwok/kwok:v0.3.0")
+                                                 (default "registry.k8s.io/kwok/kwok:v0.4.0")
       --prometheus-binary string                Binary of Prometheus, only for binary runtime
       --prometheus-binary-tar string            Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
                                                  (default "https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.linux-amd64.tar.gz")

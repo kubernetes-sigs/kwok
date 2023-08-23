@@ -18,8 +18,6 @@ package version
 
 import (
 	"testing"
-
-	"sigs.k8s.io/kwok/pkg/consts"
 )
 
 func TestVersionInfo(t *testing.T) {
@@ -36,7 +34,7 @@ func TestVersionInfo(t *testing.T) {
 			name: "versionInfo to alpha",
 			args: args{
 				version:    "v1.2.3",
-				preRelease: consts.PreRelease,
+				preRelease: "alpha",
 			},
 			want: "1.2.3-alpha",
 		},
@@ -44,7 +42,7 @@ func TestVersionInfo(t *testing.T) {
 			name: "versionInfo to alpha but version is not v",
 			args: args{
 				version:    "1.2.3",
-				preRelease: consts.PreRelease,
+				preRelease: "alpha",
 			},
 			want: "1.2.3-alpha",
 		},
@@ -52,7 +50,7 @@ func TestVersionInfo(t *testing.T) {
 			name: "versionInfo to alpha but version is empty",
 			args: args{
 				version:    "",
-				preRelease: consts.PreRelease,
+				preRelease: "alpha",
 			},
 			want: "",
 		},
