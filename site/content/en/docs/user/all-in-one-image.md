@@ -13,7 +13,7 @@ This document walks through the steps to create a cluster with the all-in-one im
 ## Getting started
 
 ``` bash
-docker run --rm -it -p 8080:8080 registry.k8s.io/kwok/cluster:v0.3.0-k8s.v1.27.3
+docker run --rm -it -p 8080:8080 registry.k8s.io/kwok/cluster:v0.4.0-k8s.v1.28.0
 ```
 
 ``` log
@@ -29,10 +29,9 @@ Thanks for using kwok!
 Starting to serve on [::]:8080
 ###############################################################################
 > kubectl -s :8080 version
-WARNING: This version information is deprecated and will be replaced with the output from kubectl version --short.  Use --output=yaml|json to get the full version.
-Client Version: version.Info{Major:"1", Minor:"27", GitVersion:"v1.27.3", GitCommit:"25b4e43193bcda6c7328a6d147b1fb73a33f1598", GitTreeState:"clean", BuildDate:"2023-06-14T09:53:42Z", GoVersion:"go1.20.5", Compiler:"gc", Platform:"linux/arm64"}
-Kustomize Version: v5.0.1
-Server Version: version.Info{Major:"1", Minor:"27", GitVersion:"v1.27.3", GitCommit:"25b4e43193bcda6c7328a6d147b1fb73a33f1598", GitTreeState:"clean", BuildDate:"2023-06-14T09:47:40Z", GoVersion:"go1.20.5", Compiler:"gc", Platform:"linux/arm64"}
+Client Version: v1.28.0
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.28.0
 ###############################################################################
 # The following kubeconfig can be used to connect to the Kubernetes API server
 apiVersion: v1

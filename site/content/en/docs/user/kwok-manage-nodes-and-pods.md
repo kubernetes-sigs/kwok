@@ -12,8 +12,6 @@ This document walks you through how to manage nodes and pods with `kwok`.
 
 ## Node Management
 
-`--manage-all-nodes` cannot be used together with `--manage-nodes-with-annotation-selector` and `--manage-nodes-with-label-selector`.
-
 ### For all nodes
 
 With the `--manage-all-nodes=true` argument,
@@ -31,6 +29,11 @@ If the annotation is not present, `kwok` will not manage the node.
 With the `--manage-nodes-with-label-selector=kwok.x-k8s.io/node=fake` argument,
 `kwok` just manages the nodes with the label `kwok.x-k8s.io/node=fake`.
 If the label is not present, `kwok` will not manage the node.
+
+### For single node
+
+With the `--manage-single-node=fake-node` argument,
+`kwok` only manages the node named `fake-node`.
 
 ## Create a Node
 
