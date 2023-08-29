@@ -28,6 +28,9 @@ function all_cases() {
     cases="$(echo "${cases}" | grep -v "${skip}" || :)"
   done
   echo "${cases}"
+  go test -json -v sigs.k8s.io/kwok/test/e2e/... -args --dry-run |
+    jq -r '. | select( .Action == "pass" ) | select( .Test == null ) | .Package' |
+    sed 's|^sigs.k8s.io/kwok/test/||g'
 }
 
 function usage() {
@@ -73,6 +76,19 @@ function main() {
   local failed=()
   for target in "${TARGETS[@]}"; do
     echo "================================================================================"
+    if [[ "${target}" == "e2e/"* ]]; then
+      echo "Testing ${target}..."
+      if ! go test -v "sigs.k8s.io/kwok/test/${target}" -args --v=6; then
+        failed+=("${target}")
+        echo "------------------------------"
+        echo "Test ${target} failed."
+      else
+        echo "------------------------------"
+        echo "Test ${target} passed."
+      fi
+      continue
+    fi
+
     target="${target%.test.sh}"
     test="${test_dir}/${target}.test.sh"
     if [[ ! -x "${test}" ]]; then

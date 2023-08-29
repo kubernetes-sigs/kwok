@@ -3,8 +3,11 @@ kind: Kustomization
 
 images:
 - name: registry.k8s.io/kwok/kwok
-  newName: kwok
+  newName: localhost/kwok
   newTag: test
+
+resources:
+- ../../../../kustomize/kwok
 
 patches:
 - target:
@@ -24,9 +27,4 @@ patches:
       value: --manage-nodes-with-annotation-selector=
     - op: replace
       path: /spec/template/spec/containers/0/args/3
-      value: --manage-single-node=fake-node
-
-resources:
-- ../../kustomize/kwok
-- fake-deployment.yaml
-- fake-node.yaml
+      value: --manage-single-node=node
