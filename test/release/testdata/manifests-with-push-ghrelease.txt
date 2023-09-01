@@ -1,0 +1,8 @@
+mkdir -p ./artifacts
+cp -r ./kustomize ./artifacts/
+cd ./artifacts/kustomize/kwok
+kustomize edit set image registry.k8s.io/kwok/kwok=image-prefix/kwok:<VERSION>
+cd -
+kustomize build ./artifacts/kustomize/kwok -o ./artifacts/kwok.yaml
+gh -R ghrelease release upload <VERSION> ./artifacts/kwok.yaml
+rm -r ./artifacts/kustomize

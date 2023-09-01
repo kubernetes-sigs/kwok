@@ -1,0 +1,1 @@
+docker buildx build --tag=image-prefix/kwok:staging-prefix-<VERSION> --platform=linux/amd64 --platform=linux/arm64 --push -f ./images/kwok/Dockerfile .

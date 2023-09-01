@@ -1,0 +1,12 @@
+GOOS=linux GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/linux/<ARCH>/kwok ./cmd/kwok
+GOOS=linux GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/linux/<ARCH>/kwokctl ./cmd/kwokctl
+GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/linux/arm64/kwok ./cmd/kwok
+GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/linux/arm64/kwokctl ./cmd/kwokctl
+GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/<OS>/<ARCH>/kwok ./cmd/kwok
+GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/<OS>/<ARCH>/kwokctl ./cmd/kwokctl
+GOOS=<OS> GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/<OS>/arm64/kwok ./cmd/kwok
+GOOS=<OS> GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/<OS>/arm64/kwokctl ./cmd/kwokctl
+GOOS=windows GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/windows/<ARCH>/kwok.exe ./cmd/kwok
+GOOS=windows GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/windows/<ARCH>/kwokctl.exe ./cmd/kwokctl
+GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/windows/arm64/kwok.exe ./cmd/kwok
+GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0' -o ./bin/windows/arm64/kwokctl.exe ./cmd/kwokctl
