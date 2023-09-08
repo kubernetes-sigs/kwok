@@ -68,6 +68,25 @@ jobs:
         run: |
           BUILDER=${{ matrix.builder }} make build-cluster-image
 
+  test-kwok-e2e:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: "1.20"
+
+    - name: Test e2e default
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh e2e/kwok/default
+
+    - name: Test e2e single
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh e2e/kwok/single
+
   test-kwok:
     strategy:
       fail-fast: false
@@ -75,7 +94,6 @@ jobs:
         case:
           - kwok
           - kwok-with-cni
-          - kwok-single-node
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:
@@ -262,6 +280,11 @@ jobs:
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_with_dryrun
+
+      - name: Test e2e
+        shell: bash
+        run: |
+          ./hack/e2e-test.sh e2e/kwokctl/${{ matrix.kwokctl-runtime }}
 
       - name: Test Export Logs
         shell: bash
