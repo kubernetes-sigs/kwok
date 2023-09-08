@@ -8,7 +8,7 @@ require (
 	github.com/containerd/go-cni v1.1.9
 	github.com/containernetworking/plugins v1.3.0
 	github.com/creack/pty v1.1.18
-	github.com/emicklei/go-restful/v3 v3.10.2
+	github.com/emicklei/go-restful/v3 v3.11.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/google/cel-go v0.16.0
 	github.com/google/go-cmp v0.5.9
