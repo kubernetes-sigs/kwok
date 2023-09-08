@@ -1,0 +1,2 @@
+podman build --tag=image-prefix/kwok:<VERSION> --platform=linux/<ARCH> -f ./images/kwok/Dockerfile .
+podman push --platform=linux/<ARCH> image-prefix/kwok:<VERSION>

@@ -1,0 +1,47 @@
+build GOOS,GOARCH build
+build-with-push-bucket GOOS,GOARCH PUSH=true BUCKET=bucket build
+build-with-push-bucket-staging GOOS,GOARCH PUSH=true BUCKET=bucket STAGING=true build
+build-with-push-ghrelease GOOS,GOARCH PUSH=true GH_RELEASE=ghrelease build
+image GOARCH image
+image-with-push GOARCH PUSH=true image
+image-with-push-staging GOARCH PUSH=true BUCKET=bucket STAGING=true image
+image-nerdctl GOARCH BUILDER=nerdctl image
+image-nerdctl-with-push GOARCH BUILDER=nerdctl PUSH=true image
+image-nerdctl-with-push-staging GOARCH BUILDER=nerdctl PUSH=true BUCKET=bucket STAGING=true image
+image-podman GOARCH BUILDER=podman image
+image-podman-with-push GOARCH BUILDER=podman PUSH=true image
+image-podman-with-push-staging GOARCH BUILDER=podman PUSH=true BUCKET=bucket STAGING=true image
+cluster-image GOARCH cluster-image
+cluster-image-with-push GOARCH PUSH=true cluster-image
+cluster-image-with-push-staging GOARCH PUSH=true BUCKET=bucket STAGING=true cluster-image
+cluster-image-nerdctl GOARCH BUILDER=nerdctl cluster-image
+cluster-image-nerdctl-with-push GOARCH BUILDER=nerdctl PUSH=true cluster-image
+cluster-image-nerdctl-with-push-staging GOARCH BUILDER=nerdctl PUSH=true BUCKET=bucket STAGING=true cluster-image
+cluster-image-podman GOARCH BUILDER=podman cluster-image
+cluster-image-podman-with-push GOARCH BUILDER=podman PUSH=true cluster-image
+cluster-image-podman-with-push-staging GOARCH BUILDER=podman PUSH=true BUCKET=bucket STAGING=true cluster-image
+cross-build NONE cross-build
+cross-build-with-push-bucket NONE PUSH=true BUCKET=bucket cross-build
+cross-build-with-push-bucket-staging NONE PUSH=true BUCKET=bucket STAGING=true cross-build
+cross-build-with-push-ghrelease NONE PUSH=true GH_RELEASE=ghrelease cross-build
+cross-image NONE cross-image
+cross-image-with-push NONE PUSH=true cross-image
+cross-image-with-push-staging NONE PUSH=true BUCKET=bucket STAGING=true cross-image
+cross-image-nerdctl NONE BUILDER=nerdctl cross-image
+cross-image-nerdctl-with-push NONE BUILDER=nerdctl PUSH=true cross-image
+cross-image-nerdctl-with-push-staging NONE BUILDER=nerdctl PUSH=true BUCKET=bucket STAGING=true cross-image
+cross-image-podman NONE BUILDER=podman cross-image
+cross-image-podman-with-push NONE BUILDER=podman PUSH=true cross-image
+cross-image-podman-with-push-staging NONE BUILDER=podman PUSH=true BUCKET=bucket STAGING=true cross-image
+cross-cluster-image NONE cross-cluster-image
+cross-cluster-image-with-push NONE PUSH=true cross-cluster-image
+cross-cluster-image-with-push-staging NONE PUSH=true BUCKET=bucket STAGING=true cross-cluster-image
+cross-cluster-image-nerdctl NONE BUILDER=nerdctl cross-cluster-image
+cross-cluster-image-nerdctl-with-push NONE BUILDER=nerdctl PUSH=true cross-cluster-image
+cross-cluster-image-nerdctl-with-push-staging NONE BUILDER=nerdctl PUSH=true BUCKET=bucket STAGING=true cross-cluster-image
+cross-cluster-image-podman NONE BUILDER=podman cross-cluster-image
+cross-cluster-image-podman-with-push NONE BUILDER=podman PUSH=true cross-cluster-image
+cross-cluster-image-podman-with-push-staging NONE BUILDER=podman PUSH=true BUCKET=bucket STAGING=true cross-cluster-image
+manifests GOOS,GOARCH MANIFESTS=kwok manifests
+manifests-with-push-ghrelease GOOS,GOARCH PUSH=true MANIFESTS=kwok GH_RELEASE=ghrelease manifests
+manifests-with-push-bucket GOOS,GOARCH PUSH=true MANIFESTS=kwok BUCKET=bucket STAGING=true manifests

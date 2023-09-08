@@ -1,0 +1,2 @@
+nerdctl build --tag=image-prefix/kwok:<VERSION> --platform=linux/<ARCH> -f ./images/kwok/Dockerfile .
+nerdctl push --platform=linux/<ARCH> image-prefix/kwok:<VERSION>
