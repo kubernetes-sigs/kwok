@@ -4,17 +4,17 @@ kwokctl create cluster
 # Get all clusters.
 kwokctl get clusters
 
-# Create a node.
-kubectl apply -f ./test/kwok/fake-node.yaml
+# Create an nodes.
+kwokctl scale node --replicas 2
 
 # Get all nodes.
 kubectl get node
 
 # Apply a deployment.
-kubectl apply -f ./test/kwok/fake-deployment.yaml
+kubectl create deployment pod --image=pod --replicas=5
 
 # Get all pods.
-kubectl get pod
+kubectl get pod -o wide
 
 # Delete the cluster.
 kwokctl delete cluster

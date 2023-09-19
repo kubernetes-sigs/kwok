@@ -1,14 +1,14 @@
 # Let's getting started with kwokctl!
-kwokctl -c ./test/kwokctl/port-forward.yaml create cluster
+kwokctl -c ./demo/port-forward.yaml create cluster
 
-# Create a node.
-kubectl apply -f ./test/kwok/fake-node.yaml
+# Create an nodes.
+kwokctl scale node --replicas 2
 
 # Apply a deployment.
-kubectl apply -f ./test/kwok/fake-deployment.yaml
+kubectl create deployment pod --image=pod --replicas=5
 
 # Forward port to the deployment.
-kubectl port-forward deployment/fake-pod 8080:10247 &
+kubectl port-forward deployment/pod 8080:10247 &
 
 # Check the port forward.
 curl http://localhost:8080/healthz

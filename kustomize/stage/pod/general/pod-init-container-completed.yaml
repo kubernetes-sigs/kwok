@@ -14,10 +14,6 @@ spec:
       operator: 'In'
       values:
       - 'Pending'
-    - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
-      operator: 'NotIn'
-      values:
-      - 'True'
     - key: '.status.initContainerStatuses.[].state.running.startedAt'
       operator: 'Exists'
   weight: 1
@@ -32,6 +28,7 @@ spec:
       - lastProbeTime: null
         lastTransitionTime: {{ $now | Quote }}
         status: "True"
+        reason: ""
         type: Initialized
       initContainerStatuses:
       {{ range $index, $item := .spec.initContainers }}

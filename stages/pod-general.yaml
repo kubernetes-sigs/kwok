@@ -159,10 +159,6 @@ spec:
         operator: 'In'
         values:
           - 'Pending'
-      - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
-        operator: 'NotIn'
-        values:
-          - 'True'
       - key: '.status.initContainerStatuses.[].state.running.startedAt'
         operator: 'Exists'
   weight: 1
@@ -177,6 +173,7 @@ spec:
       - lastProbeTime: null
         lastTransitionTime: {{ $now | Quote }}
         status: "True"
+        reason: ""
         type: Initialized
       initContainerStatuses:
       {{ range $index, $item := .spec.initContainers }}
@@ -217,18 +214,12 @@ spec:
     matchExpressions:
       - key: '.metadata.deletionTimestamp'
         operator: 'DoesNotExist'
-      - key: '.status.phase'
-        operator: 'In'
-        values:
-          - 'Pending'
       - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
         operator: 'In'
         values:
           - 'True'
-      - key: '.status.conditions.[] | select( .type == "ContainersReady" ) | .status'
-        operator: 'NotIn'
-        values:
-          - 'True'
+      - key: '.status.containerStatuses.[].state.running.startedAt'
+        operator: 'DoesNotExist'
   weight: 1
   delay:
     durationMilliseconds: 1000
