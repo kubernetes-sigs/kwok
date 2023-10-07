@@ -274,8 +274,20 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	}, nil
 }
 
+func (c *Cluster) checkRunInCluster(ctx context.Context) {
+	if !file.Exists("/var/run/secrets/kubernetes.io/serviceaccount/token") {
+		return
+	}
+
+	logger := log.FromContext(ctx)
+	logger.Warn("cluster may not work correctly and need to be workaround." +
+		"see https://kwok.sigs.k8s.io/docs/user/all-in-one-image/#use-in-a-pod")
+}
+
 // Install installs the cluster
 func (c *Cluster) Install(ctx context.Context) error {
+	c.checkRunInCluster(ctx)
+
 	err := c.Cluster.Install(ctx)
 	if err != nil {
 		return err
