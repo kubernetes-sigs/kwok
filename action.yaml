@@ -1,0 +1,40 @@
+name: Setup kwok
+
+description: This action sets up kwok/kwokctl for use in your workflow
+
+inputs:
+  command:
+    required: true
+    description: Command to install
+  kwok-version:
+    required: false
+    description: Specific version of command to install, defaults to latest release
+  repository:
+    required: false
+    description: Repository is kwok's repository, will use release from this repository, defaults same as uses in this step
+
+runs:
+  using: composite
+  steps:
+  - name: Install ${{ inputs.command }}
+    shell: bash
+    env:
+      KWOK_REPO: ${{ inputs.repository || github.repository }}
+      KWOK_VERSION: ${{ inputs.kwok-version }}
+    run: |
+      if [[ ! -f /usr/local/bin/${{ inputs.command }}-${KWOK_VERSION} ]]; then
+        if [[ -z "${KWOK_VERSION}" ]]; then
+          echo "Fetching latest version..."
+          KWOK_VERSION="$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')"
+          echo "Latest version is ${KWOK_VERSION}"
+        fi
+        echo "Installing ${{ inputs.command }} ${KWOK_VERSION}..."
+        wget -O ${{ inputs.command }}-${KWOK_VERSION} "https://github.com/${KWOK_REPO}/releases/download/${KWOK_VERSION}/${{ inputs.command }}-$(go env GOOS)-$(go env GOARCH)"
+        chmod +x ${{ inputs.command }}-${KWOK_VERSION}
+        sudo mv ${{ inputs.command }}-${KWOK_VERSION} /usr/local/bin/
+        sudo ln -sf /usr/local/bin/${{ inputs.command }}-${KWOK_VERSION} /usr/local/bin/${{ inputs.command }}
+        if ! ${{ inputs.command }} --version; then
+          echo "Failed to run ${{ inputs.command }} --version"
+          exit 1
+        fi
+      fi

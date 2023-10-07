@@ -123,6 +123,10 @@ menu:
       pageRef: "/docs/user/all-in-one-image"
       weight: 1010
       parent: user-guide
+    - identifier: github-action
+      pageRef: "/docs/user/github-action"
+      weight: 1015
+      parent: user-guide
     - identifier: installation
       pageRef: "/docs/user/installation"
       weight: 1020
