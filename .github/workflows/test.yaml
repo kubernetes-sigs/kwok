@@ -221,10 +221,6 @@ jobs:
         shell: bash
         run: |
           brew install colima docker
-          # Workaround for https://github.com/actions/runner-images/issues/8104
-          brew remove --ignore-dependencies qemu && \
-          curl -o ./qemu.rb https://raw.githubusercontent.com/Homebrew/homebrew-core/f88e30b3a23ef3735580f9b05535ce5a0a03c9e3/Formula/qemu.rb && \
-          brew install ./qemu.rb
           colima start --mount $HOME/.kwok/:w --mount $(pwd):w --mount-type virtiofs
 
       - name: Install Buildx
