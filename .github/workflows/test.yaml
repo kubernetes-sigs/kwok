@@ -2,7 +2,23 @@ name: Test
 
 on:
   pull_request:
+    paths:
+    - pkg/**/*
+    - cmd/**/*
+    - e2e/**/*
+    - hack/**/*
+    - kustomize/**/*
+    - go.mod
+    - .github/workflows/test.yaml
   push:
+    paths:
+    - pkg/**/*
+    - cmd/**/*
+    - e2e/**/*
+    - hack/**/*
+    - kustomize/**/*
+    - go.mod
+    - .github/workflows/test.yaml
 
 env:
   DOCKER_CLI_EXPERIMENTAL: "enabled"
@@ -14,15 +30,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-site:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Check site
-        shell: bash
-        run: |
-          make -C site check
-
   test-build:
     runs-on: ubuntu-latest
     strategy:
@@ -32,7 +39,7 @@ jobs:
           - nerdctl
           - podman
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -71,7 +78,7 @@ jobs:
   test-kwok-e2e:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
@@ -97,7 +104,7 @@ jobs:
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -163,7 +170,7 @@ jobs:
     continue-on-error: false
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -178,7 +185,7 @@ jobs:
         # No binary is provided by default for control plane components outside of Linux
         # https://www.downloadkubernetes.com
       - name: Download Kubernetes Source Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         if: ${{ matrix.kwokctl-runtime == 'binary' && ( matrix.os == 'macos-latest' || matrix.os == 'windows-latest' ) }}
         with:
           repository: kubernetes/kubernetes
