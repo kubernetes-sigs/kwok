@@ -24,11 +24,13 @@ ROOT_DIR="$(realpath "${DIR}/..")"
 COMMAND=()
 if command -v yamllint; then
   COMMAND=(yamllint)
+elif command -v "${ROOT_DIR}/venv/bin/yamllint"; then
+  COMMAND=("${ROOT_DIR}/venv/bin/yamllint")
 elif command -v python3; then
-  if ! python3 -m yamllint --help >/dev/null; then
-    python3 -m pip install --user yamllint
-  fi
-  COMMAND=(python3 -m yamllint)
+  python3 -m venv "${ROOT_DIR}/venv"
+  source "${ROOT_DIR}/venv/bin/activate"
+  pip install yamllint
+  COMMAND=("${ROOT_DIR}/venv/bin/yamllint")
 elif command -v docker; then
   COMMAND=(
     docker run
