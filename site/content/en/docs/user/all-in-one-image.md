@@ -59,6 +59,22 @@ kube-system       Active   1s
 # otherwise, change it to your host's port
 ```
 
+## Use in a pod
+
+If you are using the all-in-one image in a pod,
+you need disable the service account token or the cluster might not work properly.
+
+``` yaml
+...
+spec:
+  automountServiceAccountToken: false
+...
+```
+
+or
+
+remove the service account token file `/var/run/secrets/kubernetes.io/serviceaccount/token`.
+
 ## Next steps
 
 Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
