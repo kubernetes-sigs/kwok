@@ -1,5 +1,5 @@
 # Let's getting started with kwokctl!
-kwokctl create cluster --kube-audit-policy ./test/kwokctl/audit-policy.yaml
+kwokctl create cluster --kube-audit-policy ./demo/audit-log.yaml
 
 # Get audit logs.
 kwokctl logs audit | head -n 1 | jq .

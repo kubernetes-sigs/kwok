@@ -1,8 +1,8 @@
 # Let's getting started with kwokctl!
 kwokctl -c ./stages/pod-general.yaml create cluster
 
-# Create a node.
-kubectl apply -f ./test/lifecycle/fake-node.yaml
+# Create an nodes.
+kwokctl scale node --replicas 2
 
 # Apply a deployment and watch.
 kubectl apply -f ./test/lifecycle/fake-pod-stages.yaml && timeout 20 kubectl get pod -w

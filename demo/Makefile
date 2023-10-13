@@ -13,16 +13,28 @@
 # limitations under the License.
 
 SVG_TERM=./node_modules/.bin/svg-term
+SVG_TO_VIDEO=./node_modules/.bin/svg-to-video
 
 $(SVG_TERM):
 	pip3 install asciinema
-	npm i svg-term-cli
+	npm i --save-dev svg-term-cli
 
-%.svg: %.demo $(SVG_TERM)
+$(SVG_TO_VIDEO):
+	npm i --save-dev @wzshiming/svg-to-video
+
+%.svg: %.demo
+	@$(MAKE) $(SVG_TERM)
 	@echo "Generating $@"
 	@$(SVG_TERM) --out "$@" \
 	  --window \
 	  --command "cd .. && ./demo/play-demo.sh ./demo/$<"
+
+%.mp4: %.svg
+	@$(MAKE) $(SVG_TO_VIDEO)
+	@echo "Generating $@"
+	@$(SVG_TO_VIDEO) $< $@ \
+	  --delay-start 1 \
+	  --headless
 
 .PHONY: all
 all: $(patsubst %.demo,%.svg,$(wildcard *.demo))
