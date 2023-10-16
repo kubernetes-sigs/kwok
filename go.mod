@@ -10,7 +10,7 @@ require (
 	github.com/creack/pty v1.1.18
 	github.com/emicklei/go-restful/v3 v3.10.2
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/google/cel-go v0.16.0
+	github.com/google/cel-go v0.18.1
 	github.com/google/go-cmp v0.5.9
 	github.com/itchyny/gojq v0.12.13
 	github.com/nxadm/tail v1.4.8
@@ -102,9 +102,9 @@ require (
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230525234035-dd9d682886f9 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect
-	google.golang.org/grpc v1.54.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230803162519-f966b187b2e5 // indirect
+	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
