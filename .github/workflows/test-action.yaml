@@ -1,0 +1,37 @@
+name: Test Actions
+
+on:
+  pull_request:
+    paths:
+    - action.yaml
+    - .github/workflows/test-action.yaml
+  push:
+    paths:
+    - action.yaml
+    - .github/workflows/test-action.yaml
+
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#concurrency
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          action.yaml
+    - name: Set up kwokctl
+      uses: . # kubernetes-sigs/kwok@main
+      with:
+        command: kwokctl
+    - name: Test kwokctl
+      shell: bash
+      run: |
+        kwokctl --version
+        kwokctl create cluster
+        kubectl version
+        kwokctl delete cluster
