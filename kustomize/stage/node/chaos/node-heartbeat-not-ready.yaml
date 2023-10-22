@@ -1,0 +1,39 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: node-heartbeat-not-ready
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Node
+  selector:
+    matchExpressions:
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - 'Running'
+    - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+      operator: 'In'
+      values:
+      - 'True'
+  weight: 1
+  delay:
+    durationMilliseconds: 20000
+    jitterDurationMilliseconds: 21000
+  next:
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $lastTransitionTime := or .metadata.creationTimestamp $now }}
+      conditions:
+      {{ range NodeConditions }}
+      - lastHeartbeatTime: {{ $now | Quote }}
+        lastTransitionTime: {{ $lastTransitionTime | Quote }}
+        message: 'Error'
+        reason: 'Error'
+        type: {{ .type | Quote }}
+        {{ if eq .type "Ready" }}
+        status: 'False'
+        {{ else }}
+        status: 'True'
+        {{ end }}
+      {{ end }}

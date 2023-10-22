@@ -1,0 +1,54 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pod-container-running-retry
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  selector:
+    matchExpressions:
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - 'Running'
+  weight: 1
+  delay:
+    durationMilliseconds: 10000
+    jitterDurationMilliseconds: 15000
+  next:
+    delete: false
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $root := . }}
+      conditions:
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: ''
+        reason: ''
+        status: "False"
+        type: Ready
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: ''
+        reason: ''
+        status: "False"
+        type: ContainersReady
+      containerStatuses:
+      {{ range $index, $item := .spec.containers }}
+      {{ $origin := index $root.status.containerStatuses $index }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        ready: false
+        restartCount: {{ $origin.restartCount }}
+        started: false
+        state:
+          terminated:
+            exitCode: 1
+            finishedAt: {{ $now | Quote }}
+            reason: ContainerRunningFailed
+            startedAt: {{ $now | Quote }}
+      {{ end }}
+      phase: Failed

@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- pod-create.yaml
+- pod-init-container-running.yaml
+- pod-init-container-completed.yaml
+- pod-init-container-create-failed.yaml
+- pod-container-ready.yaml
+- pod-container-completed.yaml
+- pod-container-create-error.yaml
+- pod-container-create-retry.yaml
+- pod-container-running-failed.yaml
+- pod-remove-finalizer.yaml
+- pod-delete.yaml

@@ -1,0 +1,58 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pod-init-container-completed
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  selector:
+    matchExpressions:
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - 'Pending'
+    - key: '.status.initContainerStatuses.[].state.running.startedAt'
+      operator: 'Exists'
+  weight: 4
+  delay:
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
+  next:
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $root := . }}
+      conditions:
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        status: "True"
+        reason: ""
+        type: Initialized
+      initContainerStatuses:
+      {{ range $index, $item := .spec.initContainers }}
+      {{ $origin := index $root.status.initContainerStatuses $index }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        ready: true
+        restartCount: {{ $origin.restartCount }}
+        started: false
+        state:
+          terminated:
+            exitCode: 0
+            finishedAt: {{ $now | Quote }}
+            reason: Completed
+            startedAt: {{ $now | Quote }}
+      {{ end }}
+      containerStatuses:
+      {{ range .spec.containers }}
+      - image: {{ .image | Quote }}
+        name: {{ .name | Quote }}
+        ready: false
+        restartCount: 0
+        started: false
+        state:
+          waiting:
+            reason: ContainerCreating
+      {{ end }}
