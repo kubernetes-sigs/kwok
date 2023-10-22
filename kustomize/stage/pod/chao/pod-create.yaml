@@ -1,0 +1,101 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pod-create
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  selector:
+    matchExpressions:
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.podIP'
+      operator: 'DoesNotExist'
+  weight: 1
+  delay:
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
+  next:
+    event:
+      type: Normal
+      reason: Created
+      message: Created container
+    finalizers:
+      add:
+      - value: 'kwok.x-k8s.io/fake'
+    statusTemplate: |
+      {{ $now := Now }}
+
+      conditions:
+      {{ if .spec.initContainers }}
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: 'containers with incomplete status: [{{ range .spec.initContainers }} {{ .name }} {{ end }}]'
+        reason: ContainersNotInitialized
+        status: "False"
+        type: Initialized
+      {{ else }}
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        status: "True"
+        type: Initialized
+      {{ end }}
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: 'containers with unready status: [{{ range .spec.containers }} {{ .name }} {{ end }}]'
+        reason: ContainersNotReady
+        status: "False"
+        type: Ready
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: 'containers with unready status: [{{ range .spec.containers }} {{ .name }} {{ end }}]'
+        reason: ContainersNotReady
+        status: "False"
+        type: ContainersReady
+      {{ range .spec.readinessGates }}
+      - lastTransitionTime: {{ $now | Quote }}
+        status: "True"
+        type: {{ .conditionType | Quote }}
+      {{ end }}
+
+      {{ if .spec.initContainers }}
+      initContainerStatuses:
+      {{ range .spec.initContainers }}
+      - image: {{ .image | Quote }}
+        name: {{ .name | Quote }}
+        ready: false
+        restartCount: 0
+        started: false
+        state:
+          waiting:
+            reason: PodInitializing
+      {{ end }}
+      containerStatuses:
+      {{ range .spec.containers }}
+      - image: {{ .image | Quote }}
+        name: {{ .name | Quote }}
+        ready: false
+        restartCount: 0
+        started: false
+        state:
+          waiting:
+            reason: PodInitializing
+      {{ end }}
+      {{ else }}
+      containerStatuses:
+      {{ range .spec.containers }}
+      - image: {{ .image | Quote }}
+        name: {{ .name | Quote }}
+        ready: false
+        restartCount: 0
+        started: false
+        state:
+          waiting:
+            reason: ContainerCreating
+      {{ end }}
+      {{ end }}
+
+      hostIP: {{ NodeIPWith .spec.nodeName | Quote }}
+      podIP: {{ PodIPWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) | Quote }}
+      phase: Pending

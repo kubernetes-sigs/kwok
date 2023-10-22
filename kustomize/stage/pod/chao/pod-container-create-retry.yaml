@@ -1,0 +1,48 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pod-container-create-retry
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  selector:
+    matchExpressions:
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
+      operator: 'In'
+      values:
+      - 'True'
+    - key: '.status.containerStatuses.[].state.terminated'
+      operator: 'Exists'
+    - key: '.status.containerStatuses.[].state.terminated.exitCode'
+      operator: 'NotIn'
+      values:
+      - '0'
+    - key: '.status.phase'
+      operator: 'NotIn'
+      values:
+      - 'Failed'
+  weight: 1
+  delay:
+    durationMilliseconds: 10000
+    jitterDurationMilliseconds: 15000
+  next:
+    delete: false
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $root := . }}
+      containerStatuses:
+      {{ range $index, $item := .spec.containers }}
+      {{ $origin := index $root.status.containerStatuses $index }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        ready: false
+        {{/* TODO: Add incrementing restartCount. */}}
+        restartCount: {{ len (printf "x%*s" $origin.restartCount.Int64 "x") }}
+        started: false
+        state:
+          waiting:
+            reason: ContainerCreating
+      {{ end }}
