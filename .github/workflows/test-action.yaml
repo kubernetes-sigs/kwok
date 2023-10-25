@@ -25,7 +25,7 @@ jobs:
         sparse-checkout: |
           action.yaml
     - name: Set up kwokctl
-      uses: . # kubernetes-sigs/kwok@main
+      uses: ./ # kubernetes-sigs/kwok@main
       with:
         command: kwokctl
     - name: Test kwokctl
