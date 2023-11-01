@@ -245,7 +245,7 @@ func (c *Controller) Start(ctx context.Context) error {
 			FieldSelector: manageNodeLeasesWithFieldSelector,
 		}, nodeLeasesChan)
 		if err != nil {
-			return fmt.Errorf("failed to watch nodes: %w", err)
+			return fmt.Errorf("failed to watch node leases: %w", err)
 		}
 
 		leaseDuration := time.Duration(conf.NodeLeaseDurationSeconds) * time.Second

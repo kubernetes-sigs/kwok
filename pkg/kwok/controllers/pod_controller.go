@@ -343,7 +343,7 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 		} else {
 			result, err := c.patchResource(ctx, pod, patch)
 			if err != nil {
-				logger.Error("Failed to patch node", err)
+				logger.Error("Failed to patch pod", err)
 			}
 			if result != nil && stage.ImmediateNextStage() {
 				c.preprocessChan <- result

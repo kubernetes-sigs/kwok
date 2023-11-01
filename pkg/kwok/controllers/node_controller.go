@@ -326,7 +326,7 @@ func (c *NodeController) preprocessWorker(ctx context.Context) {
 	}
 }
 
-// preprocess the pod and send it to the playStageWorker
+// preprocess the node and send it to the playStageWorker
 func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) error {
 	key := node.Name
 
