@@ -31,6 +31,8 @@ KUBE_VERSION=1.28.0
 # https://github.com/docker/buildx/pull/1412
 BUILDX_VERSION=0.9.1
 
+KUSTOMIZE_VERSION=5.2.1
+
 function command_exist() {
   local command="${1}"
   type "${command}" >/dev/null 2>&1
@@ -167,7 +169,7 @@ function install_kustomize() {
   fi
 
   mkdir -p "${LOCAL_BIN_DIR}"
-  GOBIN="${LOCAL_BIN_DIR}" go install sigs.k8s.io/kustomize/kustomize/v5
+  GOBIN="${LOCAL_BIN_DIR}" go install sigs.k8s.io/kustomize/kustomize/v5@v${KUSTOMIZE_VERSION}
   if ! command_exist kustomize; then
     echo kustomize is installed but not effective >&2
     return 1

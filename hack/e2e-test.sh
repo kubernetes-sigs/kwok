@@ -22,15 +22,34 @@ test_dir=$(realpath "${DIR}"/../test)
 TARGETS=()
 SKIPS=()
 
-function all_cases() {
-  cases="$(find "${test_dir}" -name '*.test.sh' | sed "s#^${test_dir}/##g" | sed "s#.test.sh\$##g" | sort)"
-  for skip in "${SKIPS[@]}"; do
-    cases="$(echo "${cases}" | grep -v "${skip}" || :)"
+function filter_skip() {
+  cat | while read -r line; do
+    skip=false
+    for s in "${SKIPS[@]}"; do
+      if [[ "${line}" =~ ${s} ]]; then
+        skip=true
+        break
+      fi
+    done
+    if [[ "${skip}" == false ]]; then
+      echo "${line}"
+    fi
   done
-  echo "${cases}"
-  go test -json -v sigs.k8s.io/kwok/test/e2e/... -args --dry-run |
+}
+
+function all_cases() {
+  find "${test_dir}" -name '*.test.sh' |
+    sed "s#^${test_dir}/##g" |
+    sed "s#.test.sh\$##g" |
+    filter_skip
+  go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwok/... -args --dry-run |
     jq -r '. | select( .Action == "pass" ) | select( .Test == null ) | .Package' |
-    sed 's|^sigs.k8s.io/kwok/test/||g'
+    sed 's|^sigs.k8s.io/kwok/test/||g' |
+    filter_skip
+  go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwokctl/... -args --dry-run |
+    jq -r '. | select( .Action == "pass" ) | select( .Test == null ) | .Package' |
+    sed 's|^sigs.k8s.io/kwok/test/||g' |
+    filter_skip
 }
 
 function usage() {
