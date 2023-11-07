@@ -24,7 +24,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 )
@@ -43,7 +42,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func runE(ctx context.Context) error {
-	clusters, err := runtime.ListClusters(ctx, config.ClustersDir)
+	clusters, err := runtime.ListClusters(ctx)
 	if err != nil {
 		return err
 	}

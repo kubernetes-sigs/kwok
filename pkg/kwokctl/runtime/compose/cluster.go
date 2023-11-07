@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
@@ -211,10 +212,10 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 	return nil
 }
 
-func (c *Cluster) setupPorts(ctx context.Context, ports ...*uint32) error {
+func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
 	for _, port := range ports {
 		if port != nil && *port == 0 {
-			p, err := net.GetUnusedPort(ctx)
+			p, err := net.GetUnusedPort(ctx, used)
 			if err != nil {
 				return err
 			}
@@ -245,6 +246,7 @@ type env struct {
 	inClusterAdminCertPath        string
 	inClusterPort                 uint32
 	scheme                        string
+	usedPorts                     sets.Sets[uint32]
 }
 
 func (c *Cluster) env(ctx context.Context) (*env, error) {
@@ -285,6 +287,8 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	logger := log.FromContext(ctx)
 	verbosity := logger.Level()
 
+	usedPorts := runtime.GetUsedPorts(ctx)
+
 	return &env{
 		kwokctlConfig:                 config,
 		verbosity:                     verbosity,
@@ -306,6 +310,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 		inClusterAdminCertPath:        inClusterAdminCertPath,
 		inClusterPort:                 inClusterPort,
 		scheme:                        scheme,
+		usedPorts:                     usedPorts,
 	}, nil
 }
 
@@ -327,6 +332,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	err = c.setupPorts(ctx,
+		env.usedPorts,
 		&env.kwokctlConfig.Options.KubeApiserverPort,
 	)
 	if err != nil {
