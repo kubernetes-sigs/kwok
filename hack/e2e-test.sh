@@ -37,26 +37,58 @@ function filter_skip() {
   done
 }
 
-function all_cases() {
+function filter_e2e_option_cases() {
+  jq -r '. | select( .Action == "pass" ) | select( has("Test") ) | select( .Test | contains("/") | not ) | .Package + "@" + .Test' |
+    sed 's|^sigs.k8s.io/kwok/test/||g' |
+    sed 's|@Test|@|g'
+}
+
+function filter_e2e_cases() {
+  jq -r '. | select( .Action == "pass" ) | select( .Test == null ) | .Package' |
+    sed 's|^sigs.k8s.io/kwok/test/||g'
+}
+
+function shell_cases() {
   find "${test_dir}" -name '*.test.sh' |
     sed "s#^${test_dir}/##g" |
     sed "s#.test.sh\$##g" |
     filter_skip
+}
+
+function e2e_cases() {
   go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwok/... -args --dry-run |
-    jq -r '. | select( .Action == "pass" ) | select( .Test == null ) | .Package' |
-    sed 's|^sigs.k8s.io/kwok/test/||g' |
+    filter_e2e_cases |
     filter_skip
   go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwokctl/... -args --dry-run |
-    jq -r '. | select( .Action == "pass" ) | select( .Test == null ) | .Package' |
-    sed 's|^sigs.k8s.io/kwok/test/||g' |
+    filter_e2e_cases |
     filter_skip
+}
+
+function e2e_option_cases() {
+  go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwok/... -args --dry-run |
+    filter_e2e_option_cases |
+    filter_skip
+  go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwokctl/... -args --dry-run |
+    filter_e2e_option_cases |
+    filter_skip
+}
+
+function all_cases() {
+  shell_cases
+  e2e_cases
 }
 
 function usage() {
   echo "Usage: ${0} [cases...] [--help]"
   echo "  Empty argument will run all cases."
   echo "  CASES:"
-  for c in $(all_cases); do
+  for c in $(shell_cases); do
+    echo "    ${c}"
+  done
+  for c in $(e2e_cases); do
+    echo "    ${c}"
+  done
+  for c in $(e2e_option_cases); do
     echo "    ${c}"
   done
 }
@@ -93,11 +125,27 @@ function args() {
 
 function main() {
   local failed=()
+  local test_case
+  local test_path
   for target in "${TARGETS[@]}"; do
     echo "================================================================================"
     if [[ "${target}" == "e2e/"* ]]; then
       echo "Testing ${target}..."
-      if ! go test -v "sigs.k8s.io/kwok/test/${target}" -args --v=6; then
+      if [[ "${target}" == *"@"* ]]; then
+        test_case="${target##*@}"
+        test_path="${target%@*}"
+        if ! go test -timeout=1h -v -test.v "sigs.k8s.io/kwok/test/${test_path}" -test.run "^Test${test_case}\$" -args --v=6; then
+          failed+=("${target}")
+          echo "------------------------------"
+          echo "Test ${target} failed."
+        else
+          echo "------------------------------"
+          echo "Test ${target} passed."
+        fi
+        continue
+      fi
+
+      if ! go test -timeout=1h -v -test.v "sigs.k8s.io/kwok/test/${target}" -args --v=6; then
         failed+=("${target}")
         echo "------------------------------"
         echo "Test ${target} failed."

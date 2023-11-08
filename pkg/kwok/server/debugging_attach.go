@@ -42,7 +42,7 @@ func (s *Server) AttachContainer(ctx context.Context, name string, uid types.UID
 		return fmt.Errorf("invalid pod name %q", name)
 	}
 	podName, podNamespace := pod[0], pod[1]
-	attach, err := s.getPodAttach(podName, podNamespace, containerName)
+	attach, err := getPodAttach(s.attaches.Get(), s.clusterAttaches.Get(), podName, podNamespace, containerName)
 	if err != nil {
 		return err
 	}
@@ -78,8 +78,8 @@ func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
 	)
 }
 
-func (s *Server) getPodAttach(podName, podNamespace, containerName string) (*internalversion.AttachConfig, error) {
-	a, has := slices.Find(s.attaches.Get(), func(a *internalversion.Attach) bool {
+func getPodAttach(rules []*internalversion.Attach, clusterRules []*internalversion.ClusterAttach, podName, podNamespace, containerName string) (*internalversion.AttachConfig, error) {
+	a, has := slices.Find(rules, func(a *internalversion.Attach) bool {
 		return a.Name == podName && a.Namespace == podNamespace
 	})
 	if has {
@@ -87,17 +87,17 @@ func (s *Server) getPodAttach(podName, podNamespace, containerName string) (*int
 		if found {
 			return a, nil
 		}
-		return nil, fmt.Errorf("not found log target for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
+		return nil, fmt.Errorf("attaches target not found for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 	}
 
-	for _, cl := range s.clusterAttaches.Get() {
+	for _, cl := range clusterRules {
 		if !cl.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}
 
-		log, found := findAttachInAttaches(containerName, cl.Spec.Attaches)
+		a, found := findAttachInAttaches(containerName, cl.Spec.Attaches)
 		if found {
-			return log, nil
+			return a, nil
 		}
 	}
 

@@ -74,12 +74,3 @@ func buildBinary(rootDir string, binary string) env.Func {
 		return ctx, nil
 	}
 }
-
-// BinSuffix is the suffix for binaries on Windows
-var BinSuffix string
-
-func init() {
-	if runtime.GOOS == "windows" {
-		BinSuffix = ".exe"
-	}
-}

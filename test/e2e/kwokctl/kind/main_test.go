@@ -25,7 +25,6 @@ import (
 
 	"sigs.k8s.io/e2e-framework/pkg/env"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
-	"sigs.k8s.io/e2e-framework/pkg/envfuncs"
 	"sigs.k8s.io/e2e-framework/support/kwok"
 
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -34,12 +33,19 @@ import (
 )
 
 var (
+	runtimeEnv  = consts.RuntimeTypeKind
 	testEnv     env.Environment
 	pwd         = os.Getenv("PWD")
 	rootDir     = path.Join(pwd, "../../../..")
+	logsDir     = path.Join(rootDir, "logs")
 	clusterName = envconf.RandomName("kwok-e2e", 16)
 	namespace   = envconf.RandomName("ns", 16)
 	testImage   = "localhost/kwok:test"
+	kwokctlPath = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	baseArgs    = []string{
+		"--kwok-controller-image=" + testImage,
+		"--runtime=" + runtimeEnv,
+	}
 )
 
 func init() {
@@ -52,42 +58,22 @@ func TestMain(m *testing.M) {
 
 	testEnv, _ = env.NewWithContext(ctx, cfg)
 
-	kwokctlPath := path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
-
-	k := kwok.NewProvider().
-		WithName(clusterName).
+	k := kwok.NewCluster(clusterName).
 		WithPath(kwokctlPath)
 	testEnv.Setup(
 		helper.BuildKwokImage(rootDir, testImage, consts.RuntimeTypeDocker),
 		helper.BuildKwokctlBinary(rootDir),
-		func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
-			kubecfg, err := k.Create(ctx,
-				"--kwok-controller-image", testImage,
-				"--runtime", consts.RuntimeTypeKind,
-			)
-			if err != nil {
-				return ctx, err
-			}
-
-			cfg.WithKubeconfigFile(kubecfg)
-
-			if err := k.WaitForControlPlane(ctx, cfg.Client()); err != nil {
-				return ctx, err
-			}
-
-			return ctx, nil
-		},
-		envfuncs.CreateNamespace(namespace),
+		helper.CreateCluster(k, append(baseArgs,
+			"--config="+path.Join(rootDir, "test/e2e/port_forward.yaml"),
+			"--config="+path.Join(rootDir, "test/e2e/logs.yaml"),
+			"--config="+path.Join(rootDir, "test/e2e/attach.yaml"),
+			"--config="+path.Join(rootDir, "test/e2e/exec.yaml"),
+		)...),
+		helper.CreateNamespace(namespace),
 	)
 	testEnv.Finish(
-		func(ctx context.Context, config *envconf.Config) (context.Context, error) {
-			err := k.Destroy(ctx)
-			if err != nil {
-				return ctx, err
-			}
-
-			return ctx, nil
-		},
+		helper.ExportLogs(k, logsDir),
+		helper.DestroyCluster(k),
 	)
 	os.Exit(testEnv.Run(m))
 }

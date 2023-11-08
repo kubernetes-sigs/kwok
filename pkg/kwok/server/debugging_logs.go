@@ -65,7 +65,7 @@ var (
 // GetContainerLogs returns logs for a container in a pod.
 // If follow is true, it streams the logs until the connection is closed by the client.
 func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, container string, logOptions *corev1.PodLogOptions, stdout, stderr io.Writer) error {
-	log, err := s.getPodLogs(podName, podNamespace, container)
+	log, err := getPodLogs(s.logs.Get(), s.clusterLogs.Get(), podName, podNamespace, container)
 	if err != nil {
 		return err
 	}
@@ -125,8 +125,8 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 	}
 }
 
-func (s *Server) getPodLogs(podName, podNamespace, containerName string) (*internalversion.Log, error) {
-	l, has := slices.Find(s.logs.Get(), func(l *internalversion.Logs) bool {
+func getPodLogs(rules []*internalversion.Logs, clusterRules []*internalversion.ClusterLogs, podName, podNamespace, containerName string) (*internalversion.Log, error) {
+	l, has := slices.Find(rules, func(l *internalversion.Logs) bool {
 		return l.Name == podName && l.Namespace == podNamespace
 	})
 	if has {
@@ -134,10 +134,10 @@ func (s *Server) getPodLogs(podName, podNamespace, containerName string) (*inter
 		if found {
 			return l, nil
 		}
-		return nil, fmt.Errorf("not found log target for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
+		return nil, fmt.Errorf("log target not found for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 	}
 
-	for _, cl := range s.clusterLogs.Get() {
+	for _, cl := range clusterRules {
 		if !cl.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}
@@ -214,10 +214,6 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 	logger := log.FromContext(ctx)
 
 	f, err := os.Open(logsFile)
-	if err != nil {
-		return err
-	}
-
 	if err != nil {
 		return fmt.Errorf("failed to open log file %q: %w", logsFile, err)
 	}
