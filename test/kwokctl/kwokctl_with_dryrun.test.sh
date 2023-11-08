@@ -64,7 +64,13 @@ function main() {
     fi
     echo "------------------------------"
     echo "Testing dryrun with verbosity on runtime ${runtime}"
-    got="$(KWOK_RUNTIME="${runtime}" create_cluster "${name}" "" -v=debug --prometheus-port 9090 --jaeger-port 16686 --dashboard-port 8000 --dry-run | clear_testdata "${name}")"
+    got="$(KWOK_RUNTIME="${runtime}" create_cluster "${name}" "" -v=debug \
+      --prometheus-port 9090 \
+      --jaeger-port 16686 \
+      --dashboard-port 8000 \
+      --kube-audit-policy "${DIR}/audit-policy.yaml" \
+      --kube-scheduler-config "${DIR}/scheduler-config.yaml" \
+      --dry-run | clear_testdata "${name}")"
     want="$(<"${DIR}/testdata/${runtime}/create_cluster_with_verbosity.txt")"
     if [[ "${got}" != "${want}" ]]; then
       echo "------------------------------"
