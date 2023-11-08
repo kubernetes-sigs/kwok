@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+
+	"sigs.k8s.io/kwok/pkg/utils/sets"
 )
 
 var (
@@ -28,9 +30,12 @@ var (
 )
 
 // GetUnusedPort returns an unused port on the local machine.
-func GetUnusedPort(ctx context.Context) (uint32, error) {
+func GetUnusedPort(ctx context.Context, used sets.Sets[uint32]) (uint32, error) {
 	for lastUsedPort > 10000 && ctx.Err() == nil {
 		lastUsedPort--
+		if used.Has(lastUsedPort) {
+			continue
+		}
 		if isPortUnused(lastUsedPort) {
 			return lastUsedPort, nil
 		}

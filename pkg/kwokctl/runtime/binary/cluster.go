@@ -41,6 +41,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -197,10 +198,10 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 	return nil
 }
 
-func (c *Cluster) setupPorts(ctx context.Context, ports ...*uint32) error {
+func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
 	for _, port := range ports {
 		if port != nil && *port == 0 {
-			p, err := net.GetUnusedPort(ctx)
+			p, err := net.GetUnusedPort(ctx, used)
 			if err != nil {
 				return err
 			}
@@ -224,6 +225,7 @@ type env struct {
 	adminKeyPath    string
 	adminCertPath   string
 	scheme          string
+	usedPorts       sets.Sets[uint32]
 }
 
 func (c *Cluster) env(ctx context.Context) (*env, error) {
@@ -257,6 +259,8 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	logger := log.FromContext(ctx)
 	verbosity := logger.Level()
 
+	usedPorts := runtime.GetUsedPorts(ctx)
+
 	return &env{
 		kwokctlConfig:   config,
 		verbosity:       verbosity,
@@ -271,6 +275,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 		adminKeyPath:    adminKeyPath,
 		adminCertPath:   adminCertPath,
 		scheme:          scheme,
+		usedPorts:       usedPorts,
 	}, nil
 }
 
@@ -321,6 +326,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	err = c.setupPorts(ctx,
+		env.usedPorts,
 		&env.kwokctlConfig.Options.EtcdPeerPort,
 		&env.kwokctlConfig.Options.EtcdPort,
 		&env.kwokctlConfig.Options.KubeApiserverPort,
@@ -419,6 +425,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	kubeApiserverTracingConfigPath := ""
 	if conf.JaegerPort != 0 {
 		err = c.setupPorts(ctx,
+			env.usedPorts,
 			&conf.JaegerOtlpGrpcPort,
 		)
 		if err != nil {
@@ -480,6 +487,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 		kubeControllerManagerPath := c.GetBinPath(consts.ComponentKubeControllerManager + conf.BinSuffix)
 
 		err = c.setupPorts(ctx,
+			env.usedPorts,
 			&conf.KubeControllerManagerPort,
 		)
 		if err != nil {
@@ -538,6 +546,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		}
 
 		err = c.setupPorts(ctx,
+			env.usedPorts,
 			&conf.KubeSchedulerPort,
 		)
 		if err != nil {
