@@ -311,11 +311,6 @@ jobs:
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_snapshot
 
-      - name: Test Authorization
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_authorization
-
       - name: Test Restart
         shell: bash
         run: |

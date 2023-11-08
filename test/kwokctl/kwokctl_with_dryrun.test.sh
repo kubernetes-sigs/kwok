@@ -30,7 +30,9 @@ function main() {
     name="dryrun-cluster-${runtime}"
     echo "------------------------------"
     echo "Testing dryrun on runtime ${runtime}"
-    got="$(KWOK_RUNTIME="${runtime}" create_cluster "${name}" "" --dry-run | clear_testdata "${name}")"
+    got="$(KWOK_RUNTIME="${runtime}" create_cluster "${name}" "" \
+      --kube-authorization=false \
+      --dry-run | clear_testdata "${name}")"
     want="$(<"${DIR}/testdata/${runtime}/create_cluster.txt")"
     if [[ "${got}" != "${want}" ]]; then
       echo "------------------------------"
