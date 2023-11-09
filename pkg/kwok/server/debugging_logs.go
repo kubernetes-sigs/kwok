@@ -27,6 +27,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"time"
 
@@ -65,7 +66,7 @@ var (
 // GetContainerLogs returns logs for a container in a pod.
 // If follow is true, it streams the logs until the connection is closed by the client.
 func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, container string, logOptions *corev1.PodLogOptions, stdout, stderr io.Writer) error {
-	log, err := s.getPodLogs(podName, podNamespace, container)
+	log, err := getPodLogs(s.logs.Get(), s.clusterLogs.Get(), podName, podNamespace, container)
 	if err != nil {
 		return err
 	}
@@ -125,8 +126,8 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 	}
 }
 
-func (s *Server) getPodLogs(podName, podNamespace, containerName string) (*internalversion.Log, error) {
-	l, has := slices.Find(s.logs.Get(), func(l *internalversion.Logs) bool {
+func getPodLogs(rules []*internalversion.Logs, clusterRules []*internalversion.ClusterLogs, podName, podNamespace, containerName string) (*internalversion.Log, error) {
+	l, has := slices.Find(rules, func(l *internalversion.Logs) bool {
 		return l.Name == podName && l.Namespace == podNamespace
 	})
 	if has {
@@ -134,10 +135,10 @@ func (s *Server) getPodLogs(podName, podNamespace, containerName string) (*inter
 		if found {
 			return l, nil
 		}
-		return nil, fmt.Errorf("not found log target for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
+		return nil, fmt.Errorf("log target not found for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 	}
 
-	for _, cl := range s.clusterLogs.Get() {
+	for _, cl := range clusterRules {
 		if !cl.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}
@@ -215,10 +216,6 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 
 	f, err := os.Open(logsFile)
 	if err != nil {
-		return err
-	}
-
-	if err != nil {
 		return fmt.Errorf("failed to open log file %q: %w", logsFile, err)
 	}
 
@@ -226,6 +223,7 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 		_ = f.Close()
 	}(f)
 
+	// Search start point based on tail line.
 	start, err := tail.FindTailLineStartIndex(f, opts.tail)
 	if err != nil {
 		return fmt.Errorf("failed to tail %d lines of log file %q: %w", opts.tail, logsFile, err)
@@ -234,11 +232,10 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 		return fmt.Errorf("failed to seek %d in log file %q: %w", start, logsFile, err)
 	}
 
-	r := bufio.NewReader(f)
-
 	limitedMode := (opts.tail >= 0) && (!opts.follow)
 	limitedNum := opts.tail
-
+	// Start parsing the logs.
+	r := bufio.NewReader(f)
 	// Do not create watcher here because it is not needed if `Follow` is false.
 	var watcher *fsnotify.Watcher
 	var parse parseFunc
@@ -247,9 +244,9 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 	found := true
 
 	writer := newLogWriter(stdout, stderr, opts)
-
 	msg := &logMessage{}
-
+	baseName := filepath.Base(logsFile)
+	dir := filepath.Dir(logsFile)
 	for {
 		if stop || (limitedMode && limitedNum == 0) {
 			logger.Debug("Finished parsing log file", "path", logsFile)
@@ -258,8 +255,8 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 
 		l, err := r.ReadBytes('\n')
 		if err != nil {
-			if !errors.Is(err, io.EOF) {
-				return fmt.Errorf("failed to read log file: %q: %w", logsFile, err)
+			if !errors.Is(err, io.EOF) { // This is an real error
+				return fmt.Errorf("failed to read log file %q: %w", logsFile, err)
 			}
 
 			if opts.follow {
@@ -267,8 +264,8 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 				if !found {
 					return nil
 				}
-				// reset seek so that if this is an incomplete line,
-				// it will be read again
+				// Reset seek so that if this is an incomplete line,
+				// it will be read again.
 				if _, err := f.Seek(-int64(len(l)), io.SeekCurrent); err != nil {
 					return fmt.Errorf("failed to reset seek in log file %q: %w", logsFile, err)
 				}
@@ -280,16 +277,16 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 					defer func(watcher *fsnotify.Watcher) {
 						_ = watcher.Close()
 					}(watcher)
-					if err := watcher.Add(f.Name()); err != nil {
-						return fmt.Errorf("failed to watch file %q: %w", f.Name(), err)
+					if err := watcher.Add(dir); err != nil {
+						return fmt.Errorf("failed to watch directory %q: %w", dir, err)
 					}
 					// If we just created the watcher, try again to read as we might have missed
-					// the event
+					// the event.
 					continue
 				}
-
-				var recreated bool // Wait until the next log change
-				found, recreated, err = waitLogs(ctx, watcher)
+				var recreated bool
+				// Wait until the next log change.
+				found, recreated, err = waitLogs(ctx, baseName, watcher)
 				if err != nil {
 					return err
 				}
@@ -308,13 +305,7 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 					}(newF)
 
 					_ = f.Close()
-					if err := watcher.Remove(f.Name()); err != nil && !os.IsNotExist(err) {
-						logger.Error("Failed to remove file watch", err, "path", f.Name())
-					}
 					f = newF
-					if err := watcher.Add(f.Name()); err != nil {
-						return fmt.Errorf("failed to watch file %q: %w", f.Name(), err)
-					}
 					r = bufio.NewReader(f)
 				}
 				// If the container exited consume data until the next EOF
@@ -335,7 +326,7 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 				return fmt.Errorf("failed to get parse function: %w", err)
 			}
 		}
-
+		// Parse the log line.
 		msg.reset()
 		if err := parse(l, msg); err != nil {
 			logger.Error("Failed when parsing line in log file", err, "path", logsFile, "line", l)
@@ -345,7 +336,7 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 		// Write the log line into the stream.
 		if err := writer.write(msg, isNewLine); err != nil {
 			if errors.Is(err, errMaximumWrite) {
-				logger.Debug("Finished parsing log file, hit bytes limit", "path", logsFile, "limit", opts.bytes)
+				logger.Debug("Finished parsing log file, hit bytes limit", "path", waitLogs, "limit", opts.bytes)
 				return nil
 			}
 			logger.Error("Failed when writing line to log file", err, "path", logsFile, "line", msg)
@@ -526,28 +517,24 @@ func newLogWriter(stdout io.Writer, stderr io.Writer, opts *logOptions) *logWrit
 	return w
 }
 
+var errContextCanceled = fmt.Errorf("context canceled")
+
 // waitLogs wait for the next log write. It returns two booleans and an error. The first boolean
 // indicates whether a new log is found; the second boolean if the log file was recreated;
 // the error is error happens during waiting new logs.
-func waitLogs(ctx context.Context, watcher *fsnotify.Watcher) (bool, bool, error) {
+func waitLogs(ctx context.Context, logName string, watcher *fsnotify.Watcher) (bool, bool, error) {
 	logger := log.FromContext(ctx)
 	errRetry := 5
 	for {
 		select {
 		case <-ctx.Done():
-			return false, false, fmt.Errorf("context canceled")
+			return false, false, errContextCanceled
 		case e := <-watcher.Events:
 			switch e.Op {
-			case fsnotify.Write:
+			case fsnotify.Write, fsnotify.Rename, fsnotify.Remove, fsnotify.Chmod:
 				return true, false, nil
 			case fsnotify.Create:
-				fallthrough
-			case fsnotify.Rename:
-				fallthrough
-			case fsnotify.Remove:
-				fallthrough
-			case fsnotify.Chmod:
-				return true, true, nil
+				return true, filepath.Base(e.Name) == logName, nil
 			default:
 				logger.Error("Received unexpected fsnotify event, retrying", nil, "event", e)
 			}

@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 		helper.CreateByKustomize(deploy),
 		helper.WaitForAllPodsReady(),
 		helper.CreateByKustomize(crs),
-		envfuncs.CreateNamespace(namespace),
+		helper.CreateNamespace(namespace),
 	)
 	testEnv.Finish(
 		envfuncs.DestroyCluster(clusterName),

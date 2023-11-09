@@ -1,5 +1,13 @@
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
+touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
+cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
+cp <ROOT_DIR>/test/kwokctl/scheduler-config.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+cat <<EOF >><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+clientConnection:
+  kubeconfig: "/etc/kubernetes/scheduler.conf"
+EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
 kind: TracingConfiguration
@@ -33,12 +41,24 @@ nodes:
     kind: ClusterConfiguration
     apiServer:
       extraArgs:
+        "audit-policy-file": "/etc/kubernetes/audit/audit.yaml"
+        "audit-log-path": "/var/log/kubernetes/audit.log"
         "tracing-config-file": "/etc/kubernetes/apiserver-tracing-config.yaml"
         "v": "4"
         "max-requests-inflight": "0"
         "max-mutating-requests-inflight": "0"
         "enable-priority-and-fairness": "false"
       extraVolumes:
+      - name: audit-policy-file
+        hostPath: /var/components/apiserver/etc/kubernetes/audit/audit.yaml
+        mountPath: /etc/kubernetes/audit/audit.yaml
+        readOnly: true
+        pathType: File
+      - name: audit-log-path
+        hostPath: /var/components/apiserver/var/log/kubernetes/audit.log
+        mountPath: /var/log/kubernetes/audit.log
+        readOnly: false
+        pathType: File
       - name: apiserver-tracing-config
         hostPath: /var/components/apiserver/etc/kubernetes/apiserver-tracing-config.yaml
         mountPath: /etc/kubernetes/apiserver-tracing-config.yaml
@@ -55,16 +75,32 @@ nodes:
     kind: ClusterConfiguration
     scheduler:
       extraArgs:
+        "config": "/etc/kubernetes/scheduler/scheduler.yaml"
         "v": "4"
         "kube-api-qps": "5000"
         "kube-api-burst": "10000"
+      extraVolumes:
+      - name: config
+        hostPath: /var/components/scheduler/etc/kubernetes/scheduler/scheduler.yaml
+        mountPath: /etc/kubernetes/scheduler/scheduler.yaml
+        readOnly: true
+        pathType: File
   # mount the local file on the control plane
   extraMounts:
   - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
     containerPath: /etc/kwok/kwok.yaml
     readOnly: true
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
+    containerPath: /var/components/apiserver/etc/kubernetes/audit/audit.yaml
+    readOnly: true
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
+    containerPath: /var/components/apiserver/var/log/kubernetes/audit.log
+    readOnly: false
   - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
     containerPath: /var/components/apiserver/etc/kubernetes/apiserver-tracing-config.yaml
+    readOnly: true
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+    containerPath: /var/components/scheduler/etc/kubernetes/scheduler/scheduler.yaml
     readOnly: true
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml

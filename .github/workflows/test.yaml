@@ -196,7 +196,7 @@ jobs:
         shell: bash
         run: |
           export GOBIN="$(go env GOPATH)/bin"
-          cd "${GITHUB_WORKSPACE}/kubernetes" && go install ./cmd/{kube-apiserver,kube-controller-manager,kube-scheduler}
+          cd "${GITHUB_WORKSPACE}/kubernetes" && go install ./cmd/{kubectl,kube-apiserver,kube-controller-manager,kube-scheduler}
           mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir" && cat >"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml" << EOF
           kind: KwokctlConfiguration
           apiVersion: config.kwok.x-k8s.io/v1alpha1
@@ -207,7 +207,7 @@ jobs:
         if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os == 'macos-latest' }}
         shell: bash
         run: |
-          cd "${GITHUB_WORKSPACE}/kubernetes" && make WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler"
+          cd "${GITHUB_WORKSPACE}/kubernetes" && make WHAT="cmd/kubectl cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler"
           mkdir -p "${GITHUB_WORKSPACE}/workdir" && cat >"${GITHUB_WORKSPACE}/workdir/kwok.yaml" << EOF
           kind: KwokctlConfiguration
           apiVersion: config.kwok.x-k8s.io/v1alpha1
@@ -305,32 +305,11 @@ jobs:
           fi
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
-      - name: Test Multi Cluster
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_multi_cluster
-
       - name: Test Snapshot
         if: ${{ matrix.os != 'windows-latest' }} # TODO: fix snapshot test on windows
         shell: bash
         run: |
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_snapshot
-
-      - name: Test Audit
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_audit
-
-      - name: Test Scheduler
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_scheduler
-
-      - name: Test Authorization
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_authorization
 
       - name: Test Restart
         shell: bash
@@ -339,28 +318,6 @@ jobs:
             export SKIP_DRY_RUN=true
           fi
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
-
-      - name: Test Port Forward
-        if: ${{ matrix.os != 'windows-latest' }} # TODO: fix port-forward on windows
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_port_forward
-
-      - name: Test Exec
-        if: ${{ matrix.os != 'windows-latest' }} # TODO: fix exec on windows
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_exec
-
-      - name: Test Log
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_logs
-
-      - name: Test Attach
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_attach
 
       - name: Test Metrics
         shell: bash

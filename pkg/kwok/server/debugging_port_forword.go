@@ -47,7 +47,7 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 	}
 	podName, podNamespace := pod[0], pod[1]
 
-	forward, err := s.getPodsForward(podName, podNamespace, port)
+	forward, err := getPodsForward(s.portForwards.Get(), s.clusterPortForwards.Get(), podName, podNamespace, port)
 	if err != nil {
 		return err
 	}
@@ -106,8 +106,8 @@ func (s *Server) getPortForward(req *restful.Request, resp *restful.Response) {
 	)
 }
 
-func (s *Server) getPodsForward(podName, podNamespace string, port int32) (*internalversion.Forward, error) {
-	pf, has := slices.Find(s.portForwards.Get(), func(pf *internalversion.PortForward) bool {
+func getPodsForward(rules []*internalversion.PortForward, clusterRules []*internalversion.ClusterPortForward, podName, podNamespace string, port int32) (*internalversion.Forward, error) {
+	pf, has := slices.Find(rules, func(pf *internalversion.PortForward) bool {
 		return pf.Name == podName && pf.Namespace == podNamespace
 	})
 	if has {
@@ -118,7 +118,7 @@ func (s *Server) getPodsForward(podName, podNamespace string, port int32) (*inte
 		return nil, fmt.Errorf("forward not found for port %d in pod %q", port, log.KRef(podNamespace, podName))
 	}
 
-	for _, cfw := range s.clusterPortForwards.Get() {
+	for _, cfw := range clusterRules {
 		if !cfw.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}

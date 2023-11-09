@@ -43,7 +43,7 @@ func (s *Server) ExecInContainer(ctx context.Context, name string, uid types.UID
 		return fmt.Errorf("invalid pod name %q", name)
 	}
 	podName, podNamespace := pod[0], pod[1]
-	execTarget, err := s.getExecTarget(podName, podNamespace, container)
+	execTarget, err := getExecTarget(s.execs.Get(), s.clusterExecs.Get(), podName, podNamespace, container)
 	if err != nil {
 		return err
 	}
@@ -103,8 +103,8 @@ func (s *Server) execInContainer(ctx context.Context, cmd []string, in io.Reader
 	return nil
 }
 
-func (s *Server) getExecTarget(podName, podNamespace string, containerName string) (*internalversion.ExecTarget, error) {
-	e, has := slices.Find(s.execs.Get(), func(pf *internalversion.Exec) bool {
+func getExecTarget(rules []*internalversion.Exec, clusterRules []*internalversion.ClusterExec, podName, podNamespace string, containerName string) (*internalversion.ExecTarget, error) {
+	e, has := slices.Find(rules, func(pf *internalversion.Exec) bool {
 		return pf.Name == podName && pf.Namespace == podNamespace
 	})
 	if has {
@@ -115,7 +115,7 @@ func (s *Server) getExecTarget(podName, podNamespace string, containerName strin
 		return nil, fmt.Errorf("exec target not found for container %q in pod %q", containerName, log.KRef(podNamespace, podName))
 	}
 
-	for _, ce := range s.clusterExecs.Get() {
+	for _, ce := range clusterRules {
 		if !ce.Spec.Selector.Match(podName, podNamespace) {
 			continue
 		}
