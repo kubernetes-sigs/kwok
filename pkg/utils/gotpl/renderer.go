@@ -61,7 +61,10 @@ func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) 
 	temp, ok := r.cache.Load(text)
 	if !ok {
 		var err error
-		temp, err = template.New("_").Funcs(r.funcMap).Parse(text)
+		temp, err = template.New("_").
+			Funcs(genericFuncs).
+			Funcs(r.funcMap).
+			Parse(text)
 		if err != nil {
 			return err
 		}
