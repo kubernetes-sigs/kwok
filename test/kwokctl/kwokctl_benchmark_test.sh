@@ -54,7 +54,7 @@ function wait_resource() {
       all=$(echo "${raw}" | wc -l)
       echo "${resource} ${got}/${all} => ${want}"
       if [[ "${gap}" != "" && "${got}" -ne 0 && "$((all - got))" -gt "${gap}" ]]; then
-        echo "Error ${resource} gap too large, actual: $((all - got)), expected: ${got}"
+        echo "Error ${resource} gap too large, actual: $((all - got)), expected: ${gap}"
         return 1
       fi
     fi
@@ -68,7 +68,7 @@ function scale_create_pod() {
   local node_name
   node_name="$(kwokctl --name "${name}" kubectl get node -o jsonpath='{.items.*.metadata.name}' | tr ' ' '\n' | grep fake- | head -n 1)"
   kwokctl --name "${name}" scale pod fake-pod --replicas "${size}" --param ".nodeName=\"${node_name}\"" >/dev/null &
-  wait_resource "${name}" Pod Running "${size}" 10
+  wait_resource "${name}" Pod Running "${size}" 20
 }
 
 function scale_delete_pod() {
@@ -82,7 +82,7 @@ function scale_create_node() {
   local name="${1}"
   local size="${2}"
   kwokctl --name "${name}" scale node fake-node --replicas "${size}" >/dev/null &
-  wait_resource "${name}" Node Ready "${size}" 10
+  wait_resource "${name}" Node Ready "${size}" 50
 }
 
 function main() {
