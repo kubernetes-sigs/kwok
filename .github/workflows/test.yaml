@@ -5,7 +5,7 @@ on:
     paths:
     - pkg/**/*
     - cmd/**/*
-    - e2e/**/*
+    - test/**/*
     - hack/**/*
     - kustomize/**/*
     - go.mod
@@ -14,7 +14,7 @@ on:
     paths:
     - pkg/**/*
     - cmd/**/*
-    - e2e/**/*
+    - test/**/*
     - hack/**/*
     - kustomize/**/*
     - go.mod
