@@ -394,7 +394,8 @@ func Test_readLogs(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			opts := newLogOptions(&tc.podLogOptions, time.Now())
+			apiOpt := tc.podLogOptions
+			opts := newLogOptions(&apiOpt, time.Now())
 			stdoutBuf := bytes.NewBuffer(nil)
 			stderrBuf := bytes.NewBuffer(nil)
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)

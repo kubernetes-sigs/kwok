@@ -21,13 +21,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog" //nolint:depguard
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/wzshiming/ctc"
-	"golang.org/x/exp/slog" //nolint:depguard
 	"golang.org/x/term"
 
 	"sigs.k8s.io/kwok/pkg/utils/format"

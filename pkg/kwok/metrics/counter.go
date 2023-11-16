@@ -17,8 +17,9 @@ limitations under the License.
 package metrics
 
 import (
+	"sync/atomic"
+
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/atomic"
 )
 
 type (
@@ -28,7 +29,7 @@ type (
 
 // counter is a prometheus counter that can be incremented and decremented.
 type counter struct {
-	value *atomic.Float64
+	value *atomic.Pointer[float64]
 	prometheus.CounterFunc
 }
 
@@ -43,11 +44,11 @@ type Counter interface {
 // NewCounter returns a new counter.
 func NewCounter(opts CounterOpts) Counter {
 	c := &counter{
-		value: &atomic.Float64{},
+		value: &atomic.Pointer[float64]{},
 	}
 	c.CounterFunc = prometheus.NewCounterFunc(opts,
 		func() float64 {
-			return c.value.Load()
+			return *c.value.Load()
 		},
 	)
 	return c
@@ -55,5 +56,5 @@ func NewCounter(opts CounterOpts) Counter {
 
 // Set sets the counter to the given value.
 func (c *counter) Set(value float64) {
-	c.value.Store(value)
+	c.value.Store(&value)
 }
