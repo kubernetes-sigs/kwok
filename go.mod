@@ -11,7 +11,7 @@ require (
 	github.com/creack/pty v1.1.18
 	github.com/emicklei/go-restful/v3 v3.10.2
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/google/cel-go v0.16.0
+	github.com/google/cel-go v0.18.2
 	github.com/google/go-cmp v0.5.9
 	github.com/itchyny/gojq v0.12.13
 	github.com/nxadm/tail v1.4.8
@@ -45,7 +45,7 @@ require (
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
-	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230512164433-5d1fd1a340c9 // indirect
+	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containernetworking/cni v1.1.2 // indirect
