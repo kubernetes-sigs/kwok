@@ -162,7 +162,7 @@ jobs:
           # so we need to verify that it works on releases.
           - os: ubuntu-latest
             kwokctl-runtime: nerdctl
-            nerdctl-version: 1.6.1
+            nerdctl-version: 1.7.0
           - os: ubuntu-latest
             kwokctl-runtime: nerdctl
             nerdctl-version: 1.2.1
