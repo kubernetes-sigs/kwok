@@ -111,12 +111,15 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.EtcdBinary, "etcd-binary", flags.Options.EtcdBinary, `Binary of etcd, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.Options.EtcdBinaryTar, "etcd-binary-tar", flags.Options.EtcdBinaryTar, `Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
 `)
+	_ = cmd.Flags().MarkDeprecated("etcd-binary-tar", "--etcd-binary-tar will be removed in a future release, please use --etcd-binary instead")
 	cmd.Flags().StringVar(&flags.Options.PrometheusBinary, "prometheus-binary", flags.Options.PrometheusBinary, `Binary of Prometheus, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.Options.PrometheusBinaryTar, "prometheus-binary-tar", flags.Options.PrometheusBinaryTar, `Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
 `)
+	_ = cmd.Flags().MarkDeprecated("prometheus-binary-tar", "--prometheus-binary-tar will be removed in a future release, please use --prometheus-binary instead")
 	cmd.Flags().StringVar(&flags.Options.JaegerBinary, "jaeger-binary", flags.Options.JaegerBinary, `Binary of Jaeger, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.Options.JaegerBinaryTar, "jaeger-binary-tar", flags.Options.JaegerBinaryTar, `Tar of Jaeger, if --jaeger-binary is set, this is ignored, only for binary runtime
 `)
+	_ = cmd.Flags().MarkDeprecated("jaeger-binary-tar", "--jaeger-binary-tar will be removed in a future release, please use --jaeger-binary instead")
 	cmd.Flags().StringVar(&flags.Options.DockerComposeBinary, "docker-compose-binary", flags.Options.DockerComposeBinary, `Binary of Docker-compose, only for docker runtime
 `)
 	_ = cmd.Flags().MarkDeprecated("docker-compose-binary", "docker compose will be removed in a future release")

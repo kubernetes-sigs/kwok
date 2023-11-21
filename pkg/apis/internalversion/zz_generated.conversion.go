@@ -1489,6 +1489,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeControllerManagerBinary = in.KubeControllerManagerBinary
 	out.KubeSchedulerBinary = in.KubeSchedulerBinary
 	out.KubectlBinary = in.KubectlBinary
+	out.EtcdctlBinary = in.EtcdctlBinary
 	out.EtcdBinary = in.EtcdBinary
 	out.EtcdBinaryTar = in.EtcdBinaryTar
 	out.KwokControllerBinary = in.KwokControllerBinary
@@ -1584,16 +1585,17 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeSchedulerBinary = in.KubeSchedulerBinary
 	out.KubectlBinary = in.KubectlBinary
 	// INFO: in.EtcdBinaryPrefix opted out of conversion generation
+	out.EtcdctlBinary = in.EtcdctlBinary
 	out.EtcdBinary = in.EtcdBinary
-	out.EtcdBinaryTar = in.EtcdBinaryTar
+	// INFO: in.EtcdBinaryTar opted out of conversion generation
 	// INFO: in.KwokBinaryPrefix opted out of conversion generation
 	out.KwokControllerBinary = in.KwokControllerBinary
 	// INFO: in.PrometheusBinaryPrefix opted out of conversion generation
 	out.PrometheusBinary = in.PrometheusBinary
-	out.PrometheusBinaryTar = in.PrometheusBinaryTar
+	// INFO: in.PrometheusBinaryTar opted out of conversion generation
 	// INFO: in.JaegerBinaryPrefix opted out of conversion generation
 	out.JaegerBinary = in.JaegerBinary
-	out.JaegerBinaryTar = in.JaegerBinaryTar
+	// INFO: in.JaegerBinaryTar opted out of conversion generation
 	// INFO: in.DockerComposeBinaryPrefix opted out of conversion generation
 	out.DockerComposeBinary = in.DockerComposeBinary
 	// INFO: in.KindBinaryPrefix opted out of conversion generation

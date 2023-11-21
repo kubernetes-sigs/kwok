@@ -21,23 +21,23 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"strings"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
-// DownloadWithCacheAndExtract downloads the src file to the dest file, and extract it to the dest directory.
-func (c *Cluster) DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string, match string, mode fs.FileMode, quiet bool, clean bool) error {
-	if c.IsDryRun() {
-		dryrun.PrintMessage("# Download %s and extract %s to %s", src, match, dest)
-		return nil
-	}
-	return file.DownloadWithCacheAndExtract(ctx, cacheDir, src, dest, match, mode, quiet, clean)
-}
-
 // DownloadWithCache downloads the src file to the dest file.
 func (c *Cluster) DownloadWithCache(ctx context.Context, cacheDir, src, dest string, mode fs.FileMode, quiet bool) error {
+	if s := strings.SplitN(src, "#", 2); len(s) == 2 {
+		if c.IsDryRun() {
+			dryrun.PrintMessage("# Download %s and extract %s to %s", s[0], s[1], dest)
+			return nil
+		}
+		return file.DownloadWithCacheAndExtract(ctx, cacheDir, s[0], dest, s[1], mode, quiet, true)
+	}
+
 	if c.IsDryRun() {
 		dryrun.PrintMessage("# Download %s to %s", src, dest)
 		return nil

@@ -381,6 +381,14 @@ func setKwokctlEtcdConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	conf.EtcdImage = envs.GetEnvWithPrefix("ETCD_IMAGE", conf.EtcdImage)
 
 	conf.EtcdPort = envs.GetEnvWithPrefix("ETCD_PORT", conf.EtcdPort)
+
+	if conf.EtcdBinary == "" {
+		conf.EtcdBinary = conf.EtcdBinaryTar + "#etcd" + conf.BinSuffix
+	}
+
+	if conf.EtcdctlBinary == "" {
+		conf.EtcdctlBinary = conf.EtcdBinaryTar + "#etcdctl" + conf.BinSuffix
+	}
 }
 
 func setKwokctlKindConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
@@ -489,6 +497,10 @@ func setKwokctlPrometheusConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 		}()
 	}
 	conf.PrometheusBinaryTar = envs.GetEnvWithPrefix("PROMETHEUS_BINARY_TAR", conf.PrometheusBinaryTar)
+
+	if conf.PrometheusBinary == "" {
+		conf.PrometheusBinary = conf.PrometheusBinaryTar + "#prometheus" + conf.BinSuffix
+	}
 }
 
 func setKwokctlJaegerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
@@ -525,6 +537,10 @@ func setKwokctlJaegerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		}()
 	}
 	conf.JaegerBinaryTar = envs.GetEnvWithPrefix("JAEGER_BINARY_TAR", conf.JaegerBinaryTar)
+
+	if conf.JaegerBinary == "" {
+		conf.JaegerBinary = conf.JaegerBinaryTar + "#jaeger-all-in-one" + conf.BinSuffix
+	}
 }
 
 // joinImageURI joins the image URI.

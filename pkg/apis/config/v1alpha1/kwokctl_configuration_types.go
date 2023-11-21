@@ -259,12 +259,17 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	EtcdBinaryPrefix string `json:"etcdBinaryPrefix,omitempty"`
 
+	// EtcdctlBinary is the binary of etcdctl.
+	EtcdctlBinary string `json:"etcdctlBinary,omitempty"`
+
 	// EtcdBinary is the binary of etcd.
 	// is the default value for flag --etcd-binary and env KWOK_ETCD_BINARY
 	EtcdBinary string `json:"etcdBinary,omitempty"`
 
 	// EtcdBinaryTar is the tar of the binary of etcd.
 	// is the default value for env KWOK_ETCD_BINARY_TAR
+	// Deprecated: Use EtcdBinary or EtcdctlBinary instead
+	//+k8s:conversion-gen=false
 	EtcdBinaryTar string `json:"etcdBinaryTar,omitempty"`
 
 	// KwokBinaryPrefix is the prefix of the kwok binary.
@@ -295,6 +300,8 @@ type KwokctlConfigurationOptions struct {
 
 	// PrometheusBinaryTar is the tar of binary of Prometheus.
 	// is the default value for env KWOK_PROMETHEUS_BINARY_TAR
+	// Deprecated: Use PrometheusBinary instead
+	//+k8s:conversion-gen=false
 	PrometheusBinaryTar string `json:"prometheusBinaryTar,omitempty"`
 
 	// JaegerBinaryPrefix is the prefix of the Jaeger binary.
@@ -308,6 +315,8 @@ type KwokctlConfigurationOptions struct {
 
 	// JaegerBinaryTar is the tar of binary of Jaeger.
 	// is the default value for env KWOK_JAEGER_TAR
+	// Deprecated: Use JaegerBinary instead
+	//+k8s:conversion-gen=false
 	JaegerBinaryTar string `json:"jaegerBinaryTar,omitempty"`
 
 	// DockerComposeBinaryPrefix is the binary of docker-compose.
