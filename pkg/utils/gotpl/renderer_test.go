@@ -65,6 +65,17 @@ func TestRenderToJSON(t *testing.T) {
 			templText: `        {"foo":{{ Foo }},"k":{{ .k }}}       `,
 			expected:  `{"foo":"foo","k":"v1"}`,
 		},
+		{
+			name: "with generic template functions",
+			funcMap: template.FuncMap{
+				"Foo": func() string {
+					return "bar"
+				},
+			},
+			original:  map[string]interface{}{"k": "v1"},
+			templText: `{"foo":{{ list Foo .k | join "-" }}}`,
+			expected:  `{"foo":"bar-v1"}`,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
