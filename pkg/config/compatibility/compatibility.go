@@ -84,8 +84,6 @@ type Config struct {
 }
 
 // Convert_Config_To_internalversion_KwokctlConfiguration converts a Config to an internalversion.KwokctlConfiguration.
-//
-//nolint:revive
 func Convert_Config_To_internalversion_KwokctlConfiguration(in *Config) (*internalversion.KwokctlConfiguration, bool) {
 	if in.Name == "" || in.Workdir == "" || in.Runtime == "" {
 		return nil, false

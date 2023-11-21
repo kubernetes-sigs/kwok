@@ -59,7 +59,6 @@ func getExecRequestParams(req *restful.Request) execRequestParams {
 	}
 }
 
-//nolint:revive
 func convert_url_Values_To_v1_PodLogOptions(in *url.Values, out *corev1.PodLogOptions, s conversion.Scope) error {
 	if values, ok := map[string][]string(*in)["container"]; ok && len(values) > 0 {
 		if err := runtime.Convert_Slice_string_To_string(&values, &out.Container, s); err != nil {

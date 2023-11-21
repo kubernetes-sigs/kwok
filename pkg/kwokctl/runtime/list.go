@@ -68,7 +68,7 @@ func GetUsedPorts(ctx context.Context) (rets sets.Sets[uint32]) {
 		if !os.IsNotExist(err) {
 			logger.Warn("Failed to read clusters directory", "path", workdir, "error", err)
 		}
-		return
+		return rets
 	}
 
 	for _, entry := range entries {

@@ -17,7 +17,7 @@ limitations under the License.
 package slices
 
 import (
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 // Clone returns a copy of the slice.

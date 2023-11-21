@@ -59,28 +59,40 @@ linters-settings:
       - pkg: k8s.io/apimachinery/pkg/api/errors
         alias: apierrors
   staticcheck:
-    go: "1.20"
+    go: "1.21"
   stylecheck:
-    go: "1.20"
+    go: "1.21"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     checks: ["all", "-ST1000", "-ST1003"]
   depguard:
-    include-go-root: true
-    packages:
-      - io/ioutil # https://go.dev/doc/go1.16#ioutil
-    packages-with-error-message:
-      # Use sigs.k8s.io/kwok/pkg/log, which is a wrapper around slog
-      - k8s.io/klog/v2: "please use `sigs.k8s.io/kwok/pkg/log`instead"
-      - k8s.io/klog: "please use `sigs.k8s.io/kwok/pkg/log instead"
-      - golang.org/x/exp/slog: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-      - log: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-      # Use sigs.k8s.io/kwok/pkg/utils/yaml, which is a wrapper around yaml
-      - k8s.io/apimachinery/pkg/util/yaml: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
-      - sigs.k8s.io/yaml: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
-      # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
-      - k8s.io/apimachinery/pkg/util/wait: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
-      # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
-      - k8s.io/utils/strings/slices: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
+    rules:
+      main:
+        deny:
+          # https://go.dev/doc/go1.16#ioutil
+          - pkg: "io/ioutil"
+            desc: "please see https://go.dev/doc/go1.16#ioutil"
+          # Use sigs.k8s.io/kwok/pkg/log, which is a wrapper around slog
+          - pkg: "k8s.io/klog/v2"
+            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+          - pkg: "k8s.io/klog"
+            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+          - pkg: "golang.org/x/exp/slog"
+            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+          - pkg: "log/slog"
+            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+          - pkg: "log"
+            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+          # Use sigs.k8s.io/kwok/pkg/utils/yaml, which is a wrapper around yaml
+          - pkg: "k8s.io/apimachinery/pkg/util/yaml"
+            desc: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
+          - pkg: "sigs.k8s.io/yaml"
+            desc: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
+          # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
+          - pkg: "k8s.io/apimachinery/pkg/util/wait"
+            desc: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
+          # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
+          - pkg: "k8s.io/utils/strings/slices"
+            desc: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
   gocyclo:
     min-complexity: 50
   gosec:
@@ -91,22 +103,89 @@ linters-settings:
       G301: "0750"
       G302: "0640"
       G306: "0640"
-
+  goconst:
+    min-len: 5
+    min-occurrences: 10
+    ignore-tests: true
+    match-constant: false
+  revive:
+    ignore-generated-header: true
+    severity: error
+    enable-all-rules: true
+    # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
+    rules:
+      - name: add-constant
+        disabled: true
+      - name: argument-limit
+        disabled: true
+      - name: cognitive-complexity
+        disabled: true
+      - name: confusing-naming
+        disabled: true
+      - name: cyclomatic
+        disabled: true
+      - name: early-return
+        disabled: true
+      - name: enforce-map-style
+        disabled: true
+      - name: exported
+        disabled: true
+      - name: file-header
+        disabled: true
+      - name: flag-parameter
+        disabled: true
+      - name: function-length
+        disabled: true
+      - name: get-return
+        disabled: true
+      - name: if-return
+        disabled: true
+      - name: import-shadowing
+        disabled: true
+      - name: line-length-limit
+        disabled: true
+      - name: modifies-parameter
+        disabled: true
+      - name: nested-structs
+        disabled: true
+      - name: optimize-operands-order
+        disabled: true
+      - name: unused-parameter
+        disabled: true
+      - name: unused-receiver
+        disabled: true
+      - name: use-any
+        disabled: true
+      - name: unchecked-type-assertion
+        disabled: true
+      - name: function-result-limit
+        disabled: true
+      - name: deep-exit
+        disabled: true
+      - name: superfluous-else
+        disabled: true
+      - name: confusing-results
+        disabled: true
+      - name: defer
+        disabled: true
+      - name: var-naming
+        disabled: true
+      - name: max-public-structs
+        disabled: true
+      - name: comment-spacings
+        disabled: true
+      - name: struct-tag
+        disabled: true
+      - name: unhandled-error
+        disabled: true
+      - name: error-strings
+        disabled: true
 issues:
   max-same-issues: 0
   max-issues-per-linter: 0
   # We are disabling default golangci exclusions because we want to help reviewers to focus on reviewing the most relevant
   # changes in PRs and avoid nitpicking.
   exclude-use-default: false
-  # List of regexps of issue texts to exclude, empty list by default.
-  exclude: []
-  exclude-rules:
-    # With Go 1.16, the new embed directive can be used with an un-named import,
-    # revive (previously, golint) only allows these to be imported in a main.go, which wouldn't work for us.
-    # This directive allows the embed package to be imported with an underscore everywhere.
-    - linters:
-        - revive
-      source: _ "embed"
 run:
   concurrency: 1
   timeout: 10m
@@ -114,4 +193,4 @@ run:
   skip-dirs-use-default: true
   skip-files:
     - ".*\\.zz_generated\\..*"
-  go: '1.20'
+  go: '1.21'

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package heartbeat_with_lease contains the node heartbeat with lease for kwok.
-package heartbeat_with_lease //nolint:revive
+package heartbeat_with_lease
 
 import (
 	_ "embed"
