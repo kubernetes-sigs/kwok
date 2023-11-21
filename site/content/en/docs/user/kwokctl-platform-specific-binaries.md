@@ -18,6 +18,8 @@ but that only works on Linux.
 
 ## For Non-Linux
 
+### Self Building
+
 Building Kubernetes Binaries and setting up `kwokctl` defaults to use them
 
 ``` bash
@@ -37,6 +39,26 @@ EOF
 ```
 
 The binaries will be located in `~/.kwok/cache/kubernetes/${KUBE_VERSION}/_output/local/bin/$(go env GOOS)/$(go env GOARCH)`.
+
+### Use unofficial binaries
+
+We also provide **UNOFFICIAL** binaries for non-linux platforms on [https://github.com/kwok-ci/k8s].
+
+Setting up `kwokctl` defaults to use them.
+
+``` bash
+KUBE_VERSION="v1.28.0"
+cat <<EOF >> ~/.kwok/kwok.yaml
+---
+kind: KwokctlConfiguration
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+options:
+  kubeBinaryPrefix: https://github.com/kwok-ci/k8s/releases/download/${KUBE_VERSION}-kwok.0-$(go env GOOS)-$(go env GOARCH)
+---
+EOF
+```
+
+### Using `kwokctl` with `binary` runtime
 
 Now, we can create cluster using `kwokctl` with `binary` runtime.
 
