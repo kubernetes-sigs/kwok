@@ -42,7 +42,7 @@ The binaries will be located in `~/.kwok/cache/kubernetes/${KUBE_VERSION}/_outpu
 
 ### Use unofficial binaries
 
-We also provide **UNOFFICIAL** binaries for non-linux platforms on [https://github.com/kwok-ci/k8s].
+We also provide **UNOFFICIAL** binaries for non-linux platforms on [kwok-ci/k8s].
 
 Setting up `kwokctl` defaults to use them.
 
@@ -69,3 +69,4 @@ kwokctl create cluster \
 
 [dl.k8s.io]: https://dl.k8s.io
 [www.downloadkubernetes.com]: https://www.downloadkubernetes.com
+[kwok-ci/k8s]: https://github.com/kwok-ci/k8s
