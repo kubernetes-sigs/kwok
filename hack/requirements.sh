@@ -33,6 +33,8 @@ BUILDX_VERSION=0.9.1
 
 KUSTOMIZE_VERSION=5.2.1
 
+GO_VERSION=1.21.4
+
 function command_exist() {
   local command="${1}"
   type "${command}" >/dev/null 2>&1
@@ -104,6 +106,31 @@ function install_gsutil() {
   fi
 
   gsutil version
+}
+
+function install_go() {
+  if command_exist go; then
+    if [[ $(go version | awk -F . '{ print $2 }') -ge $(echo "${GO_VERSION}" | awk -F . '{ print $2 }') ]]; then
+      return 0
+    fi
+  fi
+
+  mkdir -p "${LOCAL_BIN_DIR}/go${GO_VERSION}"
+  curl -SL -o /tmp/go.tar.gz "https://dl.google.com/go/go${GO_VERSION}.$(runtime_os)-$(runtime_arch).tar.gz" &&
+    tar -C "${LOCAL_BIN_DIR}/go${GO_VERSION}" -xzf /tmp/go.tar.gz &&
+    rm /tmp/go.tar.gz
+
+  ln -s "${LOCAL_BIN_DIR}/go${GO_VERSION}/go/bin/go" "${LOCAL_BIN_DIR}/go${GO_VERSION}/go/bin/gofmt" "${LOCAL_BIN_DIR}/"
+
+  if ! command_exist go; then
+    echo go is installed but not effective >&2
+    return 1
+  fi
+
+  if [[ $(go version | awk -F . '{ print $2 }') -lt $(echo "${GO_VERSION}" | awk -F . '{ print $2 }') ]]; then
+    echo go version is lower than ${GO_VERSION} >&2
+    return 1
+  fi
 }
 
 function install_kind() {

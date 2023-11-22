@@ -245,9 +245,8 @@ e2e-test:
 ## release: Release kwok
 .PHONY: release
 release:
-	@./hack/requirements.sh gsutil buildx kustomize
+	@./hack/requirements.sh go gsutil buildx kustomize
 	@PATH=$(PWD)/bin:${PATH} make manifests cross-build cross-image cross-cluster-image
-
 
 ## help: Show this help message
 .PHONY: help
