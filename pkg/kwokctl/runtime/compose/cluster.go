@@ -407,6 +407,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		return fmt.Errorf("failed to expand host volumes for etcd component: %w", err)
 	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
+		Runtime:      conf.Runtime,
 		Workdir:      env.workdir,
 		Image:        conf.EtcdImage,
 		Version:      etcdVersion,
@@ -457,6 +458,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	}
 
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
+		Runtime:           conf.Runtime,
 		Workdir:           env.workdir,
 		Image:             conf.KubeApiserverImage,
 		Version:           kubeApiserverVersion,
@@ -504,6 +506,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			return fmt.Errorf("failed to expand host volumes for kube controller manager component: %w", err)
 		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
+			Runtime:                            conf.Runtime,
 			Workdir:                            env.workdir,
 			Image:                              conf.KubeControllerManagerImage,
 			Version:                            kubeControllerManagerVersion,
@@ -557,6 +560,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 			return fmt.Errorf("failed to expand host volumes for kube scheduler component: %w", err)
 		}
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
+			Runtime:          conf.Runtime,
 			Workdir:          env.workdir,
 			Image:            conf.KubeSchedulerImage,
 			Version:          kubeSchedulerVersion,
@@ -603,6 +607,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, logVolumes...)
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
+		Runtime:                  conf.Runtime,
 		Workdir:                  env.workdir,
 		Image:                    conf.KwokControllerImage,
 		Version:                  kwokControllerVersion,
@@ -659,6 +664,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			return fmt.Errorf("failed to expand host volumes for prometheus component: %w", err)
 		}
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
+			Runtime:       conf.Runtime,
 			Workdir:       env.workdir,
 			Image:         conf.PrometheusImage,
 			Version:       prometheusVersion,
@@ -690,6 +696,7 @@ func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
 			return fmt.Errorf("failed to expand host volumes for dashboard component: %w", err)
 		}
 		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
+			Runtime:        conf.Runtime,
 			Workdir:        env.workdir,
 			Image:          conf.DashboardImage,
 			BindAddress:    net.PublicAddress,
@@ -724,6 +731,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 			return fmt.Errorf("failed to expand host volumes for jaeger component: %w", err)
 		}
 		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
+			Runtime:      conf.Runtime,
 			Workdir:      env.workdir,
 			Image:        conf.JaegerImage,
 			Version:      jaegerVersion,

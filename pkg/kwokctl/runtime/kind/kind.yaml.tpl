@@ -135,9 +135,12 @@ nodes:
 
   # mount the local file on the control plane
   extraMounts:
-  - hostPath: {{ .ConfigPath }}
-    containerPath: /etc/kwok/kwok.yaml
-    readOnly: true
+  - hostPath: {{ .Workdir }}
+    containerPath: /etc/kwok/
+  - hostPath: {{ .Workdir }}/manifests
+    containerPath: /etc/kubernetes/manifests
+  - hostPath: {{ .Workdir }}/pki
+    containerPath: /etc/kubernetes/pki
 
   {{ range .EtcdExtraVolumes }}
   - hostPath: {{ .HostPath }}
@@ -166,6 +169,12 @@ nodes:
   {{ range .KwokControllerExtraVolumes }}
   - hostPath: {{ .HostPath }}
     containerPath: /var/components/controller{{ .MountPath }}
+    readOnly: {{ .ReadOnly }}
+  {{ end }}
+
+  {{ range .PrometheusExtraVolumes }}
+  - hostPath: {{ .HostPath }}
+    containerPath: /var/components/prometheus{{ .MountPath }}
     readOnly: {{ .ReadOnly }}
   {{ end }}
 

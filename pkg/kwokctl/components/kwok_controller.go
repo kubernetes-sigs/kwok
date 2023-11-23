@@ -28,39 +28,50 @@ import (
 
 // BuildKwokControllerComponentConfig is the configuration for building a kwok controller component.
 type BuildKwokControllerComponentConfig struct {
-	Binary                   string
-	Image                    string
-	Version                  version.Version
-	Workdir                  string
-	BindAddress              string
-	Port                     uint32
-	ConfigPath               string
-	KubeconfigPath           string
-	CaCertPath               string
-	AdminCertPath            string
-	AdminKeyPath             string
-	NodeName                 string
-	Verbosity                log.Level
-	NodeLeaseDurationSeconds uint
-	EnableCRDs               []string
-	ExtraArgs                []internalversion.ExtraArgs
-	ExtraVolumes             []internalversion.Volume
-	ExtraEnvs                []internalversion.Env
+	Runtime                           string
+	Binary                            string
+	Image                             string
+	Version                           version.Version
+	Workdir                           string
+	BindAddress                       string
+	Port                              uint32
+	ConfigPath                        string
+	KubeconfigPath                    string
+	CaCertPath                        string
+	AdminCertPath                     string
+	AdminKeyPath                      string
+	NodeIP                            string
+	NodeName                          string
+	ManageNodesWithAnnotationSelector string
+	Verbosity                         log.Level
+	NodeLeaseDurationSeconds          uint
+	EnableCRDs                        []string
+	ExtraArgs                         []internalversion.ExtraArgs
+	ExtraVolumes                      []internalversion.Volume
+	ExtraEnvs                         []internalversion.Env
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
 func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (component internalversion.Component) {
-	kwokControllerArgs := []string{
-		"--manage-all-nodes=true",
+	kwokControllerArgs := []string{}
+	if conf.ManageNodesWithAnnotationSelector == "" {
+		kwokControllerArgs = append(kwokControllerArgs,
+			"--manage-all-nodes=true",
+		)
+	} else {
+		kwokControllerArgs = append(kwokControllerArgs,
+			"--manage-all-nodes=false",
+			"--manage-nodes-with-annotation-selector="+conf.ManageNodesWithAnnotationSelector,
+		)
 	}
+
 	kwokControllerArgs = append(kwokControllerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
-	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume
 	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
-	if inContainer {
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
@@ -102,6 +113,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--config=/root/.kwok/kwok.yaml",
 			"--tls-cert-file=/etc/kubernetes/pki/admin.crt",
 			"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
+			"--node-ip="+conf.NodeIP,
 			"--node-name="+conf.NodeName,
 			"--node-port=10247",
 			"--server-address="+conf.BindAddress+":10247",
@@ -113,7 +125,8 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--config="+conf.ConfigPath,
 			"--tls-cert-file="+conf.AdminCertPath,
 			"--tls-private-key-file="+conf.AdminKeyPath,
-			"--node-name=localhost",
+			"--node-ip="+conf.NodeIP,
+			"--node-name="+conf.NodeName,
 			"--node-port="+format.String(conf.Port),
 			"--server-address="+conf.BindAddress+":"+format.String(conf.Port),
 			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),

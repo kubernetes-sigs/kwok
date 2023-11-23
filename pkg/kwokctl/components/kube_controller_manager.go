@@ -28,6 +28,7 @@ import (
 
 // BuildKubeControllerManagerComponentConfig is the configuration for building a kube-controller-manager component.
 type BuildKubeControllerManagerComponentConfig struct {
+	Runtime                            string
 	Binary                             string
 	Image                              string
 	Version                            version.Version
@@ -73,12 +74,11 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		)
 	}
 
-	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume
 	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
-	if inContainer {
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
@@ -117,7 +117,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			)
 		}
 
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10257",
@@ -143,7 +143,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		//		"--port=0",
 		//	)
 	} else {
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--address="+conf.BindAddress,
 				"--port=10252",
@@ -170,7 +170,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	if conf.KubeAuthorization {
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--root-ca-file=/etc/kubernetes/pki/ca.crt",
 				"--service-account-private-key-file=/etc/kubernetes/pki/admin.key",

@@ -26,6 +26,7 @@ import (
 
 // BuildKubeSchedulerComponentConfig is the configuration for building a kube-scheduler component.
 type BuildKubeSchedulerComponentConfig struct {
+	Runtime          string
 	Binary           string
 	Image            string
 	Version          version.Version
@@ -57,12 +58,11 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		)
 	}
 
-	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume
 	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
-	if inContainer {
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
@@ -121,7 +121,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			)
 		}
 
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10259",
@@ -146,7 +146,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		//		"--port=0",
 		//	)
 	} else {
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
 				"--address="+conf.BindAddress,
 				"--port=10251",

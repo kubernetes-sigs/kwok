@@ -53,8 +53,8 @@ function test_apply_node_and_pod() {
   fi
   if ! kwokctl --name "${name}" kubectl wait pod -A --all --for=condition=Ready --timeout=60s; then
     echo "Error: fake-pod wait failed"
-    echo kwokctl --name "${name}" kubectl get pod -A --all
-    kwokctl --name "${name}" kubectl get pod -A --all
+    echo kwokctl --name "${name}" kubectl get pod -A
+    kwokctl --name "${name}" kubectl get pod -A
     return 1
   fi
 }

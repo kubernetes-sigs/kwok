@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
@@ -70,4 +71,27 @@ func extraArgsToStrings(args []internalversion.ExtraArgs) []string {
 	return slices.Map(args, func(arg internalversion.ExtraArgs) string {
 		return fmt.Sprintf("--%s=%s", arg.Key, arg.Value)
 	})
+}
+
+// The following runtime mode is classification of runtime for components.
+const (
+	RuntimeModeNative    = "native"
+	RuntimeModeContainer = "container"
+	RuntimeModeCluster   = "cluster"
+)
+
+var (
+	runtimeTypeMap = map[string]string{
+		consts.RuntimeTypeKind:       RuntimeModeCluster,
+		consts.RuntimeTypeKindPodman: RuntimeModeCluster,
+		consts.RuntimeTypeDocker:     RuntimeModeContainer,
+		consts.RuntimeTypeNerdctl:    RuntimeModeContainer,
+		consts.RuntimeTypePodman:     RuntimeModeContainer,
+		consts.RuntimeTypeBinary:     RuntimeModeNative,
+	}
+)
+
+// GetRuntimeMode returns the mode of runtime.
+func GetRuntimeMode(runtime string) string {
+	return runtimeTypeMap[runtime]
 }

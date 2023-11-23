@@ -371,6 +371,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 
 	etcdComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentEtcd)
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
+		Runtime:      conf.Runtime,
 		Workdir:      env.workdir,
 		Binary:       etcdPath,
 		Version:      etcdVersion,
@@ -427,6 +428,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeApiserver)
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
+		Runtime:           conf.Runtime,
 		Workdir:           env.workdir,
 		Binary:            kubeApiserverPath,
 		Version:           kubeApiserverVersion,
@@ -480,6 +482,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 
 		kubeControllerManagerPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeControllerManager)
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
+			Runtime:                            conf.Runtime,
 			Workdir:                            env.workdir,
 			Binary:                             kubeControllerManagerPath,
 			Version:                            kubeControllerManagerVersion,
@@ -539,6 +542,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 
 		kubeSchedulerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeScheduler)
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
+			Runtime:          conf.Runtime,
 			Workdir:          env.workdir,
 			Binary:           kubeSchedulerPath,
 			Version:          kubeSchedulerVersion,
@@ -579,6 +583,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	kwokControllerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKwokController)
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
+		Runtime:                  conf.Runtime,
 		Workdir:                  env.workdir,
 		Binary:                   kwokControllerPath,
 		Version:                  kwokControllerVersion,
@@ -638,6 +643,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 
 		prometheusComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentPrometheus)
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
+			Runtime:      conf.Runtime,
 			Workdir:      env.workdir,
 			Binary:       prometheusPath,
 			Version:      prometheusVersion,
@@ -671,6 +677,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 
 		jaegerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentJaeger)
 		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
+			Runtime:      conf.Runtime,
 			Workdir:      env.workdir,
 			Binary:       jaegerPath,
 			Version:      jaegerVersion,
