@@ -492,7 +492,7 @@ func (c *Cluster) etcdctlPath(ctx context.Context) (string, error) {
 	}
 	conf := &config.Options
 	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
-	err = c.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdctlPath, "etcdctl"+conf.BinSuffix, 0750, conf.QuietPull, true)
+	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdctlBinary, etcdctlPath, 0750, conf.QuietPull)
 	if err != nil {
 		return "", err
 	}

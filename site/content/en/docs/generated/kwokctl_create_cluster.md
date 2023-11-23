@@ -18,17 +18,13 @@ kwokctl create cluster [flags]
       --disable-kube-scheduler                  Disable the kube-scheduler
       --disable-qps-limits                      Disable QPS limits for components
       --enable-crds strings                     List of CRDs to enable
-      --etcd-binary string                      Binary of etcd, only for binary runtime
-      --etcd-binary-tar string                  Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
-                                                 (default "https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-amd64.tar.gz")
+      --etcd-binary string                      Binary of etcd, only for binary runtime (default "https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-amd64.tar.gz#etcd")
       --etcd-image string                       Image of etcd, only for docker/podman/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
                                                  (default "registry.k8s.io/etcd:3.5.9-0")
       --etcd-port uint32                        Port of etcd given to the host. The behavior is unstable for kind/kind-podman runtime and may be modified in the future
   -h, --help                                    help for cluster
-      --jaeger-binary string                    Binary of Jaeger, only for binary runtime
-      --jaeger-binary-tar string                Tar of Jaeger, if --jaeger-binary is set, this is ignored, only for binary runtime
-                                                 (default "https://github.com/jaegertracing/jaeger/releases/download/v1.45.0/jaeger-1.45.0-linux-amd64.tar.gz")
+      --jaeger-binary string                    Binary of Jaeger, only for binary runtime (default "https://github.com/jaegertracing/jaeger/releases/download/v1.45.0/jaeger-1.45.0-linux-amd64.tar.gz#jaeger-all-in-one")
       --jaeger-image string                     Image of Jaeger, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_JAEGER_IMAGE_PREFIX}/all-in-one:${KWOK_JAEGER_VERSION}'
                                                  (default "docker.io/jaegertracing/all-in-one:1.45.0")
@@ -68,9 +64,7 @@ kwokctl create cluster [flags]
       --kwok-controller-image string            Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
                                                  (default "registry.k8s.io/kwok/kwok:v0.4.0")
-      --prometheus-binary string                Binary of Prometheus, only for binary runtime
-      --prometheus-binary-tar string            Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
-                                                 (default "https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.linux-amd64.tar.gz")
+      --prometheus-binary string                Binary of Prometheus, only for binary runtime (default "https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.linux-amd64.tar.gz#prometheus")
       --prometheus-image string                 Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'
                                                  (default "docker.io/prom/prometheus:v2.44.0")

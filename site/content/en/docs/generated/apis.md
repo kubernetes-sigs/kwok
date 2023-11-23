@@ -2582,6 +2582,17 @@ is the default value for env KWOK_ETCD_BINARY_PREFIX</p>
 </tr>
 <tr>
 <td>
+<code>etcdctlBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>EtcdctlBinary is the binary of etcdctl.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>etcdBinary</code>
 <em>
 string
@@ -2601,7 +2612,8 @@ string
 </td>
 <td>
 <p>EtcdBinaryTar is the tar of the binary of etcd.
-is the default value for env KWOK_ETCD_BINARY_TAR</p>
+is the default value for env KWOK_ETCD_BINARY_TAR
+Deprecated: Use EtcdBinary or EtcdctlBinary instead</p>
 </td>
 </tr>
 <tr>
@@ -2661,7 +2673,8 @@ string
 </td>
 <td>
 <p>PrometheusBinaryTar is the tar of binary of Prometheus.
-is the default value for env KWOK_PROMETHEUS_BINARY_TAR</p>
+is the default value for env KWOK_PROMETHEUS_BINARY_TAR
+Deprecated: Use PrometheusBinary instead</p>
 </td>
 </tr>
 <tr>
@@ -2697,7 +2710,8 @@ string
 </td>
 <td>
 <p>JaegerBinaryTar is the tar of binary of Jaeger.
-is the default value for env KWOK_JAEGER_TAR</p>
+is the default value for env KWOK_JAEGER_TAR
+Deprecated: Use JaegerBinary instead</p>
 </td>
 </tr>
 <tr>

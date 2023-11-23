@@ -104,45 +104,24 @@ func (c *Cluster) download(ctx context.Context, env *env) error {
 	}
 
 	etcdPath := c.GetBinPath(consts.ComponentEtcd + conf.BinSuffix)
-	if conf.EtcdBinary == "" {
-		err = c.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.EtcdBinaryTar, etcdPath, consts.ComponentEtcd+conf.BinSuffix, 0750, conf.QuietPull, true)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdBinary, etcdPath, 0750, conf.QuietPull)
-		if err != nil {
-			return err
-		}
+	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdBinary, etcdPath, 0750, conf.QuietPull)
+	if err != nil {
+		return err
 	}
 
 	if conf.PrometheusPort != 0 {
 		prometheusPath := c.GetBinPath(consts.ComponentPrometheus + conf.BinSuffix)
-		if conf.PrometheusBinary == "" {
-			err = c.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.PrometheusBinaryTar, prometheusPath, consts.ComponentPrometheus+conf.BinSuffix, 0750, conf.QuietPull, true)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = c.DownloadWithCache(ctx, conf.CacheDir, conf.PrometheusBinary, prometheusPath, 0750, conf.QuietPull)
-			if err != nil {
-				return err
-			}
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.PrometheusBinary, prometheusPath, 0750, conf.QuietPull)
+		if err != nil {
+			return err
 		}
 	}
 
 	if conf.JaegerPort != 0 {
 		jaegerPath := c.GetBinPath("jaeger-all-in-one" + conf.BinSuffix)
-		if conf.JaegerBinary == "" {
-			err = c.DownloadWithCacheAndExtract(ctx, conf.CacheDir, conf.JaegerBinaryTar, jaegerPath, "jaeger-all-in-one"+conf.BinSuffix, 0750, conf.QuietPull, true)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = c.DownloadWithCache(ctx, conf.CacheDir, conf.JaegerBinary, jaegerPath, 0750, conf.QuietPull)
-			if err != nil {
-				return err
-			}
+		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.JaegerBinary, jaegerPath, 0750, conf.QuietPull)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -1088,12 +1067,12 @@ func (c *Cluster) ListBinaries(ctx context.Context) ([]string, error) {
 	conf := &config.Options
 
 	return []string{
-		conf.EtcdBinaryTar,
+		conf.EtcdBinary,
 		conf.KubeApiserverBinary,
 		conf.KubeControllerManagerBinary,
 		conf.KubeSchedulerBinary,
 		conf.KwokControllerBinary,
-		conf.PrometheusBinaryTar,
+		conf.PrometheusBinary,
 		conf.KubectlBinary,
 	}, nil
 }

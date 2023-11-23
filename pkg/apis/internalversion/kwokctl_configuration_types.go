@@ -169,10 +169,14 @@ type KwokctlConfigurationOptions struct {
 	// KubectlBinary is the binary of kubectl.
 	KubectlBinary string
 
+	// EtcdctlBinary is the binary of etcdctl.
+	EtcdctlBinary string
+
 	// EtcdBinary is the binary of etcd.
 	EtcdBinary string
 
 	// EtcdBinaryTar is the tar of the binary of etcd.
+	// Deprecated: Use EtcdBinary instead
 	EtcdBinaryTar string
 
 	// KwokControllerBinary is the binary of kwok.
@@ -186,12 +190,14 @@ type KwokctlConfigurationOptions struct {
 	PrometheusBinary string
 
 	// PrometheusBinaryTar is the tar of binary of Prometheus.
+	// Deprecated: Use PrometheusBinary instead
 	PrometheusBinaryTar string
 
 	// JaegerBinary  is the binary of Jaeger.
 	JaegerBinary string
 
 	// JaegerBinaryTar is the tar of binary of Jaeger.
+	// Deprecated: Use JaegerBinary instead
 	JaegerBinaryTar string
 
 	// DockerComposeBinary is the binary of Docker compose.
