@@ -6,14 +6,6 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
 touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
 cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
-podman pull registry.k8s.io/etcd:3.5.9-0
-podman pull registry.k8s.io/kube-apiserver:v1.28.0
-podman pull localhost/kwok:test
-podman pull registry.k8s.io/kube-controller-manager:v1.28.0
-podman pull registry.k8s.io/kube-scheduler:v1.28.0
-podman pull docker.io/kubernetesui/dashboard:v2.7.0
-podman pull docker.io/prom/prometheus:v2.44.0
-podman pull docker.io/jaegertracing/all-in-one:1.45.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
 kind: TracingConfiguration
@@ -40,18 +32,6 @@ alerting:
     static_configs:
     - targets: []
 scrape_configs:
-- job_name: "kwok-service-discovery"
-  http_sd_configs:
-  - url: http://kwok-<CLUSTER_NAME>-kwok-controller:10247/discovery/prometheus
-- job_name: "prometheus"
-  scheme: http
-  honor_timestamps: true
-  metrics_path: /metrics
-  follow_redirects: true
-  enable_http2: true
-  static_configs:
-  - targets:
-    - localhost:9090
 - job_name: "etcd"
   scheme: http
   honor_timestamps: true
@@ -60,16 +40,7 @@ scrape_configs:
   enable_http2: true
   static_configs:
   - targets:
-    - "kwok-<CLUSTER_NAME>-etcd:2379"
-- job_name: "kwok-controller"
-  scheme: http
-  honor_timestamps: true
-  metrics_path: /metrics
-  follow_redirects: true
-  enable_http2: true
-  static_configs:
-  - targets:
-    - "kwok-<CLUSTER_NAME>-kwok-controller:10247"
+    - kwok-<CLUSTER_NAME>-etcd:2379
 - job_name: "kube-apiserver"
   scheme: https
   honor_timestamps: true
@@ -82,7 +53,7 @@ scrape_configs:
     insecure_skip_verify: true
   static_configs:
   - targets:
-    - "kwok-<CLUSTER_NAME>-kube-apiserver:6443"
+    - kwok-<CLUSTER_NAME>-kube-apiserver:6443
 - job_name: "kube-controller-manager"
   scheme: https
   honor_timestamps: true
@@ -95,7 +66,7 @@ scrape_configs:
     insecure_skip_verify: true
   static_configs:
   - targets:
-    - "kwok-<CLUSTER_NAME>-kube-controller-manager:10257"
+    - kwok-<CLUSTER_NAME>-kube-controller-manager:10257
 - job_name: "kube-scheduler"
   scheme: https
   honor_timestamps: true
@@ -108,9 +79,38 @@ scrape_configs:
     insecure_skip_verify: true
   static_configs:
   - targets:
-    - "kwok-<CLUSTER_NAME>-kube-scheduler:10259"
+    - kwok-<CLUSTER_NAME>-kube-scheduler:10259
+- job_name: "kwok-controller-metrics-discovery"
+  http_sd_configs:
+  - url: http://kwok-<CLUSTER_NAME>-kwok-controller:10247/discovery/prometheus
+- job_name: "kwok-controller"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kwok-controller:10247
+- job_name: "prometheus"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:9090
 EOF
 chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
+podman pull registry.k8s.io/etcd:3.5.9-0
+podman pull registry.k8s.io/kube-apiserver:v1.28.0
+podman pull localhost/kwok:test
+podman pull registry.k8s.io/kube-controller-manager:v1.28.0
+podman pull registry.k8s.io/kube-scheduler:v1.28.0
+podman pull docker.io/kubernetesui/dashboard:v2.7.0
+podman pull docker.io/prom/prometheus:v2.44.0
+podman pull docker.io/jaegertracing/all-in-one:1.45.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
 clusters:

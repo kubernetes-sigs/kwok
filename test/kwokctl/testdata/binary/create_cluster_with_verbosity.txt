@@ -40,18 +40,6 @@ alerting:
     static_configs:
     - targets: []
 scrape_configs:
-- job_name: "kwok-service-discovery"
-  http_sd_configs:
-  - url: http://localhost:32763/discovery/prometheus
-- job_name: "prometheus"
-  scheme: http
-  honor_timestamps: true
-  metrics_path: /metrics
-  follow_redirects: true
-  enable_http2: true
-  static_configs:
-  - targets:
-    - localhost:9090
 - job_name: "etcd"
   scheme: http
   honor_timestamps: true
@@ -60,16 +48,7 @@ scrape_configs:
   enable_http2: true
   static_configs:
   - targets:
-    - localhost:32765
-- job_name: "kwok-controller"
-  scheme: http
-  honor_timestamps: true
-  metrics_path: /metrics
-  follow_redirects: true
-  enable_http2: true
-  static_configs:
-  - targets:
-    - localhost:32763
+    - 127.0.0.1:32765
 - job_name: "kube-apiserver"
   scheme: https
   honor_timestamps: true
@@ -82,7 +61,7 @@ scrape_configs:
     insecure_skip_verify: true
   static_configs:
   - targets:
-    - localhost:32764
+    - 127.0.0.1:32764
 - job_name: "kube-controller-manager"
   scheme: https
   honor_timestamps: true
@@ -95,7 +74,7 @@ scrape_configs:
     insecure_skip_verify: true
   static_configs:
   - targets:
-    - localhost:32761
+    - 127.0.0.1:32761
 - job_name: "kube-scheduler"
   scheme: https
   honor_timestamps: true
@@ -108,7 +87,28 @@ scrape_configs:
     insecure_skip_verify: true
   static_configs:
   - targets:
-    - localhost:32760
+    - 127.0.0.1:32760
+- job_name: "kwok-controller-metrics-discovery"
+  http_sd_configs:
+  - url: http://127.0.0.1:32763/discovery/prometheus
+- job_name: "kwok-controller"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:32763
+- job_name: "prometheus"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:9090
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1

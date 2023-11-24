@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -50,6 +51,8 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 	var volumes []internalversion.Volume
 	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
+	var metric *internalversion.ComponentMetric
+
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
 			internalversion.Volume{
@@ -85,6 +88,12 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		)
 	}
 
+	metric = &internalversion.ComponentMetric{
+		Scheme: "http",
+		Host:   net.LocalAddress + ":" + format.String(conf.Port),
+		Path:   "/metrics",
+	}
+
 	if conf.Verbosity != log.LevelInfo {
 		prometheusArgs = append(prometheusArgs, "--log.level="+log.ToLogSeverityLevel(conf.Verbosity))
 	}
@@ -109,6 +118,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Metric:  metric,
 		Envs:    envs,
 	}, nil
 }

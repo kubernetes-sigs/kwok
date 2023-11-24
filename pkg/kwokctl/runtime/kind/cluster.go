@@ -241,6 +241,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.setupPrometheusConfig(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	images, err := c.listAllImages(ctx)
 	if err != nil {
 		return err
@@ -323,13 +328,7 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	var prometheusPatches internalversion.ComponentPatches
 	if conf.PrometheusPort != 0 {
 		prometheusPatches = runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentPrometheus)
-
 		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
-
-		err = c.WriteFile(prometheusConfigPath, []byte(prometheusYamlTpl))
-		if err != nil {
-			return fmt.Errorf("failed to write prometheus yaml: %w", err)
-		}
 
 		prometheusPatches.ExtraVolumes = append(prometheusPatches.ExtraVolumes, internalversion.Volume{
 			Name:      "prometheus-config",
@@ -400,6 +399,14 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 func (c *Cluster) addEtcd(_ context.Context, env *env) (err error) {
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, internalversion.Component{
 		Name: consts.ComponentEtcd,
+		Metric: &internalversion.ComponentMetric{
+			Scheme:             "https",
+			Host:               "127.0.0.1:2379",
+			Path:               "/metrics",
+			CertPath:           "/etc/kubernetes/pki/apiserver-etcd-client.crt",
+			KeyPath:            "/etc/kubernetes/pki/apiserver-etcd-client.key",
+			InsecureSkipVerify: true,
+		},
 	})
 	return nil
 }
@@ -407,6 +414,14 @@ func (c *Cluster) addEtcd(_ context.Context, env *env) (err error) {
 func (c *Cluster) addKubeApiserver(_ context.Context, env *env) (err error) {
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, internalversion.Component{
 		Name: consts.ComponentKubeApiserver,
+		Metric: &internalversion.ComponentMetric{
+			Scheme:             "https",
+			Host:               "127.0.0.1:6443",
+			Path:               "/metrics",
+			CertPath:           "/etc/kubernetes/pki/admin.crt",
+			KeyPath:            "/etc/kubernetes/pki/admin.key",
+			InsecureSkipVerify: true,
+		},
 	})
 	return nil
 }
@@ -416,6 +431,14 @@ func (c *Cluster) addKubeControllerManager(_ context.Context, env *env) (err err
 	if !conf.DisableKubeControllerManager {
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, internalversion.Component{
 			Name: consts.ComponentKubeControllerManager,
+			Metric: &internalversion.ComponentMetric{
+				Scheme:             "https",
+				Host:               "127.0.0.1:10257",
+				Path:               "/metrics",
+				CertPath:           "/etc/kubernetes/pki/admin.crt",
+				KeyPath:            "/etc/kubernetes/pki/admin.key",
+				InsecureSkipVerify: true,
+			},
 		})
 	}
 	return nil
@@ -426,6 +449,14 @@ func (c *Cluster) addKubeScheduler(_ context.Context, env *env) (err error) {
 	if !conf.DisableKubeScheduler {
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, internalversion.Component{
 			Name: consts.ComponentKubeScheduler,
+			Metric: &internalversion.ComponentMetric{
+				Scheme:             "https",
+				Host:               "127.0.0.1:10259",
+				Path:               "/metrics",
+				CertPath:           "/etc/kubernetes/pki/admin.crt",
+				KeyPath:            "/etc/kubernetes/pki/admin.key",
+				InsecureSkipVerify: true,
+			},
 		})
 	}
 	return nil
@@ -457,6 +488,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Runtime:                           conf.Runtime,
+		ProjectName:                       c.Name(),
 		Workdir:                           env.workdir,
 		Image:                             conf.KwokControllerImage,
 		Version:                           kwokControllerVersion,
@@ -536,6 +568,26 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 			return fmt.Errorf("failed to write: %w", err)
 		}
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
+	}
+	return nil
+}
+
+func (c *Cluster) setupPrometheusConfig(_ context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the prometheus
+	if conf.PrometheusPort != 0 {
+		prometheusData, err := components.BuildPrometheus(components.BuildPrometheusConfig{
+			Components: env.kwokctlConfig.Components,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
+		}
+		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
+		err = c.WriteFile(prometheusConfigPath, []byte(prometheusData))
+		if err != nil {
+			return fmt.Errorf("failed to write prometheus yaml: %w", err)
+		}
 	}
 	return nil
 }

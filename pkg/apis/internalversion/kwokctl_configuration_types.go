@@ -307,6 +307,12 @@ type Component struct {
 	// Volumes is a list of named volumes that can be mounted by containers belonging to the component.
 	Volumes []Volume
 
+	// Metric is the metric of the component.
+	Metric *ComponentMetric
+
+	// MetricsDiscovery is the metrics discovery of the component.
+	MetricsDiscovery *ComponentMetric
+
 	// Version is the version of the component.
 	Version string
 }
@@ -332,6 +338,23 @@ type Port struct {
 	HostPort uint32
 	// Protocol for port. Must be UDP, TCP, or SCTP.
 	Protocol Protocol
+}
+
+// ComponentMetric represents a metric of a component.
+type ComponentMetric struct {
+	// Scheme is the scheme of the metric.
+	Scheme string
+	// Host is the host of the metric.
+	Host string
+	// Path is the path of the metric.
+	Path string
+
+	// CertPath is the cert path of the metric.
+	CertPath string
+	// KeyPath is the key path of the metric.
+	KeyPath string
+	// InsecureSkipVerify is the flag to skip verify the metric.
+	InsecureSkipVerify bool
 }
 
 // Protocol defines network protocols supported for things like component ports.

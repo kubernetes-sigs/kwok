@@ -23,12 +23,14 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // BuildKwokControllerComponentConfig is the configuration for building a kwok controller component.
 type BuildKwokControllerComponentConfig struct {
 	Runtime                           string
+	ProjectName                       string
 	Binary                            string
 	Image                             string
 	Version                           version.Version
@@ -134,6 +136,32 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		)
 	}
 
+	var metricsHost string
+	switch GetRuntimeMode(conf.Runtime) {
+	case RuntimeModeNative:
+		metricsHost = net.LocalAddress + ":" + format.String(conf.Port)
+	case RuntimeModeContainer:
+		metricsHost = conf.ProjectName + "-" + consts.ComponentKwokController + ":10247"
+	case RuntimeModeCluster:
+		metricsHost = net.LocalAddress + ":10247"
+	}
+
+	var metric *internalversion.ComponentMetric
+	var metricsDiscovery *internalversion.ComponentMetric
+
+	if metricsHost != "" {
+		metric = &internalversion.ComponentMetric{
+			Scheme: "http",
+			Host:   metricsHost,
+			Path:   "/metrics",
+		}
+		metricsDiscovery = &internalversion.ComponentMetric{
+			Scheme: "http",
+			Host:   metricsHost,
+			Path:   "/discovery/prometheus",
+		}
+	}
+
 	if conf.Verbosity != log.LevelInfo {
 		kwokControllerArgs = append(kwokControllerArgs, "--v="+format.String(conf.Verbosity))
 	}
@@ -155,13 +183,15 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		Links: []string{
 			consts.ComponentKubeApiserver,
 		},
-		Ports:   ports,
-		Command: []string{"kwok"},
-		Volumes: volumes,
-		Args:    kwokControllerArgs,
-		Binary:  conf.Binary,
-		Image:   conf.Image,
-		WorkDir: conf.Workdir,
-		Envs:    envs,
+		Ports:            ports,
+		Command:          []string{"kwok"},
+		Volumes:          volumes,
+		Args:             kwokControllerArgs,
+		Binary:           conf.Binary,
+		Image:            conf.Image,
+		Metric:           metric,
+		MetricsDiscovery: metricsDiscovery,
+		WorkDir:          conf.Workdir,
+		Envs:             envs,
 	}
 }

@@ -350,6 +350,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.setupPrometheusConfig(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.finishInstall(ctx, env)
 	if err != nil {
 		return err
@@ -372,6 +377,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 	etcdComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentEtcd)
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
 		Runtime:      conf.Runtime,
+		ProjectName:  c.Name(),
 		Workdir:      env.workdir,
 		Binary:       etcdPath,
 		Version:      etcdVersion,
@@ -429,6 +435,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeApiserver)
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Runtime:           conf.Runtime,
+		ProjectName:       c.Name(),
 		Workdir:           env.workdir,
 		Binary:            kubeApiserverPath,
 		Version:           kubeApiserverVersion,
@@ -483,6 +490,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 		kubeControllerManagerPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeControllerManager)
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
 			Runtime:                            conf.Runtime,
+			ProjectName:                        c.Name(),
 			Workdir:                            env.workdir,
 			Binary:                             kubeControllerManagerPath,
 			Version:                            kubeControllerManagerVersion,
@@ -543,6 +551,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		kubeSchedulerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeScheduler)
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
 			Runtime:          conf.Runtime,
+			ProjectName:      c.Name(),
 			Workdir:          env.workdir,
 			Binary:           kubeSchedulerPath,
 			Version:          kubeSchedulerVersion,
@@ -584,6 +593,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Runtime:                  conf.Runtime,
+		ProjectName:              c.Name(),
 		Workdir:                  env.workdir,
 		Binary:                   kwokControllerPath,
 		Version:                  kwokControllerVersion,
@@ -609,24 +619,13 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	return nil
 }
 
-func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
+func (c *Cluster) setupPrometheusConfig(_ context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the prometheus
 	if conf.PrometheusPort != 0 {
-		prometheusPath := c.GetBinPath(consts.ComponentPrometheus + conf.BinSuffix)
-
-		prometheusData, err := BuildPrometheus(BuildPrometheusConfig{
-			ProjectName:               c.Name(),
-			SecurePort:                conf.SecurePort,
-			AdminCrtPath:              env.adminCertPath,
-			AdminKeyPath:              env.adminKeyPath,
-			PrometheusPort:            conf.PrometheusPort,
-			EtcdPort:                  conf.EtcdPort,
-			KubeApiserverPort:         conf.KubeApiserverPort,
-			KubeControllerManagerPort: conf.KubeControllerManagerPort,
-			KubeSchedulerPort:         conf.KubeSchedulerPort,
-			KwokControllerPort:        conf.KwokControllerPort,
+		prometheusData, err := components.BuildPrometheus(components.BuildPrometheusConfig{
+			Components: env.kwokctlConfig.Components,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
@@ -636,6 +635,21 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}
+	}
+	return nil
+}
+
+func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the prometheus
+	if conf.PrometheusPort != 0 {
+		prometheusPath := c.GetBinPath(consts.ComponentPrometheus + conf.BinSuffix)
+
+		if err != nil {
+			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
+		}
+		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
 
 		prometheusVersion, err := c.ParseVersionFromBinary(ctx, prometheusPath)
 		if err != nil {
