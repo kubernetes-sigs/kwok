@@ -34,6 +34,7 @@ import (
 	podfast "sigs.k8s.io/kwok/kustomize/stage/pod/fast"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/server"
@@ -222,11 +223,16 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	typedClient, err := clientset.ToTypedClient()
+	restConfig, err := clientset.ToRESTConfig()
 	if err != nil {
 		return err
 	}
-	typedKwokClient, err := clientset.ToTypedKwokClient()
+
+	typedClient, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return err
+	}
+	typedKwokClient, err := versioned.NewForConfig(restConfig)
 	if err != nil {
 		return err
 	}
