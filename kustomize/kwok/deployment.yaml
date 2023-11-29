@@ -54,10 +54,10 @@ spec:
               path: /healthz
               port: 10247
               scheme: HTTP
-            initialDelaySeconds: 2
-            timeoutSeconds: 2
-            periodSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            periodSeconds: 60
+            failureThreshold: 10
           readinessProbe:
             httpGet:
               path: /healthz
