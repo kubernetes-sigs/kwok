@@ -25,6 +25,7 @@ import (
 
 // BuildDashboardComponentConfig is the configuration for building the dashboard component.
 type BuildDashboardComponentConfig struct {
+	Runtime     string
 	Binary      string
 	Image       string
 	Version     version.Version
@@ -55,11 +56,10 @@ func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component inte
 		dashboardArgs = append(dashboardArgs, "--system-banner="+conf.Banner)
 	}
 
-	inContainer := conf.Image != ""
 	user := ""
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
-	if inContainer {
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		dashboardArgs = append(dashboardArgs,
 			"--kubeconfig=/root/.kube/config",
 			"--insecure-port=8000",

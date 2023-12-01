@@ -28,6 +28,7 @@ import (
 
 // BuildEtcdComponentConfig is the configuration for building an etcd component.
 type BuildEtcdComponentConfig struct {
+	Runtime      string
 	Binary       string
 	Image        string
 	Version      version.Version
@@ -66,8 +67,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	}
 	etcdArgs = append(etcdArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
-	inContainer := conf.Image != ""
-	if inContainer {
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		// TODO: use a volume for the data path
 		// volumes = append(volumes,
 		//	internalversion.Volume{

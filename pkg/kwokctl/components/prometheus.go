@@ -26,6 +26,7 @@ import (
 
 // BuildPrometheusComponentConfig is the configuration for building a prometheus component.
 type BuildPrometheusComponentConfig struct {
+	Runtime       string
 	Binary        string
 	Image         string
 	Version       version.Version
@@ -46,11 +47,10 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 	prometheusArgs := []string{}
 	prometheusArgs = append(prometheusArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
-	inContainer := conf.Image != ""
 	var volumes []internalversion.Volume
 	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
-	if inContainer {
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.ConfigPath,

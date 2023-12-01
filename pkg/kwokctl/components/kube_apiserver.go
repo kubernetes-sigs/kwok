@@ -29,6 +29,7 @@ import (
 
 // BuildKubeApiserverComponentConfig is the configuration for building a kube-apiserver component.
 type BuildKubeApiserverComponentConfig struct {
+	Runtime           string
 	Binary            string
 	Image             string
 	Version           version.Version
@@ -121,8 +122,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	var volumes []internalversion.Volume
 	volumes = append(volumes, conf.ExtraVolumes...)
 
-	inContainer := conf.Image != ""
-	if inContainer {
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--etcd-servers=http://"+conf.EtcdAddress+":2379",
 		)
@@ -139,7 +139,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			)
 		}
 
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			ports = []internalversion.Port{
 				{
 					HostPort: conf.Port,
@@ -186,7 +186,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			)
 		}
 	} else {
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			ports = []internalversion.Port{
 				{
 					HostPort: conf.Port,
@@ -207,7 +207,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	if conf.AuditPolicyPath != "" {
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			volumes = append(volumes,
 				internalversion.Volume{
 					HostPath:  conf.AuditPolicyPath,
@@ -233,7 +233,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	if conf.TracingConfigPath != "" {
-		if inContainer {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			volumes = append(volumes,
 				internalversion.Volume{
 					HostPath:  conf.TracingConfigPath,

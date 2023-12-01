@@ -1,5 +1,99 @@
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+# Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/etcd
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+alerting:
+  alertmanagers:
+  - follow_redirects: true
+    enable_http2: true
+    scheme: http
+    timeout: 10s
+    api_version: v2
+    static_configs:
+    - targets: [ ]
+scrape_configs:
+- job_name: "kwok-service-discovery"
+  http_sd_configs:
+  - url: http://localhost:10247/discovery/prometheus
+- job_name: "prometheus"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - "localhost:9090"
+- job_name: "etcd"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: /etc/kubernetes/pki/apiserver-etcd-client.crt
+    key_file: /etc/kubernetes/pki/apiserver-etcd-client.key
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - "localhost:2379"
+- job_name: "kwok-controller"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - "localhost:10247"
+- job_name: "kube-apiserver"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    key_file: /etc/kubernetes/pki/admin.key
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - "localhost:6443"
+- job_name: "kube-controller-manager"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    key_file: /etc/kubernetes/pki/admin.key
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - "localhost:10257"
+- job_name: "kube-scheduler"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    key_file: /etc/kubernetes/pki/admin.key
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - "localhost:10259"
+EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -65,9 +159,12 @@ nodes:
         pathType: DirectoryOrCreate
   # mount the local file on the control plane
   extraMounts:
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-    containerPath: /etc/kwok/kwok.yaml
-    readOnly: true
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+    containerPath: /etc/kwok/
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
+    containerPath: /etc/kubernetes/manifests
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+    containerPath: /etc/kubernetes/pki
   - hostPath: <ROOT_DIR>/extras/etcd
     containerPath: /var/components/etcd/extras/tmp
     readOnly: false
@@ -83,258 +180,162 @@ nodes:
   - hostPath: <ROOT_DIR>/extras/controller
     containerPath: /var/components/controller/extras/tmp
     readOnly: false
+  - hostPath: ./extras/prometheus
+    containerPath: /var/components/prometheus/extras/tmp
+    readOnly: false
+  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
+    containerPath: /var/components/prometheus/etc/prometheus/prometheus.yaml
+    readOnly: false
 EOF
-cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  labels:
-    app: kwok-controller
+  creationTimestamp: null
   name: kwok-controller
   namespace: kube-system
 spec:
   containers:
   - args:
-    - --config=/etc/kwok/kwok.yaml
-    - --v=INFO
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-    - --manage-nodes-with-label-selector=
-    - --disregard-status-with-annotation-selector=kwok.x-k8s.io/status=custom
-    - --disregard-status-with-label-selector=
-    - --kubeconfig=/etc/kubernetes/admin.conf
-    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
-    - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    - --v=-4
+    - --kubeconfig=~/.kube/config
+    - --config=~/.kwok/kwok.yaml
+    - --tls-cert-file=/etc/kubernetes/pki/admin.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     - --node-ip=$(POD_IP)
     - --node-name=kwok-controller.kube-system.svc
     - --node-port=10247
+    - --server-address=0.0.0.0:10247
     - --node-lease-duration-seconds=40
-    - --v=-4
+    command:
+    - kwok
     env:
+    - name: TEST_KEY
+      value: TEST_VALUE
     - name: POD_IP
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    - name: TEST_KEY
-      value: TEST_VALUE
-    image: 'localhost/kwok:test'
-    imagePullPolicy: IfNotPresent
-    livenessProbe:
-      failureThreshold: 3
-      httpGet:
-        path: /healthz
-        port: 10247
-        scheme: HTTP
-      initialDelaySeconds: 2
-      periodSeconds: 10
-      timeoutSeconds: 2
+    image: localhost/kwok:test
+    imagePullPolicy: Never
     name: kwok-controller
-    readinessProbe:
-      failureThreshold: 5
-      httpGet:
-        path: /healthz
-        port: 10247
-        scheme: HTTP
-      initialDelaySeconds: 2
-      periodSeconds: 20
-      timeoutSeconds: 2
+    resources: {}
     volumeMounts:
-    - mountPath: /etc/kubernetes/admin.conf
-      name: kubeconfig
-      readOnly: true
-    - mountPath: /etc/kwok/kwok.yaml
-      name: config
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki
-      name: k8s-certs
-      readOnly: true
     - mountPath: /extras/tmp
       name: tmp-controller
-      readOnly: false
+    - mountPath: ~/.kube/config
+      name: volume-1
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/ca.crt
+      name: volume-2
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/admin.crt
+      name: volume-3
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/admin.key
+      name: volume-4
+      readOnly: true
+    - mountPath: ~/.kwok/kwok.yaml
+      name: volume-5
+      readOnly: true
   hostNetwork: true
   restartPolicy: Always
+  securityContext:
+    runAsGroup: 0
+    runAsUser: 0
   volumes:
   - hostPath:
-      path: /etc/kubernetes/admin.conf
-      type: FileOrCreate
-    name: kubeconfig
-  - hostPath:
-      path: /etc/kwok/kwok.yaml
-      type: FileOrCreate
-    name: config
-  - hostPath:
-      path: /etc/kubernetes/pki
-      type: DirectoryOrCreate
-    name: k8s-certs
-  - hostPath:
-      path: /var/components/controller/extras/tmp
+      path: <ROOT_DIR>/extras/controller
       type: DirectoryOrCreate
     name: tmp-controller
+  - hostPath:
+      path: /etc/kubernetes/admin.conf
+    name: volume-1
+  - hostPath:
+      path: /etc/kubernetes/pki/ca.crt
+    name: volume-2
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.crt
+    name: volume-3
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.key
+    name: volume-4
+  - hostPath:
+      path: /etc/kwok/kwok.yaml
+    name: volume-5
+status: {}
 EOF
-cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus-deployment.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: prometheus
-rules:
-- nonResourceURLs: ["/metrics"]
-  verbs: ["get"]
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: prometheus
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: prometheus
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: prometheus
-subjects:
-- kind: ServiceAccount
-  name: prometheus
-  namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: prometheus-configmap
-  namespace: kube-system
-data:
-  prometheus.yaml: |
-    global:
-      scrape_interval: 15s
-      scrape_timeout: 10s
-      evaluation_interval: 15s
-    alerting:
-      alertmanagers:
-      - follow_redirects: true
-        enable_http2: true
-        scheme: http
-        timeout: 10s
-        api_version: v2
-        static_configs:
-        - targets: [ ]
-    scrape_configs:
-    - job_name: "kwok-service-discovery"
-      http_sd_configs:
-      - url: http://localhost:10247/discovery/prometheus
-    - job_name: "prometheus"
-      scheme: http
-      honor_timestamps: true
-      metrics_path: /metrics
-      follow_redirects: true
-      enable_http2: true
-      static_configs:
-      - targets:
-        - "localhost:9090"
-    - job_name: "etcd"
-      scheme: https
-      honor_timestamps: true
-      metrics_path: /metrics
-      follow_redirects: true
-      enable_http2: true
-      tls_config:
-        cert_file: /etc/kubernetes/pki/apiserver-etcd-client.crt
-        key_file: /etc/kubernetes/pki/apiserver-etcd-client.key
-        insecure_skip_verify: true
-      static_configs:
-      - targets:
-        - "localhost:2379"
-    - job_name: "kwok-controller"
-      scheme: http
-      honor_timestamps: true
-      metrics_path: /metrics
-      follow_redirects: true
-      enable_http2: true
-      static_configs:
-      - targets:
-        - "localhost:10247"
-    - job_name: "kube-apiserver"
-      scheme: https
-      honor_timestamps: true
-      metrics_path: /metrics
-      follow_redirects: true
-      enable_http2: true
-      tls_config:
-        insecure_skip_verify: true
-      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      static_configs:
-      - targets:
-        - "localhost:6443"
-    - job_name: "kube-controller-manager"
-      scheme: https
-      honor_timestamps: true
-      metrics_path: /metrics
-      follow_redirects: true
-      enable_http2: true
-      tls_config:
-        insecure_skip_verify: true
-      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      static_configs:
-      - targets:
-        - "localhost:10257"
-    - job_name: "kube-scheduler"
-      scheme: https
-      honor_timestamps: true
-      metrics_path: /metrics
-      follow_redirects: true
-      enable_http2: true
-      tls_config:
-        insecure_skip_verify: true
-      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      static_configs:
-      - targets:
-        - "localhost:10259"
----
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
 apiVersion: v1
 kind: Pod
 metadata:
+  creationTimestamp: null
   name: prometheus
   namespace: kube-system
 spec:
   containers:
-  - name: prometheus
-    image: docker.io/prom/prometheus:v2.44.0
+  - args:
+    - --log.level=debug
+    - --config.file=/etc/prometheus/prometheus.yaml
+    - --web.listen-address=0.0.0.0:9090
+    command:
+    - prometheus
     env:
     - name: TEST_KEY
       value: TEST_VALUE
-    args:
-    - --config.file=/etc/prometheus/prometheus.yaml
-    - --log.level=debug
-    securityContext:
-      runAsUser: 0
+    image: docker.io/prom/prometheus:v2.44.0
+    imagePullPolicy: Never
+    name: prometheus
+    ports:
+    - containerPort: 9090
+      hostPort: 9090
+    resources: {}
     volumeMounts:
-    - name: config-volume
-      mountPath: /etc/prometheus/
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki
-      name: k8s-certs
-      readOnly: true
     - mountPath: /extras/tmp
       name: tmp-prometheus
-      readOnly: false
+    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.crt
+      name: volume-1
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.key
+      name: volume-2
+      readOnly: true
+    - mountPath: /etc/prometheus/prometheus.yaml
+      name: volume-3
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/admin.crt
+      name: volume-4
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/admin.key
+      name: volume-5
+      readOnly: true
+  hostNetwork: true
+  restartPolicy: Always
+  securityContext:
+    runAsGroup: 0
+    runAsUser: 0
   volumes:
-  - name: config-volume
-    configMap:
-      name: prometheus-configmap
-  - hostPath:
-      path: /etc/kubernetes/pki
-      type: DirectoryOrCreate
-    name: k8s-certs
   - hostPath:
       path: <ROOT_DIR>/extras/prometheus
       type: DirectoryOrCreate
     name: tmp-prometheus
-  serviceAccount: prometheus
-  serviceAccountName: prometheus
-  restartPolicy: Always
-  hostNetwork: true
-  nodeName: kwok-<CLUSTER_NAME>-control-plane
+  - hostPath:
+      path: /etc/kubernetes/pki/apiserver-etcd-client.crt
+    name: volume-1
+  - hostPath:
+      path: /etc/kubernetes/pki/apiserver-etcd-client.key
+    name: volume-2
+  - hostPath:
+      path: /var/components/prometheus/etc/prometheus/prometheus.yaml
+    name: volume-3
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.crt
+    name: volume-4
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.key
+    name: volume-5
+status: {}
 EOF
 docker pull docker.io/kindest/node:v1.28.0
 docker pull localhost/kwok:test
@@ -346,10 +347,5 @@ KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/promethe
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
-docker cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok-controller-pod.yaml kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/manifests/kwok-controller.yaml
-mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
-docker cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.crt <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
-docker cp kwok-<CLUSTER_NAME>-control-plane:/etc/kubernetes/pki/ca.key <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.key
-kubectl apply -f <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus-deployment.yaml
 kubectl cordon kwok-<CLUSTER_NAME>-control-plane
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config

@@ -263,8 +263,8 @@ type BuildKindConfig struct {
 
 	KubeconfigPath    string
 	SchedulerConfig   string
-	ConfigPath        string
 	TracingConfigPath string
+	Workdir           string
 
 	EtcdExtraArgs                 []internalversion.ExtraArgs
 	EtcdExtraVolumes              []internalversion.Volume
@@ -273,10 +273,10 @@ type BuildKindConfig struct {
 	SchedulerExtraArgs            []internalversion.ExtraArgs
 	SchedulerExtraVolumes         []internalversion.Volume
 	ControllerManagerExtraArgs    []internalversion.ExtraArgs
-	Verbosity                     log.Level
 	ControllerManagerExtraVolumes []internalversion.Volume
+	Verbosity                     log.Level
 	KwokControllerExtraVolumes    []internalversion.Volume
-	KwokControllerExtraExtraEnvs  []internalversion.Env
+	PrometheusExtraVolumes        []internalversion.Volume
 
 	BindAddress      string
 	DisableQPSLimits bool

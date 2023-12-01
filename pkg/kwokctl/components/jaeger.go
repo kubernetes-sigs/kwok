@@ -27,6 +27,7 @@ import (
 
 // BuildJaegerComponentConfig is the configuration for building a jaeger component.
 type BuildJaegerComponentConfig struct {
+	Runtime      string
 	Binary       string
 	Image        string
 	Version      version.Version
@@ -48,8 +49,7 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
-	inContainer := conf.Image != ""
-	if inContainer {
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		ports = []internalversion.Port{
 			{
 				HostPort: conf.Port,
