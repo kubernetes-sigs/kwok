@@ -211,30 +211,39 @@ func WaitForAllNodesReady() env.Func {
 			return nil, err
 		}
 
+		logger := log.FromContext(ctx)
+
 		var list corev1.NodeList
 		err = wait.For(
 			func(ctx context.Context) (done bool, err error) {
 				if err = client.List(ctx, &list); err != nil {
-					return false, err
+					logger.Error("failed to list nodes", err)
+					return false, nil
 				}
-				var found int
+
 				metaList, err := meta.ExtractList(&list)
 				if err != nil {
-					return false, err
+					logger.Error("failed to extract list", err)
+					return false, nil
 				}
 				if len(metaList) == 0 {
-					return false, fmt.Errorf("no node found")
+					logger.Error("no node found", nil)
+					return false, nil
 				}
+
+				notReady := []string{}
 				for _, obj := range metaList {
 					node := obj.(*corev1.Node)
 					cond, ok := slices.Find(node.Status.Conditions, func(cond corev1.NodeCondition) bool {
 						return cond.Type == corev1.NodeReady
 					})
-					if ok && cond.Status == corev1.ConditionTrue {
-						found++
+					if !ok || cond.Status != corev1.ConditionTrue {
+						notReady = append(notReady, node.Name)
 					}
 				}
-				return found == len(metaList), nil
+				logger.Error("not ready nodes", fmt.Errorf("%v", notReady))
+
+				return len(notReady) == 0, nil
 			},
 			wait.WithContext(ctx),
 			wait.WithTimeout(600*time.Second),
@@ -255,27 +264,36 @@ func WaitForAllPodsReady() env.Func {
 			return nil, err
 		}
 
+		logger := log.FromContext(ctx)
+
 		var list corev1.PodList
 		err = wait.For(
 			func(ctx context.Context) (done bool, err error) {
 				if err = client.List(ctx, &list); err != nil {
-					return false, err
+					logger.Error("failed to list pods", err)
+					return false, nil
 				}
-				var found int
+
 				metaList, err := meta.ExtractList(&list)
 				if err != nil {
-					return false, err
+					logger.Error("failed to extract list", err)
+					return false, nil
 				}
 				if len(metaList) == 0 {
-					return false, fmt.Errorf("no pod found")
+					logger.Error("no pod found", nil)
+					return false, nil
 				}
+
+				notReady := []string{}
 				for _, obj := range metaList {
 					pod := obj.(*corev1.Pod)
-					if pod.Status.Phase == corev1.PodRunning || pod.Status.Phase == corev1.PodSucceeded {
-						found++
+					if pod.Status.Phase != corev1.PodRunning && pod.Status.Phase != corev1.PodSucceeded {
+						notReady = append(notReady, log.KObj(pod).String())
 					}
 				}
-				return found == len(metaList), nil
+				logger.Error("not ready pods", fmt.Errorf("%v", notReady))
+
+				return len(notReady) == 0, nil
 			},
 			wait.WithContext(ctx),
 			wait.WithTimeout(600*time.Second),
@@ -290,6 +308,9 @@ func WaitForAllPodsReady() env.Func {
 
 func waitForServiceAccountReady(ctx context.Context, resource *resources.Resources, name, namespace string) error {
 	var sa corev1.ServiceAccount
+
+	logger := log.FromContext(ctx)
+
 	err := wait.For(
 		func(ctx context.Context) (done bool, err error) {
 			err = resource.Get(ctx, name, namespace, &sa)
@@ -297,7 +318,8 @@ func waitForServiceAccountReady(ctx context.Context, resource *resources.Resourc
 				return true, nil
 			}
 			if !apierrors.IsNotFound(err) {
-				return false, err
+				logger.Error("failed to get service account", err)
+				return false, nil
 			}
 
 			err = resource.Create(ctx, &corev1.ServiceAccount{
@@ -313,7 +335,8 @@ func waitForServiceAccountReady(ctx context.Context, resource *resources.Resourc
 				return false, nil
 			}
 
-			return false, fmt.Errorf("failed to create service account: %w", err)
+			logger.Error("failed to create service account", err)
+			return false, nil
 		},
 		wait.WithContext(ctx),
 		wait.WithTimeout(120*time.Second),
