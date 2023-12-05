@@ -40,12 +40,12 @@ func BuildKwokImage(rootDir string, image string, builder string) env.Func {
 
 		err := exec.Exec(ctx, "bash", "./hack/releases.sh", "--bin", "kwok", "--platform", "linux/"+runtime.GOARCH)
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 
 		err = exec.Exec(ctx, "bash", "./images/kwok/build.sh", "--image", ref[0], "--builder", builder, "--version", ref[1], "--platform", "linux/"+runtime.GOARCH)
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 		return ctx, nil
 	}
@@ -69,7 +69,7 @@ func buildBinary(rootDir string, binary string) env.Func {
 
 		err := exec.Exec(ctx, "bash", "./hack/releases.sh", "--bin", binary, "--platform", runtime.GOOS+"/"+runtime.GOARCH)
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 		return ctx, nil
 	}

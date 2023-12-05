@@ -37,7 +37,7 @@ func CreateByKustomize(kustomizeDir string) env.Func {
 		}
 		initYAML, err := buildKustomizeToYaml(kustomizeDir)
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 
 		err = decoder.DecodeEach(ctx, bytes.NewReader(initYAML), decoder.CreateHandler(r))
@@ -57,7 +57,7 @@ func DeleteByKustomize(kustomizeDir string) env.Func {
 		}
 		initYAML, err := buildKustomizeToYaml(kustomizeDir)
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 
 		err = decoder.DecodeEach(ctx, bytes.NewReader(initYAML), decoder.DeleteHandler(r))
