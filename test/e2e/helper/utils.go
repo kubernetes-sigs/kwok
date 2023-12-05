@@ -145,11 +145,11 @@ func CreatePod(pod *corev1.Pod) features.Func {
 		if pod.Status.PodIP != "" {
 			if pod.Spec.HostNetwork {
 				if pod.Status.PodIP != pod.Status.HostIP {
-					t.Fatal("pod ip is not equal to host ip", log.KObj(pod))
+					t.Errorf("pod ip %q is not equal to host ip %q: %s", pod.Status.PodIP, pod.Status.HostIP, log.KObj(pod))
 				}
 			} else {
 				if pod.Status.PodIP == pod.Status.HostIP {
-					t.Fatal("pod ip is equal to host ip", log.KObj(pod))
+					t.Errorf("pod ip %q is equal to host ip %q: %s", pod.Status.PodIP, pod.Status.HostIP, log.KObj(pod))
 				}
 
 				var node corev1.Node
@@ -161,12 +161,12 @@ func CreatePod(pod *corev1.Pod) features.Func {
 				if node.Spec.PodCIDR != "" {
 					_, ipnet, err := net.ParseCIDR(node.Spec.PodCIDR)
 					if err != nil {
-						t.Fatal(err)
+						t.Errorf("failed to parse pod cidr %q in %q", node.Spec.PodCIDR, node.Name)
 					}
 
 					ip := net.ParseIP(pod.Status.PodIP)
 					if !ipnet.Contains(ip) {
-						t.Fatal("pod ip is not in pod cidr", log.KObj(pod))
+						t.Errorf("pod ip %q is not in pod cidr %q in %q: %s", pod.Status.PodIP, node.Spec.PodCIDR, node.Name, log.KObj(pod))
 					}
 				}
 			}
@@ -208,7 +208,7 @@ func WaitForAllNodesReady() env.Func {
 	return func(ctx context.Context, c *envconf.Config) (context.Context, error) {
 		client, err := resources.New(c.Client().RESTConfig())
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 
 		logger := log.FromContext(ctx)
@@ -249,7 +249,7 @@ func WaitForAllNodesReady() env.Func {
 			wait.WithTimeout(600*time.Second),
 		)
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 
 		return ctx, nil
@@ -261,7 +261,7 @@ func WaitForAllPodsReady() env.Func {
 	return func(ctx context.Context, c *envconf.Config) (context.Context, error) {
 		client, err := resources.New(c.Client().RESTConfig())
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 
 		logger := log.FromContext(ctx)
@@ -299,7 +299,7 @@ func WaitForAllPodsReady() env.Func {
 			wait.WithTimeout(600*time.Second),
 		)
 		if err != nil {
-			return nil, err
+			return ctx, err
 		}
 
 		return ctx, nil
