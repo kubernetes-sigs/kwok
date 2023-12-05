@@ -57,20 +57,38 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 // SnapshotRestore restore the snapshot of cluster
 func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	logger := log.FromContext(ctx)
-	err := c.StopComponent(ctx, consts.ComponentEtcd)
-	if err != nil {
-		logger.Error("Failed to stop etcd", err)
+	clusterName := c.getClusterName()
+
+	components := []string{
+		consts.ComponentEtcd,
+	}
+	for _, component := range components {
+		err := c.StopComponent(ctx, component)
+		if err != nil {
+			logger.Error("Failed to stop", err, "component", component)
+		}
 	}
 	defer func() {
-		err = c.StartComponent(ctx, consts.ComponentEtcd)
+		for _, component := range components {
+			err := c.StartComponent(ctx, component)
+			if err != nil {
+				logger.Error("Failed to start", err, "component", component)
+			}
+		}
+
+		err := c.Stop(ctx)
 		if err != nil {
-			logger.Error("Failed to start etcd", err)
+			logger.Error("Failed to stop", err)
+		}
+		err = c.Start(ctx)
+		if err != nil {
+			logger.Error("Failed to start", err)
 		}
 	}()
 
 	// Restore snapshot to host temporary directory
 	etcdDataTmp := c.GetWorkdirPath(consts.ComponentEtcd)
-	err = c.Etcdctl(ctx, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
+	err := c.Etcdctl(ctx, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err
 	}
@@ -81,9 +99,8 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}
 	}()
 
-	kindName := c.getClusterName()
 	// Copy to kind container from host temporary directory
-	err = c.Exec(ctx, c.runtime, "cp", etcdDataTmp, kindName+":/var/lib/")
+	err = c.Exec(ctx, c.runtime, "cp", etcdDataTmp, clusterName+":/var/lib/")
 	if err != nil {
 		return err
 	}

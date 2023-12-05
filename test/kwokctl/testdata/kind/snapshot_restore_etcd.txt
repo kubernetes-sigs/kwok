@@ -4,3 +4,5 @@ ETCDCTL_API=3 etcdctl snapshot restore ./snapshot-empty-<CLUSTER_NAME> --data-di
 docker cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd kwok-<CLUSTER_NAME>-control-plane:/var/lib/
 rm -rf <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 docker exec kwok-<CLUSTER_NAME>-control-plane mv /etc/kubernetes/etcd.yaml.bak /etc/kubernetes/manifests/etcd.yaml
+docker stop kwok-<CLUSTER_NAME>-control-plane
+docker start kwok-<CLUSTER_NAME>-control-plane

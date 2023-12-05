@@ -64,6 +64,7 @@ kwokctl create cluster [flags]
       --kwok-controller-image string            Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
                                                  (default "registry.k8s.io/kwok/kwok:v0.4.0")
+      --node-lease-duration-seconds uint        Duration of node lease in seconds (default 40)
       --prometheus-binary string                Binary of Prometheus, only for binary runtime (default "https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.linux-amd64.tar.gz#prometheus")
       --prometheus-image string                 Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'

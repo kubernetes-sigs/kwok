@@ -217,6 +217,24 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 		logger.Info("Creating lease")
 		latestLease, err := c.ensureLease(ctx, nodeName)
 		if err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				logger.Error("failed to create lease, lease already exists", err)
+
+				_, err = c.syncLease(ctx, nodeName)
+				if err != nil {
+					logger.Error("failed to sync lease", err)
+					return
+				}
+				if c.onNodeManagedFunc != nil {
+					if c.Held(nodeName) {
+						c.onNodeManagedFunc(nodeName)
+					} else {
+						logger.Warn("Lease not held")
+					}
+				}
+				return
+			}
+
 			if !apierrors.IsNotFound(err) || !c.latestLease.IsEmpty() {
 				logger.Error("failed to create lease", err)
 				return
@@ -241,6 +259,15 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 			}
 		}
 	}
+}
+
+func (c *NodeLeaseController) syncLease(ctx context.Context, leaseName string) (*coordinationv1.Lease, error) {
+	lease, err := c.typedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease).Get(ctx, leaseName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	c.latestLease.Store(leaseName, lease)
+	return lease, nil
 }
 
 // ensureLease creates a lease if it does not exist

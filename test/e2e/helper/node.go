@@ -39,6 +39,9 @@ func NewNodeBuilder(name string) *NodeBuilder {
 					"type": "kwok",
 				},
 			},
+			Spec: corev1.NodeSpec{
+				PodCIDR: "10.10.0.1/24",
+			},
 		},
 	}
 }

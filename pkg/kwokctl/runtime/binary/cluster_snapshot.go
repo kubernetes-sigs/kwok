@@ -39,19 +39,44 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	logger := log.FromContext(ctx)
 
-	err := c.StopComponent(ctx, consts.ComponentEtcd)
-	if err != nil {
-		logger.Error("Failed to stop etcd", err)
+	// Restart etcd and kube-apiserver
+	components := []string{
+		consts.ComponentEtcd,
+		consts.ComponentKubeApiserver,
+	}
+	for _, component := range components {
+		err := c.StopComponent(ctx, component)
+		if err != nil {
+			logger.Error("Failed to stop", err, "component", component)
+		}
 	}
 	defer func() {
-		err = c.StartComponent(ctx, consts.ComponentEtcd)
-		if err != nil {
-			logger.Error("Failed to start etcd", err)
+		for _, component := range components {
+			err := c.StartComponent(ctx, component)
+			if err != nil {
+				logger.Error("Failed to start", err, "component", component)
+			}
+		}
+
+		components := []string{
+			consts.ComponentKwokController,
+			consts.ComponentKubeControllerManager,
+			consts.ComponentKubeScheduler,
+		}
+		for _, component := range components {
+			err := c.StopComponent(ctx, component)
+			if err != nil {
+				logger.Error("Failed to stop", err, "component", component)
+			}
+			err = c.StartComponent(ctx, component)
+			if err != nil {
+				logger.Error("Failed to start", err, "component", component)
+			}
 		}
 	}()
 
 	etcdDataTmp := c.GetWorkdirPath("etcd-data")
-	err = c.RemoveAll(etcdDataTmp)
+	err := c.RemoveAll(etcdDataTmp)
 	if err != nil {
 		return err
 	}

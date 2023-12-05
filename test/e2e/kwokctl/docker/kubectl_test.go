@@ -47,3 +47,15 @@ func TestExec(t *testing.T) {
 		Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestRestart(t *testing.T) {
+	f0 := e2e.CaseRestart(kwokctlPath, clusterName).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestSnapshot(t *testing.T) {
+	f0 := e2e.CaseSnapshot(kwokctlPath, clusterName, pwd).
+		Feature()
+	testEnv.Test(t, f0)
+}

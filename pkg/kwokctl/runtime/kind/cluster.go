@@ -952,7 +952,11 @@ func (c *Cluster) Stop(ctx context.Context) error {
 	return nil
 }
 
-var importantComponents = map[string]struct{}{
+var startImportantComponents = map[string]struct{}{
+	consts.ComponentEtcd: {},
+}
+
+var stopImportantComponents = map[string]struct{}{
 	consts.ComponentEtcd:          {},
 	consts.ComponentKubeApiserver: {},
 }
@@ -961,7 +965,7 @@ var importantComponents = map[string]struct{}{
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With("component", name)
-	if _, important := importantComponents[name]; !important {
+	if _, important := startImportantComponents[name]; !important {
 		if !c.IsDryRun() {
 			if _, exist, err := c.inspectComponent(ctx, name); err != nil {
 				return err
@@ -977,6 +981,9 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	if err != nil {
 		return err
 	}
+	if _, important := startImportantComponents[name]; important {
+		return nil
+	}
 	if c.IsDryRun() {
 		return nil
 	}
@@ -987,7 +994,7 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With("component", name)
-	if _, important := importantComponents[name]; !important {
+	if _, important := stopImportantComponents[name]; !important {
 		if !c.IsDryRun() {
 			if _, exist, err := c.inspectComponent(ctx, name); err != nil {
 				return err
@@ -1004,7 +1011,7 @@ func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 		return err
 	}
 	// Once etcd and kube-apiserver are stopped, the cluster will go down
-	if _, important := importantComponents[name]; important {
+	if _, important := stopImportantComponents[name]; important {
 		return nil
 	}
 	if c.IsDryRun() {
