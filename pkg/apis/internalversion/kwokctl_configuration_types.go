@@ -66,6 +66,9 @@ type KwokctlConfigurationOptions struct {
 	// EnableCRDs is a list of CRDs to enable.
 	EnableCRDs []string
 
+	// EnableStageForRefs is a list of refs to enable stage for.
+	EnableStageForRefs []string
+
 	// KubeApiserverPort is the port to expose apiserver.
 	KubeApiserverPort uint32
 

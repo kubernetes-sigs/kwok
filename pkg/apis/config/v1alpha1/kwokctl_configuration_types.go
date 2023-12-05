@@ -80,6 +80,10 @@ type KwokctlConfigurationOptions struct {
 	// Once listed in this field, it will no longer be supported by the --config flag.
 	EnableCRDs []string `json:"enableCRDs,omitempty"`
 
+	// EnableStageForRefs is a list of refs to enable stage for.
+	// +default=["node", "pod"]
+	EnableStageForRefs []string `json:"enableStageForRefs,omitempty"`
+
 	// KubeApiserverPort is the port to expose apiserver.
 	// is the default value for flag --kube-apiserver-port and env KWOK_KUBE_APISERVER_PORT
 	KubeApiserverPort uint32 `json:"kubeApiserverPort,omitempty"`

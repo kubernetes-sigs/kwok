@@ -22,6 +22,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"encoding/json"
+
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -35,6 +37,11 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 }
 
 func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
+	if in.Options.EnableStageForRefs == nil {
+		if err := json.Unmarshal([]byte(`["node", "pod"]`), &in.Options.EnableStageForRefs); err != nil {
+			panic(err)
+		}
+	}
 	if in.Options.CIDR == "" {
 		in.Options.CIDR = "10.0.0.1/24"
 	}
@@ -70,6 +77,11 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 }
 
 func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
+	if in.Options.EnableStageForRefs == nil {
+		if err := json.Unmarshal([]byte(`["node", "pod"]`), &in.Options.EnableStageForRefs); err != nil {
+			panic(err)
+		}
+	}
 	if in.Options.QuietPull == nil {
 		var ptrVar1 bool = false
 		in.Options.QuietPull = &ptrVar1

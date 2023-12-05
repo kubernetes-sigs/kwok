@@ -1289,6 +1289,7 @@ func Convert_v1alpha1_KwokConfiguration_To_internalversion_KwokConfiguration(in 
 
 func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurationOptions(in *KwokConfigurationOptions, out *configv1alpha1.KwokConfigurationOptions, s conversion.Scope) error {
 	out.EnableCRDs = *(*[]string)(unsafe.Pointer(&in.EnableCRDs))
+	out.EnableStageForRefs = *(*[]string)(unsafe.Pointer(&in.EnableStageForRefs))
 	out.CIDR = in.CIDR
 	out.NodeIP = in.NodeIP
 	out.NodeName = in.NodeName
@@ -1330,6 +1331,7 @@ func Convert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfigurat
 
 func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfigurationOptions(in *configv1alpha1.KwokConfigurationOptions, out *KwokConfigurationOptions, s conversion.Scope) error {
 	out.EnableCRDs = *(*[]string)(unsafe.Pointer(&in.EnableCRDs))
+	out.EnableStageForRefs = *(*[]string)(unsafe.Pointer(&in.EnableStageForRefs))
 	out.CIDR = in.CIDR
 	out.NodeIP = in.NodeIP
 	out.NodeName = in.NodeName
@@ -1448,6 +1450,7 @@ func Convert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfigurati
 
 func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(in *KwokctlConfigurationOptions, out *configv1alpha1.KwokctlConfigurationOptions, s conversion.Scope) error {
 	out.EnableCRDs = *(*[]string)(unsafe.Pointer(&in.EnableCRDs))
+	out.EnableStageForRefs = *(*[]string)(unsafe.Pointer(&in.EnableStageForRefs))
 	out.KubeApiserverPort = in.KubeApiserverPort
 	out.Runtime = in.Runtime
 	out.Runtimes = *(*[]string)(unsafe.Pointer(&in.Runtimes))
@@ -1535,6 +1538,7 @@ func Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConf
 
 func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(in *configv1alpha1.KwokctlConfigurationOptions, out *KwokctlConfigurationOptions, s conversion.Scope) error {
 	out.EnableCRDs = *(*[]string)(unsafe.Pointer(&in.EnableCRDs))
+	out.EnableStageForRefs = *(*[]string)(unsafe.Pointer(&in.EnableStageForRefs))
 	out.KubeApiserverPort = in.KubeApiserverPort
 	out.Runtime = in.Runtime
 	out.Runtimes = *(*[]string)(unsafe.Pointer(&in.Runtimes))

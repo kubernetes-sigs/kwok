@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured/unstructuredscheme"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
@@ -92,6 +93,7 @@ func (g *clientset) ToRESTConfig() (*rest.Config, error) {
 			}
 			restConfig = clientConfig
 		}
+		restConfig.GroupVersion = &schema.GroupVersion{}
 		restConfig.RateLimiter = flowcontrol.NewFakeAlwaysRateLimiter()
 		restConfig.UserAgent = version.DefaultUserAgent()
 		restConfig.NegotiatedSerializer = unstructuredscheme.NewUnstructuredNegotiatedSerializer()

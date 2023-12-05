@@ -27,12 +27,17 @@ import (
 
 	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 
@@ -44,6 +49,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
+	"sigs.k8s.io/kwok/pkg/utils/patch"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
@@ -126,6 +132,8 @@ type Controller struct {
 	nodeLifecycleGetter resources.Getter[Lifecycle]
 	podLifecycleGetter  resources.Getter[Lifecycle]
 
+	stageGetter resources.DynamicGetter[[]*internalversion.Stage]
+
 	podOnNodeManageQueue queue.Queue[string]
 	nodeManageQueue      queue.Queue[string]
 }
@@ -134,6 +142,9 @@ type Controller struct {
 type Config struct {
 	Clock                                 clock.Clock
 	EnableCNI                             bool
+	DynamicClient                         dynamic.Interface
+	RESTClient                            rest.Interface
+	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
 	TypedKwokClient                       versioned.Interface
 	ManageSingleNode                      string
@@ -146,8 +157,8 @@ type Config struct {
 	NodeIP                                string
 	NodeName                              string
 	NodePort                              int
-	PodStages                             []*internalversion.Stage
-	NodeStages                            []*internalversion.Stage
+	StageWithRefs                         []internalversion.StageResourceRef
+	LocalStages                           map[internalversion.StageResourceRef][]*internalversion.Stage
 	PodPlayStageParallelism               uint
 	NodePlayStageParallelism              uint
 	NodeLeaseDurationSeconds              uint
@@ -351,15 +362,18 @@ func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 	}
 }
 
+var podRef = internalversion.StageResourceRef{APIGroup: "v1", Kind: "Pod"}
+var nodeRef = internalversion.StageResourceRef{APIGroup: "v1", Kind: "Node"}
+
 func (c *Controller) initLifecycle(ctx context.Context) error {
-	if len(c.conf.PodStages) != 0 || len(c.conf.NodeStages) != 0 {
-		lifecycle, err := NewLifecycle(c.conf.PodStages)
+	if len(c.conf.LocalStages) != 0 {
+		lifecycle, err := NewLifecycle(c.conf.LocalStages[podRef])
 		if err != nil {
 			return fmt.Errorf("failed to create pod lifecycle: %w", err)
 		}
 		c.podLifecycleGetter = resources.NewStaticGetter(lifecycle)
 
-		lifecycle, err = NewLifecycle(c.conf.NodeStages)
+		lifecycle, err = NewLifecycle(c.conf.LocalStages[nodeRef])
 		if err != nil {
 			return fmt.Errorf("failed to create node lifecycle: %w", err)
 		}
@@ -370,7 +384,7 @@ func (c *Controller) initLifecycle(ctx context.Context) error {
 
 	logger := log.FromContext(ctx)
 
-	getter := resources.NewDynamicGetter[
+	c.stageGetter = resources.NewDynamicGetter[
 		[]*internalversion.Stage,
 		*v1alpha1.Stage,
 		*v1alpha1.StageList,
@@ -388,7 +402,7 @@ func (c *Controller) initLifecycle(ctx context.Context) error {
 		},
 	)
 
-	c.nodeLifecycleGetter = resources.NewFilter[Lifecycle, []*internalversion.Stage](getter, func(stages []*internalversion.Stage) Lifecycle {
+	c.nodeLifecycleGetter = resources.NewFilter[Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) Lifecycle {
 		lifecycle := slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
 			if stage.Spec.ResourceRef.Kind != "Node" {
 				return nil, false
@@ -404,7 +418,7 @@ func (c *Controller) initLifecycle(ctx context.Context) error {
 		return lifecycle
 	})
 
-	c.podLifecycleGetter = resources.NewFilter[Lifecycle, []*internalversion.Stage](getter, func(stages []*internalversion.Stage) Lifecycle {
+	c.podLifecycleGetter = resources.NewFilter[Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) Lifecycle {
 		lifecycle := slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
 			if stage.Spec.ResourceRef.Kind != "Pod" {
 				return nil, false
@@ -420,7 +434,7 @@ func (c *Controller) initLifecycle(ctx context.Context) error {
 		return lifecycle
 	})
 
-	err := getter.Start(ctx)
+	err := c.stageGetter.Start(ctx)
 	if err != nil {
 		return err
 	}
@@ -488,6 +502,104 @@ func (c *Controller) initPodController(ctx context.Context) (err error) {
 	return nil
 }
 
+func (c *Controller) initStageController(ctx context.Context) error {
+	logger := log.FromContext(ctx)
+
+	stageWithRefs := slices.Filter(c.conf.StageWithRefs, func(ref internalversion.StageResourceRef) bool {
+		return ref != nodeRef && ref != podRef
+	})
+
+	resourcesLifecycleGetter := map[schema.GroupVersionResource]resources.Getter[Lifecycle]{}
+
+	if len(c.conf.LocalStages) == 0 {
+		for _, ref := range stageWithRefs {
+			gv, err := schema.ParseGroupVersion(ref.APIGroup)
+			if err != nil {
+				return fmt.Errorf("failed to parse group version: %w", err)
+			}
+
+			resourceRef := ref
+			gvr, err := c.conf.RESTMapper.ResourceFor(gv.WithResource(ref.Kind))
+			if err != nil {
+				return fmt.Errorf("failed to get gvk for gvr: %w", err)
+			}
+
+			resourcesLifecycleGetter[gvr] = resources.NewFilter[Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) Lifecycle {
+				lifecycle := slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
+					if stage.Spec.ResourceRef != resourceRef {
+						return nil, false
+					}
+
+					lifecycleStage, err := NewLifecycleStage(stage)
+					if err != nil {
+						logger.Error("failed to create node lifecycle stage", err, "stage", stage)
+						return nil, false
+					}
+					return lifecycleStage, true
+				})
+				return lifecycle
+			})
+		}
+	} else {
+		for _, ref := range stageWithRefs {
+			stages := c.conf.LocalStages[ref]
+			gv, err := schema.ParseGroupVersion(ref.APIGroup)
+			if err != nil {
+				return fmt.Errorf("failed to parse group version: %w", err)
+			}
+
+			gvr, err := c.conf.RESTMapper.ResourceFor(gv.WithResource(ref.Kind))
+			if err != nil {
+				return fmt.Errorf("failed to get gvk for gvr: %w", err)
+			}
+
+			lifecycle, err := NewLifecycle(stages)
+			if err != nil {
+				return fmt.Errorf("failed to create node lifecycle: %w", err)
+			}
+			resourcesLifecycleGetter[gvr] = resources.NewStaticGetter(lifecycle)
+		}
+	}
+
+	patchMeta := patch.NewPatchMetaFromOpenAPI3(c.conf.RESTClient)
+	for gvr, lifecycle := range resourcesLifecycleGetter {
+		logger.Info("watching stages", "gvr", gvr)
+		stageInformer := informer.NewInformer[*unstructured.Unstructured, *unstructured.UnstructuredList](c.conf.DynamicClient.Resource(gvr))
+		stageChan := make(chan informer.Event[*unstructured.Unstructured], 1)
+		err := stageInformer.Watch(ctx, informer.Option{}, stageChan)
+		if err != nil {
+			return fmt.Errorf("failed to watch stages: %w", err)
+		}
+
+		schema, err := patchMeta.Lookup(gvr)
+		if err != nil {
+			return err
+		}
+		stage, err := NewStageController(StageControllerConfig{
+			Clock:                                 c.conf.Clock,
+			DynamicClient:                         c.conf.DynamicClient,
+			Schema:                                schema,
+			GVR:                                   gvr,
+			DisregardStatusWithAnnotationSelector: c.conf.DisregardStatusWithAnnotationSelector,
+			DisregardStatusWithLabelSelector:      c.conf.DisregardStatusWithLabelSelector,
+			Lifecycle:                             lifecycle,
+			PlayStageParallelism:                  1,
+			FuncMap:                               defaultFuncMap,
+			Recorder:                              c.recorder,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create stage controller: %w", err)
+		}
+
+		err = stage.Start(ctx, stageChan)
+		if err != nil {
+			return fmt.Errorf("failed to start stage controller: %w", err)
+		}
+	}
+
+	return nil
+}
+
 // Start starts the controller
 func (c *Controller) Start(ctx context.Context) error {
 	err := c.init(ctx)
@@ -516,6 +628,11 @@ func (c *Controller) Start(ctx context.Context) error {
 	}
 
 	go c.podsOnNodeSyncWorker(ctx)
+
+	err = c.initStageController(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to init stage controller: %w", err)
+	}
 
 	return nil
 }

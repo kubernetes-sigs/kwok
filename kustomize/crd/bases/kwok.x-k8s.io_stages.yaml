@@ -144,9 +144,6 @@ spec:
                     type: string
                   kind:
                     description: Kind of the referent.
-                    enum:
-                    - Pod
-                    - Node
                     type: string
                 required:
                 - kind
