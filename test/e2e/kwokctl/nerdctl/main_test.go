@@ -18,7 +18,6 @@ limitations under the License.
 package nerdctl_test
 
 import (
-	"context"
 	"os"
 	"runtime"
 	"testing"
@@ -53,10 +52,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	ctx := context.Background()
-	cfg, _ := envconf.NewFromFlags()
-
-	testEnv, _ = env.NewWithContext(ctx, cfg)
+	testEnv = helper.Environment()
 
 	k := kwok.NewCluster(clusterName).
 		WithPath(kwokctlPath)

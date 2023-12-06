@@ -18,7 +18,6 @@ limitations under the License.
 package single_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -42,10 +41,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	ctx := context.Background()
-	cfg, _ := envconf.NewFromFlags()
+	testEnv = helper.Environment()
 
-	testEnv, _ = env.NewWithContext(ctx, cfg)
 	deploy := pwd
 	crs := path.Join(rootDir, "kustomize/stage/fast")
 	testEnv.Setup(
