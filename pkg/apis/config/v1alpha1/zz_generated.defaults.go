@@ -92,7 +92,7 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		in.Options.NodeStatusUpdateFrequencyMilliseconds = 1200000
 	}
 	if in.Options.NodeLeaseDurationSeconds == 0 {
-		in.Options.NodeLeaseDurationSeconds = 1200
+		in.Options.NodeLeaseDurationSeconds = 40
 	}
 	if in.Options.BindAddress == "" {
 		in.Options.BindAddress = "0.0.0.0"

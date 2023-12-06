@@ -1,6 +1,14 @@
 # Download https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-<OS>-<ARCH>.<TAR> and extract etcdctl to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcdctl
 ETCDCTL_API=3 etcdctl snapshot restore ./snapshot-empty-<CLUSTER_NAME> --data-dir <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data
 docker stop kwok-<CLUSTER_NAME>-etcd --time=0
+docker stop kwok-<CLUSTER_NAME>-kube-apiserver --time=0
 docker cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data kwok-<CLUSTER_NAME>-etcd:/
 docker start kwok-<CLUSTER_NAME>-etcd
+docker start kwok-<CLUSTER_NAME>-kube-apiserver
+docker stop kwok-<CLUSTER_NAME>-kwok-controller --time=0
+docker start kwok-<CLUSTER_NAME>-kwok-controller
+docker stop kwok-<CLUSTER_NAME>-kube-controller-manager --time=0
+docker start kwok-<CLUSTER_NAME>-kube-controller-manager
+docker stop kwok-<CLUSTER_NAME>-kube-scheduler --time=0
+docker start kwok-<CLUSTER_NAME>-kube-scheduler
 rm -rf <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data

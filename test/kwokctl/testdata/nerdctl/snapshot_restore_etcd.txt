@@ -5,4 +5,11 @@ nerdctl cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data kwok-<CLUSTER_NA
 nerdctl stop kwok-<CLUSTER_NAME>-etcd --time=0
 nerdctl start kwok-<CLUSTER_NAME>-etcd
 nerdctl start kwok-<CLUSTER_NAME>-kube-apiserver
+nerdctl stop kwok-<CLUSTER_NAME>-kwok-controller --time=0
+nerdctl start kwok-<CLUSTER_NAME>-kwok-controller
+nerdctl stop kwok-<CLUSTER_NAME>-kube-controller-manager --time=0
+nerdctl start kwok-<CLUSTER_NAME>-kube-controller-manager
+nerdctl stop kwok-<CLUSTER_NAME>-kube-scheduler --time=0
+nerdctl start kwok-<CLUSTER_NAME>-kube-scheduler
+nerdctl start kwok-<CLUSTER_NAME>-kube-apiserver
 rm -rf <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data

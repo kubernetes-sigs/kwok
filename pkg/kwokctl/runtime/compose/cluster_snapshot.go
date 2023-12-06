@@ -71,15 +71,39 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 
 	etcdContainerName := c.Name() + "-etcd"
 	if conf.Runtime != consts.RuntimeTypeNerdctl {
-		// Restart etcd container
-		err = c.StopComponent(ctx, consts.ComponentEtcd)
-		if err != nil {
-			logger.Error("Failed to stop etcd", err)
+		// Restart etcd and kube-apiserver
+		components := []string{
+			consts.ComponentEtcd,
+			consts.ComponentKubeApiserver,
+		}
+		for _, component := range components {
+			err := c.StopComponent(ctx, component)
+			if err != nil {
+				logger.Error("Failed to stop", err, "component", component)
+			}
 		}
 		defer func() {
-			err = c.StartComponent(ctx, consts.ComponentEtcd)
-			if err != nil {
-				logger.Error("Failed to start etcd", err)
+			for _, component := range components {
+				err := c.StartComponent(ctx, component)
+				if err != nil {
+					logger.Error("Failed to start", err, "component", component)
+				}
+			}
+
+			components := []string{
+				consts.ComponentKwokController,
+				consts.ComponentKubeControllerManager,
+				consts.ComponentKubeScheduler,
+			}
+			for _, component := range components {
+				err := c.StopComponent(ctx, component)
+				if err != nil {
+					logger.Error("Failed to stop", err, "component", component)
+				}
+				err = c.StartComponent(ctx, component)
+				if err != nil {
+					logger.Error("Failed to start", err, "component", component)
+				}
 			}
 		}()
 
@@ -110,15 +134,42 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 			return err
 		}
 
-		// Restart etcd container
-		err = c.StopComponent(ctx, consts.ComponentEtcd)
-		if err != nil {
-			logger.Error("Failed to stop etcd", err)
+		// Restart etcd and kube-apiserver
+		components := []string{
+			consts.ComponentEtcd,
+		}
+		for _, component := range components {
+			err := c.StopComponent(ctx, component)
+			if err != nil {
+				logger.Error("Failed to stop", err, "component", component)
+			}
 		}
 		defer func() {
-			err = c.StartComponent(ctx, consts.ComponentEtcd)
-			if err != nil {
-				logger.Error("Failed to start etcd", err)
+			components := []string{
+				consts.ComponentEtcd,
+				consts.ComponentKubeApiserver,
+			}
+			for _, component := range components {
+				err := c.StartComponent(ctx, component)
+				if err != nil {
+					logger.Error("Failed to start", err, "component", component)
+				}
+			}
+
+			components = []string{
+				consts.ComponentKwokController,
+				consts.ComponentKubeControllerManager,
+				consts.ComponentKubeScheduler,
+			}
+			for _, component := range components {
+				err := c.StopComponent(ctx, component)
+				if err != nil {
+					logger.Error("Failed to stop", err, "component", component)
+				}
+				err = c.StartComponent(ctx, component)
+				if err != nil {
+					logger.Error("Failed to start", err, "component", component)
+				}
 			}
 		}()
 	}
