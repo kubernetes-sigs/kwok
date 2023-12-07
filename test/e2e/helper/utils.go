@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 	"testing"
 	"time"
 
@@ -345,4 +346,25 @@ func waitForServiceAccountReady(ctx context.Context, resource *resources.Resourc
 		return fmt.Errorf("wait for %s.%s service account ready: %w", name, namespace, err)
 	}
 	return nil
+}
+
+// Environment returns an environment of the test
+func Environment() env.Environment {
+	logger := log.NewLogger(os.Stderr, log.LevelDebug)
+	cfg, err := envconf.NewFromFlags()
+	if err != nil {
+		logger.Error("failed to create config", err)
+		os.Exit(1)
+	}
+
+	ctx := context.Background()
+	ctx = log.NewContext(ctx, logger)
+
+	testEnv, err := env.NewWithContext(ctx, cfg)
+	if err != nil {
+		logger.Error("failed to create environment", err)
+		os.Exit(1)
+	}
+
+	return testEnv
 }
