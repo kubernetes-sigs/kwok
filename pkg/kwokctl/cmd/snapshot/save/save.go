@@ -88,7 +88,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 			return err
 		}
 	case "k8s":
-		err = rt.SnapshotSaveWithYAML(ctx, flags.Path, flags.Filters)
+		err = rt.SnapshotSaveWithYAML(ctx, flags.Path, runtime.SnapshotSaveWithYAMLConfig{
+			Filters: flags.Filters,
+		})
 		if err != nil {
 			return err
 		}

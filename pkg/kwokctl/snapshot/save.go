@@ -46,10 +46,11 @@ type PagerConfig struct {
 // and the PagerConfig.
 type SaveConfig struct {
 	PagerConfig *PagerConfig
+	Filters     []string
 }
 
 // Save saves the snapshot of cluster
-func Save(ctx context.Context, clientset client.Clientset, w io.Writer, resources []string, saveConfig SaveConfig) error {
+func Save(ctx context.Context, clientset client.Clientset, w io.Writer, saveConfig SaveConfig) error {
 	restMapper, err := clientset.ToRESTMapper()
 	if err != nil {
 		return fmt.Errorf("failed to get rest mapper: %w", err)
@@ -61,8 +62,8 @@ func Save(ctx context.Context, clientset client.Clientset, w io.Writer, resource
 
 	logger := log.FromContext(ctx)
 
-	gvrs := make([]schema.GroupVersionResource, 0, len(resources))
-	for _, resource := range resources {
+	gvrs := make([]schema.GroupVersionResource, 0, len(saveConfig.Filters))
+	for _, resource := range saveConfig.Filters {
 		mapping, err := client.MappingFor(restMapper, resource)
 		if err != nil {
 			logger.Warn("Failed to get mapping for resource", "resource", resource, "err", err)

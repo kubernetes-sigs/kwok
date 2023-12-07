@@ -41,13 +41,18 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
+// LoadConfig is the a combination of the impersonation config
+type LoadConfig struct {
+	Filters []string
+}
+
 // Load loads the resources to cluster from the reader
-func Load(ctx context.Context, clientset client.Clientset, r io.Reader, filters []string) error {
-	l, err := newLoader(clientset, filters == nil)
+func Load(ctx context.Context, clientset client.Clientset, r io.Reader, loadConfig LoadConfig) error {
+	l, err := newLoader(clientset, loadConfig.Filters == nil)
 	if err != nil {
 		return err
 	}
-	l.addResource(ctx, filters)
+	l.addResource(ctx, loadConfig.Filters)
 
 	return l.Load(ctx, r)
 }
