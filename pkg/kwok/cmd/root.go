@@ -160,60 +160,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
-	clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterPortForwardKind, clusterPortForwards)
-	if err != nil {
-		return err
-	}
-
-	portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.PortForwardKind, portForwards)
-	if err != nil {
-		return err
-	}
-
-	clusterExecs := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterExecKind, clusterExecs)
-	if err != nil {
-		return err
-	}
-
-	execs := config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ExecKind, execs)
-	if err != nil {
-		return err
-	}
-
-	clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterLogsKind, clusterLogs)
-	if err != nil {
-		return err
-	}
-
-	logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.LogsKind, logs)
-	if err != nil {
-		return err
-	}
-
-	clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterAttachKind, clusterAttaches)
-	if err != nil {
-		return err
-	}
-
-	attaches := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.AttachKind, attaches)
-	if err != nil {
-		return err
-	}
-
-	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
-	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.MetricKind, metrics)
-	if err != nil {
-		return err
-	}
-
 	if flags.Kubeconfig == "" && flags.Master == "" {
 		logger.Warn("Neither --kubeconfig nor --master was specified")
 		logger.Info("Using the inClusterConfig")
@@ -257,6 +203,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 	ctx = log.NewContext(ctx, logger.With("id", id))
 
+	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
 	enableMetrics := len(metrics) != 0 || slices.Contains(flags.Options.EnableCRDs, v1alpha1.MetricKind)
 	ctr, err := controllers.NewController(controllers.Config{
 		Clock:                                 clock.RealClock{},
@@ -297,12 +244,78 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
+	err = startServer(ctx, flags, ctr, typedKwokClient)
+	if err != nil {
+		return err
+	}
+
+	<-ctx.Done()
+	return nil
+}
+
+func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controller, typedKwokClient versioned.Interface) (err error) {
+	logger := log.FromContext(ctx)
+
 	serverAddress := flags.Options.ServerAddress
 	if serverAddress == "" && flags.Options.NodePort != 0 {
 		serverAddress = "0.0.0.0:" + format.String(flags.Options.NodePort)
 	}
 
 	if serverAddress != "" {
+		clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterPortForwardKind, clusterPortForwards)
+		if err != nil {
+			return err
+		}
+
+		portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.PortForwardKind, portForwards)
+		if err != nil {
+			return err
+		}
+
+		clusterExecs := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterExecKind, clusterExecs)
+		if err != nil {
+			return err
+		}
+
+		execs := config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ExecKind, execs)
+		if err != nil {
+			return err
+		}
+
+		clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterLogsKind, clusterLogs)
+		if err != nil {
+			return err
+		}
+
+		logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.LogsKind, logs)
+		if err != nil {
+			return err
+		}
+
+		clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterAttachKind, clusterAttaches)
+		if err != nil {
+			return err
+		}
+
+		attaches := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.AttachKind, attaches)
+		if err != nil {
+			return err
+		}
+
+		metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.MetricKind, metrics)
+		if err != nil {
+			return err
+		}
+
 		conf := server.Config{
 			TypedKwokClient:     typedKwokClient,
 			EnableCRDs:          flags.Options.EnableCRDs,

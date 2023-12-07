@@ -168,7 +168,7 @@ func TestController(t *testing.T) {
 
 			// wait for nodes to be right phase indicated by `tt.wantNodePhase`
 			err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
-				list, err := ctr.typedClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+				list, err := ctr.conf.TypedClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 				if err != nil {
 					return false, fmt.Errorf("failed to list nodes, err: %w", err)
 				}
