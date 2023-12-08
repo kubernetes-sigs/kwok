@@ -598,6 +598,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		Verbosity:                env.verbosity,
 		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 		EnableCRDs:               conf.EnableCRDs,
+		EnableStageForRefs:       conf.EnableStageForRefs,
 		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
 		ExtraEnvs:                kwokControllerComponentPatches.ExtraEnvs,
 	})

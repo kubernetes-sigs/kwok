@@ -18,6 +18,7 @@ package informer
 
 import (
 	"context"
+	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -66,6 +67,10 @@ func (i *Informer[T, L]) Sync(ctx context.Context, opt Option, events chan<- Eve
 // WatchWithCache starts a goroutine that watches the resource and sends events to the events channel.
 func (i *Informer[T, L]) WatchWithCache(ctx context.Context, opt Option, events chan<- Event[T]) (Getter[T], error) {
 	var t T
+	typ := reflect.TypeOf(t)
+	if typ.Kind() == reflect.Ptr {
+		t = reflect.New(typ.Elem()).Interface().(T)
+	}
 	logger := log.FromContext(ctx)
 	store, contrtoller := cache.NewInformer(
 		&cache.ListWatch{
@@ -120,6 +125,10 @@ func (i *Informer[T, L]) WatchWithCache(ctx context.Context, opt Option, events 
 // Watch starts a goroutine that watches the resource and sends events to the events channel.
 func (i *Informer[T, L]) Watch(ctx context.Context, opt Option, events chan<- Event[T]) error {
 	var t T
+	typ := reflect.TypeOf(t)
+	if typ.Kind() == reflect.Ptr {
+		t = reflect.New(typ.Elem()).Interface().(T)
+	}
 	informer := cache.NewReflectorWithOptions(
 		&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {

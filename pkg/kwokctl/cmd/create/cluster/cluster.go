@@ -138,6 +138,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&flags.Options.DisableQPSLimits, "disable-qps-limits", flags.Options.DisableQPSLimits, "Disable QPS limits for components")
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease in seconds")
+	cmd.Flags().StringSliceVar(&flags.Options.EnableStageForRefs, "enable-stage-for-refs", flags.Options.EnableStageForRefs, "List of refs to enable stage for")
 
 	return cmd
 }

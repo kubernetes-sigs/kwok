@@ -14,6 +14,7 @@ kwok [flags]
       --disregard-status-with-annotation-selector string   All node/pod status excluding the ones that match the annotation selector will be watched and managed.
       --disregard-status-with-label-selector string        All node/pod status excluding the ones that match the label selector will be watched and managed.
       --enable-crds strings                                List of CRDs to enable
+      --enable-stage-for-refs strings                      List of refs to enable stage for (default [node,pod])
       --experimental-enable-cni                            Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux
   -h, --help                                               help for kwok
       --kubeconfig string                                  Path to the kubeconfig file to use (default "~/.kube/config")

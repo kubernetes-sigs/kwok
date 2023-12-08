@@ -119,3 +119,13 @@ func Reverse[S ~[]T, T any](s S) []T {
 	}
 	return out
 }
+
+// GroupBy returns a map of slices grouped by the given function.
+func GroupBy[S ~[]T, T any, K comparable](s S, f func(T) K) map[K][]T {
+	out := make(map[K][]T)
+	for _, v := range s {
+		k := f(v)
+		out[k] = append(out[k], v)
+	}
+	return out
+}

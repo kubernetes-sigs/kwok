@@ -24,8 +24,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
 
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
@@ -92,6 +94,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.ServerAddress, "server-address", flags.Options.ServerAddress, "Address to expose the server on")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease seconds")
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
+	cmd.Flags().StringSliceVar(&flags.Options.EnableStageForRefs, "enable-stage-for-refs", flags.Options.EnableStageForRefs, "List of refs to enable stage for")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
 	if config.GOOS != "linux" {
@@ -141,19 +144,26 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	nodeStages := filterStages(stagesData, "v1", "Node")
-	podStages := filterStages(stagesData, "v1", "Pod")
+	var groupStages map[internalversion.StageResourceRef][]*internalversion.Stage
+
 	if !slices.Contains(flags.Options.EnableCRDs, v1alpha1.StageKind) {
-		if len(nodeStages) == 0 {
+		groupStages = slices.GroupBy(stagesData, func(stage *internalversion.Stage) internalversion.StageResourceRef {
+			return stage.Spec.ResourceRef
+		})
+
+		nodeRef := internalversion.StageResourceRef{APIGroup: "v1", Kind: "Node"}
+		podRef := internalversion.StageResourceRef{APIGroup: "v1", Kind: "Pod"}
+
+		if len(groupStages[nodeRef]) == 0 {
 			logger.Warn("No node stages found, using default node stages")
-			nodeStages, err = getDefaultNodeStages(flags.Options.NodeLeaseDurationSeconds == 0)
+			groupStages[nodeRef], err = getDefaultNodeStages(flags.Options.NodeLeaseDurationSeconds == 0)
 			if err != nil {
 				return err
 			}
 		}
 
-		if len(podStages) == 0 {
-			podStages, err = getDefaultPodStages()
+		if len(groupStages[podRef]) == 0 {
+			groupStages[podRef], err = getDefaultPodStages()
 			if err != nil {
 				return err
 			}
@@ -174,11 +184,31 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
+	dynamicClient, err := clientset.ToDynamicClient()
+	if err != nil {
+		return err
+	}
+
+	restMapper, err := clientset.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+
+	restClient, err := rest.RESTClientFor(restConfig)
+	if err != nil {
+		return err
+	}
+
 	typedClient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return err
 	}
 	typedKwokClient, err := versioned.NewForConfig(restConfig)
+	if err != nil {
+		return err
+	}
+
+	err = waitForReady(ctx, typedClient)
 	if err != nil {
 		return err
 	}
@@ -203,10 +233,27 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 	ctx = log.NewContext(ctx, logger.With("id", id))
 
+	restMappings, err := slices.MapWithError(flags.Options.EnableStageForRefs, func(ref string) (*meta.RESTMapping, error) {
+		return client.MappingFor(restMapper, ref)
+	})
+	if err != nil {
+		return err
+	}
+
+	stageWithRefs := slices.Map(restMappings, func(m *meta.RESTMapping) internalversion.StageResourceRef {
+		return internalversion.StageResourceRef{
+			APIGroup: m.GroupVersionKind.GroupVersion().String(),
+			Kind:     m.GroupVersionKind.Kind,
+		}
+	})
+
 	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
 	enableMetrics := len(metrics) != 0 || slices.Contains(flags.Options.EnableCRDs, v1alpha1.MetricKind)
 	ctr, err := controllers.NewController(controllers.Config{
 		Clock:                                 clock.RealClock{},
+		DynamicClient:                         dynamicClient,
+		RESTClient:                            restClient,
+		RESTMapper:                            restMapper,
 		TypedClient:                           typedClient,
 		TypedKwokClient:                       typedKwokClient,
 		EnableCNI:                             flags.Options.EnableCNI,
@@ -224,17 +271,12 @@ func runE(ctx context.Context, flags *flagpole) error {
 		NodePort:                              flags.Options.NodePort,
 		PodPlayStageParallelism:               flags.Options.PodPlayStageParallelism,
 		NodePlayStageParallelism:              flags.Options.NodePlayStageParallelism,
-		NodeStages:                            nodeStages,
-		PodStages:                             podStages,
+		StageWithRefs:                         stageWithRefs,
+		LocalStages:                           groupStages,
 		NodeLeaseParallelism:                  flags.Options.NodeLeaseParallelism,
 		NodeLeaseDurationSeconds:              flags.Options.NodeLeaseDurationSeconds,
 		ID:                                    id,
 	})
-	if err != nil {
-		return err
-	}
-
-	err = waitForReady(ctx, typedClient)
 	if err != nil {
 		return err
 	}
@@ -383,12 +425,6 @@ func checkConfigOrCRD[T metav1.Object](crds []string, kind string, crs []T) erro
 	}
 
 	return nil
-}
-
-func filterStages(stages []*internalversion.Stage, apiGroup, kind string) []*internalversion.Stage {
-	return slices.Filter(stages, func(stage *internalversion.Stage) bool {
-		return stage.Spec.ResourceRef.APIGroup == apiGroup && stage.Spec.ResourceRef.Kind == kind
-	})
 }
 
 func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {

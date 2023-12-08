@@ -225,6 +225,7 @@ spec:
     - --server-address=0.0.0.0:10247
     - --node-lease-duration-seconds=40
     - --v=DEBUG
+    - --enable-stage-for-refs=node,pod
     command:
     - kwok
     env:

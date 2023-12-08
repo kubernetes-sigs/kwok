@@ -46,6 +46,7 @@ type BuildKwokControllerComponentConfig struct {
 	Verbosity                         log.Level
 	NodeLeaseDurationSeconds          uint
 	EnableCRDs                        []string
+	EnableStageForRefs                []string
 	ExtraArgs                         []internalversion.ExtraArgs
 	ExtraVolumes                      []internalversion.Volume
 	ExtraEnvs                         []internalversion.Env
@@ -139,6 +140,10 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 
 	if len(conf.EnableCRDs) != 0 {
 		kwokControllerArgs = append(kwokControllerArgs, "--enable-crds="+strings.Join(conf.EnableCRDs, ","))
+	}
+
+	if len(conf.EnableStageForRefs) != 0 {
+		kwokControllerArgs = append(kwokControllerArgs, "--enable-stage-for-refs="+strings.Join(conf.EnableStageForRefs, ","))
 	}
 
 	envs := []internalversion.Env{}

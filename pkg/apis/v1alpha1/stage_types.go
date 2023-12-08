@@ -83,7 +83,6 @@ type StageResourceRef struct {
 	// +kubebuilder:default="v1"
 	APIGroup string `json:"apiGroup,omitempty"`
 	// Kind of the referent.
-	// +kubebuilder:validation:Enum=Pod;Node
 	Kind string `json:"kind"`
 }
 
