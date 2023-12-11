@@ -36,7 +36,7 @@ require (
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/controller-runtime v0.16.0
 	sigs.k8s.io/controller-tools v0.13.0
-	sigs.k8s.io/e2e-framework v0.3.0
+	sigs.k8s.io/e2e-framework v0.2.0
 	sigs.k8s.io/kustomize/api v0.14.0
 	sigs.k8s.io/kustomize/kustomize/v5 v5.1.1
 	sigs.k8s.io/kustomize/kyaml v0.14.3
@@ -54,6 +54,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/distribution/v3 v3.0.0-20230214150026-36d8c594d7aa // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect

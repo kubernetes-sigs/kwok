@@ -17,8 +17,10 @@ limitations under the License.
 package components
 
 import (
+	"fmt"
 	"runtime"
 
+	"github.com/dustin/go-humanize"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -28,19 +30,20 @@ import (
 
 // BuildEtcdComponentConfig is the configuration for building an etcd component.
 type BuildEtcdComponentConfig struct {
-	Runtime      string
-	Binary       string
-	Image        string
-	Version      version.Version
-	DataPath     string
-	Workdir      string
-	BindAddress  string
-	Port         uint32
-	PeerPort     uint32
-	Verbosity    log.Level
-	ExtraArgs    []internalversion.ExtraArgs
-	ExtraVolumes []internalversion.Volume
-	ExtraEnvs    []internalversion.Env
+	Runtime          string
+	Binary           string
+	Image            string
+	Version          version.Version
+	DataPath         string
+	Workdir          string
+	BindAddress      string
+	Port             uint32
+	PeerPort         uint32
+	Verbosity        log.Level
+	ExtraArgs        []internalversion.ExtraArgs
+	ExtraVolumes     []internalversion.Volume
+	ExtraEnvs        []internalversion.Env
+	QuotaBackendSize string
 }
 
 // BuildEtcdComponent builds an etcd component.
@@ -60,10 +63,19 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
+	if conf.QuotaBackendSize == "" {
+		conf.QuotaBackendSize = "8G"
+	}
+
+	QuotaBackendBytes, err := humanize.ParseBytes(conf.QuotaBackendSize)
+	if err != nil {
+		return internalversion.Component{}, err
+	}
+
 	etcdArgs := []string{
 		"--name=node0",
 		"--auto-compaction-retention=1",
-		"--quota-backend-bytes=8589934592",
+		fmt.Sprintf("--quota-backend-bytes=%d", QuotaBackendBytes),
 	}
 	etcdArgs = append(etcdArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
