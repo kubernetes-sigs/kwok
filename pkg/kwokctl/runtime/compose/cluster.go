@@ -407,17 +407,18 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		return fmt.Errorf("failed to expand host volumes for etcd component: %w", err)
 	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Runtime:      conf.Runtime,
-		Workdir:      env.workdir,
-		Image:        conf.EtcdImage,
-		Version:      etcdVersion,
-		BindAddress:  net.PublicAddress,
-		Port:         conf.EtcdPort,
-		DataPath:     env.etcdDataPath,
-		Verbosity:    env.verbosity,
-		ExtraArgs:    etcdComponentPatches.ExtraArgs,
-		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
-		ExtraEnvs:    etcdComponentPatches.ExtraEnvs,
+		Runtime:          conf.Runtime,
+		Workdir:          env.workdir,
+		Image:            conf.EtcdImage,
+		Version:          etcdVersion,
+		BindAddress:      net.PublicAddress,
+		Port:             conf.EtcdPort,
+		DataPath:         env.etcdDataPath,
+		Verbosity:        env.verbosity,
+		ExtraArgs:        etcdComponentPatches.ExtraArgs,
+		ExtraVolumes:     etcdComponentPatches.ExtraVolumes,
+		ExtraEnvs:        etcdComponentPatches.ExtraEnvs,
+		QuotaBackendSize: conf.EtcdQuotaBackendSize,
 	})
 	if err != nil {
 		return err
