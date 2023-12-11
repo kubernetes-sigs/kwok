@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -109,8 +110,8 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 }
 
 // SnapshotSaveWithYAML save the snapshot of cluster
-func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters []string) error {
-	err := c.Cluster.SnapshotSaveWithYAML(ctx, path, filters)
+func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, conf runtime.SnapshotSaveWithYAMLConfig) error {
+	err := c.Cluster.SnapshotSaveWithYAML(ctx, path, conf)
 	if err != nil {
 		return err
 	}
@@ -118,7 +119,7 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, filters
 }
 
 // SnapshotRestoreWithYAML restore the snapshot of cluster
-func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error {
+func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf runtime.SnapshotRestoreWithYAMLConfig) error {
 	logger := log.FromContext(ctx)
 	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		err := c.StopComponent(ctx, consts.ComponentKubeControllerManager)
@@ -134,7 +135,7 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, filt
 		}
 	}()
 
-	err = c.Cluster.SnapshotRestoreWithYAML(ctx, path, filters)
+	err = c.Cluster.SnapshotRestoreWithYAML(ctx, path, conf)
 	if err != nil {
 		return err
 	}

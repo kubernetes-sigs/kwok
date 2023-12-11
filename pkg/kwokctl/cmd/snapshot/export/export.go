@@ -101,9 +101,10 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	snapshotSaveConfig := snapshot.SaveConfig{
 		PagerConfig: pagerConfig,
+		Filters:     flags.Filters,
 	}
 
-	err = snapshot.Save(ctx, clientset, f, flags.Filters, snapshotSaveConfig)
+	err = snapshot.Save(ctx, clientset, f, snapshotSaveConfig)
 	if err != nil {
 		return err
 	}

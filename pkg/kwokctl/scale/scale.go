@@ -282,7 +282,7 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	}, wantCreate)
 
 	ctx = log.NewContext(ctx, logger)
-	err = snapshot.Load(ctx, clientset, gen, nil)
+	err = snapshot.Load(ctx, clientset, gen, snapshot.LoadConfig{})
 	if err != nil {
 		return err
 	}

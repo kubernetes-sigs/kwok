@@ -558,7 +558,7 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 	ctx = log.NewContext(ctx, logger.With("crds", strings.Join(crds, ",")))
 
-	return snapshot.Load(ctx, clientset, buf, nil)
+	return snapshot.Load(ctx, clientset, buf, snapshot.LoadConfig{})
 }
 
 var crdDefines = map[string][]byte{

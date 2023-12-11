@@ -114,10 +114,10 @@ type Runtime interface {
 	SnapshotRestore(ctx context.Context, path string) error
 
 	// SnapshotSaveWithYAML save the snapshot of cluster
-	SnapshotSaveWithYAML(ctx context.Context, path string, filters []string) error
+	SnapshotSaveWithYAML(ctx context.Context, path string, conf SnapshotSaveWithYAMLConfig) error
 
 	// SnapshotRestoreWithYAML restore the snapshot of cluster
-	SnapshotRestoreWithYAML(ctx context.Context, path string, filters []string) error
+	SnapshotRestoreWithYAML(ctx context.Context, path string, conf SnapshotRestoreWithYAMLConfig) error
 
 	// GetWorkdirPath get the workdir path of cluster
 	GetWorkdirPath(name string) string
@@ -127,4 +127,12 @@ type Runtime interface {
 
 	// IsDryRun returns true if the runtime is in dry-run mode
 	IsDryRun() bool
+}
+
+type SnapshotSaveWithYAMLConfig struct {
+	Filters []string
+}
+
+type SnapshotRestoreWithYAMLConfig struct {
+	Filters []string
 }
