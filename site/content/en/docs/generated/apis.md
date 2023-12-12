@@ -1518,6 +1518,32 @@ string
 </tr>
 <tr>
 <td>
+<code>metric</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ComponentMetric">
+ComponentMetric
+</a>
+</em>
+</td>
+<td>
+<p>Metric is the metric of the component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricsDiscovery</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ComponentMetric">
+ComponentMetric
+</a>
+</em>
+</td>
+<td>
+<p>MetricsDiscovery is the metrics discovery of the component.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>version</code>
 <em>
 string
@@ -1526,6 +1552,93 @@ string
 <td>
 <em>(Optional)</em>
 <p>Version is the version of the component.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.ComponentMetric">
+ComponentMetric
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.ComponentMetric"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.Component">Component</a>
+</p>
+<p>
+<p>ComponentMetric represents a metric of a component.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>scheme</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Scheme is the scheme of the metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>host</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Host is the host of the metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>path</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path is the path of the metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>certPath</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>CertPath is the cert path of the metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keyPath</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KeyPath is the key path of the metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>insecureSkipVerify</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>InsecureSkipVerify is the flag to skip verify the metric.</p>
 </td>
 </tr>
 </tbody>

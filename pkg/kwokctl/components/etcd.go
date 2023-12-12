@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -31,6 +32,7 @@ type BuildEtcdComponentConfig struct {
 	Runtime      string
 	Binary       string
 	Image        string
+	ProjectName  string
 	Version      version.Version
 	DataPath     string
 	Workdir      string
@@ -66,6 +68,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		"--quota-backend-bytes=8589934592",
 	}
 	etcdArgs = append(etcdArgs, extraArgsToStrings(conf.ExtraArgs)...)
+	var metric *internalversion.ComponentMetric
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		// TODO: use a volume for the data path
@@ -104,6 +107,12 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			"--listen-client-urls=http://"+conf.BindAddress+":2379",
 			"--initial-cluster=node0=http://"+conf.BindAddress+":2380",
 		)
+
+		metric = &internalversion.ComponentMetric{
+			Scheme: "http",
+			Host:   conf.ProjectName + "-" + consts.ComponentEtcd + ":2379",
+			Path:   "/metrics",
+		}
 	} else {
 		etcdPeerPortStr := format.String(conf.PeerPort)
 		etcdClientPortStr := format.String(conf.Port)
@@ -115,6 +124,12 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			"--listen-client-urls=http://"+conf.BindAddress+":"+etcdClientPortStr,
 			"--initial-cluster=node0=http://"+conf.BindAddress+":"+etcdPeerPortStr,
 		)
+
+		metric = &internalversion.ComponentMetric{
+			Scheme: "http",
+			Host:   net.LocalAddress + ":" + etcdClientPortStr,
+			Path:   "/metrics",
+		}
 	}
 
 	if conf.Version.GTE(version.NewVersion(3, 4, 0)) {
@@ -144,6 +159,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		Args:    etcdArgs,
 		Binary:  conf.Binary,
 		Ports:   ports,
+		Metric:  metric,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
 		Envs:    envs,

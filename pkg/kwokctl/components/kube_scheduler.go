@@ -21,12 +21,14 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // BuildKubeSchedulerComponentConfig is the configuration for building a kube-scheduler component.
 type BuildKubeSchedulerComponentConfig struct {
 	Runtime          string
+	ProjectName      string
 	Binary           string
 	Image            string
 	Version          version.Version
@@ -61,6 +63,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	var volumes []internalversion.Volume
 	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
+	var metric *internalversion.ComponentMetric
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
@@ -135,11 +138,27 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 					},
 				)
 			}
+			metric = &internalversion.ComponentMetric{
+				Scheme:             "https",
+				Host:               conf.ProjectName + "-" + consts.ComponentKubeScheduler + ":10259",
+				Path:               "/metrics",
+				CertPath:           "/etc/kubernetes/pki/admin.crt",
+				KeyPath:            "/etc/kubernetes/pki/admin.key",
+				InsecureSkipVerify: true,
+			}
 		} else {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
 			)
+			metric = &internalversion.ComponentMetric{
+				Scheme:             "https",
+				Host:               net.LocalAddress + ":" + format.String(conf.Port),
+				Path:               "/metrics",
+				CertPath:           conf.AdminCertPath,
+				KeyPath:            conf.AdminKeyPath,
+				InsecureSkipVerify: true,
+			}
 		}
 		// TODO: Support disable insecure port
 		//	kubeSchedulerArgs = append(kubeSchedulerArgs,
@@ -160,11 +179,21 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 					},
 				)
 			}
+			metric = &internalversion.ComponentMetric{
+				Scheme: "http",
+				Host:   conf.ProjectName + "-" + consts.ComponentKubeScheduler + ":10251",
+				Path:   "/metrics",
+			}
 		} else {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
 				"--address="+conf.BindAddress,
 				"--port="+format.String(conf.Port),
 			)
+			metric = &internalversion.ComponentMetric{
+				Scheme: "http",
+				Host:   net.LocalAddress + ":" + format.String(conf.Port),
+				Path:   "/metrics",
+			}
 		}
 
 		// TODO: Support disable secure port
@@ -200,6 +229,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		Image:   conf.Image,
 		Ports:   ports,
 		WorkDir: conf.Workdir,
+		Metric:  metric,
 		Envs:    envs,
 	}, nil
 }

@@ -464,6 +464,12 @@ type Component struct {
 	// +optional
 	Volumes []Volume `json:"volumes,omitempty"`
 
+	// Metric is the metric of the component.
+	Metric *ComponentMetric `json:"metric,omitempty"`
+
+	// MetricsDiscovery is the metrics discovery of the component.
+	MetricsDiscovery *ComponentMetric `json:"metricsDiscovery,omitempty"`
+
 	// Version is the version of the component.
 	// +optional
 	Version string `json:"version,omitempty"`
@@ -496,6 +502,23 @@ type Port struct {
 	// +optional
 	// +default="TCP"
 	Protocol Protocol `json:"protocol,omitempty"`
+}
+
+// ComponentMetric represents a metric of a component.
+type ComponentMetric struct {
+	// Scheme is the scheme of the metric.
+	Scheme string `json:"scheme"`
+	// Host is the host of the metric.
+	Host string `json:"host"`
+	// Path is the path of the metric.
+	Path string `json:"path"`
+
+	// CertPath is the cert path of the metric.
+	CertPath string `json:"certPath,omitempty"`
+	// KeyPath is the key path of the metric.
+	KeyPath string `json:"keyPath,omitempty"`
+	// InsecureSkipVerify is the flag to skip verify the metric.
+	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
 }
 
 // Protocol defines network protocols supported for things like component ports.

@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package binary
+package components
 
 import (
 	"bytes"
 	"fmt"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
+
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+
 	_ "embed"
 )
 
-//go:embed prometheus.yaml.tpl
+//go:embed prometheus_config.yaml.tpl
 var prometheusYamlTpl string
 
-var prometheusYamlTemplate = template.Must(template.New("prometheus_config").Parse(prometheusYamlTpl))
+var prometheusYamlTemplate = template.Must(template.New("prometheus_config").Funcs(sprig.TxtFuncMap()).Parse(prometheusYamlTpl))
 
 // BuildPrometheus builds the prometheus yaml content.
 func BuildPrometheus(conf BuildPrometheusConfig) (string, error) {
@@ -41,14 +45,5 @@ func BuildPrometheus(conf BuildPrometheusConfig) (string, error) {
 
 // BuildPrometheusConfig is the configuration for building the prometheus config
 type BuildPrometheusConfig struct {
-	ProjectName               string
-	SecurePort                bool
-	AdminCrtPath              string
-	AdminKeyPath              string
-	PrometheusPort            uint32
-	EtcdPort                  uint32
-	KubeApiserverPort         uint32
-	KubeControllerManagerPort uint32
-	KubeSchedulerPort         uint32
-	KwokControllerPort        uint32
+	Components []internalversion.Component
 }
