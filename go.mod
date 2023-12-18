@@ -12,7 +12,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.10.2
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/google/cel-go v0.16.0
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/itchyny/gojq v0.12.13
 	github.com/nxadm/tail v1.4.8
 	github.com/prometheus/client_golang v1.16.0
@@ -30,7 +30,7 @@ require (
 	k8s.io/apiserver v0.28.0
 	k8s.io/client-go v0.28.0
 	k8s.io/code-generator v0.28.0
-	k8s.io/cri-api v0.28.0
+	k8s.io/cri-api v0.29.0
 	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9
 	k8s.io/kubelet v0.28.0
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
