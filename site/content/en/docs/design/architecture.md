@@ -18,7 +18,9 @@ It can run in any environment, use in-cluster or kubeconfig to connect to a `kub
 
 So far, `kwok` has implemented the following controllers:
 
-- Node Controller - It is responsible for selecting the node to simulate, and then simulating the node's lifecycle, just by updating the heartbeat of the node.
+- Node Controller - It is responsible for selecting the nodes to simulate, and then simulating the nodes' lifecycle, just by updating the node status field (which originally should be reported by kubelet).
+  You can also define and customize node's lifecycle through [Stages Configuration].
+- Node Lease Controller - It is responsible for reporting node heartbeats by creating and renewing the node lease objects for those managed nodes. See [Node HeartBeats] and [KEP 589] for more details.
 - Pod Controller - It is responsible for pod that is on selected node, and plays the stage of pod's lifecycle.
 
 See [Stages Configuration] for more details.
@@ -80,3 +82,5 @@ This is a list of control plane components that `kwokctl` will start:
 - `kwokctl etcdctl`
 
 [Stages Configuration]: {{< relref "/docs/user/stages-configuration" >}}
+[Node HeartBeats]: https://kubernetes.io/docs/reference/node/node-status/#heartbeats
+[KEP 589]: https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/589-efficient-node-heartbeats
