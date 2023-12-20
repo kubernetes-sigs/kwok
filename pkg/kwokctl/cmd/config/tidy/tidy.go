@@ -33,7 +33,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "tidy",
-		Short: "Tidy the default config file with --config",
+		Short: "Tidy the default config file",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context())
 		},

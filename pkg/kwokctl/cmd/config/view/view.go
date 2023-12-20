@@ -34,7 +34,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "view",
-		Short: "Display the default config file with --config",
+		Short: "Display the default config file",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context())
 		},
