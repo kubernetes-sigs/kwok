@@ -104,9 +104,15 @@ func GenerateSignCert(cn string, caCert *x509.Certificate, caKey crypto.Signer, 
 	}
 
 	certConfig := CertConfig{
-		CommonName:         cn,
-		Organization:       organizations,
-		Usages:             []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
+		CommonName:   cn,
+		Organization: organizations,
+		Usages: []x509.ExtKeyUsage{
+			// TODO: replace any purpose with explicit EKU after each component get a separate certificate in kubernetes-sigs/kwok #878
+			x509.ExtKeyUsageAny,
+
+			x509.ExtKeyUsageServerAuth,
+			x509.ExtKeyUsageClientAuth,
+		},
 		AltNames:           alt,
 		PublicKeyAlgorithm: x509.RSA,
 		NotAfter:           notAfter,
