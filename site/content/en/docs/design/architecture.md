@@ -16,10 +16,10 @@ This document will introduce the architecture of KWOK.
 
 It can run in any environment, use in-cluster or kubeconfig to connect to a `kube-apiserver` of cluster, and then manage the resources of the cluster.
 
-So far, `kwok` has 2 types of controllers:
+So far, `kwok` provides two types of controllers:
 
 - Resource Lifecycle Simulation Controller - This type of controller is used to simulate the lifecycle of Kubernetes resources. You can define and customize a resource's lifecycle through [Stages Configuration].
-  It is worth noting that Resource Lifecycle Simulation Controller is just a conceptual term for document purpose and does not really exist in `kwok`. Specifically, `kwok` has implemented the following controllers of this type:
+  It is worth noting that Resource Lifecycle Simulation Controller is just a conceptual term for document purpose and does not really exist in `kwok`. The following controllers are implemented under this type:
   * Node Controller - It is responsible for selecting the nodes to simulate, and then simulating the nodes' lifecycle, just by updating the node status field (which originally should be reported by kubelet).
   * Pod Controller - It is responsible for simulating the lifecycle of pods scheduled to those selected nodes by updating the pod status field (which originally should be reported by kubelet).
   * Stage Controller -  It is later introduced for a more general purpose, aiming to simulate the lifecycle of other Kubernetes resource types besides `v1.Node` and `v1.Pod`.
