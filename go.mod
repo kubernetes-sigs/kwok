@@ -23,8 +23,8 @@ require (
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.4.0
 	golang.org/x/sync v0.5.0
-	golang.org/x/sys v0.14.0
-	golang.org/x/term v0.14.0
+	golang.org/x/sys v0.15.0
+	golang.org/x/term v0.15.0
 	k8s.io/api v0.28.0
 	k8s.io/apimachinery v0.28.0
 	k8s.io/apiserver v0.28.0
@@ -102,7 +102,7 @@ require (
 	github.com/wzshiming/winseq v0.0.0-20200112104235-db357dc107ae // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	golang.org/x/crypto v0.15.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.18.0 // indirect
