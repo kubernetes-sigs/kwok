@@ -36,6 +36,8 @@ type DelayingQueue[T comparable] interface {
 	AddAfter(item T, duration time.Duration) bool
 	// Cancel removes an item from the queue if it has not yet been processed
 	Cancel(item T) bool
+	// Pending returns the number of items in the queue that have not yet been processed
+	Pending() int
 }
 
 // delayingQueue is a generic DelayingQueue implementation.
@@ -63,6 +65,12 @@ func NewDelayingQueue[T comparable](clock Clock) DelayingQueue[T] {
 	}
 	go q.loopWorker()
 	return q
+}
+
+func (q *delayingQueue[T]) Pending() int {
+	q.mut.Lock()
+	defer q.mut.Unlock()
+	return len(q.heap)
 }
 
 func (q *delayingQueue[T]) AddAfter(item T, duration time.Duration) bool {

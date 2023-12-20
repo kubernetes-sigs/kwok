@@ -18,11 +18,18 @@ package runtime
 
 import (
 	"context"
+	"io"
 	"os"
 	"strings"
+	"time"
+
+	"k8s.io/apimachinery/pkg/api/meta"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
+	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // SnapshotSaveWithYAML save the snapshot of cluster
@@ -37,6 +44,20 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, conf Sn
 		return err
 	}
 
+	restMapper, err := clientset.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+
+	logger := log.FromContext(ctx)
+
+	filters, errs := client.MappingForResources(restMapper, conf.Filters)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			logger.Error("failed to get mapping", err)
+		}
+	}
+
 	f, err := c.OpenFile(path)
 	if err != nil {
 		return err
@@ -45,9 +66,40 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, conf Sn
 		_ = f.Close()
 	}()
 
-	return snapshot.Save(ctx, clientset, f, snapshot.SaveConfig{
-		Filters: conf.Filters,
+	saver, err := snapshot.NewSaver(clientset, snapshot.SaveConfig{
+		Filters: filters,
 	})
+	if err != nil {
+		return err
+	}
+
+	var w io.Writer = f
+	if conf.Relative {
+		startTime := time.Now()
+		w = snapshot.NewWriteHook(w, func(b []byte) []byte {
+			return snapshot.ReplaceTimeToRelative(startTime, b)
+		})
+	}
+
+	encoder := yaml.NewEncoder(w)
+
+	var tracks map[*meta.RESTMapping]*snapshot.TrackData
+	if conf.Record {
+		tracks = make(map[*meta.RESTMapping]*snapshot.TrackData)
+	}
+	err = saver.Save(ctx, encoder, tracks)
+	if err != nil {
+		return err
+	}
+
+	if conf.Record {
+		err = saver.Record(ctx, encoder, tracks)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // SnapshotRestoreWithYAML restore the snapshot of cluster
@@ -62,6 +114,11 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 		return err
 	}
 
+	restMapper, err := clientset.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+
 	f, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
 		return err
@@ -70,7 +127,44 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 		_ = f.Close()
 	}()
 
-	return snapshot.Load(ctx, clientset, f, snapshot.LoadConfig{
-		Filters: conf.Filters,
+	logger := log.FromContext(ctx)
+
+	filters, errs := client.MappingForResources(restMapper, conf.Filters)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			logger.Error("failed to get mapping", err)
+		}
+	}
+
+	loader, err := snapshot.NewLoader(clientset, snapshot.LoadConfig{
+		NoFilers: len(filters) == 0,
+		Filters:  filters,
 	})
+	if err != nil {
+		return err
+	}
+
+	var r io.Reader = f
+
+	if conf.Relative {
+		startTime := time.Now()
+		r = snapshot.NewReadHook(r, func(b []byte) []byte {
+			return snapshot.RevertTimeFromRelative(startTime, b)
+		})
+	}
+
+	decoder := yaml.NewDecoder(r)
+	err = loader.Load(ctx, decoder)
+	if err != nil {
+		return err
+	}
+
+	if conf.Replay {
+		err = loader.Replay(ctx, decoder)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package save provides a command to save the snapshot of a cluster.
-package save
+// Package replay provides a command to replay the recordingof a cluster.
+package replay
 
 import (
 	"context"
@@ -34,30 +34,28 @@ import (
 )
 
 type flagpole struct {
-	Name    string
-	Path    string
-	Format  string
-	Filters []string
+	Name        string
+	Path        string
+	Filters     []string
+	OnlyInitial bool
 }
 
-// NewCommand returns a new cobra.Command for cluster snapshotting.
+// NewCommand returns a new cobra.Command to replay the cluster as a recording.
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "save",
-		Short: "Save the snapshot of the cluster",
+		Use:   "replay",
+		Short: "Replay the recording of the cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)
 		},
 	}
-	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the snapshot")
-	cmd.Flags().StringVar(&flags.Format, "format", "etcd", "Format of the snapshot file (etcd, k8s)")
-	_ = cmd.Flags().MarkDeprecated("format", "please use `record --only-initial` instead")
-	cmd.Flags().StringSliceVar(&flags.Filters, "filter", snapshot.Resources, "Filter the resources to save, only support for k8s format")
-	_ = cmd.Flags().MarkDeprecated("filter", "please use `record --only-initial` instead")
+	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the recording")
+	cmd.Flags().StringSliceVar(&flags.Filters, "filter", snapshot.Resources, "Filter the resources to restore")
+	cmd.Flags().BoolVar(&flags.OnlyInitial, "only-initial", false, "Only replay the initial state of the cluster")
 	return cmd
 }
 
@@ -67,8 +65,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if flags.Path == "" {
 		return fmt.Errorf("path is required")
 	}
-	if file.Exists(flags.Path) {
-		return fmt.Errorf("file %q already exists", flags.Path)
+	if !file.Exists(flags.Path) {
+		return fmt.Errorf("path %q does not exist", flags.Path)
 	}
 
 	logger := log.FromContext(ctx)
@@ -83,22 +81,15 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	switch flags.Format {
-	case "etcd":
-		err = rt.SnapshotSave(ctx, flags.Path)
-		if err != nil {
-			return err
-		}
-	case "k8s":
-		err = rt.SnapshotSaveWithYAML(ctx, flags.Path, runtime.SnapshotSaveWithYAMLConfig{
-			Filters:  flags.Filters,
-			Relative: true,
-		})
-		if err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("unsupport format %q", flags.Format)
+	conf := runtime.SnapshotRestoreWithYAMLConfig{
+		Filters:  flags.Filters,
+		Replay:   !flags.OnlyInitial,
+		Relative: true,
 	}
+	err = rt.SnapshotRestoreWithYAML(ctx, flags.Path, conf)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

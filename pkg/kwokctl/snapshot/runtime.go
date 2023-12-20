@@ -30,6 +30,8 @@ import (
 // list all resources can use: kubectl api-resources -o name
 var Resources = []string{
 	"namespace",
+	"events",
+	"leases.coordination.k8s.io",
 	"node",
 	"serviceaccount",
 	"configmap",

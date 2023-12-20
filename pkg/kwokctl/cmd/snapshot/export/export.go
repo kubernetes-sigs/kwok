@@ -20,15 +20,20 @@ package export
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/rest"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 type flagpole struct {
@@ -39,6 +44,7 @@ type flagpole struct {
 	ImpersonateGroups []string
 	PageSize          int64
 	PageBufferSize    int32
+	Record            bool
 }
 
 // NewCommand returns a new cobra.Command for cluster exporting.
@@ -60,6 +66,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringSliceVar(&flags.ImpersonateGroups, "as-group", nil, "Group to impersonate for the operation, this flag can be repeated to specify multiple groups.")
 	cmd.Flags().Int64Var(&flags.PageSize, "page-size", 500, "Define the page size")
 	cmd.Flags().Int32Var(&flags.PageBufferSize, "page-buffer-size", 10, "Define the number of pages to buffer")
+	cmd.Flags().BoolVar(&flags.Record, "record", false, "Record the change of the cluster")
 	return cmd
 }
 
@@ -94,19 +101,56 @@ func runE(ctx context.Context, flags *flagpole) error {
 		_ = f.Close()
 	}()
 
+	logger := log.FromContext(ctx)
+
 	pagerConfig := &snapshot.PagerConfig{
 		PageSize:       flags.PageSize,
 		PageBufferSize: flags.PageBufferSize,
 	}
 
-	snapshotSaveConfig := snapshot.SaveConfig{
-		PagerConfig: pagerConfig,
-		Filters:     flags.Filters,
-	}
-
-	err = snapshot.Save(ctx, clientset, f, snapshotSaveConfig)
+	restMapper, err := clientset.ToRESTMapper()
 	if err != nil {
 		return err
+	}
+
+	filters, errs := client.MappingForResources(restMapper, flags.Filters)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			logger.Error("failed to get mapping", err)
+		}
+	}
+
+	saver, err := snapshot.NewSaver(clientset, snapshot.SaveConfig{
+		PagerConfig: pagerConfig,
+		Filters:     filters,
+	})
+	if err != nil {
+		return err
+	}
+
+	var w io.Writer = f
+
+	startTime := time.Now()
+	w = snapshot.NewWriteHook(w, func(b []byte) []byte {
+		return snapshot.ReplaceTimeToRelative(startTime, b)
+	})
+
+	encoder := yaml.NewEncoder(w)
+
+	var tracks map[*meta.RESTMapping]*snapshot.TrackData
+	if flags.Record {
+		tracks = make(map[*meta.RESTMapping]*snapshot.TrackData)
+	}
+	err = saver.Save(ctx, encoder, tracks)
+	if err != nil {
+		return err
+	}
+
+	if flags.Record {
+		err = saver.Record(ctx, encoder, tracks)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

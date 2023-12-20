@@ -121,21 +121,30 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, conf ru
 // SnapshotRestoreWithYAML restore the snapshot of cluster
 func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf runtime.SnapshotRestoreWithYAMLConfig) error {
 	logger := log.FromContext(ctx)
-	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		err := c.StopComponent(ctx, consts.ComponentKubeControllerManager)
-		return err == nil, err
-	})
-	if err != nil {
-		logger.Error("Failed to stop kube-controller-manager", err)
+	components := []string{
+		consts.ComponentKubeScheduler,
+		consts.ComponentKubeControllerManager,
+		consts.ComponentKwokController,
+	}
+	for _, component := range components {
+		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+			err := c.StopComponent(ctx, component)
+			return err == nil, err
+		})
+		if err != nil {
+			logger.Error("Failed to stop", err, "component", component)
+		}
 	}
 	defer func() {
-		err = c.StartComponent(ctx, consts.ComponentKubeControllerManager)
-		if err != nil {
-			logger.Error("Failed to start kube-controller-manager", err)
+		for _, component := range components {
+			err := c.StartComponent(ctx, component)
+			if err != nil {
+				logger.Error("Failed to start", err, "component", component)
+			}
 		}
 	}()
 
-	err = c.Cluster.SnapshotRestoreWithYAML(ctx, path, conf)
+	err := c.Cluster.SnapshotRestoreWithYAML(ctx, path, conf)
 	if err != nil {
 		return err
 	}

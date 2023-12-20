@@ -18,6 +18,7 @@ package queue
 
 import (
 	"container/list"
+	"context"
 	"sync"
 )
 
@@ -29,6 +30,8 @@ type Queue[T any] interface {
 	Get() (T, bool)
 	// GetOrWait returns an item from the queue or waits until an item is added.
 	GetOrWait() T
+	// GetOrWaitWithContext returns an item from the queue or waits until an item is added or the context is done.
+	GetOrWaitWithContext(ctx context.Context) (T, bool)
 	// Len returns the number of items in the queue.
 	Len() int
 }
@@ -89,6 +92,26 @@ func (q *queue[T]) GetOrWait() T {
 		}
 	}
 	panic("unreachable")
+}
+
+func (q *queue[T]) GetOrWaitWithContext(ctx context.Context) (T, bool) {
+	t, ok := q.Get()
+	if ok {
+		return t, ok
+	}
+
+	// Wait for an item to be added or the context to be done.
+	for {
+		select {
+		case <-ctx.Done():
+			return t, false
+		case <-q.signal:
+			t, ok = q.Get()
+			if ok {
+				return t, ok
+			}
+		}
+	}
 }
 
 func (q *queue[T]) Len() int {

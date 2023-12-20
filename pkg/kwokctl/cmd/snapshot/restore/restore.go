@@ -55,7 +55,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the snapshot")
 	cmd.Flags().StringVar(&flags.Format, "format", "etcd", "Format of the snapshot file (etcd, k8s)")
+	_ = cmd.Flags().MarkDeprecated("format", "please use `replay --only-initial` instead")
 	cmd.Flags().StringSliceVar(&flags.Filters, "filter", snapshot.Resources, "Filter the resources to restore, only support for k8s format")
+	_ = cmd.Flags().MarkDeprecated("filter", "please use `replay --only-initial` instead")
 	return cmd
 }
 
@@ -89,7 +91,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	case "k8s":
 		err = rt.SnapshotRestoreWithYAML(ctx, flags.Path, runtime.SnapshotRestoreWithYAMLConfig{
-			Filters: flags.Filters,
+			Filters:  flags.Filters,
+			Relative: true,
 		})
 		if err != nil {
 			return err

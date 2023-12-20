@@ -130,9 +130,13 @@ type Runtime interface {
 }
 
 type SnapshotSaveWithYAMLConfig struct {
-	Filters []string
+	Filters  []string
+	Record   bool
+	Relative bool
 }
 
 type SnapshotRestoreWithYAMLConfig struct {
-	Filters []string
+	Filters  []string
+	Replay   bool
+	Relative bool
 }
