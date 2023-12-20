@@ -16,12 +16,15 @@ This document will introduce the architecture of KWOK.
 
 It can run in any environment, use in-cluster or kubeconfig to connect to a `kube-apiserver` of cluster, and then manage the resources of the cluster.
 
-So far, `kwok` has implemented the following controllers:
+So far, `kwok` has 2 types of controllers:
 
-- Node Controller - It is responsible for selecting the nodes to simulate, and then simulating the nodes' lifecycle, just by updating the node status field (which originally should be reported by kubelet).
-  You can also define and customize node's lifecycle through [Stages Configuration].
-- Node Lease Controller - It is responsible for reporting node heartbeats by creating and renewing the node lease objects for those managed nodes. See [Node HeartBeats] and [KEP 589] for more details.
-- Pod Controller - It is responsible for pod that is on selected node, and plays the stage of pod's lifecycle.
+- Resource Lifecycle Simulation Controller - This type of controller is used to simulate the lifecycle of Kubernetes resources. You can define and customize a resource's lifecycle through [Stages Configuration].
+  It is worth noting that Resource Lifecycle Simulation Controller is just a conceptual term for document purpose and does not really exist in `kwok`. Specifically, `kwok` has implemented the following controllers of this type:
+  * Node Controller - It is responsible for selecting the nodes to simulate, and then simulating the nodes' lifecycle, just by updating the node status field (which originally should be reported by kubelet).
+  * Pod Controller - It is responsible for simulating the lifecycle of pods scheduled to those selected nodes by updating the pod status field (which originally should be reported by kubelet).
+  * Stage Controller -  It is later introduced for a more general purpose, aiming to simulate the lifecycle of other Kubernetes resource types besides `v1.Node` and `v1.Pod`.
+    You can think the Node Controller and the Pod Controller are the specialized implementation of the Stage Controller.
+- Node Lease Controller - It is a dedicated controller in `kwok` for reporting node heartbeats by creating and renewing the node lease objects for those managed nodes. See [Node Heartbeats] and [KEP 589] for more details.
 
 See [Stages Configuration] for more details.
 
@@ -82,5 +85,5 @@ This is a list of control plane components that `kwokctl` will start:
 - `kwokctl etcdctl`
 
 [Stages Configuration]: {{< relref "/docs/user/stages-configuration" >}}
-[Node HeartBeats]: https://kubernetes.io/docs/reference/node/node-status/#heartbeats
+[Node Heartbeats]: https://kubernetes.io/docs/reference/node/node-status/#heartbeats
 [KEP 589]: https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/589-efficient-node-heartbeats
