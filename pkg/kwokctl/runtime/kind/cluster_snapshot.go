@@ -18,10 +18,14 @@ package kind
 
 import (
 	"context"
+	"crypto/tls"
 
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -140,4 +144,29 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 		return err
 	}
 	return nil
+}
+
+// GetEtcdClient returns the etcd client of cluster
+func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conf := &config.Options
+
+	certFile := c.GetWorkdirPath("pki/etcd/server.crt")
+	keyFile := c.GetWorkdirPath("pki/etcd/server.key")
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return etcd.NewClient(etcd.ClientConfig{
+		Endpoints: []string{"https://" + net.LocalAddress + ":" + format.String(conf.EtcdPort)},
+		TLS: &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			//nolint:gosec
+			InsecureSkipVerify: true,
+		},
+	})
 }

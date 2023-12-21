@@ -9,11 +9,15 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
+  apiServerPort: 32766
 nodes:
 - role: control-plane
   extraPortMappings:
   - containerPort: 9090
     hostPort: 9090
+    protocol: TCP
+  - containerPort: 2379
+    hostPort: 32765
     protocol: TCP
   kubeadmConfigPatches:
   - |
@@ -354,4 +358,5 @@ kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
 kubectl cordon kwok-<CLUSTER_NAME>-control-plane
+podman exec kwok-<CLUSTER_NAME>-control-plane chmod -R +r /etc/kubernetes/pki
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config

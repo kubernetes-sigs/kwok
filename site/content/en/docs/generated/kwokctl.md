@@ -24,6 +24,7 @@ kwokctl [command] [flags]
 * [kwokctl etcdctl](kwokctl_etcdctl.md)	 - etcdctl in cluster
 * [kwokctl export](kwokctl_export.md)	 - Exports one of [logs]
 * [kwokctl get](kwokctl_get.md)	 - Gets one of [artifacts, clusters, kubeconfig]
+* [kwokctl hack](kwokctl_hack.md)	 - [experimental] Hack [get, put, delete] resources in etcd without apiserver
 * [kwokctl kubectl](kwokctl_kubectl.md)	 - kubectl in cluster
 * [kwokctl logs](kwokctl_logs.md)	 - Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, prometheus, jaeger]
 * [kwokctl scale](kwokctl_scale.md)	 - Scale a resource in cluster

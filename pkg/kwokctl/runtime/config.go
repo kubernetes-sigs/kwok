@@ -22,6 +22,8 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 )
 
 // Runtime is the interface for a runtime.
@@ -127,6 +129,12 @@ type Runtime interface {
 
 	// IsDryRun returns true if the runtime is in dry-run mode
 	IsDryRun() bool
+
+	// GetClientset returns the clientset of cluster
+	GetClientset(ctx context.Context) (client.Clientset, error)
+
+	// GetEtcdClient returns the etcd client of cluster
+	GetEtcdClient(ctx context.Context) (etcd.Client, error)
 }
 
 type SnapshotSaveWithYAMLConfig struct {

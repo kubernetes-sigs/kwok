@@ -339,6 +339,7 @@ func (c *Cluster) Install(ctx context.Context) error {
 	err = c.setupPorts(ctx,
 		env.usedPorts,
 		&env.kwokctlConfig.Options.KubeApiserverPort,
+		&env.kwokctlConfig.Options.EtcdPort,
 	)
 	if err != nil {
 		return err
