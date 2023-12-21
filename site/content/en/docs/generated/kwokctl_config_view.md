@@ -1,6 +1,6 @@
 ## kwokctl config view
 
-Display the default config file with --config
+Display the default config file. When combined with --config, it displays the default config file with the specified ones merged.
 
 ```
 kwokctl config view [flags]

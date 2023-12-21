@@ -1,6 +1,6 @@
 ## kwokctl config tidy
 
-Tidy the default config file with --config
+Tidy the default config file. When combined with --config, it merges the specified configuration files into the default one.
 
 ```
 kwokctl config tidy [flags]
