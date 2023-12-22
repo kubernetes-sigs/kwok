@@ -202,8 +202,9 @@ spec:
                 type: object
               weight:
                 default: 0
-                description: Weight means the current stage, in case of multiple stages,
-                  a random stage will be matched as the next stage based on the weight.
+                description: Weight means when multiple stages share the same ResourceRef
+                  and Selector, a random stage will be matched as the next stage based
+                  on the weight.
                 minimum: 0
                 type: integer
             required:
