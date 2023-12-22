@@ -13,7 +13,7 @@ This document walks you through how to configure the Stages of Lifecycle.
 ## What is a Stage?
 
 The [Stage API] is a [`kwok` Configuration][configuration] that allows users to define and simulate different stages in the lifecycle of Kubernetes resources, such as nodes and pods.
-Each Stage resource specifies a resourceRef field that identifies the type of resource that the stage applies to, and a selector field that determines when the stage should be executed.
+Each Stage resource specifies a `resourceRef` field that identifies the type of resource that the stage applies to, and a `selector` field that determines when the stage should be executed.
 
 A Stage resource has the following fields:
 
@@ -36,6 +36,7 @@ spec:
       operator: <string>
       values:
       - <string>
+  weight: <int>
   delay:
     durationMilliseconds: <int>
     durationFrom:
@@ -60,6 +61,15 @@ users can specify the conditions that need to be met for the stage to be applied
 and the changes that will be made to the resource when the stage is applied.
 The `next` field allows users to define the new state of the resource using the `statusTemplate` field,
 modify the `finalizers` of the resource, and even `delete` the resource.
+
+It is worth noting that there is no dedicated field for arranging the execution order if multiple stages of a resource type are provided.
+The execution order of stages can be naturally controlled by utilizing `selector.matchExpressions` and `next` field.
+Specifically, users can chain the stages by making `selector.matchExpressions` of a stage match the status content specified in `next` field of the previous stage.
+Please refer to [Default Pod Stages] for a detailed example.
+If multiple stages of a resource type share the same `selector` setting, `kwok` will randomly choose a stage to apply for a specific resource. 
+Users can also customize the probability of a stage being selected via the `weight` field.
+This is useful when you want the resources under a certain type to enter different stages according to a certain probability distribution.
+Please note that `weight` only takes effect among stages with same `resourceRef` and `selector` settings.
 
 Additionally, the `delay` field in a Stage resource allows users to specify a delay before the stage is applied,
 and introduce jitter to the delay to specify the latest delay time to make the simulation more realistic.
