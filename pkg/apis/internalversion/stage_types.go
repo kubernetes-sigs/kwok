@@ -35,7 +35,7 @@ type StageSpec struct {
 	ResourceRef StageResourceRef
 	// Selector specifies the stags will be applied to the selected resource.
 	Selector *StageSelector
-	// Weight means the current stage, in case of multiple stages,
+	// Weight means when multiple stages share the same ResourceRef and Selector,
 	// a random stage will be matched as the next stage based on the weight.
 	Weight int
 	// Delay means there is a delay in this stage.

@@ -1295,7 +1295,7 @@ int
 </em>
 </td>
 <td>
-<p>Weight means the current stage, in case of multiple stages,
+<p>Weight means when multiple stages share the same ResourceRef and Selector,
 a random stage will be matched as the next stage based on the weight.</p>
 </td>
 </tr>
@@ -5474,7 +5474,7 @@ int
 </em>
 </td>
 <td>
-<p>Weight means the current stage, in case of multiple stages,
+<p>Weight means when multiple stages share the same ResourceRef and Selector,
 a random stage will be matched as the next stage based on the weight.</p>
 </td>
 </tr>
