@@ -94,14 +94,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	f, err := file.Open(flags.Path)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = f.Close()
-	}()
-
 	logger := log.FromContext(ctx)
 
 	pagerConfig := &snapshot.PagerConfig{
@@ -130,7 +122,20 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	var writer io.Writer = f
+	f, err := file.Open(flags.Path)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	press := file.Compress(flags.Path, f)
+	defer func() {
+		_ = press.Close()
+	}()
+
+	var writer io.Writer = press
 
 	startTime := time.Now()
 	writer = recording.NewWriteHook(writer, func(b []byte) []byte {

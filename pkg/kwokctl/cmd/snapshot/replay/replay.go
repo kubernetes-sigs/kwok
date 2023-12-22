@@ -148,7 +148,15 @@ func runE(ctx context.Context, flags *flagpole) error {
 		_ = f.Close()
 	}()
 
-	var reader io.Reader = f
+	press, err := file.Decompress(flags.Path, f)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = press.Close()
+	}()
+
+	var reader io.Reader = press
 
 	startTime := time.Now()
 	reader = recording.NewReadHook(reader, func(bytes []byte) []byte {
