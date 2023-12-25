@@ -62,7 +62,7 @@ type StageSpec struct {
 	ResourceRef StageResourceRef `json:"resourceRef"`
 	// Selector specifies the stags will be applied to the selected resource.
 	Selector *StageSelector `json:"selector,omitempty"`
-	// Weight means the current stage, in case of multiple stages,
+	// Weight means when multiple stages share the same ResourceRef and Selector,
 	// a random stage will be matched as the next stage based on the weight.
 	// +default=0
 	// +kubebuilder:default=0
