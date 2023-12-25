@@ -74,6 +74,20 @@ and gain insights into the behavior and performance of your applications and inf
 
 The `<expressions-string>` is provided by the [Go Implementation] of [JQ Expressions]
 
+## How `kwok` applies Stages
+
+Stages can be generally divided into two categories based on different settings of the `next` field.
+A Stage that has a non-empty `nextTemplate` is a "Change Stage". The content of `nextTemplate` will be used by `kwok` for updating resource status.
+A Stage with `delete` being `true` represents a "Delete Stage", which signals `kwok` to delete the resource.
+
+It is the [Resource Lifecycle Simulation Controller] in `kwok` that applies the Stages. The controller watches resource events from the apiserver and applies a Stage on a resource when it receives an associated event.
+Let’s take a particular resource as an example. Starting from receiving an `Added` event of the resource, `kowk` checks whether the associated object matches a Stage. `kwok` then updates the resource status
+if a "Change Stage" is matched. The update action itself consequently causes a new `Modified` to be generated, which will be caught by the controller later and trigger the next check and apply round.
+`kwok` deletes the resource until a "Delete Stage” is matched.
+
+However, this event-driven approach to applying Stages has a limitation: `kwok` won’t apply a Stage until a new event associated with that resource is received. To address the limitation,
+users can utilize the `immediateNextStage` field to make the controller apply Stages immediately rather than waiting for an event pushed from the apiserver.
+
 ## Examples
 
 ### Node Stages
@@ -137,3 +151,4 @@ This example shows how to configure the simplest and fastest stages of Pod resou
 [Default Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/fast
 [General Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/general
 [Stage API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Stage
+[Resource Lifecycle Simulation Controller]: {{< relref "/docs/design/architecture" >}}
