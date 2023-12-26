@@ -81,9 +81,45 @@ A Stage that has a non-empty `nextTemplate` is a "Change Stage". The content of 
 A Stage with `delete` being `true` represents a "Delete Stage", which signals `kwok` to delete the resource.
 
 It is the [Resource Lifecycle Simulation Controller] in `kwok` that applies the Stages. The controller watches resource events from the apiserver and applies a Stage on a resource when it receives an associated event.
-Let’s take a particular resource as an example. Starting from receiving an `Added` event of the resource, `kowk` checks whether the associated object matches a Stage. `kwok` then updates the resource status
+Let’s take a particular resource as an example. Starting from receiving an `Added` event of the resource, `kwok` checks whether the associated object matches a Stage. `kwok` then updates the resource status
 if a "Change Stage" is matched. The update action itself consequently causes a new `Modified` to be generated, which will be caught by the controller later and trigger the next check and apply round.
 `kwok` deletes the resource until a "Delete Stage” is matched.
+
+```goat { height=540 width=600 }
+             o
+             |
+             |  an event from apiserver
+             +
+            / \   Yes    .-------------------------.
+           + 1 +------->+ do some cleanup if needed +----> o
+            \ /          '-------------------------'
+             |
+             | No
+             +
+            / \   No
+           + 2 +-------> o
+            \ /
+             +
+             | Yes
+             +
+            / \   Yes    .-------------------.   
+           + 3 +------->+ delete the resource +---->o
+            \ /          '--------+----------'
+             +                    
+             | No                 
+             v                    
+ .----------------------.         
+| update resource status |
+ '-----------+----------'
+             |
+             |  (a "Modified" event will be generated)
+             v
+             o
+
+1. Is it a "Deleted" event?
+2. Does the associated object match a Stage?
+3. Is it a "Delete Stage"?
+```
 
 However, this event-driven approach to applying Stages has a limitation: `kwok` won’t apply a Stage until a new event associated with that resource is received. To address the limitation,
 users can utilize the `immediateNextStage` field to make the controller apply Stages immediately rather than waiting for an event pushed from the apiserver.
