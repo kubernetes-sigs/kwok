@@ -19,7 +19,6 @@ package kind
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -27,6 +26,9 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -941,32 +943,20 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
-	out := bytes.NewBuffer(nil)
-	err = c.KubectlInCluster(exec.WithWriteTo(ctx, out), "get", "pod", "--namespace=kube-system", "--field-selector=status.phase!=Running", "--output=json")
+	config, err := c.Config(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	var data corev1.PodList
-	err = json.Unmarshal(out.Bytes(), &data)
-	if err != nil {
-		return false, err
-	}
+	for _, component := range config.Components {
+		ready, _, err := c.inspectComponent(ctx, component.Name)
+		if err != nil {
+			return false, err
+		}
 
-	if len(data.Items) != 0 {
-		logger := log.FromContext(ctx)
-		logger.Debug("Components not all running",
-			"components", slices.Map(data.Items, func(item corev1.Pod) interface{} {
-				return struct {
-					Pod   string
-					Phase string
-				}{
-					Pod:   log.KObj(&item).String(),
-					Phase: string(item.Status.Phase),
-				}
-			}),
-		)
-		return false, nil
+		if !ready {
+			return false, nil
+		}
 	}
 	return true, nil
 }
@@ -1110,19 +1100,29 @@ func (c *Cluster) waitComponentReady(ctx context.Context, name string, wantReady
 }
 
 func (c *Cluster) inspectComponent(ctx context.Context, name string) (ready bool, exist bool, err error) {
-	out := bytes.NewBuffer(nil)
-	err = c.KubectlInCluster(exec.WithWriteTo(ctx, out), "get", "pod", "--namespace=kube-system", "--output=json", c.getComponentName(name))
+	clientset, err := c.GetClientset(ctx)
 	if err != nil {
-		if strings.Contains(out.String(), "NotFound") {
-			return false, false, nil
-		}
 		return false, false, err
 	}
 
-	var pod corev1.Pod
-	err = json.Unmarshal(out.Bytes(), &pod)
+	restConfig, err := clientset.ToRESTConfig()
 	if err != nil {
-		return false, true, err
+		return false, false, err
+	}
+
+	typedClient, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return false, false, err
+	}
+
+	pod, err := typedClient.CoreV1().
+		Pods(metav1.NamespaceSystem).
+		Get(ctx, c.getComponentName(name), metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, false, nil
+		}
+		return false, false, err
 	}
 
 	if pod.Status.Phase != corev1.PodRunning {
