@@ -1,0 +1,25 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: stage-available
+  annotations:
+    kwok.x-k8s.io/test-stage-available: "True"
+spec:
+  resourceRef:
+    apiGroup: kwok.x-k8s.io/v1alpha1
+    kind: Stage
+  selector:
+    matchAnnotations:
+      kwok.x-k8s.io/test-stage-available: "True"
+    matchExpressions:
+    - key: .status.conditions
+      operator: DoesNotExist
+  next:
+    statusTemplate: |
+      {{ $now := Now }}
+      conditions:
+      - type: Available
+        status: "True"
+        lastTransitionTime: {{ $now | Quote }}
+        reason: Available
+        message: Available

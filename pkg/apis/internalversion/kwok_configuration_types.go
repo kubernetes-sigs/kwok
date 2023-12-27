@@ -34,9 +34,6 @@ type KwokConfigurationOptions struct {
 	// EnableCRDs is a list of CRDs to enable.
 	EnableCRDs []string
 
-	// EnableStageForRefs is a list of refs to enable stage for.
-	EnableStageForRefs []string
-
 	// The default IP assigned to the Pod on maintained Nodes.
 	CIDR string
 

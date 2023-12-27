@@ -201,11 +201,6 @@ func (in *KwokConfigurationOptions) DeepCopyInto(out *KwokConfigurationOptions) 
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.EnableStageForRefs != nil {
-		in, out := &in.EnableStageForRefs, &out.EnableStageForRefs
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.ManageAllNodes != nil {
 		in, out := &in.ManageAllNodes, &out.ManageAllNodes
 		*out = new(bool)
@@ -291,11 +286,6 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 	*out = *in
 	if in.EnableCRDs != nil {
 		in, out := &in.EnableCRDs, &out.EnableCRDs
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
-	if in.EnableStageForRefs != nil {
-		in, out := &in.EnableStageForRefs, &out.EnableStageForRefs
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

@@ -29,6 +29,7 @@ const (
 // +genclient
 // +kubebuilder:subresource:status
 // +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=attaches,verbs=create;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=attaches/status,verbs=update;patch
 
 // Attach provides attach configuration for a single pod.
 type Attach struct {

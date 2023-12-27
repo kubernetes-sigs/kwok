@@ -101,7 +101,10 @@ var (
 
 // Controller is a fake kubelet implementation that can be used to test
 type Controller struct {
-	conf        Config
+	conf Config
+
+	stagesManager *StagesManager
+
 	nodes       *NodeController
 	pods        *PodController
 	nodeLeases  *NodeLeaseController
@@ -129,8 +132,7 @@ type Controller struct {
 	nodesInformer      *informer.Informer[*corev1.Node, *corev1.NodeList]
 	podsInformer       *informer.Informer[*corev1.Pod, *corev1.PodList]
 
-	nodeLifecycleGetter resources.Getter[Lifecycle]
-	podLifecycleGetter  resources.Getter[Lifecycle]
+	patchMeta *patch.PatchMetaFromOpenAPI3
 
 	stageGetter resources.DynamicGetter[[]*internalversion.Stage]
 
@@ -157,7 +159,6 @@ type Config struct {
 	NodeIP                                string
 	NodeName                              string
 	NodePort                              int
-	StageWithRefs                         []internalversion.StageResourceRef
 	LocalStages                           map[internalversion.StageResourceRef][]*internalversion.Stage
 	PodPlayStageParallelism               uint
 	NodePlayStageParallelism              uint
@@ -203,7 +204,7 @@ func NewController(conf Config) (*Controller, error) {
 }
 
 func (c *Controller) init(ctx context.Context) (err error) {
-	if c.pods != nil || c.nodes != nil || c.nodeLeases != nil {
+	if c.stagesManager != nil {
 		return fmt.Errorf("controller already started")
 	}
 
@@ -258,6 +259,8 @@ func (c *Controller) init(ctx context.Context) (err error) {
 		nodeLeasesCli := c.conf.TypedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease)
 		c.nodeLeasesInformer = informer.NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](nodeLeasesCli)
 	}
+
+	c.patchMeta = patch.NewPatchMetaFromOpenAPI3(c.conf.RESTClient)
 
 	c.podOnNodeManageQueue = queue.NewQueue[string]()
 	c.nodeManageQueue = queue.NewQueue[string]()
@@ -342,7 +345,7 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 
 func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
-	for {
+	for ctx.Err() == nil {
 		nodeName := c.nodeManageQueue.GetOrWait()
 		node, ok := c.nodeCacheGetter.Get(nodeName)
 		if !ok {
@@ -365,23 +368,36 @@ func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 var podRef = internalversion.StageResourceRef{APIGroup: "v1", Kind: "Pod"}
 var nodeRef = internalversion.StageResourceRef{APIGroup: "v1", Kind: "Node"}
 
-func (c *Controller) initLifecycle(ctx context.Context) error {
-	if len(c.conf.LocalStages) != 0 {
-		lifecycle, err := NewLifecycle(c.conf.LocalStages[podRef])
+func (c *Controller) startStageController(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[Lifecycle]) error {
+	switch ref {
+	case podRef:
+		err := c.initPodController(ctx, lifecycle)
 		if err != nil {
-			return fmt.Errorf("failed to create pod lifecycle: %w", err)
+			return fmt.Errorf("failed to init pod controller: %w", err)
 		}
-		c.podLifecycleGetter = resources.NewStaticGetter(lifecycle)
 
-		lifecycle, err = NewLifecycle(c.conf.LocalStages[nodeRef])
+		go c.podsOnNodeSyncWorker(ctx)
+
+	case nodeRef:
+		err := c.initNodeLeaseController(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to create node lifecycle: %w", err)
+			return fmt.Errorf("failed to init node lease controller: %w", err)
 		}
-		c.nodeLifecycleGetter = resources.NewStaticGetter(lifecycle)
 
-		return nil
+		err = c.initNodeController(ctx, lifecycle)
+		if err != nil {
+			return fmt.Errorf("failed to init node controller: %w", err)
+		}
+	default:
+		err := c.initStageController(ctx, ref, lifecycle)
+		if err != nil {
+			return fmt.Errorf("failed to init stage controller: %w", err)
+		}
 	}
+	return nil
+}
 
+func (c *Controller) initStagesManager(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 
 	c.stageGetter = resources.NewDynamicGetter[
@@ -402,47 +418,26 @@ func (c *Controller) initLifecycle(ctx context.Context) error {
 		},
 	)
 
-	c.nodeLifecycleGetter = resources.NewFilter[Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) Lifecycle {
-		lifecycle := slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
-			if stage.Spec.ResourceRef.Kind != "Node" {
-				return nil, false
-			}
-
-			lifecycleStage, err := NewLifecycleStage(stage)
-			if err != nil {
-				logger.Error("failed to create node lifecycle stage", err, "stage", stage)
-				return nil, false
-			}
-			return lifecycleStage, true
-		})
-		return lifecycle
-	})
-
-	c.podLifecycleGetter = resources.NewFilter[Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) Lifecycle {
-		lifecycle := slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
-			if stage.Spec.ResourceRef.Kind != "Pod" {
-				return nil, false
-			}
-
-			lifecycleStage, err := NewLifecycleStage(stage)
-			if err != nil {
-				logger.Error("failed to create node lifecycle stage", err, "stage", stage)
-				return nil, false
-			}
-			return lifecycleStage, true
-		})
-		return lifecycle
-	})
-
 	err := c.stageGetter.Start(ctx)
 	if err != nil {
 		return err
 	}
 
+	stagesManager := NewStagesManager(StagesManagerConfig{
+		StartFunc:   c.startStageController,
+		StageGetter: c.stageGetter,
+	})
+
+	err = stagesManager.Start(ctx)
+	if err != nil {
+		return err
+	}
+
+	c.stagesManager = stagesManager
 	return nil
 }
 
-func (c *Controller) initNodeController(ctx context.Context) (err error) {
+func (c *Controller) initNodeController(ctx context.Context, lifecycle resources.Getter[Lifecycle]) (err error) {
 	c.nodes, err = NewNodeController(NodeControllerConfig{
 		Clock:                                 c.conf.Clock,
 		TypedClient:                           c.conf.TypedClient,
@@ -455,7 +450,7 @@ func (c *Controller) initNodeController(ctx context.Context) (err error) {
 		OnNodeManagedFunc: func(nodeName string) {
 			c.onNodeManagedFunc(nodeName)
 		},
-		Lifecycle:            c.nodeLifecycleGetter,
+		Lifecycle:            lifecycle,
 		PlayStageParallelism: c.conf.NodePlayStageParallelism,
 		FuncMap:              defaultFuncMap,
 		Recorder:             c.recorder,
@@ -472,7 +467,7 @@ func (c *Controller) initNodeController(ctx context.Context) (err error) {
 
 	return nil
 }
-func (c *Controller) initPodController(ctx context.Context) (err error) {
+func (c *Controller) initPodController(ctx context.Context, lifecycle resources.Getter[Lifecycle]) (err error) {
 	c.pods, err = NewPodController(PodControllerConfig{
 		Clock:                                 c.conf.Clock,
 		EnableCNI:                             c.conf.EnableCNI,
@@ -482,13 +477,19 @@ func (c *Controller) initPodController(ctx context.Context) (err error) {
 		CIDR:                                  c.conf.CIDR,
 		DisregardStatusWithAnnotationSelector: c.conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      c.conf.DisregardStatusWithLabelSelector,
-		Lifecycle:                             c.podLifecycleGetter,
+		Lifecycle:                             lifecycle,
 		PlayStageParallelism:                  c.conf.PodPlayStageParallelism,
-		NodeGetFunc:                           c.nodes.Get,
-		FuncMap:                               defaultFuncMap,
-		Recorder:                              c.recorder,
-		ReadOnlyFunc:                          c.readOnlyFunc,
-		EnableMetrics:                         c.conf.EnableMetrics,
+		NodeGetFunc: func(nodeName string) (*NodeInfo, bool) {
+			if c.nodes == nil {
+				return nil, false
+			}
+
+			return c.nodes.Get(nodeName)
+		},
+		FuncMap:       defaultFuncMap,
+		Recorder:      c.recorder,
+		ReadOnlyFunc:  c.readOnlyFunc,
+		EnableMetrics: c.conf.EnableMetrics,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create pods controller: %w", err)
@@ -502,99 +503,51 @@ func (c *Controller) initPodController(ctx context.Context) (err error) {
 	return nil
 }
 
-func (c *Controller) initStageController(ctx context.Context) error {
+func (c *Controller) initStageController(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[Lifecycle]) error {
 	logger := log.FromContext(ctx)
 
-	stageWithRefs := slices.Filter(c.conf.StageWithRefs, func(ref internalversion.StageResourceRef) bool {
-		return ref != nodeRef && ref != podRef
-	})
-
-	resourcesLifecycleGetter := map[schema.GroupVersionResource]resources.Getter[Lifecycle]{}
-
-	if len(c.conf.LocalStages) == 0 {
-		for _, ref := range stageWithRefs {
-			gv, err := schema.ParseGroupVersion(ref.APIGroup)
-			if err != nil {
-				return fmt.Errorf("failed to parse group version: %w", err)
-			}
-
-			resourceRef := ref
-			gvr, err := c.conf.RESTMapper.ResourceFor(gv.WithResource(ref.Kind))
-			if err != nil {
-				return fmt.Errorf("failed to get gvk for gvr: %w", err)
-			}
-
-			resourcesLifecycleGetter[gvr] = resources.NewFilter[Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) Lifecycle {
-				lifecycle := slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
-					if stage.Spec.ResourceRef != resourceRef {
-						return nil, false
-					}
-
-					lifecycleStage, err := NewLifecycleStage(stage)
-					if err != nil {
-						logger.Error("failed to create node lifecycle stage", err, "stage", stage)
-						return nil, false
-					}
-					return lifecycleStage, true
-				})
-				return lifecycle
-			})
-		}
-	} else {
-		for _, ref := range stageWithRefs {
-			stages := c.conf.LocalStages[ref]
-			gv, err := schema.ParseGroupVersion(ref.APIGroup)
-			if err != nil {
-				return fmt.Errorf("failed to parse group version: %w", err)
-			}
-
-			gvr, err := c.conf.RESTMapper.ResourceFor(gv.WithResource(ref.Kind))
-			if err != nil {
-				return fmt.Errorf("failed to get gvk for gvr: %w", err)
-			}
-
-			lifecycle, err := NewLifecycle(stages)
-			if err != nil {
-				return fmt.Errorf("failed to create node lifecycle: %w", err)
-			}
-			resourcesLifecycleGetter[gvr] = resources.NewStaticGetter(lifecycle)
-		}
+	gv, err := schema.ParseGroupVersion(ref.APIGroup)
+	if err != nil {
+		return fmt.Errorf("failed to parse group version: %w", err)
 	}
 
-	patchMeta := patch.NewPatchMetaFromOpenAPI3(c.conf.RESTClient)
-	for gvr, lifecycle := range resourcesLifecycleGetter {
-		logger.Info("watching stages", "gvr", gvr)
-		stageInformer := informer.NewInformer[*unstructured.Unstructured, *unstructured.UnstructuredList](c.conf.DynamicClient.Resource(gvr))
-		stageChan := make(chan informer.Event[*unstructured.Unstructured], 1)
-		err := stageInformer.Watch(ctx, informer.Option{}, stageChan)
-		if err != nil {
-			return fmt.Errorf("failed to watch stages: %w", err)
-		}
+	gvr, err := c.conf.RESTMapper.ResourceFor(gv.WithResource(ref.Kind))
+	if err != nil {
+		return fmt.Errorf("failed to get gvk for gvr: %w", err)
+	}
 
-		schema, err := patchMeta.Lookup(gvr)
-		if err != nil {
-			return err
-		}
-		stage, err := NewStageController(StageControllerConfig{
-			Clock:                                 c.conf.Clock,
-			DynamicClient:                         c.conf.DynamicClient,
-			Schema:                                schema,
-			GVR:                                   gvr,
-			DisregardStatusWithAnnotationSelector: c.conf.DisregardStatusWithAnnotationSelector,
-			DisregardStatusWithLabelSelector:      c.conf.DisregardStatusWithLabelSelector,
-			Lifecycle:                             lifecycle,
-			PlayStageParallelism:                  1,
-			FuncMap:                               defaultFuncMap,
-			Recorder:                              c.recorder,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to create stage controller: %w", err)
-		}
+	schema, err := c.patchMeta.Lookup(gvr)
+	if err != nil {
+		return err
+	}
 
-		err = stage.Start(ctx, stageChan)
-		if err != nil {
-			return fmt.Errorf("failed to start stage controller: %w", err)
-		}
+	logger.Info("watching stages", "gvr", gvr)
+	stageInformer := informer.NewInformer[*unstructured.Unstructured, *unstructured.UnstructuredList](c.conf.DynamicClient.Resource(gvr))
+	stageChan := make(chan informer.Event[*unstructured.Unstructured], 1)
+	err = stageInformer.Watch(ctx, informer.Option{}, stageChan)
+	if err != nil {
+		return fmt.Errorf("failed to watch stages: %w", err)
+	}
+
+	stage, err := NewStageController(StageControllerConfig{
+		Clock:                                 c.conf.Clock,
+		DynamicClient:                         c.conf.DynamicClient,
+		Schema:                                schema,
+		GVR:                                   gvr,
+		DisregardStatusWithAnnotationSelector: c.conf.DisregardStatusWithAnnotationSelector,
+		DisregardStatusWithLabelSelector:      c.conf.DisregardStatusWithLabelSelector,
+		Lifecycle:                             lifecycle,
+		PlayStageParallelism:                  1,
+		FuncMap:                               defaultFuncMap,
+		Recorder:                              c.recorder,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create stage controller: %w", err)
+	}
+
+	err = stage.Start(ctx, stageChan)
+	if err != nil {
+		return fmt.Errorf("failed to start stage controller: %w", err)
 	}
 
 	return nil
@@ -607,39 +560,29 @@ func (c *Controller) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to init controller: %w", err)
 	}
 
-	err = c.initNodeLeaseController(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to init node lease controller: %w", err)
+	if len(c.conf.LocalStages) != 0 {
+		for ref, stage := range c.conf.LocalStages {
+			lifecycle, err := NewLifecycle(stage)
+			if err != nil {
+				return err
+			}
+			err = c.startStageController(ctx, ref, resources.NewStaticGetter(lifecycle))
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		err = c.initStagesManager(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to init stages manager: %w", err)
+		}
 	}
-
-	err = c.initLifecycle(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to init lifecycle: %w", err)
-	}
-
-	err = c.initNodeController(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to init node controller: %w", err)
-	}
-
-	err = c.initPodController(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to init pod controller: %w", err)
-	}
-
-	go c.podsOnNodeSyncWorker(ctx)
-
-	err = c.initStageController(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to init stage controller: %w", err)
-	}
-
 	return nil
 }
 
 func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
-	for {
+	for ctx.Err() == nil {
 		nodeName := c.podOnNodeManageQueue.GetOrWait()
 		err := c.podsInformer.Sync(ctx, informer.Option{
 			FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
@@ -652,11 +595,17 @@ func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 
 // ListNodes returns all nodes
 func (c *Controller) ListNodes() []string {
+	if c.nodes == nil {
+		return nil
+	}
 	return c.nodes.List()
 }
 
 // ListPods returns all pods on the given node
 func (c *Controller) ListPods(nodeName string) ([]log.ObjectRef, bool) {
+	if c.pods == nil {
+		return nil, false
+	}
 	return c.pods.List(nodeName)
 }
 
@@ -672,6 +621,9 @@ func (c *Controller) GetNodeCache() informer.Getter[*corev1.Node] {
 
 // StartedContainersTotal returns the total number of containers started
 func (c *Controller) StartedContainersTotal(nodeName string) int64 {
+	if c.nodes == nil {
+		return 0
+	}
 	nodeInfo, ok := c.nodes.Get(nodeName)
 	if !ok {
 		return 0

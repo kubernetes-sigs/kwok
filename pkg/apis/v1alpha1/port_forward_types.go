@@ -29,6 +29,7 @@ const (
 // +genclient
 // +kubebuilder:subresource:status
 // +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=portforwards,verbs=create;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=portforwards/status,verbs=update;patch
 
 // PortForward provides port forward configuration for a single pod.
 type PortForward struct {

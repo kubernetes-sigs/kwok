@@ -31,6 +31,7 @@ const (
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 // +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterlogs,verbs=create;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterlogs/status,verbs=update;patch
 
 // ClusterLogs provides cluster-wide logging configuration
 type ClusterLogs struct {

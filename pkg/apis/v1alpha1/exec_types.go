@@ -29,6 +29,7 @@ const (
 // +genclient
 // +kubebuilder:subresource:status
 // +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=execs,verbs=create;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=execs/status,verbs=update;patch
 
 // Exec provides exec configuration for a single pod.
 type Exec struct {

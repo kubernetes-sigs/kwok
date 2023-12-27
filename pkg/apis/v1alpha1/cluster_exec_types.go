@@ -31,6 +31,7 @@ const (
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 // +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterexecs,verbs=create;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterexecs/status,verbs=update;patch
 
 // ClusterExec provides cluster-wide exec configuration.
 type ClusterExec struct {
