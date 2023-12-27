@@ -35,6 +35,7 @@ import (
 )
 
 func TestNodeLeaseController(t *testing.T) {
+	now := time.Now()
 	clientset := fake.NewSimpleClientset(
 		&coordinationv1.Lease{
 			ObjectMeta: metav1.ObjectMeta{
@@ -43,7 +44,7 @@ func TestNodeLeaseController(t *testing.T) {
 			},
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity:       format.Ptr("lease1"),
-				RenewTime:            format.Ptr(metav1.NewMicroTime(time.Now().Add(-61 * time.Second))),
+				RenewTime:            format.Ptr(metav1.NewMicroTime(now.Add(-61 * time.Second))),
 				LeaseDurationSeconds: format.Ptr(int32(60)),
 			},
 		},
@@ -54,7 +55,7 @@ func TestNodeLeaseController(t *testing.T) {
 			},
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity:       format.Ptr("lease2"),
-				RenewTime:            format.Ptr(metav1.NewMicroTime(time.Now())),
+				RenewTime:            format.Ptr(metav1.NewMicroTime(now)),
 				LeaseDurationSeconds: format.Ptr(int32(60)),
 			},
 		},
@@ -65,7 +66,7 @@ func TestNodeLeaseController(t *testing.T) {
 			},
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity:       format.Ptr("lease3"),
-				RenewTime:            format.Ptr(metav1.NewMicroTime(time.Now().Add(-61 * time.Second))),
+				RenewTime:            format.Ptr(metav1.NewMicroTime(now.Add(-61 * time.Second))),
 				LeaseDurationSeconds: format.Ptr(int32(60)),
 			},
 		},
@@ -99,6 +100,8 @@ func TestNodeLeaseController(t *testing.T) {
 		t.Fatal(fmt.Errorf("watch node leases error: %w", err))
 	}
 
+	time.Sleep(1 * time.Second)
+
 	err = nodeLeases.Start(ctx, nodeLeasesCh)
 	if err != nil {
 		t.Fatal(fmt.Errorf("start node leases controller error: %w", err))
@@ -108,45 +111,45 @@ func TestNodeLeaseController(t *testing.T) {
 	nodeLeases.TryHold("lease1")
 	nodeLeases.TryHold("lease2")
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	if !nodeLeases.Held("lease0") {
-		t.Fatal("lease0 not held")
+		t.Error("lease0 not held")
 	}
 
 	if !nodeLeases.Held("lease1") {
-		t.Fatal("lease1 not held")
+		t.Error("lease1 not held")
 	}
 
 	if nodeLeases.Held("lease2") {
-		t.Fatal("lease2 held")
+		t.Error("lease2 held")
 	}
 
 	if nodeLeases.Held("lease3") {
-		t.Fatal("lease3 held")
+		t.Error("lease3 held")
 	}
 
 	if nodeLeases.Held("lease4") {
-		t.Fatal("lease4 held")
+		t.Error("lease4 held")
 	}
 
 	_ = clientset.CoordinationV1().Leases(corev1.NamespaceNodeLease).Delete(ctx, "lease1", metav1.DeleteOptions{})
 	time.Sleep(2 * time.Second)
 
 	if !nodeLeases.Held("lease0") {
-		t.Fatal("lease0 not held")
+		t.Error("lease0 not held")
 	}
 
 	if nodeLeases.Held("lease1") {
-		t.Fatal("lease1 held")
+		t.Error("lease1 held")
 	}
 
 	if nodeLeases.Held("lease3") {
-		t.Fatal("lease3 held")
+		t.Error("lease3 held")
 	}
 
 	if nodeLeases.Held("lease4") {
-		t.Fatal("lease4 held")
+		t.Error("lease4 held")
 	}
 }
 
