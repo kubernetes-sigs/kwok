@@ -146,7 +146,10 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 		now := c.clock.Now()
 		c.sync(ctx, nodeName)
 		nextTime := c.nextTryTime(nodeName, now)
-		_ = c.delayQueue.AddAfter(nodeName, nextTime.Sub(now))
+		dur := nextTime.Sub(now)
+		if dur > 0 {
+			_ = c.delayQueue.AddAfter(nodeName, dur)
+		}
 	}
 }
 
