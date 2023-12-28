@@ -402,6 +402,12 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 		"stage", stage.Name(),
 	)
 
+	var (
+		result *corev1.Node
+		patch  []byte
+		err    error
+	)
+
 	if next.Event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
 			Kind:      "Node",
@@ -410,22 +416,23 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 			Namespace: "",
 		}, next.Event.Type, next.Event.Reason, next.Event.Message)
 	}
+
 	if next.Finalizers != nil {
-		result, err := c.finalizersModify(ctx, node, next.Finalizers)
+		result, err = c.finalizersModify(ctx, node, next.Finalizers)
 		if err != nil {
 			logger.Error("Failed to finalizers of node", err)
-		}
-		if result != nil && stage.ImmediateNextStage() {
-			c.preprocessChan <- result
+			return
 		}
 	}
+
 	if next.Delete {
-		err := c.deleteResource(ctx, node)
+		err = c.deleteResource(ctx, node)
 		if err != nil {
 			logger.Error("Failed to delete node", err)
+			return
 		}
 	} else if next.StatusTemplate != "" {
-		patch, err := c.computePatch(node, next.StatusTemplate)
+		patch, err = c.computePatch(node, next.StatusTemplate)
 		if err != nil {
 			logger.Error("Failed to configure node", err)
 			return
@@ -435,14 +442,18 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 				"reason", "do not need to modify",
 			)
 		} else {
-			result, err := c.patchResource(ctx, node, patch)
+			result, err = c.patchResource(ctx, node, patch)
 			if err != nil {
 				logger.Error("Failed to patch node", err)
-			}
-			if result != nil && stage.ImmediateNextStage() {
-				c.preprocessChan <- result
+				return
 			}
 		}
+	}
+
+	if result != nil && stage.ImmediateNextStage() {
+		logger.Debug("Re-push to preprocessChan",
+			"reason", "immediateNextStage is true")
+		c.preprocessChan <- result
 	}
 }
 
