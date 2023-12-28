@@ -85,40 +85,44 @@ Let’s take a particular resource as an example. Starting from receiving an `Ad
 if a "Change Stage" is matched. The update action itself consequently causes a new `Modified` to be generated, which will be caught by the controller later and trigger the next check and apply round.
 `kwok` deletes the resource until a "Delete Stage” is matched.
 
-```goat { height=540 width=600 }
-             o
-             |
-             |  an event from apiserver
-             +
-            / \   Yes    .-------------------------.
-           + 1 +------->+ do some cleanup if needed +----> o
-            \ /          '-------------------------'
-             |
-             | No
-             +
-            / \   No
-           + 2 +-------> o
-            \ /
-             +
-             | Yes
-             +
-            / \   Yes    .-------------------.   
-           + 3 +------->+ delete the resource +---->o
-            \ /          '--------+----------'
-             +                    
-             | No                 
-             v                    
- .----------------------.         
-| update resource status |
- '-----------+----------'
-             |
-             |  (a "Modified" event will be generated)
-             v
-             o
-
-1. Is it a "Deleted" event?
-2. Does the associated object match a Stage?
-3. Is it a "Delete Stage"?
+```goat { height=600 width=550 }
+         o
+         |
+         |  An event comes
+         +
+        / \         
+       /   \        
+      /     \  
+     /       \  Yes    .---------------.
+    + "Delete"+------>+ Do some cleanup +----> o
+     \ event?/         '---------------'
+      \     /
+       \   /
+        \ / 
+         +
+         |
+         | No
+         +
+        / \         
+       /   \        
+      /     \  
+     / Match \  No
+    +   any   +----> o
+     \ Stage?/
+      \     /
+       \   /
+        \ / 
+         +
+         |
+         | Yes               
+         v                    
+ .---------------.         
+| Modify resource |
+ '-------+-------'
+         |
+         |  A new event will be generated
+         v
+         o
 ```
 
 However, this event-driven approach to applying Stages has a limitation: `kwok` won’t apply a Stage until a new event associated with that resource is received. To address the limitation,
