@@ -74,11 +74,11 @@ and gain insights into the behavior and performance of your applications and inf
 
 The `<expressions-string>` is provided by the [Go Implementation] of [JQ Expressions]
 
-## How `kwok` applies Stages
+## How it works
 
 Stages can be generally divided into two categories based on different settings of the `next` field.
-A Stage that has a non-empty `nextTemplate` is a "Change Stage". The content of `nextTemplate` will be used by `kwok` for updating resource status.
-A Stage with `delete` being `true` represents a "Delete Stage", which signals `kwok` to delete the resource.
+A Stage that has a non-empty `statusTemplate` is a "Change Stage", which will be used by `kwok` for updating resource status.
+A Stage with `delete` being `true` represents a "Delete Stage", which means to `kwok` to delete the resource.
 
 It is the [Resource Lifecycle Simulation Controller] in `kwok` that applies the Stages. The controller watches resource events from the apiserver and applies a Stage on a resource when it receives an associated event.
 Let’s take a particular resource as an example. Starting from receiving an `Added` event of the resource, `kwok` checks whether the associated object matches a Stage. `kwok` then updates the resource status
