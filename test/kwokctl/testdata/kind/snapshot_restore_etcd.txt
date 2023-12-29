@@ -1,5 +1,5 @@
 docker exec kwok-<CLUSTER_NAME>-control-plane mv /etc/kubernetes/manifests/etcd.yaml /etc/kubernetes/etcd.yaml.bak
-# Download https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-<OS>-<ARCH>.<TAR> and extract etcdctl to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcdctl
+# Download https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-<OS>-<ARCH>.<TAR> and extract etcdctl to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcdctl
 ETCDCTL_API=3 etcdctl snapshot restore ./snapshot-empty-<CLUSTER_NAME> --data-dir <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 docker cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd kwok-<CLUSTER_NAME>-control-plane:/var/lib/
 rm -rf <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd

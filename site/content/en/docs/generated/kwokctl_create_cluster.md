@@ -18,10 +18,10 @@ kwokctl create cluster [flags]
       --disable-kube-scheduler                  Disable the kube-scheduler
       --disable-qps-limits                      Disable QPS limits for components
       --enable-crds strings                     List of CRDs to enable
-      --etcd-binary string                      Binary of etcd, only for binary runtime (default "https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-amd64.tar.gz#etcd")
+      --etcd-binary string                      Binary of etcd, only for binary runtime (default "https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-linux-amd64.tar.gz#etcd")
       --etcd-image string                       Image of etcd, only for docker/podman/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
-                                                 (default "registry.k8s.io/etcd:3.5.9-0")
+                                                 (default "registry.k8s.io/etcd:3.5.11-0")
       --etcd-port uint32                        Port of etcd given to the host. The behavior is unstable for kind/kind-podman runtime and may be modified in the future
   -h, --help                                    help for cluster
       --jaeger-binary string                    Binary of Jaeger, only for binary runtime (default "https://github.com/jaegertracing/jaeger/releases/download/v1.45.0/jaeger-1.45.0-linux-amd64.tar.gz#jaeger-all-in-one")

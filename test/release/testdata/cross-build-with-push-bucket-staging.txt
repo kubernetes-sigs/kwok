@@ -1,24 +1,24 @@
-GOOS=linux GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/amd64/kwok ./cmd/kwok
+GOOS=linux GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/amd64/kwok ./cmd/kwok
 gsutil cp -P ./bin/linux/amd64/kwok bucket/releases/staging-prefix-<VERSION>/bin/linux/amd64/kwok
-GOOS=linux GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/amd64/kwokctl ./cmd/kwokctl
+GOOS=linux GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/amd64/kwokctl ./cmd/kwokctl
 gsutil cp -P ./bin/linux/amd64/kwokctl bucket/releases/staging-prefix-<VERSION>/bin/linux/amd64/kwokctl
-GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/arm64/kwok ./cmd/kwok
+GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/arm64/kwok ./cmd/kwok
 gsutil cp -P ./bin/linux/arm64/kwok bucket/releases/staging-prefix-<VERSION>/bin/linux/arm64/kwok
-GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/arm64/kwokctl ./cmd/kwokctl
+GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/arm64/kwokctl ./cmd/kwokctl
 gsutil cp -P ./bin/linux/arm64/kwokctl bucket/releases/staging-prefix-<VERSION>/bin/linux/arm64/kwokctl
-GOOS=darwin GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/amd64/kwok ./cmd/kwok
+GOOS=darwin GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/amd64/kwok ./cmd/kwok
 gsutil cp -P ./bin/darwin/amd64/kwok bucket/releases/staging-prefix-<VERSION>/bin/darwin/amd64/kwok
-GOOS=darwin GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/amd64/kwokctl ./cmd/kwokctl
+GOOS=darwin GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/amd64/kwokctl ./cmd/kwokctl
 gsutil cp -P ./bin/darwin/amd64/kwokctl bucket/releases/staging-prefix-<VERSION>/bin/darwin/amd64/kwokctl
-GOOS=darwin GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/arm64/kwok ./cmd/kwok
+GOOS=darwin GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/arm64/kwok ./cmd/kwok
 gsutil cp -P ./bin/darwin/arm64/kwok bucket/releases/staging-prefix-<VERSION>/bin/darwin/arm64/kwok
-GOOS=darwin GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/arm64/kwokctl ./cmd/kwokctl
+GOOS=darwin GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/arm64/kwokctl ./cmd/kwokctl
 gsutil cp -P ./bin/darwin/arm64/kwokctl bucket/releases/staging-prefix-<VERSION>/bin/darwin/arm64/kwokctl
-GOOS=windows GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/amd64/kwok.exe ./cmd/kwok
+GOOS=windows GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/amd64/kwok.exe ./cmd/kwok
 gsutil cp -P ./bin/windows/amd64/kwok.exe bucket/releases/staging-prefix-<VERSION>/bin/windows/amd64/kwok.exe
-GOOS=windows GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/amd64/kwokctl.exe ./cmd/kwokctl
+GOOS=windows GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/amd64/kwokctl.exe ./cmd/kwokctl
 gsutil cp -P ./bin/windows/amd64/kwokctl.exe bucket/releases/staging-prefix-<VERSION>/bin/windows/amd64/kwokctl.exe
-GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/arm64/kwok.exe ./cmd/kwok
+GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/arm64/kwok.exe ./cmd/kwok
 gsutil cp -P ./bin/windows/arm64/kwok.exe bucket/releases/staging-prefix-<VERSION>/bin/windows/arm64/kwok.exe
-GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.28.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/arm64/kwokctl.exe ./cmd/kwokctl
+GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/arm64/kwokctl.exe ./cmd/kwokctl
 gsutil cp -P ./bin/windows/arm64/kwokctl.exe bucket/releases/staging-prefix-<VERSION>/bin/windows/arm64/kwokctl.exe

@@ -1543,7 +1543,6 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.JaegerBinaryTar = in.JaegerBinaryTar
 	out.DockerComposeBinary = in.DockerComposeBinary
 	out.KindBinary = in.KindBinary
-	out.Mode = in.Mode
 	out.KubeFeatureGates = in.KubeFeatureGates
 	out.KubeRuntimeConfig = in.KubeRuntimeConfig
 	out.KubeAuditPolicy = in.KubeAuditPolicy
@@ -1644,7 +1643,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.DockerComposeBinary = in.DockerComposeBinary
 	// INFO: in.KindBinaryPrefix opted out of conversion generation
 	out.KindBinary = in.KindBinary
-	out.Mode = in.Mode
+	// INFO: in.Mode opted out of conversion generation
 	out.KubeFeatureGates = in.KubeFeatureGates
 	out.KubeRuntimeConfig = in.KubeRuntimeConfig
 	out.KubeAuditPolicy = in.KubeAuditPolicy

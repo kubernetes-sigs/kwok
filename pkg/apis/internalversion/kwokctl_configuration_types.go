@@ -206,9 +206,6 @@ type KwokctlConfigurationOptions struct {
 	// KindBinary is the binary of kind.
 	KindBinary string
 
-	// Mode is several default parameter templates for clusters
-	Mode string
-
 	// KubeFeatureGates is a set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes.
 	KubeFeatureGates string
 
