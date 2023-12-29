@@ -218,68 +218,97 @@ func Test_tryAcquireOrRenew(t *testing.T) {
 	}
 }
 
-func Test_nextTryTime(t *testing.T) {
-	now := time.Now()
-	type args struct {
-		lease          *coordinationv1.Lease
-		holderIdentity string
-		next           time.Time
-	}
+func TestNextTryDuration(t *testing.T) {
 	tests := []struct {
-		name string
-		args args
-		want time.Time
+		name           string
+		renewInterval  time.Duration
+		expire         time.Duration
+		hold           bool
+		expectedResult time.Duration
 	}{
 		{
-			name: "holder self and not expired",
-			args: args{
-				lease: &coordinationv1.Lease{
-					Spec: coordinationv1.LeaseSpec{
-						HolderIdentity:       format.Ptr("test"),
-						LeaseDurationSeconds: format.Ptr(int32(40)),
-						RenewTime:            format.Ptr(metav1.NewMicroTime(now)),
-					},
-				},
-				holderIdentity: "test",
-				next:           now.Add(39 * time.Second),
-			},
-			want: now.Add(39 * time.Second),
+			name:           "Lease expired",
+			renewInterval:  10 * time.Second,
+			expire:         -1 * time.Second,
+			hold:           true,
+			expectedResult: 0,
 		},
 		{
-			name: "holder self and expired",
-			args: args{
-				lease: &coordinationv1.Lease{
-					Spec: coordinationv1.LeaseSpec{
-						HolderIdentity:       format.Ptr("test"),
-						LeaseDurationSeconds: format.Ptr(int32(40)),
-						RenewTime:            format.Ptr(metav1.NewMicroTime(now)),
-					},
-				},
-				holderIdentity: "test",
-				next:           now.Add(41 * time.Second),
-			},
-			want: now.Add(40 * time.Second),
+			name:           "Lease not held",
+			renewInterval:  10 * time.Second,
+			expire:         5 * time.Second,
+			hold:           false,
+			expectedResult: 5 * time.Second,
 		},
 		{
-			name: "holder not self and not expired",
-			args: args{
-				lease: &coordinationv1.Lease{
-					Spec: coordinationv1.LeaseSpec{
-						HolderIdentity:       format.Ptr("test"),
-						LeaseDurationSeconds: format.Ptr(int32(40)),
-						RenewTime:            format.Ptr(metav1.NewMicroTime(now)),
-					},
-				},
-				holderIdentity: "test-new",
-				next:           now.Add(39 * time.Second),
-			},
-			want: now.Add(40 * time.Second),
+			name:           "Lease held, renew interval greater than expire time",
+			renewInterval:  10 * time.Second,
+			expire:         5 * time.Second,
+			hold:           true,
+			expectedResult: 4 * time.Second,
+		},
+		{
+			name:           "Lease held, renew interval less than expire time",
+			renewInterval:  5 * time.Second,
+			expire:         10 * time.Second,
+			hold:           true,
+			expectedResult: 5 * time.Second,
+		},
+		{
+			name:           "Lease held, renew interval equals expire time",
+			renewInterval:  5 * time.Second,
+			expire:         5 * time.Second,
+			hold:           true,
+			expectedResult: 4 * time.Second,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := nextTryTime(tt.args.lease, tt.args.holderIdentity, tt.args.next); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("nextTryTime() = %v, want %v", got, tt.want)
+			result := nextTryDuration(tt.renewInterval, tt.expire, tt.hold)
+			if result != tt.expectedResult {
+				t.Errorf("nextTryDuration() = %v, want %v", result, tt.expectedResult)
+			}
+		})
+	}
+}
+
+func TestExpireTime(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name     string
+		lease    *coordinationv1.Lease
+		wantTime time.Time
+		wantBool bool
+	}{
+		{
+			name:     "Lease with missing fields",
+			lease:    &coordinationv1.Lease{},
+			wantTime: time.Time{},
+			wantBool: false,
+		},
+		{
+			name: "Lease with all fields",
+			lease: &coordinationv1.Lease{
+				Spec: coordinationv1.LeaseSpec{
+					HolderIdentity:       format.Ptr("test"),
+					LeaseDurationSeconds: format.Ptr(int32(10)),
+					RenewTime:            format.Ptr(metav1.NewMicroTime(now)),
+				},
+			},
+			wantTime: now.Add(10 * time.Second),
+			wantBool: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTime, gotBool := expireTime(tt.lease)
+			if !reflect.DeepEqual(gotTime, tt.wantTime) {
+				t.Errorf("expireTime() gotTime = %v, want %v", gotTime, tt.wantTime)
+			}
+			if gotBool != tt.wantBool {
+				t.Errorf("expireTime() gotBool = %v, want %v", gotBool, tt.wantBool)
 			}
 		})
 	}

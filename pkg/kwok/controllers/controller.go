@@ -288,7 +288,6 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 	c.nodeLeases, err = NewNodeLeaseController(NodeLeaseControllerConfig{
 		Clock:                c.conf.Clock,
 		TypedClient:          c.conf.TypedClient,
-		NodeCacheGetter:      c.nodeCacheGetter,
 		LeaseDurationSeconds: c.conf.NodeLeaseDurationSeconds,
 		LeaseParallelism:     c.conf.NodeLeaseParallelism,
 		RenewInterval:        renewInterval,
