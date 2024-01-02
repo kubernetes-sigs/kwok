@@ -39,7 +39,6 @@ import (
 // NodeLeaseController is responsible for creating and renewing a lease object
 type NodeLeaseController struct {
 	typedClient          clientset.Interface
-	nodeCacheGetter      informer.Getter[*corev1.Node]
 	leaseDurationSeconds uint
 	leaseParallelism     uint
 	renewInterval        time.Duration
@@ -63,7 +62,6 @@ type NodeLeaseControllerConfig struct {
 	Clock                clock.Clock
 	HolderIdentity       string
 	TypedClient          clientset.Interface
-	NodeCacheGetter      informer.Getter[*corev1.Node]
 	LeaseDurationSeconds uint
 	LeaseParallelism     uint
 	RenewInterval        time.Duration
@@ -85,7 +83,6 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 	c := &NodeLeaseController{
 		clock:                conf.Clock,
 		typedClient:          conf.TypedClient,
-		nodeCacheGetter:      conf.NodeCacheGetter,
 		leaseDurationSeconds: conf.LeaseDurationSeconds,
 		leaseParallelism:     conf.LeaseParallelism,
 		renewInterval:        conf.RenewInterval,
@@ -134,35 +131,39 @@ loop:
 }
 
 func (c *NodeLeaseController) syncWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
 		nodeName := c.delayQueue.GetOrWait()
-		if c.nodeCacheGetter != nil {
-			_, ok := c.nodeCacheGetter.Get(nodeName)
-			if !ok {
-				continue
-			}
-		}
 
 		now := c.clock.Now()
-		c.sync(ctx, nodeName)
-		nextTime := c.nextTryTime(nodeName, now)
-		dur := nextTime.Sub(now)
-		if dur > 0 {
-			_ = c.delayQueue.AddAfter(nodeName, dur)
+		hold := c.sync(ctx, nodeName)
+
+		lease, _ := c.latestLease.Load(nodeName)
+
+		expireTime, ok := expireTime(lease)
+		if !ok {
+			if hold {
+				// If the lease is not found, we should retry immediately.
+				c.delayQueue.Add(nodeName)
+			} else {
+				logger.Warn("Lease not held",
+					"node", nodeName,
+				)
+			}
+			continue
 		}
+
+		renewIntervalDuration := c.interval()
+		expireDuration := expireTime.Sub(now)
+
+		nextTry := nextTryDuration(renewIntervalDuration, expireDuration, hold)
+
+		_ = c.delayQueue.AddAfter(nodeName, nextTry)
 	}
 }
 
-func (c *NodeLeaseController) nextTryTime(name string, now time.Time) time.Time {
-	next := now.Add(wait.Jitter(c.renewInterval, c.renewIntervalJitter))
-	lease, ok := c.latestLease.Load(name)
-	if !ok || lease == nil ||
-		lease.Spec.HolderIdentity == nil ||
-		lease.Spec.LeaseDurationSeconds == nil ||
-		lease.Spec.RenewTime == nil {
-		return next
-	}
-	return nextTryTime(lease, c.holderIdentity, next)
+func (c *NodeLeaseController) interval() time.Duration {
+	return wait.Jitter(c.renewInterval, c.renewIntervalJitter)
 }
 
 // TryHold tries to hold a lease for the NodeLeaseController
@@ -187,7 +188,7 @@ func (c *NodeLeaseController) Held(name string) bool {
 }
 
 // sync syncs a lease for a node
-func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
+func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) bool {
 	logger := log.FromContext(ctx)
 	logger = logger.With("node", nodeName)
 
@@ -195,13 +196,13 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 	if ok && latestLease != nil {
 		if !tryAcquireOrRenew(latestLease, c.holderIdentity, c.clock.Now()) {
 			logger.Debug("Lease already acquired by another holder")
-			return
+			return false
 		}
 		logger.Info("Syncing lease")
 		lease, transitions, err := c.renewLease(ctx, latestLease)
 		if err != nil {
 			logger.Error("failed to update lease using latest lease", err)
-			return
+			return false
 		}
 		c.latestLease.Store(nodeName, lease)
 		if transitions {
@@ -226,7 +227,7 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 				_, err = c.syncLease(ctx, nodeName)
 				if err != nil {
 					logger.Error("failed to sync lease", err)
-					return
+					return false
 				}
 				if c.onNodeManagedFunc != nil {
 					if c.Held(nodeName) {
@@ -235,12 +236,12 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 						logger.Warn("Lease not held")
 					}
 				}
-				return
+				return true
 			}
 
 			if !apierrors.IsNotFound(err) || !c.latestLease.IsEmpty() {
 				logger.Error("failed to create lease", err)
-				return
+				return false
 			}
 
 			// kube-apiserver will not have finished initializing the resources when the cluster has just been created.
@@ -249,7 +250,7 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 			latestLease, err = c.ensureLease(ctx, nodeName)
 			if err != nil {
 				logger.Error("failed to create lease secondly", err)
-				return
+				return false
 			}
 		}
 
@@ -262,6 +263,7 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) {
 			}
 		}
 	}
+	return true
 }
 
 func (c *NodeLeaseController) syncLease(ctx context.Context, leaseName string) (*coordinationv1.Lease, error) {
@@ -357,14 +359,38 @@ func tryAcquireOrRenew(lease *coordinationv1.Lease, holderIdentity string, now t
 	return expireTime.Before(now)
 }
 
-// nextTryTime returns the next time to try to acquire or renew the lease
-func nextTryTime(lease *coordinationv1.Lease, holderIdentity string, next time.Time) time.Time {
-	expireTime := lease.Spec.RenewTime.Add(time.Duration(*lease.Spec.LeaseDurationSeconds) * time.Second)
-	if *lease.Spec.HolderIdentity == holderIdentity {
-		if next.Before(expireTime) {
-			return next
-		}
+// expireTime returns the expire time of a lease
+func expireTime(lease *coordinationv1.Lease) (time.Time, bool) {
+	if lease == nil ||
+		lease.Spec.HolderIdentity == nil ||
+		lease.Spec.LeaseDurationSeconds == nil ||
+		lease.Spec.RenewTime == nil {
+		return time.Time{}, false
 	}
 
-	return expireTime
+	expireTime := lease.Spec.RenewTime.Add(time.Duration(*lease.Spec.LeaseDurationSeconds) * time.Second)
+	return expireTime, true
+}
+
+// nextTryDuration returns the next to try to acquire or renew the lease
+func nextTryDuration(renewInterval, expire time.Duration, hold bool) time.Duration {
+	switch {
+	case expire <= 0:
+		// If the lease is expired, we should retry immediately.
+		return 0
+	case !hold:
+		// If the lease is not held, we should retry at the expire time.
+		return expire
+	case hold && renewInterval >= expire-time.Second:
+		// If the lease is held and the renew interval is greater than the expire time,
+		// we should retry earlier than the expire time.
+		expire -= time.Second
+		if expire < 0 {
+			expire = 0
+		}
+		return expire
+	default:
+		// Otherwise, we should retry at the renew interval.
+		return renewInterval
+	}
 }
