@@ -102,14 +102,11 @@ func verifyBoilerplate(contents string) error {
 
 			// validate the year of the copyright
 			yearWords := strings.Split(line, " ")
-			expectedLen := len(strings.Split(boilerPlate[0], " "))
-			if len(yearWords) != expectedLen {
-				return fmt.Errorf("copyright line should contain exactly %d words: %q", expectedLen, yearWords)
+			if yearRegexp.MatchString(yearWords[1]) {
+				bpLine = strings.ReplaceAll(bpLine, yearPlaceholder, yearWords[1])
+			} else {
+				bpLine = strings.ReplaceAll(bpLine, yearPlaceholder+" ", "")
 			}
-			if !yearRegexp.MatchString(yearWords[1]) {
-				return fmt.Errorf("cannot parse the year in the copyright line")
-			}
-			bpLine = strings.ReplaceAll(bpLine, yearPlaceholder, yearWords[1])
 		}
 
 		// match line by line
