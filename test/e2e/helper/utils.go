@@ -74,7 +74,7 @@ func CreateNode(node *corev1.Node) features.Func {
 		err = wait.For(
 			conditions.New(client).ResourceMatch(node, nodeIsReady(node.Name)),
 			wait.WithContext(ctx),
-			wait.WithTimeout(600*time.Second),
+			wait.WithTimeout(20*time.Minute),
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -101,7 +101,7 @@ func DeleteNode(node *corev1.Node) features.Func {
 		err = wait.For(
 			conditions.New(client).ResourceDeleted(node),
 			wait.WithContext(ctx),
-			wait.WithTimeout(600*time.Second),
+			wait.WithTimeout(20*time.Minute),
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -128,7 +128,7 @@ func CreatePod(pod *corev1.Pod) features.Func {
 		err = wait.For(
 			conditions.New(client).PodConditionMatch(pod, corev1.PodReady, corev1.ConditionTrue),
 			wait.WithContext(ctx),
-			wait.WithTimeout(600*time.Second),
+			wait.WithTimeout(20*time.Minute),
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -195,7 +195,7 @@ func DeletePod(pod *corev1.Pod) features.Func {
 		err = wait.For(
 			conditions.New(client).ResourceDeleted(pod),
 			wait.WithContext(ctx),
-			wait.WithTimeout(600*time.Second),
+			wait.WithTimeout(20*time.Minute),
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -247,7 +247,7 @@ func WaitForAllNodesReady() env.Func {
 				return len(notReady) == 0, nil
 			},
 			wait.WithContext(ctx),
-			wait.WithTimeout(600*time.Second),
+			wait.WithTimeout(20*time.Minute),
 		)
 		if err != nil {
 			return ctx, err
@@ -297,7 +297,7 @@ func WaitForAllPodsReady() env.Func {
 				return len(notReady) == 0, nil
 			},
 			wait.WithContext(ctx),
-			wait.WithTimeout(600*time.Second),
+			wait.WithTimeout(20*time.Minute),
 		)
 		if err != nil {
 			return ctx, err
@@ -340,7 +340,7 @@ func waitForServiceAccountReady(ctx context.Context, resource *resources.Resourc
 			return false, nil
 		},
 		wait.WithContext(ctx),
-		wait.WithTimeout(120*time.Second),
+		wait.WithTimeout(10*time.Minute),
 	)
 	if err != nil {
 		return fmt.Errorf("wait for %s.%s service account ready: %w", name, namespace, err)

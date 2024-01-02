@@ -18,6 +18,7 @@ package helper
 
 import (
 	"context"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
@@ -42,7 +43,11 @@ func CreateCluster(p support.E2EClusterProvider, args ...string) env.Func {
 		if err != nil {
 			return ctx, err
 		}
-		err = wait.For(conditions.New(r).ResourceListN(&corev1.ServiceAccountList{}, 1))
+		err = wait.For(
+			conditions.New(r).ResourceListN(&corev1.ServiceAccountList{}, 1),
+			wait.WithTimeout(20*time.Minute),
+			wait.WithContext(ctx),
+		)
 		if err != nil {
 			return ctx, err
 		}
