@@ -75,6 +75,13 @@ rules:
 - apiGroups:
   - kwok.x-k8s.io
   resources:
+  - attaches/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
   - clusterattaches
   verbs:
   - create
@@ -84,6 +91,13 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterattaches/status
+  verbs:
+  - patch
+  - update
 - apiGroups:
   - kwok.x-k8s.io
   resources:
@@ -99,6 +113,13 @@ rules:
 - apiGroups:
   - kwok.x-k8s.io
   resources:
+  - clusterexecs/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
   - clusterlogs
   verbs:
   - create
@@ -108,6 +129,13 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterlogs/status
+  verbs:
+  - patch
+  - update
 - apiGroups:
   - kwok.x-k8s.io
   resources:
@@ -123,6 +151,13 @@ rules:
 - apiGroups:
   - kwok.x-k8s.io
   resources:
+  - clusterportforwards/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
   - execs
   verbs:
   - create
@@ -132,6 +167,13 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - execs/status
+  verbs:
+  - patch
+  - update
 - apiGroups:
   - kwok.x-k8s.io
   resources:
@@ -147,6 +189,13 @@ rules:
 - apiGroups:
   - kwok.x-k8s.io
   resources:
+  - logs/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
   - metrics
   verbs:
   - create
@@ -156,6 +205,13 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - metrics/status
+  verbs:
+  - patch
+  - update
 - apiGroups:
   - kwok.x-k8s.io
   resources:
@@ -171,6 +227,13 @@ rules:
 - apiGroups:
   - kwok.x-k8s.io
   resources:
+  - portforwards/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
   - stages
   verbs:
   - create
@@ -180,3 +243,10 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - stages/status
+  verbs:
+  - patch
+  - update

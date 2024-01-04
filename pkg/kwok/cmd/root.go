@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -94,7 +93,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.ServerAddress, "server-address", flags.Options.ServerAddress, "Address to expose the server on")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease seconds")
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
-	cmd.Flags().StringSliceVar(&flags.Options.EnableStageForRefs, "enable-stage-for-refs", flags.Options.EnableStageForRefs, "List of refs to enable stage for")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
 	if config.GOOS != "linux" {
@@ -233,20 +231,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 	ctx = log.NewContext(ctx, logger.With("id", id))
 
-	restMappings, err := slices.MapWithError(flags.Options.EnableStageForRefs, func(ref string) (*meta.RESTMapping, error) {
-		return client.MappingFor(restMapper, ref)
-	})
-	if err != nil {
-		return err
-	}
-
-	stageWithRefs := slices.Map(restMappings, func(m *meta.RESTMapping) internalversion.StageResourceRef {
-		return internalversion.StageResourceRef{
-			APIGroup: m.GroupVersionKind.GroupVersion().String(),
-			Kind:     m.GroupVersionKind.Kind,
-		}
-	})
-
 	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
 	enableMetrics := len(metrics) != 0 || slices.Contains(flags.Options.EnableCRDs, v1alpha1.MetricKind)
 	ctr, err := controllers.NewController(controllers.Config{
@@ -271,7 +255,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 		NodePort:                              flags.Options.NodePort,
 		PodPlayStageParallelism:               flags.Options.PodPlayStageParallelism,
 		NodePlayStageParallelism:              flags.Options.NodePlayStageParallelism,
-		StageWithRefs:                         stageWithRefs,
 		LocalStages:                           groupStages,
 		NodeLeaseParallelism:                  flags.Options.NodeLeaseParallelism,
 		NodeLeaseDurationSeconds:              flags.Options.NodeLeaseDurationSeconds,

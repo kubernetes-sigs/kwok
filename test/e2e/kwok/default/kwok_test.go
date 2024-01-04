@@ -35,3 +35,9 @@ func TestPod(t *testing.T) {
 		Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestStage(t *testing.T) {
+	f0 := e2e.CaseStage().
+		Feature()
+	testEnv.Test(t, f0)
+}

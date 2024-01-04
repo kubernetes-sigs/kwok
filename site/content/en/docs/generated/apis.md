@@ -1900,17 +1900,6 @@ Once listed in this field, it will no longer be supported by the &ndash;config f
 </tr>
 <tr>
 <td>
-<code>enableStageForRefs</code>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>EnableStageForRefs is a list of refs to enable stage for.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>cidr</code>
 <em>
 string
@@ -2199,17 +2188,6 @@ KwokctlConfigurationOptions
 <td>
 <p>EnableCRDs is a list of CRDs to enable.
 Once listed in this field, it will no longer be supported by the &ndash;config flag.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableStageForRefs</code>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>EnableStageForRefs is a list of refs to enable stage for.</p>
 </td>
 </tr>
 <tr>

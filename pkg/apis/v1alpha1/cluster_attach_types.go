@@ -31,6 +31,7 @@ const (
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 // +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterattaches,verbs=create;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterattaches/status,verbs=update;patch
 
 // ClusterAttach provides cluster-wide logging configuration
 type ClusterAttach struct {

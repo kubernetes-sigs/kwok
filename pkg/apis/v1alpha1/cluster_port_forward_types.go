@@ -31,6 +31,7 @@ const (
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 // +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterportforwards,verbs=create;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=kwok.x-k8s.io,resources=clusterportforwards/status,verbs=update;patch
 
 // ClusterPortForward provides cluster-wide port forward configuration.
 type ClusterPortForward struct {

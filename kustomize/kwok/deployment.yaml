@@ -31,8 +31,6 @@ spec:
             - --enable-crds=ClusterLogs
             - --enable-crds=PortForward
             - --enable-crds=ClusterPortForward
-            - --enable-stage-for-refs=node
-            - --enable-stage-for-refs=pod
           env:
             - name: POD_IP
               valueFrom:

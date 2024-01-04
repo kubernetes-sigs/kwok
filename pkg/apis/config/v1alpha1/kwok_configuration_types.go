@@ -44,10 +44,6 @@ type KwokConfigurationOptions struct {
 	// Once listed in this field, it will no longer be supported by the --config flag.
 	EnableCRDs []string `json:"enableCRDs,omitempty"`
 
-	// EnableStageForRefs is a list of refs to enable stage for.
-	// +default=["node", "pod"]
-	EnableStageForRefs []string `json:"enableStageForRefs,omitempty"`
-
 	// The default IP assigned to the Pod on maintained Nodes.
 	// is the default value for flag --cidr
 	// +default="10.0.0.1/24"

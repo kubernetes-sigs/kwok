@@ -18,7 +18,6 @@ kwokctl create cluster [flags]
       --disable-kube-scheduler                  Disable the kube-scheduler
       --disable-qps-limits                      Disable QPS limits for components
       --enable-crds strings                     List of CRDs to enable
-      --enable-stage-for-refs strings           List of refs to enable stage for (default [node,pod])
       --etcd-binary string                      Binary of etcd, only for binary runtime (default "https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-amd64.tar.gz#etcd")
       --etcd-image string                       Image of etcd, only for docker/podman/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
