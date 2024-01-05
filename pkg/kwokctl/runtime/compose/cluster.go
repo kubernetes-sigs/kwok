@@ -326,6 +326,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.preInstall(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.setup(ctx, env)
 	if err != nil {
 		return err
@@ -406,24 +411,16 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	etcdComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentEtcd)
-	etcdComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(etcdComponentPatches.ExtraVolumes)
-	if err != nil {
-		return fmt.Errorf("failed to expand host volumes for etcd component: %w", err)
-	}
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Runtime:      conf.Runtime,
-		ProjectName:  c.Name(),
-		Workdir:      env.workdir,
-		Image:        conf.EtcdImage,
-		Version:      etcdVersion,
-		BindAddress:  net.PublicAddress,
-		Port:         conf.EtcdPort,
-		DataPath:     env.etcdDataPath,
-		Verbosity:    env.verbosity,
-		ExtraArgs:    etcdComponentPatches.ExtraArgs,
-		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
-		ExtraEnvs:    etcdComponentPatches.ExtraEnvs,
+		Runtime:     conf.Runtime,
+		ProjectName: c.Name(),
+		Workdir:     env.workdir,
+		Image:       conf.EtcdImage,
+		Version:     etcdVersion,
+		BindAddress: net.PublicAddress,
+		Port:        conf.EtcdPort,
+		DataPath:    env.etcdDataPath,
+		Verbosity:   env.verbosity,
 	})
 	if err != nil {
 		return err
@@ -439,12 +436,6 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	kubeApiserverVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeApiserverImage, consts.ComponentKubeApiserver)
 	if err != nil {
 		return err
-	}
-
-	kubeApiserverComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeApiserver)
-	kubeApiserverComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeApiserverComponentPatches.ExtraVolumes)
-	if err != nil {
-		return fmt.Errorf("failed to expand host volumes for kube api server component: %w", err)
 	}
 
 	kubeApiserverTracingConfigPath := ""
@@ -486,9 +477,6 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		Verbosity:         env.verbosity,
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		TracingConfigPath: kubeApiserverTracingConfigPath,
-		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
-		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
-		ExtraEnvs:         kubeApiserverComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -507,11 +495,6 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			return err
 		}
 
-		kubeControllerManagerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeControllerManager)
-		kubeControllerManagerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeControllerManagerComponentPatches.ExtraVolumes)
-		if err != nil {
-			return fmt.Errorf("failed to expand host volumes for kube controller manager component: %w", err)
-		}
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
 			Runtime:                            conf.Runtime,
 			ProjectName:                        c.Name(),
@@ -531,9 +514,6 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			DisableQPSLimits:                   conf.DisableQPSLimits,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
-			ExtraArgs:                          kubeControllerManagerComponentPatches.ExtraArgs,
-			ExtraVolumes:                       kubeControllerManagerComponentPatches.ExtraVolumes,
-			ExtraEnvs:                          kubeControllerManagerComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -562,11 +542,6 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		kubeSchedulerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeScheduler)
-		kubeSchedulerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kubeSchedulerComponentPatches.ExtraVolumes)
-		if err != nil {
-			return fmt.Errorf("failed to expand host volumes for kube scheduler component: %w", err)
-		}
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
 			Runtime:          conf.Runtime,
 			ProjectName:      c.Name(),
@@ -584,9 +559,6 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 			KubeFeatureGates: conf.KubeFeatureGates,
 			Verbosity:        env.verbosity,
 			DisableQPSLimits: conf.DisableQPSLimits,
-			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
-			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
-			ExtraEnvs:        kubeSchedulerComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -605,15 +577,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	kwokControllerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKwokController)
-	kwokControllerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kwokControllerComponentPatches.ExtraVolumes)
-	if err != nil {
-		return fmt.Errorf("failed to expand host volumes for kwok controller component: %w", err)
-	}
-
 	logVolumes := runtime.GetLogVolumes(ctx)
-	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
-	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, logVolumes...)
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Runtime:                  conf.Runtime,
@@ -632,10 +596,9 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		Verbosity:                env.verbosity,
 		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 		EnableCRDs:               conf.EnableCRDs,
-		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
-		ExtraVolumes:             kwokControllerExtraVolumes,
-		ExtraEnvs:                kwokControllerComponentPatches.ExtraEnvs,
 	})
+	kwokControllerComponent.Volumes = append(kwokControllerComponent.Volumes, logVolumes...)
+
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kwokControllerComponent)
 	return nil
 }
@@ -675,11 +638,6 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		prometheusComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentPrometheus)
-		prometheusComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(prometheusComponentPatches.ExtraVolumes)
-		if err != nil {
-			return fmt.Errorf("failed to expand host volumes for prometheus component: %w", err)
-		}
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
 			Runtime:       conf.Runtime,
 			Workdir:       env.workdir,
@@ -691,9 +649,6 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			AdminCertPath: env.adminCertPath,
 			AdminKeyPath:  env.adminKeyPath,
 			Verbosity:     env.verbosity,
-			ExtraArgs:     prometheusComponentPatches.ExtraArgs,
-			ExtraVolumes:  prometheusComponentPatches.ExtraVolumes,
-			ExtraEnvs:     prometheusComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -707,11 +662,6 @@ func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.DashboardPort != 0 {
-		dashboardComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentDashboard)
-		dashboardComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(dashboardComponentPatches.ExtraVolumes)
-		if err != nil {
-			return fmt.Errorf("failed to expand host volumes for dashboard component: %w", err)
-		}
 		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
 			Runtime:        conf.Runtime,
 			Workdir:        env.workdir,
@@ -742,21 +692,14 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 			return err
 		}
 
-		jaegerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentJaeger)
-		jaegerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(jaegerComponentPatches.ExtraVolumes)
-		if err != nil {
-			return fmt.Errorf("failed to expand host volumes for jaeger component: %w", err)
-		}
 		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
-			Runtime:      conf.Runtime,
-			Workdir:      env.workdir,
-			Image:        conf.JaegerImage,
-			Version:      jaegerVersion,
-			BindAddress:  net.PublicAddress,
-			Port:         conf.JaegerPort,
-			Verbosity:    env.verbosity,
-			ExtraArgs:    jaegerComponentPatches.ExtraArgs,
-			ExtraVolumes: jaegerComponentPatches.ExtraVolumes,
+			Runtime:     conf.Runtime,
+			Workdir:     env.workdir,
+			Image:       conf.JaegerImage,
+			Version:     jaegerVersion,
+			BindAddress: net.PublicAddress,
+			Port:        conf.JaegerPort,
+			Verbosity:   env.verbosity,
 		})
 		if err != nil {
 			return err
@@ -766,8 +709,27 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 	return nil
 }
 
+func (c *Cluster) preInstall(_ context.Context, env *env) error {
+	for i, patch := range env.kwokctlConfig.ComponentsPatches {
+		if len(patch.ExtraVolumes) == 0 {
+			continue
+		}
+		volumes, err := runtime.ExpandVolumesHostPaths(patch.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for %q component: %w", patch.Name, err)
+		}
+
+		env.kwokctlConfig.ComponentsPatches[i].ExtraVolumes = volumes
+	}
+	return nil
+}
+
 func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 	conf := &env.kwokctlConfig.Options
+
+	for i := range env.kwokctlConfig.Components {
+		runtime.ApplyComponentPatches(&env.kwokctlConfig.Components[i], env.kwokctlConfig.ComponentsPatches)
+	}
 
 	// Setup kubeconfig
 	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{

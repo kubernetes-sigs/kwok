@@ -48,9 +48,6 @@ type BuildKwokControllerComponentConfig struct {
 	Verbosity                         log.Level
 	NodeLeaseDurationSeconds          uint
 	EnableCRDs                        []string
-	ExtraArgs                         []internalversion.ExtraArgs
-	ExtraVolumes                      []internalversion.Volume
-	ExtraEnvs                         []internalversion.Env
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
@@ -67,10 +64,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		)
 	}
 
-	kwokControllerArgs = append(kwokControllerArgs, extraArgsToStrings(conf.ExtraArgs)...)
-
 	var volumes []internalversion.Volume
-	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
@@ -170,7 +164,6 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	}
 
 	envs := []internalversion.Env{}
-	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
 		Name:    consts.ComponentKwokController,

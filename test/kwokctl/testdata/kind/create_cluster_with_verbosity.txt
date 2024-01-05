@@ -271,19 +271,19 @@ spec:
       hostPort: 9090
     resources: {}
     volumeMounts:
-    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.crt
+    - mountPath: /etc/prometheus/prometheus.yaml
       name: volume-0
       readOnly: true
-    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.key
+    - mountPath: /etc/kubernetes/pki/admin.crt
       name: volume-1
       readOnly: true
-    - mountPath: /etc/prometheus/prometheus.yaml
+    - mountPath: /etc/kubernetes/pki/admin.key
       name: volume-2
       readOnly: true
-    - mountPath: /etc/kubernetes/pki/admin.crt
+    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.crt
       name: volume-3
       readOnly: true
-    - mountPath: /etc/kubernetes/pki/admin.key
+    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.key
       name: volume-4
       readOnly: true
   hostNetwork: true
@@ -293,19 +293,19 @@ spec:
     runAsUser: 0
   volumes:
   - hostPath:
-      path: /etc/kubernetes/pki/apiserver-etcd-client.crt
+      path: /var/components/prometheus/etc/prometheus/prometheus.yaml
     name: volume-0
   - hostPath:
-      path: /etc/kubernetes/pki/apiserver-etcd-client.key
+      path: /etc/kubernetes/pki/admin.crt
     name: volume-1
   - hostPath:
-      path: /var/components/prometheus/etc/prometheus/prometheus.yaml
+      path: /etc/kubernetes/pki/admin.key
     name: volume-2
   - hostPath:
-      path: /etc/kubernetes/pki/admin.crt
+      path: /etc/kubernetes/pki/apiserver-etcd-client.crt
     name: volume-3
   - hostPath:
-      path: /etc/kubernetes/pki/admin.key
+      path: /etc/kubernetes/pki/apiserver-etcd-client.key
     name: volume-4
 status: {}
 EOF

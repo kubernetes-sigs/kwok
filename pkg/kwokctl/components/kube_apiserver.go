@@ -53,9 +53,6 @@ type BuildKubeApiserverComponentConfig struct {
 	Verbosity         log.Level
 	DisableQPSLimits  bool
 	TracingConfigPath string
-	ExtraArgs         []internalversion.ExtraArgs
-	ExtraVolumes      []internalversion.Volume
-	ExtraEnvs         []internalversion.Env
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -80,7 +77,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		)
 	}
 
-	kubeApiserverArgs = append(kubeApiserverArgs, extraArgsToStrings(conf.ExtraArgs)...)
 	if conf.KubeRuntimeConfig != "" {
 		kubeApiserverArgs = append(kubeApiserverArgs,
 			"--runtime-config="+conf.KubeRuntimeConfig,
@@ -122,7 +118,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 
 	var ports []internalversion.Port
 	var volumes []internalversion.Volume
-	volumes = append(volumes, conf.ExtraVolumes...)
 	var metric *internalversion.ComponentMetric
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
@@ -285,7 +280,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	envs := []internalversion.Env{}
-	envs = append(envs, conf.ExtraEnvs...)
 
 	links := []string{consts.ComponentEtcd}
 	if conf.TracingConfigPath != "" {

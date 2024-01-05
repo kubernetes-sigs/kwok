@@ -44,15 +44,11 @@ type BuildKubeSchedulerComponentConfig struct {
 	KubeFeatureGates string
 	Verbosity        log.Level
 	DisableQPSLimits bool
-	ExtraArgs        []internalversion.ExtraArgs
-	ExtraVolumes     []internalversion.Volume
-	ExtraEnvs        []internalversion.Env
 }
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
 func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (component internalversion.Component, err error) {
 	kubeSchedulerArgs := []string{}
-	kubeSchedulerArgs = append(kubeSchedulerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
 	if conf.KubeFeatureGates != "" {
 		kubeSchedulerArgs = append(kubeSchedulerArgs,
@@ -61,7 +57,6 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	var volumes []internalversion.Volume
-	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
 
@@ -214,7 +209,6 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	envs := []internalversion.Env{}
-	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
 		Name:    consts.ComponentKubeScheduler,

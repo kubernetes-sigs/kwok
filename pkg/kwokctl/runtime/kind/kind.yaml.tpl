@@ -47,7 +47,7 @@ nodes:
       {{ if .EtcdExtraArgs }}
         extraArgs:
         {{ range .EtcdExtraArgs }}
-          "{{.Key}}": "{{.Value}}"
+          "{{ .Key }}": "{{ .Value }}"
         {{ end }}
       {{ end }}
 
@@ -71,7 +71,7 @@ nodes:
     {{ if .ApiserverExtraArgs }}
       extraArgs:
       {{ range .ApiserverExtraArgs }}
-        "{{.Key}}": "{{.Value}}"
+        "{{ .Key }}": "{{ .Value }}"
       {{ end }}
     {{ end }}
 
@@ -94,7 +94,7 @@ nodes:
     {{ if .ControllerManagerExtraArgs }}
       extraArgs:
       {{ range .ControllerManagerExtraArgs }}
-        "{{.Key}}": "{{.Value}}"
+        "{{ .Key }}": "{{ .Value }}"
       {{ end }}
     {{ end }}
 
@@ -117,7 +117,7 @@ nodes:
     {{ if .SchedulerExtraArgs }}
       extraArgs:
       {{ range .SchedulerExtraArgs }}
-        "{{.Key}}": "{{.Value}}"
+        "{{ .Key }}": "{{ .Value }}"
       {{ end }}
     {{ end }}
 

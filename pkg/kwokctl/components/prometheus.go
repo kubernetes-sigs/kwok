@@ -38,18 +38,13 @@ type BuildPrometheusComponentConfig struct {
 	AdminCertPath string
 	AdminKeyPath  string
 	Verbosity     log.Level
-	ExtraArgs     []internalversion.ExtraArgs
-	ExtraVolumes  []internalversion.Volume
-	ExtraEnvs     []internalversion.Env
 }
 
 // BuildPrometheusComponent builds a prometheus component.
 func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component internalversion.Component, err error) {
 	prometheusArgs := []string{}
-	prometheusArgs = append(prometheusArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
 	var volumes []internalversion.Volume
-	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
 
@@ -99,7 +94,6 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 	}
 
 	envs := []internalversion.Env{}
-	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
 		Name:    consts.ComponentPrometheus,

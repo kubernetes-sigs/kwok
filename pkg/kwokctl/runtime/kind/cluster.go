@@ -191,6 +191,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.preInstall(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	// This is not necessary when creating a cluster use kind, but in Linux the cluster is created as root,
 	// and the files here may not have permissions when deleted, so we create them first.
 	err = c.setup(ctx, env)
@@ -473,20 +478,11 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	kwokControllerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKwokController)
-	kwokControllerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(kwokControllerComponentPatches.ExtraVolumes)
-	if err != nil {
-		return fmt.Errorf("failed to expand host volumes for kwok controller component: %w", err)
-	}
-
 	logVolumes := runtime.GetLogVolumes(ctx)
 	logVolumes = slices.Map(logVolumes, func(v internalversion.Volume) internalversion.Volume {
 		v.HostPath = path.Join("/var/components/controller", v.HostPath)
 		return v
 	})
-
-	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
-	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, logVolumes...)
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Runtime:                           conf.Runtime,
@@ -507,10 +503,10 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		Verbosity:                         env.verbosity,
 		NodeLeaseDurationSeconds:          40,
 		EnableCRDs:                        conf.EnableCRDs,
-		ExtraArgs:                         kwokControllerComponentPatches.ExtraArgs,
-		ExtraVolumes:                      kwokControllerExtraVolumes,
-		ExtraEnvs:                         kwokControllerComponentPatches.ExtraEnvs,
 	})
+	kwokControllerComponent.Volumes = append(kwokControllerComponent.Volumes, logVolumes...)
+
+	runtime.ApplyComponentPatches(&kwokControllerComponent, env.kwokctlConfig.ComponentsPatches)
 
 	pod := components.ConvertToPod(kwokControllerComponent)
 	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
@@ -560,6 +556,8 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 			return fmt.Errorf("failed to build dashboard component: %w", err)
 		}
 
+		runtime.ApplyComponentPatches(&dashboardComponent, env.kwokctlConfig.ComponentsPatches)
+
 		dashboardPod, err := yaml.Marshal(components.ConvertToPod(dashboardComponent))
 		if err != nil {
 			return fmt.Errorf("failed to marshal dashboard pod: %w", err)
@@ -602,13 +600,23 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		prometheusComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentPrometheus)
-		prometheusComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(prometheusComponentPatches.ExtraVolumes)
+		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
+			Runtime:       conf.Runtime,
+			Workdir:       env.workdir,
+			Image:         conf.PrometheusImage,
+			Version:       prometheusVersion,
+			BindAddress:   net.PublicAddress,
+			Port:          9090,
+			ConfigPath:    "/var/components/prometheus/etc/prometheus/prometheus.yaml",
+			AdminCertPath: env.adminCertPath,
+			AdminKeyPath:  env.adminKeyPath,
+			Verbosity:     env.verbosity,
+		})
 		if err != nil {
-			return fmt.Errorf("failed to expand host volumes for prometheus component: %w", err)
+			return err
 		}
 
-		prometheusComponentPatches.ExtraVolumes = append(prometheusComponentPatches.ExtraVolumes,
+		prometheusComponent.Volumes = append(prometheusComponent.Volumes,
 			internalversion.Volume{
 				HostPath:  "/etc/kubernetes/pki/apiserver-etcd-client.crt",
 				MountPath: "/etc/kubernetes/pki/apiserver-etcd-client.crt",
@@ -621,24 +629,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			},
 		)
 
-		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
-			Runtime:       conf.Runtime,
-			Workdir:       env.workdir,
-			Image:         conf.PrometheusImage,
-			Version:       prometheusVersion,
-			BindAddress:   net.PublicAddress,
-			Port:          9090,
-			ConfigPath:    "/var/components/prometheus/etc/prometheus/prometheus.yaml",
-			AdminCertPath: env.adminCertPath,
-			AdminKeyPath:  env.adminKeyPath,
-			Verbosity:     env.verbosity,
-			ExtraArgs:     prometheusComponentPatches.ExtraArgs,
-			ExtraVolumes:  prometheusComponentPatches.ExtraVolumes,
-			ExtraEnvs:     prometheusComponentPatches.ExtraEnvs,
-		})
-		if err != nil {
-			return err
-		}
+		runtime.ApplyComponentPatches(&prometheusComponent, env.kwokctlConfig.ComponentsPatches)
 
 		prometheusPod, err := yaml.Marshal(components.ConvertToPod(prometheusComponent))
 		if err != nil {
@@ -663,25 +654,20 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 			return err
 		}
 
-		jaegerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentJaeger)
-		jaegerComponentPatches.ExtraVolumes, err = runtime.ExpandVolumesHostPaths(jaegerComponentPatches.ExtraVolumes)
-		if err != nil {
-			return fmt.Errorf("failed to expand host volumes for jaeger component: %w", err)
-		}
 		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
-			Runtime:      conf.Runtime,
-			Workdir:      env.workdir,
-			Image:        conf.JaegerImage,
-			Version:      jaegerVersion,
-			BindAddress:  net.PublicAddress,
-			Port:         16686,
-			Verbosity:    env.verbosity,
-			ExtraArgs:    jaegerComponentPatches.ExtraArgs,
-			ExtraVolumes: jaegerComponentPatches.ExtraVolumes,
+			Runtime:     conf.Runtime,
+			Workdir:     env.workdir,
+			Image:       conf.JaegerImage,
+			Version:     jaegerVersion,
+			BindAddress: net.PublicAddress,
+			Port:        16686,
+			Verbosity:   env.verbosity,
 		})
 		if err != nil {
 			return err
 		}
+
+		runtime.ApplyComponentPatches(&jaegerComponent, env.kwokctlConfig.ComponentsPatches)
 
 		jaegerPod, err := yaml.Marshal(components.ConvertToPod(jaegerComponent))
 		if err != nil {
@@ -693,6 +679,21 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 		}
 
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, jaegerComponent)
+	}
+	return nil
+}
+
+func (c *Cluster) preInstall(_ context.Context, env *env) error {
+	for i, patch := range env.kwokctlConfig.ComponentsPatches {
+		if len(patch.ExtraVolumes) == 0 {
+			continue
+		}
+		volumes, err := runtime.ExpandVolumesHostPaths(patch.ExtraVolumes)
+		if err != nil {
+			return fmt.Errorf("failed to expand host volumes for %q component: %w", patch.Name, err)
+		}
+
+		env.kwokctlConfig.ComponentsPatches[i].ExtraVolumes = volumes
 	}
 	return nil
 }
@@ -820,16 +821,13 @@ func (c *Cluster) listAllImages(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	conf := &config.Options
-	images := []string{conf.KwokControllerImage}
-	if conf.DashboardPort != 0 {
-		images = append(images, conf.DashboardImage)
-	}
-	if conf.PrometheusPort != 0 {
-		images = append(images, conf.PrometheusImage)
-	}
-	if conf.JaegerPort != 0 {
-		images = append(images, conf.JaegerImage)
+
+	images := []string{}
+	for _, component := range config.Components {
+		if component.Image == "" {
+			continue
+		}
+		images = append(images, component.Image)
 	}
 
 	return images, nil
