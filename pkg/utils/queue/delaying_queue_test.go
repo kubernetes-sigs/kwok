@@ -37,13 +37,13 @@ func TestSimpleAddAfter(t *testing.T) {
 
 	// Simulate clock time passed
 	fakeClock.Step(10 * time.Millisecond)
-	err := checkIncreased(dq)
+	err := checkIncreased[string](dq)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	fakeClock.Step(100 * time.Millisecond)
-	err = checkLength(dq, 1)
+	err = checkLength[string](dq, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func TestCancel(t *testing.T) {
 	dq.Cancel(first)
 
 	fakeClock.Step(1 * time.Second)
-	err := checkIncreased(dq)
+	err := checkIncreased[string](dq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func TestAddTwo(t *testing.T) {
 
 	fakeClock.Step(600 * time.Millisecond)
 
-	err := checkLength(dq, 1)
+	err := checkLength[string](dq, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +92,7 @@ func TestAddTwo(t *testing.T) {
 
 	fakeClock.Step(1 * time.Second)
 
-	err = checkLength(dq, 1)
+	err = checkLength[string](dq, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,9 +104,9 @@ func TestAddTwo(t *testing.T) {
 
 // checkLength checks whether the delay queue has the expected number of elements.
 // The check action is supposed to be instantaneous.
-// However, in order to reserve time for the internal synchronization of the delay queue itself,
+// However, in order to reserve time for the internal synchronization of the (delay) queue itself,
 // we perform the check in a polling manner and make it subject to a very short timeout(0.1s), the reserved time.
-func checkLength[T comparable](q DelayingQueue[T], len int) error {
+func checkLength[T comparable](q Queue[T], len int) error {
 	return wait.Poll(context.TODO(), func(ctx context.Context) (done bool, err error) {
 		if q.Len() == len {
 			return true, nil
@@ -117,10 +117,10 @@ func checkLength[T comparable](q DelayingQueue[T], len int) error {
 
 // checkIncreased returns an error when the length of the delay queue is increased
 // within a very short time period (0.1s).
-// That time period is a reserved time for the internal synchronization of the delay queue itself.
+// That time period is a reserved time for the internal synchronization of the (delay) queue itself.
 // In addition, to accelerate the check progress, we perform the check in a polling manner (every 1ms)
 // during the waiting time.
-func checkIncreased[T comparable](q DelayingQueue[T]) error {
+func checkIncreased[T comparable](q Queue[T]) error {
 	curLen := q.Len()
 
 	err := wait.Poll(context.TODO(), func(ctx context.Context) (done bool, err error) {
