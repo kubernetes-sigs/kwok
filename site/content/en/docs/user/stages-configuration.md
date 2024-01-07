@@ -74,6 +74,7 @@ Please note that `weight` only takes effect among stages with same `resourceRef`
 Additionally, the `delay` field in a Stage resource allows users to specify a delay before the stage is applied,
 and introduce jitter to the delay to specify the latest delay time to make the simulation more realistic.
 This can be useful for simulating real-world scenarios where events do not always happen at the same time.
+Please refer to [How Delay is Calculated] for more details.
 
 By configuring the `delay`, `selector`, and `next` fields in a Stage, you can control when and how the stage is applied,
 providing a flexible and scalable way to simulate real-world scenarios in your Kubernetes cluster.
@@ -137,6 +138,43 @@ if a "Change Stage" is matched. The update action itself consequently causes a n
 
 However, this event-driven approach to applying Stages has a limitation: `kwok` won’t apply a Stage until a new event associated with that resource is received. To address the limitation,
 users can utilize the `immediateNextStage` field to make the controller apply Stages immediately rather than waiting for an event pushed from the apiserver.
+
+## How Delay is Calculated
+
+The delay time of applying a Stage is obtained by adding a constant time period and a randomized interval,
+which will be denoted by *duration* and *jitter* respectively in the following.
+
+- `durationMilliseconds`: provides *duration*.
+- `jitterDurationMilliseconds`: calculates *jitter* by *random*(`jitterDurationMilliseconds`-*duration*).
+  It shall be larger than `durationMilliseconds` if you want to inject jitter to the delay.
+  Otherwise, it will be used directly as the delay time without any randomization.
+
+`kwok` also provides other fields to flexibly handle more situations. They are used to extract
+and parse a RFC3339 timestamp field of a resource to help determine the delay time dynamically.
+
+- `durationFrom`: calculates *duration* by `durationFrom`-*now*
+- `jitterDurationFrom`: calculates *jitter* by *random*(`jitterDurationFrom`-*now*-*duration*),
+  where *now* is the timestamp when the delay starts.
+
+{{< hint "info" >}}
+`durationFrom` and `jitterDurationFrom` have a higher priority than `durationMilliseconds`
+and `jitterDurationMilliseconds` if both are set.
+{{< /hint >}}
+
+Let’s explain a little bit about the motivation behind these two advanced fields.
+But before that, for a better understanding, we briefly describe how kubelet "delete" a pod from a node here.
+Basically when you run `kubectl delete pod`, apiserver will not directly delete the corresponding pod resource
+from etcd when receiving the deletion request, but instead set the `.metadata.deletionTimestamp` field to the time
+the request was issued plus a short period: `metadata.deletionGracePeriodSeconds` (default 30s).
+kubelet starts to send a `TERM` signal to the container main process once a non-null `metadata.deletionTimestamp`
+of a pod is detected. The main process is then terminated using the `KILL` signal if the `.metadata.deletionTimestamp`
+expires before the process stops by itself. After all the containers in the pod have stopped running, kubelet will send
+a force deletion request to apiserver to delete the pod object from etcd. To simulate such situation, you can let 
+`jitterDurationFrom` of a "Delete Stage" (`next.delete: true`) point to `metadata.deletionTimestamp`. This will make
+the deletion operation happen at a random moment before `metadata.deletionTimple` expires.  
+
+You can also let `kwok` perform the deletion in a deterministic way by pointing `durationFrom` to `metadata.deletionTimple`,
+making the deletion happen exactly at `metadata.deletionTimple`.
 
 ## Examples
 
@@ -202,3 +240,4 @@ This example shows how to configure the simplest and fastest stages of Pod resou
 [General Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/general
 [Stage API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Stage
 [Resource Lifecycle Simulation Controller]: {{< relref "/docs/design/architecture" >}}
+[How Delay is Calculated]: {{< relref "/docs/user/stages-configuration#how-delay-is-calculated" >}}
