@@ -63,17 +63,17 @@ spec:
 By setting the `selector` and `next` fields in the spec section of a Stage resource,
 users can specify the conditions that need to be met for the stage to be applied,
 and the changes that will be made to the resource when the stage is applied.
-The `next` field allows users to define the new state of the resource using the `statusTemplate` field, and even `delete` the resource.
+The `next` field allows users to define the new status of the resource using the `statusTemplate` field, and even `delete` the resource.
 
 `statusTemplate` and `delete` are the two fundamental fields in `next` that respectively represent the two basic phases
 of resource lifecycle simulation: status update and resource deletion. 
-`delete` that is `true` has higher priority than a non-empty `statusTemplate`, which means `kwok` will delete the resource
+`delete: true` has higher priority than a non-empty `statusTemplate`, which means `kwok` will delete the resource
 rather than update its status if both are set.
 
-Apart from the two fundamental fields, there are another two fields in `next` that allow users to do
+Apart from the two fundamental fields, there are two other fields in `next` that allow users to do
 some additional actions on a simulated resource before status update or deletion. `event` allows users to emit an associated
 Kubernetes event if there is something to record. `finalizers` allows users to add or remove finalizers.
-Please note that both of the two fields can exist on their own without specifying `delete` or `statusTemplate` field.
+Please note that both fields can exist on their own without specifying `delete` or `statusTemplate` field.
 In this case, `kwok` will only send an event or modify finalizers and will not change the status or delete a resource when applying a Stage.
 
 It is worth noting that there is no dedicated field for arranging the execution order if multiple stages of a resource type are provided.
