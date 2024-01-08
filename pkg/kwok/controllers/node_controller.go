@@ -86,13 +86,13 @@ var (
 type NodeController struct {
 	clock                                 clock.Clock
 	typedClient                           kubernetes.Interface
-	nodeCacheGetter                       informer.Getter[*corev1.Node]
 	nodeIP                                string
 	nodeName                              string
 	nodePort                              int
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
 	onNodeManagedFunc                     func(nodeName string)
+	onNodeUnmanagedFunc                   func(nodeName string)
 	nodesSets                             maps.SyncMap[string, *NodeInfo]
 	renderer                              gotpl.Renderer
 	preprocessChan                        chan *corev1.Node
@@ -109,8 +109,8 @@ type NodeController struct {
 type NodeControllerConfig struct {
 	Clock                                 clock.Clock
 	TypedClient                           kubernetes.Interface
-	NodeCacheGetter                       informer.Getter[*corev1.Node]
 	OnNodeManagedFunc                     func(nodeName string)
+	OnNodeUnmanagedFunc                   func(nodeName string)
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
 	NodeIP                                string
@@ -152,10 +152,10 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 	c := &NodeController{
 		clock:                                 conf.Clock,
 		typedClient:                           conf.TypedClient,
-		nodeCacheGetter:                       conf.NodeCacheGetter,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		onNodeManagedFunc:                     conf.OnNodeManagedFunc,
+		onNodeUnmanagedFunc:                   conf.OnNodeUnmanagedFunc,
 		nodeIP:                                conf.NodeIP,
 		nodeName:                              conf.NodeName,
 		nodePort:                              conf.NodePort,
@@ -206,6 +206,11 @@ func (c *NodeController) need(node *corev1.Node) bool {
 	return true
 }
 
+// ManageNode manages a node
+func (c *NodeController) ManageNode(node *corev1.Node) {
+	c.preprocessChan <- node
+}
+
 // watchResources watch resources and send to preprocessChan
 func (c *NodeController) watchResources(ctx context.Context, events <-chan informer.Event[*corev1.Node]) {
 	logger := log.FromContext(ctx)
@@ -230,10 +235,10 @@ loop:
 					} else {
 						c.preprocessChan <- node
 					}
-				}
 
-				if c.onNodeManagedFunc != nil && event.Type != informer.Modified {
-					c.onNodeManagedFunc(node.Name)
+					if c.onNodeManagedFunc != nil && event.Type != informer.Modified {
+						c.onNodeManagedFunc(node.Name)
+					}
 				}
 			case informer.Deleted:
 				node := event.Object
@@ -246,6 +251,10 @@ loop:
 					if ok {
 						c.delayQueue.Cancel(resourceJob)
 					}
+				}
+
+				if c.onNodeUnmanagedFunc != nil {
+					c.onNodeUnmanagedFunc(node.Name)
 				}
 			}
 		case <-ctx.Done():
@@ -330,15 +339,27 @@ func (c *NodeController) preprocessWorker(ctx context.Context) {
 func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) error {
 	key := node.Name
 
-	resourceJob, ok := c.delayQueueMapping.Load(key)
-	if ok && resourceJob.Resource.ResourceVersion == node.ResourceVersion {
-		return nil
-	}
-
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", key,
 	)
+
+	resourceJob, ok := c.delayQueueMapping.Load(key)
+	if ok {
+		if resourceJob.Resource.ResourceVersion == node.ResourceVersion {
+			logger.Debug("Skip node",
+				"reason", "resource version not changed",
+				"stage", resourceJob.Stage.Name(),
+			)
+			return nil
+		}
+
+		if !c.delayQueue.Cancel(resourceJob) {
+			logger.Debug("Failed to cancel stage",
+				"stage", resourceJob.Stage.Name(),
+			)
+		}
+	}
 
 	data, err := expression.ToJSONStandard(node)
 	if err != nil {
@@ -373,14 +394,10 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		Stage:    stage,
 		Key:      key,
 	}
-	ok = c.delayQueue.AddAfter(item, delay)
-	if !ok {
-		logger.Debug("Skip node",
-			"reason", "delayed",
-		)
-	} else {
-		c.delayQueueMapping.Store(key, item)
-	}
+
+	c.delayQueue.AddAfter(item, delay)
+	c.delayQueueMapping.Store(key, item)
+
 	return nil
 }
 

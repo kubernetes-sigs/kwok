@@ -111,12 +111,13 @@ type Controller struct {
 	broadcaster record.EventBroadcaster
 	recorder    record.EventRecorder
 
-	nodeCacheGetter informer.Getter[*corev1.Node]
-	podCacheGetter  informer.Getter[*corev1.Pod]
+	nodeCacheGetter      informer.Getter[*corev1.Node]
+	podCacheGetter       informer.Getter[*corev1.Pod]
+	nodeLeaseCacheGetter informer.Getter[*coordinationv1.Lease]
 
-	onLeaseNodeManageFunc func(nodeName string)
-	onNodeManagedFunc     func(nodeName string)
-	readOnlyFunc          func(nodeName string) bool
+	onNodeManagedFunc   func(nodeName string)
+	onNodeUnmanagedFunc func(nodeName string)
+	readOnlyFunc        func(nodeName string) bool
 
 	manageNodesWithLabelSelector      string
 	manageNodesWithAnnotationSelector string
@@ -124,9 +125,8 @@ type Controller struct {
 	manageNodeLeasesWithFieldSelector string
 	managePodsWithFieldSelector       string
 
-	nodeLeasesChan chan informer.Event[*coordinationv1.Lease]
-	nodeChan       chan informer.Event[*corev1.Node]
-	podsChan       chan informer.Event[*corev1.Pod]
+	nodesChan chan informer.Event[*corev1.Node]
+	podsChan  chan informer.Event[*corev1.Pod]
 
 	nodeLeasesInformer *informer.Informer[*coordinationv1.Lease, *coordinationv1.LeaseList]
 	nodesInformer      *informer.Informer[*corev1.Node, *corev1.NodeList]
@@ -225,7 +225,7 @@ func (c *Controller) init(ctx context.Context) (err error) {
 	c.recorder = c.broadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "kwok_controller"})
 	c.broadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{Interface: c.conf.TypedClient.CoreV1().Events("")})
 
-	c.nodeChan = make(chan informer.Event[*corev1.Node], 1)
+	c.nodesChan = make(chan informer.Event[*corev1.Node], 1)
 	c.podsChan = make(chan informer.Event[*corev1.Pod], 1)
 
 	nodesCli := c.conf.TypedClient.CoreV1().Nodes()
@@ -234,7 +234,7 @@ func (c *Controller) init(ctx context.Context) (err error) {
 		LabelSelector:      c.manageNodesWithLabelSelector,
 		AnnotationSelector: c.manageNodesWithAnnotationSelector,
 		FieldSelector:      c.manageNodesWithFieldSelector,
-	}, c.nodeChan)
+	}, c.nodesChan)
 	if err != nil {
 		return fmt.Errorf("failed to watch nodes: %w", err)
 	}
@@ -255,7 +255,6 @@ func (c *Controller) init(ctx context.Context) (err error) {
 	}
 
 	if c.conf.NodeLeaseDurationSeconds != 0 {
-		c.nodeLeasesChan = make(chan informer.Event[*coordinationv1.Lease], 1)
 		nodeLeasesCli := c.conf.TypedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease)
 		c.nodeLeasesInformer = informer.NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](nodeLeasesCli)
 	}
@@ -276,9 +275,10 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		return nil
 	}
 
-	err := c.nodeLeasesInformer.Watch(ctx, informer.Option{
+	var err error
+	c.nodeLeaseCacheGetter, err = c.nodeLeasesInformer.WatchWithCache(ctx, informer.Option{
 		FieldSelector: c.manageNodeLeasesWithFieldSelector,
-	}, c.nodeLeasesChan)
+	}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to watch node leases: %w", err)
 	}
@@ -293,8 +293,11 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		TypedClient:          c.conf.TypedClient,
 		LeaseDurationSeconds: c.conf.NodeLeaseDurationSeconds,
 		LeaseParallelism:     c.conf.NodeLeaseParallelism,
-		RenewInterval:        renewInterval,
-		RenewIntervalJitter:  renewIntervalJitter,
+		GetLease: func(nodeName string) (*coordinationv1.Lease, bool) {
+			return c.nodeLeaseCacheGetter.GetWithNamespace(nodeName, corev1.NamespaceNodeLease)
+		},
+		RenewInterval:       renewInterval,
+		RenewIntervalJitter: renewIntervalJitter,
 		MutateLeaseFunc: setNodeOwnerFunc(func(nodeName string) []metav1.OwnerReference {
 			node, ok := c.nodeCacheGetter.Get(nodeName)
 			if !ok {
@@ -312,7 +315,8 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		}),
 		HolderIdentity: c.conf.ID,
 		OnNodeManagedFunc: func(nodeName string) {
-			c.onLeaseNodeManageFunc(nodeName)
+			c.nodeManageQueue.Add(nodeName)
+			c.podOnNodeManageQueue.Add(nodeName)
 		},
 	})
 	if err != nil {
@@ -324,18 +328,17 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		return !c.nodeLeases.Held(nodeName)
 	}
 
-	c.onLeaseNodeManageFunc = func(nodeName string) {
-		c.nodeManageQueue.Add(nodeName)
-		c.podOnNodeManageQueue.Add(nodeName)
-	}
 	c.onNodeManagedFunc = func(nodeName string) {
 		// Try to hold the lease
 		c.nodeLeases.TryHold(nodeName)
 	}
+	c.onNodeUnmanagedFunc = func(nodeName string) {
+		c.nodeLeases.ReleaseHold(nodeName)
+	}
 
 	go c.nodeLeaseSyncWorker(ctx)
 
-	err = c.nodeLeases.Start(ctx, c.nodeLeasesChan)
+	err = c.nodeLeases.Start(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start node leases controller: %w", err)
 	}
@@ -351,16 +354,15 @@ func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 			logger.Warn("node not found in cache", "node", nodeName)
 			err := c.nodesInformer.Sync(ctx, informer.Option{
 				FieldSelector: fields.OneTermEqualSelector("metadata.name", nodeName).String(),
-			}, c.nodeChan)
+			}, c.nodesChan)
 			if err != nil {
 				logger.Error("failed to update node", err, "node", nodeName)
 			}
 			continue
 		}
-		c.nodeChan <- informer.Event[*corev1.Node]{
-			Type:   informer.Sync,
-			Object: node,
-		}
+
+		// Avoid slow cache synchronization, which may be judged as unmanaged.
+		c.nodes.ManageNode(node)
 	}
 }
 
@@ -436,30 +438,42 @@ func (c *Controller) initStagesManager(ctx context.Context) error {
 	return nil
 }
 
+func (c *Controller) onNodeManaged(nodeName string) {
+	if c.onNodeManagedFunc == nil {
+		return
+	}
+	c.onNodeManagedFunc(nodeName)
+}
+
+func (c *Controller) onNodeUnmanaged(nodeName string) {
+	if c.onNodeUnmanagedFunc == nil {
+		return
+	}
+	c.onNodeUnmanagedFunc(nodeName)
+}
+
 func (c *Controller) initNodeController(ctx context.Context, lifecycle resources.Getter[Lifecycle]) (err error) {
 	c.nodes, err = NewNodeController(NodeControllerConfig{
 		Clock:                                 c.conf.Clock,
 		TypedClient:                           c.conf.TypedClient,
-		NodeCacheGetter:                       c.nodeCacheGetter,
 		NodeIP:                                c.conf.NodeIP,
 		NodeName:                              c.conf.NodeName,
 		NodePort:                              c.conf.NodePort,
 		DisregardStatusWithAnnotationSelector: c.conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      c.conf.DisregardStatusWithLabelSelector,
-		OnNodeManagedFunc: func(nodeName string) {
-			c.onNodeManagedFunc(nodeName)
-		},
-		Lifecycle:            lifecycle,
-		PlayStageParallelism: c.conf.NodePlayStageParallelism,
-		FuncMap:              defaultFuncMap,
-		Recorder:             c.recorder,
-		ReadOnlyFunc:         c.readOnlyFunc,
-		EnableMetrics:        c.conf.EnableMetrics,
+		OnNodeManagedFunc:                     c.onNodeManaged,
+		OnNodeUnmanagedFunc:                   c.onNodeUnmanaged,
+		Lifecycle:                             lifecycle,
+		PlayStageParallelism:                  c.conf.NodePlayStageParallelism,
+		FuncMap:                               defaultFuncMap,
+		Recorder:                              c.recorder,
+		ReadOnlyFunc:                          c.readOnlyFunc,
+		EnableMetrics:                         c.conf.EnableMetrics,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create nodes controller: %w", err)
 	}
-	err = c.nodes.Start(ctx, c.nodeChan)
+	err = c.nodes.Start(ctx, c.nodesChan)
 	if err != nil {
 		return fmt.Errorf("failed to start nodes controller: %w", err)
 	}

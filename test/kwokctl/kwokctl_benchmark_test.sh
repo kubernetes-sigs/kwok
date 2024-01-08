@@ -41,23 +41,35 @@ function wait_resource() {
   local reason="${3}"
   local want="${4}"
   local gap="${5}"
+  local tolerance="${6:-0}"
   local raw
   local got
   local all
+  local prev
   while true; do
     raw="$(kwokctl --name "${name}" kubectl get --no-headers "${resource}" | grep "fake-" 2>/dev/null)"
     got=$(echo "${raw}" | grep -c "${reason}")
     if [[ "${got}" == "${want}" ]]; then
       echo "${resource} ${got} done"
-      break
-    else
-      all=$(echo "${raw}" | wc -l)
-      echo "${resource} ${got}/${all} => ${want}"
-      if [[ "${gap}" != "" && "${got}" -ne 0 && "$((all - got))" -gt "${gap}" ]]; then
+      return 0
+    fi
+    if [[ "${got}" == "${prev}" ]]; then
+      echo "Error ${resource} ${got} not changed"
+      return 1
+    fi
+    prev="${got}"
+    all=$(echo "${raw}" | wc -l)
+    echo "${resource} ${got}/${all} => ${want}"
+    if [[ "${gap}" != "" && "${got}" -ne 0 && "$((all - got))" -gt "${gap}" ]]; then
+      if [[ "${tolerance}" -gt 0 ]]; then
+        echo "Error ${resource} gap too large, actual: $((all - got)), expected: ${gap}, retrying..."
+        tolerance="$((tolerance - 1))"
+      else
         echo "Error ${resource} gap too large, actual: $((all - got)), expected: ${gap}"
         return 1
       fi
     fi
+
     sleep 1
   done
 }
@@ -68,7 +80,7 @@ function scale_create_pod() {
   local node_name
   node_name="$(kwokctl --name "${name}" kubectl get node -o jsonpath='{.items.*.metadata.name}' | tr ' ' '\n' | grep fake- | head -n 1)"
   kwokctl --name "${name}" scale pod fake-pod --replicas "${size}" --param ".nodeName=\"${node_name}\"" >/dev/null &
-  wait_resource "${name}" Pod Running "${size}" 20
+  wait_resource "${name}" Pod Running "${size}" 5 1
 }
 
 function scale_delete_pod() {
@@ -82,7 +94,7 @@ function scale_create_node() {
   local name="${1}"
   local size="${2}"
   kwokctl --name "${name}" scale node fake-node --replicas "${size}" >/dev/null &
-  wait_resource "${name}" Node Ready "${size}" 50
+  wait_resource "${name}" Node Ready "${size}" 10 5
 }
 
 function main() {
@@ -94,10 +106,10 @@ function main() {
   echo "Benchmarking on ${KWOK_RUNTIME}"
   name="benchmark-${KWOK_RUNTIME}"
 
-  create_cluster "${name}" "${release}" --disable-qps-limits
-  child_timeout 60 scale_create_node "${name}" 1000 || failed+=("scale_create_node_timeout_${name}")
-  child_timeout 30 scale_create_pod "${name}" 1000 || failed+=("scale_create_pod_timeout_${name}")
-  child_timeout 30 scale_delete_pod "${name}" 0 || failed+=("scale_delete_pod_timeout_${name}")
+  create_cluster "${name}" "${release}"
+  child_timeout 120 scale_create_node "${name}" 2000 || failed+=("scale_create_node_timeout_${name}")
+  child_timeout 240 scale_create_pod "${name}" 5000 || failed+=("scale_create_pod_timeout_${name}")
+  child_timeout 240 scale_delete_pod "${name}" 0 || failed+=("scale_delete_pod_timeout_${name}")
   delete_cluster "${name}"
 
   if [[ "${#failed[@]}" -ne 0 ]]; then

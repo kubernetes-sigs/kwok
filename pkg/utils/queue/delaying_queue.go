@@ -17,9 +17,10 @@ limitations under the License.
 package queue
 
 import (
-	"container/heap"
 	"sync"
 	"time"
+
+	"sigs.k8s.io/kwok/pkg/utils/heap"
 )
 
 // Clock is an interface that returns the current time and duration since a given time.
@@ -32,8 +33,12 @@ type Clock interface {
 // DelayingQueue is a generic queue interface that supports adding items after
 type DelayingQueue[T comparable] interface {
 	Queue[T]
+	delayingQueueInterface[T]
+}
+
+type delayingQueueInterface[T comparable] interface {
 	// AddAfter adds an item to the queue after the indicated duration has passed
-	AddAfter(item T, duration time.Duration) bool
+	AddAfter(item T, duration time.Duration)
 	// Cancel removes an item from the queue if it has not yet been processed
 	Cancel(item T) bool
 }
@@ -44,50 +49,40 @@ type delayingQueue[T comparable] struct {
 
 	clock Clock
 
-	mut sync.Mutex
-
-	heap    waitEntries[T]
-	entries map[T]*waitEntry[T]
+	heap *heap.Heap[int64, T]
 
 	signal chan struct{}
+	mut    sync.Mutex
 }
 
 // NewDelayingQueue returns a new DelayingQueue.
 func NewDelayingQueue[T comparable](clock Clock) DelayingQueue[T] {
 	q := &delayingQueue[T]{
-		Queue:   NewQueue[T](),
-		clock:   clock,
-		heap:    waitEntries[T]{},
-		entries: make(map[T]*waitEntry[T]),
-		signal:  make(chan struct{}, 1),
+		Queue:  NewQueue[T](),
+		clock:  clock,
+		heap:   heap.NewHeap[int64, T](),
+		signal: make(chan struct{}, 1),
 	}
 	go q.loopWorker()
 	return q
 }
 
-func (q *delayingQueue[T]) AddAfter(item T, duration time.Duration) bool {
+func (q *delayingQueue[T]) AddAfter(item T, duration time.Duration) {
 	if duration <= 0 {
 		q.Queue.Add(item)
-		return true
+		return
 	}
+
+	k := q.clock.Now().Add(duration).UnixNano()
 
 	q.mut.Lock()
-	defer q.mut.Unlock()
-
-	_, ok := q.entries[item]
-	if ok {
-		return false
-	}
-
-	entry := &waitEntry[T]{data: item, readyAt: q.clock.Now().Add(duration)}
-	heap.Push(&q.heap, entry)
-	q.entries[item] = entry
+	q.heap.Push(k, item)
+	q.mut.Unlock()
 
 	select {
 	case q.signal <- struct{}{}:
 	default:
 	}
-	return true
 }
 
 func (q *delayingQueue[T]) loopWorker() {
@@ -113,74 +108,22 @@ func (q *delayingQueue[T]) next() (t T, ok bool, wait *time.Duration) {
 	q.mut.Lock()
 	defer q.mut.Unlock()
 
-	if len(q.heap) == 0 {
+	k, v, ok := q.heap.Peek()
+	if !ok {
 		return t, false, nil
 	}
-	entry := q.heap[0]
-	waitDuration := entry.readyAt.Sub(q.clock.Now())
+
+	waitDuration := time.Unix(0, k).Sub(q.clock.Now())
 	if waitDuration > 0 {
-		return t, false, &waitDuration
+		return v, false, &waitDuration
 	}
 
-	entry = heap.Pop(&q.heap).(*waitEntry[T])
-	delete(q.entries, entry.data)
-	return entry.data, true, nil
+	q.heap.Remove(v)
+	return v, true, nil
 }
 
 func (q *delayingQueue[T]) Cancel(item T) bool {
 	q.mut.Lock()
 	defer q.mut.Unlock()
-	return q.cancel(item)
-}
-
-func (q *delayingQueue[T]) cancel(item T) bool {
-	entry, ok := q.entries[item]
-	if !ok {
-		return false
-	}
-
-	heap.Remove(&q.heap, entry.index)
-	delete(q.entries, item)
-	return true
-}
-
-// waitEntry is an entry in the delayingQueue heap.
-type waitEntry[T any] struct {
-	data    T
-	readyAt time.Time
-	// index in the heap
-	index int
-}
-
-type waitEntries[T any] []*waitEntry[T]
-
-func (w waitEntries[T]) Len() int {
-	return len(w)
-}
-
-func (w waitEntries[T]) Less(i, j int) bool {
-	return w[i].readyAt.Before(w[j].readyAt)
-}
-
-func (w waitEntries[T]) Swap(i, j int) {
-	w[i], w[j] = w[j], w[i]
-	w[i].index = i
-	w[j].index = j
-}
-
-// Push adds an item to the queue, should not be called directly instead use `heap.Push`.
-func (w *waitEntries[T]) Push(x any) {
-	n := len(*w)
-	item := x.(*waitEntry[T])
-	item.index = n
-	*w = append(*w, item)
-}
-
-// Pop removes an item from the queue, should not be called directly instead use `heap.Pop`.
-func (w *waitEntries[T]) Pop() any {
-	n := len(*w)
-	item := (*w)[n-1]
-	item.index = -1
-	*w = (*w)[0:(n - 1)]
-	return item
+	return q.heap.Remove(item)
 }

@@ -209,15 +209,27 @@ func (c *StageController) preprocessWorker(ctx context.Context) {
 func (c *StageController) preprocess(ctx context.Context, resource *unstructured.Unstructured) error {
 	key := log.KObj(resource).String()
 
-	resourceJob, ok := c.delayQueueMapping.Load(key)
-	if ok && resourceJob.Resource.GetResourceVersion() == resource.GetResourceVersion() {
-		return nil
-	}
-
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"resource", key,
 	)
+
+	resourceJob, ok := c.delayQueueMapping.Load(key)
+	if ok {
+		if resourceJob.Resource.GetResourceVersion() == resource.GetResourceVersion() {
+			logger.Debug("Skip resource",
+				"reason", "resource version not changed",
+				"stage", resourceJob.Stage.Name(),
+			)
+			return nil
+		}
+
+		if !c.delayQueue.Cancel(resourceJob) {
+			logger.Debug("Failed to cancel stage",
+				"stage", resourceJob.Stage.Name(),
+			)
+		}
+	}
 
 	data, err := expression.ToJSONStandard(resource)
 	if err != nil {
@@ -252,14 +264,9 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 		Stage:    stage,
 		Key:      key,
 	}
-	ok = c.delayQueue.AddAfter(item, delay)
-	if !ok {
-		logger.Debug("Skip resource",
-			"reason", "delayed",
-		)
-	} else {
-		c.delayQueueMapping.Store(key, item)
-	}
+
+	c.delayQueue.AddAfter(item, delay)
+	c.delayQueueMapping.Store(key, item)
 
 	return nil
 }

@@ -233,16 +233,28 @@ func (c *PodController) preprocessWorker(ctx context.Context) {
 func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 	key := log.KObj(pod).String()
 
-	resourceJob, ok := c.delayQueueMapping.Load(key)
-	if ok && resourceJob.Resource.ResourceVersion == pod.ResourceVersion {
-		return nil
-	}
-
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", key,
 		"node", pod.Spec.NodeName,
 	)
+
+	resourceJob, ok := c.delayQueueMapping.Load(key)
+	if ok {
+		if resourceJob.Resource.ResourceVersion == pod.ResourceVersion {
+			logger.Debug("Skip pod",
+				"reason", "resource version not changed",
+				"stage", resourceJob.Stage.Name(),
+			)
+			return nil
+		}
+
+		if !c.delayQueue.Cancel(resourceJob) {
+			logger.Debug("Failed to cancel stage",
+				"stage", resourceJob.Stage.Name(),
+			)
+		}
+	}
 
 	data, err := expression.ToJSONStandard(pod)
 	if err != nil {
@@ -277,14 +289,9 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		Stage:    stage,
 		Key:      key,
 	}
-	ok = c.delayQueue.AddAfter(item, delay)
-	if !ok {
-		logger.Debug("Skip pod",
-			"reason", "delayed",
-		)
-	} else {
-		c.delayQueueMapping.Store(key, item)
-	}
+
+	c.delayQueue.AddAfter(item, delay)
+	c.delayQueueMapping.Store(key, item)
 
 	return nil
 }

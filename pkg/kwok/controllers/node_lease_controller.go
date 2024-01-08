@@ -30,7 +30,6 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -45,13 +44,13 @@ type NodeLeaseController struct {
 	renewIntervalJitter  float64
 	clock                clock.Clock
 
-	// latestLease is the latest lease which the NodeLeaseController updated or created
-	latestLease maps.SyncMap[string, *coordinationv1.Lease]
+	getLease func(nodeName string) (*coordinationv1.Lease, bool)
 
 	// mutateLeaseFunc allows customizing a lease object
 	mutateLeaseFunc func(*coordinationv1.Lease) error
 
-	delayQueue queue.DelayingQueue[string]
+	delayQueue   queue.WeightDelayingQueue[string]
+	holdLeaseSet maps.SyncMap[string, struct{}]
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)
@@ -64,6 +63,7 @@ type NodeLeaseControllerConfig struct {
 	TypedClient          clientset.Interface
 	LeaseDurationSeconds uint
 	LeaseParallelism     uint
+	GetLease             func(nodeName string) (*coordinationv1.Lease, bool)
 	RenewInterval        time.Duration
 	RenewIntervalJitter  float64
 	MutateLeaseFunc      func(*coordinationv1.Lease) error
@@ -85,10 +85,11 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 		typedClient:          conf.TypedClient,
 		leaseDurationSeconds: conf.LeaseDurationSeconds,
 		leaseParallelism:     conf.LeaseParallelism,
+		getLease:             conf.GetLease,
 		renewInterval:        conf.RenewInterval,
 		renewIntervalJitter:  conf.RenewIntervalJitter,
 		mutateLeaseFunc:      conf.MutateLeaseFunc,
-		delayQueue:           queue.NewDelayingQueue[string](conf.Clock),
+		delayQueue:           queue.NewWeightDelayingQueue[string](conf.Clock),
 		holderIdentity:       conf.HolderIdentity,
 		onNodeManagedFunc:    conf.OnNodeManagedFunc,
 	}
@@ -97,37 +98,11 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 }
 
 // Start starts the NodeLeaseController
-func (c *NodeLeaseController) Start(ctx context.Context, events <-chan informer.Event[*coordinationv1.Lease]) error {
+func (c *NodeLeaseController) Start(ctx context.Context) error {
 	for i := uint(0); i < c.leaseParallelism; i++ {
 		go c.syncWorker(ctx)
 	}
-	go c.watchResources(ctx, events)
 	return nil
-}
-
-// watchResources watch resources and send to preprocessChan
-func (c *NodeLeaseController) watchResources(ctx context.Context, events <-chan informer.Event[*coordinationv1.Lease]) {
-	logger := log.FromContext(ctx)
-loop:
-	for {
-		select {
-		case event, ok := <-events:
-			if !ok {
-				break loop
-			}
-			switch event.Type {
-			case informer.Added, informer.Modified, informer.Sync:
-				lease := event.Object.DeepCopy()
-				c.latestLease.Store(lease.Name, lease)
-			case informer.Deleted:
-				lease := event.Object
-				c.remove(lease.Name)
-			}
-		case <-ctx.Done():
-			break loop
-		}
-	}
-	logger.Info("Stop watch node leases")
 }
 
 func (c *NodeLeaseController) syncWorker(ctx context.Context) {
@@ -135,30 +110,33 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 	for ctx.Err() == nil {
 		nodeName := c.delayQueue.GetOrWait()
 
-		now := c.clock.Now()
-		hold := c.sync(ctx, nodeName)
-
-		lease, _ := c.latestLease.Load(nodeName)
-
-		expireTime, ok := expireTime(lease)
+		_, ok := c.holdLeaseSet.Load(nodeName)
 		if !ok {
-			if hold {
-				// If the lease is not found, we should retry immediately.
-				c.delayQueue.Add(nodeName)
-			} else {
-				logger.Warn("Lease not held",
-					"node", nodeName,
-				)
-			}
 			continue
 		}
 
-		renewIntervalDuration := c.interval()
+		dur := c.interval()
+
+		lease, err := c.sync(ctx, nodeName)
+		if err != nil {
+			logger.Error("Failed to sync lease", err,
+				"node", nodeName,
+			)
+			c.delayQueue.AddWeightAfter(nodeName, 1, dur)
+			continue
+		}
+
+		expireTime, ok := expireTime(lease)
+		if !ok {
+			c.delayQueue.AddWeightAfter(nodeName, 1, dur)
+			continue
+		}
+
+		now := c.clock.Now()
 		expireDuration := expireTime.Sub(now)
-
-		nextTry := nextTryDuration(renewIntervalDuration, expireDuration, hold)
-
-		_ = c.delayQueue.AddAfter(nodeName, nextTry)
+		hold := tryAcquireOrRenew(lease, c.holderIdentity, now)
+		nextTry := nextTryDuration(dur, expireDuration, hold)
+		c.delayQueue.AddWeightAfter(nodeName, 2, nextTry)
 	}
 }
 
@@ -168,18 +146,21 @@ func (c *NodeLeaseController) interval() time.Duration {
 
 // TryHold tries to hold a lease for the NodeLeaseController
 func (c *NodeLeaseController) TryHold(name string) {
-	c.delayQueue.Add(name)
+	_, loaded := c.holdLeaseSet.LoadOrStore(name, struct{}{})
+	if !loaded {
+		c.delayQueue.Add(name)
+	}
 }
 
-// remove removes a lease from the NodeLeaseController
-func (c *NodeLeaseController) remove(name string) {
+// ReleaseHold releases a lease for the NodeLeaseController
+func (c *NodeLeaseController) ReleaseHold(name string) {
 	_ = c.delayQueue.Cancel(name)
-	c.latestLease.Delete(name)
+	c.holdLeaseSet.Delete(name)
 }
 
 // Held returns true if the NodeLeaseController holds the lease
 func (c *NodeLeaseController) Held(name string) bool {
-	lease, ok := c.latestLease.Load(name)
+	lease, ok := c.getLease(name)
 	if !ok || lease == nil || lease.Spec.HolderIdentity == nil {
 		return false
 	}
@@ -188,91 +169,54 @@ func (c *NodeLeaseController) Held(name string) bool {
 }
 
 // sync syncs a lease for a node
-func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) bool {
+func (c *NodeLeaseController) sync(ctx context.Context, nodeName string) (lease *coordinationv1.Lease, err error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With("node", nodeName)
 
-	latestLease, ok := c.latestLease.Load(nodeName)
-	if ok && latestLease != nil {
-		if !tryAcquireOrRenew(latestLease, c.holderIdentity, c.clock.Now()) {
+	lease, _ = c.getLease(nodeName)
+	if lease != nil {
+		if !tryAcquireOrRenew(lease, c.holderIdentity, c.clock.Now()) {
 			logger.Debug("Lease already acquired by another holder")
-			return false
+			return nil, nil
 		}
 		logger.Info("Syncing lease")
-		lease, transitions, err := c.renewLease(ctx, latestLease)
+		lease, err := c.renewLease(ctx, lease)
 		if err != nil {
-			logger.Error("failed to update lease using latest lease", err)
-			return false
+			return nil, fmt.Errorf("failed to update lease using lease: %w", err)
 		}
-		c.latestLease.Store(nodeName, lease)
-		if transitions {
-			logger.Debug("Lease transitioned",
-				"transitions", transitions,
-			)
-			if c.onNodeManagedFunc != nil {
-				if c.Held(nodeName) {
-					c.onNodeManagedFunc(nodeName)
-				} else {
-					logger.Warn("Lease not held")
-				}
-			}
+
+		c.onNodeManaged(nodeName)
+		return lease, nil
+	}
+
+	logger.Info("Creating lease")
+	lease, err = c.ensureLease(ctx, nodeName)
+	if err != nil {
+		if apierrors.IsAlreadyExists(err) {
+			return nil, fmt.Errorf("failed to create lease, lease already exists: %w", err)
 		}
-	} else {
-		logger.Info("Creating lease")
-		latestLease, err := c.ensureLease(ctx, nodeName)
-		if err != nil {
-			if apierrors.IsAlreadyExists(err) {
-				logger.Error("failed to create lease, lease already exists", err)
 
-				_, err = c.syncLease(ctx, nodeName)
-				if err != nil {
-					logger.Error("failed to sync lease", err)
-					return false
-				}
-				if c.onNodeManagedFunc != nil {
-					if c.Held(nodeName) {
-						c.onNodeManagedFunc(nodeName)
-					} else {
-						logger.Warn("Lease not held")
-					}
-				}
-				return true
-			}
-
-			if !apierrors.IsNotFound(err) || !c.latestLease.IsEmpty() {
-				logger.Error("failed to create lease", err)
-				return false
-			}
-
-			// kube-apiserver will not have finished initializing the resources when the cluster has just been created.
+		// kube-apiserver will not have finished initializing the resources when the cluster has just been created.
+		for apierrors.IsNotFound(err) {
 			logger.Error("lease namespace not found, retrying in 1 second", err)
 			c.clock.Sleep(1 * time.Second)
-			latestLease, err = c.ensureLease(ctx, nodeName)
-			if err != nil {
-				logger.Error("failed to create lease secondly", err)
-				return false
-			}
+			lease, err = c.ensureLease(ctx, nodeName)
 		}
-
-		c.latestLease.Store(nodeName, latestLease)
-		if c.onNodeManagedFunc != nil {
-			if c.Held(nodeName) {
-				c.onNodeManagedFunc(nodeName)
-			} else {
-				logger.Warn("Lease not held")
-			}
+		if err != nil {
+			return lease, fmt.Errorf("failed to create lease after retrying: %w", err)
 		}
 	}
-	return true
+
+	c.onNodeManaged(nodeName)
+	return lease, nil
 }
 
-func (c *NodeLeaseController) syncLease(ctx context.Context, leaseName string) (*coordinationv1.Lease, error) {
-	lease, err := c.typedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease).Get(ctx, leaseName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
+func (c *NodeLeaseController) onNodeManaged(nodeName string) {
+	if c.onNodeManagedFunc == nil {
+		return
 	}
-	c.latestLease.Store(leaseName, lease)
-	return lease, nil
+
+	c.onNodeManagedFunc(nodeName)
 }
 
 // ensureLease creates a lease if it does not exist
@@ -303,7 +247,7 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 }
 
 // renewLease attempts to update the lease for maxUpdateRetries, call this once you're sure the lease has been created
-func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordinationv1.Lease) (*coordinationv1.Lease, bool, error) {
+func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordinationv1.Lease) (*coordinationv1.Lease, error) {
 	lease := base.DeepCopy()
 
 	transitions := format.ElemOrDefault(lease.Spec.HolderIdentity) != c.holderIdentity
@@ -317,15 +261,15 @@ func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordination
 	if c.mutateLeaseFunc != nil {
 		err := c.mutateLeaseFunc(lease)
 		if err != nil {
-			return nil, false, err
+			return nil, err
 		}
 	}
 
 	lease, err := c.typedClient.CoordinationV1().Leases(lease.Namespace).Update(ctx, lease, metav1.UpdateOptions{})
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
-	return lease, transitions, nil
+	return lease, nil
 }
 
 // setNodeOwnerFunc helps construct a mutateLeaseFunc which sets a node OwnerReference to the given lease object
@@ -375,22 +319,18 @@ func expireTime(lease *coordinationv1.Lease) (time.Time, bool) {
 // nextTryDuration returns the next to try to acquire or renew the lease
 func nextTryDuration(renewInterval, expire time.Duration, hold bool) time.Duration {
 	switch {
-	case expire <= 0:
-		// If the lease is expired, we should retry immediately.
-		return 0
 	case !hold:
-		// If the lease is not held, we should retry at the expire time.
-		return expire
-	case hold && renewInterval >= expire-time.Second:
-		// If the lease is held and the renew interval is greater than the expire time,
-		// we should retry earlier than the expire time.
-		expire -= time.Second
-		if expire < 0 {
-			expire = 0
-		}
-		return expire
-	default:
-		// Otherwise, we should retry at the renew interval.
+		// If the lease is not held, we should retry at the renew interval.
 		return renewInterval
+	case renewInterval < expire:
+		// If the lease is held and the renew interval is less than the expire time,
+		// we should retry at the renew interval.
+		return renewInterval
+	case expire < time.Second:
+		// If the lease is held and the expire time is less than 1 second,
+		return time.Second
+	default:
+		// Otherwise, we should retry at the expire time.
+		return expire
 	}
 }

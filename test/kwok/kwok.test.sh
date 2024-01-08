@@ -41,7 +41,7 @@ function start_cluster() {
 
 # Check for normal heartbeat
 function test_node_ready() {
-  for ((i = 0; i < 30; i++)); do
+  for ((i = 0; i < 300; i++)); do
     if [[ ! "$(kubectl get node fake-node)" =~ "Ready" ]]; then
       echo "Waiting for fake-node to be ready..."
       sleep 1
@@ -85,7 +85,7 @@ function test_check_pod_status() {
 
 # Check for the Pod is running
 function test_pod_running() {
-  for ((i = 0; i < 30; i++)); do
+  for ((i = 0; i < 300; i++)); do
     if [[ ! "$(kubectl get pod | grep -c Running)" -eq 5 ]]; then
       echo "Waiting all pods to be running..."
       sleep 1
@@ -182,6 +182,8 @@ function main() {
   test_node_ready || failed+=("node_ready_again")
   test_pod_running || failed+=("pod_running_again")
   test_check_pod_status || failed+=("check_pod_status_again")
+
+  sleep 40
 
   test_check_node_lease_transitions 1 || failed+=("check_node_lease_transitions_again")
 

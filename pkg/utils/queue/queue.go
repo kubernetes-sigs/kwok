@@ -38,7 +38,7 @@ type queue[T any] struct {
 	base *list.List
 
 	signal chan struct{}
-	mut    sync.Mutex
+	mut    sync.RWMutex
 }
 
 // NewQueue returns a new Queue.
@@ -51,16 +51,13 @@ func NewQueue[T any]() Queue[T] {
 
 func (q *queue[T]) Add(item T) {
 	q.mut.Lock()
-	defer q.mut.Unlock()
-
 	q.base.PushBack(item)
+	q.mut.Unlock()
 
 	// Signal that an item was added.
-	if len(q.signal) == 0 {
-		select {
-		case q.signal <- struct{}{}:
-		default:
-		}
+	select {
+	case q.signal <- struct{}{}:
+	default:
 	}
 }
 
@@ -92,7 +89,7 @@ func (q *queue[T]) GetOrWait() T {
 }
 
 func (q *queue[T]) Len() int {
-	q.mut.Lock()
-	defer q.mut.Unlock()
+	q.mut.RLock()
+	defer q.mut.RUnlock()
 	return q.base.Len()
 }
