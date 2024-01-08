@@ -102,6 +102,26 @@ func GetComponentPatches(conf *internalversion.KwokctlConfiguration, componentNa
 	return componentPatches
 }
 
+// ApplyComponentPatches applies patches to a component.
+func ApplyComponentPatches(component *internalversion.Component, patches []internalversion.ComponentPatches) {
+	for _, patch := range patches {
+		applyComponentPatch(component, patch)
+	}
+}
+
+func applyComponentPatch(component *internalversion.Component, patch internalversion.ComponentPatches) {
+	if patch.Name != component.Name {
+		return
+	}
+
+	component.Volumes = append(component.Volumes, patch.ExtraVolumes...)
+	component.Envs = append(component.Envs, patch.ExtraEnvs...)
+
+	for _, a := range patch.ExtraArgs {
+		component.Args = append(component.Args, fmt.Sprintf("--%s=%s", a.Key, a.Value))
+	}
+}
+
 // ExpandVolumesHostPaths expands relative paths specified in volumes to absolute paths
 func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion.Volume, error) {
 	result := make([]internalversion.Volume, 0, len(volumes))

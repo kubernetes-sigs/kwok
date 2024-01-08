@@ -91,7 +91,7 @@ nodes:
   - hostPath: <ROOT_DIR>/extras/controller
     containerPath: /var/components/controller/extras/tmp
     readOnly: false
-  - hostPath: ./extras/prometheus
+  - hostPath: <ROOT_DIR>/extras/prometheus
     containerPath: /var/components/prometheus/extras/tmp
     readOnly: false
   - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
@@ -110,7 +110,6 @@ spec:
   - args:
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-    - --v=-4
     - --kubeconfig=~/.kube/config
     - --config=~/.kwok/kwok.yaml
     - --tls-cert-file=/etc/kubernetes/pki/admin.crt
@@ -120,6 +119,7 @@ spec:
     - --node-port=10247
     - --server-address=0.0.0.0:10247
     - --node-lease-duration-seconds=40
+    - --v=-4
     command:
     - kwok
     env:
@@ -134,23 +134,23 @@ spec:
     name: kwok-controller
     resources: {}
     volumeMounts:
-    - mountPath: /extras/tmp
-      name: tmp-controller
     - mountPath: ~/.kube/config
-      name: volume-1
+      name: volume-0
       readOnly: true
     - mountPath: /etc/kubernetes/pki/ca.crt
-      name: volume-2
+      name: volume-1
       readOnly: true
     - mountPath: /etc/kubernetes/pki/admin.crt
-      name: volume-3
+      name: volume-2
       readOnly: true
     - mountPath: /etc/kubernetes/pki/admin.key
-      name: volume-4
+      name: volume-3
       readOnly: true
     - mountPath: ~/.kwok/kwok.yaml
-      name: volume-5
+      name: volume-4
       readOnly: true
+    - mountPath: /extras/tmp
+      name: tmp-controller
   hostNetwork: true
   restartPolicy: Always
   securityContext:
@@ -158,24 +158,24 @@ spec:
     runAsUser: 0
   volumes:
   - hostPath:
+      path: /etc/kubernetes/admin.conf
+    name: volume-0
+  - hostPath:
+      path: /etc/kubernetes/pki/ca.crt
+    name: volume-1
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.crt
+    name: volume-2
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.key
+    name: volume-3
+  - hostPath:
+      path: /etc/kwok/kwok.yaml
+    name: volume-4
+  - hostPath:
       path: <ROOT_DIR>/extras/controller
       type: DirectoryOrCreate
     name: tmp-controller
-  - hostPath:
-      path: /etc/kubernetes/admin.conf
-    name: volume-1
-  - hostPath:
-      path: /etc/kubernetes/pki/ca.crt
-    name: volume-2
-  - hostPath:
-      path: /etc/kubernetes/pki/admin.crt
-    name: volume-3
-  - hostPath:
-      path: /etc/kubernetes/pki/admin.key
-    name: volume-4
-  - hostPath:
-      path: /etc/kwok/kwok.yaml
-    name: volume-5
 status: {}
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
@@ -188,9 +188,9 @@ metadata:
 spec:
   containers:
   - args:
-    - --log.level=debug
     - --config.file=/etc/prometheus/prometheus.yaml
     - --web.listen-address=0.0.0.0:9090
+    - --log.level=debug
     command:
     - prometheus
     env:
@@ -204,23 +204,23 @@ spec:
       hostPort: 9090
     resources: {}
     volumeMounts:
-    - mountPath: /extras/tmp
-      name: tmp-prometheus
-    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.crt
-      name: volume-1
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.key
-      name: volume-2
-      readOnly: true
     - mountPath: /etc/prometheus/prometheus.yaml
-      name: volume-3
+      name: volume-0
       readOnly: true
     - mountPath: /etc/kubernetes/pki/admin.crt
-      name: volume-4
+      name: volume-1
       readOnly: true
     - mountPath: /etc/kubernetes/pki/admin.key
-      name: volume-5
+      name: volume-2
       readOnly: true
+    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.crt
+      name: volume-3
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/apiserver-etcd-client.key
+      name: volume-4
+      readOnly: true
+    - mountPath: /extras/tmp
+      name: tmp-prometheus
   hostNetwork: true
   restartPolicy: Always
   securityContext:
@@ -228,24 +228,24 @@ spec:
     runAsUser: 0
   volumes:
   - hostPath:
+      path: /var/components/prometheus/etc/prometheus/prometheus.yaml
+    name: volume-0
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.crt
+    name: volume-1
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.key
+    name: volume-2
+  - hostPath:
+      path: /etc/kubernetes/pki/apiserver-etcd-client.crt
+    name: volume-3
+  - hostPath:
+      path: /etc/kubernetes/pki/apiserver-etcd-client.key
+    name: volume-4
+  - hostPath:
       path: <ROOT_DIR>/extras/prometheus
       type: DirectoryOrCreate
     name: tmp-prometheus
-  - hostPath:
-      path: /etc/kubernetes/pki/apiserver-etcd-client.crt
-    name: volume-1
-  - hostPath:
-      path: /etc/kubernetes/pki/apiserver-etcd-client.key
-    name: volume-2
-  - hostPath:
-      path: /var/components/prometheus/etc/prometheus/prometheus.yaml
-    name: volume-3
-  - hostPath:
-      path: /etc/kubernetes/pki/admin.crt
-    name: volume-4
-  - hostPath:
-      path: /etc/kubernetes/pki/admin.key
-    name: volume-5
 status: {}
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml

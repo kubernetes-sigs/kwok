@@ -29,20 +29,17 @@ import (
 
 // BuildEtcdComponentConfig is the configuration for building an etcd component.
 type BuildEtcdComponentConfig struct {
-	Runtime      string
-	Binary       string
-	Image        string
-	ProjectName  string
-	Version      version.Version
-	DataPath     string
-	Workdir      string
-	BindAddress  string
-	Port         uint32
-	PeerPort     uint32
-	Verbosity    log.Level
-	ExtraArgs    []internalversion.ExtraArgs
-	ExtraVolumes []internalversion.Volume
-	ExtraEnvs    []internalversion.Env
+	Runtime     string
+	Binary      string
+	Image       string
+	ProjectName string
+	Version     version.Version
+	DataPath    string
+	Workdir     string
+	BindAddress string
+	Port        uint32
+	PeerPort    uint32
+	Verbosity   log.Level
 }
 
 // BuildEtcdComponent builds an etcd component.
@@ -59,7 +56,6 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	}
 
 	var volumes []internalversion.Volume
-	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
 	etcdArgs := []string{
@@ -67,7 +63,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		"--auto-compaction-retention=1",
 		"--quota-backend-bytes=8589934592",
 	}
-	etcdArgs = append(etcdArgs, extraArgsToStrings(conf.ExtraArgs)...)
+
 	var metric *internalversion.ComponentMetric
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
@@ -149,7 +145,6 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			Value: runtime.GOARCH,
 		})
 	}
-	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
 		Name:    consts.ComponentEtcd,

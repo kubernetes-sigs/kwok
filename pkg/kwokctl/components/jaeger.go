@@ -36,17 +36,13 @@ type BuildJaegerComponentConfig struct {
 	Port         uint32
 	OtlpGrpcPort uint32
 	Verbosity    log.Level
-	ExtraArgs    []internalversion.ExtraArgs
-	ExtraVolumes []internalversion.Volume
 }
 
 // BuildJaegerComponent builds a jaeger component.
 func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalversion.Component, err error) {
 	jaegerArgs := []string{"--collector.otlp.enabled=true"}
-	jaegerArgs = append(jaegerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
 	var volumes []internalversion.Volume
-	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {

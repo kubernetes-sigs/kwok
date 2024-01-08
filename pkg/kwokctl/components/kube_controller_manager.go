@@ -48,15 +48,11 @@ type BuildKubeControllerManagerComponentConfig struct {
 	NodeMonitorGracePeriodMilliseconds int64
 	Verbosity                          log.Level
 	DisableQPSLimits                   bool
-	ExtraArgs                          []internalversion.ExtraArgs
-	ExtraVolumes                       []internalversion.Volume
-	ExtraEnvs                          []internalversion.Env
 }
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
 func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponentConfig) (component internalversion.Component, err error) {
 	kubeControllerManagerArgs := []string{}
-	kubeControllerManagerArgs = append(kubeControllerManagerArgs, extraArgsToStrings(conf.ExtraArgs)...)
 
 	if conf.KubeFeatureGates != "" {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
@@ -77,7 +73,6 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	var volumes []internalversion.Volume
-	volumes = append(volumes, conf.ExtraVolumes...)
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
 
@@ -224,7 +219,6 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	envs := []internalversion.Env{}
-	envs = append(envs, conf.ExtraEnvs...)
 
 	return internalversion.Component{
 		Name:    consts.ComponentKubeControllerManager,

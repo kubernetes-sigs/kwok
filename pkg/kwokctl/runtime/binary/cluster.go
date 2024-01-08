@@ -374,21 +374,17 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	etcdComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentEtcd)
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Runtime:      conf.Runtime,
-		ProjectName:  c.Name(),
-		Workdir:      env.workdir,
-		Binary:       etcdPath,
-		Version:      etcdVersion,
-		BindAddress:  conf.BindAddress,
-		DataPath:     env.etcdDataPath,
-		Port:         conf.EtcdPort,
-		PeerPort:     conf.EtcdPeerPort,
-		Verbosity:    env.verbosity,
-		ExtraArgs:    etcdComponentPatches.ExtraArgs,
-		ExtraVolumes: etcdComponentPatches.ExtraVolumes,
-		ExtraEnvs:    etcdComponentPatches.ExtraEnvs,
+		Runtime:     conf.Runtime,
+		ProjectName: c.Name(),
+		Workdir:     env.workdir,
+		Binary:      etcdPath,
+		Version:     etcdVersion,
+		BindAddress: conf.BindAddress,
+		DataPath:    env.etcdDataPath,
+		Port:        conf.EtcdPort,
+		PeerPort:    conf.EtcdPeerPort,
+		Verbosity:   env.verbosity,
 	})
 	if err != nil {
 		return err
@@ -432,7 +428,6 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		}
 	}
 
-	kubeApiserverComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeApiserver)
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
 		Runtime:           conf.Runtime,
 		ProjectName:       c.Name(),
@@ -456,9 +451,6 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		Verbosity:         env.verbosity,
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		TracingConfigPath: kubeApiserverTracingConfigPath,
-		ExtraArgs:         kubeApiserverComponentPatches.ExtraArgs,
-		ExtraVolumes:      kubeApiserverComponentPatches.ExtraVolumes,
-		ExtraEnvs:         kubeApiserverComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -487,7 +479,6 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			return err
 		}
 
-		kubeControllerManagerPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeControllerManager)
 		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
 			Runtime:                            conf.Runtime,
 			ProjectName:                        c.Name(),
@@ -507,9 +498,6 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
 			Verbosity:                          env.verbosity,
 			DisableQPSLimits:                   conf.DisableQPSLimits,
-			ExtraArgs:                          kubeControllerManagerPatches.ExtraArgs,
-			ExtraVolumes:                       kubeControllerManagerPatches.ExtraVolumes,
-			ExtraEnvs:                          kubeControllerManagerPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -548,7 +536,6 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		kubeSchedulerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeScheduler)
 		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
 			Runtime:          conf.Runtime,
 			ProjectName:      c.Name(),
@@ -566,9 +553,6 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 			KubeFeatureGates: conf.KubeFeatureGates,
 			Verbosity:        env.verbosity,
 			DisableQPSLimits: conf.DisableQPSLimits,
-			ExtraArgs:        kubeSchedulerComponentPatches.ExtraArgs,
-			ExtraVolumes:     kubeSchedulerComponentPatches.ExtraVolumes,
-			ExtraEnvs:        kubeSchedulerComponentPatches.ExtraEnvs,
 		})
 		if err != nil {
 			return err
@@ -589,8 +573,6 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	kwokControllerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKwokController)
-
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
 		Runtime:                  conf.Runtime,
 		ProjectName:              c.Name(),
@@ -608,8 +590,6 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		Verbosity:                env.verbosity,
 		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 		EnableCRDs:               conf.EnableCRDs,
-		ExtraArgs:                kwokControllerComponentPatches.ExtraArgs,
-		ExtraEnvs:                kwokControllerComponentPatches.ExtraEnvs,
 	})
 	if err != nil {
 		return err
@@ -655,19 +635,15 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		prometheusComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentPrometheus)
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
-			Runtime:      conf.Runtime,
-			Workdir:      env.workdir,
-			Binary:       prometheusPath,
-			Version:      prometheusVersion,
-			BindAddress:  conf.BindAddress,
-			Port:         conf.PrometheusPort,
-			ConfigPath:   prometheusConfigPath,
-			Verbosity:    env.verbosity,
-			ExtraArgs:    prometheusComponentPatches.ExtraArgs,
-			ExtraVolumes: prometheusComponentPatches.ExtraVolumes,
-			ExtraEnvs:    prometheusComponentPatches.ExtraEnvs,
+			Runtime:     conf.Runtime,
+			Workdir:     env.workdir,
+			Binary:      prometheusPath,
+			Version:     prometheusVersion,
+			BindAddress: conf.BindAddress,
+			Port:        conf.PrometheusPort,
+			ConfigPath:  prometheusConfigPath,
+			Verbosity:   env.verbosity,
 		})
 		if err != nil {
 			return err
@@ -689,7 +665,6 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 			return err
 		}
 
-		jaegerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentJaeger)
 		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
 			Runtime:      conf.Runtime,
 			Workdir:      env.workdir,
@@ -699,8 +674,6 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 			Port:         conf.JaegerPort,
 			OtlpGrpcPort: conf.JaegerOtlpGrpcPort,
 			Verbosity:    env.verbosity,
-			ExtraArgs:    jaegerComponentPatches.ExtraArgs,
-			ExtraVolumes: jaegerComponentPatches.ExtraVolumes,
 		})
 		if err != nil {
 			return err
@@ -712,6 +685,10 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 
 func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 	conf := &env.kwokctlConfig.Options
+
+	for i := range env.kwokctlConfig.Components {
+		runtime.ApplyComponentPatches(&env.kwokctlConfig.Components[i], env.kwokctlConfig.ComponentsPatches)
+	}
 
 	// Setup kubeconfig
 	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
