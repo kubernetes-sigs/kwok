@@ -18,6 +18,7 @@ package informer
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,6 +46,9 @@ func NewInformer[T runtime.Object, L runtime.Object](lw Watcher[T, L]) *Informer
 
 // Sync sends a sync event for each resource returned by the ListFunc.
 func (i *Informer[T, L]) Sync(ctx context.Context, opt Option, events chan<- Event[T]) error {
+	if events == nil {
+		return fmt.Errorf("events channel is nil")
+	}
 	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 		return i.ListFunc(ctx, opts)
 	})
@@ -72,20 +76,9 @@ func (i *Informer[T, L]) WatchWithCache(ctx context.Context, opt Option, events 
 		t = reflect.New(typ.Elem()).Interface().(T)
 	}
 	logger := log.FromContext(ctx)
-	store, contrtoller := cache.NewInformer(
-		&cache.ListWatch{
-			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
-				opt.setup(&opts)
-				return i.ListFunc(ctx, opts)
-			},
-			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
-				opt.setup(&opts)
-				return i.WatchFunc(ctx, opts)
-			},
-		},
-		t,
-		0,
-		cache.ResourceEventHandlerFuncs{
+	eventHandler := cache.ResourceEventHandlerFuncs{}
+	if events != nil {
+		eventHandler = cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj any) {
 				if ok, err := opt.filter(obj); err != nil {
 					logger.Error("filtering object", err)
@@ -113,10 +106,25 @@ func (i *Informer[T, L]) WatchWithCache(ctx context.Context, opt Option, events 
 				}
 				events <- Event[T]{Type: Deleted, Object: obj.(T)}
 			},
+		}
+	}
+	store, controller := cache.NewInformer(
+		&cache.ListWatch{
+			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
+				opt.setup(&opts)
+				return i.ListFunc(ctx, opts)
+			},
+			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
+				opt.setup(&opts)
+				return i.WatchFunc(ctx, opts)
+			},
 		},
+		t,
+		0,
+		eventHandler,
 	)
 
-	go contrtoller.Run(ctx.Done())
+	go controller.Run(ctx.Done())
 
 	g := &getter[T]{store: store}
 	return g, nil
@@ -124,6 +132,10 @@ func (i *Informer[T, L]) WatchWithCache(ctx context.Context, opt Option, events 
 
 // Watch starts a goroutine that watches the resource and sends events to the events channel.
 func (i *Informer[T, L]) Watch(ctx context.Context, opt Option, events chan<- Event[T]) error {
+	if events == nil {
+		return fmt.Errorf("events channel is nil")
+	}
+
 	var t T
 	typ := reflect.TypeOf(t)
 	if typ.Kind() == reflect.Ptr {

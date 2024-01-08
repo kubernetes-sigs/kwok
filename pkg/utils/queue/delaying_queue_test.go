@@ -102,13 +102,17 @@ func TestAddTwo(t *testing.T) {
 	}
 }
 
+type length interface {
+	Len() int
+}
+
 // checkLength checks whether the delay queue has the expected number of elements.
 // The check action is supposed to be instantaneous.
 // However, in order to reserve time for the internal synchronization of the delay queue itself,
 // we perform the check in a polling manner and make it subject to a very short timeout(0.1s), the reserved time.
-func checkLength[T comparable](q DelayingQueue[T], len int) error {
+func checkLength(q length, l int) error {
 	return wait.Poll(context.TODO(), func(ctx context.Context) (done bool, err error) {
-		if q.Len() == len {
+		if q.Len() == l {
 			return true, nil
 		}
 		return false, nil
@@ -120,7 +124,7 @@ func checkLength[T comparable](q DelayingQueue[T], len int) error {
 // That time period is a reserved time for the internal synchronization of the delay queue itself.
 // In addition, to accelerate the check progress, we perform the check in a polling manner (every 1ms)
 // during the waiting time.
-func checkIncreased[T comparable](q DelayingQueue[T]) error {
+func checkIncreased(q length) error {
 	curLen := q.Len()
 
 	err := wait.Poll(context.TODO(), func(ctx context.Context) (done bool, err error) {

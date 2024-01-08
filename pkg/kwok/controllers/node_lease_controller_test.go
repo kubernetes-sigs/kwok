@@ -72,8 +72,26 @@ func TestNodeLeaseController(t *testing.T) {
 		},
 	)
 
+	ctx := context.Background()
+	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	t.Cleanup(func() {
+		cancel()
+		time.Sleep(time.Second)
+	})
+
+	nodeLeasesCli := clientset.CoordinationV1().Leases(corev1.NamespaceNodeLease)
+	nodesInformer := informer.NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](nodeLeasesCli)
+	cache, err := nodesInformer.WatchWithCache(ctx, informer.Option{}, nil)
+	if err != nil {
+		t.Fatal(fmt.Errorf("watch node leases error: %w", err))
+	}
+
 	nodeLeases, err := NewNodeLeaseController(NodeLeaseControllerConfig{
-		TypedClient:          clientset,
+		TypedClient: clientset,
+		GetLease: func(nodeName string) (*coordinationv1.Lease, bool) {
+			return cache.GetWithNamespace(nodeName, corev1.NamespaceNodeLease)
+		},
 		HolderIdentity:       "test",
 		LeaseDurationSeconds: 40,
 		LeaseParallelism:     2,
@@ -84,25 +102,9 @@ func TestNodeLeaseController(t *testing.T) {
 		t.Fatal(fmt.Errorf("new node leases controller error: %w", err))
 	}
 
-	ctx := context.Background()
-	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	t.Cleanup(func() {
-		cancel()
-		time.Sleep(time.Second)
-	})
-
-	nodeLeasesCh := make(chan informer.Event[*coordinationv1.Lease], 1)
-	nodeLeasesCli := clientset.CoordinationV1().Leases(corev1.NamespaceNodeLease)
-	nodesInformer := informer.NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](nodeLeasesCli)
-	err = nodesInformer.Watch(ctx, informer.Option{}, nodeLeasesCh)
-	if err != nil {
-		t.Fatal(fmt.Errorf("watch node leases error: %w", err))
-	}
-
 	time.Sleep(1 * time.Second)
 
-	err = nodeLeases.Start(ctx, nodeLeasesCh)
+	err = nodeLeases.Start(ctx)
 	if err != nil {
 		t.Fatal(fmt.Errorf("start node leases controller error: %w", err))
 	}
@@ -227,25 +229,11 @@ func TestNextTryDuration(t *testing.T) {
 		expectedResult time.Duration
 	}{
 		{
-			name:           "Lease expired",
-			renewInterval:  10 * time.Second,
-			expire:         -1 * time.Second,
-			hold:           true,
-			expectedResult: 0,
-		},
-		{
 			name:           "Lease not held",
 			renewInterval:  10 * time.Second,
 			expire:         5 * time.Second,
 			hold:           false,
-			expectedResult: 5 * time.Second,
-		},
-		{
-			name:           "Lease held, renew interval greater than expire time",
-			renewInterval:  10 * time.Second,
-			expire:         5 * time.Second,
-			hold:           true,
-			expectedResult: 4 * time.Second,
+			expectedResult: 10 * time.Second,
 		},
 		{
 			name:           "Lease held, renew interval less than expire time",
@@ -255,11 +243,25 @@ func TestNextTryDuration(t *testing.T) {
 			expectedResult: 5 * time.Second,
 		},
 		{
+			name:           "Lease held, renew interval greater than expire time",
+			renewInterval:  10 * time.Second,
+			expire:         5 * time.Second,
+			hold:           true,
+			expectedResult: 5 * time.Second,
+		},
+		{
+			name:           "Lease held, expire time less than 1 second",
+			renewInterval:  10 * time.Second,
+			expire:         500 * time.Millisecond,
+			hold:           true,
+			expectedResult: 1 * time.Second,
+		},
+		{
 			name:           "Lease held, renew interval equals expire time",
 			renewInterval:  5 * time.Second,
 			expire:         5 * time.Second,
 			hold:           true,
-			expectedResult: 4 * time.Second,
+			expectedResult: 5 * time.Second,
 		},
 	}
 
