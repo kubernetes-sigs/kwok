@@ -315,6 +315,12 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 		"stage", stage.Name(),
 	)
 
+	var (
+		result *corev1.Pod
+		patch  []byte
+		err    error
+	)
+
 	if next.Event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
 			Kind:      "Pod",
@@ -323,22 +329,23 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 			Namespace: pod.Namespace,
 		}, next.Event.Type, next.Event.Reason, next.Event.Message)
 	}
+
 	if next.Finalizers != nil {
-		result, err := c.finalizersModify(ctx, pod, next.Finalizers)
+		result, err = c.finalizersModify(ctx, pod, next.Finalizers)
 		if err != nil {
 			logger.Error("Failed to finalizers", err)
-		}
-		if result != nil && stage.ImmediateNextStage() {
-			c.preprocessChan <- result
+			return
 		}
 	}
+
 	if next.Delete {
-		err := c.deleteResource(ctx, pod)
+		err = c.deleteResource(ctx, pod)
 		if err != nil {
 			logger.Error("Failed to delete pod", err)
+			return
 		}
 	} else if next.StatusTemplate != "" {
-		patch, err := c.configureResource(pod, next.StatusTemplate)
+		patch, err = c.configureResource(pod, next.StatusTemplate)
 		if err != nil {
 			logger.Error("Failed to configure pod", err)
 			return
@@ -348,14 +355,18 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 				"reason", "do not need to modify",
 			)
 		} else {
-			result, err := c.patchResource(ctx, pod, patch)
+			result, err = c.patchResource(ctx, pod, patch)
 			if err != nil {
 				logger.Error("Failed to patch pod", err)
-			}
-			if result != nil && stage.ImmediateNextStage() {
-				c.preprocessChan <- result
+				return
 			}
 		}
+	}
+
+	if result != nil && stage.ImmediateNextStage() {
+		logger.Debug("Re-push to preprocessChan",
+			"reason", "immediateNextStage is true")
+		c.preprocessChan <- result
 	}
 }
 

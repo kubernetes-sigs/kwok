@@ -289,6 +289,12 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 		"stage", stage.Name(),
 	)
 
+	var (
+		result *unstructured.Unstructured
+		patch  []byte
+		err    error
+	)
+
 	if next.Event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
 			Kind:      "Stage",
@@ -297,22 +303,23 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 			Namespace: resource.GetNamespace(),
 		}, next.Event.Type, next.Event.Reason, next.Event.Message)
 	}
+
 	if next.Finalizers != nil {
-		result, err := c.finalizersModify(ctx, resource, next.Finalizers)
+		result, err = c.finalizersModify(ctx, resource, next.Finalizers)
 		if err != nil {
 			logger.Error("Failed to finalizers", err)
-		}
-		if result != nil && stage.ImmediateNextStage() {
-			c.preprocessChan <- result
+			return
 		}
 	}
+
 	if next.Delete {
-		err := c.deleteResource(ctx, resource)
+		err = c.deleteResource(ctx, resource)
 		if err != nil {
 			logger.Error("Failed to delete resource", err)
+			return
 		}
 	} else if next.StatusTemplate != "" {
-		patch, err := c.configureResource(resource, next.StatusTemplate)
+		patch, err = c.configureResource(resource, next.StatusTemplate)
 		if err != nil {
 			logger.Error("Failed to configure resource", err)
 			return
@@ -322,14 +329,18 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 				"reason", "do not need to modify",
 			)
 		} else {
-			result, err := c.patchResource(ctx, resource, patch)
+			result, err = c.patchResource(ctx, resource, patch)
 			if err != nil {
 				logger.Error("Failed to patch resource", err)
-			}
-			if result != nil && stage.ImmediateNextStage() {
-				c.preprocessChan <- result
+				return
 			}
 		}
+	}
+
+	if result != nil && stage.ImmediateNextStage() {
+		logger.Debug("Re-push to preprocessChan",
+			"reason", "immediateNextStage is true")
+		c.preprocessChan <- result
 	}
 }
 
