@@ -26,6 +26,7 @@ const (
 
 	// ModeStableFeatureGateAndAPI is intended to reduce cluster configuration requirements
 	// Disables all Alpha feature by default, as well as Beta feature that are not eventually GA
+	// Deprecated: This mode will be removed in a future release
 	ModeStableFeatureGateAndAPI = "StableFeatureGateAndAPI"
 )
 
@@ -341,6 +342,10 @@ type KwokctlConfigurationOptions struct {
 
 	// Mode is several default parameter templates for clusters
 	// is the default value for env KWOK_MODE
+	// k8s 1.29, different components use different FeatureGate,
+	// which makes it impossible to create clusters properly using this feature.
+	// Deprecated: This mode will be removed in a future release
+	//+k8s:conversion-gen=false
 	Mode string `json:"mode,omitempty"`
 
 	// KubeFeatureGates is a set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes.

@@ -2886,7 +2886,10 @@ string
 </td>
 <td>
 <p>Mode is several default parameter templates for clusters
-is the default value for env KWOK_MODE</p>
+is the default value for env KWOK_MODE
+k8s 1.29, different components use different FeatureGate,
+which makes it impossible to create clusters properly using this feature.
+Deprecated: This mode will be removed in a future release</p>
 </td>
 </tr>
 <tr>

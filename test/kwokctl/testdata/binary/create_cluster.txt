@@ -6,7 +6,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
 # Download https://dl.k8s.io/release/v1.28.0/bin/<OS>/<ARCH>/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
 # Download https://dl.k8s.io/release/v1.28.0/bin/<OS>/<ARCH>/kube-scheduler to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
 # Download <ROOT_DIR>/bin/<OS>/<ARCH>/kwok to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
-# Download https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-<OS>-<ARCH>.<TAR> and extract etcd to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd
+# Download https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-<OS>-<ARCH>.<TAR> and extract etcd to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
