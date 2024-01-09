@@ -211,7 +211,7 @@ jobs:
         shell: bash
         run: |
           brew install colima docker
-          colima start --mount $HOME/.kwok/:w --mount $(pwd):w --mount-type virtiofs
+          colima start --mount $HOME/.kwok/:w --mount $(pwd):w --cpu 4 --memory 8
 
       - name: Install Buildx
         if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
