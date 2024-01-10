@@ -166,8 +166,8 @@ But before that, for a better understanding, we briefly describe how kubelet "de
 
 Here are the steps to remove a pod in Kubernetes:
 
-1. Execute the command kubectl delete pod. The apiserver receives the deletion request but does not immediately remove the corresponding pod resource from etcd.
-2. The apiserver sets the metadata.deletionTimestamp field to the time the request was issued plus a short period, defined by `metadata.deletionGracePeriodSeconds` (default 30s).
+1. Execute the command `kubectl delete pod`. The apiserver receives the deletion request but does not immediately remove the corresponding pod resource from etcd.
+2. The apiserver sets the `metadata.deletionTimestamp` field to the time the request was issued plus a short period, defined by `metadata.deletionGracePeriodSeconds` (default 30s).
 3. The kubelet detects a non-null `metadata.deletionTimestamp` for a pod and starts to send a `TERM` signal to the main process of the container.
 4. If the `metadata.deletionTimestamp` expires before the process stops by itself, the main process is then terminated using the `KILL` signal.
 5. After all the containers in the pod have stopped running, the kubelet sends a force deletion request to the apiserver.
