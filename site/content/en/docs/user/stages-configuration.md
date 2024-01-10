@@ -162,17 +162,19 @@ and `jitterDurationMilliseconds` if both are set.
 {{< /hint >}}
 
 Let’s explain a little bit about the motivation behind these two advanced fields.
-But before that, for a better understanding, we briefly describe how kubelet "delete" a pod from a node here.
-Basically when you run `kubectl delete pod`, apiserver will not directly delete the corresponding pod resource
-from etcd when receiving the deletion request, but instead set the `.metadata.deletionTimestamp` field to the time
-the request was issued plus a short period: `metadata.deletionGracePeriodSeconds` (default 30s).
-kubelet starts to send a `TERM` signal to the container main process once a non-null `metadata.deletionTimestamp`
-of a pod is detected. The main process is then terminated using the `KILL` signal if the `.metadata.deletionTimestamp`
-expires before the process stops by itself. After all the containers in the pod have stopped running, kubelet will send
-a force deletion request to apiserver to delete the pod object from etcd. To simulate such situation, you can let 
-`jitterDurationFrom` of a "Delete Stage" (`next.delete: true`) point to `metadata.deletionTimestamp`. This will make
-the deletion operation happen at a random moment before `metadata.deletionTimple` expires.  
+But before that, for a better understanding, we briefly describe how kubelet "delete" a pod from a node.
 
+Here are the steps to remove a pod in Kubernetes:
+
+1. Execute the command kubectl delete pod. The apiserver receives the deletion request but does not immediately remove the corresponding pod resource from etcd.
+2. The apiserver sets the metadata.deletionTimestamp field to the time the request was issued plus a short period, defined by `metadata.deletionGracePeriodSeconds` (default 30s).
+3. The kubelet detects a non-null `metadata.deletionTimestamp` for a pod and starts to send a `TERM` signal to the main process of the container.
+4. If the `metadata.deletionTimestamp` expires before the process stops by itself, the main process is then terminated using the `KILL` signal.
+5. After all the containers in the pod have stopped running, the kubelet sends a force deletion request to the apiserver.
+6. The apiserver removes the pod object from etcd.
+
+To simulate this situation, you can set `jitterDurationFrom` of a "Delete Stage" (`next.delete: true`) to point to `metadata.deletionTimestamp`.
+This will cause the deletion operation to occur at a random moment before `metadata.deletionTimestamp` expires.
 You can also let `kwok` perform the deletion in a deterministic way by pointing `durationFrom` to `metadata.deletionTimple`,
 making the deletion happen exactly at `metadata.deletionTimple`.
 
