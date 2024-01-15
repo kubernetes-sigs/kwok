@@ -24,6 +24,12 @@ import (
 	"sigs.k8s.io/kwok/test/e2e"
 )
 
+func TestHack(t *testing.T) {
+	f0 := e2e.CaseHack(kwokctlPath, clusterName, envconf.RandomName("node", 16)).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
 func TestPortForward(t *testing.T) {
 	f0 := e2e.CasePortForward(kwokctlPath, clusterName, envconf.RandomName("node", 16), namespace).
 		Feature()

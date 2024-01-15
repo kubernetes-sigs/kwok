@@ -121,6 +121,13 @@ func WithReadWriter(ctx context.Context, rw io.ReadWriter) context.Context {
 	})
 }
 
+// WithReadFrom returns a context with the given io.Reader as the In stream.
+func WithReadFrom(ctx context.Context, r io.Reader) context.Context {
+	return WithIOStreams(ctx, IOStreams{
+		In: r,
+	})
+}
+
 // WithAllWriteTo returns a context with the given io.Writer as the In, Out, and ErrOut streams.
 func WithAllWriteTo(ctx context.Context, w io.Writer) context.Context {
 	return WithIOStreams(ctx, IOStreams{

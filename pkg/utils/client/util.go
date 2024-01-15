@@ -18,9 +18,13 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // MappingFor returns the RESTMapping for the given resource or kind argument.
@@ -64,4 +68,80 @@ func MappingFor(restMapper meta.RESTMapper, resourceOrKindArg string) (*meta.RES
 	}
 
 	return mapping, nil
+}
+
+// MatchShortResourceName returns the GroupVersionResource for the given resource name.
+func MatchShortResourceName(arl []*metav1.APIResourceList, name string) (gvr schema.GroupVersionResource, resource *metav1.APIResource, err error) {
+	name = strings.ToLower(name)
+
+	for _, r := range arl {
+		ar, ok := slices.Find(r.APIResources, func(ar metav1.APIResource) bool {
+			return ar.Name == name ||
+				ar.SingularName == name ||
+				slices.Contains(ar.ShortNames, name)
+		})
+		if ok {
+			gv, err := schema.ParseGroupVersion(r.GroupVersion)
+			if err != nil {
+				return gvr, nil, err
+			}
+			gvr = schema.GroupVersionResource{
+				Group:    gv.Group,
+				Version:  gv.Version,
+				Resource: ar.Name,
+			}
+			return gvr, &ar, nil
+		}
+	}
+
+	return gvr, nil, fmt.Errorf("no resource found for %q", name)
+}
+
+// MatchGVK returns the GroupVersionKind for the given resource name.
+func MatchGVK(arl []*metav1.APIResourceList, gvk schema.GroupVersionKind) (gvr schema.GroupVersionResource, resource *metav1.APIResource, err error) {
+	gvStr := gvk.GroupVersion().String()
+	for _, r := range arl {
+		if gvStr != r.GroupVersion {
+			continue
+		}
+		ar, ok := slices.Find(r.APIResources, func(ar metav1.APIResource) bool {
+			return ar.Kind == gvk.Kind
+		})
+		if ok {
+			gvr = schema.GroupVersionResource{
+				Group:    gvk.Group,
+				Version:  gvk.Version,
+				Resource: ar.Name,
+			}
+			return gvr, &ar, nil
+		}
+	}
+
+	return gvr, nil, fmt.Errorf("no resource found for %q", gvk)
+}
+
+// MatchGK returns the GroupVersionKind for the given resource name.
+func MatchGK(arl []*metav1.APIResourceList, gvk schema.GroupKind) (gvr schema.GroupVersionResource, resource *metav1.APIResource, err error) {
+	for _, r := range arl {
+		gv, err := schema.ParseGroupVersion(r.GroupVersion)
+		if err != nil {
+			return gvr, nil, err
+		}
+		if gv.Group != gvk.Group {
+			continue
+		}
+		ar, ok := slices.Find(r.APIResources, func(ar metav1.APIResource) bool {
+			return ar.Kind == gvk.Kind
+		})
+		if ok {
+			gvr = schema.GroupVersionResource{
+				Group:    gvk.Group,
+				Version:  gv.Version,
+				Resource: ar.Name,
+			}
+			return gvr, &ar, nil
+		}
+	}
+
+	return gvr, nil, fmt.Errorf("no resource found for %q", gvk)
 }

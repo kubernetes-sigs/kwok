@@ -42,6 +42,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -119,6 +120,19 @@ func (c *Cluster) withProviderEnv(ctx context.Context) context.Context {
 	return ctx
 }
 
+func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
+	for _, port := range ports {
+		if port != nil && *port == 0 {
+			p, err := net.GetUnusedPort(ctx, used)
+			if err != nil {
+				return err
+			}
+			*port = p
+		}
+	}
+	return nil
+}
+
 type env struct {
 	kwokctlConfig        *internalversion.KwokctlConfiguration
 	verbosity            log.Level
@@ -134,6 +148,8 @@ type env struct {
 	adminCertPath                 string
 
 	kwokConfigPath string
+
+	usedPorts sets.Sets[uint32]
 }
 
 func (c *Cluster) env(ctx context.Context) (*env, error) {
@@ -163,6 +179,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	adminKeyPath := path.Join(pkiPath, "admin.key")
 	adminCertPath := path.Join(pkiPath, "admin.crt")
 
+	usedPorts := runtime.GetUsedPorts(ctx)
 	return &env{
 		kwokctlConfig:                 config,
 		verbosity:                     verbosity,
@@ -176,6 +193,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 		adminKeyPath:                  adminKeyPath,
 		adminCertPath:                 adminCertPath,
 		kwokConfigPath:                kwokConfigPath,
+		usedPorts:                     usedPorts,
 	}, nil
 }
 
@@ -199,6 +217,15 @@ func (c *Cluster) Install(ctx context.Context) error {
 	// This is not necessary when creating a cluster use kind, but in Linux the cluster is created as root,
 	// and the files here may not have permissions when deleted, so we create them first.
 	err = c.setup(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.setupPorts(ctx,
+		env.usedPorts,
+		&env.kwokctlConfig.Options.KubeApiserverPort,
+		&env.kwokctlConfig.Options.EtcdPort,
+	)
 	if err != nil {
 		return err
 	}
@@ -798,6 +825,11 @@ func (c *Cluster) Up(ctx context.Context) error {
 	err = c.Kubectl(ctx, "cordon", c.getClusterName())
 	if err != nil {
 		logger.Error("Failed cordon node", err)
+	}
+
+	err = c.Exec(ctx, c.runtime, "exec", c.getClusterName(), "chmod", "-R", "+r", "/etc/kubernetes/pki")
+	if err != nil {
+		logger.Error("Failed to chmod pki", err)
 	}
 
 	return nil
