@@ -299,7 +299,10 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *PodController) playStageWorker(ctx context.Context) {
 	for ctx.Err() == nil {
-		pod := c.delayQueue.GetOrWait()
+		pod, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		if !ok {
+			return
+		}
 		c.delayQueueMapping.Delete(pod.Key)
 		c.playStage(ctx, pod.Resource, pod.Stage)
 	}

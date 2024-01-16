@@ -29,6 +29,8 @@ type Queue[T any] interface {
 	Get() (T, bool)
 	// GetOrWait returns an item from the queue or waits until an item is added.
 	GetOrWait() T
+	// GetOrWaitWithDone returns an item from the queue or waits until an item is added or the done channel is closed.
+	GetOrWaitWithDone(done <-chan struct{}) (T, bool)
 	// Len returns the number of items in the queue.
 	Len() int
 }
@@ -86,6 +88,26 @@ func (q *queue[T]) GetOrWait() T {
 		}
 	}
 	panic("unreachable")
+}
+
+func (q *queue[T]) GetOrWaitWithDone(done <-chan struct{}) (T, bool) {
+	t, ok := q.Get()
+	if ok {
+		return t, ok
+	}
+
+	// Wait for an item to be added.
+	for {
+		select {
+		case <-done:
+			return t, false
+		case <-q.signal:
+			t, ok = q.Get()
+			if ok {
+				return t, true
+			}
+		}
+	}
 }
 
 func (q *queue[T]) Len() int {

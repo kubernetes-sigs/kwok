@@ -108,9 +108,11 @@ func (c *NodeLeaseController) Start(ctx context.Context) error {
 func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName := c.delayQueue.GetOrWait()
-
-		_, ok := c.holdLeaseSet.Load(nodeName)
+		nodeName, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		if !ok {
+			return
+		}
+		_, ok = c.holdLeaseSet.Load(nodeName)
 		if !ok {
 			continue
 		}
