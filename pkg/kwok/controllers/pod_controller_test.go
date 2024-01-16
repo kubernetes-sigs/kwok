@@ -253,6 +253,7 @@ func TestPodController(t *testing.T) {
 		}
 	}
 
+	time.Sleep(1 * time.Second)
 	_, err = clientset.CoreV1().Pods("default").Create(ctx, &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "pod1",
@@ -316,7 +317,7 @@ func TestPodController(t *testing.T) {
 			}
 		}
 		return true, nil
-	}, wait.WithContinueOnError(10))
+	}, wait.WithContinueOnError(5))
 	if err != nil {
 		t.Fatal(err)
 	}
