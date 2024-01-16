@@ -62,6 +62,7 @@ type PortForwardSpec struct {
 }
 
 // Forward holds information how to forward based on ports.
+// +kubebuilder:validation:XValidation:rule="has(self.target) != has(self.command)",message="target and command can't be set at the same time"
 type Forward struct {
 	// Ports is a list of ports to forward.
 	// if not set, all ports will be forwarded.

@@ -135,7 +135,7 @@ type SelectorRequirement struct {
 	// Represents a scope's relationship to a set of values.
 	Operator SelectorOperator
 	// An array of string values.
-	// If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
+	// If the operator is In or NotIn, the values array must be non-empty.
 	// If the operator is Exists or DoesNotExist, the values array must be empty.
 	Values []string
 }
