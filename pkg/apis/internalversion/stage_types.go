@@ -83,6 +83,18 @@ type StageNext struct {
 	Delete bool
 	// StatusTemplate indicates the template for modifying the status of the resource in the next.
 	StatusTemplate string
+	// StatusSubresource indicates the name of the subresource that will be patched.
+	StatusSubresource string
+	// StatusPatchAs indicates the impersonating configuration for client when patching status.
+	// In most cases this will be empty, in which case the default client service account will be used.
+	// When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
+	StatusPatchAs *ImpersonationConfig
+}
+
+// ImpersonationConfig describes the configuration for impersonating clients
+type ImpersonationConfig struct {
+	// Username the target username for the client to impersonate
+	Username string
 }
 
 // StageFinalizers describes the modifications in the finalizers of a resource.

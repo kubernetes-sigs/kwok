@@ -47,6 +47,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/patch"
@@ -146,6 +147,7 @@ type Config struct {
 	EnableCNI                             bool
 	DynamicClient                         dynamic.Interface
 	RESTClient                            rest.Interface
+	ImpersonatingDynamicClient            client.DynamicClientImpersonator
 	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
 	TypedKwokClient                       versioned.Interface
@@ -545,6 +547,7 @@ func (c *Controller) initStageController(ctx context.Context, ref internalversio
 	stage, err := NewStageController(StageControllerConfig{
 		Clock:                                 c.conf.Clock,
 		DynamicClient:                         c.conf.DynamicClient,
+		ImpersonatingDynamicClient:            c.conf.ImpersonatingDynamicClient,
 		Schema:                                schema,
 		GVR:                                   gvr,
 		DisregardStatusWithAnnotationSelector: c.conf.DisregardStatusWithAnnotationSelector,
