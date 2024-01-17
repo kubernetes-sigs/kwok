@@ -404,7 +404,10 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *NodeController) playStageWorker(ctx context.Context) {
 	for ctx.Err() == nil {
-		node := c.delayQueue.GetOrWait()
+		node, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		if !ok {
+			return
+		}
 		c.delayQueueMapping.Delete(node.Key)
 		c.playStage(ctx, node.Resource, node.Stage)
 	}

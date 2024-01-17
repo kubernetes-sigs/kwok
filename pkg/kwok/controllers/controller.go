@@ -348,7 +348,10 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName := c.nodeManageQueue.GetOrWait()
+		nodeName, ok := c.nodeManageQueue.GetOrWaitWithDone(ctx.Done())
+		if !ok {
+			return
+		}
 		node, ok := c.nodeCacheGetter.Get(nodeName)
 		if !ok {
 			logger.Warn("node not found in cache", "node", nodeName)
@@ -596,7 +599,10 @@ func (c *Controller) Start(ctx context.Context) error {
 func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName := c.podOnNodeManageQueue.GetOrWait()
+		nodeName, ok := c.podOnNodeManageQueue.GetOrWaitWithDone(ctx.Done())
+		if !ok {
+			return
+		}
 		err := c.podsInformer.Sync(ctx, informer.Option{
 			FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
 		}, c.podsChan)

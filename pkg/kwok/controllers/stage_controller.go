@@ -274,7 +274,10 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *StageController) playStageWorker(ctx context.Context) {
 	for ctx.Err() == nil {
-		resource := c.delayQueue.GetOrWait()
+		resource, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		if !ok {
+			return
+		}
 		c.delayQueueMapping.Delete(resource.Key)
 		c.playStage(ctx, resource.Resource, resource.Stage)
 	}

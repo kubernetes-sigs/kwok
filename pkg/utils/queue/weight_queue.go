@@ -140,6 +140,26 @@ func (q *weightQueue[T]) GetOrWait() T {
 	panic("unreachable")
 }
 
+func (q *weightQueue[T]) GetOrWaitWithDone(done <-chan struct{}) (T, bool) {
+	t, ok := q.Get()
+	if ok {
+		return t, ok
+	}
+
+	// Wait for an item to be added.
+	for {
+		select {
+		case <-done:
+			return t, false
+		case <-q.signal:
+			t, ok = q.Get()
+			if ok {
+				return t, true
+			}
+		}
+	}
+}
+
 func (q *weightQueue[T]) Len() int {
 	size := q.queue.Len()
 
