@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
@@ -422,6 +423,22 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 				errCh <- fmt.Errorf("serve https: %w", err)
 			}
 		}()
+	} else {
+		logger.Info("Starting test HTTPS server",
+			"address", address,
+		)
+		svc := httptest.Server{
+			Listener: tlsListener,
+			Config: &http.Server{
+				ReadHeaderTimeout: 5 * time.Second,
+				BaseContext: func(_ net.Listener) context.Context {
+					return ctx
+				},
+				Addr:    address,
+				Handler: s.restfulCont,
+			},
+		}
+		svc.StartTLS()
 	}
 
 	go func() {

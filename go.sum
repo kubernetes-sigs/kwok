@@ -234,8 +234,8 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/vladimirvivien/gexe v0.2.0 h1:nbdAQ6vbZ+ZNsolCgSVb9Fno60kzSuvtzVh6Ytqi/xY=
 github.com/vladimirvivien/gexe v0.2.0/go.mod h1:LHQL00w/7gDUKIak24n801ABp8C+ni6eBht9vGVst8w=
-github.com/wzshiming/cmux v0.3.2 h1:lBEWbfbRqUDdXB6Mro/g35kvCuUEmAgIdpGEuER3bis=
-github.com/wzshiming/cmux v0.3.2/go.mod h1:lPhqJN2E3frzkxrPdjesxL09z7nTcuZ6i8Is+2G/Xw4=
+github.com/wzshiming/cmux v0.3.3 h1:WlcKUwSN4vpClnHiyX9I4RtZ4xJeAqfrf4ltxSWuPoQ=
+github.com/wzshiming/cmux v0.3.3/go.mod h1:lPhqJN2E3frzkxrPdjesxL09z7nTcuZ6i8Is+2G/Xw4=
 github.com/wzshiming/ctc v1.2.3 h1:q+hW3IQNsjIlOFBTGZZZeIXTElFM4grF4spW/errh/c=
 github.com/wzshiming/ctc v1.2.3/go.mod h1:2tVAtIY7SUyraSk0JxvwmONNPFL4ARavPuEsg5+KA28=
 github.com/wzshiming/easycel v0.5.0 h1:pnMBpOuEfr9EYLNpKD52NfpAhUrOQ3uAHFQT7bF76ZM=
