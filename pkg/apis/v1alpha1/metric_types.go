@@ -68,6 +68,9 @@ type MetricSpec struct {
 }
 
 // MetricConfig provides metric configuration to a single metric
+// +kubebuilder:validation:XValidation:rule="self.kind == 'counter' && self.value.size() != 0",message="counter metric must have value"
+// +kubebuilder:validation:XValidation:rule="self.kind == 'gauge' && self.value.size() != 0",message="gauge metric must have value"
+// +kubebuilder:validation:XValidation:rule="self.kind == 'histogram' && self.buckets.size() != 0",message="histogram metric must have buckets"
 type MetricConfig struct {
 	// Name is the fully-qualified name of the metric.
 	// +kubebuilder:validation:Required
@@ -95,6 +98,7 @@ type MetricConfig struct {
 	Buckets []MetricBucket `json:"buckets,omitempty"`
 	// Dimension is a dimension of the metric.
 	// +default="node"
+	// +kubebuilder:validation:Enum=node;pod;container
 	Dimension Dimension `json:"dimension,omitempty"`
 }
 

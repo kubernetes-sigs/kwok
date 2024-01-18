@@ -82,7 +82,7 @@ type StageResourceRef struct {
 	// APIGroup of the referent.
 	// +default="v1"
 	// +kubebuilder:default="v1"
-	APIGroup string `json:"apiGroup,omitempty"`
+	APIGroup string `json:"apiGroup"`
 	// Kind of the referent.
 	Kind string `json:"kind"`
 }
@@ -109,6 +109,7 @@ type StageDelay struct {
 }
 
 // StageNext describes a stage will be moved to.
+// +kubebuilder:validation:XValidation:rule="self.delete != (self.statusTemplate.size() != 0)",message="delete and statusTemplate can't be set at the same time"
 type StageNext struct {
 	// Event means that an event will be sent.
 	Event *StageEvent `json:"event,omitempty"`
@@ -121,6 +122,7 @@ type StageNext struct {
 }
 
 // StageFinalizers describes the modifications in the finalizers of a resource.
+// +kubebuilder:validation:XValidation:rule="has(self.remove) != self.empty",message="remove and empty can't be set at the same time"
 type StageFinalizers struct {
 	// Add means that the Finalizers will be added to the resource.
 	Add []FinalizerItem `json:"add,omitempty"`
@@ -164,13 +166,16 @@ type StageSelector struct {
 
 // SelectorRequirement is a resource selector requirement is a selector that contains values, a key,
 // and an operator that relates the key and values.
+// +kubebuilder:validation:XValidation:rule="self.operator in ['In', 'NotIn'] && self.values.size() != 0",message="values must be non-empty if the operator is In or NotIn"
+// +kubebuilder:validation:XValidation:rule="self.operator in ['Exists', 'DoesNotExist'] && self.values.size() == 0",message="values must be empty if the operator is Exists or DoesNotExist"
 type SelectorRequirement struct {
 	// The name of the scope that the selector applies to.
+	// +kubebuilder:validation:Required
 	Key string `json:"key"`
 	// Represents a scope's relationship to a set of values.
 	Operator SelectorOperator `json:"operator"`
 	// An array of string values.
-	// If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
+	// If the operator is In or NotIn, the values array must be non-empty.
 	// If the operator is Exists or DoesNotExist, the values array must be empty.
 	Values []string `json:"values,omitempty"`
 }

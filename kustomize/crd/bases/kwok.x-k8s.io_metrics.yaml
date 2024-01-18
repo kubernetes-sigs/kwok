@@ -67,6 +67,10 @@ spec:
                       x-kubernetes-list-type: map
                     dimension:
                       description: Dimension is a dimension of the metric.
+                      enum:
+                      - node
+                      - pod
+                      - container
                       type: string
                     help:
                       description: Help provides information about this metric.
@@ -111,6 +115,13 @@ spec:
                   - kind
                   - name
                   type: object
+                  x-kubernetes-validations:
+                  - message: counter metric must have value
+                    rule: self.kind == 'counter' && self.value.size() != 0
+                  - message: gauge metric must have value
+                    rule: self.kind == 'gauge' && self.value.size() != 0
+                  - message: histogram metric must have buckets
+                    rule: self.kind == 'histogram' && self.buckets.size() != 0
                 type: array
               path:
                 description: Path is a restful service path.

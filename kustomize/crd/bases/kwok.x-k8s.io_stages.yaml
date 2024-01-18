@@ -130,11 +130,17 @@ spec:
                           type: object
                         type: array
                     type: object
+                    x-kubernetes-validations:
+                    - message: remove and empty can't be set at the same time
+                      rule: has(self.remove) != self.empty
                   statusTemplate:
                     description: StatusTemplate indicates the template for modifying
                       the status of the resource in the next.
                     type: string
                 type: object
+                x-kubernetes-validations:
+                - message: delete and statusTemplate can't be set at the same time
+                  rule: self.delete != (self.statusTemplate.size() != 0)
               resourceRef:
                 description: ResourceRef specifies the Kind and version of the resource.
                 properties:
@@ -146,6 +152,7 @@ spec:
                     description: Kind of the referent.
                     type: string
                 required:
+                - apiGroup
                 - kind
                 type: object
               selector:
@@ -179,9 +186,9 @@ spec:
                           type: string
                         values:
                           description: An array of string values. If the operator
-                            is In, NotIn, Intersection or NotIntersection, the values
-                            array must be non-empty. If the operator is Exists or
-                            DoesNotExist, the values array must be empty.
+                            is In or NotIn, the values array must be non-empty. If
+                            the operator is Exists or DoesNotExist, the values array
+                            must be empty.
                           items:
                             type: string
                           type: array
@@ -189,6 +196,15 @@ spec:
                       - key
                       - operator
                       type: object
+                      x-kubernetes-validations:
+                      - message: values must be non-empty if the operator is In or
+                          NotIn
+                        rule: self.operator in ['In', 'NotIn'] && self.values.size()
+                          != 0
+                      - message: values must be empty if the operator is Exists or
+                          DoesNotExist
+                        rule: self.operator in ['Exists', 'DoesNotExist'] && self.values.size()
+                          == 0
                     type: array
                   matchLabels:
                     additionalProperties:

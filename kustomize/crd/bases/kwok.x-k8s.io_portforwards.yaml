@@ -71,6 +71,9 @@ spec:
                       - port
                       type: object
                   type: object
+                  x-kubernetes-validations:
+                  - message: target and command can't be set at the same time
+                    rule: has(self.target) != has(self.command)
                 type: array
             required:
             - forwards
