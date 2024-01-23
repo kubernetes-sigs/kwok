@@ -187,6 +187,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
+	impersonatingDynamicClient := clientset.ToImpersonatingDynamicClient()
+
 	restMapper, err := clientset.ToRESTMapper()
 	if err != nil {
 		return err
@@ -238,6 +240,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		DynamicClient:                         dynamicClient,
 		RESTClient:                            restClient,
 		RESTMapper:                            restMapper,
+		ImpersonatingDynamicClient:            impersonatingDynamicClient,
 		TypedClient:                           typedClient,
 		TypedKwokClient:                       typedKwokClient,
 		EnableCNI:                             flags.Options.EnableCNI,

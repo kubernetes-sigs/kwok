@@ -59,6 +59,10 @@ func SetObjectDefaults_Stage(in *Stage) {
 	if in.Spec.Weight == 0 {
 		in.Spec.Weight = 0
 	}
+	if in.Spec.Next.StatusSubresource == nil {
+		var ptrVar1 string = "status"
+		in.Spec.Next.StatusSubresource = &ptrVar1
+	}
 }
 
 func SetObjectDefaults_StageList(in *StageList) {

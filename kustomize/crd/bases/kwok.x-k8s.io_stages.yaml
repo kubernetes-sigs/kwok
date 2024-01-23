@@ -130,6 +130,27 @@ spec:
                           type: object
                         type: array
                     type: object
+                  statusPatchAs:
+                    description: StatusPatchAs indicates the impersonating configuration
+                      for client when patching status. In most cases this will be
+                      empty, in which case the default client service account will
+                      be used. When this is not empty, a corresponding rbac change
+                      is required to grant `impersonate` privilege. The support for
+                      this field is not available in Pod and Node resources.
+                    properties:
+                      username:
+                        description: Username the target username for the client to
+                          impersonate
+                        type: string
+                    required:
+                    - username
+                    type: object
+                  statusSubresource:
+                    default: status
+                    description: StatusSubresource indicates the name of the subresource
+                      that will be patched. The support for this field is not available
+                      in Pod and Node resources.
+                    type: string
                   statusTemplate:
                     description: StatusTemplate indicates the template for modifying
                       the status of the resource in the next.

@@ -31,12 +31,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
@@ -48,6 +50,7 @@ import (
 type StageController struct {
 	clock                                 clock.Clock
 	dynamicClient                         dynamic.Interface
+	impersonatingDynamicClient            client.DynamicClientImpersonator
 	schema                                strategicpatch.LookupPatchMeta
 	gvr                                   schema.GroupVersionResource
 	disregardStatusWithAnnotationSelector labels.Selector
@@ -65,6 +68,7 @@ type StageController struct {
 type StageControllerConfig struct {
 	Clock                                 clock.Clock
 	DynamicClient                         dynamic.Interface
+	ImpersonatingDynamicClient            client.DynamicClientImpersonator
 	Schema                                strategicpatch.LookupPatchMeta
 	GVR                                   schema.GroupVersionResource
 	DisregardStatusWithAnnotationSelector string
@@ -98,6 +102,7 @@ func NewStageController(conf StageControllerConfig) (*StageController, error) {
 	c := &StageController{
 		clock:                                 conf.Clock,
 		dynamicClient:                         conf.DynamicClient,
+		impersonatingDynamicClient:            conf.ImpersonatingDynamicClient,
 		schema:                                conf.Schema,
 		gvr:                                   conf.GVR,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
@@ -332,7 +337,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 				"reason", "do not need to modify",
 			)
 		} else {
-			result, err = c.patchResource(ctx, resource, patch)
+			result, err = c.patchResource(ctx, resource, patch, stage.next)
 			if err != nil {
 				logger.Error("Failed to patch resource", err)
 				return
@@ -348,18 +353,37 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 }
 
 // patchResource patches the resource
-func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patch []byte) (*unstructured.Unstructured, error) {
+func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patch []byte, next *internalversion.StageNext) (*unstructured.Unstructured, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"resource", log.KObj(resource),
 	)
 
 	nri := c.dynamicClient.Resource(c.gvr)
+	if next.StatusPatchAs != nil {
+		logger.With(
+			"impersonate", next.StatusPatchAs.Username,
+		)
+
+		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: next.StatusPatchAs.Username})
+		if err != nil {
+			logger.Error("error getting impersonating client", err)
+			return nil, err
+		}
+		nri = dc.Resource(c.gvr)
+	}
 	var cli dynamic.ResourceInterface = nri
 	if ns := resource.GetNamespace(); ns != "" {
 		cli = nri.Namespace(ns)
 	}
-	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patch, metav1.PatchOptions{}, "status")
+	subresource := []string{}
+	if next.StatusSubresource != "" {
+		logger = logger.With(
+			"subresource", next.StatusSubresource,
+		)
+		subresource = []string{next.StatusSubresource}
+	}
+	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patch, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch resource",

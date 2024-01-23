@@ -39,6 +39,7 @@ type Clientset interface {
 	ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
 	ToRESTMapper() (meta.RESTMapper, error)
 	ToDynamicClient() (dynamic.Interface, error)
+	ToImpersonatingDynamicClient() DynamicClientImpersonator
 }
 
 // clientset is a set of Kubernetes clients.
@@ -50,6 +51,8 @@ type clientset struct {
 	restMapper      meta.RESTMapper
 	clientConfig    clientcmd.ClientConfig
 	dynamicClient   dynamic.Interface
+
+	impersonationCache map[string]dynamic.Interface
 
 	opts []Option
 }
@@ -67,9 +70,10 @@ func WithImpersonate(impersonateConfig rest.ImpersonationConfig) Option {
 // NewClientset creates a new clientset.
 func NewClientset(masterURL, kubeconfigPath string, opts ...Option) (Clientset, error) {
 	return &clientset{
-		masterURL:      masterURL,
-		kubeconfigPath: kubeconfigPath,
-		opts:           opts,
+		masterURL:          masterURL,
+		kubeconfigPath:     kubeconfigPath,
+		opts:               opts,
+		impersonationCache: map[string]dynamic.Interface{},
 	}, nil
 }
 
@@ -162,6 +166,11 @@ func (g *clientset) ToDynamicClient() (dynamic.Interface, error) {
 		g.dynamicClient = dynamicClient
 	}
 	return g.dynamicClient, nil
+}
+
+// ToImpersonatingDynamicClient returns a dynamic Kubernetes client.
+func (g *clientset) ToImpersonatingDynamicClient() DynamicClientImpersonator {
+	return g
 }
 
 type cachedDiscoveryInterface struct {

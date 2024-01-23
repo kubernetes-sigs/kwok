@@ -4334,6 +4334,38 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ImpersonationConfig">
+ImpersonationConfig
+<a href="#kwok.x-k8s.io%2fv1alpha1.ImpersonationConfig"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageNext">StageNext</a>
+</p>
+<p>
+<p>ImpersonationConfig describes the configuration for impersonating clients</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>username</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Username the target username for the client to impersonate</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.Kind">
 Kind
 (<code>string</code> alias)
@@ -5293,6 +5325,34 @@ string
 </td>
 <td>
 <p>StatusTemplate indicates the template for modifying the status of the resource in the next.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>statusSubresource</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>StatusSubresource indicates the name of the subresource that will be patched. The support for
+this field is not available in Pod and Node resources.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>statusPatchAs</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ImpersonationConfig">
+ImpersonationConfig
+</a>
+</em>
+</td>
+<td>
+<p>StatusPatchAs indicates the impersonating configuration for client when patching status.
+In most cases this will be empty, in which case the default client service account will be used.
+When this is not empty, a corresponding rbac change is required to grant <code>impersonate</code> privilege.
+The support for this field is not available in Pod and Node resources.</p>
 </td>
 </tr>
 </tbody>

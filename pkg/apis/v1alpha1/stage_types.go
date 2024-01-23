@@ -118,6 +118,22 @@ type StageNext struct {
 	Delete bool `json:"delete,omitempty"`
 	// StatusTemplate indicates the template for modifying the status of the resource in the next.
 	StatusTemplate string `json:"statusTemplate,omitempty"`
+	// StatusSubresource indicates the name of the subresource that will be patched. The support for
+	// this field is not available in Pod and Node resources.
+	// +default="status"
+	// +kubebuilder:default=status
+	StatusSubresource *string `json:"statusSubresource,omitempty"`
+	// StatusPatchAs indicates the impersonating configuration for client when patching status.
+	// In most cases this will be empty, in which case the default client service account will be used.
+	// When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
+	// The support for this field is not available in Pod and Node resources.
+	StatusPatchAs *ImpersonationConfig `json:"statusPatchAs,omitempty"`
+}
+
+// ImpersonationConfig describes the configuration for impersonating clients
+type ImpersonationConfig struct {
+	// Username the target username for the client to impersonate
+	Username string `json:"username"`
 }
 
 // StageFinalizers describes the modifications in the finalizers of a resource.
