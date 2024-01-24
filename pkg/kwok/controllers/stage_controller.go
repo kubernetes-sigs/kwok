@@ -147,7 +147,13 @@ func (c *StageController) finalizersModify(ctx context.Context, resource *unstru
 	logger = logger.With(
 		"resource", log.KObj(resource),
 	)
-	result, err := c.patchResource(ctx, resource, types.JSONPatchType, data, nil)
+
+	nri := c.dynamicClient.Resource(c.gvr)
+	var cli dynamic.ResourceInterface = nri
+	if ns := resource.GetNamespace(); ns != "" {
+		cli = nri.Namespace(ns)
+	}
+	result, err := cli.Patch(ctx, resource.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -338,12 +344,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 				"reason", "do not need to modify",
 			)
 		} else {
-			// The default subresource is status if no other subresource is specified
-			var subresource = next.StatusSubresource
-			if subresource == "" {
-				subresource = "status"
-			}
-			result, err = c.patchResource(ctx, resource, types.MergePatchType, patch, next.StatusPatchAs, subresource)
+			result, err = c.patchResource(ctx, resource, patch, next)
 			if err != nil {
 				return shouldRetry(err), fmt.Errorf("failed to patch resource %s: %w", resource.GetName(), err)
 			}
@@ -359,20 +360,19 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 }
 
 // patchResource patches the resource
-func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, pt types.PatchType, patch []byte,
-	impersonator *internalversion.ImpersonationConfig, subresources ...string) (*unstructured.Unstructured, error) {
+func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patch []byte, next *internalversion.StageNext) (*unstructured.Unstructured, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"resource", log.KObj(resource),
 	)
 
 	nri := c.dynamicClient.Resource(c.gvr)
-	if impersonator != nil {
+	if next.StatusPatchAs != nil {
 		logger.With(
-			"impersonate", impersonator.Username,
+			"impersonate", next.StatusPatchAs.Username,
 		)
 
-		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: impersonator.Username})
+		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: next.StatusPatchAs.Username})
 		if err != nil {
 			logger.Error("error getting impersonating client", err)
 			return nil, err
@@ -383,7 +383,14 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 	if ns := resource.GetNamespace(); ns != "" {
 		cli = nri.Namespace(ns)
 	}
-	result, err := cli.Patch(ctx, resource.GetName(), pt, patch, metav1.PatchOptions{}, subresources...)
+	subresource := []string{}
+	if next.StatusSubresource != "" {
+		logger = logger.With(
+			"subresource", next.StatusSubresource,
+		)
+		subresource = []string{next.StatusSubresource}
+	}
+	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patch, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
