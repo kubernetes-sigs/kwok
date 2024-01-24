@@ -33,7 +33,8 @@ func NewNodeBuilder(name string) *NodeBuilder {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: name,
 				Annotations: map[string]string{
-					"kwok.x-k8s.io/node": "fake",
+					"kwok.x-k8s.io/node":                   "fake",
+					"metrics.k8s.io/resource-metrics-path": "/metrics/nodes/" + name + "/metrics/resource",
 				},
 				Labels: map[string]string{
 					"type": "kwok",

@@ -28,6 +28,8 @@ type ClusterLogsExpansion interface{}
 
 type ClusterPortForwardExpansion interface{}
 
+type ClusterResourceUsageExpansion interface{}
+
 type ExecExpansion interface{}
 
 type LogsExpansion interface{}
@@ -35,5 +37,7 @@ type LogsExpansion interface{}
 type MetricExpansion interface{}
 
 type PortForwardExpansion interface{}
+
+type ResourceUsageExpansion interface{}
 
 type StageExpansion interface{}

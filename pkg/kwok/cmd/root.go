@@ -102,16 +102,18 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 var crdDefines = map[string]struct{}{
-	v1alpha1.StageKind:              {},
-	v1alpha1.AttachKind:             {},
-	v1alpha1.ClusterAttachKind:      {},
-	v1alpha1.ExecKind:               {},
-	v1alpha1.ClusterExecKind:        {},
-	v1alpha1.PortForwardKind:        {},
-	v1alpha1.ClusterPortForwardKind: {},
-	v1alpha1.LogsKind:               {},
-	v1alpha1.ClusterLogsKind:        {},
-	v1alpha1.MetricKind:             {},
+	v1alpha1.StageKind:                {},
+	v1alpha1.AttachKind:               {},
+	v1alpha1.ClusterAttachKind:        {},
+	v1alpha1.ExecKind:                 {},
+	v1alpha1.ClusterExecKind:          {},
+	v1alpha1.PortForwardKind:          {},
+	v1alpha1.ClusterPortForwardKind:   {},
+	v1alpha1.LogsKind:                 {},
+	v1alpha1.ClusterLogsKind:          {},
+	v1alpha1.ResourceUsageKind:        {},
+	v1alpha1.ClusterResourceUsageKind: {},
+	v1alpha1.MetricKind:               {},
 }
 
 func runE(ctx context.Context, flags *flagpole) error {
@@ -338,6 +340,18 @@ func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controll
 			return err
 		}
 
+		clusterResourceUsages := config.FilterWithTypeFromContext[*internalversion.ClusterResourceUsage](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterResourceUsageKind, clusterResourceUsages)
+		if err != nil {
+			return err
+		}
+
+		resourceUsages := config.FilterWithTypeFromContext[*internalversion.ResourceUsage](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ResourceUsageKind, resourceUsages)
+		if err != nil {
+			return err
+		}
+
 		metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
 		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.MetricKind, metrics)
 		if err != nil {
@@ -345,20 +359,22 @@ func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controll
 		}
 
 		conf := server.Config{
-			TypedKwokClient:     typedKwokClient,
-			EnableCRDs:          flags.Options.EnableCRDs,
-			ClusterPortForwards: clusterPortForwards,
-			PortForwards:        portForwards,
-			ClusterExecs:        clusterExecs,
-			Execs:               execs,
-			ClusterLogs:         clusterLogs,
-			Logs:                logs,
-			ClusterAttaches:     clusterAttaches,
-			Attaches:            attaches,
-			Metrics:             metrics,
-			DataSource:          ctr,
-			NodeCacheGetter:     ctr.GetNodeCache(),
-			PodCacheGetter:      ctr.GetPodCache(),
+			TypedKwokClient:       typedKwokClient,
+			EnableCRDs:            flags.Options.EnableCRDs,
+			ClusterPortForwards:   clusterPortForwards,
+			PortForwards:          portForwards,
+			ClusterExecs:          clusterExecs,
+			Execs:                 execs,
+			ClusterLogs:           clusterLogs,
+			Logs:                  logs,
+			ClusterAttaches:       clusterAttaches,
+			Attaches:              attaches,
+			ClusterResourceUsages: clusterResourceUsages,
+			ResourceUsages:        resourceUsages,
+			Metrics:               metrics,
+			DataSource:            ctr,
+			NodeCacheGetter:       ctr.GetNodeCache(),
+			PodCacheGetter:        ctr.GetPodCache(),
 		}
 		svc, err := server.NewServer(conf)
 		if err != nil {

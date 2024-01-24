@@ -25,6 +25,7 @@ import (
 	json "encoding/json"
 	unsafe "unsafe"
 
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -146,6 +147,26 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.ClusterPortForwardSpec)(nil), (*ClusterPortForwardSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(a.(*v1alpha1.ClusterPortForwardSpec), b.(*ClusterPortForwardSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ClusterResourceUsage)(nil), (*v1alpha1.ClusterResourceUsage)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ClusterResourceUsage_To_v1alpha1_ClusterResourceUsage(a.(*ClusterResourceUsage), b.(*v1alpha1.ClusterResourceUsage), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ClusterResourceUsage)(nil), (*ClusterResourceUsage)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ClusterResourceUsage_To_internalversion_ClusterResourceUsage(a.(*v1alpha1.ClusterResourceUsage), b.(*ClusterResourceUsage), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ClusterResourceUsageSpec)(nil), (*v1alpha1.ClusterResourceUsageSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ClusterResourceUsageSpec_To_v1alpha1_ClusterResourceUsageSpec(a.(*ClusterResourceUsageSpec), b.(*v1alpha1.ClusterResourceUsageSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ClusterResourceUsageSpec)(nil), (*ClusterResourceUsageSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ClusterResourceUsageSpec_To_internalversion_ClusterResourceUsageSpec(a.(*v1alpha1.ClusterResourceUsageSpec), b.(*ClusterResourceUsageSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -476,6 +497,46 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.PortForwardSpec)(nil), (*PortForwardSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(a.(*v1alpha1.PortForwardSpec), b.(*PortForwardSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ResourceUsage)(nil), (*v1alpha1.ResourceUsage)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ResourceUsage_To_v1alpha1_ResourceUsage(a.(*ResourceUsage), b.(*v1alpha1.ResourceUsage), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ResourceUsage)(nil), (*ResourceUsage)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ResourceUsage_To_internalversion_ResourceUsage(a.(*v1alpha1.ResourceUsage), b.(*ResourceUsage), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ResourceUsageContainer)(nil), (*v1alpha1.ResourceUsageContainer)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ResourceUsageContainer_To_v1alpha1_ResourceUsageContainer(a.(*ResourceUsageContainer), b.(*v1alpha1.ResourceUsageContainer), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ResourceUsageContainer)(nil), (*ResourceUsageContainer)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ResourceUsageContainer_To_internalversion_ResourceUsageContainer(a.(*v1alpha1.ResourceUsageContainer), b.(*ResourceUsageContainer), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ResourceUsageSpec)(nil), (*v1alpha1.ResourceUsageSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ResourceUsageSpec_To_v1alpha1_ResourceUsageSpec(a.(*ResourceUsageSpec), b.(*v1alpha1.ResourceUsageSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ResourceUsageSpec)(nil), (*ResourceUsageSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ResourceUsageSpec_To_internalversion_ResourceUsageSpec(a.(*v1alpha1.ResourceUsageSpec), b.(*ResourceUsageSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ResourceUsageValue)(nil), (*v1alpha1.ResourceUsageValue)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ResourceUsageValue_To_v1alpha1_ResourceUsageValue(a.(*ResourceUsageValue), b.(*v1alpha1.ResourceUsageValue), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ResourceUsageValue)(nil), (*ResourceUsageValue)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue(a.(*v1alpha1.ResourceUsageValue), b.(*ResourceUsageValue), scope)
 	}); err != nil {
 		return err
 	}
@@ -924,6 +985,56 @@ func autoConvert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortF
 // Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec is an autogenerated conversion function.
 func Convert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(in *v1alpha1.ClusterPortForwardSpec, out *ClusterPortForwardSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(in, out, s)
+}
+
+func autoConvert_internalversion_ClusterResourceUsage_To_v1alpha1_ClusterResourceUsage(in *ClusterResourceUsage, out *v1alpha1.ClusterResourceUsage, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_ClusterResourceUsageSpec_To_v1alpha1_ClusterResourceUsageSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_ClusterResourceUsage_To_v1alpha1_ClusterResourceUsage is an autogenerated conversion function.
+func Convert_internalversion_ClusterResourceUsage_To_v1alpha1_ClusterResourceUsage(in *ClusterResourceUsage, out *v1alpha1.ClusterResourceUsage, s conversion.Scope) error {
+	return autoConvert_internalversion_ClusterResourceUsage_To_v1alpha1_ClusterResourceUsage(in, out, s)
+}
+
+func autoConvert_v1alpha1_ClusterResourceUsage_To_internalversion_ClusterResourceUsage(in *v1alpha1.ClusterResourceUsage, out *ClusterResourceUsage, s conversion.Scope) error {
+	// INFO: in.TypeMeta opted out of conversion generation
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_ClusterResourceUsageSpec_To_internalversion_ClusterResourceUsageSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	// INFO: in.Status opted out of conversion generation
+	return nil
+}
+
+// Convert_v1alpha1_ClusterResourceUsage_To_internalversion_ClusterResourceUsage is an autogenerated conversion function.
+func Convert_v1alpha1_ClusterResourceUsage_To_internalversion_ClusterResourceUsage(in *v1alpha1.ClusterResourceUsage, out *ClusterResourceUsage, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ClusterResourceUsage_To_internalversion_ClusterResourceUsage(in, out, s)
+}
+
+func autoConvert_internalversion_ClusterResourceUsageSpec_To_v1alpha1_ClusterResourceUsageSpec(in *ClusterResourceUsageSpec, out *v1alpha1.ClusterResourceUsageSpec, s conversion.Scope) error {
+	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
+	out.Usages = *(*[]v1alpha1.ResourceUsageContainer)(unsafe.Pointer(&in.Usages))
+	return nil
+}
+
+// Convert_internalversion_ClusterResourceUsageSpec_To_v1alpha1_ClusterResourceUsageSpec is an autogenerated conversion function.
+func Convert_internalversion_ClusterResourceUsageSpec_To_v1alpha1_ClusterResourceUsageSpec(in *ClusterResourceUsageSpec, out *v1alpha1.ClusterResourceUsageSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_ClusterResourceUsageSpec_To_v1alpha1_ClusterResourceUsageSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_ClusterResourceUsageSpec_To_internalversion_ClusterResourceUsageSpec(in *v1alpha1.ClusterResourceUsageSpec, out *ClusterResourceUsageSpec, s conversion.Scope) error {
+	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
+	out.Usages = *(*[]ResourceUsageContainer)(unsafe.Pointer(&in.Usages))
+	return nil
+}
+
+// Convert_v1alpha1_ClusterResourceUsageSpec_To_internalversion_ClusterResourceUsageSpec is an autogenerated conversion function.
+func Convert_v1alpha1_ClusterResourceUsageSpec_To_internalversion_ClusterResourceUsageSpec(in *v1alpha1.ClusterResourceUsageSpec, out *ClusterResourceUsageSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ClusterResourceUsageSpec_To_internalversion_ClusterResourceUsageSpec(in, out, s)
 }
 
 func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, out *configv1alpha1.Component, s conversion.Scope) error {
@@ -2090,6 +2201,98 @@ func autoConvert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in 
 // Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec is an autogenerated conversion function.
 func Convert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in *v1alpha1.PortForwardSpec, out *PortForwardSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in, out, s)
+}
+
+func autoConvert_internalversion_ResourceUsage_To_v1alpha1_ResourceUsage(in *ResourceUsage, out *v1alpha1.ResourceUsage, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_internalversion_ResourceUsageSpec_To_v1alpha1_ResourceUsageSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_ResourceUsage_To_v1alpha1_ResourceUsage is an autogenerated conversion function.
+func Convert_internalversion_ResourceUsage_To_v1alpha1_ResourceUsage(in *ResourceUsage, out *v1alpha1.ResourceUsage, s conversion.Scope) error {
+	return autoConvert_internalversion_ResourceUsage_To_v1alpha1_ResourceUsage(in, out, s)
+}
+
+func autoConvert_v1alpha1_ResourceUsage_To_internalversion_ResourceUsage(in *v1alpha1.ResourceUsage, out *ResourceUsage, s conversion.Scope) error {
+	// INFO: in.TypeMeta opted out of conversion generation
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha1_ResourceUsageSpec_To_internalversion_ResourceUsageSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	// INFO: in.Status opted out of conversion generation
+	return nil
+}
+
+// Convert_v1alpha1_ResourceUsage_To_internalversion_ResourceUsage is an autogenerated conversion function.
+func Convert_v1alpha1_ResourceUsage_To_internalversion_ResourceUsage(in *v1alpha1.ResourceUsage, out *ResourceUsage, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ResourceUsage_To_internalversion_ResourceUsage(in, out, s)
+}
+
+func autoConvert_internalversion_ResourceUsageContainer_To_v1alpha1_ResourceUsageContainer(in *ResourceUsageContainer, out *v1alpha1.ResourceUsageContainer, s conversion.Scope) error {
+	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
+	out.Usage = *(*map[string]v1alpha1.ResourceUsageValue)(unsafe.Pointer(&in.Usage))
+	return nil
+}
+
+// Convert_internalversion_ResourceUsageContainer_To_v1alpha1_ResourceUsageContainer is an autogenerated conversion function.
+func Convert_internalversion_ResourceUsageContainer_To_v1alpha1_ResourceUsageContainer(in *ResourceUsageContainer, out *v1alpha1.ResourceUsageContainer, s conversion.Scope) error {
+	return autoConvert_internalversion_ResourceUsageContainer_To_v1alpha1_ResourceUsageContainer(in, out, s)
+}
+
+func autoConvert_v1alpha1_ResourceUsageContainer_To_internalversion_ResourceUsageContainer(in *v1alpha1.ResourceUsageContainer, out *ResourceUsageContainer, s conversion.Scope) error {
+	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
+	out.Usage = *(*map[string]ResourceUsageValue)(unsafe.Pointer(&in.Usage))
+	return nil
+}
+
+// Convert_v1alpha1_ResourceUsageContainer_To_internalversion_ResourceUsageContainer is an autogenerated conversion function.
+func Convert_v1alpha1_ResourceUsageContainer_To_internalversion_ResourceUsageContainer(in *v1alpha1.ResourceUsageContainer, out *ResourceUsageContainer, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ResourceUsageContainer_To_internalversion_ResourceUsageContainer(in, out, s)
+}
+
+func autoConvert_internalversion_ResourceUsageSpec_To_v1alpha1_ResourceUsageSpec(in *ResourceUsageSpec, out *v1alpha1.ResourceUsageSpec, s conversion.Scope) error {
+	out.Usages = *(*[]v1alpha1.ResourceUsageContainer)(unsafe.Pointer(&in.Usages))
+	return nil
+}
+
+// Convert_internalversion_ResourceUsageSpec_To_v1alpha1_ResourceUsageSpec is an autogenerated conversion function.
+func Convert_internalversion_ResourceUsageSpec_To_v1alpha1_ResourceUsageSpec(in *ResourceUsageSpec, out *v1alpha1.ResourceUsageSpec, s conversion.Scope) error {
+	return autoConvert_internalversion_ResourceUsageSpec_To_v1alpha1_ResourceUsageSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_ResourceUsageSpec_To_internalversion_ResourceUsageSpec(in *v1alpha1.ResourceUsageSpec, out *ResourceUsageSpec, s conversion.Scope) error {
+	out.Usages = *(*[]ResourceUsageContainer)(unsafe.Pointer(&in.Usages))
+	return nil
+}
+
+// Convert_v1alpha1_ResourceUsageSpec_To_internalversion_ResourceUsageSpec is an autogenerated conversion function.
+func Convert_v1alpha1_ResourceUsageSpec_To_internalversion_ResourceUsageSpec(in *v1alpha1.ResourceUsageSpec, out *ResourceUsageSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ResourceUsageSpec_To_internalversion_ResourceUsageSpec(in, out, s)
+}
+
+func autoConvert_internalversion_ResourceUsageValue_To_v1alpha1_ResourceUsageValue(in *ResourceUsageValue, out *v1alpha1.ResourceUsageValue, s conversion.Scope) error {
+	out.Value = (*resource.Quantity)(unsafe.Pointer(in.Value))
+	out.Expression = (*string)(unsafe.Pointer(in.Expression))
+	return nil
+}
+
+// Convert_internalversion_ResourceUsageValue_To_v1alpha1_ResourceUsageValue is an autogenerated conversion function.
+func Convert_internalversion_ResourceUsageValue_To_v1alpha1_ResourceUsageValue(in *ResourceUsageValue, out *v1alpha1.ResourceUsageValue, s conversion.Scope) error {
+	return autoConvert_internalversion_ResourceUsageValue_To_v1alpha1_ResourceUsageValue(in, out, s)
+}
+
+func autoConvert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue(in *v1alpha1.ResourceUsageValue, out *ResourceUsageValue, s conversion.Scope) error {
+	out.Value = (*resource.Quantity)(unsafe.Pointer(in.Value))
+	out.Expression = (*string)(unsafe.Pointer(in.Expression))
+	return nil
+}
+
+// Convert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue is an autogenerated conversion function.
+func Convert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue(in *v1alpha1.ResourceUsageValue, out *ResourceUsageValue, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue(in, out, s)
 }
 
 func autoConvert_internalversion_SecurityContext_To_v1alpha1_SecurityContext(in *SecurityContext, out *v1alpha1.SecurityContext, s conversion.Scope) error {

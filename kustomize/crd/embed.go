@@ -58,6 +58,14 @@ var (
 	//go:embed bases/kwok.x-k8s.io_clusterportforwards.yaml
 	ClusterPortForward []byte
 
+	// ResourceUsage is the custom resource definition for resource usage.
+	//go:embed bases/kwok.x-k8s.io_resourceusages.yaml
+	ResourceUsage []byte
+
+	// ClusterResourceUsage is the custom resource definition for cluster resource usage.
+	//go:embed bases/kwok.x-k8s.io_clusterresourceusages.yaml
+	ClusterResourceUsage []byte
+
 	// Metric is the custom resource definition for metrics.
 	//go:embed bases/kwok.x-k8s.io_metrics.yaml
 	Metric []byte

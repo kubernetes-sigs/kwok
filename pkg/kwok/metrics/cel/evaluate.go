@@ -28,6 +28,7 @@ import (
 	"github.com/google/cel-go/common/types/ref"
 	"github.com/wzshiming/easycel"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -38,6 +39,14 @@ type NodeEvaluatorConfig struct {
 
 	Now                    func() time.Time
 	StartedContainersTotal func(nodeName string) int64
+
+	ContainerResourceUsage func(resourceName, podNamespace, podName, containerName string) float64
+	PodResourceUsage       func(resourceName, podNamespace, podName string) float64
+	NodeResourceUsage      func(resourceName, nodeName string) float64
+
+	ContainerResourceCumulativeUsage func(resourceName, podNamespace, podName, containerName string) float64
+	PodResourceCumulativeUsage       func(resourceName, podNamespace, podName string) float64
+	NodeResourceCumulativeUsage      func(resourceName, nodeName string) float64
 }
 
 // NewEnvironment returns a MetricEvaluator that is able to evaluate node metrics
@@ -103,16 +112,24 @@ func (e *Environment) init() error {
 			}
 			return types.Duration{Duration: t.Duration}
 		},
+		func(t resource.Quantity) Quantity {
+			return NewQuantity(&t)
+		},
+		NewResourceList,
 	}
+
 	types := []any{
 		corev1.Node{},
 		corev1.NodeSpec{},
 		corev1.NodeStatus{},
 		corev1.Pod{},
 		corev1.PodSpec{},
+		corev1.ResourceRequirements{},
 		corev1.PodStatus{},
 		corev1.Container{},
 		metav1.ObjectMeta{},
+		Quantity{},
+		ResourceList{},
 	}
 
 	vars := map[string]any{
@@ -134,6 +151,11 @@ func (e *Environment) init() error {
 		mathRandName               = "Rand"
 		sinceSecondName            = "SinceSecond"
 		unixSecondName             = "UnixSecond"
+
+		quantityName = "Quantity"
+
+		usageName           = "Usage"
+		cumulativeUsageName = "CumulativeUsage"
 	)
 	if e.conf.Now != nil {
 		funcs[nowOldName] = append(funcs[nowOldName], e.conf.Now)
@@ -150,6 +172,44 @@ func (e *Environment) init() error {
 
 	methods[unixSecondName] = append(methods[unixSecondName], unixSecond)
 	funcs[unixSecondName] = append(funcs[unixSecondName], unixSecond)
+
+	funcs[quantityName] = append(funcs[quantityName], NewQuantityFromString)
+
+	if e.conf.ContainerResourceUsage != nil {
+		methods[usageName] = append(methods[usageName], func(pod corev1.Pod, resourceName string, containerName string) float64 {
+			return e.conf.ContainerResourceUsage(resourceName, pod.Namespace, pod.Name, containerName)
+		})
+	}
+
+	if e.conf.PodResourceUsage != nil {
+		methods[usageName] = append(methods[usageName], func(pod corev1.Pod, resourceName string) float64 {
+			return e.conf.PodResourceUsage(resourceName, pod.Namespace, pod.Name)
+		})
+	}
+
+	if e.conf.NodeResourceUsage != nil {
+		methods[usageName] = append(methods[usageName], func(node corev1.Node, resourceName string) float64 {
+			return e.conf.NodeResourceUsage(resourceName, node.Name)
+		})
+	}
+
+	if e.conf.ContainerResourceCumulativeUsage != nil {
+		methods[cumulativeUsageName] = append(methods[cumulativeUsageName], func(pod corev1.Pod, resourceName string, containerName string) float64 {
+			return e.conf.ContainerResourceCumulativeUsage(resourceName, pod.Namespace, pod.Name, containerName)
+		})
+	}
+
+	if e.conf.PodResourceCumulativeUsage != nil {
+		methods[cumulativeUsageName] = append(methods[cumulativeUsageName], func(pod corev1.Pod, resourceName string) float64 {
+			return e.conf.PodResourceCumulativeUsage(resourceName, pod.Namespace, pod.Name)
+		})
+	}
+
+	if e.conf.NodeResourceCumulativeUsage != nil {
+		methods[cumulativeUsageName] = append(methods[cumulativeUsageName], func(node corev1.Node, resourceName string) float64 {
+			return e.conf.NodeResourceCumulativeUsage(resourceName, node.Name)
+		})
+	}
 
 	if e.conf.StartedContainersTotal != nil {
 		startedContainersTotal := e.conf.StartedContainersTotal
@@ -309,6 +369,8 @@ func (e *Evaluator) EvaluateFloat64(data Data) (float64, error) {
 			return 1, nil
 		}
 		return 0, nil
+	case Quantity:
+		return v.Quantity.AsApproximateFloat64(), nil
 	default:
 		return 0, fmt.Errorf("unsupported metric value type: %T", v)
 	}

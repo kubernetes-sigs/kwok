@@ -47,6 +47,7 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 	metricsServerArgs := []string{
 		"--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname",
 		"--kubelet-use-node-status-port",
+		"--kubelet-insecure-tls", // TODO: remove this flag
 		"--metric-resolution=15s",
 	}
 
