@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"net"
 	"sync/atomic"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 var (
@@ -98,8 +99,9 @@ type NodeController struct {
 	preprocessChan                        chan *corev1.Node
 	playStageParallelism                  uint
 	lifecycle                             resources.Getter[Lifecycle]
-	delayQueue                            queue.DelayingQueue[resourceStageJob[*corev1.Node]]
+	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*corev1.Node]]
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Node]]
+	backoff                               wait.Backoff
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
 	enableMetrics                         bool
@@ -159,7 +161,8 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		nodeIP:                                conf.NodeIP,
 		nodeName:                              conf.NodeName,
 		nodePort:                              conf.NodePort,
-		delayQueue:                            queue.NewDelayingQueue[resourceStageJob[*corev1.Node]](conf.Clock),
+		delayQueue:                            queue.NewWeightDelayingQueue[resourceStageJob[*corev1.Node]](conf.Clock),
+		backoff:                               defaultBackoff(),
 		lifecycle:                             conf.Lifecycle,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Node),
@@ -264,7 +267,7 @@ loop:
 	logger.Info("Stop watch nodes")
 }
 
-// finalizersModify modify finalizers of node
+// finalizersModify modifies the finalizers of a node
 func (c *NodeController) finalizersModify(ctx context.Context, node *corev1.Node, finalizers *internalversion.StageFinalizers) (*corev1.Node, error) {
 	ops := finalizersModify(node.Finalizers, finalizers)
 	if len(ops) == 0 {
@@ -280,14 +283,8 @@ func (c *NodeController) finalizersModify(ctx context.Context, node *corev1.Node
 		"node", node.Name,
 	)
 
-	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
+	result, err := c.patchResource(ctx, node, types.JSONPatchType, data)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Patch node finalizers",
-				"err", err,
-			)
-			return nil, nil
-		}
 		return nil, err
 	}
 	logger.Info("Patch node finalizers")
@@ -303,12 +300,6 @@ func (c *NodeController) deleteResource(ctx context.Context, node *corev1.Node) 
 
 	err := c.typedClient.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Delete node",
-				"err", err,
-			)
-			return nil
-		}
 		return err
 	}
 
@@ -389,32 +380,50 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		)
 	}
 
+	// We initialize a normal(fresh) job with a zero `RetryCount`.
+	// The counter may increase if the job fails to apply.
 	item := resourceStageJob[*corev1.Node]{
-		Resource: node,
-		Stage:    stage,
-		Key:      key,
+		Resource:   node,
+		Stage:      stage,
+		Key:        key,
+		RetryCount: new(int),
 	}
-
-	c.delayQueue.AddAfter(item, delay)
-	c.delayQueueMapping.Store(key, item)
-
+	// we add a normal(fresh) stage job with weight 0,
+	// resulting in that it will always be processed with high priority compared to those retry ones
+	c.addStageJob(item, delay, 0)
 	return nil
 }
 
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *NodeController) playStageWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
+
 	for ctx.Err() == nil {
 		node, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
 		c.delayQueueMapping.Delete(node.Key)
-		c.playStage(ctx, node.Resource, node.Stage)
+		needRetry, err := c.playStage(ctx, node.Resource, node.Stage)
+		if err != nil {
+			logger.Error("failed to apply stage", err,
+				"node", node.Resource.Name, "stage", node.Stage.Name())
+		}
+		if needRetry {
+			*node.RetryCount++
+			logger.Info("retrying for failed job",
+				"node", node.Resource.Name, "stage", node.Stage.Name(), "retry", *node.RetryCount)
+			// for failed jobs, we re-push them into the queue with a lower weight
+			// and a backoff period to avoid blocking normal tasks
+			retryDelay := backoffDelayByStep(*node.RetryCount, c.backoff)
+			c.addStageJob(node, retryDelay, 1)
+		}
 	}
 }
 
-// playStage plays the stage
-func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *LifecycleStage) {
+// playStage plays the stage.
+// The returned boolean indicates whether the applying action needs to be retried.
+func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *LifecycleStage) (bool, error) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
 	logger = logger.With(
@@ -440,32 +449,28 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 	if next.Finalizers != nil {
 		result, err = c.finalizersModify(ctx, node, next.Finalizers)
 		if err != nil {
-			logger.Error("Failed to finalizers of node", err)
-			return
+			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of node %s: %w", node.Name, err)
 		}
 	}
 
 	if next.Delete {
 		err = c.deleteResource(ctx, node)
 		if err != nil {
-			logger.Error("Failed to delete node", err)
-			return
+			return shouldRetry(err), fmt.Errorf("failed to delete node %s: %w", node.Name, err)
 		}
 	} else if next.StatusTemplate != "" {
-		patch, err = c.computePatch(node, next.StatusTemplate)
+		patch, err = c.computeStatusPatch(node, next.StatusTemplate)
 		if err != nil {
-			logger.Error("Failed to configure node", err)
-			return
+			return shouldRetry(err), fmt.Errorf("failed to compute the status patch of node %s: %w", node.Name, err)
 		}
 		if patch == nil {
-			logger.Debug("Skip node",
-				"reason", "do not need to modify",
+			logger.Debug("Skip modify status",
+				"reason", "do not need to modify status",
 			)
 		} else {
-			result, err = c.patchResource(ctx, node, patch)
+			result, err = c.patchResource(ctx, node, types.StrategicMergePatchType, patch, "status")
 			if err != nil {
-				logger.Error("Failed to patch node", err)
-				return
+				return shouldRetry(err), fmt.Errorf("failed to patch node %s: %w", node.Name, err)
 			}
 		}
 	}
@@ -475,6 +480,7 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 			"reason", "immediateNextStage is true")
 		c.preprocessChan <- result
 	}
+	return false, nil
 }
 
 func (c *NodeController) readOnly(nodeName string) bool {
@@ -485,27 +491,23 @@ func (c *NodeController) readOnly(nodeName string) bool {
 }
 
 // patchResource patches the resource
-func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, patch []byte) (*corev1.Node, error) {
+func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, pt types.PatchType, patch []byte,
+	subresources ...string) (*corev1.Node, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
 	)
 
-	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, pt, patch, metav1.PatchOptions{},
+		subresources...)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Patch node",
-				"err", err,
-			)
-			return nil, nil
-		}
 		return nil, err
 	}
 	logger.Info("Patch node")
 	return result, nil
 }
 
-func (c *NodeController) computePatch(node *corev1.Node, tpl string) ([]byte, error) {
+func (c *NodeController) computeStatusPatch(node *corev1.Node, tpl string) ([]byte, error) {
 	patch, err := c.renderer.ToJSON(tpl, node)
 	if err != nil {
 		return nil, err
@@ -617,4 +619,13 @@ func (c *NodeController) funcNodeName() string {
 
 func (c *NodeController) funcNodePort() int {
 	return c.nodePort
+}
+
+// addStageJob adds a stage to be applied into the underlying weight delay queue and the associated helper map
+func (c *NodeController) addStageJob(job resourceStageJob[*corev1.Node], delay time.Duration, weight int) {
+	old, loaded := c.delayQueueMapping.Swap(job.Key, job)
+	if loaded {
+		c.delayQueue.Cancel(old)
+	}
+	c.delayQueue.AddWeightAfter(job, weight, delay)
 }

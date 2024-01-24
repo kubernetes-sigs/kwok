@@ -17,12 +17,17 @@ limitations under the License.
 package controllers
 
 import (
+	"math"
 	"net"
 	"sync"
+	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	utilnet "k8s.io/apimachinery/pkg/util/net"
 
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 func parseCIDR(s string) (*net.IPNet, error) {
@@ -112,4 +117,40 @@ type resourceStageJob[T any] struct {
 	Resource T
 	Stage    *LifecycleStage
 	Key      string
+	// RetryCount is used for tracking the retry times of a job.
+	// It should be zero for a fresh job.
+	RetryCount *int
+}
+
+// defaultBackoff provides a backoff setting for kwok controllers to apply failed jobs
+func defaultBackoff() wait.Backoff {
+	return wait.Backoff{Duration: 1 * time.Second, Factor: 2.0, Jitter: 0.2, Cap: 32 * time.Minute}
+}
+
+// backoffDelayByStep calculates the backoff delay period based on steps
+func backoffDelayByStep(steps int, c wait.Backoff) time.Duration {
+	if steps <= 0 {
+		return 0
+	}
+	delay := math.Min(
+		float64(c.Duration)*math.Pow(c.Factor, float64(steps)),
+		float64(c.Cap))
+	return wait.Jitter(time.Duration(delay), c.Jitter)
+}
+
+// shouldRetry determines if a certain error needs to be retried
+func shouldRetry(err error) bool {
+	// if apiserver is not reachable
+	if utilnet.IsConnectionRefused(err) {
+		return true
+	}
+	// if it is a network issue reported by apiserver side
+	if apierrors.IsServerTimeout(err) ||
+		apierrors.IsTimeout(err) ||
+		apierrors.IsServiceUnavailable(err) ||
+		apierrors.IsTooManyRequests(err) {
+		return true
+	}
+	// ignore all other cases
+	return false
 }

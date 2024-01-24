@@ -17,9 +17,15 @@ limitations under the License.
 package controllers
 
 import (
+	"encoding/json"
+	"errors"
 	"net"
 	"reflect"
+	"syscall"
 	"testing"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func Test_parseCIDR(t *testing.T) {
@@ -127,6 +133,57 @@ func Test_ipPool_new(t *testing.T) {
 			pool := newIPPool(tt.fields.cidr)
 			if got := pool.new(); got != tt.want {
 				t.Errorf("new() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func genResource(resource string) schema.GroupResource {
+	return schema.GroupResource{Group: "", Resource: resource}
+}
+
+func Test_shouldRetry(t *testing.T) {
+	var testCases = []struct {
+		name     string
+		input    error
+		expected bool
+	}{
+		{
+			name:     "connection refused error",
+			input:    syscall.ECONNREFUSED,
+			expected: true,
+		},
+		{
+			name:     "too many request error",
+			input:    apierrors.NewTooManyRequests("foo", 1),
+			expected: true,
+		},
+		{
+			name:     "resource not found error",
+			input:    apierrors.NewNotFound(genResource("foo"), "bar"),
+			expected: false,
+		},
+		{
+			name:     "resource conflict error",
+			input:    apierrors.NewConflict(genResource("foo"), "bar", errors.New("message")),
+			expected: false,
+		},
+		{
+			name:     "marshal error",
+			input:    &json.UnsupportedTypeError{},
+			expected: false,
+		},
+		{
+			name:     "unknown error",
+			input:    errors.New("an weird error"),
+			expected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if shouldRetry(tc.input) != tc.expected {
+				t.Errorf("expected: %t", tc.expected)
 			}
 		})
 	}
