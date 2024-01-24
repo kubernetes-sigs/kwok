@@ -252,6 +252,69 @@ spec:
     name: volume-3
 status: {}
 EOF
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/metrics-server.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  name: metrics-server
+  namespace: kube-system
+spec:
+  containers:
+  - args:
+    - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+    - --kubelet-use-node-status-port
+    - --metric-resolution=15s
+    - --bind-address=0.0.0.0
+    - --secure-port=4443
+    - --kubeconfig=~/.kube/config
+    - --authentication-kubeconfig=~/.kube/config
+    - --authorization-kubeconfig=~/.kube/config
+    - --tls-cert-file=/etc/kubernetes/pki/admin.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/admin.key
+    - --v=4
+    command:
+    - /metrics-server
+    image: registry.k8s.io/metrics-server/metrics-server:v0.7.0
+    imagePullPolicy: Never
+    name: metrics-server
+    ports:
+    - containerPort: 4443
+      hostPort: 4443
+    resources: {}
+    volumeMounts:
+    - mountPath: ~/.kube/config
+      name: volume-0
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/ca.crt
+      name: volume-1
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/admin.crt
+      name: volume-2
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/admin.key
+      name: volume-3
+      readOnly: true
+  hostNetwork: true
+  restartPolicy: Always
+  securityContext:
+    runAsGroup: 0
+    runAsUser: 0
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/admin.conf
+    name: volume-0
+  - hostPath:
+      path: /etc/kubernetes/pki/ca.crt
+    name: volume-1
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.crt
+    name: volume-2
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.key
+    name: volume-3
+status: {}
+EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
 apiVersion: v1
 kind: Pod
@@ -419,6 +482,19 @@ scrape_configs:
   static_configs:
   - targets:
     - 127.0.0.1:10247
+- job_name: "metrics-server"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "/etc/kubernetes/pki/admin.crt"
+    key_file: "/etc/kubernetes/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:4443
 - job_name: "prometheus"
   scheme: http
   honor_timestamps: true
@@ -432,12 +508,14 @@ EOF
 docker pull docker.io/kindest/node:v1.28.0
 docker pull localhost/kwok:test
 docker pull docker.io/kubernetesui/dashboard:v2.7.0
+docker pull registry.k8s.io/metrics-server/metrics-server:v0.7.0
 docker pull docker.io/prom/prometheus:v2.44.0
 docker pull docker.io/jaegertracing/all-in-one:1.45.0
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.28.0 --wait 29m
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image localhost/kwok:test --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/dashboard:v2.7.0 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/metrics-server/metrics-server:v0.7.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v2.44.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/jaegertracing/all-in-one:1.45.0 --name kwok-<CLUSTER_NAME>
 kubectl config view --minify=true --raw=true
@@ -445,4 +523,5 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
 kubectl cordon kwok-<CLUSTER_NAME>-control-plane
 docker exec kwok-<CLUSTER_NAME>-control-plane chmod -R +r /etc/kubernetes/pki
+# Set up apiservice for metrics server
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config

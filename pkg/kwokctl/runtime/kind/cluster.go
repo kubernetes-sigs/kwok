@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -261,6 +262,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	err = c.addDashboard(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addMetricsServer(ctx, env)
 	if err != nil {
 		return err
 	}
@@ -594,6 +600,46 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 			return fmt.Errorf("failed to write: %w", err)
 		}
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
+	}
+	return nil
+}
+
+func (c *Cluster) addMetricsServer(_ context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
+	if conf.EnableMetricsServer {
+		metricsServerVersion, err := c.ParseVersionFromImage(context.Background(), c.runtime, conf.MetricsServerImage, "")
+		if err != nil {
+			return err
+		}
+
+		metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
+			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
+			Workdir:        env.workdir,
+			Image:          conf.MetricsServerImage,
+			Version:        metricsServerVersion,
+			BindAddress:    net.PublicAddress,
+			Port:           443,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			Verbosity:      env.verbosity,
+		})
+		if err != nil {
+			return err
+		}
+
+		metricsServerPod, err := yaml.Marshal(components.ConvertToPod(metricsServerComponent))
+		if err != nil {
+			return fmt.Errorf("failed to marshal metrics server pod: %w", err)
+		}
+		err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentMetricsServer+".yaml"), metricsServerPod)
+		if err != nil {
+			return fmt.Errorf("failed to write: %w", err)
+		}
+
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, metricsServerComponent)
 	}
 	return nil
 }
@@ -1321,6 +1367,7 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 		conf.KindNodeImage,
 		conf.KwokControllerImage,
 		conf.PrometheusImage,
+		conf.MetricsServerImage,
 	}, nil
 }
 
@@ -1362,4 +1409,42 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	}
 
 	return "kind", nil
+}
+
+// InitCRs initializes the CRs.
+func (c *Cluster) InitCRs(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := config.Options
+
+	if c.IsDryRun() {
+		if conf.EnableMetricsServer {
+			dryrun.PrintMessage("# Set up apiservice for metrics server")
+		}
+
+		return nil
+	}
+
+	buf := bytes.NewBuffer(nil)
+	if conf.EnableMetricsServer {
+		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(apiservice)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if buf.Len() == 0 {
+		return nil
+	}
+
+	clientset, err := c.GetClientset(ctx)
+	if err != nil {
+		return err
+	}
+
+	return snapshot.Load(ctx, clientset, bytes.NewBuffer(buf.Bytes()), snapshot.LoadConfig{})
 }

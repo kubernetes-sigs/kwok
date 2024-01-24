@@ -540,6 +540,11 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 		return nil
 	}
 
+	if c.IsDryRun() {
+		dryrun.PrintMessage("# Init CRDs %s", strings.Join(crds, ","))
+		return nil
+	}
+
 	clientset, err := c.GetClientset(ctx)
 	if err != nil {
 		return err

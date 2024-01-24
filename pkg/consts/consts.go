@@ -61,6 +61,10 @@ var (
 	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
 	JaegerImagePrefix  = "docker.io/jaegertracing"
 
+	MetricsServerVersion      = "0.7.0"
+	MetricsServerBinaryPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
+	MetricsServerImagePrefix  = "registry.k8s.io/metrics-server"
+
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000
 )
@@ -85,4 +89,5 @@ const (
 	ComponentDashboard             = "dashboard"
 	ComponentPrometheus            = "prometheus"
 	ComponentJaeger                = "jaeger"
+	ComponentMetricsServer         = "metrics-server"
 )

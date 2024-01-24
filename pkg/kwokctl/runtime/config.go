@@ -127,6 +127,9 @@ type Runtime interface {
 	// InitCRDs init the crds of cluster
 	InitCRDs(ctx context.Context) error
 
+	// InitCRs init the crs of cluster
+	InitCRs(ctx context.Context) error
+
 	// IsDryRun returns true if the runtime is in dry-run mode
 	IsDryRun() bool
 

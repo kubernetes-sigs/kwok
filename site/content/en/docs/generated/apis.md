@@ -2335,6 +2335,17 @@ is the default value for env KWOK_JAEGER_VERSION</p>
 </tr>
 <tr>
 <td>
+<code>metricsServerVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>MetricsServerVersion is the version of metrics-server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>dockerComposeVersion</code>
 <em>
 string
@@ -2421,6 +2432,17 @@ is the default value for flag &ndash;disable-kube-controller-manager and env KWO
 </tr>
 <tr>
 <td>
+<code>enableMetricsServer</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>EnableMetricsServer is the flag to enable metrics-server.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kubeImagePrefix</code>
 <em>
 string
@@ -2488,6 +2510,17 @@ string
 <td>
 <p>JaegerImagePrefix is the prefix of the Jaeger image.
 is the default value for env KWOK_JAEGER_IMAGE_PREFIX</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricsServerImagePrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>MetricsServerImagePrefix is the prefix of the metrics-server image.</p>
 </td>
 </tr>
 <tr>
@@ -2583,6 +2616,17 @@ string
 <td>
 <p>JaegerImage is the image of Jaeger.
 is the default value for flag &ndash;jaeger-image and env KWOK_JAEGER_IMAGE</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricsServerImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>MetricsServerImage is the image of metrics-server.</p>
 </td>
 </tr>
 <tr>
@@ -2829,6 +2873,28 @@ Deprecated: Use JaegerBinary instead</p>
 </tr>
 <tr>
 <td>
+<code>metricsServerBinaryPrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>MetricsServerBinaryPrefix is the prefix of the metrics-server binary.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricsServerBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>MetricsServerBinary is the binary of metrics-server.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>dockerComposeBinaryPrefix</code>
 <em>
 string
@@ -3017,6 +3083,17 @@ uint32
 <td>
 <p>KwokControllerPort is kwok-controller port that is exposed to the host.
 is the default value for flag &ndash;controller-port and env KWOK_CONTROLLER_PORT</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricsServerPort</code>
+<em>
+uint32
+</em>
+</td>
+<td>
+<p>MetricsServerPort is metrics-server port that is exposed to the host.</p>
 </td>
 </tr>
 <tr>

@@ -68,6 +68,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.KubeSchedulerConfig, "kube-scheduler-config", flags.Options.KubeSchedulerConfig, `Path to a kube-scheduler configuration file`)
 	cmd.Flags().BoolVar(&flags.Options.DisableKubeScheduler, "disable-kube-scheduler", flags.Options.DisableKubeScheduler, `Disable the kube-scheduler`)
 	cmd.Flags().BoolVar(&flags.Options.DisableKubeControllerManager, "disable-kube-controller-manager", flags.Options.DisableKubeControllerManager, `Disable the kube-controller-manager`)
+	cmd.Flags().BoolVar(&flags.Options.EnableMetricsServer, "enable-metrics-server", flags.Options.EnableMetricsServer, `Enable the metrics-server`)
 	cmd.Flags().StringVar(&flags.Options.EtcdImage, "etcd-image", flags.Options.EtcdImage, `Image of etcd, only for docker/podman/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
 `)
@@ -85,6 +86,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().Uint32Var(&flags.Options.KubeSchedulerPort, "kube-scheduler-port", flags.Options.KubeSchedulerPort, `Port of kube-scheduler given to the host, only for binary and docker/podman/nerdctl runtime`)
 	cmd.Flags().StringVar(&flags.Options.KwokControllerImage, "kwok-controller-image", flags.Options.KwokControllerImage, `Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
+`)
+	cmd.Flags().StringVar(&flags.Options.MetricsServerImage, "metrics-server-image", flags.Options.MetricsServerImage, `Image of metrics-server, only for docker/podman/nerdctl/kind/kind-podman runtime
+'${KWOK_METRICS_SERVER_IMAGE_PREFIX}/metrics-server:${KWOK_METRICS_SERVER_VERSION}'
 `)
 	cmd.Flags().StringVar(&flags.Options.PrometheusImage, "prometheus-image", flags.Options.PrometheusImage, `Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'
@@ -112,6 +116,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.EtcdBinaryTar, "etcd-binary-tar", flags.Options.EtcdBinaryTar, `Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
 `)
 	_ = cmd.Flags().MarkDeprecated("etcd-binary-tar", "--etcd-binary-tar will be removed in a future release, please use --etcd-binary instead")
+	cmd.Flags().StringVar(&flags.Options.MetricsServerBinary, "metrics-server-binary", flags.Options.MetricsServerBinary, `Binary of metrics-server, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.Options.PrometheusBinary, "prometheus-binary", flags.Options.PrometheusBinary, `Binary of Prometheus, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.Options.PrometheusBinaryTar, "prometheus-binary-tar", flags.Options.PrometheusBinaryTar, `Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime
 `)
@@ -286,6 +291,10 @@ func runE(ctx context.Context, flags *flagpole) error {
 	err = rt.InitCRDs(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to init crds %q: %w", name, err)
+	}
+	err = rt.InitCRs(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to init crs %q: %w", name, err)
 	}
 
 	// Wait for cluster to be ready

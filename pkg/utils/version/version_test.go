@@ -75,6 +75,12 @@ func TestParseFromOutput(t *testing.T) {
 			},
 			want: semver.MustParse("1.45.0"),
 		},
+		{
+			args: args{
+				s: "v0.7.0\n",
+			},
+			want: semver.MustParse("0.7.0"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
