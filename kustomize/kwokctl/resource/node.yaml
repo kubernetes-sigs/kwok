@@ -20,6 +20,7 @@ template: |-
     annotations:
       kwok.x-k8s.io/node: fake
       node.alpha.kubernetes.io/ttl: "0"
+      metrics.k8s.io/resource-metrics-path: "/metrics/nodes/{{ Name }}/metrics/resource"
     labels:
       beta.kubernetes.io/arch: {{ .nodeInfo.architecture }}
       beta.kubernetes.io/os: {{ .nodeInfo.operatingSystem }}

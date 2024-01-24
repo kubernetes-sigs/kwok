@@ -17,6 +17,7 @@ limitations under the License.
 package compose
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -31,6 +32,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
@@ -154,6 +156,9 @@ func (c *Cluster) pullAllImages(ctx context.Context, env *env) error {
 	if conf.JaegerPort != 0 {
 		images = append(images, conf.JaegerImage)
 	}
+	if conf.EnableMetricsServer {
+		images = append(images, conf.MetricsServerImage)
+	}
 	err := c.PullImages(ctx, c.runtime, images, conf.QuietPull)
 	if err != nil {
 		return err
@@ -166,6 +171,7 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 	if !file.Exists(env.pkiPath) {
 		sans := []string{
 			c.Name() + "-kube-apiserver",
+			c.Name() + "-kwok-controller",
 		}
 		ips, err := net.GetAllIPs()
 		if err != nil {
@@ -366,6 +372,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	err = c.addKwokController(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addMetricsServer(ctx, env)
 	if err != nil {
 		return err
 	}
@@ -601,6 +612,37 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	kwokControllerComponent.Volumes = append(kwokControllerComponent.Volumes, logVolumes...)
 
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kwokControllerComponent)
+	return nil
+}
+
+func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
+
+	if conf.EnableMetricsServer {
+		metricsServerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.MetricsServerImage, "metrics-server")
+		if err != nil {
+			return err
+		}
+
+		metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
+			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
+			Workdir:        env.workdir,
+			Image:          conf.MetricsServerImage,
+			Version:        metricsServerVersion,
+			BindAddress:    conf.BindAddress,
+			Port:           conf.MetricsServerPort,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			Verbosity:      env.verbosity,
+		})
+		if err != nil {
+			return err
+		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, metricsServerComponent)
+	}
 	return nil
 }
 
@@ -1099,6 +1141,7 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 		conf.KubeSchedulerImage,
 		conf.KwokControllerImage,
 		conf.PrometheusImage,
+		conf.MetricsServerImage,
 	}, nil
 }
 
@@ -1158,4 +1201,45 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		return waitErr
 	}
 	return nil
+}
+
+// InitCRs initializes the CRs.
+func (c *Cluster) InitCRs(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := config.Options
+
+	if c.IsDryRun() {
+		if conf.EnableMetricsServer {
+			dryrun.PrintMessage("# Set up apiservice for metrics server")
+		}
+
+		return nil
+	}
+
+	buf := bytes.NewBuffer(nil)
+	if conf.EnableMetricsServer {
+		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{
+			Port:         4443,
+			ExternalName: c.Name() + "-metrics-server",
+		})
+		if err != nil {
+			return err
+		}
+		_, _ = buf.WriteString(apiservice)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if buf.Len() == 0 {
+		return nil
+	}
+
+	clientset, err := c.GetClientset(ctx)
+	if err != nil {
+		return err
+	}
+
+	return snapshot.Load(ctx, clientset, bytes.NewBuffer(buf.Bytes()), snapshot.LoadConfig{})
 }

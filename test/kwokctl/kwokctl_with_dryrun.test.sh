@@ -72,6 +72,7 @@ function main() {
       --dashboard-port 8000 \
       --kube-audit-policy "${DIR}/audit-policy.yaml" \
       --kube-scheduler-config "${DIR}/scheduler-config.yaml" \
+      --enable-metrics-server \
       --dry-run | clear_testdata "${name}")"
     want="$(<"${DIR}/testdata/${runtime}/create_cluster_with_verbosity.txt")"
     if [[ "${got}" != "${want}" ]]; then

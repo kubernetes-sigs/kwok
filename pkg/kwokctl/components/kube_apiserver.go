@@ -170,6 +170,8 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--service-account-key-file=/etc/kubernetes/pki/admin.key",
 				"--service-account-signing-key-file=/etc/kubernetes/pki/admin.key",
 				"--service-account-issuer=https://kubernetes.default.svc.cluster.local",
+				"--proxy-client-key-file=/etc/kubernetes/pki/admin.key",
+				"--proxy-client-cert-file=/etc/kubernetes/pki/admin.crt",
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             "https",
@@ -189,6 +191,8 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--service-account-key-file="+conf.AdminKeyPath,
 				"--service-account-signing-key-file="+conf.AdminKeyPath,
 				"--service-account-issuer=https://kubernetes.default.svc.cluster.local",
+				"--proxy-client-key-file="+conf.AdminKeyPath,
+				"--proxy-client-cert-file="+conf.AdminCertPath,
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             "https",

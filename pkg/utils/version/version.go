@@ -42,20 +42,14 @@ func NewVersion(major, minor, patch uint64) Version {
 	}
 }
 
-var versionRegexp = regexp.MustCompile(`(kubernetes|version):? v?(\d+\.\d+\.\d+\S*)`)
-var jaegerVersionRegexp = regexp.MustCompile(`"(gitversion)":"v(\d+\.\d+\.\d+)"`)
+var versionRegexp = regexp.MustCompile(`(kubernetes|version)?:? ?v?(\d+\.\d+\.\d+(-\S*)?)`)
 
 // ParseFromOutput parses the version from the output.
 func ParseFromOutput(s string) (Version, error) {
 	s = strings.ToLower(s)
-	var matches []string
-	matches = versionRegexp.FindStringSubmatch(s)
+	matches := versionRegexp.FindStringSubmatch(s)
 	if len(matches) == 0 {
-		// try match jaeger version msg
-		matches = jaegerVersionRegexp.FindStringSubmatch(s)
-		if len(matches) == 0 {
-			return semver.Version{}, fmt.Errorf("failed to parse version from output: %q", s)
-		}
+		return semver.Version{}, fmt.Errorf("failed to parse version from output: %q", s)
 	}
 	v := matches[2]
 	if strings.HasPrefix(v, "0.0.0") {

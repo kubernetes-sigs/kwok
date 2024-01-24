@@ -246,6 +246,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setKwokctlJaegerConfig(conf)
 
+	setMetricsServerConfig(conf)
+
 	return config
 }
 
@@ -541,6 +543,34 @@ func setKwokctlJaegerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.JaegerBinary == "" {
 		conf.JaegerBinary = conf.JaegerBinaryTar + "#jaeger-all-in-one" + conf.BinSuffix
 	}
+}
+
+func setMetricsServerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.MetricsServerVersion == "" {
+		conf.MetricsServerVersion = consts.MetricsServerVersion
+	}
+	conf.MetricsServerVersion = version.AddPrefixV(envs.GetEnvWithPrefix("METRICS_SERVER_VERSION", conf.MetricsServerVersion))
+
+	if conf.MetricsServerImagePrefix == "" {
+		conf.MetricsServerImagePrefix = consts.MetricsServerImagePrefix
+	}
+	conf.MetricsServerImagePrefix = envs.GetEnvWithPrefix("METRICS_SERVER_IMAGE_PREFIX", conf.MetricsServerImagePrefix)
+
+	if conf.MetricsServerImage == "" {
+		conf.MetricsServerImage = joinImageURI(conf.MetricsServerImagePrefix, "metrics-server", version.AddPrefixV(conf.MetricsServerVersion))
+	}
+	conf.MetricsServerImage = envs.GetEnvWithPrefix("METRICS_SERVER_IMAGE", conf.MetricsServerImage)
+
+	if conf.MetricsServerBinaryPrefix == "" {
+		conf.MetricsServerBinaryPrefix = consts.MetricsServerBinaryPrefix + "/" + conf.MetricsServerVersion
+	}
+	conf.MetricsServerBinaryPrefix = envs.GetEnvWithPrefix("METRICS_SERVER_BINARY_PREFIX", conf.MetricsServerBinaryPrefix)
+
+	if conf.MetricsServerBinaryPrefix != "" &&
+		conf.MetricsServerBinary == "" {
+		conf.MetricsServerBinary = conf.MetricsServerBinaryPrefix + "/metrics-server-" + GOOS + "-" + GOARCH + conf.BinSuffix
+	}
+	conf.MetricsServerBinary = envs.GetEnvWithPrefix("METRICS_SERVER_BINARY", conf.MetricsServerBinary)
 }
 
 // joinImageURI joins the image URI.
