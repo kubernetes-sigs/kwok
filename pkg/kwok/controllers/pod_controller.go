@@ -275,8 +275,6 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		)
 	}
 
-	// We initialize a normal(fresh) job with a zero `RetryCount`.
-	// The counter may increase if the job fails to apply.
 	item := resourceStageJob[*corev1.Pod]{
 		Resource:   pod,
 		Stage:      stage,
@@ -302,12 +300,17 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 		needRetry, err := c.playStage(ctx, pod.Resource, pod.Stage)
 		if err != nil {
 			logger.Error("failed to apply stage", err,
-				"node", pod.Resource.Name, "stage", pod.Stage.Name())
+				"pod", pod.Key,
+				"stage", pod.Stage.Name(),
+			)
 		}
 		if needRetry {
 			*pod.RetryCount++
 			logger.Info("retrying for failed job",
-				"pod", pod.Resource.Name, "stage", pod.Stage.Name(), "retry", *pod.RetryCount)
+				"pod", pod.Key,
+				"stage", pod.Stage.Name(),
+				"retry", *pod.RetryCount,
+			)
 			// for failed jobs, we re-push them into the queue with a lower weight
 			// and a backoff period to avoid blocking normal tasks
 			retryDelay := backoffDelayByStep(*pod.RetryCount, c.backoff)

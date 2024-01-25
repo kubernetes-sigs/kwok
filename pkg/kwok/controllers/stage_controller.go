@@ -255,8 +255,6 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 		)
 	}
 
-	// We initialize a normal(fresh) job with a zero `RetryCount`.
-	// The counter may increase if the job fails to apply.
 	item := resourceStageJob[*unstructured.Unstructured]{
 		Resource:   resource,
 		Stage:      stage,
@@ -283,12 +281,17 @@ func (c *StageController) playStageWorker(ctx context.Context) {
 		needRetry, err := c.playStage(ctx, resource.Resource, resource.Stage)
 		if err != nil {
 			logger.Error("failed to apply stage", err,
-				"resource", resource.Resource.GetName(), "stage", resource.Stage.Name())
+				"resource", resource.Key,
+				"stage", resource.Stage.Name(),
+			)
 		}
 		if needRetry {
 			*resource.RetryCount++
 			logger.Info("retrying for failed job",
-				"resource", resource.Resource.GetName(), "stage", resource.Stage.Name(), "retry", *resource.RetryCount)
+				"resource", resource.Key,
+				"stage", resource.Stage.Name(),
+				"retry", *resource.RetryCount,
+			)
 			// for failed jobs, we re-push them into the queue with a lower weight
 			// and a backoff period to avoid blocking normal tasks
 			retryDelay := backoffDelayByStep(*resource.RetryCount, c.backoff)

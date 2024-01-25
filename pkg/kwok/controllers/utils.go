@@ -118,7 +118,7 @@ type resourceStageJob[T any] struct {
 	Stage    *LifecycleStage
 	Key      string
 	// RetryCount is used for tracking the retry times of a job.
-	// It should be zero for a fresh job.
+	// Must be initialized to 0.
 	RetryCount *int
 }
 
