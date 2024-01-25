@@ -175,7 +175,7 @@ func (c *PodController) finalizersModify(ctx context.Context, pod *corev1.Pod, f
 		"node", pod.Spec.NodeName,
 	)
 
-	result, err := c.patchResource(ctx, pod, types.JSONPatchType, data)
+	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +366,7 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 				"reason", "do not need to modify",
 			)
 		} else {
-			result, err = c.patchResource(ctx, pod, types.StrategicMergePatchType, patch, "status")
+			result, err = c.patchResource(ctx, pod, patch)
 			if err != nil {
 				return shouldRetry(err), fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
 			}
@@ -389,16 +389,14 @@ func (c *PodController) readOnly(nodeName string) bool {
 }
 
 // patchResource patches the resource
-func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, pt types.PatchType, patch []byte,
-	subresources ...string) (*corev1.Pod, error) {
+func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patch []byte) (*corev1.Pod, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
 
-	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, pt, patch, metav1.PatchOptions{},
-		subresources...)
+	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		return nil, err
 	}

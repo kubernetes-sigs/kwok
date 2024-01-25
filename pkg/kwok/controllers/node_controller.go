@@ -283,7 +283,7 @@ func (c *NodeController) finalizersModify(ctx context.Context, node *corev1.Node
 		"node", node.Name,
 	)
 
-	result, err := c.patchResource(ctx, node, types.JSONPatchType, data)
+	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -468,7 +468,7 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 				"reason", "do not need to modify status",
 			)
 		} else {
-			result, err = c.patchResource(ctx, node, types.StrategicMergePatchType, patch, "status")
+			result, err = c.patchResource(ctx, node, patch)
 			if err != nil {
 				return shouldRetry(err), fmt.Errorf("failed to patch node %s: %w", node.Name, err)
 			}
@@ -491,15 +491,13 @@ func (c *NodeController) readOnly(nodeName string) bool {
 }
 
 // patchResource patches the resource
-func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, pt types.PatchType, patch []byte,
-	subresources ...string) (*corev1.Node, error) {
+func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, patch []byte) (*corev1.Node, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
 	)
 
-	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, pt, patch, metav1.PatchOptions{},
-		subresources...)
+	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		return nil, err
 	}
