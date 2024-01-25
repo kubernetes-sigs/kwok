@@ -6,12 +6,124 @@ bookToc: false
 <p>Packages:</p>
 <ul>
 <li>
+<a href="#action.kwok.x-k8s.io%2fv1alpha1">action.kwok.x-k8s.io/v1alpha1</a>
+</li>
+<li>
 <a href="#config.kwok.x-k8s.io%2fv1alpha1">config.kwok.x-k8s.io/v1alpha1</a>
 </li>
 <li>
 <a href="#kwok.x-k8s.io%2fv1alpha1">kwok.x-k8s.io/v1alpha1</a>
 </li>
 </ul>
+<h2 id="action.kwok.x-k8s.io/v1alpha1">
+action.kwok.x-k8s.io/v1alpha1
+<a href="#action.kwok.x-k8s.io%2fv1alpha1"> #</a>
+</h2>
+<div>
+<p>Package v1alpha1 implements the v1alpha1 apiVersion of kwokctl&rsquo;s action</p>
+</div>
+Resource Types:
+<ul>
+<li>
+<a href="#action.kwok.x-k8s.io/v1alpha1.ResourcePatch">ResourcePatch</a>
+</li></ul>
+<h3 id="action.kwok.x-k8s.io/v1alpha1.ResourcePatch">
+ResourcePatch
+<a href="#action.kwok.x-k8s.io%2fv1alpha1.ResourcePatch"> #</a>
+</h3>
+<p>
+<p>ResourcePatch provides resource definition for kwokctl.
+this is a action of resource patch.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+action.kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>ResourcePatch</code></td>
+</tr>
+<tr>
+<td>
+<code>resource</code>
+<em>
+<a href="#action.kwok.x-k8s.io/v1alpha1.GroupVersionResource">
+GroupVersionResource
+</a>
+</em>
+</td>
+<td>
+<p>Resource represents the resource to be patched.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>target</code>
+<em>
+<a href="#action.kwok.x-k8s.io/v1alpha1.Target">
+Target
+</a>
+</em>
+</td>
+<td>
+<p>Target represents the target of the ResourcePatch.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>durationNanosecond</code>
+<em>
+time.Duration
+</em>
+</td>
+<td>
+<p>DurationNanosecond represents the duration of the patch in nanoseconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>method</code>
+<em>
+<a href="#action.kwok.x-k8s.io/v1alpha1.PatchMethod">
+PatchMethod
+</a>
+</em>
+</td>
+<td>
+<p>Method represents the method of the patch.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code>
+<em>
+encoding/json.RawMessage
+</em>
+</td>
+<td>
+<p>Template contains the patch data as a raw JSON message.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h2 id="config.kwok.x-k8s.io/v1alpha1">
 config.kwok.x-k8s.io/v1alpha1
 <a href="#config.kwok.x-k8s.io%2fv1alpha1"> #</a>
@@ -1561,6 +1673,139 @@ StageStatus
 References
 <a href="#references"> #</a>
 </h2>
+<h3 id="action.kwok.x-k8s.io/v1alpha1.GroupVersionResource">
+GroupVersionResource
+<a href="#action.kwok.x-k8s.io%2fv1alpha1.GroupVersionResource"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#action.kwok.x-k8s.io/v1alpha1.ResourcePatch">ResourcePatch</a>
+</p>
+<p>
+<p>GroupVersionResource is a struct that represents the group version resource.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>group</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Group represents the group of the resource.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version represents the version of the resource.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resource</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Resource represents the type of the resource.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="action.kwok.x-k8s.io/v1alpha1.PatchMethod">
+PatchMethod
+(<code>string</code> alias)
+<a href="#action.kwok.x-k8s.io%2fv1alpha1.PatchMethod"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#action.kwok.x-k8s.io/v1alpha1.ResourcePatch">ResourcePatch</a>
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&#34;create&#34;</code></td>
+<td><p>PatchMethodCreate means that the resource will be created by create.</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;delete&#34;</code></td>
+<td><p>PatchMethodDelete means that the resource will be deleted by delete.</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;patch&#34;</code></td>
+<td><p>PatchMethodPatch means that the resource will be patched by patch.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="action.kwok.x-k8s.io/v1alpha1.Target">
+Target
+<a href="#action.kwok.x-k8s.io%2fv1alpha1.Target"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#action.kwok.x-k8s.io/v1alpha1.ResourcePatch">ResourcePatch</a>
+</p>
+<p>
+<p>Target is a struct that represents the target of the ResourcePatch.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name represents the name of the resource to be patched.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Namespace represents the namespace of the resource to be patched.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.Component">
 Component
 <a href="#config.kwok.x-k8s.io%2fv1alpha1.Component"> #</a>

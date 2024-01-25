@@ -67,6 +67,9 @@ type Runtime interface {
 	// GetComponent return the component if it exists
 	GetComponent(ctx context.Context, name string) (internalversion.Component, error)
 
+	// ListComponents list the components of cluster
+	ListComponents(ctx context.Context) ([]internalversion.Component, error)
+
 	// Ready check the cluster is ready
 	Ready(ctx context.Context) (bool, error)
 

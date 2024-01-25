@@ -41,12 +41,14 @@ function gen() {
   rm -rf \
     "${ROOT_DIR}/pkg/apis/internalversion"/zz_generated.*.go \
     "${ROOT_DIR}/pkg/apis/v1alpha1"/zz_generated.*.go \
-    "${ROOT_DIR}/pkg/apis/config/v1alpha1"/zz_generated.*.go
+    "${ROOT_DIR}/pkg/apis/config/v1alpha1"/zz_generated.*.go \
+    "${ROOT_DIR}/pkg/apis/action/v1alpha1"/zz_generated.*.go
   echo "Generating deepcopy"
   deepcopy-gen \
     --input-dirs ./pkg/apis/internalversion/ \
     --input-dirs ./pkg/apis/v1alpha1/ \
     --input-dirs ./pkg/apis/config/v1alpha1/ \
+    --input-dirs ./pkg/apis/action/v1alpha1/ \
     --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
     --output-file-base zz_generated.deepcopy \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
@@ -54,6 +56,7 @@ function gen() {
   defaulter-gen \
     --input-dirs ./pkg/apis/v1alpha1/ \
     --input-dirs ./pkg/apis/config/v1alpha1/ \
+    --input-dirs ./pkg/apis/action/v1alpha1/ \
     --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
     --output-file-base zz_generated.defaults \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt

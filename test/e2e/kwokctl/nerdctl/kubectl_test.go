@@ -30,6 +30,12 @@ func TestHack(t *testing.T) {
 	testEnv.Test(t, f0)
 }
 
+func TestRecording(t *testing.T) {
+	f0 := e2e.CaseRecording(kwokctlPath, clusterName, pwd).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
 func TestPortForward(t *testing.T) {
 	f0 := e2e.CasePortForward(kwokctlPath, clusterName, envconf.RandomName("node", 16), namespace).
 		Feature()

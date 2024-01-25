@@ -23,6 +23,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/export"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/record"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/replay"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/restore"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/save"
 )
@@ -32,7 +34,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "snapshot [command]",
-		Short: "Snapshot [save, restore, export] one of cluster",
+		Short: "Snapshot [save, restore, record, replay, export] one of cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -40,5 +42,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.AddCommand(save.NewCommand(ctx))
 	cmd.AddCommand(restore.NewCommand(ctx))
 	cmd.AddCommand(export.NewCommand(ctx))
+	cmd.AddCommand(replay.NewCommand(ctx))
+	cmd.AddCommand(record.NewCommand(ctx))
 	return cmd
 }
