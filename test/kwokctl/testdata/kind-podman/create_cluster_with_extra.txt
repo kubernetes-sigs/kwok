@@ -200,7 +200,7 @@ spec:
     env:
     - name: TEST_KEY
       value: TEST_VALUE
-    image: docker.io/prom/prometheus:v2.44.0
+    image: docker.io/prom/prometheus:v2.49.1
     imagePullPolicy: Never
     name: prometheus
     ports:
@@ -341,19 +341,19 @@ scrape_configs:
   - targets:
     - 127.0.0.1:9090
 EOF
-podman pull docker.io/kindest/node:v1.28.0
+podman pull docker.io/kindest/node:v1.29.0
 podman pull localhost/kwok:test
-podman pull docker.io/prom/prometheus:v2.44.0
+podman pull docker.io/prom/prometheus:v2.49.1
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.28.0 --wait 29m
+KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.29.0 --wait 29m
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok
 podman save localhost/kwok:test -o <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/localhost/kwok/test.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus
-podman save docker.io/prom/prometheus:v2.44.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.44.0.tar
-KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.44.0.tar --name kwok-<CLUSTER_NAME>
-rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.44.0.tar
+podman save docker.io/prom/prometheus:v2.49.1 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.49.1.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.49.1.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.49.1.tar
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
