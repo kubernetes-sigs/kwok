@@ -33,10 +33,12 @@ type KwokV1alpha1Interface interface {
 	ClusterExecsGetter
 	ClusterLogsGetter
 	ClusterPortForwardsGetter
+	ClusterResourceUsagesGetter
 	ExecsGetter
 	LogsGetter
 	MetricsGetter
 	PortForwardsGetter
+	ResourceUsagesGetter
 	StagesGetter
 }
 
@@ -65,6 +67,10 @@ func (c *KwokV1alpha1Client) ClusterPortForwards() ClusterPortForwardInterface {
 	return newClusterPortForwards(c)
 }
 
+func (c *KwokV1alpha1Client) ClusterResourceUsages() ClusterResourceUsageInterface {
+	return newClusterResourceUsages(c)
+}
+
 func (c *KwokV1alpha1Client) Execs(namespace string) ExecInterface {
 	return newExecs(c, namespace)
 }
@@ -79,6 +85,10 @@ func (c *KwokV1alpha1Client) Metrics() MetricInterface {
 
 func (c *KwokV1alpha1Client) PortForwards(namespace string) PortForwardInterface {
 	return newPortForwards(c, namespace)
+}
+
+func (c *KwokV1alpha1Client) ResourceUsages(namespace string) ResourceUsageInterface {
+	return newResourceUsages(c, namespace)
 }
 
 func (c *KwokV1alpha1Client) Stages() StageInterface {

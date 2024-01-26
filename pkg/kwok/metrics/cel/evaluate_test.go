@@ -21,6 +21,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -60,5 +61,57 @@ func TestNodeEvaluation(t *testing.T) {
 
 	if actual != 17280 {
 		t.Errorf("expected %v, got %v", 17280, actual)
+	}
+}
+
+func TestResourceEvaluation(t *testing.T) {
+	n := &corev1.Node{
+		Status: corev1.NodeStatus{
+			Allocatable: map[corev1.ResourceName]resource.Quantity{
+				corev1.ResourceCPU: resource.MustParse("90m"),
+			},
+		},
+	}
+	p := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				"cpu_usage": "10m",
+			},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Resources: corev1.ResourceRequirements{
+						Requests: map[corev1.ResourceName]resource.Quantity{
+							corev1.ResourceCPU: resource.MustParse("10m"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	exp := `( Quantity("10m") + Quantity(pod.metadata.annotations["cpu_usage"]) + node.status.allocatable["cpu"] + pod.spec.containers[0].resources.requests["cpu"] ) * 1.5 * 10`
+
+	env, err := NewEnvironment(NodeEvaluatorConfig{})
+	if err != nil {
+		t.Fatalf("failed to instantiate node Evaluator: %v", err)
+	}
+
+	eval, err := env.Compile(exp)
+	if err != nil {
+		t.Fatalf("failed to compile expression: %v", err)
+	}
+
+	actual, err := eval.EvaluateFloat64(Data{
+		Node: n,
+		Pod:  p,
+	})
+	if err != nil {
+		t.Fatalf("evaluation failed: %v", err)
+	}
+
+	if actual != 18 {
+		t.Errorf("expected %v, got %v", 18, actual)
 	}
 }

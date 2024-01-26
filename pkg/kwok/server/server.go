@@ -22,6 +22,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
@@ -35,6 +36,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/metrics"
+	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
@@ -48,6 +50,8 @@ const (
 
 // Server is a server that can serve HTTP/HTTPS requests.
 type Server struct {
+	ctx context.Context
+
 	typedKwokClient versioned.Interface
 
 	enableCRDs []string
@@ -58,17 +62,24 @@ type Server struct {
 	streamCreationTimeout time.Duration
 	bufPool               *pools.Pool[[]byte]
 
-	clusterPortForwards resources.Getter[[]*internalversion.ClusterPortForward]
-	portForwards        resources.Getter[[]*internalversion.PortForward]
-	clusterExecs        resources.Getter[[]*internalversion.ClusterExec]
-	execs               resources.Getter[[]*internalversion.Exec]
-	clusterLogs         resources.Getter[[]*internalversion.ClusterLogs]
-	logs                resources.Getter[[]*internalversion.Logs]
-	clusterAttaches     resources.Getter[[]*internalversion.ClusterAttach]
-	attaches            resources.Getter[[]*internalversion.Attach]
-	metrics             resources.Getter[[]*internalversion.Metric]
+	clusterPortForwards   resources.Getter[[]*internalversion.ClusterPortForward]
+	portForwards          resources.Getter[[]*internalversion.PortForward]
+	clusterExecs          resources.Getter[[]*internalversion.ClusterExec]
+	execs                 resources.Getter[[]*internalversion.Exec]
+	clusterLogs           resources.Getter[[]*internalversion.ClusterLogs]
+	logs                  resources.Getter[[]*internalversion.Logs]
+	clusterAttaches       resources.Getter[[]*internalversion.ClusterAttach]
+	attaches              resources.Getter[[]*internalversion.Attach]
+	clusterResourceUsages resources.Getter[[]*internalversion.ClusterResourceUsage]
+	resourceUsages        resources.Getter[[]*internalversion.ResourceUsage]
+	metrics               resources.Getter[[]*internalversion.Metric]
 
 	metricsUpdateHandler maps.SyncMap[string, *metrics.UpdateHandler]
+
+	cumulatives    map[string]cumulative
+	cumulativesMut sync.Mutex
+
+	env *cel.Environment
 
 	dataSource      DataSource
 	nodeCacheGetter informer.Getter[*corev1.Node]
@@ -87,15 +98,17 @@ type Config struct {
 	TypedKwokClient versioned.Interface
 	EnableCRDs      []string
 
-	ClusterPortForwards []*internalversion.ClusterPortForward
-	PortForwards        []*internalversion.PortForward
-	ClusterExecs        []*internalversion.ClusterExec
-	Execs               []*internalversion.Exec
-	ClusterLogs         []*internalversion.ClusterLogs
-	Logs                []*internalversion.Logs
-	ClusterAttaches     []*internalversion.ClusterAttach
-	Attaches            []*internalversion.Attach
-	Metrics             []*internalversion.Metric
+	ClusterPortForwards   []*internalversion.ClusterPortForward
+	PortForwards          []*internalversion.PortForward
+	ClusterExecs          []*internalversion.ClusterExec
+	Execs                 []*internalversion.Exec
+	ClusterLogs           []*internalversion.ClusterLogs
+	Logs                  []*internalversion.Logs
+	ClusterAttaches       []*internalversion.ClusterAttach
+	Attaches              []*internalversion.Attach
+	ClusterResourceUsages []*internalversion.ClusterResourceUsage
+	ResourceUsages        []*internalversion.ResourceUsage
+	Metrics               []*internalversion.Metric
 
 	DataSource      DataSource
 	NodeCacheGetter informer.Getter[*corev1.Node]
@@ -113,15 +126,19 @@ func NewServer(conf Config) (*Server, error) {
 		idleTimeout:           1 * time.Hour,
 		streamCreationTimeout: remotecommandconsts.DefaultStreamCreationTimeout,
 
-		clusterPortForwards: resources.NewStaticGetter(conf.ClusterPortForwards),
-		portForwards:        resources.NewStaticGetter(conf.PortForwards),
-		clusterExecs:        resources.NewStaticGetter(conf.ClusterExecs),
-		execs:               resources.NewStaticGetter(conf.Execs),
-		clusterLogs:         resources.NewStaticGetter(conf.ClusterLogs),
-		logs:                resources.NewStaticGetter(conf.Logs),
-		clusterAttaches:     resources.NewStaticGetter(conf.ClusterAttaches),
-		attaches:            resources.NewStaticGetter(conf.Attaches),
-		metrics:             resources.NewStaticGetter(conf.Metrics),
+		clusterPortForwards:   resources.NewStaticGetter(conf.ClusterPortForwards),
+		portForwards:          resources.NewStaticGetter(conf.PortForwards),
+		clusterExecs:          resources.NewStaticGetter(conf.ClusterExecs),
+		execs:                 resources.NewStaticGetter(conf.Execs),
+		clusterLogs:           resources.NewStaticGetter(conf.ClusterLogs),
+		logs:                  resources.NewStaticGetter(conf.Logs),
+		clusterAttaches:       resources.NewStaticGetter(conf.ClusterAttaches),
+		attaches:              resources.NewStaticGetter(conf.Attaches),
+		clusterResourceUsages: resources.NewStaticGetter(conf.ClusterResourceUsages),
+		resourceUsages:        resources.NewStaticGetter(conf.ResourceUsages),
+		metrics:               resources.NewStaticGetter(conf.Metrics),
+
+		cumulatives: map[string]cumulative{},
 
 		dataSource:      conf.DataSource,
 		podCacheGetter:  conf.PodCacheGetter,
@@ -328,6 +345,52 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			)
 			starters = append(starters, attaches)
 			s.attaches = attaches
+		case v1alpha1.ClusterResourceUsageKind:
+			if len(s.clusterResourceUsages.Get()) != 0 {
+				return nil, fmt.Errorf("cluster resource usage already exists, cannot watch CRD")
+			}
+			clusterResourceUsages := resources.NewDynamicGetter[
+				[]*internalversion.ClusterResourceUsage,
+				*v1alpha1.ClusterResourceUsage,
+				*v1alpha1.ClusterResourceUsageList,
+			](
+				cli.KwokV1alpha1().ClusterResourceUsages(),
+				func(objs []*v1alpha1.ClusterResourceUsage) []*internalversion.ClusterResourceUsage {
+					return slices.FilterAndMap(objs, func(obj *v1alpha1.ClusterResourceUsage) (*internalversion.ClusterResourceUsage, bool) {
+						r, err := internalversion.ConvertToInternalClusterResourceUsage(obj)
+						if err != nil {
+							logger.Error("failed to convert to internal cluster resource usage", err, "obj", obj)
+							return nil, false
+						}
+						return r, true
+					})
+				},
+			)
+			starters = append(starters, clusterResourceUsages)
+			s.clusterResourceUsages = clusterResourceUsages
+		case v1alpha1.ResourceUsageKind:
+			if len(s.resourceUsages.Get()) != 0 {
+				return nil, fmt.Errorf("resource usage already exists, cannot watch CRD")
+			}
+			resourceUsages := resources.NewDynamicGetter[
+				[]*internalversion.ResourceUsage,
+				*v1alpha1.ResourceUsage,
+				*v1alpha1.ResourceUsageList,
+			](
+				cli.KwokV1alpha1().ResourceUsages(""),
+				func(objs []*v1alpha1.ResourceUsage) []*internalversion.ResourceUsage {
+					return slices.FilterAndMap(objs, func(obj *v1alpha1.ResourceUsage) (*internalversion.ResourceUsage, bool) {
+						r, err := internalversion.ConvertToInternalResourceUsage(obj)
+						if err != nil {
+							logger.Error("failed to convert to internal resource usage", err, "obj", obj)
+							return nil, false
+						}
+						return r, true
+					})
+				},
+			)
+			starters = append(starters, resourceUsages)
+			s.resourceUsages = resourceUsages
 		case v1alpha1.MetricKind:
 			if len(s.metrics.Get()) != 0 {
 				return nil, fmt.Errorf("metrics already exists, cannot watch CRD")
@@ -400,6 +463,8 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	s.ctx = ctx
 
 	errCh := make(chan error, 1)
 

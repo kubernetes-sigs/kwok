@@ -1429,7 +1429,10 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 
 	buf := bytes.NewBuffer(nil)
 	if conf.EnableMetricsServer {
-		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{})
+		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{
+			Port:         4443,
+			ExternalName: "localhost",
+		})
 		if err != nil {
 			return err
 		}

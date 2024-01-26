@@ -32,21 +32,42 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
-// InstallMetrics registers the metrics handler on the given mux.
-func (s *Server) InstallMetrics(ctx context.Context) error {
-	promHandler := promhttp.Handler()
-
-	selfMetric := func(req *restful.Request, resp *restful.Response) {
-		promHandler.ServeHTTP(resp.ResponseWriter, req.Request)
+func (s *Server) initCEL() error {
+	if s.env != nil {
+		return fmt.Errorf("CEL environment already initialized")
 	}
 
 	env, err := cel.NewEnvironment(cel.NodeEvaluatorConfig{
 		EnableEvaluatorCache:   true,
 		EnableResultCache:      true,
 		StartedContainersTotal: s.dataSource.StartedContainersTotal,
+
+		ContainerResourceUsage: s.containerResourceUsage,
+		PodResourceUsage:       s.podResourceUsage,
+		NodeResourceUsage:      s.nodeResourceUsage,
+
+		ContainerResourceCumulativeUsage: s.containerResourceCumulativeUsage,
+		PodResourceCumulativeUsage:       s.podResourceCumulativeUsage,
+		NodeResourceCumulativeUsage:      s.nodeResourceCumulativeUsage,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create CEL environment: %w", err)
+	}
+	s.env = env
+	return nil
+}
+
+// InstallMetrics registers the metrics handler on the given mux.
+func (s *Server) InstallMetrics(ctx context.Context) error {
+	err := s.initCEL()
+	if err != nil {
+		return err
+	}
+
+	promHandler := promhttp.Handler()
+
+	selfMetric := func(req *restful.Request, resp *restful.Response) {
+		promHandler.ServeHTTP(resp.ResponseWriter, req.Request)
 	}
 
 	const rootPath = "/metrics"
@@ -55,54 +76,56 @@ func (s *Server) InstallMetrics(ctx context.Context) error {
 	ws.Route(ws.GET("/").To(selfMetric))
 	s.restfulCont.Add(ws)
 
-	hasPaths := map[string]struct{}{}
-	logger := log.FromContext(ctx)
 	syncd, ok := s.metrics.(resources.Synced)
 	if ok {
-		go func() {
-			for range syncd.Sync() {
-				newHasPaths := map[string]struct{}{}
-				for _, m := range s.metrics.Get() {
-					if !strings.HasPrefix(m.Spec.Path, rootPath) {
-						logger.Warn("metric path does not start with "+rootPath, "path", m.Spec.Path)
-						continue
-					}
-
-					path := strings.TrimPrefix(m.Spec.Path, rootPath)
-					newHasPaths[path] = struct{}{}
-					if _, ok := hasPaths[path]; ok {
-						err := ws.RemoveRoute(http.MethodGet, path)
-						if err != nil {
-							logger.Error("Failed to remove route", err, "path", path)
-						}
-					}
-					ws.Route(ws.GET(path).
-						To(s.getMetrics(m, env)))
-				}
-
-				for path := range hasPaths {
-					if _, ok := newHasPaths[path]; !ok {
-						err := ws.RemoveRoute(http.MethodGet, path)
-						if err != nil {
-							logger.Error("Failed to remove route", err, "path", path)
-						}
-					}
-				}
-
-				hasPaths = newHasPaths
-			}
-		}()
+		go s.dynamicMetricsPath(ctx, ws, syncd, rootPath)
 	} else {
 		for _, m := range s.metrics.Get() {
 			if !strings.HasPrefix(m.Spec.Path, rootPath) {
 				return fmt.Errorf("metric path %q does not start with %q", m.Spec.Path, rootPath)
 			}
 			ws.Route(ws.GET(strings.TrimPrefix(m.Spec.Path, rootPath)).
-				To(s.getMetrics(m, env)))
+				To(s.getMetrics(m, s.env)))
 		}
 	}
 
 	return nil
+}
+
+func (s *Server) dynamicMetricsPath(ctx context.Context, ws *restful.WebService, syncd resources.Synced, rootPath string) {
+	logger := log.FromContext(ctx)
+	hasPaths := map[string]struct{}{}
+	for range syncd.Sync() {
+		newHasPaths := map[string]struct{}{}
+		for _, m := range s.metrics.Get() {
+			if !strings.HasPrefix(m.Spec.Path, rootPath) {
+				logger.Warn("metric path does not start with "+rootPath, "path", m.Spec.Path)
+				continue
+			}
+
+			path := strings.TrimPrefix(m.Spec.Path, rootPath)
+			newHasPaths[path] = struct{}{}
+			if _, ok := hasPaths[path]; ok {
+				err := ws.RemoveRoute(http.MethodGet, path)
+				if err != nil {
+					logger.Error("Failed to remove route", err, "path", path)
+				}
+			}
+			ws.Route(ws.GET(path).
+				To(s.getMetrics(m, s.env)))
+		}
+
+		for path := range hasPaths {
+			if _, ok := newHasPaths[path]; !ok {
+				err := ws.RemoveRoute(http.MethodGet, path)
+				if err != nil {
+					logger.Error("Failed to remove route", err, "path", path)
+				}
+			}
+		}
+
+		hasPaths = newHasPaths
+	}
 }
 
 func (s *Server) getMetrics(metric *internalversion.Metric, env *cel.Environment) func(req *restful.Request, resp *restful.Response) {

@@ -65,3 +65,9 @@ func TestSnapshot(t *testing.T) {
 		Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestResourceUsage(t *testing.T) {
+	f0 := e2e.CaseResourceUsage(kwokctlPath, clusterName).
+		Feature()
+	testEnv.Test(t, f0)
+}

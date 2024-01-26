@@ -158,6 +158,25 @@ rules:
 - apiGroups:
   - kwok.x-k8s.io
   resources:
+  - clusterresourceusages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterresourceusages/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
   - execs
   verbs:
   - create
@@ -228,6 +247,25 @@ rules:
   - kwok.x-k8s.io
   resources:
   - portforwards/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - resourceusages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - resourceusages/status
   verbs:
   - patch
   - update

@@ -44,6 +44,7 @@ var (
 	baseArgs    = []string{
 		"--kwok-controller-image=" + testImage,
 		"--runtime=" + runtimeEnv,
+		"--enable-metrics-server",
 	}
 )
 
@@ -64,6 +65,8 @@ func TestMain(m *testing.M) {
 			"--config="+path.Join(rootDir, "test/e2e/logs.yaml"),
 			"--config="+path.Join(rootDir, "test/e2e/attach.yaml"),
 			"--config="+path.Join(rootDir, "test/e2e/exec.yaml"),
+			"--config="+path.Join(rootDir, "kustomize/metrics/usage/usage-from-annotation.yaml"),
+			"--config="+path.Join(rootDir, "kustomize/metrics/resource/metrics-resource.yaml"),
 		)...),
 		helper.CreateNamespace(namespace),
 	)
