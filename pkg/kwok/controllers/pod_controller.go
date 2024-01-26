@@ -21,9 +21,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -41,6 +42,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 var (
@@ -65,7 +67,8 @@ type PodController struct {
 	preprocessChan                        chan *corev1.Pod
 	playStageParallelism                  uint
 	lifecycle                             resources.Getter[Lifecycle]
-	delayQueue                            queue.DelayingQueue[resourceStageJob[*corev1.Pod]]
+	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*corev1.Pod]]
+	backoff                               wait.Backoff
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Pod]]
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
@@ -126,7 +129,8 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		nodeIP:                                conf.NodeIP,
 		defaultCIDR:                           conf.CIDR,
 		nodeGetFunc:                           conf.NodeGetFunc,
-		delayQueue:                            queue.NewDelayingQueue[resourceStageJob[*corev1.Pod]](conf.Clock),
+		delayQueue:                            queue.NewWeightDelayingQueue[resourceStageJob[*corev1.Pod]](conf.Clock),
+		backoff:                               defaultBackoff(),
 		lifecycle:                             conf.Lifecycle,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *corev1.Pod),
@@ -155,7 +159,7 @@ func (c *PodController) Start(ctx context.Context, events <-chan informer.Event[
 	return nil
 }
 
-// finalizersModify modify the finalizers of the pod
+// finalizersModify modifies the finalizers of a pod
 func (c *PodController) finalizersModify(ctx context.Context, pod *corev1.Pod, finalizers *internalversion.StageFinalizers) (*corev1.Pod, error) {
 	ops := finalizersModify(pod.Finalizers, finalizers)
 	if len(ops) == 0 {
@@ -174,12 +178,6 @@ func (c *PodController) finalizersModify(ctx context.Context, pod *corev1.Pod, f
 
 	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Patch pod finalizers",
-				"err", err,
-			)
-			return nil, nil
-		}
 		return nil, err
 	}
 	logger.Info("Patch pod finalizers")
@@ -196,12 +194,6 @@ func (c *PodController) deleteResource(ctx context.Context, pod *corev1.Pod) err
 
 	err := c.typedClient.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Delete pod",
-				"err", err,
-			)
-			return nil
-		}
 		return err
 	}
 
@@ -285,31 +277,52 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 	}
 
 	item := resourceStageJob[*corev1.Pod]{
-		Resource: pod,
-		Stage:    stage,
-		Key:      key,
+		Resource:   pod,
+		Stage:      stage,
+		Key:        key,
+		RetryCount: new(uint64),
 	}
-
-	c.delayQueue.AddAfter(item, delay)
-	c.delayQueueMapping.Store(key, item)
-
+	// we add a normal(fresh) stage job with weight 0,
+	// resulting in that it will always be processed with high priority compared to those retry ones
+	c.addStageJob(item, delay, 0)
 	return nil
 }
 
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *PodController) playStageWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
+
 	for ctx.Err() == nil {
 		pod, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
 		c.delayQueueMapping.Delete(pod.Key)
-		c.playStage(ctx, pod.Resource, pod.Stage)
+		needRetry, err := c.playStage(ctx, pod.Resource, pod.Stage)
+		if err != nil {
+			logger.Error("failed to apply stage", err,
+				"pod", pod.Key,
+				"stage", pod.Stage.Name(),
+			)
+		}
+		if needRetry {
+			retryCount := atomic.AddUint64(pod.RetryCount, 1) - 1
+			logger.Info("retrying for failed job",
+				"pod", pod.Key,
+				"stage", pod.Stage.Name(),
+				"retry", retryCount,
+			)
+			// for failed jobs, we re-push them into the queue with a lower weight
+			// and a backoff period to avoid blocking normal tasks
+			retryDelay := backoffDelayByStep(retryCount, c.backoff)
+			c.addStageJob(pod, retryDelay, 1)
+		}
 	}
 }
 
-// playStage plays the stage
-func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *LifecycleStage) {
+// playStage plays the stage.
+// The returned boolean indicates whether the applying action needs to be retried.
+func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *LifecycleStage) (bool, error) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
 	logger = logger.With(
@@ -336,22 +349,21 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 	if next.Finalizers != nil {
 		result, err = c.finalizersModify(ctx, pod, next.Finalizers)
 		if err != nil {
-			logger.Error("Failed to finalizers", err)
-			return
+			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of pod %s: %w", pod.Name, err)
 		}
 	}
 
 	if next.Delete {
 		err = c.deleteResource(ctx, pod)
 		if err != nil {
-			logger.Error("Failed to delete pod", err)
-			return
+			if err != nil {
+				return shouldRetry(err), fmt.Errorf("failed to delete pod %s: %w", pod.Name, err)
+			}
 		}
 	} else if next.StatusTemplate != "" {
-		patch, err = c.configureResource(pod, next.StatusTemplate)
+		patch, err = c.computeStatusPatch(pod, next.StatusTemplate)
 		if err != nil {
-			logger.Error("Failed to configure pod", err)
-			return
+			return shouldRetry(err), fmt.Errorf("failed to compute the status patch of pod %s: %w", pod.Name, err)
 		}
 		if patch == nil {
 			logger.Debug("Skip pod",
@@ -360,8 +372,7 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 		} else {
 			result, err = c.patchResource(ctx, pod, patch)
 			if err != nil {
-				logger.Error("Failed to patch pod", err)
-				return
+				return shouldRetry(err), fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
 			}
 		}
 	}
@@ -371,6 +382,7 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 			"reason", "immediateNextStage is true")
 		c.preprocessChan <- result
 	}
+	return false, nil
 }
 
 func (c *PodController) readOnly(nodeName string) bool {
@@ -390,12 +402,6 @@ func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patc
 
 	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Patch pod",
-				"err", err,
-			)
-			return nil, nil
-		}
 		return nil, err
 	}
 	logger.Info("Patch pod")
@@ -547,7 +553,7 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 	}
 }
 
-func (c *PodController) configureResource(pod *corev1.Pod, template string) ([]byte, error) {
+func (c *PodController) computeStatusPatch(pod *corev1.Pod, template string) ([]byte, error) {
 	if !c.enableCNI {
 		// Mark the pod IP that existed before the kubelet was started
 		if _, has := c.nodeGetFunc(pod.Spec.NodeName); has {
@@ -712,4 +718,13 @@ func (c *PodController) List(nodeName string) ([]log.ObjectRef, bool) {
 		return nil, false
 	}
 	return m.Keys(), true
+}
+
+// addStageJob adds a stage to be applied into the underlying weight delay queue and the associated helper map
+func (c *PodController) addStageJob(job resourceStageJob[*corev1.Pod], delay time.Duration, weight int) {
+	old, loaded := c.delayQueueMapping.Swap(job.Key, job)
+	if loaded {
+		c.delayQueue.Cancel(old)
+	}
+	c.delayQueue.AddWeightAfter(job, weight, delay)
 }

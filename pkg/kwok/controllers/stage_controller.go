@@ -21,9 +21,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -44,6 +45,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
+	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 // StageController is a fake resources implementation that can be used to test
@@ -59,7 +61,8 @@ type StageController struct {
 	preprocessChan                        chan *unstructured.Unstructured
 	playStageParallelism                  uint
 	lifecycle                             resources.Getter[Lifecycle]
-	delayQueue                            queue.DelayingQueue[resourceStageJob[*unstructured.Unstructured]]
+	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*unstructured.Unstructured]]
+	backoff                               wait.Backoff
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*unstructured.Unstructured]]
 	recorder                              record.EventRecorder
 }
@@ -107,7 +110,8 @@ func NewStageController(conf StageControllerConfig) (*StageController, error) {
 		gvr:                                   conf.GVR,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
-		delayQueue:                            queue.NewDelayingQueue[resourceStageJob[*unstructured.Unstructured]](conf.Clock),
+		delayQueue:                            queue.NewWeightDelayingQueue[resourceStageJob[*unstructured.Unstructured]](conf.Clock),
+		backoff:                               defaultBackoff(),
 		lifecycle:                             conf.Lifecycle,
 		playStageParallelism:                  conf.PlayStageParallelism,
 		preprocessChan:                        make(chan *unstructured.Unstructured),
@@ -129,7 +133,7 @@ func (c *StageController) Start(ctx context.Context, events <-chan informer.Even
 	return nil
 }
 
-// finalizersModify modify the finalizers of the resource
+// finalizersModify modifies the finalizers of a resource
 func (c *StageController) finalizersModify(ctx context.Context, resource *unstructured.Unstructured, finalizers *internalversion.StageFinalizers) (*unstructured.Unstructured, error) {
 	ops := finalizersModify(resource.GetFinalizers(), finalizers)
 	if len(ops) == 0 {
@@ -152,12 +156,6 @@ func (c *StageController) finalizersModify(ctx context.Context, resource *unstru
 	}
 	result, err := cli.Patch(ctx, resource.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Patch resource finalizers",
-				"err", err,
-			)
-			return nil, nil
-		}
 		return nil, err
 	}
 	logger.Info("Patch resource finalizers")
@@ -178,12 +176,6 @@ func (c *StageController) deleteResource(ctx context.Context, resource *unstruct
 	}
 	err := cli.Delete(ctx, resource.GetName(), deleteOpt)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Delete resource",
-				"err", err,
-			)
-			return nil
-		}
 		return err
 	}
 
@@ -202,7 +194,7 @@ func (c *StageController) preprocessWorker(ctx context.Context) {
 		case resource := <-c.preprocessChan:
 			err := c.preprocess(ctx, resource)
 			if err != nil {
-				logger.Error("Failed to preprocess node", err,
+				logger.Error("Failed to preprocess resource", err,
 					"resource", log.KObj(resource),
 				)
 			}
@@ -265,31 +257,53 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 	}
 
 	item := resourceStageJob[*unstructured.Unstructured]{
-		Resource: resource,
-		Stage:    stage,
-		Key:      key,
+		Resource:   resource,
+		Stage:      stage,
+		Key:        key,
+		RetryCount: new(uint64),
 	}
 
-	c.delayQueue.AddAfter(item, delay)
-	c.delayQueueMapping.Store(key, item)
-
+	// we add a normal(fresh) stage job with weight 0,
+	// resulting in that it will always be processed with high priority compared to those retry ones
+	c.addStageJob(item, delay, 0)
 	return nil
 }
 
 // playStageWorker receives the resource from the playStageChan and play the stage
 func (c *StageController) playStageWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
+
 	for ctx.Err() == nil {
 		resource, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
 		c.delayQueueMapping.Delete(resource.Key)
-		c.playStage(ctx, resource.Resource, resource.Stage)
+		needRetry, err := c.playStage(ctx, resource.Resource, resource.Stage)
+		if err != nil {
+			logger.Error("failed to apply stage", err,
+				"resource", resource.Key,
+				"stage", resource.Stage.Name(),
+			)
+		}
+		if needRetry {
+			retryCount := atomic.AddUint64(resource.RetryCount, 1) - 1
+			logger.Info("retrying for failed job",
+				"resource", resource.Key,
+				"stage", resource.Stage.Name(),
+				"retry", retryCount,
+			)
+			// for failed jobs, we re-push them into the queue with a lower weight
+			// and a backoff period to avoid blocking normal tasks
+			retryDelay := backoffDelayByStep(retryCount, c.backoff)
+			c.addStageJob(resource, retryDelay, 1)
+		}
 	}
 }
 
-// playStage plays the stage
-func (c *StageController) playStage(ctx context.Context, resource *unstructured.Unstructured, stage *LifecycleStage) {
+// playStage plays the stage.
+// The returned boolean indicates whether the applying action needs to be retried.
+func (c *StageController) playStage(ctx context.Context, resource *unstructured.Unstructured, stage *LifecycleStage) (bool, error) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
 	logger = logger.With(
@@ -315,32 +329,28 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 	if next.Finalizers != nil {
 		result, err = c.finalizersModify(ctx, resource, next.Finalizers)
 		if err != nil {
-			logger.Error("Failed to finalizers", err)
-			return
+			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of resource %s: %w", resource.GetName(), err)
 		}
 	}
 
 	if next.Delete {
 		err = c.deleteResource(ctx, resource)
 		if err != nil {
-			logger.Error("Failed to delete resource", err)
-			return
+			return shouldRetry(err), fmt.Errorf("failed to delete resource %s: %w", resource.GetName(), err)
 		}
 	} else if next.StatusTemplate != "" {
-		patch, err = c.configureResource(resource, next.StatusTemplate)
+		patch, err = c.computeStatusPatch(resource, next.StatusTemplate)
 		if err != nil {
-			logger.Error("Failed to configure resource", err)
-			return
+			return shouldRetry(err), fmt.Errorf("failed to compute the status patch of resource %s: %w", resource.GetName(), err)
 		}
 		if patch == nil {
 			logger.Debug("Skip resource",
 				"reason", "do not need to modify",
 			)
 		} else {
-			result, err = c.patchResource(ctx, resource, patch, stage.next)
+			result, err = c.patchResource(ctx, resource, patch, next)
 			if err != nil {
-				logger.Error("Failed to patch resource", err)
-				return
+				return shouldRetry(err), fmt.Errorf("failed to patch resource %s: %w", resource.GetName(), err)
 			}
 		}
 	}
@@ -350,6 +360,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 			"reason", "immediateNextStage is true")
 		c.preprocessChan <- result
 	}
+	return false, nil
 }
 
 // patchResource patches the resource
@@ -385,12 +396,6 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 	}
 	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patch, metav1.PatchOptions{}, subresource...)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Warn("Patch resource",
-				"err", err,
-			)
-			return nil, nil
-		}
 		return nil, err
 	}
 	logger.Info("Patch resource")
@@ -454,7 +459,7 @@ loop:
 	logger.Info("Stop watch resources")
 }
 
-func (c *StageController) configureResource(resource *unstructured.Unstructured, template string) ([]byte, error) {
+func (c *StageController) computeStatusPatch(resource *unstructured.Unstructured, template string) ([]byte, error) {
 	patch, err := c.computePatch(resource, template)
 	if err != nil {
 		return nil, err
@@ -499,4 +504,13 @@ func (c *StageController) computePatch(resource *unstructured.Unstructured, tpl 
 		}
 	}
 	return patchData, nil
+}
+
+// addStageJob adds a stage to be applied into the underlying weight delay queue and the associated helper map
+func (c *StageController) addStageJob(job resourceStageJob[*unstructured.Unstructured], delay time.Duration, weight int) {
+	old, loaded := c.delayQueueMapping.Swap(job.Key, job)
+	if loaded {
+		c.delayQueue.Cancel(old)
+	}
+	c.delayQueue.AddWeightAfter(job, weight, delay)
 }
