@@ -119,7 +119,7 @@ type resourceStageJob[T any] struct {
 	Key      string
 	// RetryCount is used for tracking the retry times of a job.
 	// Must be initialized to 0.
-	RetryCount *int
+	RetryCount *uint64
 }
 
 // defaultBackoff provides a backoff setting for kwok controllers to apply failed jobs
@@ -128,10 +128,7 @@ func defaultBackoff() wait.Backoff {
 }
 
 // backoffDelayByStep calculates the backoff delay period based on steps
-func backoffDelayByStep(steps int, c wait.Backoff) time.Duration {
-	if steps <= 0 {
-		return 0
-	}
+func backoffDelayByStep(steps uint64, c wait.Backoff) time.Duration {
 	delay := math.Min(
 		float64(c.Duration)*math.Pow(c.Factor, float64(steps)),
 		float64(c.Cap))

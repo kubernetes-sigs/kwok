@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -259,7 +260,7 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 		Resource:   resource,
 		Stage:      stage,
 		Key:        key,
-		RetryCount: new(int),
+		RetryCount: new(uint64),
 	}
 
 	// we add a normal(fresh) stage job with weight 0,
@@ -286,15 +287,15 @@ func (c *StageController) playStageWorker(ctx context.Context) {
 			)
 		}
 		if needRetry {
-			*resource.RetryCount++
+			retryCount := atomic.AddUint64(resource.RetryCount, 1) - 1
 			logger.Info("retrying for failed job",
 				"resource", resource.Key,
 				"stage", resource.Stage.Name(),
-				"retry", *resource.RetryCount,
+				"retry", retryCount,
 			)
 			// for failed jobs, we re-push them into the queue with a lower weight
 			// and a backoff period to avoid blocking normal tasks
-			retryDelay := backoffDelayByStep(*resource.RetryCount, c.backoff)
+			retryDelay := backoffDelayByStep(retryCount, c.backoff)
 			c.addStageJob(resource, retryDelay, 1)
 		}
 	}

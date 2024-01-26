@@ -384,7 +384,7 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		Resource:   node,
 		Stage:      stage,
 		Key:        key,
-		RetryCount: new(int),
+		RetryCount: new(uint64),
 	}
 	// we add a normal(fresh) stage job with weight 0,
 	// resulting in that it will always be processed with high priority compared to those retry ones
@@ -410,15 +410,15 @@ func (c *NodeController) playStageWorker(ctx context.Context) {
 			)
 		}
 		if needRetry {
-			*node.RetryCount++
+			retryCount := atomic.AddUint64(node.RetryCount, 1) - 1
 			logger.Info("retrying for failed job",
 				"node", node.Key,
 				"stage", node.Stage.Name(),
-				"retry", *node.RetryCount,
+				"retry", retryCount,
 			)
 			// for failed jobs, we re-push them into the queue with a lower weight
 			// and a backoff period to avoid blocking normal tasks
-			retryDelay := backoffDelayByStep(*node.RetryCount, c.backoff)
+			retryDelay := backoffDelayByStep(retryCount, c.backoff)
 			c.addStageJob(node, retryDelay, 1)
 		}
 	}
@@ -467,8 +467,8 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 			return shouldRetry(err), fmt.Errorf("failed to compute the status patch of node %s: %w", node.Name, err)
 		}
 		if patch == nil {
-			logger.Debug("Skip modify status",
-				"reason", "do not need to modify status",
+			logger.Debug("Skip node",
+				"reason", "do not need to modify",
 			)
 		} else {
 			result, err = c.patchResource(ctx, node, patch)

@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -279,7 +280,7 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		Resource:   pod,
 		Stage:      stage,
 		Key:        key,
-		RetryCount: new(int),
+		RetryCount: new(uint64),
 	}
 	// we add a normal(fresh) stage job with weight 0,
 	// resulting in that it will always be processed with high priority compared to those retry ones
@@ -305,15 +306,15 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 			)
 		}
 		if needRetry {
-			*pod.RetryCount++
+			retryCount := atomic.AddUint64(pod.RetryCount, 1) - 1
 			logger.Info("retrying for failed job",
 				"pod", pod.Key,
 				"stage", pod.Stage.Name(),
-				"retry", *pod.RetryCount,
+				"retry", retryCount,
 			)
 			// for failed jobs, we re-push them into the queue with a lower weight
 			// and a backoff period to avoid blocking normal tasks
-			retryDelay := backoffDelayByStep(*pod.RetryCount, c.backoff)
+			retryDelay := backoffDelayByStep(retryCount, c.backoff)
 			c.addStageJob(pod, retryDelay, 1)
 		}
 	}
