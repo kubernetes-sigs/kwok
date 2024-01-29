@@ -34,6 +34,11 @@ func PrintMessage(format string, a ...any) {
 	_, _ = fmt.Fprintf(stdout, format+"\n", a...)
 }
 
+// PrintReader prints the content of the reader to stdout.
+func PrintReader(r io.Reader) {
+	_, _ = io.Copy(stdout, r)
+}
+
 type dryRunWriter struct {
 	name string
 	w    io.Writer

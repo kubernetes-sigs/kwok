@@ -164,6 +164,10 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		deleteCount++
 
 		if len(objs) == 0 {
+			if conf.DryRun {
+				deleteDryrun(gvr, obj.GetName(), namespace)
+				return nil
+			}
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
 				logger.Error("Delete resource", err)
@@ -174,6 +178,10 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		// New object is newer than the end object, delete the new object.
 		endObj := objs[len(objs)-1]
 		if endObj.Less(obj.GetCreationTimestamp(), obj.GetName()) {
+			if conf.DryRun {
+				deleteDryrun(gvr, obj.GetName(), namespace)
+				return nil
+			}
 			// Delete the last object.
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
@@ -182,10 +190,14 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 			return nil
 		}
 
-		// Delete the end object.
-		err = ri.Delete(ctx, endObj.Name, metav1.DeleteOptions{})
-		if err != nil {
-			logger.Error("Delete resource", err)
+		if conf.DryRun {
+			deleteDryrun(gvr, endObj.Name, namespace)
+		} else {
+			// Delete the end object.
+			err = ri.Delete(ctx, endObj.Name, metav1.DeleteOptions{})
+			if err != nil {
+				logger.Error("Delete resource", err)
+			}
 		}
 
 		// Find the index of the new object to be inserted.
@@ -197,6 +209,10 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		})
 
 		if index == len(objs) {
+			if conf.DryRun {
+				deleteDryrun(gvr, obj.GetName(), namespace)
+				return nil
+			}
 			// Delete the last object.
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
@@ -283,21 +299,35 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 
 	ctx = log.NewContext(ctx, logger)
 
-	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
-		Clientset: clientset,
-		NoFilers:  true,
-	})
-	if err != nil {
-		return err
-	}
+	if conf.DryRun {
+		dryrun.PrintMessage("kubectl apply -f - <<EOF")
+		dryrun.PrintReader(gen)
+		dryrun.PrintMessage("\nEOF")
+	} else {
+		loader, err := snapshot.NewLoader(snapshot.LoadConfig{
+			Clientset: clientset,
+			NoFilers:  true,
+		})
+		if err != nil {
+			return err
+		}
 
-	decoder := yaml.NewDecoder(gen)
-	err = loader.Load(ctx, decoder)
-	if err != nil {
-		return err
+		decoder := yaml.NewDecoder(gen)
+		err = loader.Load(ctx, decoder)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func deleteDryrun(gvr schema.GroupVersionResource, name, namespace string) {
+	if namespace != "" {
+		dryrun.PrintMessage("kubectl delete %s -n %s %s", gvr, namespace, name)
+	} else {
+		dryrun.PrintMessage("kubectl delete %s %s", gvr, name)
+	}
 }
 
 // NewParameters parses the parameters.
