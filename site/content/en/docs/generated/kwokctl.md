@@ -28,7 +28,7 @@ kwokctl [command] [flags]
 * [kwokctl kubectl](kwokctl_kubectl.md)	 - kubectl in cluster
 * [kwokctl logs](kwokctl_logs.md)	 - Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, metrics-server, prometheus, jaeger]
 * [kwokctl scale](kwokctl_scale.md)	 - Scale a resource in cluster
-* [kwokctl snapshot](kwokctl_snapshot.md)	 - Snapshot [save, restore, export] one of cluster
+* [kwokctl snapshot](kwokctl_snapshot.md)	 - Snapshot [save, restore, record, replay, export] one of cluster
 * [kwokctl start](kwokctl_start.md)	 - Start one of [cluster]
 * [kwokctl stop](kwokctl_stop.md)	 - Stop one of [cluster]
 

@@ -242,9 +242,12 @@ func WaitForAllNodesReady() env.Func {
 						notReady = append(notReady, node.Name)
 					}
 				}
-				logger.Error("not ready nodes", fmt.Errorf("%v", notReady))
+				if len(notReady) != 0 {
+					logger.Error("not ready nodes", fmt.Errorf("%v", notReady))
+					return false, nil
+				}
 
-				return len(notReady) == 0, nil
+				return true, nil
 			},
 			wait.WithContext(ctx),
 			wait.WithTimeout(20*time.Minute),
@@ -292,9 +295,12 @@ func WaitForAllPodsReady() env.Func {
 						notReady = append(notReady, log.KObj(pod).String())
 					}
 				}
-				logger.Error("not ready pods", fmt.Errorf("%v", notReady))
+				if len(notReady) != 0 {
+					logger.Error("not ready pods", fmt.Errorf("%v", notReady))
+					return false, nil
+				}
 
-				return len(notReady) == 0, nil
+				return true, nil
 			},
 			wait.WithContext(ctx),
 			wait.WithTimeout(20*time.Minute),

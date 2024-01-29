@@ -22,6 +22,7 @@ require (
 	github.com/wzshiming/cmux v0.3.3
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.5.0
+	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
 	go.etcd.io/etcd/client/v3 v3.5.10
 	golang.org/x/sync v0.5.0
 	golang.org/x/sys v0.15.0

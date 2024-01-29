@@ -180,8 +180,10 @@ func Exec(ctx context.Context, name string, args ...string) error {
 	return err
 }
 
+type Cmd = exec.Cmd
+
 // Command executes the given command and return the command.
-func Command(ctx context.Context, name string, args ...string) (cmd *exec.Cmd, err error) {
+func Command(ctx context.Context, name string, args ...string) (cmd *Cmd, err error) {
 	opt := GetExecOptions(ctx)
 	if opt.Fork {
 		subCtx := context.Background()

@@ -30,5 +30,5 @@ kwokctl snapshot export [flags]
 
 ### SEE ALSO
 
-* [kwokctl snapshot](kwokctl_snapshot.md)	 - Snapshot [save, restore, export] one of cluster
+* [kwokctl snapshot](kwokctl_snapshot.md)	 - Snapshot [save, restore, record, replay, export] one of cluster
 

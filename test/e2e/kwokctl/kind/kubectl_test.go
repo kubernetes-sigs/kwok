@@ -17,6 +17,7 @@ limitations under the License.
 package kind_test
 
 import (
+	"runtime"
 	"testing"
 
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
@@ -26,6 +27,15 @@ import (
 
 func TestHack(t *testing.T) {
 	f0 := e2e.CaseHack(kwokctlPath, clusterName, envconf.RandomName("node", 16)).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestRecording(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Skip test for non-linux platform")
+	}
+	f0 := e2e.CaseRecording(kwokctlPath, clusterName, pwd).
 		Feature()
 	testEnv.Test(t, f0)
 }

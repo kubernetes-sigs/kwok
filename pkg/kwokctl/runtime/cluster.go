@@ -397,6 +397,16 @@ func (c *Cluster) GetComponent(ctx context.Context, name string) (internalversio
 	return component, nil
 }
 
+// ListComponents returns the list of components
+func (c *Cluster) ListComponents(ctx context.Context) ([]internalversion.Component, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return config.Components, nil
+}
+
 // Kubectl runs kubectl.
 func (c *Cluster) Kubectl(ctx context.Context, args ...string) error {
 	kubectlPath, err := c.kubectlPath(ctx)
