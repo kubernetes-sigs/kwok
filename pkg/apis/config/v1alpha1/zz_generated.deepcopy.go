@@ -329,6 +329,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = new(bool)
 		**out = **in
 	}
+	if in.HeartbeatFactor != nil {
+		in, out := &in.HeartbeatFactor, &out.HeartbeatFactor
+		*out = new(float64)
+		**out = **in
+	}
 	if in.KubeApiserverCertSANs != nil {
 		in, out := &in.KubeApiserverCertSANs, &out.KubeApiserverCertSANs
 		*out = make([]string, len(*in))

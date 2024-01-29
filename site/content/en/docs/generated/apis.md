@@ -3634,6 +3634,17 @@ uint
 </tr>
 <tr>
 <td>
+<code>heartbeatFactor</code>
+<em>
+float64
+</em>
+</td>
+<td>
+<p>HeartbeatFactor is the scale factor for all about heartbeat.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>bindAddress</code>
 <em>
 string

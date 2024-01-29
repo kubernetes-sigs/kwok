@@ -278,6 +278,9 @@ type KwokctlConfigurationOptions struct {
 	// NodeLeaseDurationSeconds is the duration the Kubelet will set on its corresponding Lease.
 	NodeLeaseDurationSeconds uint
 
+	// HeartbeatFactor is the scale factor for all about heartbeat.
+	HeartbeatFactor float64
+
 	// BindAddress is the address to bind to.
 	BindAddress string
 
