@@ -248,7 +248,7 @@ func (c *Controller) init(ctx context.Context) (err error) {
 		FieldSelector: c.managePodsWithFieldSelector,
 	}
 	if c.conf.EnablePodCache {
-		c.podCacheGetter, err = c.podsInformer.WatchWithCache(ctx, podWatchOption, c.podsChan)
+		c.podCacheGetter, err = c.podsInformer.WatchWithLazyCache(ctx, podWatchOption, c.podsChan)
 	} else {
 		err = c.podsInformer.Watch(ctx, podWatchOption, c.podsChan)
 	}
