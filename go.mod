@@ -24,7 +24,7 @@ require (
 	github.com/wzshiming/easycel v0.5.0
 	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
 	go.etcd.io/etcd/client/v3 v3.5.10
-	golang.org/x/sync v0.5.0
+	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.15.0
 	golang.org/x/term v0.15.0
 	k8s.io/api v0.29.0
