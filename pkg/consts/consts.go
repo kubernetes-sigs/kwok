@@ -34,7 +34,7 @@ var (
 
 	// KubeVersion is the version of Kubernetes.
 	// It will be overwritten during the `make build` process.
-	KubeVersion      = "1.28.0"
+	KubeVersion      = "1.29.0"
 	KubeBinaryPrefix = "https://dl.k8s.io/release"
 	KubeImagePrefix  = "registry.k8s.io"
 
@@ -53,11 +53,11 @@ var (
 	DashboardBinaryPrefix = ""
 	DashboardImagePrefix  = "docker.io/kubernetesui"
 
-	PrometheusVersion      = "2.44.0"
+	PrometheusVersion      = "2.49.1"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
 
-	JaegerVersion      = "1.45.0"
+	JaegerVersion      = "1.53.0"
 	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
 	JaegerImagePrefix  = "docker.io/jaegertracing"
 

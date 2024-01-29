@@ -59,7 +59,7 @@ jobs:
         if: ${{ matrix.builder == 'nerdctl' }}
         shell: bash
         run: |
-          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.2/nerdctl-full-1.7.2-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
           sudo systemctl daemon-reload
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
@@ -162,7 +162,7 @@ jobs:
           # so we need to verify that it works on releases.
           - os: ubuntu-latest
             kwokctl-runtime: nerdctl
-            nerdctl-version: 1.7.0
+            nerdctl-version: 1.7.2
           - os: ubuntu-latest
             kwokctl-runtime: nerdctl
             nerdctl-version: 1.2.1
@@ -188,7 +188,7 @@ jobs:
         if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os != 'ubuntu-latest' }}
         shell: bash
         env:
-          KUBE_VERSION: v1.28.0
+          KUBE_VERSION: v1.29.0
         run: |
           mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir"
           cat << EOF >"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml"
