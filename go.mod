@@ -11,7 +11,7 @@ require (
 	github.com/creack/pty v1.1.21
 	github.com/emicklei/go-restful/v3 v3.11.2
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/google/cel-go v0.17.7
+	github.com/google/cel-go v0.18.2
 	github.com/google/go-cmp v0.6.0
 	github.com/itchyny/gojq v0.12.14
 	github.com/nxadm/tail v1.4.11
@@ -21,7 +21,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/wzshiming/cmux v0.3.3
 	github.com/wzshiming/ctc v1.2.3
-	github.com/wzshiming/easycel v0.5.0
+	github.com/wzshiming/easycel v0.6.0
 	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
 	go.etcd.io/etcd/client/v3 v3.5.11
 	golang.org/x/sync v0.6.0
@@ -48,7 +48,7 @@ require (
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
-	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230512164433-5d1fd1a340c9 // indirect
+	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containernetworking/cni v1.1.2 // indirect
