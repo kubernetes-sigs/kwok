@@ -248,6 +248,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		EnableCNI:                             flags.Options.EnableCNI,
 		EnableMetrics:                         enableMetrics,
 		EnablePodCache:                        enableMetrics,
+		EnableNodeCache:                       enableMetrics,
 		ManageSingleNode:                      flags.Options.ManageSingleNode,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,

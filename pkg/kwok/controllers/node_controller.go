@@ -92,7 +92,7 @@ type NodeController struct {
 	nodePort                              int
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
-	onNodeManagedFunc                     func(nodeName string)
+	onNodeManagedFunc                     func(nodeName string, node *corev1.Node)
 	onNodeUnmanagedFunc                   func(nodeName string)
 	nodesSets                             maps.SyncMap[string, *NodeInfo]
 	renderer                              gotpl.Renderer
@@ -111,7 +111,7 @@ type NodeController struct {
 type NodeControllerConfig struct {
 	Clock                                 clock.Clock
 	TypedClient                           kubernetes.Interface
-	OnNodeManagedFunc                     func(nodeName string)
+	OnNodeManagedFunc                     func(nodeName string, node *corev1.Node)
 	OnNodeUnmanagedFunc                   func(nodeName string)
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
@@ -129,6 +129,9 @@ type NodeControllerConfig struct {
 // NodeInfo is the collection of necessary node information
 type NodeInfo struct {
 	StartedContainer atomic.Int64
+	OwnerReferences  []metav1.OwnerReference
+	PodCIDR          string
+	HostIPs          []net.IP
 }
 
 // NewNodeController creates a new fake nodes controller
@@ -240,7 +243,7 @@ loop:
 					}
 
 					if c.onNodeManagedFunc != nil && event.Type != informer.Modified {
-						c.onNodeManagedFunc(node.Name)
+						c.onNodeManagedFunc(node.Name, node)
 					}
 				}
 			case informer.Deleted:
@@ -381,6 +384,7 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 	}
 
 	item := resourceStageJob[*corev1.Node]{
+		// TODO: Need to be able to calculate the next patch in advance
 		Resource:   node,
 		Stage:      stage,
 		Key:        key,
@@ -546,7 +550,18 @@ func (c *NodeController) computeStatusPatch(node *corev1.Node, tpl string) ([]by
 
 // putNodeInfo puts node info
 func (c *NodeController) putNodeInfo(node *corev1.Node) {
-	c.nodesSets.Store(node.Name, &NodeInfo{})
+	c.nodesSets.Store(node.Name, &NodeInfo{
+		OwnerReferences: []metav1.OwnerReference{
+			{
+				APIVersion: nodeKind.Version,
+				Kind:       nodeKind.Kind,
+				Name:       node.Name,
+				UID:        node.UID,
+			},
+		},
+		PodCIDR: node.Spec.PodCIDR,
+		HostIPs: getNodeHostIPs(node),
+	})
 }
 
 // deleteNodeInfo deletes node info

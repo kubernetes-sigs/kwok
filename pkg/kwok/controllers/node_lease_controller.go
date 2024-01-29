@@ -50,10 +50,10 @@ type NodeLeaseController struct {
 	mutateLeaseFunc func(*coordinationv1.Lease) error
 
 	delayQueue   queue.WeightDelayingQueue[string]
-	holdLeaseSet maps.SyncMap[string, struct{}]
+	holdLeaseSet maps.SyncMap[string, *corev1.Node]
 
 	holderIdentity    string
-	onNodeManagedFunc func(nodeName string)
+	onNodeManagedFunc func(nodeName string, node *corev1.Node)
 }
 
 // NodeLeaseControllerConfig is the configuration for NodeLeaseController
@@ -67,7 +67,7 @@ type NodeLeaseControllerConfig struct {
 	RenewInterval        time.Duration
 	RenewIntervalJitter  float64
 	MutateLeaseFunc      func(*coordinationv1.Lease) error
-	OnNodeManagedFunc    func(nodeName string)
+	OnNodeManagedFunc    func(nodeName string, node *corev1.Node)
 }
 
 // NewNodeLeaseController constructs and returns a NodeLeaseController
@@ -147,17 +147,17 @@ func (c *NodeLeaseController) interval() time.Duration {
 }
 
 // TryHold tries to hold a lease for the NodeLeaseController
-func (c *NodeLeaseController) TryHold(name string) {
-	_, loaded := c.holdLeaseSet.LoadOrStore(name, struct{}{})
+func (c *NodeLeaseController) TryHold(nodeName string, node *corev1.Node) {
+	_, loaded := c.holdLeaseSet.Swap(nodeName, node)
 	if !loaded {
-		c.delayQueue.Add(name)
+		c.delayQueue.Add(nodeName)
 	}
 }
 
 // ReleaseHold releases a lease for the NodeLeaseController
-func (c *NodeLeaseController) ReleaseHold(name string) {
-	_ = c.delayQueue.Cancel(name)
-	c.holdLeaseSet.Delete(name)
+func (c *NodeLeaseController) ReleaseHold(nodeName string) {
+	_ = c.delayQueue.Cancel(nodeName)
+	c.holdLeaseSet.Delete(nodeName)
 }
 
 // Held returns true if the NodeLeaseController holds the lease
@@ -218,7 +218,10 @@ func (c *NodeLeaseController) onNodeManaged(nodeName string) {
 		return
 	}
 
-	c.onNodeManagedFunc(nodeName)
+	node, _ := c.holdLeaseSet.Swap(nodeName, nil)
+	if node != nil {
+		c.onNodeManagedFunc(nodeName, node)
+	}
 }
 
 // ensureLease creates a lease if it does not exist

@@ -159,12 +159,17 @@ func TestPodController(t *testing.T) {
 		return podCIDR
 	}
 	nodeGetFunc := func(nodeName string) (*NodeInfo, bool) {
-		_, err := clientset.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
+		node, err := clientset.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
 		if err != nil {
 			return nil, false
 		}
 
-		nodeInfo := &NodeInfo{}
+		hostIP := wantHostIPFunc(*node)
+
+		nodeInfo := &NodeInfo{
+			PodCIDR: wantPodCIDRFunc(*node),
+			HostIPs: []net.IP{net.ParseIP(hostIP)},
+		}
 		return nodeInfo, true
 	}
 
@@ -182,19 +187,10 @@ func TestPodController(t *testing.T) {
 		time.Sleep(time.Second)
 	})
 
-	nodeCh := make(chan informer.Event[*corev1.Node], 1)
-	nodesCli := clientset.CoreV1().Nodes()
-	nodesInformer := informer.NewInformer[*corev1.Node, *corev1.NodeList](nodesCli)
-	nodeCache, err := nodesInformer.WatchWithCache(ctx, informer.Option{}, nodeCh)
-	if err != nil {
-		t.Fatal(fmt.Errorf("failed to watch nodes: %w", err))
-	}
-
 	lifecycle, _ := NewLifecycle(podStages)
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
 		TypedClient:                           clientset,
-		NodeCacheGetter:                       nodeCache,
 		NodeIP:                                defaultNodeIP,
 		CIDR:                                  defaultPodCIDR,
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),

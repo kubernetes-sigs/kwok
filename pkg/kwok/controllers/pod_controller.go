@@ -54,7 +54,6 @@ type PodController struct {
 	clock                                 clock.Clock
 	enableCNI                             bool
 	typedClient                           kubernetes.Interface
-	nodeCacheGetter                       informer.Getter[*corev1.Node]
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
 	nodeIP                                string
@@ -84,7 +83,6 @@ type PodControllerConfig struct {
 	Clock                                 clock.Clock
 	EnableCNI                             bool
 	TypedClient                           kubernetes.Interface
-	NodeCacheGetter                       informer.Getter[*corev1.Node]
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
 	NodeIP                                string
@@ -123,7 +121,6 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		clock:                                 conf.Clock,
 		enableCNI:                             conf.EnableCNI,
 		typedClient:                           conf.TypedClient,
-		nodeCacheGetter:                       conf.NodeCacheGetter,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		nodeIP:                                conf.NodeIP,
@@ -520,29 +517,27 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 	}
 
 	// Skip not managed node
-	_, has := c.nodeGetFunc(pod.Spec.NodeName)
+	info, has := c.nodeGetFunc(pod.Spec.NodeName)
 	if !has {
 		return
 	}
 
 	logger := log.FromContext(ctx)
 	if !c.enableCNI {
-		if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
+		if pod.Status.PodIP != "" {
 			cidr := c.defaultCIDR
-			node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
-			if ok {
-				if node.Spec.PodCIDR != "" {
-					cidr = node.Spec.PodCIDR
-				}
-				pool, err := c.ipPool(cidr)
-				if err != nil {
-					logger.Error("Failed to get ip pool", err,
-						"pod", log.KObj(pod),
-						"node", pod.Spec.NodeName,
-					)
-				} else {
-					pool.Put(pod.Status.PodIP)
-				}
+			if info.PodCIDR != "" {
+				cidr = info.PodCIDR
+			}
+
+			pool, err := c.ipPool(cidr)
+			if err != nil {
+				logger.Error("Failed to get ip pool", err,
+					"pod", log.KObj(pod),
+					"node", pod.Spec.NodeName,
+				)
+			} else {
+				pool.Put(pod.Status.PodIP)
 			}
 		}
 	} else {
@@ -556,18 +551,16 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 func (c *PodController) computeStatusPatch(pod *corev1.Pod, template string) ([]byte, error) {
 	if !c.enableCNI {
 		// Mark the pod IP that existed before the kubelet was started
-		if _, has := c.nodeGetFunc(pod.Spec.NodeName); has {
-			if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
+		if info, has := c.nodeGetFunc(pod.Spec.NodeName); has {
+			if pod.Status.PodIP != "" {
 				cidr := c.defaultCIDR
-				node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
-				if ok {
-					if node.Spec.PodCIDR != "" {
-						cidr = node.Spec.PodCIDR
-					}
-					pool, err := c.ipPool(cidr)
-					if err == nil {
-						pool.Use(pod.Status.PodIP)
-					}
+				if info.PodCIDR != "" {
+					cidr = info.PodCIDR
+				}
+
+				pool, err := c.ipPool(cidr)
+				if err == nil {
+					pool.Use(pod.Status.PodIP)
 				}
 			}
 		}
@@ -625,14 +618,11 @@ func (c *PodController) funcNodeIP() string {
 }
 
 func (c *PodController) funcNodeIPWith(nodeName string) string {
-	_, has := c.nodeGetFunc(nodeName)
-	if has && c.nodeCacheGetter != nil {
-		node, ok := c.nodeCacheGetter.Get(nodeName)
-		if ok {
-			hostIPs := getNodeHostIPs(node)
-			if len(hostIPs) != 0 {
-				return hostIPs[0].String()
-			}
+	info, has := c.nodeGetFunc(nodeName)
+	if has {
+		hostIPs := info.HostIPs
+		if len(hostIPs) != 0 {
+			return hostIPs[0].String()
 		}
 	}
 	return c.nodeIP
@@ -661,13 +651,10 @@ func (c *PodController) funcPodIPWith(nodeName string, hostNetwork bool, uid, na
 	}
 
 	podCIDR := c.defaultCIDR
-	_, has := c.nodeGetFunc(nodeName)
-	if has && c.nodeCacheGetter != nil {
-		node, ok := c.nodeCacheGetter.Get(nodeName)
-		if ok {
-			if node.Spec.PodCIDR != "" {
-				podCIDR = node.Spec.PodCIDR
-			}
+	info, has := c.nodeGetFunc(nodeName)
+	if has {
+		if info.PodCIDR != "" {
+			podCIDR = info.PodCIDR
 		}
 	}
 
