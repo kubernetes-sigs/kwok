@@ -18,8 +18,6 @@ package snapshot
 
 import (
 	"fmt"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Resources is the resources of cluster want to save or restore
@@ -52,13 +50,6 @@ var Resources = []string{
 	"pod",
 	"service",
 	"endpoints",
-}
-
-func clearUnstructured(obj metav1.Object) {
-	obj.SetResourceVersion("")
-	obj.SetSelfLink("")
-	obj.SetCreationTimestamp(metav1.Time{})
-	obj.SetManagedFields(nil)
 }
 
 // ErrNotHandled is returned when a resource is not handled

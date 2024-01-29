@@ -282,7 +282,17 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	}, wantCreate)
 
 	ctx = log.NewContext(ctx, logger)
-	err = snapshot.Load(ctx, clientset, gen, snapshot.LoadConfig{})
+
+	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
+		Clientset: clientset,
+		NoFilers:  true,
+	})
+	if err != nil {
+		return err
+	}
+
+	decoder := yaml.NewDecoder(gen)
+	err = loader.Load(ctx, decoder)
 	if err != nil {
 		return err
 	}

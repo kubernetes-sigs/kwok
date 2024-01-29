@@ -40,6 +40,15 @@ func TestRecording(t *testing.T) {
 	testEnv.Test(t, f0)
 }
 
+func TestRecordingExternal(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Skip test for non-linux platform")
+	}
+	f0 := e2e.CaseRecordingExternal(kwokctlPath, clusterName, pwd).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
 func TestPortForward(t *testing.T) {
 	f0 := e2e.CasePortForward(kwokctlPath, clusterName, envconf.RandomName("node", 16), namespace).
 		Feature()

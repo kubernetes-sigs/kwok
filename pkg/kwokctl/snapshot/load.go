@@ -18,8 +18,10 @@ package snapshot
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -34,8 +36,10 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/util/retry"
 
+	"sigs.k8s.io/kwok/pkg/kwokctl/recording"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
@@ -43,18 +47,9 @@ import (
 
 // LoadConfig is the a combination of the impersonation config
 type LoadConfig struct {
-	Filters []string
-}
-
-// Load loads the resources to cluster from the reader
-func Load(ctx context.Context, clientset client.Clientset, r io.Reader, loadConfig LoadConfig) error {
-	l, err := newLoader(clientset, loadConfig.Filters == nil)
-	if err != nil {
-		return err
-	}
-	l.addResource(ctx, loadConfig.Filters)
-
-	return l.Load(ctx, r)
+	Clientset client.Clientset
+	Filters   []*meta.RESTMapping
+	NoFilers  bool
 }
 
 type uniqueKey struct {
@@ -64,11 +59,11 @@ type uniqueKey struct {
 	UID        types.UID
 }
 
-// loader loads the resources to cluster
+// Loader loads the resources to cluster
 // This way does not delete existing resources in the cluster,
 // which will handle the ownerReference so that the resources remain relative to each other
-type loader struct {
-	filterMap map[schema.GroupKind]struct{}
+type Loader struct {
+	filterGKMap sets.Sets[schema.GroupKind]
 
 	successCounter int
 	failedCounter  int
@@ -78,56 +73,54 @@ type loader struct {
 
 	restMapper    meta.RESTMapper
 	dynamicClient dynamic.Interface
+
+	loadConfig LoadConfig
 }
 
-func newLoader(clientset client.Clientset, noFilter bool) (*loader, error) {
-	restMapper, err := clientset.ToRESTMapper()
+// NewLoader creates a new snapshot Loader.
+func NewLoader(loadConfig LoadConfig) (*Loader, error) {
+	restMapper, err := loadConfig.Clientset.ToRESTMapper()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rest mapper: %w", err)
 	}
-	dynClient, err := clientset.ToDynamicClient()
+	dynamicClient, err := loadConfig.Clientset.ToDynamicClient()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dynamic client: %w", err)
 	}
 
-	l := &loader{
+	l := &Loader{
 		exist:         make(map[uniqueKey]types.UID),
 		pending:       make(map[uniqueKey][]*unstructured.Unstructured),
 		restMapper:    restMapper,
-		dynamicClient: dynClient,
+		dynamicClient: dynamicClient,
+		loadConfig:    loadConfig,
 	}
-	if !noFilter {
-		l.filterMap = make(map[schema.GroupKind]struct{})
-	}
+
 	return l, nil
 }
 
-func (l *loader) addResource(ctx context.Context, resources []string) {
-	if l.filterMap == nil {
-		return
-	}
+// Load loads the resources to cluster
+func (l *Loader) Load(ctx context.Context, decoder *yaml.Decoder) error {
 	logger := log.FromContext(ctx)
-	for _, resource := range resources {
-		mapping, err := client.MappingFor(l.restMapper, resource)
+
+	startTime := time.Now()
+
+	for ctx.Err() == nil {
+		obj, err := decoder.DecodeUnstructured()
 		if err != nil {
-			logger.Warn("Failed to get mapping for resource", "resource", resource, "err", err)
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			logger.Warn("Failed to decode resource", "err", err)
 			continue
 		}
-		l.filterMap[mapping.GroupVersionKind.GroupKind()] = struct{}{}
-	}
-}
 
-func (l *loader) Load(ctx context.Context, r io.Reader) error {
-	logger := log.FromContext(ctx)
-
-	start := time.Now()
-	decoder := yaml.NewDecoder(r)
-
-	err := decoder.DecodeToUnstructured(func(obj *unstructured.Unstructured) error {
-		if err := ctx.Err(); err != nil {
-			return err
+		if obj.GetKind() == recording.ResourcePatchType.Kind && obj.GetAPIVersion() == recording.ResourcePatchType.APIVersion {
+			decoder.UndecodedUnstructured(obj)
+			break
 		}
-		if !l.filter(obj) {
+
+		if !l.filterGK(obj.GroupVersionKind().GroupKind()) {
 			logger.Warn("Skipped",
 				"resource", "filtered",
 				"kind", obj.GetKind(),
@@ -137,11 +130,13 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 		}
 
 		l.load(ctx, obj)
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to decode objects: %w", err)
 	}
+
+	return l.finishLoad(ctx, startTime)
+}
+
+func (l *Loader) finishLoad(ctx context.Context, startTime time.Time) error {
+	logger := log.FromContext(ctx)
 
 	// Print the skipped resources
 	pending := []*unstructured.Unstructured{}
@@ -186,18 +181,18 @@ func (l *loader) Load(ctx context.Context, r io.Reader) error {
 			"counter", l.successCounter+l.failedCounter,
 			"successCounter", l.successCounter,
 			"failedCounter", l.failedCounter,
-			"elapsed", time.Since(start),
+			"elapsed", time.Since(startTime),
 		)
 	} else {
 		logger.Info("Load resources",
 			"counter", l.successCounter,
-			"elapsed", time.Since(start),
+			"elapsed", time.Since(startTime),
 		)
 	}
 	return nil
 }
 
-func (l *loader) load(ctx context.Context, obj *unstructured.Unstructured) {
+func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 	// If the object has owner references, we need to wait until all the owner references are created.
 	if ownerReferences := obj.GetOwnerReferences(); len(ownerReferences) != 0 {
 		allExist := true
@@ -248,15 +243,21 @@ func (l *loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 	}
 }
 
-func (l *loader) filter(obj *unstructured.Unstructured) bool {
-	if l.filterMap == nil {
+func (l *Loader) filterGK(gk schema.GroupKind) bool {
+	if l.loadConfig.NoFilers {
 		return true
 	}
-	_, ok := l.filterMap[obj.GroupVersionKind().GroupKind()]
+	if l.filterGKMap == nil {
+		l.filterGKMap = sets.NewSets[schema.GroupKind]()
+		for _, f := range l.loadConfig.Filters {
+			l.filterGKMap.Insert(f.GroupVersionKind.GroupKind())
+		}
+	}
+	_, ok := l.filterGKMap[gk]
 	return ok
 }
 
-func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *unstructured.Unstructured {
+func (l *Loader) apply(ctx context.Context, obj *unstructured.Unstructured) *unstructured.Unstructured {
 	gvr := obj.GroupVersionKind().GroupVersion().WithResource(obj.GetKind())
 
 	logger := log.FromContext(ctx)
@@ -279,7 +280,7 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 		return nil
 	}
 
-	clearUnstructured(obj)
+	obj.SetResourceVersion("")
 
 	nri := l.dynamicClient.Resource(gvr)
 	var ri dynamic.ResourceInterface = nri
@@ -313,6 +314,18 @@ func (l *loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 	} else {
 		logger.Debug("Created")
 	}
+
+	if newObj != nil {
+		status, ok, _ := unstructured.NestedFieldNoCopy(obj.Object, "status")
+		if ok && !reflect.DeepEqual(newObj.Object["status"], status) {
+			newObj.Object["status"] = status
+			newObj, err = ri.UpdateStatus(ctx, newObj, metav1.UpdateOptions{FieldValidation: "Ignore"})
+			if err != nil {
+				logger.Error("Failed to update status", err)
+			}
+		}
+	}
+
 	l.successCounter++
 	return newObj
 }
@@ -329,7 +342,7 @@ var defaultRetry = wait.Backoff{
 	Jitter:   0.1,
 }
 
-func (l *loader) hasAllOwnerReferences(obj *unstructured.Unstructured) bool {
+func (l *Loader) hasAllOwnerReferences(obj *unstructured.Unstructured) bool {
 	ownerReferences := obj.GetOwnerReferences()
 	if len(ownerReferences) == 0 {
 		return true
@@ -349,7 +362,7 @@ type ownerReference struct {
 	Name       string `json:"name"`
 }
 
-func (l *loader) getMissingOwnerReferences(obj *unstructured.Unstructured) []metav1.OwnerReference {
+func (l *Loader) getMissingOwnerReferences(obj *unstructured.Unstructured) []metav1.OwnerReference {
 	ownerReferences := obj.GetOwnerReferences()
 	if len(ownerReferences) == 0 {
 		return nil
@@ -364,7 +377,7 @@ func (l *loader) getMissingOwnerReferences(obj *unstructured.Unstructured) []met
 	return missingOwnerReferences
 }
 
-func (l *loader) updateOwnerReferences(obj *unstructured.Unstructured) {
+func (l *Loader) updateOwnerReferences(obj *unstructured.Unstructured) {
 	ownerReferences := obj.GetOwnerReferences()
 	if len(ownerReferences) == 0 {
 		return

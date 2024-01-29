@@ -46,6 +46,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // Cluster is an implementation of Runtime for binary
@@ -1179,5 +1180,15 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 		return err
 	}
 
-	return snapshot.Load(ctx, clientset, bytes.NewBuffer(buf.Bytes()), snapshot.LoadConfig{})
+	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
+		Clientset: clientset,
+		NoFilers:  true,
+	})
+	if err != nil {
+		return err
+	}
+
+	decoder := yaml.NewDecoder(buf)
+
+	return loader.Load(ctx, decoder)
 }
