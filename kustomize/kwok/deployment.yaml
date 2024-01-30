@@ -31,6 +31,8 @@ spec:
             - --enable-crds=ClusterLogs
             - --enable-crds=PortForward
             - --enable-crds=ClusterPortForward
+            - --enable-crds=ResourceUsage
+            - --enable-crds=ClusterResourceUsage
           env:
             - name: POD_IP
               valueFrom:

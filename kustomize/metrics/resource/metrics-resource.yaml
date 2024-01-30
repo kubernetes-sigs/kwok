@@ -45,12 +45,12 @@ spec:
       [ALPHA] Current working set of the container in bytes
     kind: gauge
     labels:
-      - name: container
-        value: 'container.name'
-      - name: namespace
-        value: 'pod.metadata.namespace'
-      - name: pod
-        value: 'pod.metadata.name'
+    - name: container
+      value: 'container.name'
+    - name: namespace
+      value: 'pod.metadata.namespace'
+    - name: pod
+      value: 'pod.metadata.name'
     value: 'pod.Usage("memory", container.name)'
   # CPU of the pod
   - name: pod_cpu_usage_seconds_total
@@ -59,10 +59,10 @@ spec:
       [ALPHA] Cumulative cpu time consumed by the pod in core-seconds
     kind: counter
     labels:
-      - name: namespace
-        value: 'pod.metadata.namespace'
-      - name: pod
-        value: 'pod.metadata.name'
+    - name: namespace
+      value: 'pod.metadata.namespace'
+    - name: pod
+      value: 'pod.metadata.name'
     value: 'pod.CumulativeUsage("cpu")'
   # Memory of the pod
   - name: pod_memory_working_set_bytes
@@ -71,10 +71,10 @@ spec:
       [ALPHA] Current working set of the pod in bytes
     kind: gauge
     labels:
-      - name: namespace
-        value: 'pod.metadata.namespace'
-      - name: pod
-        value: 'pod.metadata.name'
+    - name: namespace
+      value: 'pod.metadata.namespace'
+    - name: pod
+      value: 'pod.metadata.name'
     value: 'pod.Usage("memory")'
   # CPU of the node
   - name: node_cpu_usage_seconds_total
