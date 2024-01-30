@@ -144,10 +144,10 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 	envs := []internalversion.Env{}
 
 	return internalversion.Component{
-		Name:    "metrics-server",
+		Name:    consts.ComponentMetricsServer,
 		Version: conf.Version.String(),
 		Links: []string{
-			"kwok-controller",
+			consts.ComponentKwokController,
 		},
 		Command: []string{"/metrics-server"},
 		User:    user,

@@ -2,14 +2,6 @@
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
-# Download https://dl.k8s.io/release/v1.29.0/bin/<OS>/<ARCH>/kube-apiserver to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-apiserver
-# Download https://dl.k8s.io/release/v1.29.0/bin/<OS>/<ARCH>/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
-# Download https://dl.k8s.io/release/v1.29.0/bin/<OS>/<ARCH>/kube-scheduler to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
-# Download <ROOT_DIR>/bin/<OS>/<ARCH>/kwok to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
-# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.0/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
-# Download https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-<OS>-<ARCH>.<TAR> and extract etcd to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd
-# Download https://github.com/prometheus/prometheus/releases/download/v2.49.1/prometheus-2.49.1.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
-# Download https://github.com/jaegertracing/jaeger/releases/download/v1.53.0/jaeger-1.53.0-<OS>-<ARCH>.<TAR> and extract jaeger-all-in-one to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger-all-in-one
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
@@ -124,6 +116,14 @@ scrape_configs:
   - targets:
     - 127.0.0.1:9090
 EOF
+# Download <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd
+# Download <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-apiserver to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-apiserver
+# Download <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
+# Download <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
+# Download <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
+# Download <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
+# Download <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
+# Download <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
 clusters:
@@ -149,8 +149,8 @@ EOF
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config
 cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && etcd --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd --initial-advertise-peer-urls=http://0.0.0.0:32766 --listen-peer-urls=http://0.0.0.0:32766 --advertise-client-urls=http://0.0.0.0:32765 --listen-client-urls=http://0.0.0.0:32765 --initial-cluster=node0=http://0.0.0.0:32766 --log-level=debug ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/etcd.log 2>&1 &
 echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/etcd.pid
-cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && jaeger-all-in-one --collector.otlp.enabled=true --query.http-server.host-port=0.0.0.0:16686 --collector.otlp.grpc.host-port=127.0.0.1:32762 --log-level=debug ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/jaeger-all-in-one.log 2>&1 &
-echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/jaeger-all-in-one.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && jaeger --collector.otlp.enabled=true --query.http-server.host-port=0.0.0.0:16686 --collector.otlp.grpc.host-port=127.0.0.1:32762 --log-level=debug ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/jaeger.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/jaeger.pid
 cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && kube-apiserver --etcd-prefix=/registry --allow-privileged=true --max-requests-inflight=0 --max-mutating-requests-inflight=0 --enable-priority-and-fairness=false --etcd-servers=http://127.0.0.1:32765 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --secure-port=32764 --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --client-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-signing-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-issuer=https://kubernetes.default.svc.cluster.local --proxy-client-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --proxy-client-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --audit-policy-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml --audit-log-path=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log --tracing-config-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml --v=4 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-apiserver.log 2>&1 &
 echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid
 cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && kube-controller-manager --node-monitor-period=10m0s --node-monitor-grace-period=1h0m0s --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32761 --root-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --kube-api-qps=5000 --kube-api-burst=10000 --v=4 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-controller-manager.log 2>&1 &

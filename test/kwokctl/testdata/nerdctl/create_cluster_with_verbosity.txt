@@ -118,13 +118,13 @@ EOF
 chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 nerdctl pull registry.k8s.io/etcd:3.5.11-0
 nerdctl pull registry.k8s.io/kube-apiserver:v1.29.0
-nerdctl pull localhost/kwok:test
 nerdctl pull registry.k8s.io/kube-controller-manager:v1.29.0
 nerdctl pull registry.k8s.io/kube-scheduler:v1.29.0
-nerdctl pull docker.io/kubernetesui/dashboard:v2.7.0
+nerdctl pull localhost/kwok:test
+nerdctl pull registry.k8s.io/metrics-server/metrics-server:v0.7.0
 nerdctl pull docker.io/prom/prometheus:v2.49.1
 nerdctl pull docker.io/jaegertracing/all-in-one:1.53.0
-nerdctl pull registry.k8s.io/metrics-server/metrics-server:v0.7.0
+nerdctl pull docker.io/kubernetesui/dashboard:v2.7.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
 clusters:
