@@ -582,8 +582,9 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 			CaCertPath:     env.caCertPath,
 			AdminCertPath:  env.adminCertPath,
 			AdminKeyPath:   env.adminKeyPath,
-			Port:           8000,
+			Port:           8080,
 			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
+			EnableMetrics:  conf.EnableMetricsServer,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to build dashboard component: %w", err)
@@ -600,6 +601,30 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 			return fmt.Errorf("failed to write: %w", err)
 		}
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
+
+		if conf.EnableMetricsServer {
+			dashboardMetricsScraperComponent, err := components.BuildDashboardMetricsScraperComponent(components.BuildDashboardMetricsScraperComponentConfig{
+				Runtime:        conf.Runtime,
+				Workdir:        env.workdir,
+				Image:          conf.DashboardMetricsScraperImage,
+				KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+				CaCertPath:     env.caCertPath,
+				AdminCertPath:  env.adminCertPath,
+				AdminKeyPath:   env.adminKeyPath,
+			})
+			if err != nil {
+				return err
+			}
+			dashboardMetricsScraperPod, err := yaml.Marshal(components.ConvertToPod(dashboardMetricsScraperComponent))
+			if err != nil {
+				return fmt.Errorf("failed to marshal dashboard metrics scraper pod: %w", err)
+			}
+			err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentDashboardMetricsScraper+".yaml"), dashboardMetricsScraperPod)
+			if err != nil {
+				return fmt.Errorf("failed to write: %w", err)
+			}
+			env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardMetricsScraperComponent)
+		}
 	}
 	return nil
 }

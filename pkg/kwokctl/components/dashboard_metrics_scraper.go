@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,24 +19,16 @@ package components
 import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
-// BuildDashboardComponentConfig is the configuration for building the dashboard component.
-type BuildDashboardComponentConfig struct {
-	Runtime     string
-	ProjectName string
-	Binary      string
-	Image       string
-	Version     version.Version
-	Workdir     string
-	BindAddress string
-	Port        uint32
-
-	Banner string
-
-	EnableMetrics bool
+// BuildDashboardMetricsScraperComponentConfig is the configuration for building the dashboard component.
+type BuildDashboardMetricsScraperComponentConfig struct {
+	Runtime string
+	Binary  string
+	Image   string
+	Version version.Version
+	Workdir string
 
 	CaCertPath     string
 	AdminCertPath  string
@@ -44,29 +36,10 @@ type BuildDashboardComponentConfig struct {
 	KubeconfigPath string
 }
 
-// BuildDashboardComponent builds the dashboard component.
-func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component internalversion.Component, err error) {
+// BuildDashboardMetricsScraperComponent builds the dashboard component.
+func BuildDashboardMetricsScraperComponent(conf BuildDashboardMetricsScraperComponentConfig) (component internalversion.Component, err error) {
 	dashboardArgs := []string{
-		"--insecure-bind-address=" + conf.BindAddress,
-		"--bind-address=127.0.0.1",
-		"--port=0",
-		"--enable-insecure-login",
-		"--enable-skip-login",
-		"--disable-settings-authorizer",
-	}
-	if conf.EnableMetrics {
-		switch GetRuntimeMode(conf.Runtime) {
-		case RuntimeModeContainer:
-			dashboardArgs = append(dashboardArgs, "--sidecar-host="+conf.ProjectName+"-"+consts.ComponentDashboardMetricsScraper+":8000")
-		default:
-			dashboardArgs = append(dashboardArgs, "--sidecar-host=127.0.0.1:8000")
-		}
-	} else {
-		dashboardArgs = append(dashboardArgs, "--metrics-provider=none")
-	}
-
-	if conf.Banner != "" {
-		dashboardArgs = append(dashboardArgs, "--system-banner="+conf.Banner)
+		"--db-file=/metrics.db",
 	}
 
 	user := ""
@@ -75,7 +48,6 @@ func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component inte
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		dashboardArgs = append(dashboardArgs,
 			"--kubeconfig=/root/.kube/config",
-			"--insecure-port=8080",
 		)
 		volumes = append(volumes,
 			internalversion.Volume{
@@ -99,26 +71,18 @@ func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component inte
 				ReadOnly:  true,
 			},
 		)
-		ports = append(ports,
-			internalversion.Port{
-				Name:     "http",
-				Port:     8080,
-				HostPort: conf.Port,
-				Protocol: internalversion.ProtocolTCP,
-			},
-		)
+		user = "root"
 	} else {
 		dashboardArgs = append(dashboardArgs,
 			"--kubeconfig="+conf.KubeconfigPath,
-			"--insecure-port="+format.String(conf.Port),
 		)
 	}
 
 	component = internalversion.Component{
-		Name:  consts.ComponentDashboard,
+		Name:  consts.ComponentDashboardMetricsScraper,
 		Image: conf.Image,
 		Links: []string{
-			consts.ComponentKubeApiserver,
+			consts.ComponentMetricsServer,
 		},
 		WorkDir: conf.Workdir,
 		Ports:   ports,

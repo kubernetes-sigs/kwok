@@ -206,9 +206,9 @@ function main() {
     minor="${minor%.*}"
 
     if [[ $minor -lt 22 ]]; then
-      create_cluster "${name}" "${release}" -v=debug --enable-metrics-server --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260 --dashboard-port 8000
+      create_cluster "${name}" "${release}" -v=debug --enable-metrics-server --prometheus-port 9090 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260 --dashboard-port=8080
     else
-      create_cluster "${name}" "${release}" -v=debug --enable-metrics-server --prometheus-port 9090 --jaeger-port 16686 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260 --dashboard-port 8000
+      create_cluster "${name}" "${release}" -v=debug --enable-metrics-server --prometheus-port 9090 --jaeger-port 16686 --controller-port 10247 --etcd-port=2400 --kube-scheduler-port=10250 --kube-controller-manager-port=10260 --dashboard-port=8080
     fi
 
     test_workable "${name}" || failed+=("workable_${name}")

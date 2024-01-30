@@ -98,6 +98,9 @@ type KwokctlConfigurationOptions struct {
 	// DashboardVersion is the version of Kubernetes dashboard to use.
 	DashboardVersion string
 
+	// DashboardMetricsScraperVersion is the version of dashboard metrics scraper to use.
+	DashboardMetricsScraperVersion string
+
 	// PrometheusVersion is the version of Prometheus to use.
 	PrometheusVersion string
 
@@ -149,6 +152,9 @@ type KwokctlConfigurationOptions struct {
 
 	// DashboardImage is the image of dashboard.
 	DashboardImage string
+
+	// DashboardMetricsScraperImage is the image of dashboard metrics scraper.
+	DashboardMetricsScraperImage string
 
 	// PrometheusImage is the image of Prometheus.
 	PrometheusImage string

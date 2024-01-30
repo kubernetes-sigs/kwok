@@ -453,6 +453,16 @@ func setKwokctlDashboardConfig(conf *configv1alpha1.KwokctlConfigurationOptions)
 	}
 	conf.DashboardImage = envs.GetEnvWithPrefix("DASHBOARD_IMAGE", conf.DashboardImage)
 
+	if conf.DashboardMetricsScraperVersion == "" {
+		conf.DashboardMetricsScraperVersion = consts.DashboardMetricsScraperVersion
+	}
+	conf.DashboardMetricsScraperVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_VERSION", conf.DashboardMetricsScraperVersion))
+
+	if conf.DashboardMetricsScraperImage == "" {
+		conf.DashboardMetricsScraperImage = joinImageURI(conf.DashboardImagePrefix, "metrics-scraper", conf.DashboardMetricsScraperVersion)
+	}
+	conf.DashboardMetricsScraperImage = envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_IMAGE", conf.DashboardMetricsScraperImage)
+
 	// TODO: Add dashboard binary
 	// if conf.DashboardBinaryPrefix == "" {
 	// 	conf.DashboardBinaryPrefix = consts.DashboardBinaryPrefix + "/" + conf.DashboardVersion

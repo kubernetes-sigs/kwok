@@ -53,6 +53,8 @@ var (
 	DashboardBinaryPrefix = ""
 	DashboardImagePrefix  = "docker.io/kubernetesui"
 
+	DashboardMetricsScraperVersion = "1.0.9"
+
 	PrometheusVersion      = "2.49.1"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
@@ -81,13 +83,14 @@ const (
 
 // The following components is provided.
 const (
-	ComponentEtcd                  = "etcd"
-	ComponentKubeApiserver         = "kube-apiserver"
-	ComponentKubeControllerManager = "kube-controller-manager"
-	ComponentKubeScheduler         = "kube-scheduler"
-	ComponentKwokController        = "kwok-controller"
-	ComponentDashboard             = "dashboard"
-	ComponentPrometheus            = "prometheus"
-	ComponentJaeger                = "jaeger"
-	ComponentMetricsServer         = "metrics-server"
+	ComponentEtcd                    = "etcd"
+	ComponentKubeApiserver           = "kube-apiserver"
+	ComponentKubeControllerManager   = "kube-controller-manager"
+	ComponentKubeScheduler           = "kube-scheduler"
+	ComponentKwokController          = "kwok-controller"
+	ComponentDashboard               = "dashboard"
+	ComponentDashboardMetricsScraper = "dashboard-metrics-scraper"
+	ComponentPrometheus              = "prometheus"
+	ComponentJaeger                  = "jaeger"
+	ComponentMetricsServer           = "metrics-server"
 )
