@@ -116,6 +116,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.EtcdBinaryTar, "etcd-binary-tar", flags.Options.EtcdBinaryTar, `Tar of etcd, if --etcd-binary is set, this is ignored, only for binary runtime
 `)
 	_ = cmd.Flags().MarkDeprecated("etcd-binary-tar", "--etcd-binary-tar will be removed in a future release, please use --etcd-binary instead")
+	cmd.Flags().StringVar(&flags.Options.EtcdPrefix, "etcd-prefix", flags.Options.EtcdPrefix, `prefix of the key`)
 	cmd.Flags().StringVar(&flags.Options.MetricsServerBinary, "metrics-server-binary", flags.Options.MetricsServerBinary, `Binary of metrics-server, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.Options.PrometheusBinary, "prometheus-binary", flags.Options.PrometheusBinary, `Binary of Prometheus, only for binary runtime`)
 	cmd.Flags().StringVar(&flags.Options.PrometheusBinaryTar, "prometheus-binary-tar", flags.Options.PrometheusBinaryTar, `Tar of Prometheus, if --prometheus-binary is set, this is ignored, only for binary runtime

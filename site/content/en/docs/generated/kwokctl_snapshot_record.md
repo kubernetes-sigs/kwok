@@ -9,10 +9,9 @@ kwokctl snapshot record [flags]
 ### Options
 
 ```
-  -h, --help            help for record
-      --path string     Path to the recording
-      --prefix string   prefix of the key (default "/registry")
-      --snapshot        Only save the snapshot
+  -h, --help          help for record
+      --path string   Path to the recording
+      --snapshot      Only save the snapshot
 ```
 
 ### Options inherited from parent commands

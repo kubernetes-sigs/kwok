@@ -13,7 +13,6 @@ kwokctl hack get [resource] [name] [flags]
   -h, --help               help for get
   -n, --namespace string   namespace of resource
   -o, --output string      output format. One of: (json, yaml, raw, key). (default "yaml")
-      --prefix string      prefix of the key (default "/registry")
   -w, --watch              after listing/getting the requested object, watch for changes
       --watch-only         watch for changes to the requested object(s), without listing/getting first
 ```

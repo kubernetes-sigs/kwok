@@ -489,6 +489,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		Verbosity:         env.verbosity,
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		TracingConfigPath: kubeApiserverTracingConfigPath,
+		EtcdPrefix:        conf.EtcdPrefix,
 	})
 	if err != nil {
 		return err

@@ -37,7 +37,6 @@ import (
 type flagpole struct {
 	Name      string
 	Namespace string
-	Prefix    string
 	Output    string
 }
 
@@ -59,7 +58,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&flags.Prefix, "prefix", "/registry", "prefix of the key")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "key", "output format. One of: (key, none).")
 	cmd.Flags().StringVarP(&flags.Namespace, "namespace", "n", "", "namespace of resource")
 	return cmd
@@ -74,6 +72,11 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	ctx = log.NewContext(ctx, logger)
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
+	if err != nil {
+		return err
+	}
+
+	conf, err := rt.Config(ctx)
 	if err != nil {
 		return err
 	}
@@ -172,7 +175,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		)
 	}
 
-	err = etcdclient.Delete(ctx, flags.Prefix,
+	err = etcdclient.Delete(ctx, conf.Options.EtcdPrefix,
 		opOpts...,
 	)
 	if err != nil {

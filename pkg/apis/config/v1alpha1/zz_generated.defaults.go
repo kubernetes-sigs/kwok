@@ -86,6 +86,9 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		var ptrVar1 bool = false
 		in.Options.EnableMetricsServer = &ptrVar1
 	}
+	if in.Options.EtcdPrefix == "" {
+		in.Options.EtcdPrefix = "/registry"
+	}
 	if in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds == 0 {
 		in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds = 600000
 	}

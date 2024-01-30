@@ -53,6 +53,7 @@ type BuildKubeApiserverComponentConfig struct {
 	Verbosity         log.Level
 	DisableQPSLimits  bool
 	TracingConfigPath string
+	EtcdPrefix        string
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -62,7 +63,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	kubeApiserverArgs := []string{
-		"--etcd-prefix=/registry",
+		"--etcd-prefix=" + conf.EtcdPrefix,
 		"--allow-privileged=true",
 	}
 

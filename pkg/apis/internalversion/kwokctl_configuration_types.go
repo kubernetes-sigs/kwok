@@ -188,6 +188,9 @@ type KwokctlConfigurationOptions struct {
 	// Deprecated: Use EtcdBinary instead
 	EtcdBinaryTar string
 
+	// EtcdPrefix is the prefix of etcd.
+	EtcdPrefix string
+
 	// KwokControllerBinary is the binary of kwok.
 	KwokControllerBinary string
 

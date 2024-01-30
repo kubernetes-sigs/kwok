@@ -40,7 +40,6 @@ import (
 type flagpole struct {
 	Name     string
 	Path     string
-	Prefix   string
 	Snapshot bool
 }
 
@@ -58,7 +57,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&flags.Prefix, "prefix", "/registry", "prefix of the key")
 	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the recording")
 	cmd.Flags().BoolVar(&flags.Snapshot, "snapshot", false, "Only save the snapshot")
 	return cmd
@@ -86,6 +84,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
+	conf, err := rt.Config(ctx)
+	if err != nil {
+		return err
+	}
+
 	etcdclient, err := rt.GetEtcdClient(ctx)
 	if err != nil {
 		return err
@@ -99,7 +102,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	saver, err := etcd.NewSaver(etcd.SaveConfig{
 		Clientset: clientset,
 		Client:    etcdclient,
-		Prefix:    flags.Prefix,
+		Prefix:    conf.Options.EtcdPrefix,
 	})
 	if err != nil {
 		return err

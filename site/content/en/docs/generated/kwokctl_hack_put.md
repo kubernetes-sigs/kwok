@@ -13,7 +13,6 @@ kwokctl hack put [resource] [name] [flags]
   -n, --namespace string   namespace of resource
   -o, --output string      output format. One of: (key, none). (default "key")
       --path string        path of the file
-      --prefix string      prefix of the key (default "/registry")
 ```
 
 ### Options inherited from parent commands
