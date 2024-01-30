@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3.18 AS cache
+FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3.19 AS cache
 ARG TARGETPLATFORM
 COPY --chmod=0755 bin/$TARGETPLATFORM/kwok /usr/local/bin/
 COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
@@ -30,7 +30,7 @@ RUN echo "KUBE_VERSION: ${KWOK_KUBE_VERSION}" && \
     kwokctl kubectl version && \
     kwokctl delete cluster
 
-FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3.18
+FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3.19
 ARG TARGETPLATFORM
 
 # Cache dependent binaries as the first layer
