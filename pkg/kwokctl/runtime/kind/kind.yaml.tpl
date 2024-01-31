@@ -11,7 +11,7 @@ nodes:
   {{ if or .DashboardPort .PrometheusPort .KwokControllerPort .EtcdPort .JaegerPort}}
   extraPortMappings:
   {{ if .DashboardPort }}
-  - containerPort: 8000
+  - containerPort: 8080
     hostPort: {{ .DashboardPort }}
     protocol: TCP
   {{ end }}

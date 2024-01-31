@@ -1643,6 +1643,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeVersion = in.KubeVersion
 	out.EtcdVersion = in.EtcdVersion
 	out.DashboardVersion = in.DashboardVersion
+	out.DashboardMetricsScraperVersion = in.DashboardMetricsScraperVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
 	out.MetricsServerVersion = in.MetricsServerVersion
@@ -1670,6 +1671,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeSchedulerImage = in.KubeSchedulerImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.DashboardImage = in.DashboardImage
+	out.DashboardMetricsScraperImage = in.DashboardMetricsScraperImage
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
@@ -1736,6 +1738,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeVersion = in.KubeVersion
 	out.EtcdVersion = in.EtcdVersion
 	out.DashboardVersion = in.DashboardVersion
+	out.DashboardMetricsScraperVersion = in.DashboardMetricsScraperVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
 	out.MetricsServerVersion = in.MetricsServerVersion
@@ -1770,6 +1773,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeSchedulerImage = in.KubeSchedulerImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.DashboardImage = in.DashboardImage
+	out.DashboardMetricsScraperImage = in.DashboardMetricsScraperImage
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage

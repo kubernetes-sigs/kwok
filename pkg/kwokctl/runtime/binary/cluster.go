@@ -106,7 +106,7 @@ func (c *Cluster) download(ctx context.Context, env *env) error {
 	}
 
 	if conf.EnableMetricsServer {
-		metricsServerPath := c.GetBinPath("metrics-server" + conf.BinSuffix)
+		metricsServerPath := c.GetBinPath(consts.ComponentMetricsServer + conf.BinSuffix)
 		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.MetricsServerBinary, metricsServerPath, 0750, conf.QuietPull)
 		if err != nil {
 			return err
@@ -617,7 +617,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.EnableMetricsServer {
-		metricsServerPath := c.GetBinPath("metrics-server" + conf.BinSuffix)
+		metricsServerPath := c.GetBinPath(consts.ComponentMetricsServer + conf.BinSuffix)
 		metricsServerVersion, err := c.ParseVersionFromBinary(ctx, metricsServerPath)
 		if err != nil {
 			return err

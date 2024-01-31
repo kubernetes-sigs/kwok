@@ -120,6 +120,9 @@ type KwokctlConfigurationOptions struct {
 	// DashboardVersion is the version of Kubernetes dashboard to use.
 	DashboardVersion string `json:"dashboardVersion,omitempty"`
 
+	// DashboardMetricsScraperVersion is the version of Kubernetes dashboard metrics scraper to use.
+	DashboardMetricsScraperVersion string `json:"dashboardMetricsScraperVersion,omitempty"`
+
 	// PrometheusVersion is the version of Prometheus to use.
 	// is the default value for env KWOK_PROMETHEUS_VERSION
 	PrometheusVersion string `json:"prometheusVersion,omitempty"`
@@ -223,6 +226,9 @@ type KwokctlConfigurationOptions struct {
 
 	// DashboardImage is the image of dashboard.
 	DashboardImage string `json:"dashboardImage,omitempty"`
+
+	// DashboardMetricsScraperImage is the image of dashboard metrics scraper.
+	DashboardMetricsScraperImage string `json:"dashboardMetricsScraperImage,omitempty"`
 
 	// PrometheusImage is the image of Prometheus.
 	// is the default value for flag --prometheus-image and env KWOK_PROMETHEUS_IMAGE

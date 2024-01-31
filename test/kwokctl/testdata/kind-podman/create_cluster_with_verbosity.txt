@@ -27,7 +27,7 @@ networking:
 nodes:
 - role: control-plane
   extraPortMappings:
-  - containerPort: 8000
+  - containerPort: 8080
     hostPort: 8000
     protocol: TCP
   - containerPort: 9090
@@ -206,18 +206,67 @@ spec:
     - --enable-insecure-login
     - --enable-skip-login
     - --disable-settings-authorizer
-    - --metrics-provider=none
+    - --sidecar-host=127.0.0.1:8000
     - --system-banner=Welcome to kwok-<CLUSTER_NAME>
     - --kubeconfig=~/.kube/config
-    - --insecure-port=8000
+    - --insecure-port=8080
     image: docker.io/kubernetesui/dashboard:v2.7.0
     imagePullPolicy: Never
     name: dashboard
     ports:
-    - containerPort: 8000
-      hostPort: 8000
+    - containerPort: 8080
+      hostPort: 8080
       name: http
       protocol: TCP
+    resources: {}
+    volumeMounts:
+    - mountPath: ~/.kube/config
+      name: volume-0
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/ca.crt
+      name: volume-1
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/admin.crt
+      name: volume-2
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki/admin.key
+      name: volume-3
+      readOnly: true
+  hostNetwork: true
+  restartPolicy: Always
+  securityContext:
+    runAsGroup: 0
+    runAsUser: 0
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/admin.conf
+    name: volume-0
+  - hostPath:
+      path: /etc/kubernetes/pki/ca.crt
+    name: volume-1
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.crt
+    name: volume-2
+  - hostPath:
+      path: /etc/kubernetes/pki/admin.key
+    name: volume-3
+status: {}
+EOF
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/dashboard-metrics-scraper.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  name: dashboard-metrics-scraper
+  namespace: kube-system
+spec:
+  containers:
+  - args:
+    - --db-file=/metrics.db
+    - --kubeconfig=~/.kube/config
+    image: docker.io/kubernetesui/metrics-scraper:v1.0.9
+    imagePullPolicy: Never
+    name: dashboard-metrics-scraper
     resources: {}
     volumeMounts:
     - mountPath: ~/.kube/config
@@ -509,6 +558,7 @@ EOF
 podman pull docker.io/kindest/node:v1.29.0
 podman pull localhost/kwok:test
 podman pull docker.io/kubernetesui/dashboard:v2.7.0
+podman pull docker.io/kubernetesui/metrics-scraper:v1.0.9
 podman pull registry.k8s.io/metrics-server/metrics-server:v0.7.0
 podman pull docker.io/prom/prometheus:v2.49.1
 podman pull docker.io/jaegertracing/all-in-one:1.53.0
@@ -522,6 +572,10 @@ mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard
 podman save docker.io/kubernetesui/dashboard:v2.7.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard/v2.7.0.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard/v2.7.0.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard/v2.7.0.tar
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/metrics-scraper
+podman save docker.io/kubernetesui/metrics-scraper:v1.0.9 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/metrics-scraper/v1.0.9.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/metrics-scraper/v1.0.9.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/metrics-scraper/v1.0.9.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server
 podman save registry.k8s.io/metrics-server/metrics-server:v0.7.0 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.0.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.0.tar --name kwok-<CLUSTER_NAME>

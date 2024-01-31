@@ -134,36 +134,31 @@ func (c *Cluster) Available(ctx context.Context) error {
 	return c.Exec(ctx, c.runtime, "version")
 }
 
-func (c *Cluster) pullAllImages(ctx context.Context, env *env) error {
+func (c *Cluster) pullAllImages(ctx context.Context, env *env, images []string) error {
 	conf := &env.kwokctlConfig.Options
-	images := []string{
-		conf.EtcdImage,
-		conf.KubeApiserverImage,
-		conf.KwokControllerImage,
-	}
-	if !conf.DisableKubeControllerManager {
-		images = append(images, conf.KubeControllerManagerImage)
-	}
-	if !conf.DisableKubeScheduler {
-		images = append(images, conf.KubeSchedulerImage)
-	}
-	if conf.DashboardPort != 0 {
-		images = append(images, conf.DashboardImage)
-	}
-	if conf.PrometheusPort != 0 {
-		images = append(images, conf.PrometheusImage)
-	}
-	if conf.JaegerPort != 0 {
-		images = append(images, conf.JaegerImage)
-	}
-	if conf.EnableMetricsServer {
-		images = append(images, conf.MetricsServerImage)
-	}
+
 	err := c.PullImages(ctx, c.runtime, images, conf.QuietPull)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (c *Cluster) listAllImages(ctx context.Context) ([]string, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	images := []string{}
+	for _, component := range config.Components {
+		if component.Image == "" {
+			continue
+		}
+		images = append(images, component.Image)
+	}
+
+	return images, nil
 }
 
 func (c *Cluster) setup(ctx context.Context, env *env) error {
@@ -401,7 +396,12 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	err = c.pullAllImages(ctx, env)
+	images, err := c.listAllImages(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = c.pullAllImages(ctx, env, images)
 	if err != nil {
 		return err
 	}
@@ -619,7 +619,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.EnableMetricsServer {
-		metricsServerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.MetricsServerImage, "metrics-server")
+		metricsServerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.MetricsServerImage, consts.ComponentMetricsServer)
 		if err != nil {
 			return err
 		}
@@ -707,6 +707,7 @@ func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
 	if conf.DashboardPort != 0 {
 		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
 			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
 			Workdir:        env.workdir,
 			Image:          conf.DashboardImage,
 			BindAddress:    net.PublicAddress,
@@ -716,11 +717,28 @@ func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
 			AdminKeyPath:   env.adminKeyPath,
 			Port:           conf.DashboardPort,
 			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
+			EnableMetrics:  conf.EnableMetricsServer,
 		})
 		if err != nil {
 			return err
 		}
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
+
+		if conf.EnableMetricsServer {
+			dashboardMetricsScraperComponent, err := components.BuildDashboardMetricsScraperComponent(components.BuildDashboardMetricsScraperComponentConfig{
+				Runtime:        conf.Runtime,
+				Workdir:        env.workdir,
+				Image:          conf.DashboardMetricsScraperImage,
+				KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+				CaCertPath:     env.caCertPath,
+				AdminCertPath:  env.adminCertPath,
+				AdminKeyPath:   env.adminKeyPath,
+			})
+			if err != nil {
+				return err
+			}
+			env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardMetricsScraperComponent)
+		}
 	}
 	return nil
 }

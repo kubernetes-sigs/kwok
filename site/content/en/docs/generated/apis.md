@@ -2759,6 +2759,17 @@ string
 </tr>
 <tr>
 <td>
+<code>dashboardMetricsScraperVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DashboardMetricsScraperVersion is the version of Kubernetes dashboard metrics scraper to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>prometheusVersion</code>
 <em>
 string
@@ -3040,6 +3051,17 @@ string
 </td>
 <td>
 <p>DashboardImage is the image of dashboard.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dashboardMetricsScraperImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DashboardMetricsScraperImage is the image of dashboard metrics scraper.</p>
 </td>
 </tr>
 <tr>
