@@ -6,17 +6,27 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
 touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
 cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
+docker pull registry.k8s.io/etcd:3.5.11-0
+docker pull registry.k8s.io/kube-apiserver:v1.29.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
 kind: TracingConfiguration
 endpoint: kwok-<CLUSTER_NAME>-jaeger:4317
 samplingRatePerMillion: 1000000
 EOF
+docker pull registry.k8s.io/kube-controller-manager:v1.29.0
 cp <ROOT_DIR>/test/kwokctl/scheduler-config.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 cat <<EOF >><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 clientConnection:
   kubeconfig: "~/.kube/config"
 EOF
+docker pull registry.k8s.io/kube-scheduler:v1.29.0
+docker pull localhost/kwok:test
+docker pull registry.k8s.io/metrics-server/metrics-server:v0.7.0
+docker pull docker.io/prom/prometheus:v2.49.1
+docker pull docker.io/jaegertracing/all-in-one:1.53.0
+docker pull docker.io/kubernetesui/dashboard:v2.7.0
+docker pull docker.io/kubernetesui/metrics-scraper:v1.0.9
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 global:
   scrape_interval: 15s
@@ -116,16 +126,6 @@ scrape_configs:
     - 127.0.0.1:9090
 EOF
 chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
-docker pull registry.k8s.io/etcd:3.5.11-0
-docker pull registry.k8s.io/kube-apiserver:v1.29.0
-docker pull registry.k8s.io/kube-controller-manager:v1.29.0
-docker pull registry.k8s.io/kube-scheduler:v1.29.0
-docker pull localhost/kwok:test
-docker pull registry.k8s.io/metrics-server/metrics-server:v0.7.0
-docker pull docker.io/prom/prometheus:v2.49.1
-docker pull docker.io/jaegertracing/all-in-one:1.53.0
-docker pull docker.io/kubernetesui/dashboard:v2.7.0
-docker pull docker.io/kubernetesui/metrics-scraper:v1.0.9
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
 clusters:

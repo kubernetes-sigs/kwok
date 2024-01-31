@@ -286,22 +286,18 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	images, err := c.listAllImages(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = c.pullAllImages(ctx, env, images)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
 func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	logger := log.FromContext(ctx)
 	conf := &env.kwokctlConfig.Options
+
+	err = c.EnsureImage(ctx, c.runtime, conf.KindNodeImage)
+	if err != nil {
+		return err
+	}
+
 	var featureGates []string
 	var runtimeConfig []string
 	if conf.KubeFeatureGates != "" {
@@ -504,6 +500,10 @@ func (c *Cluster) addKubeScheduler(_ context.Context, env *env) (err error) {
 
 func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
+	err = c.EnsureImage(ctx, c.runtime, conf.KwokControllerImage)
+	if err != nil {
+		return err
+	}
 
 	// Configure the kwok-controller
 	kwokControllerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KwokControllerImage, "kwok")
@@ -567,6 +567,10 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.DashboardPort != 0 {
+		err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
+		if err != nil {
+			return err
+		}
 		dashboardVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardImage, "")
 		if err != nil {
 			return err
@@ -603,6 +607,11 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
 
 		if conf.EnableMetricsServer {
+			err = c.EnsureImage(ctx, c.runtime, conf.DashboardMetricsScraperImage)
+			if err != nil {
+				return err
+			}
+
 			dashboardMetricsScraperComponent, err := components.BuildDashboardMetricsScraperComponent(components.BuildDashboardMetricsScraperComponentConfig{
 				Runtime:        conf.Runtime,
 				Workdir:        env.workdir,
@@ -629,10 +638,14 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 	return nil
 }
 
-func (c *Cluster) addMetricsServer(_ context.Context, env *env) (err error) {
+func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 	if conf.EnableMetricsServer {
-		metricsServerVersion, err := c.ParseVersionFromImage(context.Background(), c.runtime, conf.MetricsServerImage, "")
+		err = c.EnsureImage(ctx, c.runtime, conf.MetricsServerImage)
+		if err != nil {
+			return err
+		}
+		metricsServerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.MetricsServerImage, "")
 		if err != nil {
 			return err
 		}
@@ -693,6 +706,10 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.PrometheusPort != 0 {
+		err = c.EnsureImage(ctx, c.runtime, conf.PrometheusImage)
+		if err != nil {
+			return err
+		}
 		prometheusVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.PrometheusImage, "")
 		if err != nil {
 			return err
@@ -743,10 +760,14 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 	return nil
 }
 
-func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
+func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.JaegerPort != 0 {
+		err = c.EnsureImage(ctx, c.runtime, conf.JaegerImage)
+		if err != nil {
+			return err
+		}
 		jaegerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.JaegerImage, "")
 		if err != nil {
 			return err
@@ -903,19 +924,6 @@ func (c *Cluster) Up(ctx context.Context) error {
 		logger.Error("Failed to chmod pki", err)
 	}
 
-	return nil
-}
-
-func (c *Cluster) pullAllImages(ctx context.Context, env *env, images []string) error {
-	conf := &env.kwokctlConfig.Options
-	images = append([]string{
-		conf.KindNodeImage,
-	}, images...)
-
-	err := c.PullImages(ctx, c.runtime, images, conf.QuietPull)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -1425,8 +1433,7 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	_, err = exec.LookPath("kind")
 	if err != nil {
 		// kind does not exist, try to download it
-		kindPath := c.GetBinPath("kind" + conf.BinSuffix)
-		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KindBinary, kindPath, 0750, conf.QuietPull)
+		kindPath, err := c.EnsureBinary(ctx, "kind", conf.KindBinary)
 		if err != nil {
 			return "", err
 		}

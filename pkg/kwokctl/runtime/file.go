@@ -154,3 +154,20 @@ func (c *Cluster) MkdirAll(name string) error {
 
 	return file.MkdirAll(name)
 }
+
+// EnsureBinary ensures the binary exists.
+func (c *Cluster) EnsureBinary(ctx context.Context, name, binary string) (string, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return "", err
+	}
+	conf := config.Options
+
+	binaryPath := c.GetBinPath(name + conf.BinSuffix)
+	err = c.DownloadWithCache(ctx, conf.CacheDir, binary, binaryPath, 0750, conf.QuietPull)
+	if err != nil {
+		return "", err
+	}
+
+	return binaryPath, nil
+}

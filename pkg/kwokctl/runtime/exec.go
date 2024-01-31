@@ -149,6 +149,22 @@ func (c *Cluster) PullImages(ctx context.Context, command string, images []strin
 	return exec.PullImages(ctx, command, images, quiet)
 }
 
+// EnsureImage ensures the image exists.
+func (c *Cluster) EnsureImage(ctx context.Context, command string, image string) error {
+	if c.IsDryRun() {
+		dryrun.PrintMessage("%s pull %s", command, image)
+		return nil
+	}
+
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := config.Options
+
+	return exec.PullImage(ctx, command, image, conf.QuietPull)
+}
+
 // Exec executes the given command and returns the output.
 func (c *Cluster) Exec(ctx context.Context, name string, args ...string) error {
 	if c.IsDryRun() {
