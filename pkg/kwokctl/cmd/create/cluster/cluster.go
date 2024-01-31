@@ -144,8 +144,24 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&flags.Options.DisableQPSLimits, "disable-qps-limits", flags.Options.DisableQPSLimits, "Disable QPS limits for components")
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease in seconds")
+	cmd.Flags().Float64Var(&flags.Options.HeartbeatFactor, "heartbeat-factor", flags.Options.HeartbeatFactor, "Scale factor for all about heartbeat")
 
 	return cmd
+}
+
+func multiplyByFactor[T ~int64 | ~uint](num *T, factor float64) {
+	*num = T(float64(*num) * factor)
+}
+
+func mutationHeartbeat(flags *flagpole) {
+	if flags.Options.HeartbeatFactor == 0 || flags.Options.HeartbeatFactor == 1 {
+		return
+	}
+	multiplyByFactor(&flags.Options.NodeLeaseDurationSeconds, flags.Options.HeartbeatFactor)
+	multiplyByFactor(&flags.Options.NodeStatusUpdateFrequencyMilliseconds, flags.Options.HeartbeatFactor)
+	multiplyByFactor(&flags.Options.KubeControllerManagerNodeMonitorGracePeriodMilliseconds, flags.Options.HeartbeatFactor)
+	multiplyByFactor(&flags.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds, flags.Options.HeartbeatFactor)
+	flags.Options.HeartbeatFactor = 1
 }
 
 func runE(ctx context.Context, flags *flagpole) error {
@@ -170,6 +186,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		ctx, cancel = context.WithTimeout(ctx, flags.Timeout)
 		defer cancel()
 	}
+
+	mutationHeartbeat(flags)
 
 	// Choose runtime
 	var rt runtime.Runtime

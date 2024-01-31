@@ -90,16 +90,20 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		in.Options.EtcdPrefix = "/registry"
 	}
 	if in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds == 0 {
-		in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds = 600000
+		in.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds = 5000
 	}
 	if in.Options.KubeControllerManagerNodeMonitorGracePeriodMilliseconds == 0 {
-		in.Options.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = 3600000
+		in.Options.KubeControllerManagerNodeMonitorGracePeriodMilliseconds = 40000
 	}
 	if in.Options.NodeStatusUpdateFrequencyMilliseconds == 0 {
-		in.Options.NodeStatusUpdateFrequencyMilliseconds = 1200000
+		in.Options.NodeStatusUpdateFrequencyMilliseconds = 10000
 	}
 	if in.Options.NodeLeaseDurationSeconds == 0 {
 		in.Options.NodeLeaseDurationSeconds = 40
+	}
+	if in.Options.HeartbeatFactor == nil {
+		var ptrVar1 float64 = 5
+		in.Options.HeartbeatFactor = &ptrVar1
 	}
 	if in.Options.BindAddress == "" {
 		in.Options.BindAddress = "0.0.0.0"

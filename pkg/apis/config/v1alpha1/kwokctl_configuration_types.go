@@ -425,20 +425,24 @@ type KwokctlConfigurationOptions struct {
 	CacheDir string `json:"cacheDir,omitempty"`
 
 	// KubeControllerManagerNodeMonitorPeriodMilliseconds is --node-monitor-period for kube-controller-manager.
-	// +default=600000
+	// +default=5000
 	KubeControllerManagerNodeMonitorPeriodMilliseconds int64 `json:"kubeControllerManagerNodeMonitorPeriodMilliseconds,omitempty"`
 
 	// KubeControllerManagerNodeMonitorGracePeriodMilliseconds is --node-monitor-grace-period for kube-controller-manager.
-	// +default=3600000
+	// +default=40000
 	KubeControllerManagerNodeMonitorGracePeriodMilliseconds int64 `json:"kubeControllerManagerNodeMonitorGracePeriodMilliseconds,omitempty"`
 
 	// NodeStatusUpdateFrequencyMilliseconds is --node-status-update-frequency for kwok like kubelet.
-	// +default=1200000
+	// +default=10000
 	NodeStatusUpdateFrequencyMilliseconds int64 `json:"nodeStatusUpdateFrequencyMilliseconds,omitempty"`
 
 	// NodeLeaseDurationSeconds is the duration the Kubelet will set on its corresponding Lease.
 	// +default=40
 	NodeLeaseDurationSeconds uint `json:"nodeLeaseDurationSeconds,omitempty"`
+
+	// HeartbeatFactor is the scale factor for all about heartbeat.
+	// +default=5
+	HeartbeatFactor *float64 `json:"heartbeatFactor,omitempty"`
 
 	// BindAddress is the address to bind to.
 	// +default="0.0.0.0"
