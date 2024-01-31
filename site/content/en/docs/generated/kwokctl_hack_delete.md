@@ -12,7 +12,6 @@ kwokctl hack delete [resource] [name] [flags]
   -h, --help               help for delete
   -n, --namespace string   namespace of resource
   -o, --output string      output format. One of: (key, none). (default "key")
-      --prefix string      prefix of the key (default "/registry")
 ```
 
 ### Options inherited from parent commands

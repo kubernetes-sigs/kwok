@@ -3245,6 +3245,17 @@ Deprecated: Use EtcdBinary or EtcdctlBinary instead</p>
 </tr>
 <tr>
 <td>
+<code>etcdPrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>EtcdPrefix is the prefix of etcd.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kwokBinaryPrefix</code>
 <em>
 string

@@ -43,7 +43,6 @@ import (
 type flagpole struct {
 	Name     string
 	Path     string
-	Prefix   string
 	Snapshot bool
 }
 
@@ -61,7 +60,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&flags.Prefix, "prefix", "/registry", "prefix of the key")
 	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the recording")
 	cmd.Flags().BoolVar(&flags.Snapshot, "snapshot", false, "Only restore the snapshot")
 	return cmd
@@ -86,6 +84,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 		if errors.Is(err, os.ErrNotExist) {
 			logger.Warn("Cluster is not exists")
 		}
+		return err
+	}
+
+	conf, err := rt.Config(ctx)
+	if err != nil {
 		return err
 	}
 
@@ -131,7 +134,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	loader, err := etcd.NewLoader(etcd.LoadConfig{
 		Clientset: clientset,
 		Client:    etcdclient,
-		Prefix:    flags.Prefix,
+		Prefix:    conf.Options.EtcdPrefix,
 	})
 	if err != nil {
 		return err

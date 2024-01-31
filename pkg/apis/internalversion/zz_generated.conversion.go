@@ -1684,6 +1684,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.EtcdctlBinary = in.EtcdctlBinary
 	out.EtcdBinary = in.EtcdBinary
 	out.EtcdBinaryTar = in.EtcdBinaryTar
+	out.EtcdPrefix = in.EtcdPrefix
 	out.KwokControllerBinary = in.KwokControllerBinary
 	out.PrometheusBinary = in.PrometheusBinary
 	out.PrometheusBinaryTar = in.PrometheusBinaryTar
@@ -1789,6 +1790,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.EtcdctlBinary = in.EtcdctlBinary
 	out.EtcdBinary = in.EtcdBinary
 	// INFO: in.EtcdBinaryTar opted out of conversion generation
+	out.EtcdPrefix = in.EtcdPrefix
 	// INFO: in.KwokBinaryPrefix opted out of conversion generation
 	out.KwokControllerBinary = in.KwokControllerBinary
 	// INFO: in.PrometheusBinaryPrefix opted out of conversion generation

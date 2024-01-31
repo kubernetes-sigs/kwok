@@ -293,6 +293,10 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	EtcdBinaryTar string `json:"etcdBinaryTar,omitempty"`
 
+	// EtcdPrefix is the prefix of etcd.
+	// +default="/registry"
+	EtcdPrefix string `json:"etcdPrefix,omitempty"`
+
 	// KwokBinaryPrefix is the prefix of the kwok binary.
 	// is the default value for env KWOK_BINARY_PREFIX
 	//+k8s:conversion-gen=false

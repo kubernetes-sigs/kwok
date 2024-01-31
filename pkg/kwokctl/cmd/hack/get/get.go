@@ -37,7 +37,6 @@ import (
 type flagpole struct {
 	Name      string
 	Namespace string
-	Prefix    string
 	Output    string
 	ChunkSize int64
 	Watch     bool
@@ -62,7 +61,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&flags.Prefix, "prefix", "/registry", "prefix of the key")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "yaml", "output format. One of: (json, yaml, raw, key).")
 	cmd.Flags().StringVarP(&flags.Namespace, "namespace", "n", "", "namespace of resource")
 	cmd.Flags().BoolVarP(&flags.Watch, "watch", "w", false, "after listing/getting the requested object, watch for changes")
@@ -80,6 +78,11 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	ctx = log.NewContext(ctx, logger)
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
+	if err != nil {
+		return err
+	}
+
+	conf, err := rt.Config(ctx)
 	if err != nil {
 		return err
 	}
@@ -233,7 +236,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	if flags.Watch {
 		var rev int64
 		if !flags.WatchOnly {
-			rev, err = etcdclient.Get(ctx, flags.Prefix,
+			rev, err = etcdclient.Get(ctx, conf.Options.EtcdPrefix,
 				opOpts...,
 			)
 			if err != nil {
@@ -243,14 +246,14 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 
 		opOpts = append(opOpts, etcd.WithRevision(rev))
 
-		err = etcdclient.Watch(ctx, flags.Prefix,
+		err = etcdclient.Watch(ctx, conf.Options.EtcdPrefix,
 			opOpts...,
 		)
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err = etcdclient.Get(ctx, flags.Prefix,
+		_, err = etcdclient.Get(ctx, conf.Options.EtcdPrefix,
 			opOpts...,
 		)
 		if err != nil {

@@ -9,10 +9,9 @@ kwokctl snapshot replay [flags]
 ### Options
 
 ```
-  -h, --help            help for replay
-      --path string     Path to the recording
-      --prefix string   prefix of the key (default "/registry")
-      --snapshot        Only restore the snapshot
+  -h, --help          help for replay
+      --path string   Path to the recording
+      --snapshot      Only restore the snapshot
 ```
 
 ### Options inherited from parent commands
