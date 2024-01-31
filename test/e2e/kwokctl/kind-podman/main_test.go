@@ -45,6 +45,7 @@ var (
 		"--kwok-controller-image=" + testImage,
 		"--runtime=" + runtimeEnv,
 		"--enable-metrics-server",
+		"--wait=15m",
 	}
 )
 
