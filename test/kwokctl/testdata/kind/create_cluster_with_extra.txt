@@ -3,6 +3,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/etcd
+docker pull docker.io/kindest/node:v1.29.0
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
@@ -102,6 +103,7 @@ nodes:
     containerPath: /var/components/prometheus/etc/prometheus/prometheus.yaml
     readOnly: false
 EOF
+docker pull localhost/kwok:test
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml
 apiVersion: v1
 kind: Pod
@@ -182,6 +184,7 @@ spec:
     name: tmp-controller
 status: {}
 EOF
+docker pull docker.io/prom/prometheus:v2.49.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
 apiVersion: v1
 kind: Pod
@@ -341,9 +344,6 @@ scrape_configs:
   - targets:
     - 127.0.0.1:9090
 EOF
-docker pull docker.io/kindest/node:v1.29.0
-docker pull localhost/kwok:test
-docker pull docker.io/prom/prometheus:v2.49.1
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.29.0 --wait 29m
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image localhost/kwok:test --name kwok-<CLUSTER_NAME>

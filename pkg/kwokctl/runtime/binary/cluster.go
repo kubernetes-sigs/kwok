@@ -65,79 +65,6 @@ func (c *Cluster) Available(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) download(ctx context.Context, env *env) error {
-	conf := &env.kwokctlConfig.Options
-
-	kubeApiserverPath := c.GetBinPath(consts.ComponentKubeApiserver + conf.BinSuffix)
-	err := c.DownloadWithCache(ctx, conf.CacheDir, conf.KubeApiserverBinary, kubeApiserverPath, 0750, conf.QuietPull)
-	if err != nil {
-		return err
-	}
-
-	if !conf.DisableKubeControllerManager {
-		kubeControllerManagerPath := c.GetBinPath(consts.ComponentKubeControllerManager + conf.BinSuffix)
-		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KubeControllerManagerBinary, kubeControllerManagerPath, 0750, conf.QuietPull)
-		if err != nil {
-			return err
-		}
-	}
-
-	if !conf.DisableKubeScheduler {
-		kubeSchedulerPath := c.GetBinPath(consts.ComponentKubeScheduler + conf.BinSuffix)
-		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KubeSchedulerBinary, kubeSchedulerPath, 0750, conf.QuietPull)
-		if err != nil {
-			return err
-		}
-	}
-
-	// TODO: Add dashboard binary
-	// if conf.DashboardPort != 0 {
-	// 	kubeDashboardPath := c.GetBinPath(consts.ComponentDashboard + conf.BinSuffix)
-	// 	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.DashboardBinary, kubeDashboardPath, 0750, conf.QuietPull)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	kwokControllerPath := c.GetBinPath(consts.ComponentKwokController + conf.BinSuffix)
-	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KwokControllerBinary, kwokControllerPath, 0750, conf.QuietPull)
-	if err != nil {
-		return err
-	}
-
-	if conf.EnableMetricsServer {
-		metricsServerPath := c.GetBinPath(consts.ComponentMetricsServer + conf.BinSuffix)
-		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.MetricsServerBinary, metricsServerPath, 0750, conf.QuietPull)
-		if err != nil {
-			return err
-		}
-	}
-
-	etcdPath := c.GetBinPath(consts.ComponentEtcd + conf.BinSuffix)
-	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdBinary, etcdPath, 0750, conf.QuietPull)
-	if err != nil {
-		return err
-	}
-
-	if conf.PrometheusPort != 0 {
-		prometheusPath := c.GetBinPath(consts.ComponentPrometheus + conf.BinSuffix)
-		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.PrometheusBinary, prometheusPath, 0750, conf.QuietPull)
-		if err != nil {
-			return err
-		}
-	}
-
-	if conf.JaegerPort != 0 {
-		jaegerPath := c.GetBinPath("jaeger-all-in-one" + conf.BinSuffix)
-		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.JaegerBinary, jaegerPath, 0750, conf.QuietPull)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (c *Cluster) setup(ctx context.Context, env *env) error {
 	conf := &env.kwokctlConfig.Options
 
@@ -304,11 +231,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	err = c.download(ctx, env)
-	if err != nil {
-		return err
-	}
-
 	err = c.setup(ctx, env)
 	if err != nil {
 		return err
@@ -382,7 +304,10 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the etcd
-	etcdPath := c.GetBinPath(consts.ComponentEtcd + conf.BinSuffix)
+	etcdPath, err := c.EnsureBinary(ctx, consts.ComponentEtcd, conf.EtcdBinary)
+	if err != nil {
+		return err
+	}
 
 	etcdVersion, err := c.ParseVersionFromBinary(ctx, etcdPath)
 	if err != nil {
@@ -412,7 +337,10 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-apiserver
-	kubeApiserverPath := c.GetBinPath(consts.ComponentKubeApiserver + conf.BinSuffix)
+	kubeApiserverPath, err := c.EnsureBinary(ctx, consts.ComponentKubeApiserver, conf.KubeApiserverBinary)
+	if err != nil {
+		return err
+	}
 
 	kubeApiserverVersion, err := c.ParseVersionFromBinary(ctx, kubeApiserverPath)
 	if err != nil {
@@ -480,7 +408,10 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 
 	// Configure the kube-controller-manager
 	if !conf.DisableKubeControllerManager {
-		kubeControllerManagerPath := c.GetBinPath(consts.ComponentKubeControllerManager + conf.BinSuffix)
+		kubeControllerManagerPath, err := c.EnsureBinary(ctx, consts.ComponentKubeControllerManager, conf.KubeControllerManagerBinary)
+		if err != nil {
+			return err
+		}
 
 		err = c.setupPorts(ctx,
 			env.usedPorts,
@@ -528,7 +459,10 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 
 	// Configure the kube-scheduler
 	if !conf.DisableKubeScheduler {
-		kubeSchedulerPath := c.GetBinPath(consts.ComponentKubeScheduler + conf.BinSuffix)
+		kubeSchedulerPath, err := c.EnsureBinary(ctx, consts.ComponentKubeScheduler, conf.KubeSchedulerBinary)
+		if err != nil {
+			return err
+		}
 
 		schedulerConfigPath := ""
 		if conf.KubeSchedulerConfig != "" {
@@ -582,7 +516,10 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kwok-controller
-	kwokControllerPath := c.GetBinPath(consts.ComponentKwokController + conf.BinSuffix)
+	kwokControllerPath, err := c.EnsureBinary(ctx, consts.ComponentKwokController, conf.KwokControllerBinary)
+	if err != nil {
+		return err
+	}
 
 	kwokControllerVersion, err := c.ParseVersionFromBinary(ctx, kwokControllerPath)
 	if err != nil {
@@ -618,7 +555,11 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.EnableMetricsServer {
-		metricsServerPath := c.GetBinPath(consts.ComponentMetricsServer + conf.BinSuffix)
+		metricsServerPath, err := c.EnsureBinary(ctx, consts.ComponentMetricsServer, conf.MetricsServerBinary)
+		if err != nil {
+			return err
+		}
+
 		metricsServerVersion, err := c.ParseVersionFromBinary(ctx, metricsServerPath)
 		if err != nil {
 			return err
@@ -679,11 +620,11 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 
 	// Configure the prometheus
 	if conf.PrometheusPort != 0 {
-		prometheusPath := c.GetBinPath(consts.ComponentPrometheus + conf.BinSuffix)
-
+		prometheusPath, err := c.EnsureBinary(ctx, consts.ComponentPrometheus, conf.PrometheusBinary)
 		if err != nil {
-			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
+			return err
 		}
+
 		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
 
 		prometheusVersion, err := c.ParseVersionFromBinary(ctx, prometheusPath)
@@ -714,7 +655,10 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 
 	// Configure the jaeger
 	if conf.JaegerPort != 0 {
-		jaegerPath := c.GetBinPath("jaeger-all-in-one" + conf.BinSuffix)
+		jaegerPath, err := c.EnsureBinary(ctx, consts.ComponentJaeger, conf.JaegerBinary)
+		if err != nil {
+			return err
+		}
 
 		jaegerVersion, err := c.ParseVersionFromBinary(ctx, jaegerPath)
 		if err != nil {

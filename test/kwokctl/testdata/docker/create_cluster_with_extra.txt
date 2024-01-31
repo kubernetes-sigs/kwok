@@ -3,6 +3,12 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
+docker pull registry.k8s.io/etcd:3.5.11-0
+docker pull registry.k8s.io/kube-apiserver:v1.29.0
+docker pull registry.k8s.io/kube-controller-manager:v1.29.0
+docker pull registry.k8s.io/kube-scheduler:v1.29.0
+docker pull localhost/kwok:test
+docker pull docker.io/prom/prometheus:v2.49.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 global:
   scrape_interval: 15s
@@ -89,12 +95,6 @@ scrape_configs:
     - 127.0.0.1:9090
 EOF
 chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
-docker pull registry.k8s.io/etcd:3.5.11-0
-docker pull registry.k8s.io/kube-apiserver:v1.29.0
-docker pull registry.k8s.io/kube-controller-manager:v1.29.0
-docker pull registry.k8s.io/kube-scheduler:v1.29.0
-docker pull localhost/kwok:test
-docker pull docker.io/prom/prometheus:v2.49.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
 clusters:

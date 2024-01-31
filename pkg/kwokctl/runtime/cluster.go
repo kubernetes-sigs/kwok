@@ -316,8 +316,7 @@ func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
 
 	kubectlPath, err := exec.LookPath("kubectl")
 	if err != nil {
-		kubectlPath = c.GetBinPath("kubectl" + conf.BinSuffix)
-		err = c.DownloadWithCache(ctx, conf.CacheDir, conf.KubectlBinary, kubectlPath, 0750, conf.QuietPull)
+		kubectlPath, err = c.EnsureBinary(ctx, "kubectl", conf.KubectlBinary)
 		if err != nil {
 			return "", err
 		}
@@ -508,8 +507,7 @@ func (c *Cluster) etcdctlPath(ctx context.Context) (string, error) {
 		return "", err
 	}
 	conf := &config.Options
-	etcdctlPath := c.GetBinPath("etcdctl" + conf.BinSuffix)
-	err = c.DownloadWithCache(ctx, conf.CacheDir, conf.EtcdctlBinary, etcdctlPath, 0750, conf.QuietPull)
+	etcdctlPath, err := c.EnsureBinary(ctx, "etcdctl", conf.EtcdctlBinary)
 	if err != nil {
 		return "", err
 	}

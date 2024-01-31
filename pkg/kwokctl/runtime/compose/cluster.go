@@ -134,33 +134,6 @@ func (c *Cluster) Available(ctx context.Context) error {
 	return c.Exec(ctx, c.runtime, "version")
 }
 
-func (c *Cluster) pullAllImages(ctx context.Context, env *env, images []string) error {
-	conf := &env.kwokctlConfig.Options
-
-	err := c.PullImages(ctx, c.runtime, images, conf.QuietPull)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Cluster) listAllImages(ctx context.Context) ([]string, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	images := []string{}
-	for _, component := range config.Components {
-		if component.Image == "" {
-			continue
-		}
-		images = append(images, component.Image)
-	}
-
-	return images, nil
-}
-
 func (c *Cluster) setup(ctx context.Context, env *env) error {
 	conf := &env.kwokctlConfig.Options
 	if !file.Exists(env.pkiPath) {
@@ -396,16 +369,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	images, err := c.listAllImages(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = c.pullAllImages(ctx, env, images)
-	if err != nil {
-		return err
-	}
-
 	err = c.finishInstall(ctx, env)
 	if err != nil {
 		return err
@@ -418,6 +381,10 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the etcd
+	err = c.EnsureImage(ctx, c.runtime, conf.EtcdImage)
+	if err != nil {
+		return err
+	}
 	etcdVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.EtcdImage, "etcd")
 	if err != nil {
 		return err
@@ -445,6 +412,10 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-apiserver
+	err = c.EnsureImage(ctx, c.runtime, conf.KubeApiserverImage)
+	if err != nil {
+		return err
+	}
 	kubeApiserverVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeApiserverImage, consts.ComponentKubeApiserver)
 	if err != nil {
 		return err
@@ -503,6 +474,10 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 
 	// Configure the kube-controller-manager
 	if !conf.DisableKubeControllerManager {
+		err = c.EnsureImage(ctx, c.runtime, conf.KubeControllerManagerImage)
+		if err != nil {
+			return err
+		}
 		kubeControllerManagerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeControllerManagerImage, consts.ComponentKubeControllerManager)
 		if err != nil {
 			return err
@@ -550,6 +525,10 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 			}
 		}
 
+		err = c.EnsureImage(ctx, c.runtime, conf.KubeSchedulerImage)
+		if err != nil {
+			return err
+		}
 		kubeSchedulerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeSchedulerImage, consts.ComponentKubeScheduler)
 		if err != nil {
 			return err
@@ -585,6 +564,11 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kwok-controller
+	err = c.EnsureImage(ctx, c.runtime, conf.KwokControllerImage)
+	if err != nil {
+		return err
+	}
+
 	kwokControllerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KwokControllerImage, "kwok")
 	if err != nil {
 		return err
@@ -620,6 +604,11 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.EnableMetricsServer {
+		err = c.EnsureImage(ctx, c.runtime, conf.MetricsServerImage)
+		if err != nil {
+			return err
+		}
+
 		metricsServerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.MetricsServerImage, consts.ComponentMetricsServer)
 		if err != nil {
 			return err
@@ -676,11 +665,17 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 
 	// Configure the prometheus
 	if conf.PrometheusPort != 0 {
-		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
+		err = c.EnsureImage(ctx, c.runtime, conf.PrometheusImage)
+		if err != nil {
+			return err
+		}
+
 		prometheusVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.PrometheusImage, "")
 		if err != nil {
 			return err
 		}
+
+		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
 
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
 			Runtime:       conf.Runtime,
@@ -702,15 +697,25 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 	return nil
 }
 
-func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
+func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.DashboardPort != 0 {
+		err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
+		if err != nil {
+			return err
+		}
+		dashboardVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardImage, "")
+		if err != nil {
+			return err
+		}
+
 		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
 			Runtime:        conf.Runtime,
 			ProjectName:    c.Name(),
 			Workdir:        env.workdir,
 			Image:          conf.DashboardImage,
+			Version:        dashboardVersion,
 			BindAddress:    net.PublicAddress,
 			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
 			CaCertPath:     env.caCertPath,
@@ -726,6 +731,10 @@ func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
 		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
 
 		if conf.EnableMetricsServer {
+			err = c.EnsureImage(ctx, c.runtime, conf.DashboardMetricsScraperImage)
+			if err != nil {
+				return err
+			}
 			dashboardMetricsScraperComponent, err := components.BuildDashboardMetricsScraperComponent(components.BuildDashboardMetricsScraperComponentConfig{
 				Runtime:        conf.Runtime,
 				Workdir:        env.workdir,
@@ -744,11 +753,16 @@ func (c *Cluster) addDashboard(_ context.Context, env *env) (err error) {
 	return nil
 }
 
-func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
+func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the jaeger
 	if conf.JaegerPort != 0 {
+		err = c.EnsureImage(ctx, c.runtime, conf.JaegerImage)
+		if err != nil {
+			return err
+		}
+
 		jaegerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.JaegerImage, "")
 		if err != nil {
 			return err
