@@ -116,7 +116,12 @@ func runE(ctx context.Context, flags *flagpole) error {
 		_ = f.Close()
 	}()
 
-	var writer io.Writer = f
+	press := file.Compress(flags.Path, f)
+	defer func() {
+		_ = press.Close()
+	}()
+
+	var writer io.Writer = press
 
 	startTime := time.Now()
 	writer = recording.NewWriteHook(writer, func(bytes []byte) []byte {
