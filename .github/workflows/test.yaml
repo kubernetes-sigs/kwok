@@ -140,12 +140,16 @@ jobs:
             kwokctl-runtime: binary
 
           # MacOS
-          - os: macos-latest
+          - os: macos-13
             kwokctl-runtime: binary
-          - os: macos-latest
+          - os: macos-13
             kwokctl-runtime: docker
-          - os: macos-latest
+          - os: macos-13
+            kwokctl-runtime: podman
+          - os: macos-13
             kwokctl-runtime: kind
+          - os: macos-13
+            kwokctl-runtime: kind-podman
 
           # Linux
           - os: ubuntu-latest
@@ -206,6 +210,14 @@ jobs:
         run: |
           sudo apt install podman=3.4.4+ds1-1ubuntu1 --allow-downgrades
 
+      - name: Install Podman for MacOS
+        if: ${{ matrix.os == 'macos-latest' && ( matrix.kwokctl-runtime == 'podman' || matrix.kwokctl-runtime == 'kind-podman' ) }}
+        shell: bash
+        run: |
+          brew install podman
+          podman machine init
+          podman machine start
+
       - name: Install Docker for MacOS
         if: ${{ matrix.os == 'macos-latest' && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
         shell: bash
@@ -239,7 +251,7 @@ jobs:
           containerd-rootless-setuptool.sh install-buildkit-containerd
 
       - name: Setup Podman for Kind
-        if: ${{ matrix.kwokctl-runtime == 'kind-podman' }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'kind-podman' }}
         shell: bash
         run: |
           sudo mkdir -p /etc/systemd/system/user@.service.d
