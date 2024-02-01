@@ -291,6 +291,10 @@ func WaitForAllPodsReady() env.Func {
 				notReady := []string{}
 				for _, obj := range metaList {
 					pod := obj.(*corev1.Pod)
+					// On Kind, ignore pods in kube-system and local-path-storage namespaces
+					if pod.Namespace == "kube-system" || pod.Namespace == "local-path-storage" {
+						continue
+					}
 					if pod.Status.Phase != corev1.PodRunning && pod.Status.Phase != corev1.PodSucceeded {
 						notReady = append(notReady, log.KObj(pod).String())
 					}

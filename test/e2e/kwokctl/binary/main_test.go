@@ -45,6 +45,7 @@ var (
 		"--kwok-controller-binary=" + kwokPath,
 		"--runtime=" + runtimeEnv,
 		"--enable-metrics-server",
+		"--wait=15m",
 	}
 )
 
