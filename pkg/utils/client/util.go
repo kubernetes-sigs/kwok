@@ -145,3 +145,18 @@ func MatchGK(arl []*metav1.APIResourceList, gvk schema.GroupKind) (gvr schema.Gr
 
 	return gvr, nil, fmt.Errorf("no resource found for %q", gvk)
 }
+
+// MappingForResources is a wrapper of MappingFor.
+func MappingForResources(restMapper meta.RESTMapper, filters []string) ([]*meta.RESTMapping, []error) {
+	mappings := make([]*meta.RESTMapping, 0, len(filters))
+	errs := make([]error, 0, len(filters))
+	for _, filter := range filters {
+		mapping, err := MappingFor(restMapper, filter)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		mappings = append(mappings, mapping)
+	}
+	return mappings, errs
+}

@@ -45,6 +45,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // The following functions are used to get the path of the cluster
@@ -581,7 +582,21 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 	ctx = log.NewContext(ctx, logger.With("crds", strings.Join(crds, ",")))
 
-	return snapshot.Load(ctx, clientset, buf, snapshot.LoadConfig{})
+	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
+		Clientset: clientset,
+		NoFilers:  true,
+	})
+	if err != nil {
+		return err
+	}
+
+	decoder := yaml.NewDecoder(buf)
+	err = loader.Load(ctx, decoder)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var crdDefines = map[string][]byte{
