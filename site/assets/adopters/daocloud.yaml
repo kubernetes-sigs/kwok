@@ -1,0 +1,11 @@
+name: DaoCloud, Inc.
+description: DaoCloud uses KWOK to test their Kubernetes-based cloud platform, namely DaoCloud Enterprise
+contacts:
+  - wzshiming
+links:
+  - name: DaoCloud Enterprise
+    url: https://docs.daocloud.io/en/
+  - name: CNCF Landscape
+    url: https://landscape.cncf.io/?group=certified-partners-and-providers&item=platform--certified-kubernetes-distribution--daocloud-enterprise
+  - name: Website
+    url: https://www.daocloud.io/en/
