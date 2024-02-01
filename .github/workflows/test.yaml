@@ -59,7 +59,7 @@ jobs:
         if: ${{ matrix.builder == 'nerdctl' }}
         shell: bash
         run: |
-          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.2/nerdctl-full-1.7.2-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.3/nerdctl-full-1.7.3-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
           sudo systemctl daemon-reload
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
@@ -132,6 +132,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
         include:
           # Windows
           # Linux containers are not supported on Windows Runner
@@ -139,13 +140,16 @@ jobs:
           - os: windows-latest
             kwokctl-runtime: binary
 
-          # MacOS
-          - os: macos-latest
+          # MacOS amd64
+          - os: macos-13
             kwokctl-runtime: binary
-          - os: macos-latest
+          - os: macos-13
             kwokctl-runtime: docker
-          - os: macos-latest
+          - os: macos-13
             kwokctl-runtime: kind
+          # MacOS arm64
+          - os: macos-14
+            kwokctl-runtime: binary
 
           # Linux
           - os: ubuntu-latest
@@ -158,14 +162,8 @@ jobs:
             kwokctl-runtime: kind
           - os: ubuntu-latest
             kwokctl-runtime: kind-podman
-          # nerdctl is still very early and has many bugs and differences in docker behavior,
-          # so we need to verify that it works on releases.
           - os: ubuntu-latest
             kwokctl-runtime: nerdctl
-            nerdctl-version: 1.7.2
-          - os: ubuntu-latest
-            kwokctl-runtime: nerdctl
-            nerdctl-version: 1.2.1
 
     continue-on-error: false
     runs-on: ${{ matrix.os }}
@@ -177,7 +175,7 @@ jobs:
           go-version: "1.21"
 
       - name: Install CoreUtils for MacOS
-        if: ${{ matrix.os == 'macos-latest' }}
+        if: ${{ startsWith(matrix.os, 'macos-') }}
         shell: bash
         run: |
           brew install coreutils bash
@@ -207,7 +205,7 @@ jobs:
           sudo apt install podman=3.4.4+ds1-1ubuntu1 --allow-downgrades
 
       - name: Install Docker for MacOS
-        if: ${{ matrix.os == 'macos-latest' && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
+        if: ${{ startsWith(matrix.os, 'macos-') && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
         shell: bash
         run: |
           brew install colima docker
@@ -232,7 +230,7 @@ jobs:
         run: |
           sudo mkdir -p /etc/cni/net.d
           sudo chmod 777 /etc/cni/net.d
-          curl -sSL https://github.com/containerd/nerdctl/releases/download/v${{ matrix.nerdctl-version }}/nerdctl-full-${{ matrix.nerdctl-version }}-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.3/nerdctl-full-1.7.3-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
           sudo systemctl daemon-reload
           sudo systemctl enable --now containerd
           containerd-rootless-setuptool.sh install
@@ -297,7 +295,7 @@ jobs:
       - name: Test Restart
         shell: bash
         run: |
-          if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest'  || ( "${{ matrix.kwokctl-runtime }}" == "nerdctl" && "${{ matrix.nerdctl-version }}" == "1.2.1" ) ]]; then
+          if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest' ]]; then
             export SKIP_DRY_RUN=true
           fi
           ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
@@ -318,5 +316,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}${{ matrix.nerdctl-version && format('-nerdctl-{0}', matrix.nerdctl-version) || '' }}
+          name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}
           path: ${{ github.workspace }}/logs
