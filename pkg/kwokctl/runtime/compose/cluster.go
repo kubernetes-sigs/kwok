@@ -84,7 +84,8 @@ func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
 }
 
 var (
-	selfComposePrefer = envs.GetEnvWithPrefix("CONTAINER_SELF_COMPOSE", "auto")
+	// Deprecated: docker-compose support will be removed in next release.
+	selfComposePrefer = envs.GetEnvWithPrefix("CONTAINER_SELF_COMPOSE", "true")
 )
 
 // getSwitchStatus parses the value to bool pointer.
