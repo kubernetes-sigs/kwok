@@ -1,0 +1,32 @@
+# Let's getting started with kwokctl!
+kwokctl create cluster --enable-metrics-server -c ./kustomize/metrics/resource/metrics-resource.yaml -c ./kustomize/metrics/usage/usage-from-annotation.yaml
+
+kwokctl scale node --replicas 2
+kwokctl scale pod --replicas 8
+
+# Wait for a while to let the metrics server collect the metrics
+sleep 30
+
+# Now we can check the metrics
+kubectl top node
+kubectl top pod
+
+# I don't know why the first result is always empty
+# let's try again
+kubectl top pod
+
+# Let's add some usage metrics to the pods
+kubectl patch pod pod-000000 --type=json -p='[{"op": "add", "path": "/metadata/annotations", "value": {"kwok.x-k8s.io/usage-cpu": "10000m", "kwok.x-k8s.io/usage-memory": "10000Mi"}}]'
+
+# Wait for a while to let the metrics server collect the metrics
+sleep 30
+
+# Now we can check the metrics
+kubectl top node
+kubectl top pod
+
+# Delete the cluster.
+kwokctl delete cluster
+
+# That's all, enjoy it!
+clear

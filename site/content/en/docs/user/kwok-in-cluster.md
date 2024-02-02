@@ -35,6 +35,14 @@ NOTE: This configures the pod/node emulation behavior, if not it will do nothing
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/stage-fast.yaml"
 ```
 
+## Set up default CRs of Resource Usage (optional)
+
+This will allows to simulate the resource usage of the pods.
+
+``` bash 
+kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/metrics-usage.yaml"
+```
+
 ## Old way to deploy kwok
 
 Old way to deploy kwok is [here][kwok in cluster old].
