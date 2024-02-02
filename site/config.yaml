@@ -215,6 +215,12 @@ menu:
     - identifier: attach
       pageRef: "/docs/user/attach-configuration"
       parent: configuration
+    - identifier: metrics
+      pageRef: "/docs/user/metrics-configuration"
+      parent: configuration
+    - identifier: resource-usage
+      pageRef: "/docs/user/resource-usage-configuration"
+      parent: configuration
 
     # Design Children
     - identifier: introduction
