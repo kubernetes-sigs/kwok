@@ -311,19 +311,19 @@ func (l *Loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 			return nil
 		}
 		logger.Debug("Updated")
-	} else {
-		logger.Debug("Created")
-	}
 
-	if newObj != nil {
-		status, ok, _ := unstructured.NestedFieldNoCopy(obj.Object, "status")
-		if ok && !reflect.DeepEqual(newObj.Object["status"], status) {
-			newObj.Object["status"] = status
-			newObj, err = ri.UpdateStatus(ctx, newObj, metav1.UpdateOptions{FieldValidation: "Ignore"})
-			if err != nil {
-				logger.Error("Failed to update status", err)
+		if newObj != nil {
+			status, ok, _ := unstructured.NestedFieldNoCopy(obj.Object, "status")
+			if ok && !reflect.DeepEqual(newObj.Object["status"], status) {
+				newObj.Object["status"] = status
+				newObj, err = ri.UpdateStatus(ctx, newObj, metav1.UpdateOptions{FieldValidation: "Ignore"})
+				if err != nil {
+					logger.Error("Failed to update resource status", err)
+				}
 			}
 		}
+	} else {
+		logger.Debug("Created")
 	}
 
 	l.successCounter++
