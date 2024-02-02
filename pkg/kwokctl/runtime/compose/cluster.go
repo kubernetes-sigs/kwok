@@ -112,7 +112,7 @@ func (c *Cluster) isSelfCompose(ctx context.Context, creating bool) bool {
 	if err != nil {
 		logger.Warn("Failed to parse env KWOK_CONTAINER_SELF_COMPOSE, ignore it, fallback to auto", "err", err)
 	} else if c.selfCompose != nil {
-		logger.Info("Found env KWOK_CONTAINER_SELF_COMPOSE, use it", "value", *c.selfCompose)
+		logger.Debug("Found env KWOK_CONTAINER_SELF_COMPOSE, use it", "value", *c.selfCompose)
 		return *c.selfCompose
 	}
 
