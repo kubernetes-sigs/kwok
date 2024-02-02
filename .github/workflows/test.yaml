@@ -268,7 +268,7 @@ jobs:
       - name: Test e2e
         shell: bash
         run: |
-          ./hack/e2e-test.sh e2e/kwokctl/${{ matrix.kwokctl-runtime }}
+          ./hack/e2e-test.sh e2e/kwokctl/${{ matrix.kwokctl-runtime }} && rm -rf logs
 
       - name: Test Export Logs
         shell: bash
@@ -316,5 +316,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}
+          name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}
           path: ${{ github.workspace }}/logs
