@@ -24,13 +24,13 @@ var (
 
 	// Version is the version of the project.
 	// It will be overwritten during the `make build` process.
-	Version      = "0.4.0"
+	Version      = "0.5.0"
 	BinaryPrefix = "https://github.com/kubernetes-sigs/kwok/releases/download"
 	ImagePrefix  = "registry.k8s.io/kwok"
 
 	// PreRelease is the pre-release version of the project.
 	// It will be overwritten during the `make build` process.
-	PreRelease = "alpha"
+	PreRelease = "GA"
 
 	// KubeVersion is the version of Kubernetes.
 	// It will be overwritten during the `make build` process.
