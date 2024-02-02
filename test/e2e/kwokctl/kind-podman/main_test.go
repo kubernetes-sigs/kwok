@@ -56,7 +56,8 @@ func init() {
 func TestMain(m *testing.M) {
 	testEnv = helper.Environment()
 
-	k := kwok.NewCluster(clusterName).
+	k := kwok.NewProvider().
+		WithName(clusterName).
 		WithPath(kwokctlPath)
 	testEnv.Setup(
 		helper.BuildKwokImage(rootDir, testImage, consts.RuntimeTypePodman),
