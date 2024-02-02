@@ -11,3 +11,5 @@ resources:
 - bases/kwok.x-k8s.io_clusterportforwards.yaml
 - bases/kwok.x-k8s.io_metrics.yaml
 - bases/kwok.x-k8s.io_stages.yaml
+- bases/kwok.x-k8s.io_resourceusages.yaml
+- bases/kwok.x-k8s.io_clusterresourceusages.yaml
