@@ -23,7 +23,7 @@ require (
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.5.0
 	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
-	go.etcd.io/etcd/client/v3 v3.5.11
+	go.etcd.io/etcd/client/v3 v3.5.12
 	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.16.0
 	golang.org/x/term v0.16.0
@@ -107,8 +107,8 @@ require (
 	github.com/wzshiming/trie v0.1.1 // indirect
 	github.com/wzshiming/winseq v0.0.0-20200112104235-db357dc107ae // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
-	go.etcd.io/etcd/api/v3 v3.5.11 // indirect
-	go.etcd.io/etcd/client/pkg/v3 v3.5.11 // indirect
+	go.etcd.io/etcd/api/v3 v3.5.12 // indirect
+	go.etcd.io/etcd/client/pkg/v3 v3.5.12 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
