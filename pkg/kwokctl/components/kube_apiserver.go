@@ -30,30 +30,31 @@ import (
 
 // BuildKubeApiserverComponentConfig is the configuration for building a kube-apiserver component.
 type BuildKubeApiserverComponentConfig struct {
-	Runtime           string
-	ProjectName       string
-	Binary            string
-	Image             string
-	Version           version.Version
-	Workdir           string
-	BindAddress       string
-	Port              uint32
-	EtcdAddress       string
-	EtcdPort          uint32
-	KubeRuntimeConfig string
-	KubeFeatureGates  string
-	SecurePort        bool
-	KubeAuthorization bool
-	KubeAdmission     bool
-	AuditPolicyPath   string
-	AuditLogPath      string
-	CaCertPath        string
-	AdminCertPath     string
-	AdminKeyPath      string
-	Verbosity         log.Level
-	DisableQPSLimits  bool
-	TracingConfigPath string
-	EtcdPrefix        string
+	Runtime               string
+	ProjectName           string
+	Binary                string
+	Image                 string
+	Version               version.Version
+	Workdir               string
+	BindAddress           string
+	Port                  uint32
+	EtcdAddress           string
+	EtcdPort              uint32
+	KubeRuntimeConfig     string
+	KubeFeatureGates      string
+	SecurePort            bool
+	KubeAuthorization     bool
+	KubeAdmission         bool
+	AuditPolicyPath       string
+	AuditLogPath          string
+	CaCertPath            string
+	AdminCertPath         string
+	AdminKeyPath          string
+	Verbosity             log.Level
+	DisableQPSLimits      bool
+	TracingConfigPath     string
+	EtcdPrefix            string
+	CORSAllowedOriginList []string
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -65,6 +66,12 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	kubeApiserverArgs := []string{
 		"--etcd-prefix=" + conf.EtcdPrefix,
 		"--allow-privileged=true",
+	}
+
+	if len(conf.CORSAllowedOriginList) != 0 {
+		kubeApiserverArgs = append(kubeApiserverArgs,
+			"--cors-allowed-origins="+strings.Join(conf.CORSAllowedOriginList, ","),
+		)
 	}
 
 	if conf.KubeAdmission {

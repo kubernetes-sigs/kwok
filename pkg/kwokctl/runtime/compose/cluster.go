@@ -83,10 +83,8 @@ func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
-var (
-	// Deprecated: docker-compose support will be removed in next release.
-	selfComposePrefer = envs.GetEnvWithPrefix("CONTAINER_SELF_COMPOSE", "true")
-)
+// Deprecated: docker-compose support will be removed in next release.
+var selfComposePrefer = envs.GetEnvWithPrefix("CONTAINER_SELF_COMPOSE", "true")
 
 // getSwitchStatus parses the value to bool pointer.
 func getSwitchStatus(value string) (*bool, error) {
@@ -439,29 +437,30 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	}
 
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
-		Runtime:           conf.Runtime,
-		ProjectName:       c.Name(),
-		Workdir:           env.workdir,
-		Image:             conf.KubeApiserverImage,
-		Version:           kubeApiserverVersion,
-		BindAddress:       net.PublicAddress,
-		Port:              conf.KubeApiserverPort,
-		KubeRuntimeConfig: conf.KubeRuntimeConfig,
-		KubeFeatureGates:  conf.KubeFeatureGates,
-		SecurePort:        conf.SecurePort,
-		KubeAuthorization: conf.KubeAuthorization,
-		KubeAdmission:     conf.KubeAdmission,
-		AuditPolicyPath:   env.auditPolicyPath,
-		AuditLogPath:      env.auditLogPath,
-		CaCertPath:        env.caCertPath,
-		AdminCertPath:     env.adminCertPath,
-		AdminKeyPath:      env.adminKeyPath,
-		EtcdPort:          conf.EtcdPort,
-		EtcdAddress:       c.Name() + "-etcd",
-		Verbosity:         env.verbosity,
-		DisableQPSLimits:  conf.DisableQPSLimits,
-		TracingConfigPath: kubeApiserverTracingConfigPath,
-		EtcdPrefix:        conf.EtcdPrefix,
+		Runtime:               conf.Runtime,
+		ProjectName:           c.Name(),
+		Workdir:               env.workdir,
+		Image:                 conf.KubeApiserverImage,
+		Version:               kubeApiserverVersion,
+		BindAddress:           net.PublicAddress,
+		Port:                  conf.KubeApiserverPort,
+		KubeRuntimeConfig:     conf.KubeRuntimeConfig,
+		KubeFeatureGates:      conf.KubeFeatureGates,
+		SecurePort:            conf.SecurePort,
+		KubeAuthorization:     conf.KubeAuthorization,
+		KubeAdmission:         conf.KubeAdmission,
+		AuditPolicyPath:       env.auditPolicyPath,
+		AuditLogPath:          env.auditLogPath,
+		CaCertPath:            env.caCertPath,
+		AdminCertPath:         env.adminCertPath,
+		AdminKeyPath:          env.adminKeyPath,
+		EtcdPort:              conf.EtcdPort,
+		EtcdAddress:           c.Name() + "-etcd",
+		Verbosity:             env.verbosity,
+		DisableQPSLimits:      conf.DisableQPSLimits,
+		TracingConfigPath:     kubeApiserverTracingConfigPath,
+		EtcdPrefix:            conf.EtcdPrefix,
+		CORSAllowedOriginList: conf.KubeApiserverCORSAllowedOriginList,
 	})
 	if err != nil {
 		return err
@@ -652,7 +651,7 @@ func (c *Cluster) setupPrometheusConfig(_ context.Context, env *env) (err error)
 
 		// We don't need to check the permissions of the prometheus config file,
 		// because it's working in a non-root container.
-		err = c.WriteFileWithMode(prometheusConfigPath, []byte(prometheusData), 0644)
+		err = c.WriteFileWithMode(prometheusConfigPath, []byte(prometheusData), 0o644)
 		if err != nil {
 			return fmt.Errorf("failed to write prometheus yaml: %w", err)
 		}

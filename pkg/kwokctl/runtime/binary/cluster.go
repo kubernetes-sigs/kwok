@@ -373,29 +373,30 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	}
 
 	kubeApiserverComponent, err := components.BuildKubeApiserverComponent(components.BuildKubeApiserverComponentConfig{
-		Runtime:           conf.Runtime,
-		ProjectName:       c.Name(),
-		Workdir:           env.workdir,
-		Binary:            kubeApiserverPath,
-		Version:           kubeApiserverVersion,
-		BindAddress:       conf.BindAddress,
-		Port:              conf.KubeApiserverPort,
-		EtcdAddress:       net.LocalAddress,
-		EtcdPort:          conf.EtcdPort,
-		KubeRuntimeConfig: conf.KubeRuntimeConfig,
-		KubeFeatureGates:  conf.KubeFeatureGates,
-		SecurePort:        conf.SecurePort,
-		KubeAuthorization: conf.KubeAuthorization,
-		KubeAdmission:     conf.KubeAdmission,
-		AuditPolicyPath:   env.auditPolicyPath,
-		AuditLogPath:      env.auditLogPath,
-		CaCertPath:        env.caCertPath,
-		AdminCertPath:     env.adminCertPath,
-		AdminKeyPath:      env.adminKeyPath,
-		Verbosity:         env.verbosity,
-		DisableQPSLimits:  conf.DisableQPSLimits,
-		TracingConfigPath: kubeApiserverTracingConfigPath,
-		EtcdPrefix:        conf.EtcdPrefix,
+		Runtime:               conf.Runtime,
+		ProjectName:           c.Name(),
+		Workdir:               env.workdir,
+		Binary:                kubeApiserverPath,
+		Version:               kubeApiserverVersion,
+		BindAddress:           conf.BindAddress,
+		Port:                  conf.KubeApiserverPort,
+		EtcdAddress:           net.LocalAddress,
+		EtcdPort:              conf.EtcdPort,
+		KubeRuntimeConfig:     conf.KubeRuntimeConfig,
+		KubeFeatureGates:      conf.KubeFeatureGates,
+		SecurePort:            conf.SecurePort,
+		KubeAuthorization:     conf.KubeAuthorization,
+		KubeAdmission:         conf.KubeAdmission,
+		AuditPolicyPath:       env.auditPolicyPath,
+		AuditLogPath:          env.auditLogPath,
+		CaCertPath:            env.caCertPath,
+		AdminCertPath:         env.adminCertPath,
+		AdminKeyPath:          env.adminKeyPath,
+		Verbosity:             env.verbosity,
+		DisableQPSLimits:      conf.DisableQPSLimits,
+		TracingConfigPath:     kubeApiserverTracingConfigPath,
+		EtcdPrefix:            conf.EtcdPrefix,
+		CORSAllowedOriginList: conf.KubeApiserverCORSAllowedOriginList,
 	})
 	if err != nil {
 		return err
@@ -940,7 +941,7 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 		return nil
 	}
 
-	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
+	f, err := os.OpenFile(logs, os.O_RDONLY, 0o640)
 	if err != nil {
 		return fmt.Errorf("failed to open %s: %w", logs, err)
 	}
