@@ -32,7 +32,6 @@ import (
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
-	"sigs.k8s.io/kwok/pkg/config/compatibility"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
@@ -288,26 +287,6 @@ func Load(ctx context.Context, src ...string) ([]InternalObject, error) {
 		}
 
 		gvk := meta.GroupVersionKind()
-
-		// Converting old configurations to the latest
-		// TODO: Remove this in the future
-		if gvk.Version == "" && gvk.Group == "" && gvk.Kind == "" {
-			conf := compatibility.Config{}
-			err = json.Unmarshal(raw, &conf)
-			if err != nil {
-				logger.Error("Unsupported config", err,
-					"src", src,
-				)
-				continue
-			}
-			obj, ok := compatibility.Convert_Config_To_internalversion_KwokctlConfiguration(&conf)
-			if ok {
-				logger.Debug("Convert old config",
-					"src", src,
-				)
-				return []InternalObject{obj}, nil
-			}
-		}
 
 		handler, ok := configHandlers[gvk.Kind]
 		if !ok {
