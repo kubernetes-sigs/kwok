@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -34,7 +32,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -51,10 +48,6 @@ type Cluster struct {
 	*runtime.Cluster
 
 	runtime string
-
-	selfCompose *bool
-
-	composeCommands []string
 
 	canNerdctlUnlessStopped *bool
 }
@@ -81,53 +74,6 @@ func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
 		Cluster: runtime.NewCluster(name, workdir),
 		runtime: consts.RuntimeTypeDocker,
 	}, nil
-}
-
-var (
-	// Deprecated: docker-compose support will be removed in next release.
-	selfComposePrefer = envs.GetEnvWithPrefix("CONTAINER_SELF_COMPOSE", "true")
-)
-
-// getSwitchStatus parses the value to bool pointer.
-func getSwitchStatus(value string) (*bool, error) {
-	if strings.ToLower(value) == "auto" {
-		return nil, nil
-	}
-	b, err := strconv.ParseBool(value)
-	if err != nil {
-		return nil, err
-	}
-	return &b, nil
-}
-
-func (c *Cluster) isSelfCompose(ctx context.Context, creating bool) bool {
-	if c.selfCompose != nil {
-		return *c.selfCompose
-	}
-
-	var err error
-	logger := log.FromContext(ctx)
-
-	c.selfCompose, err = getSwitchStatus(selfComposePrefer)
-	if err != nil {
-		logger.Warn("Failed to parse env KWOK_CONTAINER_SELF_COMPOSE, ignore it, fallback to auto", "err", err)
-	} else if c.selfCompose != nil {
-		logger.Debug("Found env KWOK_CONTAINER_SELF_COMPOSE, use it", "value", *c.selfCompose)
-		return *c.selfCompose
-	}
-
-	if creating {
-		// When create a new cluster, then use self-compose.
-		c.selfCompose = format.Ptr(true)
-	} else {
-		// otherwise, check whether the compose file exists.
-		// If not exists, then use self-compose.
-		// If exists, then use *-compose.
-		composePath := c.GetWorkdirPath(runtime.ComposeName)
-		c.selfCompose = format.Ptr(!file.Exists(composePath))
-	}
-
-	return *c.selfCompose
 }
 
 // Available  checks whether the runtime is available.
@@ -833,20 +779,6 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 		return err
 	}
 
-	isSelfCompose := c.isSelfCompose(ctx, true)
-	if !isSelfCompose {
-		composePath := c.GetWorkdirPath(runtime.ComposeName)
-		compose := convertToCompose(c.Name(), conf.BindAddress, env.kwokctlConfig.Components)
-		composeData, err := yaml.Marshal(compose)
-		if err != nil {
-			return err
-		}
-		err = c.WriteFile(composePath, composeData)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Save config
 	err = c.WriteFile(env.kubeconfigPath, kubeconfigData)
 	if err != nil {
@@ -867,47 +799,44 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 		return err
 	}
 
-	if isSelfCompose {
-		err = c.createNetwork(ctx)
-		if err != nil {
-			return err
-		}
-
-		err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-			err = c.createComponents(ctx)
-			return err == nil, err
-		},
-			wait.WithContinueOnError(5),
-			wait.WithImmediate(),
-		)
-		if err != nil {
-			return err
-		}
+	err = c.createNetwork(ctx)
+	if err != nil {
+		return err
 	}
+
+	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err = c.createComponents(ctx)
+		return err == nil, err
+	},
+		wait.WithContinueOnError(5),
+		wait.WithImmediate(),
+	)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
-	if c.isSelfCompose(ctx, false) {
-		err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-			err := c.deleteComponents(ctx)
-			return err == nil, err
-		},
-			wait.WithContinueOnError(5),
-			wait.WithImmediate(),
-		)
-		if err != nil {
-			return err
-		}
-
-		err = c.deleteNetwork(ctx)
-		if err != nil {
-			return err
-		}
+	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.deleteComponents(ctx)
+		return err == nil, err
+	},
+		wait.WithContinueOnError(5),
+		wait.WithImmediate(),
+	)
+	if err != nil {
+		return err
 	}
 
-	err := c.Cluster.Uninstall(ctx)
+	err = c.deleteNetwork(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = c.Cluster.Uninstall(ctx)
 	if err != nil {
 		return err
 	}
@@ -916,34 +845,22 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 
 // Up starts the cluster.
 func (c *Cluster) Up(ctx context.Context) error {
-	if c.isSelfCompose(ctx, false) {
-		return c.start(ctx)
-	}
-	return c.upCompose(ctx)
+	return c.start(ctx)
 }
 
 // Down stops the cluster
 func (c *Cluster) Down(ctx context.Context) error {
-	if c.isSelfCompose(ctx, false) {
-		return c.stop(ctx)
-	}
-	return c.downCompose(ctx)
+	return c.stop(ctx)
 }
 
 // Start starts the cluster
 func (c *Cluster) Start(ctx context.Context) error {
-	if c.isSelfCompose(ctx, false) {
-		return c.start(ctx)
-	}
-	return c.startCompose(ctx)
+	return c.start(ctx)
 }
 
 // Stop stops the cluster
 func (c *Cluster) Stop(ctx context.Context) error {
-	if c.isSelfCompose(ctx, false) {
-		return c.stop(ctx)
-	}
-	return c.stopCompose(ctx)
+	return c.stop(ctx)
 }
 
 func (c *Cluster) start(ctx context.Context) error {
