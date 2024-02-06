@@ -69,6 +69,10 @@ type KwokctlConfigurationOptions struct {
 	// KubeApiserverPort is the port to expose apiserver.
 	KubeApiserverPort uint32
 
+	// KubeApiserverCORSAllowedOriginList is a list of
+	// origins that should be allowed to make CORS requests to the apiserver.
+	KubeApiserverCORSAllowedOriginList []string
+
 	// Runtime is the runtime to use.
 	Runtime string
 

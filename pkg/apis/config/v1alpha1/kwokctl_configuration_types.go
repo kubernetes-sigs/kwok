@@ -85,6 +85,10 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for flag --kube-apiserver-port and env KWOK_KUBE_APISERVER_PORT
 	KubeApiserverPort uint32 `json:"kubeApiserverPort,omitempty"`
 
+	// KubeApiserverCORSAllowedOriginList is a list of
+	// origins that should be allowed to make CORS requests to the apiserver.
+	KubeApiserverCORSAllowedOriginList []string
+
 	// Runtime is the runtime to use.
 	// is the default value for flag --runtime and env KWOK_RUNTIME
 	Runtime string `json:"runtime,omitempty"`
