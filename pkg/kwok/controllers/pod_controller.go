@@ -240,12 +240,6 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 			)
 			return nil
 		}
-
-		if !c.delayQueue.Cancel(resourceJob) {
-			logger.Debug("Failed to cancel stage",
-				"stage", resourceJob.Stage.Name(),
-			)
-		}
 	}
 
 	data, err := expression.ToJSONStandard(pod)
@@ -284,7 +278,7 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 	}
 	// we add a normal(fresh) stage job with weight 0,
 	// resulting in that it will always be processed with high priority compared to those retry ones
-	c.addStageJob(item, delay, 0)
+	c.addStageJob(ctx, item, delay, 0)
 	return nil
 }
 
@@ -315,7 +309,7 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 			// for failed jobs, we re-push them into the queue with a lower weight
 			// and a backoff period to avoid blocking normal tasks
 			retryDelay := backoffDelayByStep(retryCount, c.backoff)
-			c.addStageJob(pod, retryDelay, 1)
+			c.addStageJob(ctx, pod, retryDelay, 1)
 		}
 	}
 }
@@ -721,10 +715,15 @@ func (c *PodController) List(nodeName string) ([]log.ObjectRef, bool) {
 }
 
 // addStageJob adds a stage to be applied into the underlying weight delay queue and the associated helper map
-func (c *PodController) addStageJob(job resourceStageJob[*corev1.Pod], delay time.Duration, weight int) {
+func (c *PodController) addStageJob(ctx context.Context, job resourceStageJob[*corev1.Pod], delay time.Duration, weight int) {
 	old, loaded := c.delayQueueMapping.Swap(job.Key, job)
 	if loaded {
-		c.delayQueue.Cancel(old)
+		if !c.delayQueue.Cancel(old) {
+			logger := log.FromContext(ctx)
+			logger.Debug("Failed to cancel stage",
+				"stage", job.Stage.Name(),
+			)
+		}
 	}
 	c.delayQueue.AddWeightAfter(job, weight, delay)
 }
