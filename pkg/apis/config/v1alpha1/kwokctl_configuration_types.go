@@ -87,7 +87,7 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeApiserverCORSAllowedOriginList is a list of
 	// origins that should be allowed to make CORS requests to the apiserver.
-	KubeApiserverCORSAllowedOriginList []string
+	KubeApiserverCORSAllowedOriginList []string `json:"kubeApiserverCORSAllowedOriginList,omitempty"`
 
 	// Runtime is the runtime to use.
 	// is the default value for flag --runtime and env KWOK_RUNTIME
