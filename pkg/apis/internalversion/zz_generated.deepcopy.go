@@ -736,6 +736,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.KubeApiserverCORSAllowedOriginList != nil {
+		in, out := &in.KubeApiserverCORSAllowedOriginList, &out.KubeApiserverCORSAllowedOriginList
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Runtimes != nil {
 		in, out := &in.Runtimes, &out.Runtimes
 		*out = make([]string, len(*in))

@@ -2652,6 +2652,18 @@ is the default value for flag &ndash;kube-apiserver-port and env KWOK_KUBE_APISE
 </tr>
 <tr>
 <td>
+<code>kubeApiserverCORSAllowedOriginList</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>KubeApiserverCORSAllowedOriginList is a list of
+origins that should be allowed to make CORS requests to the apiserver.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>runtime</code>
 <em>
 string
