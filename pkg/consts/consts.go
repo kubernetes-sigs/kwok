@@ -24,7 +24,7 @@ var (
 
 	// Version is the version of the project.
 	// It will be overwritten during the `make build` process.
-	Version      = "0.5.0"
+	Version      = "0.5.1"
 	BinaryPrefix = "https://github.com/kubernetes-sigs/kwok/releases/download"
 	ImagePrefix  = "registry.k8s.io/kwok"
 
