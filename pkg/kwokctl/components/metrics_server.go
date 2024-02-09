@@ -40,6 +40,7 @@ type BuildMetricsServerComponentConfig struct {
 	AdminKeyPath   string
 	KubeconfigPath string
 	Verbosity      log.Level
+	ExtraArgs      []string
 }
 
 // BuildMetricsServerComponent builds a metrics server component.
@@ -140,6 +141,8 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 	if conf.Verbosity != log.LevelInfo {
 		metricsServerArgs = append(metricsServerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
+
+	metricsServerArgs = AddExtraArgs(metricsServerArgs, conf.ExtraArgs)
 
 	envs := []internalversion.Env{}
 

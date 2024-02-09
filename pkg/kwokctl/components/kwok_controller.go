@@ -48,6 +48,7 @@ type BuildKwokControllerComponentConfig struct {
 	Verbosity                         log.Level
 	NodeLeaseDurationSeconds          uint
 	EnableCRDs                        []string
+	ExtraArgs                         []string
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
@@ -162,6 +163,8 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	if len(conf.EnableCRDs) != 0 {
 		kwokControllerArgs = append(kwokControllerArgs, "--enable-crds="+strings.Join(conf.EnableCRDs, ","))
 	}
+
+	kwokControllerArgs = AddExtraArgs(kwokControllerArgs, conf.ExtraArgs)
 
 	envs := []internalversion.Env{}
 

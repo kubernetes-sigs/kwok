@@ -378,11 +378,50 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
+	componentPatches := make([]internalversion.ComponentPatches, 0, len(conf.ExtraArgs))
+	componentNames := make(map[string]int)
+	for i, extraArgs := range conf.ExtraArgs {
+		splitedArgs := strings.SplitN(extraArgs, "=", 3)
+		if len(splitedArgs) != 3 {
+			return fmt.Errorf("invalid extraArgs: %s. It should be in the format of component=arg=value", extraArgs)
+		}
+		if n, ok := componentNames[splitedArgs[0]]; ok {
+			componentPatches[n].ExtraArgs = append(componentPatches[n].ExtraArgs, internalversion.ExtraArgs{
+				Key:   splitedArgs[1],
+				Value: splitedArgs[2],
+			})
+			continue
+		}
+		componentPatches = append(componentPatches, internalversion.ComponentPatches{
+			Name: splitedArgs[0],
+			ExtraArgs: []internalversion.ExtraArgs{
+				{
+					Key:   splitedArgs[1],
+					Value: splitedArgs[2],
+				},
+			},
+		})
+		componentNames[splitedArgs[0]] = i
+	}
+
 	etcdComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentEtcd)
+
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeApiserver)
+	if n, ok := componentNames[consts.ComponentKubeApiserver]; ok {
+		kubeApiserverComponentPatches.ExtraArgs = append(kubeApiserverComponentPatches.ExtraArgs, componentPatches[n].ExtraArgs...)
+	}
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeScheduler)
+	if n, ok := componentNames[consts.ComponentKubeScheduler]; ok {
+		kubeSchedulerComponentPatches.ExtraArgs = append(kubeSchedulerComponentPatches.ExtraArgs, componentPatches[n].ExtraArgs...)
+	}
 	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeControllerManager)
+	if n, ok := componentNames[consts.ComponentKubeControllerManager]; ok {
+		kubeControllerManagerComponentPatches.ExtraArgs = append(kubeControllerManagerComponentPatches.ExtraArgs, componentPatches[n].ExtraArgs...)
+	}
 	kwokControllerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKwokController)
+	if n, ok := componentNames[consts.ComponentKwokController]; ok {
+		kwokControllerComponentPatches.ExtraArgs = append(kwokControllerComponentPatches.ExtraArgs, componentPatches[n].ExtraArgs...)
+	}
 	extraLogVolumes := runtime.GetLogVolumes(ctx)
 	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, extraLogVolumes...)

@@ -18,6 +18,7 @@ package components
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -26,10 +27,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
-var (
-	// ErrBrokenLinks is returned when there are broken links.
-	ErrBrokenLinks = fmt.Errorf("broken links dependency detected")
-)
+// ErrBrokenLinks is returned when there are broken links.
+var ErrBrokenLinks = fmt.Errorf("broken links dependency detected")
 
 // GroupByLinks groups stages by links.
 func GroupByLinks(components []internalversion.Component) ([][]internalversion.Component, error) {
@@ -67,6 +66,22 @@ func GroupByLinks(components []internalversion.Component) ([][]internalversion.C
 	return groups, nil
 }
 
+func AddExtraArgs(args []string, extraArgs []string) []string {
+	if extraArgs != nil {
+		for _, arg := range extraArgs {
+			splits := strings.SplitN(arg, "=", 3)
+			if len(splits) != 3 {
+				continue
+			}
+			if splits[0] != consts.ComponentEtcd {
+				continue
+			}
+			args = append(args, fmt.Sprintf("--%s=%s", splits[1], splits[2]))
+		}
+	}
+	return args
+}
+
 // The following runtime mode is classification of runtime for components.
 const (
 	RuntimeModeNative    = "native"
@@ -74,16 +89,14 @@ const (
 	RuntimeModeCluster   = "cluster"
 )
 
-var (
-	runtimeTypeMap = map[string]string{
-		consts.RuntimeTypeKind:       RuntimeModeCluster,
-		consts.RuntimeTypeKindPodman: RuntimeModeCluster,
-		consts.RuntimeTypeDocker:     RuntimeModeContainer,
-		consts.RuntimeTypeNerdctl:    RuntimeModeContainer,
-		consts.RuntimeTypePodman:     RuntimeModeContainer,
-		consts.RuntimeTypeBinary:     RuntimeModeNative,
-	}
-)
+var runtimeTypeMap = map[string]string{
+	consts.RuntimeTypeKind:       RuntimeModeCluster,
+	consts.RuntimeTypeKindPodman: RuntimeModeCluster,
+	consts.RuntimeTypeDocker:     RuntimeModeContainer,
+	consts.RuntimeTypeNerdctl:    RuntimeModeContainer,
+	consts.RuntimeTypePodman:     RuntimeModeContainer,
+	consts.RuntimeTypeBinary:     RuntimeModeNative,
+}
 
 // GetRuntimeMode returns the mode of runtime.
 func GetRuntimeMode(runtime string) string {

@@ -48,6 +48,7 @@ type BuildKubeControllerManagerComponentConfig struct {
 	NodeMonitorGracePeriodMilliseconds int64
 	Verbosity                          log.Level
 	DisableQPSLimits                   bool
+	ExtraArgs                          []string
 }
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
@@ -217,6 +218,8 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	if conf.Verbosity != log.LevelInfo {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
+
+	kubeControllerManagerArgs = AddExtraArgs(kubeControllerManagerArgs, conf.ExtraArgs)
 
 	envs := []internalversion.Env{}
 

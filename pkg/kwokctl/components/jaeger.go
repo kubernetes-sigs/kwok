@@ -36,6 +36,7 @@ type BuildJaegerComponentConfig struct {
 	Port         uint32
 	OtlpGrpcPort uint32
 	Verbosity    log.Level
+	ExtraArgs    []string
 }
 
 // BuildJaegerComponent builds a jaeger component.
@@ -65,6 +66,8 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 	if conf.Verbosity != log.LevelInfo {
 		jaegerArgs = append(jaegerArgs, "--log-level="+log.ToLogSeverityLevel(conf.Verbosity))
 	}
+
+	jaegerArgs = AddExtraArgs(jaegerArgs, conf.ExtraArgs)
 
 	return internalversion.Component{
 		Name:    consts.ComponentJaeger,

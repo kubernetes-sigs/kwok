@@ -326,6 +326,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		Port:        conf.EtcdPort,
 		PeerPort:    conf.EtcdPeerPort,
 		Verbosity:   env.verbosity,
+		ExtraArgs:   conf.ExtraArgs,
 	})
 	if err != nil {
 		return err
@@ -396,6 +397,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		TracingConfigPath: kubeApiserverTracingConfigPath,
 		EtcdPrefix:        conf.EtcdPrefix,
+		ExtraArgs:         conf.ExtraArgs,
 	})
 	if err != nil {
 		return err
@@ -446,6 +448,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
 			Verbosity:                          env.verbosity,
 			DisableQPSLimits:                   conf.DisableQPSLimits,
+			ExtraArgs:                          conf.ExtraArgs,
 		})
 		if err != nil {
 			return err
@@ -504,6 +507,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 			KubeFeatureGates: conf.KubeFeatureGates,
 			Verbosity:        env.verbosity,
 			DisableQPSLimits: conf.DisableQPSLimits,
+			ExtraArgs:        conf.ExtraArgs,
 		})
 		if err != nil {
 			return err
@@ -544,6 +548,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		Verbosity:                env.verbosity,
 		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 		EnableCRDs:               conf.EnableCRDs,
+		ExtraArgs:                conf.ExtraArgs,
 	})
 	if err != nil {
 		return err
@@ -587,6 +592,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 			AdminKeyPath:   env.adminKeyPath,
 			KubeconfigPath: env.kubeconfigPath,
 			Verbosity:      env.verbosity,
+			ExtraArgs:      conf.ExtraArgs,
 		})
 		if err != nil {
 			return err
@@ -642,6 +648,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			Port:        conf.PrometheusPort,
 			ConfigPath:  prometheusConfigPath,
 			Verbosity:   env.verbosity,
+			ExtraArgs:   conf.ExtraArgs,
 		})
 		if err != nil {
 			return err
@@ -675,6 +682,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) error {
 			Port:         conf.JaegerPort,
 			OtlpGrpcPort: conf.JaegerOtlpGrpcPort,
 			Verbosity:    env.verbosity,
+			ExtraArgs:    conf.ExtraArgs,
 		})
 		if err != nil {
 			return err
@@ -940,7 +948,7 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 		return nil
 	}
 
-	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
+	f, err := os.OpenFile(logs, os.O_RDONLY, 0o640)
 	if err != nil {
 		return fmt.Errorf("failed to open %s: %w", logs, err)
 	}

@@ -40,6 +40,7 @@ type BuildEtcdComponentConfig struct {
 	Port        uint32
 	PeerPort    uint32
 	Verbosity   log.Level
+	ExtraArgs   []string
 }
 
 // BuildEtcdComponent builds an etcd component.
@@ -127,6 +128,8 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			Path:   "/metrics",
 		}
 	}
+
+	etcdArgs = AddExtraArgs(etcdArgs, conf.ExtraArgs)
 
 	if conf.Version.GTE(version.NewVersion(3, 4, 0)) {
 		if conf.Verbosity != log.LevelInfo {
