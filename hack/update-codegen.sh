@@ -49,6 +49,7 @@ function gen() {
     --input-dirs ./pkg/apis/v1alpha1/ \
     --input-dirs ./pkg/apis/config/v1alpha1/ \
     --input-dirs ./pkg/apis/action/v1alpha1/ \
+    --output-package sigs.k8s.io/kwok/pkg/apis \
     --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
     --output-file-base zz_generated.deepcopy \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
@@ -57,12 +58,14 @@ function gen() {
     --input-dirs ./pkg/apis/v1alpha1/ \
     --input-dirs ./pkg/apis/config/v1alpha1/ \
     --input-dirs ./pkg/apis/action/v1alpha1/ \
+    --output-package sigs.k8s.io/kwok/pkg/apis \
     --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
     --output-file-base zz_generated.defaults \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
   echo "Generating conversion"
   conversion-gen \
-    --input-dirs ./pkg/apis/internalversion/ \
+    --input-dirs ./pkg/apis/internalversion \
+    --output-package sigs.k8s.io/kwok/pkg/apis/internalversion \
     --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
     --output-file-base zz_generated.conversion \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
@@ -73,6 +76,7 @@ function gen() {
     --clientset-name versioned \
     --input-base "" \
     --input sigs.k8s.io/kwok/pkg/apis/v1alpha1 \
+    --trim-path-prefix sigs.k8s.io/kwok \
     --output-package sigs.k8s.io/kwok/pkg/client/clientset \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt \
     --plural-exceptions="Logs:Logs,ClusterLogs:ClusterLogs"
