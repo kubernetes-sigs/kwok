@@ -67,17 +67,15 @@ func GroupByLinks(components []internalversion.Component) ([][]internalversion.C
 }
 
 func AddExtraArgs(args []string, extraArgs []string) []string {
-	if extraArgs != nil {
-		for _, arg := range extraArgs {
-			splits := strings.SplitN(arg, "=", 3)
-			if len(splits) != 3 {
-				continue
-			}
-			if splits[0] != consts.ComponentEtcd {
-				continue
-			}
-			args = append(args, fmt.Sprintf("--%s=%s", splits[1], splits[2]))
+	for _, arg := range extraArgs {
+		splits := strings.SplitN(arg, "=", 3)
+		if len(splits) != 3 {
+			continue
 		}
+		if splits[0] != consts.ComponentEtcd {
+			continue
+		}
+		args = append(args, fmt.Sprintf("--%s=%s", splits[1], splits[2]))
 	}
 	return args
 }
