@@ -165,6 +165,35 @@ func mutationHeartbeat(flags *flagpole) {
 	flags.Options.HeartbeatFactor = 1
 }
 
+func mutationComponentPatches(flags *flagpole) {
+	componentPatches := make([]internalversion.ComponentPatches, 0, len(flags.Options.ExtraArgs))
+	componentNames := make(map[string]int)
+	for i, extraArgs := range flags.Options.ExtraArgs {
+		splitedArgs := strings.SplitN(extraArgs, "=", 3)
+		if len(splitedArgs) != 3 {
+			continue
+		}
+		if n, ok := componentNames[splitedArgs[0]]; ok {
+			componentPatches[n].ExtraArgs = append(componentPatches[n].ExtraArgs, internalversion.ExtraArgs{
+				Key:   splitedArgs[1],
+				Value: splitedArgs[2],
+			})
+			continue
+		}
+		componentPatches = append(componentPatches, internalversion.ComponentPatches{
+			Name: splitedArgs[0],
+			ExtraArgs: []internalversion.ExtraArgs{
+				{
+					Key:   splitedArgs[1],
+					Value: splitedArgs[2],
+				},
+			},
+		})
+		componentNames[splitedArgs[0]] = i
+	}
+	flags.KwokctlConfiguration.ComponentsPatches = append(flags.KwokctlConfiguration.ComponentsPatches, componentPatches...)
+}
+
 func runE(ctx context.Context, flags *flagpole) error {
 	name := config.ClusterName(flags.Name)
 	workdir := path.Join(config.ClustersDir, flags.Name)
@@ -189,6 +218,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	mutationHeartbeat(flags)
+	mutationComponentPatches(flags)
 
 	// Choose runtime
 	var rt runtime.Runtime
