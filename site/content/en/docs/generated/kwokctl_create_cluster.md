@@ -25,6 +25,7 @@ kwokctl create cluster [flags]
                                                  (default "registry.k8s.io/etcd:3.5.11-0")
       --etcd-port uint32                        Port of etcd given to the host. The behavior is unstable for kind/kind-podman runtime and may be modified in the future
       --etcd-prefix string                      prefix of the key (default "/registry")
+      --extra-args stringArray                  A set of key=value pairs that is passed to the runtime
       --heartbeat-factor float                  Scale factor for all about heartbeat (default 5)
   -h, --help                                    help for cluster
       --jaeger-binary string                    Binary of Jaeger, only for binary runtime (default "https://github.com/jaegertracing/jaeger/releases/download/v1.53.0/jaeger-1.53.0-linux-amd64.tar.gz#jaeger-all-in-one")
