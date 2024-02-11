@@ -44,7 +44,6 @@ type BuildKubeSchedulerComponentConfig struct {
 	KubeFeatureGates string
 	Verbosity        log.Level
 	DisableQPSLimits bool
-	ExtraArgs        []string
 }
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
@@ -208,8 +207,6 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	if conf.Verbosity != log.LevelInfo {
 		kubeSchedulerArgs = append(kubeSchedulerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
-
-	kubeSchedulerArgs = AddExtraArgs(kubeSchedulerArgs, conf.ExtraArgs)
 
 	envs := []internalversion.Env{}
 

@@ -38,7 +38,6 @@ type BuildPrometheusComponentConfig struct {
 	AdminCertPath string
 	AdminKeyPath  string
 	Verbosity     log.Level
-	ExtraArgs     []string
 }
 
 // BuildPrometheusComponent builds a prometheus component.
@@ -93,8 +92,6 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 	if conf.Verbosity != log.LevelInfo {
 		prometheusArgs = append(prometheusArgs, "--log.level="+log.ToLogSeverityLevel(conf.Verbosity))
 	}
-
-	prometheusArgs = AddExtraArgs(prometheusArgs, conf.ExtraArgs)
 
 	envs := []internalversion.Env{}
 

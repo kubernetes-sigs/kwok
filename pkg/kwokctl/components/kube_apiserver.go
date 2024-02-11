@@ -54,7 +54,6 @@ type BuildKubeApiserverComponentConfig struct {
 	DisableQPSLimits  bool
 	TracingConfigPath string
 	EtcdPrefix        string
-	ExtraArgs         []string
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -291,8 +290,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	if conf.TracingConfigPath != "" {
 		links = append(links, consts.ComponentJaeger)
 	}
-
-	kubeApiserverArgs = AddExtraArgs(kubeApiserverArgs, conf.ExtraArgs)
 
 	return internalversion.Component{
 		Name:    consts.ComponentKubeApiserver,
