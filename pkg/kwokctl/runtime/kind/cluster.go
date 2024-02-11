@@ -387,15 +387,20 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	for _, patch := range env.kwokctlConfig.ComponentsPatches {
 		switch patch.Name {
 		case consts.ComponentEtcd:
-			etcdComponentPatches.ExtraArgs = append(etcdComponentPatches.ExtraArgs, patch.ExtraArgs...)
+			args := filterDuplicatedExtraArgs(etcdComponentPatches.ExtraArgs, patch.ExtraArgs)
+			etcdComponentPatches.ExtraArgs = args
 		case consts.ComponentKubeApiserver:
-			kubeApiserverComponentPatches.ExtraArgs = append(kubeApiserverComponentPatches.ExtraArgs, patch.ExtraArgs...)
+			args := filterDuplicatedExtraArgs(kubeApiserverComponentPatches.ExtraArgs, patch.ExtraArgs)
+			kubeApiserverComponentPatches.ExtraArgs = args
 		case consts.ComponentKubeScheduler:
-			kubeSchedulerComponentPatches.ExtraArgs = append(kubeSchedulerComponentPatches.ExtraArgs, patch.ExtraArgs...)
+			args := filterDuplicatedExtraArgs(kubeSchedulerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			kubeSchedulerComponentPatches.ExtraArgs = args
 		case consts.ComponentKubeControllerManager:
-			kubeControllerManagerComponentPatches.ExtraArgs = append(kubeControllerManagerComponentPatches.ExtraArgs, patch.ExtraArgs...)
+			args := filterDuplicatedExtraArgs(kubeControllerManagerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			kubeControllerManagerComponentPatches.ExtraArgs = args
 		case consts.ComponentKwokController:
-			kwokControllerComponentPatches.ExtraArgs = append(kwokControllerComponentPatches.ExtraArgs, patch.ExtraArgs...)
+			args := filterDuplicatedExtraArgs(kwokControllerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			kwokControllerComponentPatches.ExtraArgs = args
 		}
 	}
 	extraLogVolumes := runtime.GetLogVolumes(ctx)
@@ -445,6 +450,21 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	}
 
 	return nil
+}
+
+func filterDuplicatedExtraArgs(extraArgs, passedExtraArgs []internalversion.ExtraArgs) []internalversion.ExtraArgs {
+	extraArgsMap := make(map[string]internalversion.ExtraArgs)
+	for _, args := range extraArgs {
+		extraArgsMap[args.Key] = args
+	}
+	for _, args := range passedExtraArgs {
+		extraArgsMap[args.Key] = args
+	}
+	result := make([]internalversion.ExtraArgs, 0, len(extraArgsMap))
+	for _, args := range extraArgsMap {
+		result = append(result, args)
+	}
+	return result
 }
 
 func (c *Cluster) addEtcd(_ context.Context, env *env) (err error) {
