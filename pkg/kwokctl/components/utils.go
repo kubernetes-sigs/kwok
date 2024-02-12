@@ -26,8 +26,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
-// ErrBrokenLinks is returned when there are broken links.
-var ErrBrokenLinks = fmt.Errorf("broken links dependency detected")
+var (
+	// ErrBrokenLinks is returned when there are broken links.
+	ErrBrokenLinks = fmt.Errorf("broken links dependency detected")
+)
 
 // GroupByLinks groups stages by links.
 func GroupByLinks(components []internalversion.Component) ([][]internalversion.Component, error) {
@@ -72,14 +74,16 @@ const (
 	RuntimeModeCluster   = "cluster"
 )
 
-var runtimeTypeMap = map[string]string{
-	consts.RuntimeTypeKind:       RuntimeModeCluster,
-	consts.RuntimeTypeKindPodman: RuntimeModeCluster,
-	consts.RuntimeTypeDocker:     RuntimeModeContainer,
-	consts.RuntimeTypeNerdctl:    RuntimeModeContainer,
-	consts.RuntimeTypePodman:     RuntimeModeContainer,
-	consts.RuntimeTypeBinary:     RuntimeModeNative,
-}
+var (
+	runtimeTypeMap = map[string]string{
+		consts.RuntimeTypeKind:       RuntimeModeCluster,
+		consts.RuntimeTypeKindPodman: RuntimeModeCluster,
+		consts.RuntimeTypeDocker:     RuntimeModeContainer,
+		consts.RuntimeTypeNerdctl:    RuntimeModeContainer,
+		consts.RuntimeTypePodman:     RuntimeModeContainer,
+		consts.RuntimeTypeBinary:     RuntimeModeNative,
+	}
+)
 
 // GetRuntimeMode returns the mode of runtime.
 func GetRuntimeMode(runtime string) string {
