@@ -746,11 +746,6 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.ExtraArgs != nil {
-		in, out := &in.ExtraArgs, &out.ExtraArgs
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	return
 }
 

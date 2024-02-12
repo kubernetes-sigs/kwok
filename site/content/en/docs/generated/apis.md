@@ -3676,17 +3676,6 @@ bool
 <p>DisableQPSLimits specifies whether to disable QPS limits for components.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>extraArgs</code>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>ExtraArgs is used to pass extra arguments to the components.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlConfigurationStatus">

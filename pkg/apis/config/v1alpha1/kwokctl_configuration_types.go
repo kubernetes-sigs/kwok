@@ -454,9 +454,6 @@ type KwokctlConfigurationOptions struct {
 	// DisableQPSLimits specifies whether to disable QPS limits for components.
 	// +default=false
 	DisableQPSLimits *bool `json:"disableQPSLimits,omitempty"`
-
-	// ExtraArgs is used to pass extra arguments to the components.
-	ExtraArgs []string `json:"extraArgs,omitempty"`
 }
 
 // Component is a component of the cluster.
