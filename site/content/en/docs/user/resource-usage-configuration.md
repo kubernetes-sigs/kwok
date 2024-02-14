@@ -6,13 +6,13 @@ title: ResourceUsage
 
 {{< hint "info" >}}
 
-This document walks you through how to configure the ResourceUsage feature.
+This document walks you through how to simulate the resource usage of pod(s).
 
 {{< /hint >}}
 
 ## What is ResourceUsage?
 
-The [ResourceUsage API] is a [`kwok` Configuration][configuration] that allows users to define and simulate the resource usage of Pod(s).
+[ResourceUsage] is a [`kwok` Configuration][configuration] that allows users to define and simulate the resource usages of a single pod.
 
 A ResourceUsage resource has the following fields:
 
@@ -28,19 +28,49 @@ spec:
     - <string>
     usage:
       cpu:
+        value: <Quantity>
         expression: <string>
       memory:
+        value: <Quantity>
         expression: <string>
 ```
 
-To simulate the resource usage, you can set the `usages` field in the spec section of a ResourceUsage resource.
-The `containers` field is used to match an item in the `usages` field. If the `containers` field is not set, the `usages` item will default to all containers.
-The `usage` field specifies the resource usage to be simulated. The `cpu` field is used to simulate the CPU usage, and the `memory` field is used to simulate the memory usage.
+To associate a ResourceUsage with a certain pod to be simulated, users must ensure `metadata.name` and `metadata.namespace` are inconsistent with the name and namespace of the target pod.
+
+The resource usages of a pod are specified via `usages` field.
+The `usages` field are organized by groups, with each corresponding to a collection of containers that shares a same resource usage simulation setting.
+Each group consists of a list of container names (`containers`) and the shared resource usage setting (`usage`).
+
+{{< hint "info" >}}
+If `containers` is not given in a group, the `usage` in that group will be applied to all containers of the target pod.
+{{< /hint >}}
+
+You can simply set a static [Quantity value] (`100Mi`, `1000m`, etc.) via `cpu.value` and `memory.value` to define the cpu and memory resource usage respectively.
+Besides, users are also allowed to provide a [CEL expression] via `expressions` to describe the resource usage more flexibly. For example,
+the following expression tries to extract the cpu resource usage from the pod's annotation if it has or use a default value.
+```yaml
+expression: |
+  "kwok.x-k8s.io/usage-cpu" in pod.metadata.annotations
+  ? Quantity(pod.metadata.annotations["kwok.x-k8s.io/usage-cpu"])
+  : Quantity("1m")
+```
+
+{{< hint "info" >}}
+1. `value` has higher priority than `expressions` if both are set.
+2. Quantity value must be explicitly wrapped by `Quantity` function in CEL expressions.
+{{< /hint >}}
+
+With CEL expressions, it is even possible to simulate resource usages dynamically. For example, the following expression
+yields CPU usage that grows linearly with time.
+```yaml
+expression: (pod.SinceSecond() / 60.0) * Quantity("1Mi")
+```
+Please refer to [built-in CEL extension functions] for an exhausted list that may helpful to config dynamic resource usages.
 
 
 ### ClusterResourceUsage
 
-The [ClusterResourceUsage API] is a special ResourceUsage API which is cluster-side.
+In addition to simulating a single pod, users can also simulate the resource usage for multiple pods via [ClusterResourceUsage].
 
 A ClusterResourceUsage resource has the following fields:
 
@@ -60,20 +90,44 @@ spec:
     - <string>
     usage:
     cpu:
+      value: <Quantity>
       expression: <string>
     memory:
+      value: <Quantity>
       expression: <string>
 ```
+Compared to ResourceUsage, whose `metadata.name` and `metadata.namespace` are required to match the associated pod, 
+ClusterResourceUsage has an additional `selector` field for specifying the target pods to be simulated.
+`matchNamespaces` and `matchNames` are both represented as list，which are designed to take pod collections by different levels:
 
-The `selector` field is used to select the Pods to simulate the resource usage.
-The `matchNamespaces` field is used to match the namespace of the Pods. If the `matchNamespaces` field is not set, the ClusterResourceUsage will match all namespaces.
-The `matchNames` field is used to match the name of the Pods. If the `matchNames` field is not set, the ClusterResourceUsage will match all Pods.
+1. If `matchNamespaces` is empty, ClusterResourceUsage will be applied to all pods that are managed by `kwok` and whose names listed in `matchNames`.
+2. If `matchNames` is empty, ClusterResourceUsage will be applied to all pods managed by `kwok` and under namespaces listed in `matchNamespaces`.
+3. If `matchNames` and `matchNamespaces` are both unset, ClusterResourceUsage will be applied to all pods that `kwok` manages.
+
+The `usages` field of ClusterResourceUsage has the same semantic with the one in ResourceUsage.
+
+Please refer to [pod resource usage from annotation] for a concrete example.
+
+## Where to get the simulation data?
+
+The resource usages defined in ResourceUsage and ClusterResourceUsage resources can be fetched from the metric service of `kwok` at port `10247` with path `/metrics/nodes/{nodeName}/metrics/resource`,
+where `{nodeName}` is the name of the fake node that the pod is scheduled to.
+The returned metrics look the same as the response of kubelet's `metrics/resource` endpoint.
+
+Please refer to [`kwok` Metric][Metric] about how to integrate `kwok` simulated metrics endpoints with metrics-server.  
 
 ## Dependencies
 
-[Metrics] is required to be enabled and set up default CRs for ResourceUsage
+ResourceUsage or ClusterResourceUsage only takes effect when the [Metric] feature is also enabled and the
+[default Metric resource] that simulates kubelet's `metrics/resource` endpoint is applied. 
+
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
-[ResourceUsage API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ResourceUsage
-[ClusterResourceUsage API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage
-[Metrics]: {{< relref "/docs/user/metrics-configuration" >}}
+[ResourceUsage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ResourceUsage
+[ClusterResourceUsage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage
+[Quantity value]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes
+[CEL expression]: https://github.com/google/cel-spec/blob/master/doc/langdef.md
+[Metric]: {{< relref "/docs/user/metrics-configuration" >}}
+[default Metric resource]:  https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource/metrics-resource.yaml
+[pod resource usage from annotation]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/usage/usage-from-annotation.yaml
+[built-in CEL extension functions]: {{< relref "/docs/user/metrics-configuration" >}}#built-in-cel-extension-functions

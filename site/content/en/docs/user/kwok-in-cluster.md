@@ -37,7 +37,7 @@ kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATES
 
 ## Set up default CRs of Resource Usage (optional)
 
-This will allows to simulate the resource usage of the pods.
+This allows to simulate the resource usage of nodes, pods and containers.
 
 ``` bash 
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/metrics-usage.yaml"
