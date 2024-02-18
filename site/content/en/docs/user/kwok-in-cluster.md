@@ -35,7 +35,7 @@ NOTE: This configures the pod/node emulation behavior, if not it will do nothing
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/stage-fast.yaml"
 ```
 
-## Set up default CRs of Resource Usage (optional)
+## Set up default CRs of resource usage (optional)
 
 This allows to simulate the resource usage of nodes, pods and containers.
 

@@ -12,9 +12,9 @@ This document walks you through how to configure the Metrics feature.
 
 ## What is a Metrics?
 
-The [Metrics] is a [`kwok` Configuration][configuration]  that allows users to define and simulate metrics endpoints exposed by kubelet.
+The [Metrics] is a [`kwok` Configuration][configuration] that allows users to define and simulate metrics endpoints exposed by kubelet.
 
-A Metrics resource has the following fields:
+The YAML below shows all the fields of a Metrics resource:
 
 ``` yaml
 kind: Metrics
@@ -38,7 +38,7 @@ spec:
       hidden: <bool>
 ```
 
-There are total four metric-related endpoints in kubelet: `/metrics`, `/metrics/resource`, `metrics/probe`, `metrics/cadvisor`,
+There are total four metric-related endpoints in kubelet: `/metrics`, `/metrics/resource`, `/metrics/probe` and `/metrics/cadvisor`,
 all of which are exposed with a Prometheus style. The Metrics resource is capable of simulating endpoints with such style.
 
 To simulate a metric endpoint, first, you need to specify the RESTful `path` of the endpoint,
@@ -68,37 +68,39 @@ The `metrics` field are used to customize the return body of the installed metri
 * `labels` defines the metric labels, with each item corresponding to a specific metric label.
   - `name` is a const string that provides the label name.
   - `value` is represented as a CEL expression that dynamically determines the label value.
-    For example: you can use `pod.metadata.name` to reference the pod name as the label value.
+    For example: you can use `node.metadata.name` to reference the node name as the label value.
 * `help` defines the help string of a metric.
 * `kind` defines the type of the metric: `counter`, `guage` or `histogram`.
 * `dimension` defines where the data comes from. It could be `node`, `pod`, or `container`.
 * `value` is a CEL expression that defines the metric value if `kind` is `counter` or `guage`.
   Please refer to [built-in CEL extension functions] for an exhausted list that you can use to simulate the metric value.
 * `buckets` is exclusively for customizing the data of the metric of kind `histogram`.
-  - `le` has the same meaning as the one of Prometheus histogram bucket.
+  - `le`, which defines the histogram bucket’s upper threshold, has the same meaning as the one of Prometheus histogram bucket.
+    That is, each bucket contains values less than or equal to `le`.
   - `value` is a CEL expression that provides the value of the bucket.
-  - `hidden` indicates whether to hide the bucket. The bucket would be ignored if set to `true`.
+  - `hidden` indicates whether to show the bucket in the metric.
+    But the value of the bucket will be calculated and cumulated into the next bucket.
 
-Please refer to [Metrics for kubelet's "metrics/resource" endpoint] for a detailed example.
+Please refer to [Metrics for kubelet's "metrics/resource" endpoint][metrics resource endpoint] for a detailed example.
 
 
 ## built-in CEL extension functions
 
 As `kwok` doesn't actually run containers, to simulate the resource usage data, `kwok` provides the following CEL
 extension functions you can use in a CEL expression to help calculate the simulation data flexibly and dynamically:
-* `Now()`: yields the current timestamp.
-* `Rand()`: yields a random `float64` value.
-* `SinceSecond()` yields the seconds elapsed since a resource (pod or node) was created.
+* `Now()`: returns the current timestamp.
+* `Rand()`: returns a random `float64` value.
+* `SinceSecond()` returns the seconds elapsed since a resource (pod or node) was created.
   For example: `pod.SinceSecond()`, `node.SinceSecond()`.
-* `UnixSecond()` yields the Unix time of a given time of type `time.Time`.
+* `UnixSecond()` returns the Unix time of a given time of type `time.Time`.
   For example: , `UnixSecond(Now())`, `UnixSecond(node.metadata.creationTimestamp)`.
-* `Quantity()` yields a float64 value of a given Quantity value. For example: `Quantity("100m")`, `Quantity("10Mi")`.
-* `Usage()` yields the current instantaneous resource usage with the simulation data in [ResourceUsage (ClusterResourceUsage)].
-  For example: `Usage(pod, "memory")`, `Usage(node, "memory")`, `Usage(pod, "memory", container.name)` yield the
+* `Quantity()` returns a float64 value of a given Quantity value. For example: `Quantity("100m")`, `Quantity("10Mi")`.
+* `Usage()` returns the current instantaneous resource usage with the simulation data in [ResourceUsage (ClusterResourceUsage)].
+  For example: `Usage(pod, "memory")`, `Usage(node, "memory")`, `Usage(pod, "memory", container.name)` return the
   current working set of a resource (pod, node or container) in bytes.
-* `CumulativeUsage()` yield the cumulative resource usage in seconds with the simulation data given in [ResourceUsage (ClusterResourceUsage)].
+* `CumulativeUsage()` return the cumulative resource usage in seconds with the simulation data given in [ResourceUsage (ClusterResourceUsage)].
   For example: `CumulativeUsage(pod, "cpu")`, `CumulativeUsage(node, "cpu")`, `CumulativeUsage(pod, "cpu", container.name)`
-  yield a cumulative cpu time consumed by a resource (pod, node or container) in core-seconds.
+  return a cumulative cpu time consumed by a resource (pod, node or container) in core-seconds.
 
 
 `node`, `pod`, `container` are three special parameters that can be used only when `dimension` is set to the corresponding value.
@@ -108,9 +110,9 @@ You should follow the below rules to use the three parameters:
 * When dimension is `container`: `node`, `pod`, `container` all can be used.
 
 
-Except `Now()`, `Rand()` and `Quantity()`, all other functions can be invoked in a receiver call-style.
-That is, a function call like `f(e1, e2)` can also be invoked in style `e1.f(e2)`.  For instance, you can use `pod.Usage("memory")`
-as an alternative of `Usage(pod, "memory")`.
+The functions that have more one parameter can be called in a receiver call-style.
+That is, a function call like `f(e1, e2)` can also be called in style `e1.f(e2)`. For example, you can use `pod.Usage("memory")`
+as an alternative to `Usage(pod, "memory")`.
 
 
 {{< hint "warning" >}}
@@ -129,7 +131,7 @@ Therefore, please ensure that the associated ResourceUsage or ClusterResourceUsa
 
 ## Out-of-box Metric Config
 
-`kwok` currently provides the [Metrics config][Metrics for kubelet's "metrics/resource" endpoint] that is capable of
+`kwok` currently provides the [Metrics config][metrics resource endpoint]that is capable of
 simulating kubelet's `"metrics/resource"` endpoint.
 
 To integrate the simulated endpoint with metrics-server (version is required >= 0.7.0), please add the 
@@ -139,5 +141,5 @@ nodes managed by `kwok`.
 [configuration]: {{< relref "/docs/user/configuration" >}}
 [Metrics]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Metrics
 [built-in CEL extension functions]: {{< relref "/docs/user/metrics-configuration" >}}#built-in-cel-extension-functions
-[Metrics for kubelet's "metrics/resource" endpoint]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource/metrics-resource.yaml
+[metrics resource endpoint]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource
 [ResourceUsage (ClusterResourceUsage)]: {{< relref "/docs/user/resource-usage-configuration" >}}

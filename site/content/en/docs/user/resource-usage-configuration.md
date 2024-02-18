@@ -14,7 +14,7 @@ This document walks you through how to simulate the resource usage of pod(s).
 
 [ResourceUsage] is a [`kwok` Configuration][configuration] that allows users to define and simulate the resource usages of a single pod.
 
-A ResourceUsage resource has the following fields:
+The YAML below shows all the fields of a ResourceUsage resource:
 
 ``` yaml
 kind: ResourceUsage
@@ -28,10 +28,10 @@ spec:
     - <string>
     usage:
       cpu:
-        value: <Quantity>
+        value: <quantity>
         expression: <string>
       memory:
-        value: <Quantity>
+        value: <quantity>
         expression: <string>
 ```
 
@@ -61,7 +61,7 @@ expression: |
 {{< /hint >}}
 
 With CEL expressions, it is even possible to simulate resource usages dynamically. For example, the following expression
-yields CPU usage that grows linearly with time.
+yields memory usage that grows linearly with time.
 ```yaml
 expression: (pod.SinceSecond() / 60.0) * Quantity("1Mi")
 ```
@@ -90,10 +90,10 @@ spec:
     - <string>
     usage:
     cpu:
-      value: <Quantity>
+      value: <quantity>
       expression: <string>
     memory:
-      value: <Quantity>
+      value: <quantity>
       expression: <string>
 ```
 Compared to ResourceUsage, whose `metadata.name` and `metadata.namespace` are required to match the associated pod, 
@@ -112,14 +112,14 @@ Please refer to [pod resource usage from annotation] for a concrete example.
 
 The resource usages defined in ResourceUsage and ClusterResourceUsage resources can be fetched from the metric service of `kwok` at port `10247` with path `/metrics/nodes/{nodeName}/metrics/resource`,
 where `{nodeName}` is the name of the fake node that the pod is scheduled to.
-The returned metrics look the same as the response of kubelet's `metrics/resource` endpoint.
+The returned metrics look the same as the response of kubelet's `/metrics/resource` endpoint.
 
 Please refer to [`kwok` Metric][Metric] about how to integrate `kwok` simulated metrics endpoints with metrics-server.  
 
 ## Dependencies
 
-ResourceUsage or ClusterResourceUsage only takes effect when the [Metric] feature is also enabled and the
-[default Metric resource] that simulates kubelet's `metrics/resource` endpoint is applied. 
+ResourceUsage or ClusterResourceUsage only takes effect when the [Metric] feature is also enabled and
+[the default Metric resource] that simulates kubelet's `/metrics/resource` endpoint is applied. 
 
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
@@ -128,6 +128,6 @@ ResourceUsage or ClusterResourceUsage only takes effect when the [Metric] featur
 [Quantity value]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes
 [CEL expression]: https://github.com/google/cel-spec/blob/master/doc/langdef.md
 [Metric]: {{< relref "/docs/user/metrics-configuration" >}}
-[default Metric resource]:  https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource/metrics-resource.yaml
+[the default Metric resource]:  https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource
 [pod resource usage from annotation]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/usage/usage-from-annotation.yaml
 [built-in CEL extension functions]: {{< relref "/docs/user/metrics-configuration" >}}#built-in-cel-extension-functions
