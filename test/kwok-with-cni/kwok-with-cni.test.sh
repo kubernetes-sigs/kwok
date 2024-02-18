@@ -19,7 +19,7 @@ DIR="$(realpath "${DIR}")"
 
 ROOT_DIR="$(realpath "${DIR}/../..")"
 
-BASH_IMAGE=registry.k8s.io/build-image/distroless-iptables:v0.2.4
+BASH_IMAGE=registry.k8s.io/build-image/distroless-iptables:v0.5.1
 CLUSTER_NAME=kwok-test
 KWOK_IMAGE="kwok-with-cni"
 KWOK_VERSION="test"
