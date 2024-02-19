@@ -110,9 +110,6 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerVersion is the version of metrics-server to use.
 	MetricsServerVersion string
 
-	// DockerComposeVersion is the version of docker-compose to use.
-	DockerComposeVersion string
-
 	// KindVersion is the version of kind to use.
 	KindVersion string
 
@@ -220,9 +217,6 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerBinary is the binary of metrics-server.
 	MetricsServerBinary string
-
-	// DockerComposeBinary is the binary of Docker compose.
-	DockerComposeBinary string
 
 	// KindBinary is the binary of kind.
 	KindBinary string

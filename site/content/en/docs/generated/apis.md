@@ -2805,19 +2805,6 @@ string
 </tr>
 <tr>
 <td>
-<code>dockerComposeVersion</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DockerComposeVersion is the version of docker-compose to use.
-is the default value for env KWOK_DOCKER_COMPOSE_VERSION
-Deprecated: docker compose will be removed in a future release</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>kindVersion</code>
 <em>
 string
@@ -3372,32 +3359,6 @@ string
 </td>
 <td>
 <p>MetricsServerBinary is the binary of metrics-server.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dockerComposeBinaryPrefix</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DockerComposeBinaryPrefix is the binary of docker-compose.
-is the default value for env KWOK_DOCKER_COMPOSE_BINARY_PREFIX
-Deprecated: docker compose will be removed in a future release</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dockerComposeBinary</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DockerComposeBinary is the binary of Docker compose.
-is the default value for flag &ndash;docker-compose-binary and env KWOK_DOCKER_COMPOSE_BINARY
-Deprecated: docker compose will be removed in a future release</p>
 </td>
 </tr>
 <tr>

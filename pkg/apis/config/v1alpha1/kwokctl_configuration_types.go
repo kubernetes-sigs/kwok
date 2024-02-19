@@ -134,11 +134,6 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerVersion is the version of metrics-server to use.
 	MetricsServerVersion string `json:"metricsServerVersion,omitempty"`
 
-	// DockerComposeVersion is the version of docker-compose to use.
-	// is the default value for env KWOK_DOCKER_COMPOSE_VERSION
-	// Deprecated: docker compose will be removed in a future release
-	DockerComposeVersion string `json:"dockerComposeVersion,omitempty"`
-
 	// KindVersion is the version of kind to use.
 	// is the default value for env KWOK_KIND_VERSION
 	KindVersion string `json:"kindVersion,omitempty"`
@@ -350,17 +345,6 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerBinary is the binary of metrics-server.
 	MetricsServerBinary string `json:"metricsServerBinary,omitempty"`
-
-	// DockerComposeBinaryPrefix is the binary of docker-compose.
-	// is the default value for env KWOK_DOCKER_COMPOSE_BINARY_PREFIX
-	// Deprecated: docker compose will be removed in a future release
-	//+k8s:conversion-gen=false
-	DockerComposeBinaryPrefix string `json:"dockerComposeBinaryPrefix,omitempty"`
-
-	// DockerComposeBinary is the binary of Docker compose.
-	// is the default value for flag --docker-compose-binary and env KWOK_DOCKER_COMPOSE_BINARY
-	// Deprecated: docker compose will be removed in a future release
-	DockerComposeBinary string `json:"dockerComposeBinary,omitempty"`
 
 	// KindBinaryPrefix is the binary prefix of kind.
 	// is the default value for env KWOK_KIND_BINARY_PREFIX

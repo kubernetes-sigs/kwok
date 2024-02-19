@@ -238,8 +238,6 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setKwokctlKindConfig(conf)
 
-	setKwokctlDockerConfig(conf)
-
 	setKwokctlDashboardConfig(conf)
 
 	setKwokctlPrometheusConfig(conf)
@@ -420,23 +418,6 @@ func setKwokctlKindConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	conf.KindBinary = envs.GetEnvWithPrefix("KIND_BINARY", conf.KindBinary)
 }
 
-func setKwokctlDockerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
-	if conf.DockerComposeVersion == "" {
-		conf.DockerComposeVersion = consts.DockerComposeVersion
-	}
-	conf.DockerComposeVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DOCKER_COMPOSE_VERSION", conf.DockerComposeVersion))
-
-	if conf.DockerComposeBinaryPrefix == "" {
-		conf.DockerComposeBinaryPrefix = consts.DockerComposeBinaryPrefix + "/" + conf.DockerComposeVersion
-	}
-	conf.DockerComposeBinaryPrefix = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY_PREFIX", conf.DockerComposeBinaryPrefix)
-
-	if conf.DockerComposeBinary == "" {
-		conf.DockerComposeBinary = conf.DockerComposeBinaryPrefix + "/docker-compose-" + GOOS + "-" + archAlias(GOARCH) + conf.BinSuffix
-	}
-	conf.DockerComposeBinary = envs.GetEnvWithPrefix("DOCKER_COMPOSE_BINARY", conf.DockerComposeBinary)
-}
-
 func setKwokctlDashboardConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.DashboardVersion == "" {
 		conf.DashboardVersion = consts.DashboardVersion
@@ -595,19 +576,4 @@ func parseRelease(ver string) int {
 		return -1
 	}
 	return int(v.Minor)
-}
-
-var archMapping = map[string]string{
-	"arm64": "aarch64",
-	"arm":   "armv7",
-	"amd64": "x86_64",
-	"386":   "x86",
-}
-
-// archAlias returns the alias of the given arch
-func archAlias(arch string) string {
-	if v, ok := archMapping[arch]; ok {
-		return v
-	}
-	return arch
 }

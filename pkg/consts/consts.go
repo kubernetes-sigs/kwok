@@ -40,11 +40,6 @@ var (
 
 	EtcdBinaryPrefix = "https://github.com/etcd-io/etcd/releases/download"
 
-	// DockerComposeVersion
-	// Deprecated: will be removed in the future.
-	DockerComposeVersion      = "2.17.2"
-	DockerComposeBinaryPrefix = "https://github.com/docker/compose/releases/download"
-
 	KindVersion         = "0.19.0"
 	KindBinaryPrefix    = "https://github.com/kubernetes-sigs/kind/releases/download"
 	KindNodeImagePrefix = "docker.io/kindest"

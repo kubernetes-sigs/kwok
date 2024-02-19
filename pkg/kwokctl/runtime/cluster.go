@@ -62,10 +62,6 @@ var (
 	AuditLogName            = "audit.log"
 	SchedulerConfigName     = "scheduler.yaml"
 	ApiserverTracingConfig  = "apiserver-tracing-config.yaml"
-
-	// ComposeName is the default name of the docker-compose file
-	// Deprecated: *-compose will be removed in the future
-	ComposeName = "docker-compose.yaml"
 )
 
 // Cluster is the cluster
