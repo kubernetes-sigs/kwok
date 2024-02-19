@@ -48,6 +48,7 @@ If `containers` is not given in a group, the `usage` in that group will be appli
 You can simply set a static [Quantity value] (`100Mi`, `1000m`, etc.) via `cpu.value` and `memory.value` to define the cpu and memory resource usage respectively.
 Besides, users are also allowed to provide a [CEL expression] via `expressions` to describe the resource usage more flexibly. For example,
 the following expression tries to extract the cpu resource usage from the pod's annotation if it has or use a default value.
+
 ```yaml
 expression: |
   "kwok.x-k8s.io/usage-cpu" in pod.metadata.annotations
@@ -65,7 +66,7 @@ yields memory usage that grows linearly with time.
 ```yaml
 expression: (pod.SinceSecond() / 60.0) * Quantity("1Mi")
 ```
-Please refer to [built-in CEL extension functions] for an exhausted list that may helpful to config dynamic resource usages.
+Please refer to [built-in CEL extension functions] for an exhausted list that may be helpful to configure dynamic resource usage.
 
 
 ### ClusterResourceUsage
@@ -112,7 +113,7 @@ Please refer to [pod resource usage from annotation] for a concrete example.
 
 The resource usages defined in ResourceUsage and ClusterResourceUsage resources can be fetched from the metric service of `kwok` at port `10247` with path `/metrics/nodes/{nodeName}/metrics/resource`,
 where `{nodeName}` is the name of the fake node that the pod is scheduled to.
-The returned metrics look the same as the response of kubelet's `/metrics/resource` endpoint.
+The returned metrics are similar to the response from kubelet's `/metrics/resource` endpoint.
 
 Please refer to [`kwok` Metric][Metric] about how to integrate `kwok` simulated metrics endpoints with metrics-server.  
 

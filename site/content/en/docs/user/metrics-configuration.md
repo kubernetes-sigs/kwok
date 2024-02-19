@@ -98,7 +98,7 @@ extension functions you can use in a CEL expression to help calculate the simula
 * `Usage()` returns the current instantaneous resource usage with the simulation data in [ResourceUsage (ClusterResourceUsage)].
   For example: `Usage(pod, "memory")`, `Usage(node, "memory")`, `Usage(pod, "memory", container.name)` return the
   current working set of a resource (pod, node or container) in bytes.
-* `CumulativeUsage()` return the cumulative resource usage in seconds with the simulation data given in [ResourceUsage (ClusterResourceUsage)].
+* `CumulativeUsage()` returns the cumulative resource usage in seconds with the simulation data given in [ResourceUsage (ClusterResourceUsage)].
   For example: `CumulativeUsage(pod, "cpu")`, `CumulativeUsage(node, "cpu")`, `CumulativeUsage(pod, "cpu", container.name)`
   return a cumulative cpu time consumed by a resource (pod, node or container) in core-seconds.
 
@@ -131,10 +131,10 @@ Therefore, please ensure that the associated ResourceUsage or ClusterResourceUsa
 
 ## Out-of-box Metric Config
 
-`kwok` currently provides the [Metrics config][metrics resource endpoint]that is capable of
+`kwok` currently provides the [Metrics config][metrics resource endpoint] that is capable of
 simulating kubelet's `"metrics/resource"` endpoint.
 
-To integrate the simulated endpoint with metrics-server (version is required >= 0.7.0), please add the 
+To integrate the simulated endpoint with metrics-server (required version >= 0.7.0), add the 
 `"metrics.k8s.io/resource-metrics-path": "/metrics/nodes/<nodeName>/metrics/resource"` annotation to the fake
 nodes managed by `kwok`.
 
