@@ -1,6 +1,6 @@
-GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/<OS>/<ARCH>/kwok ./cmd/kwok
+GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.2 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/<OS>/<ARCH>/kwok ./cmd/kwok
 cp ./bin/<OS>/<ARCH>/kwok kwok-<OS>-<ARCH>
 gh -R ghrelease release upload <VERSION> kwok-<OS>-<ARCH>
-GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/<OS>/<ARCH>/kwokctl ./cmd/kwokctl
+GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.29.2 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/<OS>/<ARCH>/kwokctl ./cmd/kwokctl
 cp ./bin/<OS>/<ARCH>/kwokctl kwokctl-<OS>-<ARCH>
 gh -R ghrelease release upload <VERSION> kwokctl-<OS>-<ARCH>
