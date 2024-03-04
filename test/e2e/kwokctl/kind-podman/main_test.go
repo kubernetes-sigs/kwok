@@ -18,6 +18,7 @@ limitations under the License.
 package kind_podman_test
 
 import (
+	"context"
 	"os"
 	"runtime"
 	"testing"
@@ -27,6 +28,8 @@ import (
 	"sigs.k8s.io/e2e-framework/support/kwok"
 
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
@@ -62,14 +65,26 @@ func TestMain(m *testing.M) {
 	testEnv.Setup(
 		helper.BuildKwokImage(rootDir, testImage, consts.RuntimeTypePodman),
 		helper.BuildKwokctlBinary(rootDir),
-		helper.CreateCluster(k, append(baseArgs,
-			"--config="+path.Join(rootDir, "test/e2e/port_forward.yaml"),
-			"--config="+path.Join(rootDir, "test/e2e/logs.yaml"),
-			"--config="+path.Join(rootDir, "test/e2e/attach.yaml"),
-			"--config="+path.Join(rootDir, "test/e2e/exec.yaml"),
-			"--config="+path.Join(rootDir, "kustomize/metrics/usage/usage-from-annotation.yaml"),
-			"--config="+path.Join(rootDir, "kustomize/metrics/resource/metrics-resource.yaml"),
-		)...),
+		func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
+			ctx, err := helper.CreateCluster(k, append(baseArgs,
+				"--config="+path.Join(rootDir, "test/e2e/port_forward.yaml"),
+				"--config="+path.Join(rootDir, "test/e2e/logs.yaml"),
+				"--config="+path.Join(rootDir, "test/e2e/attach.yaml"),
+				"--config="+path.Join(rootDir, "test/e2e/exec.yaml"),
+				"--config="+path.Join(rootDir, "kustomize/metrics/usage/usage-from-annotation.yaml"),
+				"--config="+path.Join(rootDir, "kustomize/metrics/resource/metrics-resource.yaml"),
+			)...)(ctx, cfg)
+			if err != nil {
+				logger := log.FromContext(ctx)
+
+				logger.Info("exporting logs for control plane")
+				err := exec.Exec(ctx, "docker", "logs", "kwok-"+clusterName+"-control-plane")
+				if err != nil {
+					logger.Error("failed to export logs for control plane", err)
+				}
+			}
+			return ctx, err
+		},
 		helper.CreateNamespace(namespace),
 	)
 	testEnv.Finish(
