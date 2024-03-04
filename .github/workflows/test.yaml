@@ -145,6 +145,12 @@ jobs:
             kwokctl-runtime: binary
           - os: macos-13
             kwokctl-runtime: docker
+            # Kind failed to start Load Kernel Modules
+            # https://github.com/kubernetes-sigs/kind/issues/3283
+          - os: macos-11
+            kwokctl-runtime: kind
+          - os: macos-12
+            kwokctl-runtime: kind
           - os: macos-13
             kwokctl-runtime: kind
           # MacOS arm64
