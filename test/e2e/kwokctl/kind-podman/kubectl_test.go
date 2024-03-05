@@ -73,11 +73,13 @@ func TestExec(t *testing.T) {
 	testEnv.Test(t, f0)
 }
 
-func TestRestart(t *testing.T) {
-	f0 := e2e.CaseRestart(kwokctlPath, clusterName).
-		Feature()
-	testEnv.Test(t, f0)
-}
+// Kind failed to start Load Kernel Modules
+// https://github.com/kubernetes-sigs/kind/issues/3283
+//	func TestRestart(t *testing.T) {
+//		f0 := e2e.CaseRestart(kwokctlPath, clusterName).
+//			Feature()
+//		testEnv.Test(t, f0)
+//	}
 
 func TestSnapshot(t *testing.T) {
 	f0 := e2e.CaseSnapshot(kwokctlPath, clusterName, pwd).
