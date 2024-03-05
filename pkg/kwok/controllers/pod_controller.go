@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -28,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
@@ -327,7 +325,6 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 
 	var (
 		result *corev1.Pod
-		patch  []byte
 		err    error
 	)
 
@@ -353,19 +350,22 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 			return shouldRetry(err), fmt.Errorf("failed to delete pod %s: %w", pod.Name, err)
 		}
 		result = nil
-	} else if next.StatusTemplate != "" {
-		patch, err = c.computeStatusPatch(pod, next.StatusTemplate)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to compute the status patch of pod %s: %w", pod.Name, err)
-		}
-		if patch == nil {
-			logger.Debug("Skip pod",
-				"reason", "do not need to modify",
-			)
-		} else {
-			result, err = c.patchResource(ctx, pod, patch)
+	} else if len(next.Patches) != 0 {
+		c.markPodIP(pod)
+		for _, patch := range next.Patches {
+			patchData, err := c.computeMergePatch(pod, patch.Root, patch.Template)
 			if err != nil {
-				return shouldRetry(err), fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
+				return shouldRetry(err), fmt.Errorf("failed to compute the pod %s: %w", pod.Name, err)
+			}
+			if patchData == nil {
+				logger.Debug("Skip pod",
+					"reason", "do not need to modify",
+				)
+			} else {
+				result, err = c.patchResource(ctx, pod, patchData, patch)
+				if err != nil {
+					return shouldRetry(err), fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
+				}
 			}
 		}
 	}
@@ -386,14 +386,21 @@ func (c *PodController) readOnly(nodeName string) bool {
 }
 
 // patchResource patches the resource
-func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patch []byte) (*corev1.Pod, error) {
+func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patchData []byte, patch internalversion.StagePatch) (*corev1.Pod, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
 		"node", pod.Spec.NodeName,
 	)
 
-	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	subresource := []string{}
+	if patch.Subresource != "" {
+		logger = logger.With(
+			"subresource", patch.Subresource,
+		)
+		subresource = []string{patch.Subresource}
+	}
+	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patchData, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
@@ -546,71 +553,65 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 	}
 }
 
-func (c *PodController) computeStatusPatch(pod *corev1.Pod, template string) ([]byte, error) {
-	if !c.enableCNI {
-		// Mark the pod IP that existed before the kubelet was started
-		if _, has := c.nodeGetFunc(pod.Spec.NodeName); has {
-			if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
-				cidr := c.defaultCIDR
-				node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
-				if ok {
-					if node.Spec.PodCIDR != "" {
-						cidr = node.Spec.PodCIDR
-					}
-					pool, err := c.ipPool(cidr)
-					if err == nil {
-						pool.Use(pod.Status.PodIP)
-					}
+func (c *PodController) markPodIP(pod *corev1.Pod) {
+	if c.enableCNI {
+		return
+	}
+	// Mark the pod IP that existed before the kubelet was started
+	if _, has := c.nodeGetFunc(pod.Spec.NodeName); has {
+		if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
+			cidr := c.defaultCIDR
+			node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
+			if ok {
+				if node.Spec.PodCIDR != "" {
+					cidr = node.Spec.PodCIDR
+				}
+				pool, err := c.ipPool(cidr)
+				if err == nil {
+					pool.Use(pod.Status.PodIP)
 				}
 			}
 		}
 	}
-
-	patch, err := c.computePatch(pod, template)
-	if err != nil {
-		return nil, err
-	}
-	if patch == nil {
-		return nil, nil
-	}
-
-	return json.Marshal(map[string]json.RawMessage{
-		"status": patch,
-	})
 }
 
-func (c *PodController) computePatch(pod *corev1.Pod, tpl string) ([]byte, error) {
-	patch, err := c.renderer.ToJSON(tpl, pod)
+func (c *PodController) computeMergePatch(pod *corev1.Pod, root, tpl string) ([]byte, error) {
+	patchData, err := c.renderer.ToJSON(tpl, pod)
 	if err != nil {
 		return nil, err
 	}
 
-	original, err := json.Marshal(pod.Status)
-	if err != nil {
-		return nil, err
+	var hasChange bool
+	switch root {
+	default:
+		return nil, fmt.Errorf("root %q is not supported", root)
+	case "":
+		hasChange, err = checkNeedPatch(*pod, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "metadata":
+		hasChange, err = checkNeedPatch(pod.ObjectMeta, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "spec":
+		hasChange, err = checkNeedPatch(pod.Spec, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "status":
+		hasChange, err = checkNeedPatch(pod.Status, patchData)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	sum, err := strategicpatch.StrategicMergePatch(original, patch, pod.Status)
-	if err != nil {
-		return nil, err
-	}
-
-	podStatus := corev1.PodStatus{}
-	err = json.Unmarshal(sum, &podStatus)
-	if err != nil {
-		return nil, err
-	}
-
-	dist, err := json.Marshal(podStatus)
-	if err != nil {
-		return nil, err
-	}
-
-	if bytes.Equal(original, dist) {
+	if !hasChange {
 		return nil, nil
 	}
 
-	return patch, nil
+	return wrapPatchData(root, patchData), nil
 }
 
 func (c *PodController) funcNodeIP() string {
