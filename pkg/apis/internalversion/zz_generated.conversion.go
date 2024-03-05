@@ -1647,7 +1647,6 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
 	out.MetricsServerVersion = in.MetricsServerVersion
-	out.DockerComposeVersion = in.DockerComposeVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_bool_To_Pointer_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
 		return err
@@ -1691,7 +1690,6 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.JaegerBinary = in.JaegerBinary
 	out.JaegerBinaryTar = in.JaegerBinaryTar
 	out.MetricsServerBinary = in.MetricsServerBinary
-	out.DockerComposeBinary = in.DockerComposeBinary
 	out.KindBinary = in.KindBinary
 	out.KubeFeatureGates = in.KubeFeatureGates
 	out.KubeRuntimeConfig = in.KubeRuntimeConfig
@@ -1746,7 +1744,6 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
 	out.MetricsServerVersion = in.MetricsServerVersion
-	out.DockerComposeVersion = in.DockerComposeVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_Pointer_bool_To_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
 		return err
@@ -1804,8 +1801,6 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.JaegerBinaryTar opted out of conversion generation
 	// INFO: in.MetricsServerBinaryPrefix opted out of conversion generation
 	out.MetricsServerBinary = in.MetricsServerBinary
-	// INFO: in.DockerComposeBinaryPrefix opted out of conversion generation
-	out.DockerComposeBinary = in.DockerComposeBinary
 	// INFO: in.KindBinaryPrefix opted out of conversion generation
 	out.KindBinary = in.KindBinary
 	// INFO: in.Mode opted out of conversion generation
