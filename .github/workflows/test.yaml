@@ -204,6 +204,16 @@ jobs:
         run: |
           sudo apt install podman=3.4.4+ds1-1ubuntu1 --allow-downgrades
 
+      - name: Setup Crun on Kind Podman
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'kind-podman' }}
+        shell: bash
+        run: |
+          # crun >= 1.9.1 is required on Ubuntu 20.04.6
+          # https://github.com/kubernetes-sigs/kind/issues/3526
+          curl -Lo ./crun https://github.com/containers/crun/releases/download/1.14.3/crun-1.14.3-linux-amd64
+          chmod +x ./crun
+          sudo mv ./crun /usr/bin/crun
+
       - name: Install Docker for MacOS
         if: ${{ startsWith(matrix.os, 'macos-') && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
         shell: bash
