@@ -332,6 +332,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to delete resource %s: %w", resource.GetName(), err)
 		}
+		result = nil
 	} else if next.StatusTemplate != "" {
 		patch, err = c.computeStatusPatch(resource, next.StatusTemplate)
 		if err != nil {

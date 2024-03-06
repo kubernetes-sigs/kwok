@@ -350,10 +350,9 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 	if next.Delete {
 		err = c.deleteResource(ctx, pod)
 		if err != nil {
-			if err != nil {
-				return shouldRetry(err), fmt.Errorf("failed to delete pod %s: %w", pod.Name, err)
-			}
+			return shouldRetry(err), fmt.Errorf("failed to delete pod %s: %w", pod.Name, err)
 		}
+		result = nil
 	} else if next.StatusTemplate != "" {
 		patch, err = c.computeStatusPatch(pod, next.StatusTemplate)
 		if err != nil {

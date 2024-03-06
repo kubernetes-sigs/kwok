@@ -455,6 +455,7 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to delete node %s: %w", node.Name, err)
 		}
+		result = nil
 	} else if next.StatusTemplate != "" {
 		patch, err = c.computeStatusPatch(node, next.StatusTemplate)
 		if err != nil {
