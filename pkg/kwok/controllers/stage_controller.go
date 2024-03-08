@@ -313,10 +313,11 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 
 	if next.Event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
-			Kind:      "Stage",
-			UID:       resource.GetUID(),
-			Name:      resource.GetName(),
-			Namespace: resource.GetNamespace(),
+			APIVersion: resource.GetAPIVersion(),
+			Kind:       resource.GetKind(),
+			UID:        resource.GetUID(),
+			Name:       resource.GetName(),
+			Namespace:  resource.GetNamespace(),
 		}, next.Event.Type, next.Event.Reason, next.Event.Message)
 	}
 
