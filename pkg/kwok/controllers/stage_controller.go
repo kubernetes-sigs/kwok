@@ -230,7 +230,7 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 	}
 
 	lifecycle := c.lifecycle.Get()
-	stage, err := lifecycle.Match(resource.GetLabels(), resource.GetAnnotations(), data)
+	stage, err := lifecycle.Match(ctx, resource.GetLabels(), resource.GetAnnotations(), resource, data)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}

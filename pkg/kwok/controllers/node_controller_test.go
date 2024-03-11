@@ -78,7 +78,7 @@ func TestNodeController(t *testing.T) {
 	nodeInit, _ := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
 	nodeStages := []*internalversion.Stage{nodeInit}
 
-	lifecycle, _ := NewLifecycle(nodeStages)
+	lifecycle, _ := NewLifecycle(nodeStages, nil)
 	nodes, err := NewNodeController(NodeControllerConfig{
 		TypedClient:          clientset,
 		NodeIP:               "10.0.0.1",
