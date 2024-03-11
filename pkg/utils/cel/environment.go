@@ -144,3 +144,12 @@ func AsString(refVal ref.Val) (string, error) {
 	}
 	return string(v), nil
 }
+
+// AsBool returns the bool value of a ref.Val
+func AsBool(refVal ref.Val) (bool, error) {
+	v, ok := refVal.(types.Bool)
+	if !ok {
+		return false, fmt.Errorf("unsupported type: %T", v)
+	}
+	return bool(v), nil
+}

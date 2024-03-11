@@ -73,7 +73,7 @@ func TestStageController(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 	patchMeta, _ := strategicpatch.NewPatchMetaFromStruct(corev1.PersistentVolume{})
 	controller, err := NewStageController(StageControllerConfig{
 		PlayStageParallelism: 1,

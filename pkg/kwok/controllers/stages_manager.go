@@ -22,12 +22,14 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/cel"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // StagesManagerConfig is the configuration for a stages manager
 type StagesManagerConfig struct {
+	Env         *cel.Environment
 	StageGetter resources.DynamicGetter[[]*internalversion.Stage]
 	StartFunc   func(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[Lifecycle]) error
 }
@@ -35,6 +37,7 @@ type StagesManagerConfig struct {
 // StagesManager is a stages manager
 // It is a dynamic getter for stages and start a stage controller
 type StagesManager struct {
+	env         *cel.Environment
 	stageGetter resources.DynamicGetter[[]*internalversion.Stage]
 	startFunc   func(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[Lifecycle]) error
 	cache       map[internalversion.StageResourceRef]context.CancelCauseFunc
@@ -43,6 +46,7 @@ type StagesManager struct {
 // NewStagesManager creates a stage controller manager
 func NewStagesManager(conf StagesManagerConfig) *StagesManager {
 	return &StagesManager{
+		env:         conf.Env,
 		stageGetter: conf.StageGetter,
 		startFunc:   conf.StartFunc,
 		cache:       map[internalversion.StageResourceRef]context.CancelCauseFunc{},
@@ -89,7 +93,7 @@ func (c *StagesManager) manage(ctx context.Context) {
 					return nil, false
 				}
 
-				lifecycleStage, err := NewLifecycleStage(stage)
+				lifecycleStage, err := NewLifecycleStage(stage, c.env)
 				if err != nil {
 					logger.Error("failed to create lifecycle stage", err, "ref", ref)
 					return nil, false
