@@ -65,9 +65,11 @@ type KwokConfigurationOptions struct {
 	ManageNodesWithLabelSelector string
 
 	// If a Node/Pod is on a managed Node and has this annotation status will not be modified
+	// Deprecated: use Stage API instead
 	DisregardStatusWithAnnotationSelector string
 
 	// If a Node/Pod is on a managed Node and has this label status will not be modified
+	// Deprecated: use Stage API instead
 	DisregardStatusWithLabelSelector string
 
 	// ServerAddress is server address of the Kwok.

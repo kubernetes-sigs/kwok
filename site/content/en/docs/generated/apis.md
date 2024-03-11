@@ -2488,7 +2488,8 @@ string
 </td>
 <td>
 <p>If a Node/Pod is on a managed Node and has this annotation status will not be modified
-is the default value for flag &ndash;disregard-status-with-annotation-selector</p>
+is the default value for flag &ndash;disregard-status-with-annotation-selector
+Deprecated: use Stage API instead</p>
 </td>
 </tr>
 <tr>
@@ -2500,7 +2501,8 @@ string
 </td>
 <td>
 <p>If a Node/Pod is on a managed Node and has this label status will not be modified
-is the default value for flag &ndash;disregard-status-with-label-selector</p>
+is the default value for flag &ndash;disregard-status-with-label-selector
+Deprecated: use Stage API instead</p>
 </td>
 </tr>
 <tr>
