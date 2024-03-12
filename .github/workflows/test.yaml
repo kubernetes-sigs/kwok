@@ -218,7 +218,7 @@ jobs:
         if: ${{ startsWith(matrix.os, 'macos-') && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
         shell: bash
         run: |
-          brew install colima docker
+          brew install colima docker || :
           colima start --mount $HOME/.kwok/:w --mount $(pwd):w --cpu 4 --memory 8
 
       - name: Install Buildx
