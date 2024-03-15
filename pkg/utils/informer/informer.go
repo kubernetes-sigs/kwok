@@ -19,10 +19,10 @@ package informer
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"sync"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
@@ -110,10 +110,6 @@ func (i *Informer[T, L]) WatchWithCache(ctx context.Context, opt Option, events 
 
 func newCacheInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Option, events chan<- Event[T]) (cache.Store, cache.Controller) {
 	var t T
-	typ := reflect.TypeOf(t)
-	if typ.Kind() == reflect.Ptr {
-		t = reflect.New(typ.Elem()).Interface().(T)
-	}
 	eventHandler := cache.ResourceEventHandlerFuncs{}
 	if events != nil {
 		eventHandler = cache.ResourceEventHandlerFuncs{
@@ -154,7 +150,7 @@ func newCacheInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Optio
 				return listWatch.Watch(opts)
 			},
 		},
-		t,
+		objType(t),
 		0,
 		eventHandler,
 	)
@@ -176,10 +172,6 @@ func (i *Informer[T, L]) Watch(ctx context.Context, opt Option, events chan<- Ev
 
 func newDummyInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Option, events chan<- Event[T]) *cache.Reflector {
 	var t T
-	typ := reflect.TypeOf(t)
-	if typ.Kind() == reflect.Ptr {
-		t = reflect.New(typ.Elem()).Interface().(T)
-	}
 	informer := cache.NewReflectorWithOptions(
 		&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
@@ -191,7 +183,7 @@ func newDummyInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Optio
 				return listWatch.Watch(opts)
 			},
 		},
-		t,
+		objType(t),
 		dummyCache(events, opt),
 		cache.ReflectorOptions{},
 	)
@@ -322,4 +314,14 @@ func (l *lazyGetter[T]) List() (list []T) {
 		list = append(list, obj.(T))
 	}
 	return list
+}
+
+func objType(expectedType runtime.Object) runtime.Object {
+	switch expectedType.(type) {
+	default:
+		return expectedType
+	case *unstructured.Unstructured:
+		var obj unstructured.Unstructured
+		return &obj
+	}
 }
