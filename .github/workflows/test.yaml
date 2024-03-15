@@ -143,10 +143,6 @@ jobs:
           # MacOS amd64
           - os: macos-13
             kwokctl-runtime: binary
-          - os: macos-13
-            kwokctl-runtime: docker
-          - os: macos-13
-            kwokctl-runtime: kind
           # MacOS arm64
           - os: macos-14
             kwokctl-runtime: binary
