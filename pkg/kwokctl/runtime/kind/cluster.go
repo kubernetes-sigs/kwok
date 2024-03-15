@@ -387,19 +387,19 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	for _, patch := range env.kwokctlConfig.ComponentsPatches {
 		switch patch.Name {
 		case consts.ComponentEtcd:
-			args := filterDuplicatedExtraArgs(etcdComponentPatches.ExtraArgs, patch.ExtraArgs)
+			args := filterDuplicatedExtraArgs(ctx, etcdComponentPatches.ExtraArgs, patch.ExtraArgs)
 			etcdComponentPatches.ExtraArgs = args
 		case consts.ComponentKubeApiserver:
-			args := filterDuplicatedExtraArgs(kubeApiserverComponentPatches.ExtraArgs, patch.ExtraArgs)
+			args := filterDuplicatedExtraArgs(ctx, kubeApiserverComponentPatches.ExtraArgs, patch.ExtraArgs)
 			kubeApiserverComponentPatches.ExtraArgs = args
 		case consts.ComponentKubeScheduler:
-			args := filterDuplicatedExtraArgs(kubeSchedulerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			args := filterDuplicatedExtraArgs(ctx, kubeSchedulerComponentPatches.ExtraArgs, patch.ExtraArgs)
 			kubeSchedulerComponentPatches.ExtraArgs = args
 		case consts.ComponentKubeControllerManager:
-			args := filterDuplicatedExtraArgs(kubeControllerManagerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			args := filterDuplicatedExtraArgs(ctx, kubeControllerManagerComponentPatches.ExtraArgs, patch.ExtraArgs)
 			kubeControllerManagerComponentPatches.ExtraArgs = args
 		case consts.ComponentKwokController:
-			args := filterDuplicatedExtraArgs(kwokControllerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			args := filterDuplicatedExtraArgs(ctx, kwokControllerComponentPatches.ExtraArgs, patch.ExtraArgs)
 			kwokControllerComponentPatches.ExtraArgs = args
 		}
 	}
@@ -452,12 +452,16 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	return nil
 }
 
-func filterDuplicatedExtraArgs(extraArgs, passedExtraArgs []internalversion.ExtraArgs) []internalversion.ExtraArgs {
+func filterDuplicatedExtraArgs(ctx context.Context, extraArgs, passedExtraArgs []internalversion.ExtraArgs) []internalversion.ExtraArgs {
+	logger := log.FromContext(ctx)
 	extraArgsMap := make(map[string]internalversion.ExtraArgs)
 	for _, args := range extraArgs {
 		extraArgsMap[args.Key] = args
 	}
 	for _, args := range passedExtraArgs {
+		if _, ok := extraArgsMap[args.Key]; ok {
+			logger.Warn("duplicated extraArgs and will be overwritten", "key", args.Key, "value", args.Value)
+		}
 		extraArgsMap[args.Key] = args
 	}
 	result := make([]internalversion.ExtraArgs, 0, len(extraArgsMap))
