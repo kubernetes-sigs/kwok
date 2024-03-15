@@ -45,37 +45,6 @@ type flagpole struct {
 	*internalversion.KwokctlConfiguration
 }
 
-const (
-	extraArgsUsage = `
-    A set of key=value pairs that is passed to the runtime.
-
-    Example:
-
-    --extra-args=component1=key1=value1
-    is equal to 
-    - name: component1
-      extraArgs:
-        - key: key1
-          arg: value1 
-
-    --extra-args=component1=key1=value1=value2,value3
-    is equal to
-    - name: component1
-      extraArgs:
-        - key: key1
-          arg: value1=value2,value3
-
-    --extra-args=component1=key1=value1 --extra-args=component1=key2=value2
-    is equal to
-    - name: component1
-      extraArgs:
-        - key: key1
-          value: value1
-        - key: key2
-          value: value2
-    `
-)
-
 // NewCommand returns a new cobra.Command for cluster creation
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
@@ -177,7 +146,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease in seconds")
 	cmd.Flags().Float64Var(&flags.Options.HeartbeatFactor, "heartbeat-factor", flags.Options.HeartbeatFactor, "Scale factor for all about heartbeat")
-	cmd.Flags().StringArrayVar(&flags.ExtraArgs, "extra-args", flags.ExtraArgs, extraArgsUsage)
+	cmd.Flags().StringArrayVar(&flags.ExtraArgs, "extra-args", flags.ExtraArgs, "Pass a single extra arg key-value pair to the component in the format `component=key=value`")
 
 	return cmd
 }
