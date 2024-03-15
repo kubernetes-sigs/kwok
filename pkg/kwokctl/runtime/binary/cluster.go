@@ -940,7 +940,7 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 		return nil
 	}
 
-	f, err := os.OpenFile(logs, os.O_RDONLY, 0o640)
+	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
 	if err != nil {
 		return fmt.Errorf("failed to open %s: %w", logs, err)
 	}
