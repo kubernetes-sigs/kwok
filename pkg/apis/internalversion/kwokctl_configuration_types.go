@@ -69,6 +69,13 @@ type KwokctlConfigurationOptions struct {
 	// KubeApiserverPort is the port to expose apiserver.
 	KubeApiserverPort uint32
 
+	// KubeApiserverInsecurePort is the port to expose kubectl proxy.
+	KubeApiserverInsecurePort uint32
+
+	// InsecureKubeconfig is the flag to use insecure kubeconfig.
+	// only available when KubeApiserverInsecurePort is set.
+	InsecureKubeconfig bool
+
 	// Runtime is the runtime to use.
 	Runtime string
 
@@ -143,6 +150,9 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeSchedulerImage is the image of kube-scheduler.
 	KubeSchedulerImage string
+
+	// KubectlImage is the image of kubectl.
+	KubectlImage string
 
 	// KwokControllerImage is the image of Kwok.
 	KwokControllerImage string

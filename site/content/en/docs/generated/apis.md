@@ -2652,6 +2652,30 @@ is the default value for flag &ndash;kube-apiserver-port and env KWOK_KUBE_APISE
 </tr>
 <tr>
 <td>
+<code>kubeApiserverInsecurePort</code>
+<em>
+uint32
+</em>
+</td>
+<td>
+<p>KubeApiserverInsecurePort is the port to expose insecure apiserver.
+is the default value for flag &ndash;kube-apiserver-insecure-port and env KWOK_KUBE_APISERVER_INSECURE_PORT</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>insecureKubeconfig</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>InsecureKubeconfig is the flag to use insecure kubeconfig.
+only available when KubeApiserverInsecurePort is set.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>runtime</code>
 <em>
 string
@@ -3015,6 +3039,18 @@ string
 <td>
 <p>KubeSchedulerImage is the image of kube-scheduler.
 is the default value for flag &ndash;kube-scheduler-image and env KWOK_KUBE_SCHEDULER_IMAGE</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kubectlImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KubectlImage is the image of kubectl.
+is the default value for flag &ndash;kubectl-image and env KWOK_KUBECTL_IMAGE</p>
 </td>
 </tr>
 <tr>

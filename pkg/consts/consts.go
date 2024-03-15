@@ -78,14 +78,15 @@ const (
 
 // The following components is provided.
 const (
-	ComponentEtcd                    = "etcd"
-	ComponentKubeApiserver           = "kube-apiserver"
-	ComponentKubeControllerManager   = "kube-controller-manager"
-	ComponentKubeScheduler           = "kube-scheduler"
-	ComponentKwokController          = "kwok-controller"
-	ComponentDashboard               = "dashboard"
-	ComponentDashboardMetricsScraper = "dashboard-metrics-scraper"
-	ComponentPrometheus              = "prometheus"
-	ComponentJaeger                  = "jaeger"
-	ComponentMetricsServer           = "metrics-server"
+	ComponentEtcd                       = "etcd"
+	ComponentKubeApiserver              = "kube-apiserver"
+	ComponentKubeApiserverInsecureProxy = "kube-apiserver-insecure-proxy"
+	ComponentKubeControllerManager      = "kube-controller-manager"
+	ComponentKubeScheduler              = "kube-scheduler"
+	ComponentKwokController             = "kwok-controller"
+	ComponentDashboard                  = "dashboard"
+	ComponentDashboardMetricsScraper    = "dashboard-metrics-scraper"
+	ComponentPrometheus                 = "prometheus"
+	ComponentJaeger                     = "jaeger"
+	ComponentMetricsServer              = "metrics-server"
 )

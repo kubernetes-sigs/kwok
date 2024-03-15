@@ -1634,6 +1634,8 @@ func Convert_v1alpha1_KwokctlConfiguration_To_internalversion_KwokctlConfigurati
 func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConfigurationOptions(in *KwokctlConfigurationOptions, out *configv1alpha1.KwokctlConfigurationOptions, s conversion.Scope) error {
 	out.EnableCRDs = *(*[]string)(unsafe.Pointer(&in.EnableCRDs))
 	out.KubeApiserverPort = in.KubeApiserverPort
+	out.KubeApiserverInsecurePort = in.KubeApiserverInsecurePort
+	out.InsecureKubeconfig = in.InsecureKubeconfig
 	out.Runtime = in.Runtime
 	out.Runtimes = *(*[]string)(unsafe.Pointer(&in.Runtimes))
 	out.PrometheusPort = in.PrometheusPort
@@ -1668,6 +1670,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
 	out.KubeSchedulerImage = in.KubeSchedulerImage
+	out.KubectlImage = in.KubectlImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.DashboardImage = in.DashboardImage
 	out.DashboardMetricsScraperImage = in.DashboardMetricsScraperImage
@@ -1731,6 +1734,8 @@ func Convert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_KwokctlConf
 func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConfigurationOptions(in *configv1alpha1.KwokctlConfigurationOptions, out *KwokctlConfigurationOptions, s conversion.Scope) error {
 	out.EnableCRDs = *(*[]string)(unsafe.Pointer(&in.EnableCRDs))
 	out.KubeApiserverPort = in.KubeApiserverPort
+	out.KubeApiserverInsecurePort = in.KubeApiserverInsecurePort
+	out.InsecureKubeconfig = in.InsecureKubeconfig
 	out.Runtime = in.Runtime
 	out.Runtimes = *(*[]string)(unsafe.Pointer(&in.Runtimes))
 	out.PrometheusPort = in.PrometheusPort
@@ -1772,6 +1777,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
 	out.KubeSchedulerImage = in.KubeSchedulerImage
+	out.KubectlImage = in.KubectlImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.DashboardImage = in.DashboardImage
 	out.DashboardMetricsScraperImage = in.DashboardMetricsScraperImage

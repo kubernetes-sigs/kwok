@@ -276,6 +276,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addKubectlProxy(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.addKubeControllerManager(ctx, env)
 	if err != nil {
 		return err
@@ -413,6 +418,37 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		return err
 	}
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeApiserverComponent)
+	return nil
+}
+
+func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the kubectl
+	if conf.KubeApiserverInsecurePort != 0 {
+		err := c.EnsureImage(ctx, c.runtime, conf.KubectlImage)
+		if err != nil {
+			return err
+		}
+
+		kubectlProxyComponent, err := components.BuildKubectlProxyComponent(components.BuildKubectlProxyComponentConfig{
+			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
+			Workdir:        env.workdir,
+			Image:          conf.KubectlImage,
+			BindAddress:    net.PublicAddress,
+			Port:           conf.KubeApiserverInsecurePort,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			Verbosity:      env.verbosity,
+		})
+		if err != nil {
+			return err
+		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubectlProxyComponent)
+	}
 	return nil
 }
 

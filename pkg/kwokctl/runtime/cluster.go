@@ -304,7 +304,7 @@ func (c *Cluster) getDefaultStages(updateFrequency int64, lease bool) ([]config.
 	return objs, nil
 }
 
-func (c *Cluster) kubectlPath(ctx context.Context) (string, error) {
+func (c *Cluster) KubectlPath(ctx context.Context) (string, error) {
 	config, err := c.Config(ctx)
 	if err != nil {
 		return "", err
@@ -405,7 +405,7 @@ func (c *Cluster) ListComponents(ctx context.Context) ([]internalversion.Compone
 
 // Kubectl runs kubectl.
 func (c *Cluster) Kubectl(ctx context.Context, args ...string) error {
-	kubectlPath, err := c.kubectlPath(ctx)
+	kubectlPath, err := c.KubectlPath(ctx)
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,7 @@ func (c *Cluster) Kubectl(ctx context.Context, args ...string) error {
 
 // KubectlInCluster runs kubectl in the cluster.
 func (c *Cluster) KubectlInCluster(ctx context.Context, args ...string) error {
-	kubectlPath, err := c.kubectlPath(ctx)
+	kubectlPath, err := c.KubectlPath(ctx)
 	if err != nil {
 		return err
 	}

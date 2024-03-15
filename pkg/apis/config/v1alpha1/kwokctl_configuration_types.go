@@ -85,6 +85,14 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for flag --kube-apiserver-port and env KWOK_KUBE_APISERVER_PORT
 	KubeApiserverPort uint32 `json:"kubeApiserverPort,omitempty"`
 
+	// KubeApiserverInsecurePort is the port to expose insecure apiserver.
+	// is the default value for flag --kube-apiserver-insecure-port and env KWOK_KUBE_APISERVER_INSECURE_PORT
+	KubeApiserverInsecurePort uint32 `json:"kubeApiserverInsecurePort,omitempty"`
+
+	// InsecureKubeconfig is the flag to use insecure kubeconfig.
+	// only available when KubeApiserverInsecurePort is set.
+	InsecureKubeconfig bool `json:"insecureKubeconfig,omitempty"`
+
 	// Runtime is the runtime to use.
 	// is the default value for flag --runtime and env KWOK_RUNTIME
 	Runtime string `json:"runtime,omitempty"`
@@ -214,6 +222,10 @@ type KwokctlConfigurationOptions struct {
 	// KubeSchedulerImage is the image of kube-scheduler.
 	// is the default value for flag --kube-scheduler-image and env KWOK_KUBE_SCHEDULER_IMAGE
 	KubeSchedulerImage string `json:"kubeSchedulerImage,omitempty"`
+
+	// KubectlImage is the image of kubectl.
+	// is the default value for flag --kubectl-image and env KWOK_KUBECTL_IMAGE
+	KubectlImage string `json:"kubectlImage,omitempty"`
 
 	// KwokControllerImage is the image of Kwok.
 	// is the default value for flag --controller-image and env KWOK_CONTROLLER_IMAGE
