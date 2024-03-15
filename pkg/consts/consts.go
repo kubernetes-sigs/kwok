@@ -40,7 +40,7 @@ var (
 
 	EtcdBinaryPrefix = "https://github.com/etcd-io/etcd/releases/download"
 
-	KindVersion         = "0.19.0"
+	KindVersion         = "0.22.0"
 	KindBinaryPrefix    = "https://github.com/kubernetes-sigs/kind/releases/download"
 	KindNodeImagePrefix = "docker.io/kindest"
 
@@ -68,12 +68,13 @@ var (
 
 // The following runtime is provided.
 const (
-	RuntimeTypeKind       = "kind"
-	RuntimeTypeKindPodman = RuntimeTypeKind + "-" + RuntimeTypePodman
-	RuntimeTypeDocker     = "docker"
-	RuntimeTypeNerdctl    = "nerdctl"
-	RuntimeTypePodman     = "podman"
-	RuntimeTypeBinary     = "binary"
+	RuntimeTypeKind        = "kind"
+	RuntimeTypeKindPodman  = RuntimeTypeKind + "-" + RuntimeTypePodman
+	RuntimeTypeKindNerdctl = RuntimeTypeKind + "-" + RuntimeTypeNerdctl
+	RuntimeTypeDocker      = "docker"
+	RuntimeTypeNerdctl     = "nerdctl"
+	RuntimeTypePodman      = "podman"
+	RuntimeTypeBinary      = "binary"
 )
 
 // The following components is provided.

@@ -73,6 +73,14 @@ func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
+// NewNerdctlCluster creates a new Runtime for kind with nerdctl
+func NewNerdctlCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypeNerdctl,
+	}, nil
+}
+
 // Available  checks whether the runtime is available.
 func (c *Cluster) Available(ctx context.Context) error {
 	return c.Exec(ctx, c.runtime, "version")

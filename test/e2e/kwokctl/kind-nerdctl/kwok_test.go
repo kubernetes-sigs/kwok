@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,15 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kind
+package kind_nerdctl_test
 
 import (
-	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"testing"
+
+	"sigs.k8s.io/e2e-framework/pkg/envconf"
+
+	"sigs.k8s.io/kwok/test/e2e"
 )
 
-func init() {
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKind, NewDockerCluster)
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKindPodman, NewPodmanCluster)
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKindNerdctl, NewNerdctlCluster)
+func TestNode(t *testing.T) {
+	f0 := e2e.CaseNode(envconf.RandomName("node", 16)).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestPod(t *testing.T) {
+	f0 := e2e.CasePod(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
 }
