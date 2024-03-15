@@ -35,7 +35,8 @@ spec:
         expression: <string>
 ```
 
-To associate a ResourceUsage with a certain pod to be simulated, users must ensure `metadata.name` and `metadata.namespace` are inconsistent with the name and namespace of the target pod.
+To associate a ResourceUsage with a certain pod to be simulated, users must ensure `metadata.name` and `metadata.namespace` 
+are inconsistent with the name and namespace of the target pod.
 
 The resource usages of a pod are specified via `usages` field.
 The `usages` field are organized by groups, with each corresponding to a collection of containers that shares a same resource usage simulation setting.
@@ -66,14 +67,14 @@ yields memory usage that grows linearly with time.
 ```yaml
 expression: (pod.SinceSecond() / 60.0) * Quantity("1Mi")
 ```
-Please refer to [built-in CEL extension functions] for an exhausted list that may be helpful to configure dynamic resource usage.
+Please refer to [CEL expressions in `kwok`] for an exhausted list that may be helpful to configure dynamic resource usage.
 
 
 ### ClusterResourceUsage
 
 In addition to simulating a single pod, users can also simulate the resource usage for multiple pods via [ClusterResourceUsage].
 
-A ClusterResourceUsage resource has the following fields:
+The YAML below shows all the fields of a ClusterResourceUsage resource:
 
 ``` yaml
 kind: ClusterResourceUsage
@@ -131,4 +132,4 @@ ResourceUsage or ClusterResourceUsage only takes effect when the [Metric] featur
 [Metric]: {{< relref "/docs/user/metrics-configuration" >}}
 [the default Metric resource]:  https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource
 [pod resource usage from annotation]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/usage/usage-from-annotation.yaml
-[built-in CEL extension functions]: {{< relref "/docs/user/metrics-configuration" >}}#built-in-cel-extension-functions
+[CEL expressions in `kwok`]: {{< relref "/docs/user/cel-expressions" >}}
