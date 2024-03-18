@@ -97,8 +97,11 @@ To integrate the simulated endpoint with metrics-server (required version >= 0.7
 `"metrics.k8s.io/resource-metrics-path": "/metrics/nodes/<nodeName>/metrics/resource"` annotation to the fake
 nodes managed by `kwok`.
 
+<img width="700px" src="/img/demo/resource-usage.svg">
+
+
 [configuration]: {{< relref "/docs/user/configuration" >}}
 [Metrics]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Metrics
-[CEL expressions in `kwok`]: {{< relref "/docs/user/cel-expression" >}}
+[CEL expressions in `kwok`]: {{< relref "/docs/user/cel-expressions" >}}
 [metrics resource endpoint]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource
 [ResourceUsage (ClusterResourceUsage)]: {{< relref "/docs/user/resource-usage-configuration" >}}
