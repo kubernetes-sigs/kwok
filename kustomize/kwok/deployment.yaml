@@ -15,8 +15,6 @@ spec:
             - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
             - --manage-nodes-with-label-selector=
             - --manage-single-node=
-            - --disregard-status-with-annotation-selector=kwok.x-k8s.io/status=custom
-            - --disregard-status-with-label-selector=
             - --node-ip=$(POD_IP)
             - --node-port=10247
             - --cidr=10.0.0.1/24

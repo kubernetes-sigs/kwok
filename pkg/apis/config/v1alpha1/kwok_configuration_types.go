@@ -101,10 +101,12 @@ type KwokConfigurationOptions struct {
 
 	// If a Node/Pod is on a managed Node and has this annotation status will not be modified
 	// is the default value for flag --disregard-status-with-annotation-selector
+	// Deprecated: use Stage API instead
 	DisregardStatusWithAnnotationSelector string `json:"disregardStatusWithAnnotationSelector,omitempty"`
 
 	// If a Node/Pod is on a managed Node and has this label status will not be modified
 	// is the default value for flag --disregard-status-with-label-selector
+	// Deprecated: use Stage API instead
 	DisregardStatusWithLabelSelector string `json:"disregardStatusWithLabelSelector,omitempty"`
 
 	// ServerAddress is server address of the Kwok.
