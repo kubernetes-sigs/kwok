@@ -48,9 +48,10 @@ The `path` must start with `/metrics`, otherwise, `kwok` will not install it.
 
 {{< hint "info" >}}
 Starting from metrics-server 0.7.0, it is allowed to specify the path to scrape metrics for a node.
-Specifically, metric-server will check if a node has annotation `metrics.k8s.io/resource-metrics-path` 
-and use it as the target metric scrape path. Combing with the Metric CR, the feature makes it possible to integrate
-`kwok` and metrics-server easily. For a fake node, by adding that annotation and setting its value to the `path`
+Specifically, metrics-server will check if a node has annotation `metrics.k8s.io/resource-metrics-path`
+and use it as the target metric scrape path.
+Combined with the Metric CR, the feature makes it possible to integrate `kwok` and metrics-server.
+For a fake node, by adding that annotation and setting its value to the `path`
 specified in a Metric resource, metrics-server will collect data from the endpoints exposed by `kwok` instead of
 scrapping from kubelet.
 {{< /hint >}}
@@ -74,9 +75,9 @@ For readers' convenience, we also mirror the documents here with some additional
   - `value` is represented as a CEL expression that dynamically determines the label value.
     For example: you can use `node.metadata.name` to reference the node name as the label value.
 * `help` defines the help string of a metric.
-* `kind` defines the type of the metric: `counter`, `guage` or `histogram`.
+* `kind` defines the type of the metric: `counter`, `gauge`, or `histogram`.
 * `dimension` defines where the data comes from. It could be `node`, `pod`, or `container`.
-* `value` is a CEL expression that defines the metric value if `kind` is `counter` or `guage`.
+* `value` is a CEL expression that defines the metric value if `kind` is `counter` or `gauge`.
   Please refer to [CEL expressions in `kwok`] for more detailed instructions that might be helpful to simulate the metric value.
 * `buckets` is exclusively for customizing the data of the metric of kind `histogram`.
   - `le`, which defines the histogram bucket’s upper threshold, has the same meaning as the one of Prometheus histogram bucket.
