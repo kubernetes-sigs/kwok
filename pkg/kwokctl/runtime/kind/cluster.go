@@ -379,10 +379,30 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	}
 
 	etcdComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentEtcd)
+
 	kubeApiserverComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeApiserver)
 	kubeSchedulerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeScheduler)
 	kubeControllerManagerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKubeControllerManager)
 	kwokControllerComponentPatches := runtime.GetComponentPatches(env.kwokctlConfig, consts.ComponentKwokController)
+	for _, patch := range env.kwokctlConfig.ComponentsPatches {
+		switch patch.Name {
+		case consts.ComponentEtcd:
+			args := filterDuplicatedExtraArgs(ctx, etcdComponentPatches.ExtraArgs, patch.ExtraArgs)
+			etcdComponentPatches.ExtraArgs = args
+		case consts.ComponentKubeApiserver:
+			args := filterDuplicatedExtraArgs(ctx, kubeApiserverComponentPatches.ExtraArgs, patch.ExtraArgs)
+			kubeApiserverComponentPatches.ExtraArgs = args
+		case consts.ComponentKubeScheduler:
+			args := filterDuplicatedExtraArgs(ctx, kubeSchedulerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			kubeSchedulerComponentPatches.ExtraArgs = args
+		case consts.ComponentKubeControllerManager:
+			args := filterDuplicatedExtraArgs(ctx, kubeControllerManagerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			kubeControllerManagerComponentPatches.ExtraArgs = args
+		case consts.ComponentKwokController:
+			args := filterDuplicatedExtraArgs(ctx, kwokControllerComponentPatches.ExtraArgs, patch.ExtraArgs)
+			kwokControllerComponentPatches.ExtraArgs = args
+		}
+	}
 	extraLogVolumes := runtime.GetLogVolumes(ctx)
 	kwokControllerExtraVolumes := kwokControllerComponentPatches.ExtraVolumes
 	kwokControllerExtraVolumes = append(kwokControllerExtraVolumes, extraLogVolumes...)
@@ -430,6 +450,25 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	}
 
 	return nil
+}
+
+func filterDuplicatedExtraArgs(ctx context.Context, extraArgs, passedExtraArgs []internalversion.ExtraArgs) []internalversion.ExtraArgs {
+	logger := log.FromContext(ctx)
+	extraArgsMap := make(map[string]internalversion.ExtraArgs)
+	for _, args := range extraArgs {
+		extraArgsMap[args.Key] = args
+	}
+	for _, args := range passedExtraArgs {
+		if _, ok := extraArgsMap[args.Key]; ok {
+			logger.Warn("duplicated extraArgs and will be overwritten", "key", args.Key, "value", args.Value)
+		}
+		extraArgsMap[args.Key] = args
+	}
+	result := make([]internalversion.ExtraArgs, 0, len(extraArgsMap))
+	for _, args := range extraArgsMap {
+		result = append(result, args)
+	}
+	return result
 }
 
 func (c *Cluster) addEtcd(_ context.Context, env *env) (err error) {

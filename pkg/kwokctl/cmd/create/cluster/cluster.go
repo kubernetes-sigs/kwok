@@ -40,6 +40,7 @@ type flagpole struct {
 	Timeout    time.Duration
 	Wait       time.Duration
 	Kubeconfig string
+	ExtraArgs  []string
 
 	*internalversion.KwokctlConfiguration
 }
@@ -141,6 +142,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease in seconds")
 	cmd.Flags().Float64Var(&flags.Options.HeartbeatFactor, "heartbeat-factor", flags.Options.HeartbeatFactor, "Scale factor for all about heartbeat")
+	cmd.Flags().StringArrayVar(&flags.ExtraArgs, "extra-args", flags.ExtraArgs, "Pass a single extra arg key-value pair to the component in the format `component=key=value`")
 
 	return cmd
 }
@@ -158,6 +160,35 @@ func mutationHeartbeat(flags *flagpole) {
 	multiplyByFactor(&flags.Options.KubeControllerManagerNodeMonitorGracePeriodMilliseconds, flags.Options.HeartbeatFactor)
 	multiplyByFactor(&flags.Options.KubeControllerManagerNodeMonitorPeriodMilliseconds, flags.Options.HeartbeatFactor)
 	flags.Options.HeartbeatFactor = 1
+}
+
+func mutationComponentPatches(flags *flagpole) {
+	componentPatches := make([]internalversion.ComponentPatches, 0, len(flags.ExtraArgs))
+	componentNames := make(map[string]int)
+	for i, extraArgs := range flags.ExtraArgs {
+		splitedArgs := strings.SplitN(extraArgs, "=", 3)
+		if len(splitedArgs) != 3 {
+			continue
+		}
+		if n, ok := componentNames[splitedArgs[0]]; ok {
+			componentPatches[n].ExtraArgs = append(componentPatches[n].ExtraArgs, internalversion.ExtraArgs{
+				Key:   splitedArgs[1],
+				Value: splitedArgs[2],
+			})
+			continue
+		}
+		componentPatches = append(componentPatches, internalversion.ComponentPatches{
+			Name: splitedArgs[0],
+			ExtraArgs: []internalversion.ExtraArgs{
+				{
+					Key:   splitedArgs[1],
+					Value: splitedArgs[2],
+				},
+			},
+		})
+		componentNames[splitedArgs[0]] = i
+	}
+	flags.KwokctlConfiguration.ComponentsPatches = append(flags.KwokctlConfiguration.ComponentsPatches, componentPatches...)
 }
 
 func runE(ctx context.Context, flags *flagpole) error {
@@ -184,6 +215,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	mutationHeartbeat(flags)
+	mutationComponentPatches(flags)
 
 	// Choose runtime
 	var rt runtime.Runtime
