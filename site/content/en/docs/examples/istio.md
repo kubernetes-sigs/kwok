@@ -1,5 +1,5 @@
 ---
-title: "With Istio"
+title: "Istio"
 ---
 
 # Istio

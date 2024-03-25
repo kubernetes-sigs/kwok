@@ -1,5 +1,5 @@
 ---
-title: "With Argo"
+title: "Argo"
 ---
 
 # Argo

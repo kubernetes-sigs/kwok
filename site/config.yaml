@@ -170,15 +170,22 @@ menu:
     - identifier: platform-specific-binaries
       pageRef: "/docs/user/kwokctl-platform-specific-binaries"
       parent: kwokctl-advanced-usage
-    - identifier: with-argo
+
+    - identifier: examples
+      title: Examples
+      parent: kwokctl-advanced-usage
+    - identifier: argo
       pageRef: "/docs/examples/argo"
-      parent: kwokctl-advanced-usage
-    - identifier: with-linkerd
+      parent: examples
+    - identifier: linkerd
       pageRef: "/docs/examples/linkerd"
-      parent: kwokctl-advanced-usage
-    - identifier: with-istio
+      parent: examples
+    - identifier: istio
       pageRef: "/docs/examples/istio"
-      parent: kwokctl-advanced-usage
+      parent: examples
+    - identifier: metrics-server
+      pageRef: "/docs/examples/metrics-server"
+      parent: examples
 
     - identifier: tools
       title: Tools
@@ -200,33 +207,43 @@ menu:
     - identifier: api-reference
       pageRef: "/docs/generated/apis"
       parent: configuration
-    - identifier: stages
+    - identifier: stages-configuration
       pageRef: "/docs/user/stages-configuration"
       parent: configuration
-    - identifier: port-forward
+
+    - identifier: pod-interaction
+      title: Pod Interaction
+      parent: configuration
+    - identifier: port-forward-configuration
       pageRef: "/docs/user/port-forward-configuration"
-      parent: configuration
-    - identifier: exec
+      parent: pod-interaction
+    - identifier: exec-configuration
       pageRef: "/docs/user/exec-configuration"
-      parent: configuration
-    - identifier: logs
+      parent: pod-interaction
+    - identifier: logs-configuration
       pageRef: "/docs/user/logs-configuration"
-      parent: configuration
-    - identifier: attach
+      parent: pod-interaction
+    - identifier: attach-configuration
       pageRef: "/docs/user/attach-configuration"
-      parent: configuration
-    - identifier: metrics
+      parent: pod-interaction
+    - identifier: metrics-configuration
       pageRef: "/docs/user/metrics-configuration"
       parent: configuration
-    - identifier: resource-usage
+      params:
+        collapse: never
+    - identifier: resource-usage-configuration
       pageRef: "/docs/user/resource-usage-configuration"
+      parent: metrics-configuration
+
+    - identifier: extensions
+      title: Extensions
       parent: configuration
     - identifier: go-template
       pageRef: "/docs/user/go-template"
-      parent: configuration
+      parent: extensions
     - identifier: cel-expressions
       pageRef: "/docs/user/cel-expressions"
-      parent: configuration
+      parent: extensions
 
     # Design Children
     - identifier: introduction
