@@ -65,8 +65,9 @@ users can specify the conditions that need to be met for the stage to be applied
 and the changes that will be made to the resource when the stage is applied.
 The `next` field allows users to define the new status of the resource using the `statusTemplate` field, and even `delete` the resource.
 
-`statusTemplate` and `delete` are the two fundamental fields in `next` that respectively represent the two basic phases
-of resource lifecycle simulation: status update and resource deletion. 
+`statusTemplate` and `delete` are the two fundamental fields in `next` that respectively represent the two basic phases of resource lifecycle simulation: status update and resource deletion.
+`statusTemplate` provides a way to define resource status based on go template rendering. Please see
+[go template in `kwok`] for more detailed instructions.
 `delete: true` has higher priority than a non-empty `statusTemplate`, which means `kwok` will delete the resource
 rather than update its status if both are set.
 
@@ -257,3 +258,4 @@ This example shows how to configure the simplest and fastest stages of Pod resou
 [Stage API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Stage
 [Resource Lifecycle Simulation Controller]: {{< relref "/docs/design/architecture" >}}
 [How Delay is Calculated]: {{< relref "/docs/user/stages-configuration#how-delay-is-calculated" >}}
+[go template in `kwok`]: {{< relref "/docs/user/go-template" >}}

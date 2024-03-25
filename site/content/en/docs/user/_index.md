@@ -37,6 +37,7 @@ If any special concerns, you can configure KWOK with options and stages.
 - [Exec]
 - [Logs]
 - [Attach]
+- [ResourceUsage]
 
 I hope this helps you get started with KWOK! Good luck and have fun!
 
@@ -53,3 +54,4 @@ I hope this helps you get started with KWOK! Good luck and have fun!
 [Exec]: {{< relref "/docs/user/exec-configuration" >}}
 [Logs]: {{< relref "/docs/user/logs-configuration" >}}
 [Attach]: {{< relref "/docs/user/attach-configuration" >}}
+[ResourceUsage]: {{< relref "/docs/user/resource-usage-configuration" >}}
