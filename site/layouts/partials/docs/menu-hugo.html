@@ -1,5 +1,5 @@
 <!--
-  https://gohugo.io/variables/menus/
+  https://gohugo.io/methods/menu/
 -->
 
 {{ template "book-menu" (dict "page" .page "menuEntries" .menuEntries) }}
@@ -45,7 +45,7 @@
 
   {{ with .menuEntries }}
 
-  {{ $title := or .Title .Name .Identifier | markdownify }}
+  {{ $title := or .Title (and .Page (.Page.Param "title")) .Identifier | markdownify }}
 
   {{- if $page.IsMenuCurrent .Menu . }}
       {{- $attrs = merge $attrs (dict "class" "active" "aria-current" "page") }}
