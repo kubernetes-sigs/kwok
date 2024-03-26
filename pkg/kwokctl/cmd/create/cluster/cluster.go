@@ -62,6 +62,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	}
 
 	cmd.Flags().Uint32Var(&flags.Options.KubeApiserverPort, "kube-apiserver-port", flags.Options.KubeApiserverPort, `Port of the apiserver (default random)`)
+	cmd.Flags().Uint32Var(&flags.Options.KubeApiserverInsecurePort, "kube-apiserver-insecure-port", flags.Options.KubeApiserverInsecurePort, `Insecure port of the apiserver`)
 	cmd.Flags().Uint32Var(&flags.Options.PrometheusPort, "prometheus-port", flags.Options.PrometheusPort, `Port to expose Prometheus metrics`)
 	cmd.Flags().Uint32Var(&flags.Options.JaegerPort, "jaeger-port", flags.Options.JaegerPort, `Port to expose Jaeger UI`)
 	cmd.Flags().BoolVar(&flags.Options.SecurePort, "secure-port", flags.Options.SecurePort, `The apiserver port on which to serve HTTPS with authentication and authorization, is not available before Kubernetes 1.13.0`)

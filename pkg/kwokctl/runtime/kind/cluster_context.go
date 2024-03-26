@@ -24,7 +24,9 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 )
 
 // AddContext add the context of cluster to kubeconfig
@@ -34,13 +36,30 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 		return nil
 	}
 
-	kubeConfig := &kubeconfig.Config{
-		Context: &clientcmdapi.Context{
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+
+	// set the context in default kubeconfig
+	kubeConfig := &kubeconfig.Config{}
+
+	if conf.InsecureKubeconfig && conf.KubeApiserverInsecurePort != 0 {
+		kubeConfig.Context = &clientcmdapi.Context{
+			Cluster: c.Name(),
+		}
+		kubeConfig.Cluster = &clientcmdapi.Cluster{
+			Server: "http://" + utilsnet.LocalAddress + ":" + format.String(conf.KubeApiserverInsecurePort),
+		}
+	} else {
+		kubeConfig.Context = &clientcmdapi.Context{
 			Cluster:  "kind-" + c.Name(),
 			AuthInfo: "kind-" + c.Name(),
-		},
+		}
 	}
-	err := kubeconfig.AddContext(kubeconfigPath, c.Name(), kubeConfig)
+
+	err = kubeconfig.AddContext(kubeconfigPath, c.Name(), kubeConfig)
 	if err != nil {
 		return err
 	}

@@ -129,20 +129,21 @@ func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports 
 }
 
 type env struct {
-	kwokctlConfig   *internalversion.KwokctlConfiguration
-	verbosity       log.Level
-	kubeconfigPath  string
-	etcdDataPath    string
-	kwokConfigPath  string
-	pkiPath         string
-	auditLogPath    string
-	auditPolicyPath string
-	workdir         string
-	caCertPath      string
-	adminKeyPath    string
-	adminCertPath   string
-	scheme          string
-	usedPorts       sets.Sets[uint32]
+	kwokctlConfig           *internalversion.KwokctlConfiguration
+	verbosity               log.Level
+	inClusterKubeconfigPath string
+	kubeconfigPath          string
+	etcdDataPath            string
+	kwokConfigPath          string
+	pkiPath                 string
+	auditLogPath            string
+	auditPolicyPath         string
+	workdir                 string
+	caCertPath              string
+	adminKeyPath            string
+	adminCertPath           string
+	scheme                  string
+	usedPorts               sets.Sets[uint32]
 }
 
 func (c *Cluster) env(ctx context.Context) (*env, error) {
@@ -159,6 +160,11 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	workdir := c.Workdir()
 
 	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
+	inClusterKubeconfigPath := c.GetWorkdirPath(runtime.InClusterKubeconfigName)
+	if config.Options.KubeApiserverInsecurePort == 0 {
+		inClusterKubeconfigPath = kubeconfigPath
+	}
+
 	kwokConfigPath := c.GetWorkdirPath(runtime.ConfigName)
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
@@ -179,20 +185,21 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	usedPorts := runtime.GetUsedPorts(ctx)
 
 	return &env{
-		kwokctlConfig:   config,
-		verbosity:       verbosity,
-		kubeconfigPath:  kubeconfigPath,
-		etcdDataPath:    etcdDataPath,
-		kwokConfigPath:  kwokConfigPath,
-		pkiPath:         pkiPath,
-		auditLogPath:    auditLogPath,
-		auditPolicyPath: auditPolicyPath,
-		workdir:         workdir,
-		caCertPath:      caCertPath,
-		adminKeyPath:    adminKeyPath,
-		adminCertPath:   adminCertPath,
-		scheme:          scheme,
-		usedPorts:       usedPorts,
+		kwokctlConfig:           config,
+		verbosity:               verbosity,
+		inClusterKubeconfigPath: inClusterKubeconfigPath,
+		kubeconfigPath:          kubeconfigPath,
+		etcdDataPath:            etcdDataPath,
+		kwokConfigPath:          kwokConfigPath,
+		pkiPath:                 pkiPath,
+		auditLogPath:            auditLogPath,
+		auditPolicyPath:         auditPolicyPath,
+		workdir:                 workdir,
+		caCertPath:              caCertPath,
+		adminKeyPath:            adminKeyPath,
+		adminCertPath:           adminCertPath,
+		scheme:                  scheme,
+		usedPorts:               usedPorts,
 	}, nil
 }
 
@@ -254,6 +261,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	err = c.addKubeApiserver(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addKubectlProxy(ctx, env)
 	if err != nil {
 		return err
 	}
@@ -404,6 +416,37 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	return nil
 }
 
+func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the kubectl
+	if conf.KubeApiserverInsecurePort != 0 {
+		kubectlPath, err := c.KubectlPath(ctx)
+		if err != nil {
+			return err
+		}
+
+		kubectlProxyComponent, err := components.BuildKubectlProxyComponent(components.BuildKubectlProxyComponentConfig{
+			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
+			Workdir:        env.workdir,
+			Binary:         kubectlPath,
+			BindAddress:    conf.BindAddress,
+			Port:           conf.KubeApiserverInsecurePort,
+			KubeconfigPath: env.inClusterKubeconfigPath,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			Verbosity:      env.verbosity,
+		})
+		if err != nil {
+			return err
+		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubectlProxyComponent)
+	}
+	return nil
+}
+
 func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
@@ -440,7 +483,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			AdminCertPath:                      env.adminCertPath,
 			AdminKeyPath:                       env.adminKeyPath,
 			KubeAuthorization:                  conf.KubeAuthorization,
-			KubeconfigPath:                     env.kubeconfigPath,
+			KubeconfigPath:                     env.inClusterKubeconfigPath,
 			KubeFeatureGates:                   conf.KubeFeatureGates,
 			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
 			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
@@ -468,7 +511,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		schedulerConfigPath := ""
 		if conf.KubeSchedulerConfig != "" {
 			schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
-			err = c.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, env.kubeconfigPath)
+			err = c.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, env.inClusterKubeconfigPath)
 			if err != nil {
 				return err
 			}
@@ -500,7 +543,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 			AdminCertPath:    env.adminCertPath,
 			AdminKeyPath:     env.adminKeyPath,
 			ConfigPath:       schedulerConfigPath,
-			KubeconfigPath:   env.kubeconfigPath,
+			KubeconfigPath:   env.inClusterKubeconfigPath,
 			KubeFeatureGates: conf.KubeFeatureGates,
 			Verbosity:        env.verbosity,
 			DisableQPSLimits: conf.DisableQPSLimits,
@@ -536,7 +579,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		BindAddress:              conf.BindAddress,
 		Port:                     conf.KwokControllerPort,
 		ConfigPath:               env.kwokConfigPath,
-		KubeconfigPath:           env.kubeconfigPath,
+		KubeconfigPath:           env.inClusterKubeconfigPath,
 		CaCertPath:               env.caCertPath,
 		AdminCertPath:            env.adminCertPath,
 		AdminKeyPath:             env.adminKeyPath,
@@ -585,7 +628,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 			CaCertPath:     env.caCertPath,
 			AdminCertPath:  env.adminCertPath,
 			AdminKeyPath:   env.adminKeyPath,
-			KubeconfigPath: env.kubeconfigPath,
+			KubeconfigPath: env.inClusterKubeconfigPath,
 			Verbosity:      env.verbosity,
 		})
 		if err != nil {
@@ -692,7 +735,7 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 	}
 
 	// Setup kubeconfig
-	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
+	inClusterKubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
 		Address:      env.scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
@@ -703,9 +746,24 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 	if err != nil {
 		return err
 	}
-	err = c.WriteFile(env.kubeconfigPath, kubeconfigData)
+	err = c.WriteFile(env.inClusterKubeconfigPath, inClusterKubeconfigData)
 	if err != nil {
 		return err
+	}
+
+	if conf.KubeApiserverInsecurePort != 0 {
+		kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
+			ProjectName: c.Name(),
+			SecurePort:  false,
+			Address:     "http://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverInsecurePort),
+		}))
+		if err != nil {
+			return err
+		}
+		err = c.WriteFile(env.kubeconfigPath, kubeconfigData)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Save config

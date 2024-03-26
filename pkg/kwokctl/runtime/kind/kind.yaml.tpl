@@ -8,8 +8,13 @@ networking:
 nodes:
 - role: control-plane
 
-  {{ if or .DashboardPort .PrometheusPort .KwokControllerPort .EtcdPort .JaegerPort}}
+  {{ if or .KubeApiserverInsecurePort .DashboardPort .PrometheusPort .KwokControllerPort .EtcdPort .JaegerPort}}
   extraPortMappings:
+  {{ if .KubeApiserverInsecurePort }}
+  - containerPort: 8001
+    hostPort: {{ .KubeApiserverInsecurePort }}
+    protocol: TCP
+  {{ end }}
   {{ if .DashboardPort }}
   - containerPort: 8080
     hostPort: {{ .DashboardPort }}

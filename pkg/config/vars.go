@@ -257,6 +257,7 @@ func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 	conf.KubeAdmission = envs.GetEnvWithPrefix("KUBE_ADMISSION", conf.KubeAdmission)
 
 	conf.KubeApiserverPort = envs.GetEnvWithPrefix("KUBE_APISERVER_PORT", conf.KubeApiserverPort)
+	conf.KubeApiserverInsecurePort = envs.GetEnvWithPrefix("KUBE_APISERVER_INSECURE_PORT", conf.KubeApiserverInsecurePort)
 
 	if conf.KubeFeatureGates == "" {
 		if conf.Mode == configv1alpha1.ModeStableFeatureGateAndAPI {
@@ -320,6 +321,11 @@ func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 		conf.KubeSchedulerImage = joinImageURI(conf.KubeImagePrefix, "kube-scheduler", conf.KubeVersion)
 	}
 	conf.KubeSchedulerImage = envs.GetEnvWithPrefix("KUBE_SCHEDULER_IMAGE", conf.KubeSchedulerImage)
+
+	if conf.KubectlImage == "" {
+		conf.KubectlImage = joinImageURI(conf.KubeImagePrefix, "kubectl", conf.KubeVersion)
+	}
+	conf.KubectlImage = envs.GetEnvWithPrefix("KUBECTL_IMAGE", conf.KubectlImage)
 
 	conf.KubeSchedulerPort = envs.GetEnvWithPrefix("KUBE_SCHEDULER_PORT", conf.KubeSchedulerPort)
 }

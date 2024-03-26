@@ -44,6 +44,7 @@ kwokctl create cluster [flags]
       --kube-apiserver-image string             Image of kube-apiserver, only for docker/podman/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/kube-apiserver:${KWOK_KUBE_VERSION}'
                                                  (default "registry.k8s.io/kube-apiserver:v1.29.0")
+      --kube-apiserver-insecure-port uint32     Insecure port of the apiserver
       --kube-apiserver-port uint32              Port of the apiserver (default random)
       --kube-audit-policy string                Path to the file that defines the audit policy configuration
       --kube-authorization                      Enable authorization for kube-apiserver, only for non kind/kind-podman runtime (default true)

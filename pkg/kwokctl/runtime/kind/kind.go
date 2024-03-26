@@ -248,12 +248,13 @@ func expandHostVolumePaths(conf BuildKindConfig) (BuildKindConfig, error) {
 
 // BuildKindConfig is the configuration for building the kind config
 type BuildKindConfig struct {
-	KubeApiserverPort  uint32
-	EtcdPort           uint32
-	DashboardPort      uint32
-	PrometheusPort     uint32
-	JaegerPort         uint32
-	KwokControllerPort uint32
+	KubeApiserverPort         uint32
+	KubeApiserverInsecurePort uint32
+	EtcdPort                  uint32
+	DashboardPort             uint32
+	PrometheusPort            uint32
+	JaegerPort                uint32
+	KwokControllerPort        uint32
 
 	RuntimeConfig []string
 	FeatureGates  []string

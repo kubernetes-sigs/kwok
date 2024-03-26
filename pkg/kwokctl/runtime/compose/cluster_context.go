@@ -42,31 +42,38 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 	}
 	conf := &config.Options
 
-	scheme := "http"
-	if conf.SecurePort {
-		scheme = "https"
-	}
-
-	pkiPath := c.GetWorkdirPath(runtime.PkiName)
-	adminKeyPath := path.Join(pkiPath, "admin.key")
-	adminCertPath := path.Join(pkiPath, "admin.crt")
-	caCertPath := path.Join(pkiPath, "ca.crt")
-
 	// set the context in default kubeconfig
 	kubeConfig := &kubeconfig.Config{
-		Cluster: &clientcmdapi.Cluster{
-			Server: scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
-		},
 		Context: &clientcmdapi.Context{
 			Cluster: c.Name(),
 		},
 	}
-	if conf.SecurePort {
-		kubeConfig.Cluster.CertificateAuthority = caCertPath
-		kubeConfig.Context.AuthInfo = c.Name()
-		kubeConfig.User = &clientcmdapi.AuthInfo{
-			ClientCertificate: adminCertPath,
-			ClientKey:         adminKeyPath,
+
+	if conf.InsecureKubeconfig && conf.KubeApiserverInsecurePort != 0 {
+		kubeConfig.Cluster = &clientcmdapi.Cluster{
+			Server: "http://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverInsecurePort),
+		}
+	} else {
+		scheme := "http"
+		if conf.SecurePort {
+			scheme = "https"
+		}
+
+		pkiPath := c.GetWorkdirPath(runtime.PkiName)
+		adminKeyPath := path.Join(pkiPath, "admin.key")
+		adminCertPath := path.Join(pkiPath, "admin.crt")
+		caCertPath := path.Join(pkiPath, "ca.crt")
+
+		kubeConfig.Cluster = &clientcmdapi.Cluster{
+			Server: scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
+		}
+		if conf.SecurePort {
+			kubeConfig.Cluster.CertificateAuthority = caCertPath
+			kubeConfig.Context.AuthInfo = c.Name()
+			kubeConfig.User = &clientcmdapi.AuthInfo{
+				ClientCertificate: adminCertPath,
+				ClientKey:         adminKeyPath,
+			}
 		}
 	}
 	err = kubeconfig.AddContext(kubeconfigPath, c.Name(), kubeConfig)

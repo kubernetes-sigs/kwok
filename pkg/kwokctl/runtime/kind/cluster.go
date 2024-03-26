@@ -246,6 +246,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addKubectlProxy(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.addKubeControllerManager(ctx, env)
 	if err != nil {
 		return err
@@ -415,6 +420,7 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	kindYaml, err := BuildKind(BuildKindConfig{
 		BindAddress:                   conf.BindAddress,
 		KubeApiserverPort:             conf.KubeApiserverPort,
+		KubeApiserverInsecurePort:     conf.KubeApiserverInsecurePort,
 		EtcdPort:                      conf.EtcdPort,
 		JaegerPort:                    conf.JaegerPort,
 		DashboardPort:                 conf.DashboardPort,
@@ -498,6 +504,49 @@ func (c *Cluster) addKubeApiserver(_ context.Context, env *env) (err error) {
 			InsecureSkipVerify: true,
 		},
 	})
+	return nil
+}
+
+func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the kubectl
+	if conf.KubeApiserverInsecurePort != 0 {
+		err := c.EnsureImage(ctx, c.runtime, conf.KubectlImage)
+		if err != nil {
+			return err
+		}
+
+		kubectlProxyComponent, err := components.BuildKubectlProxyComponent(components.BuildKubectlProxyComponentConfig{
+			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
+			Workdir:        env.workdir,
+			Image:          conf.KubectlImage,
+			BindAddress:    net.PublicAddress,
+			Port:           conf.KubeApiserverInsecurePort,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			Verbosity:      env.verbosity,
+		})
+		if err != nil {
+			return err
+		}
+
+		runtime.ApplyComponentPatches(&kubectlProxyComponent, env.kwokctlConfig.ComponentsPatches)
+
+		dashboardPod, err := yaml.Marshal(components.ConvertToPod(kubectlProxyComponent))
+		if err != nil {
+			return fmt.Errorf("failed to marshal kubectl proxy pod: %w", err)
+		}
+		err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKubeApiserverInsecureProxy+".yaml"), dashboardPod)
+		if err != nil {
+			return fmt.Errorf("failed to write: %w", err)
+		}
+
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubectlProxyComponent)
+	}
 	return nil
 }
 
