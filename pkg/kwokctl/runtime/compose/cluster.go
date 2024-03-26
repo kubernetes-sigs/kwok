@@ -1141,6 +1141,19 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 	return c.Exec(ctx, c.runtime, args...)
 }
 
+// InspectComponent returns the status of the component
+func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.ComponentStatus, error) {
+	running, _ := c.inspectComponent(ctx, name)
+
+	if !running {
+		return runtime.ComponentStatusStopped, nil
+	}
+
+	// TODO: check if the component is ready
+
+	return runtime.ComponentStatusReady, nil
+}
+
 // Ready returns true if the cluster is ready
 func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	config, err := c.Config(ctx)
@@ -1148,8 +1161,10 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
+	// TODO: Only the necessary components are checked for readiness.
 	for _, component := range config.Components {
-		if running, _ := c.inspectComponent(ctx, component.Name); !running {
+		s, _ := c.InspectComponent(ctx, component.Name)
+		if s != runtime.ComponentStatusReady {
 			return false, nil
 		}
 	}

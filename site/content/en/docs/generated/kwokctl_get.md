@@ -1,6 +1,6 @@
 ## kwokctl get
 
-Gets one of [artifacts, clusters, kubeconfig]
+Gets one of [artifacts, clusters, components, kubeconfig]
 
 ```
 kwokctl get [command] [flags]
@@ -26,5 +26,6 @@ kwokctl get [command] [flags]
 * [kwokctl](kwokctl.md)	 - kwokctl is a tool to streamline the creation and management of clusters, with nodes simulated by kwok
 * [kwokctl get artifacts](kwokctl_get_artifacts.md)	 - Lists binaries or images used by cluster
 * [kwokctl get clusters](kwokctl_get_clusters.md)	 - Lists existing clusters by their name
+* [kwokctl get components](kwokctl_get_components.md)	 - List components
 * [kwokctl get kubeconfig](kwokctl_get_kubeconfig.md)	 - Prints cluster kubeconfig
 

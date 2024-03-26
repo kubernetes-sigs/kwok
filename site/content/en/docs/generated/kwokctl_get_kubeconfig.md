@@ -27,5 +27,5 @@ kwokctl get kubeconfig [flags]
 
 ### SEE ALSO
 
-* [kwokctl get](kwokctl_get.md)	 - Gets one of [artifacts, clusters, kubeconfig]
+* [kwokctl get](kwokctl_get.md)	 - Gets one of [artifacts, clusters, components, kubeconfig]
 

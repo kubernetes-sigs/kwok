@@ -70,6 +70,9 @@ type Runtime interface {
 	// ListComponents list the components of cluster
 	ListComponents(ctx context.Context) ([]internalversion.Component, error)
 
+	// InspectComponent inspect the component
+	InspectComponent(ctx context.Context, name string) (ComponentStatus, error)
+
 	// Ready check the cluster is ready
 	Ready(ctx context.Context) (bool, error)
 
@@ -150,3 +153,12 @@ type SnapshotSaveWithYAMLConfig struct {
 type SnapshotRestoreWithYAMLConfig struct {
 	Filters []string
 }
+
+type ComponentStatus uint64
+
+const (
+	ComponentStatusUnknown ComponentStatus = iota
+	ComponentStatusStopped
+	ComponentStatusRunning
+	ComponentStatusReady
+)
