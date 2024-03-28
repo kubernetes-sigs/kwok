@@ -1,0 +1,53 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pod-container-create-ready
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  selector:
+    matchExpressions:
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
+      operator: 'In'
+      values:
+      - 'True'
+    - key: '.status.containerStatuses.[].state.waiting.reason'
+      operator: 'Exists'
+  weight: 1
+  delay:
+    durationMilliseconds: 1000
+    jitterDurationMilliseconds: 5000
+  next:
+    delete: false
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $root := . }}
+      conditions:
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: ''
+        reason: ''
+        status: "True"
+        type: Ready
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: ''
+        reason: ''
+        status: "True"
+        type: ContainersReady
+      containerStatuses:
+      {{ range $index, $item := .spec.containers }}
+      {{ $origin := index $root.status.containerStatuses $index }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        ready: true
+        restartCount: {{ $origin.restartCount }}
+        started: true
+        state:
+          running:
+            startedAt: {{ $now | Quote }}
+      {{ end }}
+      phase: Running
