@@ -1,17 +1,16 @@
-## kwokctl get artifacts
+## kwokctl get components
 
-Lists binaries or images used by cluster
+List components
 
 ```
-kwokctl get artifacts [flags]
+kwokctl get components [flags]
 ```
 
 ### Options
 
 ```
-      --filter string    Filter the list of (binary or image)
-  -h, --help             help for artifacts
-      --runtime string   Runtime of the cluster (binary or docker or kind or kind-podman or nerdctl or podman)
+  -h, --help            help for components
+  -o, --output string   Output format (name, wide) (default "name")
 ```
 
 ### Options inherited from parent commands

@@ -9,7 +9,8 @@ kwokctl get clusters [flags]
 ### Options
 
 ```
-  -h, --help   help for clusters
+  -h, --help            help for clusters
+  -o, --output string   Output format (name, wide) (default "name")
 ```
 
 ### Options inherited from parent commands
@@ -23,5 +24,5 @@ kwokctl get clusters [flags]
 
 ### SEE ALSO
 
-* [kwokctl get](kwokctl_get.md)	 - Gets one of [artifacts, clusters, kubeconfig]
+* [kwokctl get](kwokctl_get.md)	 - Gets one of [artifacts, clusters, components, kubeconfig]
 

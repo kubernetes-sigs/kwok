@@ -25,6 +25,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get/artifacts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get/clusters"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get/kubeconfig"
 )
 
@@ -33,13 +34,14 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "get [command]",
-		Short: "Gets one of [artifacts, clusters, kubeconfig]",
+		Short: "Gets one of [artifacts, clusters, components, kubeconfig]",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
 	}
 	// add subcommands
 	cmd.AddCommand(clusters.NewCommand(ctx))
+	cmd.AddCommand(components.NewCommand(ctx))
 	cmd.AddCommand(artifacts.NewCommand(ctx))
 	cmd.AddCommand(kubeconfig.NewCommand(ctx))
 	return cmd
