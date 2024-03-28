@@ -155,11 +155,13 @@ jobs:
           - os: ubuntu-latest
             kwokctl-runtime: podman
           - os: ubuntu-latest
+            kwokctl-runtime: nerdctl
+          - os: ubuntu-latest
             kwokctl-runtime: kind
           - os: ubuntu-latest
             kwokctl-runtime: kind-podman
           - os: ubuntu-latest
-            kwokctl-runtime: nerdctl
+            kwokctl-runtime: kind-nerdctl
 
     continue-on-error: false
     runs-on: ${{ matrix.os }}
@@ -231,7 +233,7 @@ jobs:
           docker info
 
       - name: Install Nerdctl and Start Containerd
-        if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
+        if: ${{ matrix.kwokctl-runtime == 'nerdctl' ||  matrix.kwokctl-runtime == 'kind-nerdctl' }}
         shell: bash
         run: |
           sudo mkdir -p /etc/cni/net.d
