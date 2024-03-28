@@ -332,11 +332,17 @@ type Component struct {
 	// Volumes is a list of named volumes that can be mounted by containers belonging to the component.
 	Volumes []Volume
 
+	// Files is a list of files that can be mounted by containers belonging to the component.
+	Files []File
+
 	// Metric is the metric of the component.
 	Metric *ComponentMetric
 
 	// MetricsDiscovery is the metrics discovery of the component.
 	MetricsDiscovery *ComponentMetric
+
+	// Address is the address of the component.
+	Address string
 
 	// Version is the version of the component.
 	Version string
@@ -406,6 +412,18 @@ type Volume struct {
 	MountPath string
 	// PathType is the type of the HostPath.
 	PathType HostPathType
+}
+
+// File represents a file that is accessible to the containers running in a component.
+type File struct {
+	// Path is the path of the file.
+	Path string
+	// Data is the content of the file.
+	Data string
+	// Template is the template of the file.
+	Template string
+	// Mode is the mode of the file.
+	Mode string
 }
 
 // HostPathType represents the type of storage used for HostPath volumes.

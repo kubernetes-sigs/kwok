@@ -70,6 +70,9 @@ type Runtime interface {
 	// ListComponents list the components of cluster
 	ListComponents(ctx context.Context) ([]internalversion.Component, error)
 
+	// SetComponents returns the components of cluster
+	SetComponents(ctx context.Context, name string, args ...string) error
+
 	// InspectComponent inspect the component
 	InspectComponent(ctx context.Context, name string) (ComponentStatus, error)
 

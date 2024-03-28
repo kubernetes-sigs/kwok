@@ -282,4 +282,8 @@ type BuildKindConfig struct {
 	BindAddress      string
 	DisableQPSLimits bool
 	KubeVersion      version.Version
+
+	Ports []internalversion.Port
+
+	Components []internalversion.Component
 }

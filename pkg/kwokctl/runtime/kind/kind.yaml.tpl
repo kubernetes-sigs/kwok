@@ -40,6 +40,11 @@ nodes:
     hostPort: {{ .EtcdPort }}
     protocol: TCP
   {{ end }}
+  {{ range .Ports }}
+  - containerPort: {{ .Port }}
+    hostPort: {{ .HostPort }}
+    protocol: {{ .Protocol }}
+  {{ end }}
   {{ end }}
 
   kubeadmConfigPatches:
@@ -147,40 +152,12 @@ nodes:
   - hostPath: {{ .Workdir }}/pki
     containerPath: /etc/kubernetes/pki
 
-  {{ range .EtcdExtraVolumes }}
+  {{ range $components := .Components }}
+  {{ range $components.Volumes }}
   - hostPath: {{ .HostPath }}
-    containerPath: /var/components/etcd{{ .MountPath }}
+    containerPath: /var/components/{{ $components.Name }}{{ .MountPath }}
     readOnly: {{ .ReadOnly }}
   {{ end }}
-
-  {{ range .ApiserverExtraVolumes }}
-  - hostPath: {{ .HostPath }}
-    containerPath: /var/components/apiserver{{ .MountPath }}
-    readOnly: {{ .ReadOnly }}
-  {{ end }}
-
-  {{ range .ControllerManagerExtraVolumes }}
-  - hostPath: {{ .HostPath }}
-    containerPath: /var/components/controller-manager{{ .MountPath }}
-    readOnly: {{ .ReadOnly }}
-  {{ end }}
-
-  {{ range .SchedulerExtraVolumes }}
-  - hostPath: {{ .HostPath }}
-    containerPath: /var/components/scheduler{{ .MountPath }}
-    readOnly: {{ .ReadOnly }}
-  {{ end }}
-
-  {{ range .KwokControllerExtraVolumes }}
-  - hostPath: {{ .HostPath }}
-    containerPath: /var/components/controller{{ .MountPath }}
-    readOnly: {{ .ReadOnly }}
-  {{ end }}
-
-  {{ range .PrometheusExtraVolumes }}
-  - hostPath: {{ .HostPath }}
-    containerPath: /var/components/prometheus{{ .MountPath }}
-    readOnly: {{ .ReadOnly }}
   {{ end }}
 
 {{ if .FeatureGates }}
