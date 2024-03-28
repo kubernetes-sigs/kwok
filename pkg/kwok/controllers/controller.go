@@ -116,7 +116,7 @@ type Controller struct {
 	podCacheGetter       informer.Getter[*corev1.Pod]
 	nodeLeaseCacheGetter informer.Getter[*coordinationv1.Lease]
 
-	onNodeManagedFunc   func(nodeName string)
+	onNodeManagedFunc   func(nodeName string, node *corev1.Node)
 	onNodeUnmanagedFunc func(nodeName string)
 	readOnlyFunc        func(nodeName string) bool
 
@@ -138,7 +138,7 @@ type Controller struct {
 	stageGetter resources.DynamicGetter[[]*internalversion.Stage]
 
 	podOnNodeManageQueue queue.Queue[string]
-	nodeManageQueue      queue.Queue[string]
+	nodeManageQueue      queue.Queue[*corev1.Node]
 }
 
 // Config is the configuration for the controller
@@ -169,6 +169,7 @@ type Config struct {
 	ID                                    string
 	EnableMetrics                         bool
 	EnablePodCache                        bool
+	EnableNodeCache                       bool
 }
 
 func (c Config) validate() error {
@@ -232,11 +233,20 @@ func (c *Controller) init(ctx context.Context) (err error) {
 
 	nodesCli := c.conf.TypedClient.CoreV1().Nodes()
 	c.nodesInformer = informer.NewInformer[*corev1.Node, *corev1.NodeList](nodesCli)
-	c.nodeCacheGetter, err = c.nodesInformer.WatchWithCache(ctx, informer.Option{
-		LabelSelector:      c.manageNodesWithLabelSelector,
-		AnnotationSelector: c.manageNodesWithAnnotationSelector,
-		FieldSelector:      c.manageNodesWithFieldSelector,
-	}, c.nodesChan)
+
+	if c.conf.EnableNodeCache {
+		c.nodeCacheGetter, err = c.nodesInformer.WatchWithLazyCache(ctx, informer.Option{
+			LabelSelector:      c.manageNodesWithLabelSelector,
+			AnnotationSelector: c.manageNodesWithAnnotationSelector,
+			FieldSelector:      c.manageNodesWithFieldSelector,
+		}, c.nodesChan)
+	} else {
+		err = c.nodesInformer.Watch(ctx, informer.Option{
+			LabelSelector:      c.manageNodesWithLabelSelector,
+			AnnotationSelector: c.manageNodesWithAnnotationSelector,
+			FieldSelector:      c.manageNodesWithFieldSelector,
+		}, c.nodesChan)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to watch nodes: %w", err)
 	}
@@ -264,14 +274,14 @@ func (c *Controller) init(ctx context.Context) (err error) {
 	c.patchMeta = patch.NewPatchMetaFromOpenAPI3(c.conf.RESTClient)
 
 	c.podOnNodeManageQueue = queue.NewQueue[string]()
-	c.nodeManageQueue = queue.NewQueue[string]()
+	c.nodeManageQueue = queue.NewQueue[(*corev1.Node)]()
 	return nil
 }
 
 func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 	if c.conf.NodeLeaseDurationSeconds == 0 {
 		// Manage pods ignores leases
-		c.onNodeManagedFunc = func(nodeName string) {
+		c.onNodeManagedFunc = func(nodeName string, node *corev1.Node) {
 			c.podOnNodeManageQueue.Add(nodeName)
 		}
 		return nil
@@ -301,23 +311,19 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		RenewInterval:       renewInterval,
 		RenewIntervalJitter: renewIntervalJitter,
 		MutateLeaseFunc: setNodeOwnerFunc(func(nodeName string) []metav1.OwnerReference {
-			node, ok := c.nodeCacheGetter.Get(nodeName)
+			if c.nodes == nil {
+				return nil
+			}
+
+			info, ok := c.nodes.Get(nodeName)
 			if !ok {
 				return nil
 			}
-			ownerReferences := []metav1.OwnerReference{
-				{
-					APIVersion: nodeKind.Version,
-					Kind:       nodeKind.Kind,
-					Name:       node.Name,
-					UID:        node.UID,
-				},
-			}
-			return ownerReferences
+			return info.OwnerReferences
 		}),
 		HolderIdentity: c.conf.ID,
-		OnNodeManagedFunc: func(nodeName string) {
-			c.nodeManageQueue.Add(nodeName)
+		OnNodeManagedFunc: func(nodeName string, node *corev1.Node) {
+			c.nodeManageQueue.Add(node)
 			c.podOnNodeManageQueue.Add(nodeName)
 		},
 	})
@@ -330,9 +336,9 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		return !c.nodeLeases.Held(nodeName)
 	}
 
-	c.onNodeManagedFunc = func(nodeName string) {
+	c.onNodeManagedFunc = func(nodeName string, node *corev1.Node) {
 		// Try to hold the lease
-		c.nodeLeases.TryHold(nodeName)
+		c.nodeLeases.TryHold(nodeName, node)
 	}
 	c.onNodeUnmanagedFunc = func(nodeName string) {
 		c.nodeLeases.ReleaseHold(nodeName)
@@ -348,22 +354,10 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 }
 
 func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
-	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName, ok := c.nodeManageQueue.GetOrWaitWithDone(ctx.Done())
+		node, ok := c.nodeManageQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
-		}
-		node, ok := c.nodeCacheGetter.Get(nodeName)
-		if !ok {
-			logger.Warn("node not found in cache", "node", nodeName)
-			err := c.nodesInformer.Sync(ctx, informer.Option{
-				FieldSelector: fields.OneTermEqualSelector("metadata.name", nodeName).String(),
-			}, c.nodesChan)
-			if err != nil {
-				logger.Error("failed to update node", err, "node", nodeName)
-			}
-			continue
 		}
 
 		// Avoid slow cache synchronization, which may be judged as unmanaged.
@@ -443,11 +437,11 @@ func (c *Controller) initStagesManager(ctx context.Context) error {
 	return nil
 }
 
-func (c *Controller) onNodeManaged(nodeName string) {
+func (c *Controller) onNodeManaged(nodeName string, node *corev1.Node) {
 	if c.onNodeManagedFunc == nil {
 		return
 	}
-	c.onNodeManagedFunc(nodeName)
+	c.onNodeManagedFunc(nodeName, node)
 }
 
 func (c *Controller) onNodeUnmanaged(nodeName string) {
@@ -490,7 +484,6 @@ func (c *Controller) initPodController(ctx context.Context, lifecycle resources.
 		Clock:                                 c.conf.Clock,
 		EnableCNI:                             c.conf.EnableCNI,
 		TypedClient:                           c.conf.TypedClient,
-		NodeCacheGetter:                       c.nodeCacheGetter,
 		NodeIP:                                c.conf.NodeIP,
 		CIDR:                                  c.conf.CIDR,
 		DisregardStatusWithAnnotationSelector: c.conf.DisregardStatusWithAnnotationSelector,
