@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cel
+package metrics
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -35,7 +36,7 @@ func TestNodeEvaluation(t *testing.T) {
 	}
 	exp := "( Now().UnixSecond() - node.metadata.creationTimestamp.UnixSecond() ) * node.StartedContainersTotal() / 10.0"
 
-	env, err := NewEnvironment(NodeEvaluatorConfig{
+	env, err := NewEnvironment(EnvironmentConfig{
 		Now: func() time.Time {
 			return now
 		},
@@ -52,7 +53,7 @@ func TestNodeEvaluation(t *testing.T) {
 		t.Fatalf("failed to compile expression: %v", err)
 	}
 
-	actual, err := eval.EvaluateFloat64(Data{
+	actual, err := eval.EvaluateFloat64(context.Background(), Data{
 		Node: n,
 	})
 	if err != nil {
@@ -93,7 +94,7 @@ func TestResourceEvaluation(t *testing.T) {
 
 	exp := `( Quantity("10m") + Quantity(pod.metadata.annotations["cpu_usage"]) + node.status.allocatable["cpu"] + pod.spec.containers[0].resources.requests["cpu"] ) * 1.5 * 10`
 
-	env, err := NewEnvironment(NodeEvaluatorConfig{})
+	env, err := NewEnvironment(EnvironmentConfig{})
 	if err != nil {
 		t.Fatalf("failed to instantiate node Evaluator: %v", err)
 	}
@@ -103,7 +104,7 @@ func TestResourceEvaluation(t *testing.T) {
 		t.Fatalf("failed to compile expression: %v", err)
 	}
 
-	actual, err := eval.EvaluateFloat64(Data{
+	actual, err := eval.EvaluateFloat64(context.Background(), Data{
 		Node: n,
 		Pod:  p,
 	})

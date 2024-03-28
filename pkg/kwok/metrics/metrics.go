@@ -28,7 +28,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
@@ -37,7 +36,7 @@ import (
 // UpdateHandler handles updating metrics on request
 type UpdateHandler struct {
 	dataSource      DataSource
-	environment     *cel.Environment
+	environment     *Environment
 	nodeCacheGetter informer.Getter[*corev1.Node]
 	podCacheGetter  informer.Getter[*corev1.Pod]
 
@@ -57,7 +56,7 @@ type DataSource interface {
 // UpdateHandlerConfig is configuration for a single node
 type UpdateHandlerConfig struct {
 	DataSource      DataSource
-	Environment     *cel.Environment
+	Environment     *Environment
 	NodeCacheGetter informer.Getter[*corev1.Node]
 	PodCacheGetter  informer.Getter[*corev1.Pod]
 }
@@ -80,8 +79,8 @@ func NewMetricsUpdateHandler(conf UpdateHandlerConfig) *UpdateHandler {
 	return h
 }
 
-func (h *UpdateHandler) getOrRegisterGauge(metricConfig *internalversion.MetricConfig, data cel.Data) (Gauge, string, error) {
-	key, labels, err := h.createKeyAndLabels(metricConfig, data)
+func (h *UpdateHandler) getOrRegisterGauge(ctx context.Context, metricConfig *internalversion.MetricConfig, data Data) (Gauge, string, error) {
+	key, labels, err := h.createKeyAndLabels(ctx, metricConfig, data)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
 	}
@@ -105,8 +104,8 @@ func (h *UpdateHandler) getOrRegisterGauge(metricConfig *internalversion.MetricC
 	return val, key, nil
 }
 
-func (h *UpdateHandler) getOrRegisterCounter(metricConfig *internalversion.MetricConfig, data cel.Data) (Counter, string, error) {
-	key, labels, err := h.createKeyAndLabels(metricConfig, data)
+func (h *UpdateHandler) getOrRegisterCounter(ctx context.Context, metricConfig *internalversion.MetricConfig, data Data) (Counter, string, error) {
+	key, labels, err := h.createKeyAndLabels(ctx, metricConfig, data)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
 	}
@@ -131,8 +130,8 @@ func (h *UpdateHandler) getOrRegisterCounter(metricConfig *internalversion.Metri
 	return val, key, nil
 }
 
-func (h *UpdateHandler) getOrRegisterHistogram(metricConfig *internalversion.MetricConfig, data cel.Data) (Histogram, string, error) {
-	key, labels, err := h.createKeyAndLabels(metricConfig, data)
+func (h *UpdateHandler) getOrRegisterHistogram(ctx context.Context, metricConfig *internalversion.MetricConfig, data Data) (Histogram, string, error) {
+	key, labels, err := h.createKeyAndLabels(ctx, metricConfig, data)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
 	}
@@ -179,18 +178,18 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 		logger.Warn("node not found")
 		return nil, nil
 	}
-	data := cel.Data{
+	data := Data{
 		Node: node,
 	}
 
 	switch metricConfig.Dimension {
 	case internalversion.DimensionNode:
-		gauge, key, err := h.getOrRegisterGauge(metricConfig, data)
+		gauge, key, err := h.getOrRegisterGauge(ctx, metricConfig, data)
 		if err != nil {
 			return nil, err
 		}
 
-		result, err := eval.EvaluateFloat64(data)
+		result, err := eval.EvaluateFloat64(ctx, data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
 		}
@@ -211,12 +210,12 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 				continue
 			}
 			data.Pod = pod
-			gauge, key, err := h.getOrRegisterGauge(metricConfig, data)
+			gauge, key, err := h.getOrRegisterGauge(ctx, metricConfig, data)
 			if err != nil {
 				return nil, err
 			}
 
-			result, err := eval.EvaluateFloat64(data)
+			result, err := eval.EvaluateFloat64(ctx, data)
 			if err != nil {
 				return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
 			}
@@ -242,11 +241,11 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 			for _, container := range pod.Spec.Containers {
 				container := container
 				data.Container = &container
-				gauge, key, err := h.getOrRegisterGauge(metricConfig, data)
+				gauge, key, err := h.getOrRegisterGauge(ctx, metricConfig, data)
 				if err != nil {
 					return nil, err
 				}
-				result, err := eval.EvaluateFloat64(data)
+				result, err := eval.EvaluateFloat64(ctx, data)
 				if err != nil {
 					return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
 				}
@@ -273,18 +272,18 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 		logger.Warn("node not found")
 		return nil, nil
 	}
-	data := cel.Data{
+	data := Data{
 		Node: node,
 	}
 
 	switch metricConfig.Dimension {
 	case internalversion.DimensionNode:
-		counter, key, err := h.getOrRegisterCounter(metricConfig, data)
+		counter, key, err := h.getOrRegisterCounter(ctx, metricConfig, data)
 		if err != nil {
 			return nil, err
 		}
 
-		result, err := eval.EvaluateFloat64(data)
+		result, err := eval.EvaluateFloat64(ctx, data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
 		}
@@ -305,12 +304,12 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 				continue
 			}
 			data.Pod = pod
-			counter, key, err := h.getOrRegisterCounter(metricConfig, data)
+			counter, key, err := h.getOrRegisterCounter(ctx, metricConfig, data)
 			if err != nil {
 				return nil, err
 			}
 
-			result, err := eval.EvaluateFloat64(data)
+			result, err := eval.EvaluateFloat64(ctx, data)
 			if err != nil {
 				return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
 			}
@@ -336,11 +335,11 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 			for _, container := range pod.Spec.Containers {
 				container := container
 				data.Container = &container
-				counter, key, err := h.getOrRegisterCounter(metricConfig, data)
+				counter, key, err := h.getOrRegisterCounter(ctx, metricConfig, data)
 				if err != nil {
 					return nil, err
 				}
-				result, err := eval.EvaluateFloat64(data)
+				result, err := eval.EvaluateFloat64(ctx, data)
 				if err != nil {
 					return nil, fmt.Errorf("failed to evaluate metric %q: %w", metricConfig.Name, err)
 				}
@@ -362,13 +361,13 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 		logger.Warn("node not found")
 		return nil, nil
 	}
-	data := cel.Data{
+	data := Data{
 		Node: node,
 	}
 
 	switch metricConfig.Dimension {
 	case internalversion.DimensionNode:
-		histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
+		histogram, key, err := h.getOrRegisterHistogram(ctx, metricConfig, data)
 		if err != nil {
 			return nil, err
 		}
@@ -378,7 +377,7 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 			if err != nil {
 				return nil, fmt.Errorf("failed to compile program for Le(%v) %q: %w", b.Le, b.Value, err)
 			}
-			value, err := eval.EvaluateFloat64(data)
+			value, err := eval.EvaluateFloat64(ctx, data)
 			if err != nil {
 				return nil, fmt.Errorf("failed to evaluate metric with Le(%v): %w", b.Le, err)
 			}
@@ -400,7 +399,7 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 				continue
 			}
 			data.Pod = pod
-			histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
+			histogram, key, err := h.getOrRegisterHistogram(ctx, metricConfig, data)
 			if err != nil {
 				return nil, err
 			}
@@ -410,7 +409,7 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 				if err != nil {
 					return nil, fmt.Errorf("failed to compile program for Le(%v) %q: %w", b.Le, b.Value, err)
 				}
-				value, err := eval.EvaluateFloat64(data)
+				value, err := eval.EvaluateFloat64(ctx, data)
 				if err != nil {
 					return nil, fmt.Errorf("failed to evaluate metric with Le(%v): %w", b.Le, err)
 				}
@@ -437,7 +436,7 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 			for _, container := range pod.Spec.Containers {
 				container := container
 				data.Container = &container
-				histogram, key, err := h.getOrRegisterHistogram(metricConfig, data)
+				histogram, key, err := h.getOrRegisterHistogram(ctx, metricConfig, data)
 				if err != nil {
 					return nil, err
 				}
@@ -447,7 +446,7 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 					if err != nil {
 						return nil, fmt.Errorf("failed to compile program for Le(%v) %q: %w", b.Le, b.Value, err)
 					}
-					value, err := eval.EvaluateFloat64(data)
+					value, err := eval.EvaluateFloat64(ctx, data)
 					if err != nil {
 						return nil, fmt.Errorf("failed to evaluate metric with Le(%v): %w", b.Le, err)
 					}
@@ -478,7 +477,7 @@ func (h *UpdateHandler) updateMetric(ctx context.Context, metricConfig *internal
 // createKeyAndLabels creates a key and labels for a metric.
 // The key is used to unregister the metric.
 // The labels are used to set a value to the metric.
-func (h *UpdateHandler) createKeyAndLabels(metricConfig *internalversion.MetricConfig, data cel.Data) (string, prometheus.Labels, error) {
+func (h *UpdateHandler) createKeyAndLabels(ctx context.Context, metricConfig *internalversion.MetricConfig, data Data) (string, prometheus.Labels, error) {
 	if len(metricConfig.Labels) == 0 {
 		return uniqueKey(metricConfig.Name, metricConfig.Kind, nil), nil, nil
 	}
@@ -490,7 +489,7 @@ func (h *UpdateHandler) createKeyAndLabels(metricConfig *internalversion.MetricC
 			return "", nil, fmt.Errorf("failed to compile metric label value %q: %w", label.Value, err)
 		}
 
-		value, err := eval.EvaluateString(data)
+		value, err := eval.EvaluateString(ctx, data)
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to evaluate metric label %q: %w", label.Name, err)
 		}
