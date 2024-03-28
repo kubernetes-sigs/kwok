@@ -71,7 +71,7 @@ func (d *dryRunWriter) Close() error {
 		_, _ = fmt.Fprintf(d.w, "echo %s >%s\n", line, d.name)
 		return nil
 	}
-	_, _ = fmt.Fprintf(d.w, "cat <<EOF >%s\n%s\nEOF\n", buf, d.name)
+	_, _ = fmt.Fprintf(d.w, "cat <<EOF >%s\n%s\nEOF\n", d.name, buf)
 	return nil
 }
 
