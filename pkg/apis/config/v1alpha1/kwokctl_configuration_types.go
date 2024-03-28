@@ -499,11 +499,19 @@ type Component struct {
 	// +optional
 	Volumes []Volume `json:"volumes,omitempty"`
 
+	// Files is a list of files that can be mounted by containers belonging to the component.
+	// +optional
+	Files []File `json:"files,omitempty"`
+
 	// Metric is the metric of the component.
 	Metric *ComponentMetric `json:"metric,omitempty"`
 
 	// MetricsDiscovery is the metrics discovery of the component.
 	MetricsDiscovery *ComponentMetric `json:"metricsDiscovery,omitempty"`
+
+	// Address is the address of the component.
+	// +optional
+	Address string `json:"address,omitempty"`
 
 	// Version is the version of the component.
 	// +optional
@@ -583,6 +591,18 @@ type Volume struct {
 	MountPath string `json:"mountPath,omitempty"`
 	// PathType is the type of the HostPath.
 	PathType HostPathType `json:"pathType,omitempty"`
+}
+
+// File represents a file that is accessible to the containers running in a component.
+type File struct {
+	// Path is the path of the file.
+	Path string `json:"path"`
+	// Data is the content of the file.
+	Data string `json:"data,omitempty"`
+	// Template is the template of the file.
+	Template string `json:"template,omitempty"`
+	// Mode is the mode of the file.
+	Mode string `json:"mode,omitempty"`
 }
 
 // HostPathType represents the type of storage used for HostPath volumes.

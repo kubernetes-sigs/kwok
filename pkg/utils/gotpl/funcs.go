@@ -17,6 +17,8 @@ limitations under the License.
 package gotpl
 
 import (
+	"runtime"
+
 	"github.com/Masterminds/sprig/v3"
 )
 
@@ -24,3 +26,16 @@ var (
 	// genericFuncs is generic template functions.
 	genericFuncs = sprig.TxtFuncMap()
 )
+
+func init() {
+	genericFuncs["goos"] = goos
+	genericFuncs["goarch"] = goarch
+}
+
+func goos() string {
+	return runtime.GOOS
+}
+
+func goarch() string {
+	return runtime.GOARCH
+}
