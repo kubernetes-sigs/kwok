@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -29,7 +28,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
@@ -430,7 +428,6 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 
 	var (
 		result *corev1.Node
-		patch  []byte
 		err    error
 	)
 
@@ -456,19 +453,21 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 			return shouldRetry(err), fmt.Errorf("failed to delete node %s: %w", node.Name, err)
 		}
 		result = nil
-	} else if next.StatusTemplate != "" {
-		patch, err = c.computeStatusPatch(node, next.StatusTemplate)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to compute the status patch of node %s: %w", node.Name, err)
-		}
-		if patch == nil {
-			logger.Debug("Skip node",
-				"reason", "do not need to modify",
-			)
-		} else {
-			result, err = c.patchResource(ctx, node, patch)
+	} else if len(next.Patches) != 0 {
+		for _, patch := range next.Patches {
+			patchData, err := c.computeMergePatch(node, patch.Root, patch.Template)
 			if err != nil {
-				return shouldRetry(err), fmt.Errorf("failed to patch node %s: %w", node.Name, err)
+				return shouldRetry(err), fmt.Errorf("failed to compute the node %s: %w", node.Name, err)
+			}
+			if patchData == nil {
+				logger.Debug("Skip node",
+					"reason", "do not need to modify",
+				)
+			} else {
+				result, err = c.patchResource(ctx, node, patchData, patch)
+				if err != nil {
+					return shouldRetry(err), fmt.Errorf("failed to patch node %s: %w", node.Name, err)
+				}
 			}
 		}
 	}
@@ -489,13 +488,20 @@ func (c *NodeController) readOnly(nodeName string) bool {
 }
 
 // patchResource patches the resource
-func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, patch []byte) (*corev1.Node, error) {
+func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, patchData []byte, patch internalversion.StagePatch) (*corev1.Node, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
 	)
 
-	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}, "status")
+	subresource := []string{}
+	if patch.Subresource != "" {
+		logger = logger.With(
+			"subresource", patch.Subresource,
+		)
+		subresource = []string{patch.Subresource}
+	}
+	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.StrategicMergePatchType, patchData, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
@@ -503,40 +509,43 @@ func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, p
 	return result, nil
 }
 
-func (c *NodeController) computeStatusPatch(node *corev1.Node, tpl string) ([]byte, error) {
-	patch, err := c.renderer.ToJSON(tpl, node)
+func (c *NodeController) computeMergePatch(node *corev1.Node, root, tpl string) ([]byte, error) {
+	patchData, err := c.renderer.ToJSON(tpl, node)
 	if err != nil {
 		return nil, err
 	}
 
-	original, err := json.Marshal(node.Status)
-	if err != nil {
-		return nil, err
+	var hasChange bool
+	switch root {
+	default:
+		return nil, fmt.Errorf("root %q is not supported", root)
+	case "":
+		hasChange, err = checkNeedPatch(*node, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "metadata":
+		hasChange, err = checkNeedPatch(node.ObjectMeta, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "spec":
+		hasChange, err = checkNeedPatch(node.Spec, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "status":
+		hasChange, err = checkNeedPatch(node.Status, patchData)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	sum, err := strategicpatch.StrategicMergePatch(original, patch, node.Status)
-	if err != nil {
-		return nil, err
-	}
-
-	nodeStatus := corev1.NodeStatus{}
-	err = json.Unmarshal(sum, &nodeStatus)
-	if err != nil {
-		return nil, err
-	}
-
-	dist, err := json.Marshal(nodeStatus)
-	if err != nil {
-		return nil, err
-	}
-
-	if bytes.Equal(original, dist) {
+	if !hasChange {
 		return nil, nil
 	}
 
-	return json.Marshal(map[string]json.RawMessage{
-		"status": patch,
-	})
+	return wrapPatchData(root, patchData), nil
 }
 
 // putNodeInfo puts node info

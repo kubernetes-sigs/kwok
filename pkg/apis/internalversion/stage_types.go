@@ -81,14 +81,23 @@ type StageNext struct {
 	Finalizers *StageFinalizers
 	// Delete means that the resource will be deleted if true.
 	Delete bool
-	// StatusTemplate indicates the template for modifying the status of the resource in the next.
-	StatusTemplate string
-	// StatusSubresource indicates the name of the subresource that will be patched.
-	StatusSubresource string
-	// StatusPatchAs indicates the impersonating configuration for client when patching status.
+	// Patches means that the resource will be patched.
+	Patches []StagePatch
+}
+
+// StagePatch describes the patch for the resource.
+type StagePatch struct {
+	// Subresource indicates the name of the subresource that will be patched.
+	Subresource string
+	// Root indicates the root of the template calculated by the patch.
+	Root string
+	// Template indicates the template for modifying the resource in the next.
+	Template string
+	// Impersonation indicates the impersonating configuration for client when patching status.
 	// In most cases this will be empty, in which case the default client service account will be used.
 	// When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
-	StatusPatchAs *ImpersonationConfig
+	// The support for this field is not available in Pod and Node resources.
+	Impersonation *ImpersonationConfig
 }
 
 // ImpersonationConfig describes the configuration for impersonating clients

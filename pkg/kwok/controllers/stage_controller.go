@@ -307,7 +307,6 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 
 	var (
 		result *unstructured.Unstructured
-		patch  []byte
 		err    error
 	)
 
@@ -334,19 +333,21 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 			return shouldRetry(err), fmt.Errorf("failed to delete resource %s: %w", resource.GetName(), err)
 		}
 		result = nil
-	} else if next.StatusTemplate != "" {
-		patch, err = c.computeStatusPatch(resource, next.StatusTemplate)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to compute the status patch of resource %s: %w", resource.GetName(), err)
-		}
-		if patch == nil {
-			logger.Debug("Skip resource",
-				"reason", "do not need to modify",
-			)
-		} else {
-			result, err = c.patchResource(ctx, resource, patch, next)
+	} else if len(next.Patches) != 0 {
+		for _, patch := range next.Patches {
+			patchData, err := c.computeMergePatch(resource, patch.Root, patch.Template)
 			if err != nil {
-				return shouldRetry(err), fmt.Errorf("failed to patch resource %s: %w", resource.GetName(), err)
+				return shouldRetry(err), fmt.Errorf("failed to compute resource %s: %w", resource.GetName(), err)
+			}
+			if patchData == nil {
+				logger.Debug("Skip resource",
+					"reason", "do not need to modify",
+				)
+			} else {
+				result, err = c.patchResource(ctx, resource, patchData, patch)
+				if err != nil {
+					return shouldRetry(err), fmt.Errorf("failed to patch resource %s: %w", resource.GetName(), err)
+				}
 			}
 		}
 	}
@@ -360,19 +361,19 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 }
 
 // patchResource patches the resource
-func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patch []byte, next *internalversion.StageNext) (*unstructured.Unstructured, error) {
+func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patchData []byte, patch internalversion.StagePatch) (*unstructured.Unstructured, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"resource", log.KObj(resource),
 	)
 
 	nri := c.dynamicClient.Resource(c.gvr)
-	if next.StatusPatchAs != nil {
+	if patch.Impersonation != nil {
 		logger.With(
-			"impersonate", next.StatusPatchAs.Username,
+			"impersonate", patch.Impersonation.Username,
 		)
 
-		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: next.StatusPatchAs.Username})
+		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: patch.Impersonation.Username})
 		if err != nil {
 			logger.Error("error getting impersonating client", err)
 			return nil, err
@@ -384,13 +385,13 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 		cli = nri.Namespace(ns)
 	}
 	subresource := []string{}
-	if next.StatusSubresource != "" {
+	if patch.Subresource != "" {
 		logger = logger.With(
-			"subresource", next.StatusSubresource,
+			"subresource", patch.Subresource,
 		)
-		subresource = []string{next.StatusSubresource}
+		subresource = []string{patch.Subresource}
 	}
-	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patch, metav1.PatchOptions{}, subresource...)
+	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patchData, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
@@ -455,42 +456,34 @@ loop:
 	logger.Info("Stop watch resources")
 }
 
-func (c *StageController) computeStatusPatch(resource *unstructured.Unstructured, template string) ([]byte, error) {
-	patch, err := c.computePatch(resource, template)
-	if err != nil {
-		return nil, err
-	}
-	if patch == nil {
-		return nil, nil
-	}
-
-	return json.Marshal(map[string]json.RawMessage{
-		"status": patch,
-	})
-}
-
-func (c *StageController) computePatch(resource *unstructured.Unstructured, tpl string) ([]byte, error) {
+func (c *StageController) computeMergePatch(resource *unstructured.Unstructured, root, tpl string) ([]byte, error) {
 	patchData, err := c.renderer.ToJSON(tpl, resource.Object)
 	if err != nil {
 		return nil, err
 	}
 
 	if c.schema != nil {
-		status, _, err := unstructured.NestedFieldNoCopy(resource.Object, "status")
+		var base any = resource.Object
+		var patchMeta = c.schema
+
+		if root != "" {
+			base, _, err = unstructured.NestedFieldNoCopy(resource.Object, root)
+			if err != nil {
+				return nil, err
+			}
+
+			patchMeta, _, err = c.schema.LookupPatchMetadataForStruct(root)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		original, err := json.Marshal(base)
 		if err != nil {
 			return nil, err
 		}
 
-		original, err := json.Marshal(status)
-		if err != nil {
-			return nil, err
-		}
-
-		statusPatchMeta, _, err := c.schema.LookupPatchMetadataForStruct("status")
-		if err != nil {
-			return nil, err
-		}
-		sum, err := strategicpatch.StrategicMergePatchUsingLookupPatchMeta(original, patchData, statusPatchMeta)
+		sum, err := strategicpatch.StrategicMergePatchUsingLookupPatchMeta(original, patchData, patchMeta)
 		if err != nil {
 			return nil, err
 		}
@@ -499,7 +492,8 @@ func (c *StageController) computePatch(resource *unstructured.Unstructured, tpl 
 			return nil, nil
 		}
 	}
-	return patchData, nil
+
+	return wrapPatchData(root, patchData), nil
 }
 
 // addStageJob adds a stage to be applied into the underlying weight delay queue and the associated helper map
