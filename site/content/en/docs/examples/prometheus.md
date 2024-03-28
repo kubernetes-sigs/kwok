@@ -1,12 +1,14 @@
 ---
-title: "Metrics"
+title: "Prometheus"
+aliases:
+  - /docs/user/kwokctl-metrics
 ---
 
-# `kwokctl` Metrics
+# Prometheus
 
 {{< hint "info" >}}
 
-This document walks you through how to enable Metric on a `kwokctl` cluster
+This document walks you through how to enable Prometheus on clusters
 
 {{< /hint >}}
 

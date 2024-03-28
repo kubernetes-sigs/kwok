@@ -155,9 +155,6 @@ menu:
     - identifier: snapshots
       pageRef: "/docs/user/kwokctl-snapshot"
       parent: kwokctl-advanced-usage
-    - identifier: metrics
-      pageRef: "/docs/user/kwokctl-metrics"
-      parent: kwokctl-advanced-usage
     - identifier: auditing
       pageRef: "/docs/user/kwokctl-auditing"
       parent: kwokctl-advanced-usage
@@ -185,6 +182,9 @@ menu:
       parent: examples
     - identifier: metrics-server
       pageRef: "/docs/examples/metrics-server"
+      parent: examples
+    - identifier: metrics
+      pageRef: "/docs/examples/prometheus"
       parent: examples
 
     - identifier: tools
