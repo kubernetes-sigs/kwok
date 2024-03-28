@@ -1,8 +1,8 @@
 ---
-title: "CEL Expressions in `kwok`"
+title: "CEL Expressions"
 ---
 
-# Notes on CEL Expressions in `kwok`
+# CEL Expressions in `kwok`
 
 The page provides a concise note on writing CEL expressions in `kwok` CRs.  
 

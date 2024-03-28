@@ -10,9 +10,9 @@ This document walks you through how to simulate the resource usage of pod(s).
 
 {{< /hint >}}
 
-## What is ResourceUsage?
+## What is a ResourceUsage?
 
-[ResourceUsage] is a [`kwok` Configuration][configuration] that allows users to define and simulate the resource usages of a single pod.
+The [ResourceUsage] is a [`kwok` Configuration][configuration] that allows users to define and simulate the resource usages of a single pod.
 
 The YAML below shows all the fields of a ResourceUsage resource:
 
@@ -47,8 +47,8 @@ If `containers` is not given in a group, the `usage` in that group will be appli
 {{< /hint >}}
 
 You can simply set a static [Quantity value] (`100Mi`, `1000m`, etc.) via `cpu.value` and `memory.value` to define the cpu and memory resource usage respectively.
-Besides, users are also allowed to provide a [CEL expression] via `expressions` to describe the resource usage more flexibly. For example,
-the following expression tries to extract the cpu resource usage from the pod's annotation if it has or use a default value.
+Besides, users are also allowed to provide a [CEL expression] via `expressions` to describe the resource usage more flexibly.
+For example, the following expression tries to extract the cpu resource usage from the pod's annotation if it has or use a default value.
 
 ```yaml
 expression: |
@@ -67,8 +67,7 @@ yields memory usage that grows linearly with time.
 ```yaml
 expression: (pod.SinceSecond() / 60.0) * Quantity("1Mi")
 ```
-Please refer to [CEL expressions in `kwok`] for an exhausted list that may be helpful to configure dynamic resource usage.
-
+Please refer to [CEL expressions in `kwok`][CEL expressions] for an exhausted list that may be helpful to configure dynamic resource usage.
 
 ### ClusterResourceUsage
 
@@ -108,28 +107,56 @@ ClusterResourceUsage has an additional `selector` field for specifying the targe
 
 The `usages` field of ClusterResourceUsage has the same semantic with the one in ResourceUsage.
 
-Please refer to [pod resource usage from annotation] for a concrete example.
-
-## Where to get the simulation data?
-
-The resource usages defined in ResourceUsage and ClusterResourceUsage resources can be fetched from the metric service of `kwok` at port `10247` with path `/metrics/nodes/{nodeName}/metrics/resource`,
-where `{nodeName}` is the name of the fake node that the pod is scheduled to.
-The returned metrics are similar to the response from kubelet's `/metrics/resource` endpoint.
-
-Please refer to [`kwok` Metric][Metric] about how to integrate `kwok` simulated metrics endpoints with metrics-server.  
-
 ## Dependencies
 
-ResourceUsage or ClusterResourceUsage only takes effect when the [Metric] feature is also enabled and
-[the default Metric resource] that simulates kubelet's `/metrics/resource` endpoint is applied. 
+- [Metrics] and [`/metrics/resource` endpoint][metrics resource endpoint]
+- metrics-server version >= 0.7.0
+  it will get the annotation `metrics.k8s.io/resource-metrics-path` for the node instead of the default `/metrics/resource` endpoint.
 
+### Where to get the simulation data?
+
+The data can be fetched from the metric service of `kwok` with the path `/metrics/nodes/{nodeName}/metrics/resource`,
+where `{nodeName}` is the name of the fake node.
+The metrics returned are similar to the response from kubelet's `/metrics/resource` endpoint.
+
+Please refer to [`kwok` Metrics][Metrics] about how to integrate `kwok` simulated metrics endpoints with metrics-server.  
+
+## Out-of-the-box
+
+Currently, a configuration is provided to quickly simulate the resource usage of pods.
+
+- [Metrics resource endpoint][metrics resource endpoint]
+- [Resource usage from annotation][resource usage from annotation]
+
+```yaml
+# the <nodeName> should be replaced with the name of the node
+kind: Node
+apiVersion: v1
+metadata:
+  annotations:
+    metrics.k8s.io/resource-metrics-path: "/metrics/nodes/<nodeName>/metrics/resource"
+...
+```
+
+```yaml
+# specify the resource usage of a pod via annotation
+kind: Pod
+apiVersion: v1
+metadata:
+  annotations: 
+    kwok.x-k8s.io/usage-cpu: "100m"
+    kwok.x-k8s.io/usage-memory: "100Mi"
+...
+```
+
+<img width="700px" src="/img/demo/resource-usage.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
 [ResourceUsage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ResourceUsage
 [ClusterResourceUsage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage
 [Quantity value]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes
 [CEL expression]: https://github.com/google/cel-spec/blob/master/doc/langdef.md
-[Metric]: {{< relref "/docs/user/metrics-configuration" >}}
-[the default Metric resource]:  https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource
-[pod resource usage from annotation]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/usage/usage-from-annotation.yaml
-[CEL expressions in `kwok`]: {{< relref "/docs/user/cel-expressions" >}}
+[Metrics]: {{< relref "/docs/user/metrics-configuration" >}}
+[metrics resource endpoint]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/resource/metrics-resource.yaml
+[resource usage from annotation]: https://github.com/kubernetes-sigs/kwok/blob/main/kustomize/metrics/usage/usage-from-annotation.yaml
+[CEL expressions]: {{< relref "/docs/user/cel-expressions" >}}

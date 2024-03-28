@@ -1,5 +1,5 @@
 ---
-title: "With Linkerd"
+title: "Linkerd"
 ---
 
 # Linkerd
