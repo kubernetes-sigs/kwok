@@ -18,6 +18,7 @@ package file
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -25,10 +26,14 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
+	"time"
+
+	"github.com/wzshiming/httpseek"
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/progressbar"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // DownloadWithCacheAndExtract downloads the src file to the dest file, and extract it to the dest directory.
@@ -142,14 +147,37 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 	case "http", "https":
 
 		logger := log.FromContext(ctx)
-		logger.Info("Download", "uri", src)
+		logger = logger.With(
+			"uri", src,
+		)
+		logger.Info("Download")
 
-		cli := &http.Client{}
-		req, err := http.NewRequest(http.MethodGet, u.String(), nil)
+		var transport = http.DefaultTransport
+		var retry = 10
+		transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, err error) error {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return err
+			}
+			if retry > 0 {
+				retry--
+				time.Sleep(time.Second)
+				return nil
+			}
+			return err
+		})
+
+		if !quiet {
+			transport = progressbar.NewTransport(transport)
+		}
+
+		cli := &http.Client{
+			Transport: transport,
+		}
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
 			return "", err
 		}
-		req = req.WithContext(ctx)
+		req.Header.Set("User-Agent", version.DefaultUserAgent())
 		resp, err := cli.Do(req)
 		if err != nil {
 			return "", err
@@ -176,19 +204,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 			return "", err
 		}
 
-		var srcReader io.Reader = resp.Body
-		if !quiet {
-			pb := newProgressBar()
-			contentLength := resp.Header.Get("Content-Length")
-			contentLengthInt, _ := strconv.Atoi(contentLength)
-			counter := newCounterWriter(func(counter int) {
-				pb.Update(counter, contentLengthInt)
-				pb.Print()
-			})
-			srcReader = io.TeeReader(srcReader, counter)
-		}
-
-		_, err = io.Copy(d, srcReader)
+		_, err = io.Copy(d, resp.Body)
 		if err != nil {
 			_ = d.Close()
 			fmt.Println()
@@ -207,20 +223,4 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 	default:
 		return src, nil
 	}
-}
-
-type counterWriter struct {
-	fun     func(counter int)
-	counter int
-}
-
-func newCounterWriter(fun func(counter int)) *counterWriter {
-	return &counterWriter{
-		fun: fun,
-	}
-}
-func (c *counterWriter) Write(b []byte) (int, error) {
-	c.counter += len(b)
-	c.fun(c.counter)
-	return len(b), nil
 }

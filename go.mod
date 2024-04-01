@@ -12,6 +12,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/google/cel-go v0.17.7
 	github.com/google/go-cmp v0.6.0
+	github.com/google/go-containerregistry v0.19.1
 	github.com/itchyny/gojq v0.12.14
 	github.com/nxadm/tail v1.4.11
 	github.com/prometheus/client_golang v1.18.0
@@ -22,6 +23,7 @@ require (
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.5.0
 	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
+	github.com/wzshiming/httpseek v0.0.0-20240122110938-0533c4b2d7c5
 	go.etcd.io/etcd/client/v3 v3.5.11
 	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.16.0
@@ -50,11 +52,16 @@ require (
 	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230512164433-5d1fd1a340c9 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/containernetworking/cni v1.1.2 // indirect
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/docker/cli v24.0.0+incompatible // indirect
+	github.com/docker/distribution v2.8.2+incompatible // indirect
+	github.com/docker/docker v24.0.0+incompatible // indirect
+	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.8.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
@@ -78,11 +85,13 @@ require (
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -90,14 +99,18 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
+	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.1-0.20230524175051-ec119421bb97 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
+	github.com/sirupsen/logrus v1.9.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
+	github.com/vbatts/tar-split v0.11.3 // indirect
 	github.com/vladimirvivien/gexe v0.2.0 // indirect
 	github.com/wzshiming/trie v0.1.1 // indirect
 	github.com/wzshiming/winseq v0.0.0-20200112104235-db357dc107ae // indirect

@@ -19,8 +19,11 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -28,6 +31,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
+	utilsimage "sigs.k8s.io/kwok/pkg/utils/image"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -137,18 +141,6 @@ func (c *Cluster) ForkExecIsRunning(ctx context.Context, dir string, name string
 	return exec.IsRunning(pid)
 }
 
-// PullImages is a helper function to pull images
-func (c *Cluster) PullImages(ctx context.Context, command string, images []string, quiet bool) error {
-	if c.IsDryRun() {
-		for _, image := range images {
-			dryrun.PrintMessage("%s pull %s", command, image)
-		}
-		return nil
-	}
-
-	return exec.PullImages(ctx, command, images, quiet)
-}
-
 // EnsureImage ensures the image exists.
 func (c *Cluster) EnsureImage(ctx context.Context, command string, image string) error {
 	if c.IsDryRun() {
@@ -162,7 +154,71 @@ func (c *Cluster) EnsureImage(ctx context.Context, command string, image string)
 	}
 	conf := config.Options
 
-	return exec.PullImage(ctx, command, image, conf.QuietPull)
+	logger := log.FromContext(ctx)
+
+	err = exec.Exec(ctx,
+		command, "inspect",
+		image,
+	)
+	if err == nil {
+		logger.Debug("Image already exists",
+			"image", image,
+		)
+		return nil
+	}
+
+	err = c.ensureImage(ctx, command, image, conf.QuietPull, conf.CacheDir)
+	if err != nil {
+		if ctx.Err() != nil {
+			return err
+		}
+		logger.Debug("Failed to pull",
+			"image", image,
+			"err", err,
+		)
+		err0 := c.ensureImageWithRuntime(ctx, command, image, conf.QuietPull)
+		if err0 != nil {
+			return errors.Join(err, err0)
+		}
+	}
+	return nil
+}
+
+func (c *Cluster) ensureImage(ctx context.Context, command string, image string, quiet bool, cacheDir string) error {
+	dest := path.Join(cacheDir, "tarball", image+".tar")
+	err := os.MkdirAll(filepath.Dir(dest), 0750)
+	if err != nil {
+		return err
+	}
+	cache := path.Join(cacheDir, "blobs")
+	err = utilsimage.Pull(ctx, cache, image, dest, quiet)
+	if err != nil {
+		return err
+	}
+
+	err = exec.Exec(ctx, command, "load",
+		"-i", dest,
+	)
+	if err != nil {
+		return err
+	}
+
+	err = file.Remove(dest)
+	if err != nil {
+		logger := log.FromContext(ctx)
+		logger.Error("Remove file", err)
+	}
+	return nil
+}
+
+func (c *Cluster) ensureImageWithRuntime(ctx context.Context, command string, image string, quiet bool) error {
+	var out io.Writer = os.Stderr
+	if quiet {
+		out = nil
+	}
+	return exec.Exec(exec.WithAllWriteTo(ctx, out), command, "pull",
+		image,
+	)
 }
 
 // Exec executes the given command and returns the output.
