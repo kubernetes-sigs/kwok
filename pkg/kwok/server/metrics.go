@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/metrics"
-	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
@@ -37,8 +36,7 @@ func (s *Server) initCEL() error {
 		return fmt.Errorf("CEL environment already initialized")
 	}
 
-	env, err := cel.NewEnvironment(cel.NodeEvaluatorConfig{
-		EnableEvaluatorCache:   true,
+	env, err := metrics.NewEnvironment(metrics.EnvironmentConfig{
 		EnableResultCache:      true,
 		StartedContainersTotal: s.dataSource.StartedContainersTotal,
 
@@ -128,7 +126,7 @@ func (s *Server) dynamicMetricsPath(ctx context.Context, ws *restful.WebService,
 	}
 }
 
-func (s *Server) getMetrics(metric *internalversion.Metric, env *cel.Environment) func(req *restful.Request, resp *restful.Response) {
+func (s *Server) getMetrics(metric *internalversion.Metric, env *metrics.Environment) func(req *restful.Request, resp *restful.Response) {
 	return func(req *restful.Request, resp *restful.Response) {
 		nodeName := req.PathParameter("nodeName")
 		if nodeName == "" {

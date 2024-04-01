@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
+	"sigs.k8s.io/kwok/pkg/kwok/metrics"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
@@ -75,7 +75,7 @@ func (s *Server) nodeResourceCumulativeUsage(resourceName, nodeName string) floa
 		return 0
 	}
 
-	data := cel.Data{
+	data := metrics.Data{
 		Node: node,
 	}
 
@@ -125,7 +125,7 @@ func (s *Server) containerResourceUsage(resourceName, podNamespace, podName, con
 	if !ok {
 		return 0
 	}
-	data := cel.Data{
+	data := metrics.Data{
 		Node:      node,
 		Pod:       pod,
 		Container: &c,
@@ -133,7 +133,7 @@ func (s *Server) containerResourceUsage(resourceName, podNamespace, podName, con
 	return s.evaluateContainerResourceUsage(resourceName, data)
 }
 
-func (s *Server) evaluateContainerResourceUsage(resourceName string, data cel.Data) float64 {
+func (s *Server) evaluateContainerResourceUsage(resourceName string, data metrics.Data) float64 {
 	u, err := s.getResourceUsage(data.Pod.Name, data.Pod.Namespace, data.Container.Name)
 	if err != nil {
 		logger := log.FromContext(s.ctx)
@@ -156,7 +156,7 @@ func (s *Server) evaluateContainerResourceUsage(resourceName string, data cel.Da
 			return 0
 		}
 
-		out, err := eval.EvaluateFloat64(data)
+		out, err := eval.EvaluateFloat64(s.ctx, data)
 		if err != nil {
 			logger := log.FromContext(s.ctx)
 			logger.Error("failed to evaluate expression", err, "expression", r)
@@ -178,7 +178,7 @@ func (s *Server) podResourceUsage(resourceName, podNamespace, podName string) fl
 		return 0
 	}
 
-	data := cel.Data{
+	data := metrics.Data{
 		Node: node,
 		Pod:  pod,
 	}
@@ -203,7 +203,7 @@ func (s *Server) nodeResourceUsage(resourceName, nodeName string) float64 {
 		return 0
 	}
 
-	data := cel.Data{
+	data := metrics.Data{
 		Node: node,
 	}
 

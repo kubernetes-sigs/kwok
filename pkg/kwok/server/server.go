@@ -36,7 +36,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/metrics"
-	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
@@ -79,7 +78,7 @@ type Server struct {
 	cumulatives    map[string]cumulative
 	cumulativesMut sync.Mutex
 
-	env *cel.Environment
+	env *metrics.Environment
 
 	dataSource      DataSource
 	nodeCacheGetter informer.Getter[*corev1.Node]
