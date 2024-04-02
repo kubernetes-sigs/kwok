@@ -1,3 +1,3 @@
 # Stages (DEPRECATED)
 
-Use ./kustomize/stage directory instead of this directory. this directory will be removed in the future.
+Use ./kustomize/stage/fast directory instead of this directory.
