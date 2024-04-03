@@ -253,6 +253,10 @@ func runE(ctx context.Context, flags *flagpole) error {
 		if err != nil {
 			return fmt.Errorf("runtime %v not available: %w", flags.Options.Runtime, err)
 		}
+		err = rt.Available(ctx)
+		if err != nil {
+			return fmt.Errorf("runtime %v not available: %w", flags.Options.Runtime, err)
+		}
 	}
 
 	// Set up the cluster

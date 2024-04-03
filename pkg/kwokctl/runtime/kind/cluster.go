@@ -75,6 +75,9 @@ func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
 
 // Available  checks whether the runtime is available.
 func (c *Cluster) Available(ctx context.Context) error {
+	if c.IsDryRun() {
+		return nil
+	}
 	return c.Exec(ctx, c.runtime, "version")
 }
 
