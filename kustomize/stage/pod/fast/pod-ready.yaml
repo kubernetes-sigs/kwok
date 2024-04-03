@@ -49,12 +49,19 @@ spec:
         name: {{ .name | Quote }}
         ready: true
         restartCount: 0
+        {{ if eq .restartPolicy "Always" }}
+        started: true
+        state:
+          running:
+            startedAt: {{ $now | Quote }}
+        {{ else }}
         state:
           terminated:
             exitCode: 0
             finishedAt: {{ $now | Quote }}
             reason: Completed
             startedAt: {{ $now | Quote }}
+        {{ end }}
       {{ end }}
 
       hostIP: {{ NodeIPWith .spec.nodeName | Quote }}
