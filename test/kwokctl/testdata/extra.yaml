@@ -58,12 +58,6 @@ componentsPatches:
     extraArgs:
       - key: log-level
         value: "debug"
-    extraVolumes:
-      - name: tmp-etcd
-        hostPath: ./extras/etcd
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
     extraEnvs:
       - name: TEST_KEY
         value: TEST_VALUE
