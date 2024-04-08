@@ -7,65 +7,65 @@ spec:
   template:
     spec:
       containers:
-        - name: kwok-controller
-          image: registry.k8s.io/kwok/kwok
-          imagePullPolicy: IfNotPresent
-          args:
-            - --manage-all-nodes=false
-            - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-            - --manage-nodes-with-label-selector=
-            - --manage-single-node=
-            - --node-ip=$(POD_IP)
-            - --node-port=10247
-            - --cidr=10.0.0.1/24
-            - --node-lease-duration-seconds=40
-            - --enable-crds=Stage
-            - --enable-crds=Metric
-            - --enable-crds=Attach
-            - --enable-crds=ClusterAttach
-            - --enable-crds=Exec
-            - --enable-crds=ClusterExec
-            - --enable-crds=Logs
-            - --enable-crds=ClusterLogs
-            - --enable-crds=PortForward
-            - --enable-crds=ClusterPortForward
-            - --enable-crds=ResourceUsage
-            - --enable-crds=ClusterResourceUsage
-          env:
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
-            - name: HOST_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
-          startupProbe:
-            httpGet:
-              path: /healthz
-              port: 10247
-              scheme: HTTP
-            initialDelaySeconds: 2
-            timeoutSeconds: 2
-            periodSeconds: 10
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 10247
-              scheme: HTTP
-            initialDelaySeconds: 30
-            timeoutSeconds: 10
-            periodSeconds: 60
-            failureThreshold: 10
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 10247
-              scheme: HTTP
-            initialDelaySeconds: 2
-            timeoutSeconds: 2
-            periodSeconds: 20
-            failureThreshold: 5
+      - name: kwok-controller
+        image: registry.k8s.io/kwok/kwok
+        imagePullPolicy: IfNotPresent
+        args:
+        - --manage-all-nodes=false
+        - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
+        - --manage-nodes-with-label-selector=
+        - --manage-single-node=
+        - --node-ip=$(POD_IP)
+        - --node-port=10247
+        - --cidr=10.0.0.1/24
+        - --node-lease-duration-seconds=40
+        - --enable-crds=Stage
+        - --enable-crds=Metric
+        - --enable-crds=Attach
+        - --enable-crds=ClusterAttach
+        - --enable-crds=Exec
+        - --enable-crds=ClusterExec
+        - --enable-crds=Logs
+        - --enable-crds=ClusterLogs
+        - --enable-crds=PortForward
+        - --enable-crds=ClusterPortForward
+        - --enable-crds=ResourceUsage
+        - --enable-crds=ClusterResourceUsage
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: 10247
+            scheme: HTTP
+          initialDelaySeconds: 2
+          timeoutSeconds: 2
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10247
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+          periodSeconds: 60
+          failureThreshold: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10247
+            scheme: HTTP
+          initialDelaySeconds: 2
+          timeoutSeconds: 2
+          periodSeconds: 20
+          failureThreshold: 5
       serviceAccountName: kwok-controller
       restartPolicy: Always

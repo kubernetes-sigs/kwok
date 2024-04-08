@@ -1,18 +1,18 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: weekly
-    labels:
-      - "area/dependency"
-      - "release-note-none"
-      - "ok-to-test"
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: weekly
-    labels:
-      - "area/dependency"
-      - "release-note-none"
-      - "ok-to-test"
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: weekly
+  labels:
+  - "area/dependency"
+  - "release-note-none"
+  - "ok-to-test"
+- package-ecosystem: "gomod"
+  directory: "/"
+  schedule:
+    interval: weekly
+  labels:
+  - "area/dependency"
+  - "release-note-none"
+  - "ok-to-test"

@@ -35,45 +35,45 @@ jobs:
     strategy:
       matrix:
         builder:
-          - docker
-          - nerdctl
-          - podman
+        - docker
+        - nerdctl
+        - podman
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.21"
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.21"
 
-      - name: Test
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh release/build
+    - name: Test
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh release/build
 
-      - name: Build
-        shell: bash
-        run: |
-          make build
+    - name: Build
+      shell: bash
+      run: |
+        make build
 
-      - name: Install Nerdctl and Start Containerd
-        if: ${{ matrix.builder == 'nerdctl' }}
-        shell: bash
-        run: |
-          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.3/nerdctl-full-1.7.3-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
-          sudo systemctl daemon-reload
-          sudo systemctl enable --now containerd
-          containerd-rootless-setuptool.sh install
-          containerd-rootless-setuptool.sh install-buildkit-containerd
+    - name: Install Nerdctl and Start Containerd
+      if: ${{ matrix.builder == 'nerdctl' }}
+      shell: bash
+      run: |
+        curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.3/nerdctl-full-1.7.3-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+        sudo systemctl daemon-reload
+        sudo systemctl enable --now containerd
+        containerd-rootless-setuptool.sh install
+        containerd-rootless-setuptool.sh install-buildkit-containerd
 
-      - name: Build Image
-        shell: bash
-        run: |
-          BUILDER=${{ matrix.builder }} make build-image
+    - name: Build Image
+      shell: bash
+      run: |
+        BUILDER=${{ matrix.builder }} make build-image
 
-      - name: Build Cluster Image
-        shell: bash
-        run: |
-          BUILDER=${{ matrix.builder }} make build-cluster-image
+    - name: Build Cluster Image
+      shell: bash
+      run: |
+        BUILDER=${{ matrix.builder }} make build-cluster-image
 
   test-kwok-e2e:
     runs-on: ubuntu-latest
@@ -99,33 +99,33 @@ jobs:
       fail-fast: false
       matrix:
         case:
-          - kwok
-          - kwok-with-cni
+        - kwok
+        - kwok-with-cni
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.21"
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.21"
 
-      - name: Install Kind
-        shell: bash
-        run: |
-          ./hack/requirements.sh kind
-          kind version
+    - name: Install Kind
+      shell: bash
+      run: |
+        ./hack/requirements.sh kind
+        kind version
 
-      - name: Install kubectl
-        shell: bash
-        run: |
-          ./hack/requirements.sh kubectl
-          kubectl version || :
+    - name: Install kubectl
+      shell: bash
+      run: |
+        ./hack/requirements.sh kubectl
+        kubectl version || :
 
-      - name: Test Workable
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh ${{ matrix.case }}/${{ matrix.case }}
+    - name: Test Workable
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh ${{ matrix.case }}/${{ matrix.case }}
 
   test-kwokctl:
     # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
@@ -134,193 +134,193 @@ jobs:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
         include:
-          # Windows
-          # Linux containers are not supported on Windows Runner
-          # https://github.com/orgs/community/discussions/25491#discussioncomment-3248089
-          - os: windows-latest
-            kwokctl-runtime: binary
+        # Windows
+        # Linux containers are not supported on Windows Runner
+        # https://github.com/orgs/community/discussions/25491#discussioncomment-3248089
+        - os: windows-latest
+          kwokctl-runtime: binary
 
-          # MacOS amd64
-          - os: macos-13
-            kwokctl-runtime: binary
-          # MacOS arm64
-          - os: macos-14
-            kwokctl-runtime: binary
+        # MacOS amd64
+        - os: macos-13
+          kwokctl-runtime: binary
+        # MacOS arm64
+        - os: macos-14
+          kwokctl-runtime: binary
 
-          # Linux
-          - os: ubuntu-latest
-            kwokctl-runtime: binary
-          - os: ubuntu-latest
-            kwokctl-runtime: docker
-          - os: ubuntu-latest
-            kwokctl-runtime: podman
-          - os: ubuntu-latest
-            kwokctl-runtime: kind
-          - os: ubuntu-latest
-            kwokctl-runtime: kind-podman
-          - os: ubuntu-latest
-            kwokctl-runtime: nerdctl
+        # Linux
+        - os: ubuntu-latest
+          kwokctl-runtime: binary
+        - os: ubuntu-latest
+          kwokctl-runtime: docker
+        - os: ubuntu-latest
+          kwokctl-runtime: podman
+        - os: ubuntu-latest
+          kwokctl-runtime: kind
+        - os: ubuntu-latest
+          kwokctl-runtime: kind-podman
+        - os: ubuntu-latest
+          kwokctl-runtime: nerdctl
 
     continue-on-error: false
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.21"
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.21"
 
-      - name: Install CoreUtils for MacOS
-        if: ${{ startsWith(matrix.os, 'macos-') }}
-        shell: bash
-        run: |
-          brew install coreutils bash
+    - name: Install CoreUtils for MacOS
+      if: ${{ startsWith(matrix.os, 'macos-') }}
+      shell: bash
+      run: |
+        brew install coreutils bash
 
-        # No binary is provided by default for control plane components outside of Linux
-        # https://kwok.sigs.k8s.io/docs/user/kwokctl-platform-specific-binaries/
-      - name: Setup Kubernetes Binary
-        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os != 'ubuntu-latest' }}
-        shell: bash
-        env:
-          KUBE_VERSION: v1.29.0
-        run: |
-          mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir"
-          cat << EOF >"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml"
-          kind: KwokctlConfiguration
-          apiVersion: config.kwok.x-k8s.io/v1alpha1
-          options:
-            kubeBinaryPrefix: "https://github.com/kwok-ci/k8s/releases/download/${KUBE_VERSION}-kwok.0-$(go env GOOS)-$(go env GOARCH)"
-          EOF
+      # No binary is provided by default for control plane components outside of Linux
+      # https://kwok.sigs.k8s.io/docs/user/kwokctl-platform-specific-binaries/
+    - name: Setup Kubernetes Binary
+      if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os != 'ubuntu-latest' }}
+      shell: bash
+      env:
+        KUBE_VERSION: v1.29.0
+      run: |
+        mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir"
+        cat << EOF >"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml"
+        kind: KwokctlConfiguration
+        apiVersion: config.kwok.x-k8s.io/v1alpha1
+        options:
+          kubeBinaryPrefix: "https://github.com/kwok-ci/k8s/releases/download/${KUBE_VERSION}-kwok.0-$(go env GOOS)-$(go env GOARCH)"
+        EOF
 
-        # TODO: workaround for https://github.com/actions/runner-images/issues/7753 (caused by https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394).
-        # Remove this when this issue is fixed and available in the ubuntu runner image
-      - name: Setup Podman for Ubuntu
-        if: ${{ matrix.os == 'ubuntu-latest' && (matrix.kwokctl-runtime == 'podman' || matrix.kwokctl-runtime == 'kind-podman') }}
-        shell: bash
-        run: |
-          sudo apt install podman=3.4.4+ds1-1ubuntu1 --allow-downgrades
+      # TODO: workaround for https://github.com/actions/runner-images/issues/7753 (caused by https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394).
+      # Remove this when this issue is fixed and available in the ubuntu runner image
+    - name: Setup Podman for Ubuntu
+      if: ${{ matrix.os == 'ubuntu-latest' && (matrix.kwokctl-runtime == 'podman' || matrix.kwokctl-runtime == 'kind-podman') }}
+      shell: bash
+      run: |
+        sudo apt install podman=3.4.4+ds1-1ubuntu1 --allow-downgrades
 
-      - name: Setup Crun on Kind Podman
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'kind-podman' }}
-        shell: bash
-        run: |
-          # crun >= 1.9.1 is required on Ubuntu 20.04.6
-          # https://github.com/kubernetes-sigs/kind/issues/3526
-          curl -Lo ./crun https://github.com/containers/crun/releases/download/1.14.3/crun-1.14.3-linux-amd64
-          chmod +x ./crun
-          sudo mv ./crun /usr/bin/crun
+    - name: Setup Crun on Kind Podman
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'kind-podman' }}
+      shell: bash
+      run: |
+        # crun >= 1.9.1 is required on Ubuntu 20.04.6
+        # https://github.com/kubernetes-sigs/kind/issues/3526
+        curl -Lo ./crun https://github.com/containers/crun/releases/download/1.14.3/crun-1.14.3-linux-amd64
+        chmod +x ./crun
+        sudo mv ./crun /usr/bin/crun
 
-      - name: Install Docker for MacOS
-        if: ${{ startsWith(matrix.os, 'macos-') && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
-        shell: bash
-        run: |
-          brew install colima docker || :
-          colima start --mount $HOME/.kwok/:w --mount $(pwd):w --cpu 4 --memory 8
+    - name: Install Docker for MacOS
+      if: ${{ startsWith(matrix.os, 'macos-') && ( matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' ) }}
+      shell: bash
+      run: |
+        brew install colima docker || :
+        colima start --mount $HOME/.kwok/:w --mount $(pwd):w --cpu 4 --memory 8
 
-      - name: Install Buildx
-        if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
-        shell: bash
-        run: |
-          ./hack/requirements.sh buildx
-          docker buildx version
+    - name: Install Buildx
+      if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
+      shell: bash
+      run: |
+        ./hack/requirements.sh buildx
+        docker buildx version
 
-      - name: Docker Info
-        if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
-        shell: bash
-        run: |
-          docker info
+    - name: Docker Info
+      if: ${{ matrix.kwokctl-runtime == 'docker' || matrix.kwokctl-runtime == 'kind' }}
+      shell: bash
+      run: |
+        docker info
 
-      - name: Install Nerdctl and Start Containerd
-        if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
-        shell: bash
-        run: |
-          sudo mkdir -p /etc/cni/net.d
-          sudo chmod 777 /etc/cni/net.d
-          curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.3/nerdctl-full-1.7.3-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
-          sudo systemctl daemon-reload
-          sudo systemctl enable --now containerd
-          containerd-rootless-setuptool.sh install
-          containerd-rootless-setuptool.sh install-buildkit-containerd
+    - name: Install Nerdctl and Start Containerd
+      if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
+      shell: bash
+      run: |
+        sudo mkdir -p /etc/cni/net.d
+        sudo chmod 777 /etc/cni/net.d
+        curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.3/nerdctl-full-1.7.3-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+        sudo systemctl daemon-reload
+        sudo systemctl enable --now containerd
+        containerd-rootless-setuptool.sh install
+        containerd-rootless-setuptool.sh install-buildkit-containerd
 
-      - name: Setup Podman for Kind
-        if: ${{ matrix.kwokctl-runtime == 'kind-podman' }}
-        shell: bash
-        run: |
-          sudo mkdir -p /etc/systemd/system/user@.service.d
-          sudo tee <<EOF /etc/systemd/system/user@.service.d/delegate.conf
-          [Service]
-          Delegate=yes
-          EOF
-          sudo systemctl daemon-reload
+    - name: Setup Podman for Kind
+      if: ${{ matrix.kwokctl-runtime == 'kind-podman' }}
+      shell: bash
+      run: |
+        sudo mkdir -p /etc/systemd/system/user@.service.d
+        sudo tee <<EOF /etc/systemd/system/user@.service.d/delegate.conf
+        [Service]
+        Delegate=yes
+        EOF
+        sudo systemctl daemon-reload
 
-      - name: Make pki directory
-        if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os != 'windows-latest' }}
-        shell: bash
-        run: |
-          sudo mkdir -p /var/run/kubernetes
-          sudo chmod 777 /var/run/kubernetes
+    - name: Make pki directory
+      if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os != 'windows-latest' }}
+      shell: bash
+      run: |
+        sudo mkdir -p /var/run/kubernetes
+        sudo chmod 777 /var/run/kubernetes
 
-      - name: Install kubectl and kustomize
-        shell: bash
-        run: |
-          ./hack/requirements.sh kubectl kustomize
+    - name: Install kubectl and kustomize
+      shell: bash
+      run: |
+        ./hack/requirements.sh kubectl kustomize
 
-      - name: Test Dry Run
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_with_dryrun
+    - name: Test Dry Run
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh kwokctl/kwokctl_with_dryrun
 
-      - name: Test e2e
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh e2e/kwokctl/${{ matrix.kwokctl-runtime }} && rm -rf logs
+    - name: Test e2e
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh e2e/kwokctl/${{ matrix.kwokctl-runtime }} && rm -rf logs
 
-      - name: Test Export Logs
-        shell: bash
-        run: |
-          if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest' ]]; then
-            export SKIP_DRY_RUN=true
-          fi
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_export_logs
+    - name: Test Export Logs
+      shell: bash
+      run: |
+        if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest' ]]; then
+          export SKIP_DRY_RUN=true
+        fi
+        ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_export_logs
 
-      - name: Test Workable
-        shell: bash
-        run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" && ( "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" ) ]]; then
-            export LAST_RELEASE_SIZE=20
-          fi
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
+    - name: Test Workable
+      shell: bash
+      run: |
+        if [[ "${{ matrix.os }}" == "ubuntu-latest" && ( "${{ matrix.kwokctl-runtime }}" == "binary" || "${{ matrix.kwokctl-runtime }}" == "docker" ) ]]; then
+          export LAST_RELEASE_SIZE=20
+        fi
+        ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
-      - name: Test Snapshot
-        if: ${{ matrix.os != 'windows-latest' }} # TODO: fix snapshot test on windows
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_snapshot
+    - name: Test Snapshot
+      if: ${{ matrix.os != 'windows-latest' }} # TODO: fix snapshot test on windows
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_snapshot
 
-      - name: Test Restart
-        shell: bash
-        run: |
-          if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest' ]]; then
-            export SKIP_DRY_RUN=true
-          fi
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
+    - name: Test Restart
+      shell: bash
+      run: |
+        if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest' ]]; then
+          export SKIP_DRY_RUN=true
+        fi
+        ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
 
-      - name: Test Benchmark
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark
+    - name: Test Benchmark
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_benchmark
 
-      - name: Test Auto Detect
-        if: ${{ matrix.kwokctl-runtime == 'binary' }}
-        shell: bash
-        run: |
-          ./hack/e2e-test.sh kwokctl/kwokctl_auto_detect
+    - name: Test Auto Detect
+      if: ${{ matrix.kwokctl-runtime == 'binary' }}
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh kwokctl/kwokctl_auto_detect
 
-      - name: Upload logs
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}
-          path: ${{ github.workspace }}/logs
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}
+        path: ${{ github.workspace }}/logs

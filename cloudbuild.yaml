@@ -4,25 +4,25 @@ options:
   # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
   machineType: E2_HIGHCPU_32
 steps:
-  - name: "gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20231105-52c482caa0"
-    entrypoint: "bash"
-    env:
-      - DOCKER_CLI_EXPERIMENTAL=enabled
-      - GIT_TAG=$_GIT_TAG
-      - BASE_REF=$_PULL_BASE_REF
-      - PUSH=true
-      - BUCKET=gs://k8s-staging-kwok
-      - STAGING=true
-      - STAGING_IMAGE_PREFIX=gcr.io/k8s-staging-kwok
-      - IMAGE_PREFIX=registry.k8s.io/kwok
-      - NUMBER_SUPPORTED_KUBE_RELEASES=6
-      - PRE_RELEASE=GA
-    args:
-      - -c
-      - |
-        gcloud auth configure-docker && \
-        docker buildx create --name img-builder --use && \
-        make release
+- name: "gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20231105-52c482caa0"
+  entrypoint: "bash"
+  env:
+  - DOCKER_CLI_EXPERIMENTAL=enabled
+  - GIT_TAG=$_GIT_TAG
+  - BASE_REF=$_PULL_BASE_REF
+  - PUSH=true
+  - BUCKET=gs://k8s-staging-kwok
+  - STAGING=true
+  - STAGING_IMAGE_PREFIX=gcr.io/k8s-staging-kwok
+  - IMAGE_PREFIX=registry.k8s.io/kwok
+  - NUMBER_SUPPORTED_KUBE_RELEASES=6
+  - PRE_RELEASE=GA
+  args:
+  - -c
+  - |
+    gcloud auth configure-docker && \
+    docker buildx create --name img-builder --use && \
+    make release
 
 substitutions:
   # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and

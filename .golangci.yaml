@@ -2,62 +2,62 @@
 linters:
   disable-all: true
   enable:
-    - asciicheck
-    - bodyclose
-    - depguard
-    - dogsled
-    - errcheck
-    - errorlint
-    - exportloopref
-    - gci
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - importas
-    - ineffassign
-    - misspell
-    - nakedret
-    - nilerr
-    - nolintlint
-    - prealloc
-    - revive
-    - staticcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - usestdlibvars
-    - whitespace
+  - asciicheck
+  - bodyclose
+  - depguard
+  - dogsled
+  - errcheck
+  - errorlint
+  - exportloopref
+  - gci
+  - goconst
+  - gocritic
+  - gocyclo
+  - gofmt
+  - goimports
+  - goprintffuncname
+  - gosec
+  - gosimple
+  - govet
+  - importas
+  - ineffassign
+  - misspell
+  - nakedret
+  - nilerr
+  - nolintlint
+  - prealloc
+  - revive
+  - staticcheck
+  - stylecheck
+  - typecheck
+  - unconvert
+  - unparam
+  - unused
+  - usestdlibvars
+  - whitespace
 
 linters-settings:
   gci:
     sections:
-      - standard
-      - default
-      - prefix(sigs.k8s.io/kwok)
-      - blank
-      - dot
+    - standard
+    - default
+    - prefix(sigs.k8s.io/kwok)
+    - blank
+    - dot
     skip-generated: true
     custom-order: true
   importas:
     no-unaliased: true
     alias:
-      # Kubernetes
-      - pkg: k8s.io/api/core/v1
-        alias: corev1
-      - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
-        alias: apiextensionsv1
-      - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
-        alias: metav1
-      - pkg: k8s.io/apimachinery/pkg/api/errors
-        alias: apierrors
+    # Kubernetes
+    - pkg: k8s.io/api/core/v1
+      alias: corev1
+    - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
+      alias: apiextensionsv1
+    - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+      alias: metav1
+    - pkg: k8s.io/apimachinery/pkg/api/errors
+      alias: apierrors
   staticcheck:
     go: "1.21"
   stylecheck:
@@ -68,37 +68,37 @@ linters-settings:
     rules:
       main:
         deny:
-          # https://go.dev/doc/go1.16#ioutil
-          - pkg: "io/ioutil"
-            desc: "please see https://go.dev/doc/go1.16#ioutil"
-          # Use sigs.k8s.io/kwok/pkg/log, which is a wrapper around slog
-          - pkg: "k8s.io/klog/v2"
-            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-          - pkg: "k8s.io/klog"
-            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-          - pkg: "golang.org/x/exp/slog"
-            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-          - pkg: "log/slog"
-            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-          - pkg: "log"
-            desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-          # Use sigs.k8s.io/kwok/pkg/utils/yaml, which is a wrapper around yaml
-          - pkg: "k8s.io/apimachinery/pkg/util/yaml"
-            desc: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
-          - pkg: "sigs.k8s.io/yaml"
-            desc: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
-          # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
-          - pkg: "k8s.io/apimachinery/pkg/util/wait"
-            desc: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
-          # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
-          - pkg: "k8s.io/utils/strings/slices"
-            desc: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
+        # https://go.dev/doc/go1.16#ioutil
+        - pkg: "io/ioutil"
+          desc: "please see https://go.dev/doc/go1.16#ioutil"
+        # Use sigs.k8s.io/kwok/pkg/log, which is a wrapper around slog
+        - pkg: "k8s.io/klog/v2"
+          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+        - pkg: "k8s.io/klog"
+          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+        - pkg: "golang.org/x/exp/slog"
+          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+        - pkg: "log/slog"
+          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+        - pkg: "log"
+          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
+        # Use sigs.k8s.io/kwok/pkg/utils/yaml, which is a wrapper around yaml
+        - pkg: "k8s.io/apimachinery/pkg/util/yaml"
+          desc: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
+        - pkg: "sigs.k8s.io/yaml"
+          desc: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
+        # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
+        - pkg: "k8s.io/apimachinery/pkg/util/wait"
+          desc: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
+        # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
+        - pkg: "k8s.io/utils/strings/slices"
+          desc: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
   gocyclo:
     min-complexity: 50
   gosec:
     excludes:
-      - G110
-      - G304
+    - G110
+    - G304
     config:
       G301: "0750"
       G302: "0640"
@@ -114,72 +114,72 @@ linters-settings:
     enable-all-rules: true
     # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
     rules:
-      - name: add-constant
-        disabled: true
-      - name: argument-limit
-        disabled: true
-      - name: cognitive-complexity
-        disabled: true
-      - name: confusing-naming
-        disabled: true
-      - name: cyclomatic
-        disabled: true
-      - name: early-return
-        disabled: true
-      - name: enforce-map-style
-        disabled: true
-      - name: exported
-        disabled: true
-      - name: file-header
-        disabled: true
-      - name: flag-parameter
-        disabled: true
-      - name: function-length
-        disabled: true
-      - name: get-return
-        disabled: true
-      - name: if-return
-        disabled: true
-      - name: import-shadowing
-        disabled: true
-      - name: line-length-limit
-        disabled: true
-      - name: modifies-parameter
-        disabled: true
-      - name: nested-structs
-        disabled: true
-      - name: optimize-operands-order
-        disabled: true
-      - name: unused-parameter
-        disabled: true
-      - name: unused-receiver
-        disabled: true
-      - name: use-any
-        disabled: true
-      - name: unchecked-type-assertion
-        disabled: true
-      - name: function-result-limit
-        disabled: true
-      - name: deep-exit
-        disabled: true
-      - name: superfluous-else
-        disabled: true
-      - name: confusing-results
-        disabled: true
-      - name: defer
-        disabled: true
-      - name: var-naming
-        disabled: true
-      - name: max-public-structs
-        disabled: true
-      - name: comment-spacings
-        disabled: true
-      - name: struct-tag
-        disabled: true
-      - name: unhandled-error
-        disabled: true
-      - name: error-strings
-        disabled: true
+    - name: add-constant
+      disabled: true
+    - name: argument-limit
+      disabled: true
+    - name: cognitive-complexity
+      disabled: true
+    - name: confusing-naming
+      disabled: true
+    - name: cyclomatic
+      disabled: true
+    - name: early-return
+      disabled: true
+    - name: enforce-map-style
+      disabled: true
+    - name: exported
+      disabled: true
+    - name: file-header
+      disabled: true
+    - name: flag-parameter
+      disabled: true
+    - name: function-length
+      disabled: true
+    - name: get-return
+      disabled: true
+    - name: if-return
+      disabled: true
+    - name: import-shadowing
+      disabled: true
+    - name: line-length-limit
+      disabled: true
+    - name: modifies-parameter
+      disabled: true
+    - name: nested-structs
+      disabled: true
+    - name: optimize-operands-order
+      disabled: true
+    - name: unused-parameter
+      disabled: true
+    - name: unused-receiver
+      disabled: true
+    - name: use-any
+      disabled: true
+    - name: unchecked-type-assertion
+      disabled: true
+    - name: function-result-limit
+      disabled: true
+    - name: deep-exit
+      disabled: true
+    - name: superfluous-else
+      disabled: true
+    - name: confusing-results
+      disabled: true
+    - name: defer
+      disabled: true
+    - name: var-naming
+      disabled: true
+    - name: max-public-structs
+      disabled: true
+    - name: comment-spacings
+      disabled: true
+    - name: struct-tag
+      disabled: true
+    - name: unhandled-error
+      disabled: true
+    - name: error-strings
+      disabled: true
 issues:
   max-same-issues: 0
   max-issues-per-linter: 0
@@ -192,5 +192,5 @@ run:
   allow-parallel-runners: false
   skip-dirs-use-default: true
   skip-files:
-    - ".*\\.zz_generated\\..*"
+  - ".*\\.zz_generated\\..*"
   go: '1.21'

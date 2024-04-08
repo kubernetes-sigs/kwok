@@ -83,6 +83,11 @@ if [[ "${VERIFY_SHELL_FORMAT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-shell-format.sh || failed+=(shell-format)
 fi
 
+if [[ "${VERIFY_YAML_FORMAT:-true}" == "true" ]]; then
+  echo "[*] Verifying yaml format..."
+  "${ROOT_DIR}"/hack/verify-yaml-format.sh || failed+=(yaml-format)
+fi
+
 if [[ "${VERIFY_SPELLING:-true}" == "true" ]]; then
   echo "[*] Verifying spelling..."
   "${ROOT_DIR}"/hack/verify-spelling.sh || failed+=(spelling)

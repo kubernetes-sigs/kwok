@@ -68,6 +68,11 @@ if [[ "${UPDATE_SHELL_FORMAT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/update-shell-format.sh || failed+=(shell-format)
 fi
 
+if [[ "${UPDATE_YAML_FORMAT:-true}" == "true" ]]; then
+  echo "[*] Update yaml format..."
+  "${ROOT_DIR}"/hack/update-yaml-format.sh || failed+=(yaml-format)
+fi
+
 if [[ "${UPDATE_SPELLING:-true}" == "true" ]]; then
   echo "[*] Update spelling..."
   "${ROOT_DIR}"/hack/update-spelling.sh || failed+=(spelling)

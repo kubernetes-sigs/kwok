@@ -16,10 +16,10 @@ Please consider adding yourself to the list of adopters, follow the example belo
 name: kwok # your organization or individual name
 description: This is a new adopter template for others. # description of your use case
 contacts:
-  - wzshiming # your github username
+- wzshiming # your github username
 links:
-  - name: kwok.sigs.k8s.io        # your link name
-    url: https://kwok.sigs.k8s.io # your link url
+- name: kwok.sigs.k8s.io        # your link name
+  url: https://kwok.sigs.k8s.io # your link url
 ```
 
 Create a pull request to [add yourself].

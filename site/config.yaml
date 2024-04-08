@@ -8,8 +8,8 @@ theme: hugo-book
 disablePathToLower: false
 enableGitInfo: true
 disableKinds:
-  - taxonomy
-  - taxonomyTerm
+- taxonomy
+- taxonomyTerm
 
 permalinks:
   posts: "/:section/:year/:month/:day/:slug/"
@@ -99,183 +99,183 @@ params:
 
 menu:
   before:
-    - identifier: home
-      pageRef: "/"
+  - identifier: home
+    pageRef: "/"
 
   main:
-    # User Guide
-    - identifier: user-guide
-      pageRef: "/docs/user"
-      weight: 10
-      params:
-        collapse: never
-    # Design
-    - identifier: design
-      title: Design
-      weight: 20
-    # Contributing
-    - identifier: contributing
-      pageRef: "/docs/contributing"
-      weight: 30
+  # User Guide
+  - identifier: user-guide
+    pageRef: "/docs/user"
+    weight: 10
+    params:
+      collapse: never
+  # Design
+  - identifier: design
+    title: Design
+    weight: 20
+  # Contributing
+  - identifier: contributing
+    pageRef: "/docs/contributing"
+    weight: 30
 
-    # User Guide Children
-    - identifier: all-in-one-image
-      pageRef: "/docs/user/all-in-one-image"
-      weight: 1010
-      parent: user-guide
-    - identifier: github-action
-      pageRef: "/docs/user/github-action"
-      weight: 1015
-      parent: user-guide
-    - identifier: installation
-      pageRef: "/docs/user/installation"
-      weight: 1020
-      parent: user-guide
-    - identifier: kwok-in-cluster
-      pageRef: "/docs/user/kwok-in-cluster"
-      weight: 1030
-      parent: user-guide
-    - identifier: kwok-out-cluster
-      pageRef: "/docs/user/kwok-out-cluster"
-      weight: 1040
-      parent: user-guide
-    - identifier: kwokctl-manage-cluster
-      pageRef: "/docs/user/kwokctl-manage-cluster"
-      weight: 1050
-      parent: user-guide
-    - identifier: manage-nodes-and-pods
-      pageRef: "/docs/user/kwok-manage-nodes-and-pods"
-      weight: 1060
-      parent: user-guide
+  # User Guide Children
+  - identifier: all-in-one-image
+    pageRef: "/docs/user/all-in-one-image"
+    weight: 1010
+    parent: user-guide
+  - identifier: github-action
+    pageRef: "/docs/user/github-action"
+    weight: 1015
+    parent: user-guide
+  - identifier: installation
+    pageRef: "/docs/user/installation"
+    weight: 1020
+    parent: user-guide
+  - identifier: kwok-in-cluster
+    pageRef: "/docs/user/kwok-in-cluster"
+    weight: 1030
+    parent: user-guide
+  - identifier: kwok-out-cluster
+    pageRef: "/docs/user/kwok-out-cluster"
+    weight: 1040
+    parent: user-guide
+  - identifier: kwokctl-manage-cluster
+    pageRef: "/docs/user/kwokctl-manage-cluster"
+    weight: 1050
+    parent: user-guide
+  - identifier: manage-nodes-and-pods
+    pageRef: "/docs/user/kwok-manage-nodes-and-pods"
+    weight: 1060
+    parent: user-guide
 
-    - identifier: kwokctl-advanced-usage
-      title: "`kwokctl` Advanced Usage"
-      weight: 200010
-      parent: user-guide
-    - identifier: snapshots
-      pageRef: "/docs/user/kwokctl-snapshot"
-      parent: kwokctl-advanced-usage
-    - identifier: auditing
-      pageRef: "/docs/user/kwokctl-auditing"
-      parent: kwokctl-advanced-usage
-    - identifier: authorization
-      pageRef: "/docs/user/kwokctl-authorization"
-      parent: kwokctl-advanced-usage
-    - identifier: admission
-      pageRef: "/docs/user/kwokctl-admission"
-      parent: kwokctl-advanced-usage
-    - identifier: platform-specific-binaries
-      pageRef: "/docs/user/kwokctl-platform-specific-binaries"
-      parent: kwokctl-advanced-usage
+  - identifier: kwokctl-advanced-usage
+    title: "`kwokctl` Advanced Usage"
+    weight: 200010
+    parent: user-guide
+  - identifier: snapshots
+    pageRef: "/docs/user/kwokctl-snapshot"
+    parent: kwokctl-advanced-usage
+  - identifier: auditing
+    pageRef: "/docs/user/kwokctl-auditing"
+    parent: kwokctl-advanced-usage
+  - identifier: authorization
+    pageRef: "/docs/user/kwokctl-authorization"
+    parent: kwokctl-advanced-usage
+  - identifier: admission
+    pageRef: "/docs/user/kwokctl-admission"
+    parent: kwokctl-advanced-usage
+  - identifier: platform-specific-binaries
+    pageRef: "/docs/user/kwokctl-platform-specific-binaries"
+    parent: kwokctl-advanced-usage
 
-    - identifier: examples
-      title: Examples
-      parent: kwokctl-advanced-usage
-    - identifier: argo
-      pageRef: "/docs/examples/argo"
-      parent: examples
-    - identifier: linkerd
-      pageRef: "/docs/examples/linkerd"
-      parent: examples
-    - identifier: istio
-      pageRef: "/docs/examples/istio"
-      parent: examples
-    - identifier: metrics-server
-      pageRef: "/docs/examples/metrics-server"
-      parent: examples
-    - identifier: metrics
-      pageRef: "/docs/examples/prometheus"
-      parent: examples
+  - identifier: examples
+    title: Examples
+    parent: kwokctl-advanced-usage
+  - identifier: argo
+    pageRef: "/docs/examples/argo"
+    parent: examples
+  - identifier: linkerd
+    pageRef: "/docs/examples/linkerd"
+    parent: examples
+  - identifier: istio
+    pageRef: "/docs/examples/istio"
+    parent: examples
+  - identifier: metrics-server
+    pageRef: "/docs/examples/metrics-server"
+    parent: examples
+  - identifier: metrics
+    pageRef: "/docs/examples/prometheus"
+    parent: examples
 
-    - identifier: tools
-      title: Tools
-      weight: 200020
-      parent: user-guide
-    - identifier: kwok
-      title: '`kwok` CLI'
-      pageRef: "/docs/generated/kwok"
-      parent: tools
-    - identifier: kwokctl
-      title: '`kwokctl` CLI'
-      pageRef: "/docs/generated/kwokctl"
-      parent: tools
+  - identifier: tools
+    title: Tools
+    weight: 200020
+    parent: user-guide
+  - identifier: kwok
+    title: '`kwok` CLI'
+    pageRef: "/docs/generated/kwok"
+    parent: tools
+  - identifier: kwokctl
+    title: '`kwokctl` CLI'
+    pageRef: "/docs/generated/kwokctl"
+    parent: tools
 
-    - identifier: configuration
-      pageRef: "/docs/user/configuration"
-      weight: 200030
-      parent: user-guide
-    - identifier: api-reference
-      pageRef: "/docs/generated/apis"
-      parent: configuration
-    - identifier: stages-configuration
-      pageRef: "/docs/user/stages-configuration"
-      parent: configuration
+  - identifier: configuration
+    pageRef: "/docs/user/configuration"
+    weight: 200030
+    parent: user-guide
+  - identifier: api-reference
+    pageRef: "/docs/generated/apis"
+    parent: configuration
+  - identifier: stages-configuration
+    pageRef: "/docs/user/stages-configuration"
+    parent: configuration
 
-    - identifier: pod-interaction
-      title: Pod Interaction
-      parent: configuration
-    - identifier: port-forward-configuration
-      pageRef: "/docs/user/port-forward-configuration"
-      parent: pod-interaction
-    - identifier: exec-configuration
-      pageRef: "/docs/user/exec-configuration"
-      parent: pod-interaction
-    - identifier: logs-configuration
-      pageRef: "/docs/user/logs-configuration"
-      parent: pod-interaction
-    - identifier: attach-configuration
-      pageRef: "/docs/user/attach-configuration"
-      parent: pod-interaction
-    - identifier: metrics-configuration
-      pageRef: "/docs/user/metrics-configuration"
-      parent: configuration
-      params:
-        collapse: never
-    - identifier: resource-usage-configuration
-      pageRef: "/docs/user/resource-usage-configuration"
-      parent: metrics-configuration
+  - identifier: pod-interaction
+    title: Pod Interaction
+    parent: configuration
+  - identifier: port-forward-configuration
+    pageRef: "/docs/user/port-forward-configuration"
+    parent: pod-interaction
+  - identifier: exec-configuration
+    pageRef: "/docs/user/exec-configuration"
+    parent: pod-interaction
+  - identifier: logs-configuration
+    pageRef: "/docs/user/logs-configuration"
+    parent: pod-interaction
+  - identifier: attach-configuration
+    pageRef: "/docs/user/attach-configuration"
+    parent: pod-interaction
+  - identifier: metrics-configuration
+    pageRef: "/docs/user/metrics-configuration"
+    parent: configuration
+    params:
+      collapse: never
+  - identifier: resource-usage-configuration
+    pageRef: "/docs/user/resource-usage-configuration"
+    parent: metrics-configuration
 
-    - identifier: extensions
-      title: Extensions
-      parent: configuration
-    - identifier: go-template
-      pageRef: "/docs/user/go-template"
-      parent: extensions
-    - identifier: cel-expressions
-      pageRef: "/docs/user/cel-expressions"
-      parent: extensions
+  - identifier: extensions
+    title: Extensions
+    parent: configuration
+  - identifier: go-template
+    pageRef: "/docs/user/go-template"
+    parent: extensions
+  - identifier: cel-expressions
+    pageRef: "/docs/user/cel-expressions"
+    parent: extensions
 
-    # Design Children
-    - identifier: introduction
-      pageRef: "/docs/design/introduction"
-      weight: 2010
-      parent: design
-    - identifier: architecture
-      pageRef: "/docs/design/architecture"
-      weight: 2020
-      parent: design
+  # Design Children
+  - identifier: introduction
+    pageRef: "/docs/design/introduction"
+    weight: 2010
+    parent: design
+  - identifier: architecture
+    pageRef: "/docs/design/architecture"
+    weight: 2020
+    parent: design
 
-    # Contributing Children
-    - identifier: documentation
-      pageRef: "/docs/contributing/documentation"
-      parent: contributing
-    - identifier: development
-      pageRef: "/docs/contributing/development"
-      parent: contributing
+  # Contributing Children
+  - identifier: documentation
+    pageRef: "/docs/contributing/documentation"
+    parent: contributing
+  - identifier: development
+    pageRef: "/docs/contributing/development"
+    parent: contributing
 
   after:
-    - identifier: blog
-      pageRef: "/posts"
-      weight: 10
-    - identifier: adopters
-      title: Adopters
-      pageRef: "/docs/adopters"
-      weight: 20
-    - identifier: roadmap
-      title: Roadmap ⛓
-      url: https://github.com/orgs/kubernetes-sigs/projects/21
-      weight: 30
-    - identifier: source-code
-      title: Source Code ⛓
-      url: https://github.com/kubernetes-sigs/kwok
-      weight: 40
+  - identifier: blog
+    pageRef: "/posts"
+    weight: 10
+  - identifier: adopters
+    title: Adopters
+    pageRef: "/docs/adopters"
+    weight: 20
+  - identifier: roadmap
+    title: Roadmap ⛓
+    url: https://github.com/orgs/kubernetes-sigs/projects/21
+    weight: 30
+  - identifier: source-code
+    title: Source Code ⛓
+    url: https://github.com/kubernetes-sigs/kwok
+    weight: 40
