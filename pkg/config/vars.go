@@ -196,11 +196,10 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 	if conf.Runtime == "" && len(conf.Runtimes) == 0 {
 		conf.Runtimes = []string{
 			consts.RuntimeTypeDocker,
+			consts.RuntimeTypePodman,
 		}
 		if GOOS == linux {
-			// TODO: Move to above after test coverage
 			conf.Runtimes = append(conf.Runtimes,
-				consts.RuntimeTypePodman,
 				consts.RuntimeTypeNerdctl,
 				consts.RuntimeTypeBinary,
 			)
