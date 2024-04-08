@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type flagpole struct {
@@ -41,6 +42,9 @@ type flagpole struct {
 	Wait       time.Duration
 	Kubeconfig string
 	ExtraArgs  []string
+
+	ComponentArgs    []string
+	EnableComponents []string
 
 	*internalversion.KwokctlConfiguration
 }
@@ -144,6 +148,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease in seconds")
 	cmd.Flags().Float64Var(&flags.Options.HeartbeatFactor, "heartbeat-factor", flags.Options.HeartbeatFactor, "Scale factor for all about heartbeat")
 	cmd.Flags().StringArrayVar(&flags.ExtraArgs, "extra-args", flags.ExtraArgs, "Pass a single extra arg key-value pair to the component in the format `component=key=value`")
+
+	cmd.Flags().StringArrayVar(&flags.ComponentArgs, "component-args", flags.ComponentArgs, "Set component args for the cluster, format: .key1=value1 .key2=value2")
+	cmd.Flags().StringArrayVar(&flags.EnableComponents, "enable-components", flags.EnableComponents, "Enable components for the cluster")
 
 	return cmd
 }
@@ -286,6 +293,24 @@ func runE(ctx context.Context, flags *flagpole) error {
 			cleanUp()
 			return err
 		}
+
+		// Enable components
+		for _, componentName := range flags.EnableComponents {
+			componentPrefix := fmt.Sprintf(".%s.", componentName)
+			args := slices.FilterAndMap(flags.ComponentArgs, func(s string) (string, bool) {
+				if !strings.HasPrefix(s, componentPrefix) {
+					return "", false
+				}
+				return s[len(componentPrefix)-1:], true
+			})
+			err := rt.SetComponents(ctx, componentName, args...)
+			if err != nil {
+				logger.Error("Failed to set components", err, "component", componentName)
+				cleanUp()
+				return err
+			}
+		}
+
 		err = rt.Save(ctx)
 		if err != nil {
 			logger.Error("Failed to save config", err)

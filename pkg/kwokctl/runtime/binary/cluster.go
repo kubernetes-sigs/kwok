@@ -822,8 +822,12 @@ func (c *Cluster) startComponent(ctx context.Context, component internalversion.
 		ctx = exec.WithUser(ctx, &uid, &gid)
 	}
 
+	workdir := component.WorkDir
+	if workdir == "" {
+		workdir = c.Workdir()
+	}
 	logger.Debug("Starting component")
-	return c.ForkExec(ctx, component.WorkDir, component.Binary, component.Args...)
+	return c.ForkExec(ctx, workdir, component.Binary, component.Args...)
 }
 
 func (c *Cluster) startComponents(ctx context.Context) error {

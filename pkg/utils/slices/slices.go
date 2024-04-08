@@ -16,6 +16,11 @@ limitations under the License.
 
 package slices
 
+import (
+	"cmp"
+	"sort"
+)
+
 // Map returns a new slice containing the results of applying the given function
 func Map[S ~[]T, T any, O any](s S, f func(T) O) []O {
 	out := make([]O, len(s))
@@ -127,5 +132,15 @@ func GroupBy[S ~[]T, T any, K comparable](s S, f func(T) K) map[K][]T {
 		k := f(v)
 		out[k] = append(out[k], v)
 	}
+	return out
+}
+
+// Sort returns a new slice containing the elements of the slice in sorted order.
+func Sort[S ~[]T, T cmp.Ordered](s S) []T {
+	out := make([]T, len(s))
+	copy(out, s)
+	sort.Slice(out, func(i, j int) bool {
+		return cmp.Less(out[i], out[j])
+	})
 	return out
 }
