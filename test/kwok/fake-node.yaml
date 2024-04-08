@@ -16,6 +16,6 @@ metadata:
   name: fake-node
 spec:
   taints:
-    - effect: NoSchedule
-      key: kwok-controller/provider
-      value: fake
+  - effect: NoSchedule
+    key: kwok-controller/provider
+    value: fake

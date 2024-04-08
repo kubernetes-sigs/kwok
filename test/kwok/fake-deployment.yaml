@@ -17,16 +17,16 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              - matchExpressions:
-                  - key: type
-                    operator: In
-                    values:
-                      - kwok-controller
+            - matchExpressions:
+              - key: type
+                operator: In
+                values:
+                - kwok-controller
       tolerations:
-        - key: "kwok-controller/provider"
-          operator: "Exists"
-          effect: "NoSchedule"
+      - key: "kwok-controller/provider"
+        operator: "Exists"
+        effect: "NoSchedule"
       containers:
-        - name: fake-container
-          image: fake
+      - name: fake-container
+        image: fake
       nodeName: fake-node

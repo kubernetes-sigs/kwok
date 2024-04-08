@@ -1,7 +1,7 @@
 name: Headlamp
 description: Headlamp devs use kwok for load testing the Headlamp K8s UI
 contacts:
-  - illume
+- illume
 links:
-  - name: Headlamp Loading testing with kwok
-    url: https://github.com/headlamp-k8s/headlamp/blob/main/docs/development/testing.md#load-testing-headlamp
+- name: Headlamp Loading testing with kwok
+  url: https://github.com/headlamp-k8s/headlamp/blob/main/docs/development/testing.md#load-testing-headlamp

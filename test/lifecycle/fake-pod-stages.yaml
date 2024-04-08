@@ -14,19 +14,19 @@ spec:
         app: test-pod-had-init
     spec:
       tolerations:
-        - key: "kwok-controller/provider"
-          operator: "Exists"
-          effect: "NoSchedule"
+      - key: "kwok-controller/provider"
+        operator: "Exists"
+        effect: "NoSchedule"
       initContainers:
-        - name: init-0
-          image: fake
-        - name: init-1
-          image: fake
+      - name: init-0
+        image: fake
+      - name: init-1
+        image: fake
       containers:
-        - name: container-0
-          image: fake
-        - name: container-1
-          image: fake
+      - name: container-0
+        image: fake
+      - name: container-1
+        image: fake
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -44,14 +44,14 @@ spec:
         app: test-pod
     spec:
       tolerations:
-        - key: "kwok-controller/provider"
-          operator: "Exists"
-          effect: "NoSchedule"
+      - key: "kwok-controller/provider"
+        operator: "Exists"
+        effect: "NoSchedule"
       containers:
-        - name: container-0
-          image: fake
-        - name: container-1
-          image: fake
+      - name: container-0
+        image: fake
+      - name: container-1
+        image: fake
 ---
 apiVersion: batch/v1
 kind: Job
@@ -61,11 +61,11 @@ spec:
   template:
     spec:
       tolerations:
-        - key: "kwok-controller/provider"
-          operator: "Exists"
-          effect: "NoSchedule"
+      - key: "kwok-controller/provider"
+        operator: "Exists"
+        effect: "NoSchedule"
       containers:
-        - name: job
-          image: fake
+      - name: job
+        image: fake
       restartPolicy: Never
   backoffLimit: 4

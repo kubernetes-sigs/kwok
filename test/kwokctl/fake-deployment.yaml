@@ -14,5 +14,5 @@ spec:
         app: fake-pod
     spec:
       containers:
-        - name: fake-pod
-          image: fake
+      - name: fake-pod
+        image: fake
