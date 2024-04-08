@@ -14,22 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package width
+package monospace
 
 import (
 	"unicode/utf8"
 )
 
-// Width returns the width of a string in monospace font.
-func Width(str string) int {
+// String returns the width of a string in monospace font.
+func String(str string) int {
 	n := 0
 	for _, r := range str {
-		n += runeWidth(r)
+		n += Rune(r)
 	}
 	return n
 }
 
-func runeWidth(r rune) int {
+// Rune returns the width of a rune in monospace font.
+func Rune(r rune) int {
 	switch {
 	case r == utf8.RuneError || r < '\x20':
 		return 0
@@ -46,8 +47,8 @@ func runeWidth(r rune) int {
 }
 
 // Shorten returns a shortened string to fit the given width in monospace font.
-func Shorten(str string, max int) string {
-	if Width(str) <= max {
+func Shorten(str string, width int) string {
+	if String(str) <= width {
 		return str
 	}
 
@@ -56,14 +57,14 @@ func Shorten(str string, max int) string {
 	end := len(runes) - 1
 	w := 0
 	for i := 0; i < len(runes)/2; i++ {
-		w += runeWidth(runes[begin])
-		if w >= max-2 {
+		w += Rune(runes[begin])
+		if w >= width-2 {
 			break
 		}
 		begin++
 
-		w += runeWidth(runes[end])
-		if w >= max-2 {
+		w += Rune(runes[end])
+		if w >= width-2 {
 			break
 		}
 		end--

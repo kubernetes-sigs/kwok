@@ -25,12 +25,12 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
-	"unicode/utf8"
 
 	"github.com/wzshiming/ctc"
 	"golang.org/x/term"
 
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/monospace"
 )
 
 type ctlHandler struct {
@@ -132,7 +132,7 @@ func formatLog(msg string, attrs string, level Level, termWidth int) string {
 		return fmt.Sprintf("%s\n", msg)
 	}
 
-	msgWidth := stringWidth(msg)
+	msgWidth := monospace.String(msg)
 	if level != LevelInfo {
 		levelStr := level.String()
 		c, ok := levelColor[strings.SplitN(levelStr, "+", 2)[0]]
@@ -156,7 +156,7 @@ type color struct {
 func newColour(c ctc.Color, msg string) color {
 	return color{
 		renderer: fmt.Sprintf("%s%s%s", c, msg, ctc.Reset),
-		width:    stringWidth(msg),
+		width:    monospace.String(msg),
 	}
 }
 
@@ -199,30 +199,6 @@ func (c *ctlHandler) WithGroup(name string) slog.Handler {
 		attrs:  c.attrs,
 		groups: newGroups,
 	}
-}
-
-func stringWidth(str string) int {
-	n := 0
-	for _, r := range str {
-		n += runeWidth(r)
-	}
-	return n
-}
-
-func runeWidth(r rune) int {
-	switch {
-	case r == utf8.RuneError || r < '\x20':
-		return 0
-	case '\x20' <= r && r < '\u2000':
-		return 1
-	case '\u2000' <= r && r < '\uFF61':
-		return 2
-	case '\uFF61' <= r && r < '\uFFA0':
-		return 1
-	case '\uFFA0' <= r:
-		return 2
-	}
-	return 0
 }
 
 // quoteIfNeed returns wrap it in double quotes if the string contains characters other than letters and digits,
