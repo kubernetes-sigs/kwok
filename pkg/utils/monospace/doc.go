@@ -14,5 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package width provides functions to measure the width of a string.
-package width
+// Package monospace provides functions to work with monospace fonts.
+package monospace

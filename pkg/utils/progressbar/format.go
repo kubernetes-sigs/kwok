@@ -23,10 +23,10 @@ import (
 
 	"github.com/wzshiming/ctc"
 
-	"sigs.k8s.io/kwok/pkg/utils/width"
+	"sigs.k8s.io/kwok/pkg/utils/monospace"
 )
 
-func formatProgress(name string, max uint64, current uint64, total uint64, elapsed time.Duration) string {
+func formatProgress(name string, width uint64, current uint64, total uint64, elapsed time.Duration) string {
 	var per string
 	if current == total {
 		per = fmt.Sprintf("size=%s", formatBytes(total))
@@ -37,42 +37,58 @@ func formatProgress(name string, max uint64, current uint64, total uint64, elaps
 	e := elapsed.Truncate(time.Second)
 	if e != 0 || current != total {
 		widePer := fmt.Sprintf("%s speed=%s elapsed=%s", per, formatSpeed(current, elapsed), e)
-		if len(widePer) < int(max)-1 {
+		if len(widePer) < int(width)-1 {
 			per = widePer
 		}
 	}
 
-	return formatBar(max, name, per, current, total)
+	info := formatInfo(width, name, per)
+	index := calculateSplitIndex(info, width, current, total)
+	if index != 0 {
+		info = formatBar(info, index)
+	}
+	return info
 }
 
-func formatBar(max uint64, preInfo, postInfo string, current uint64, total uint64) string {
-	preInfoWidth := width.Width(preInfo)
-	postInfoWidth := width.Width(postInfo)
+func formatInfo(max uint64, preInfo, postInfo string) string {
+	preInfoWidth := monospace.String(preInfo)
+	postInfoWidth := monospace.String(postInfo)
 	infoWidth := preInfoWidth + postInfoWidth
-	if infoWidth > int(max) {
+	if infoWidth >= int(max) {
 		preInfoWidth = int(max) - postInfoWidth - 1
-		preInfo = width.Shorten(preInfo, preInfoWidth)
+		preInfo = monospace.Shorten(preInfo, preInfoWidth)
 	}
-	barInfo := strings.Join([]string{
+	return strings.Join([]string{
 		preInfo,
 		strings.Repeat(" ", int(max)-preInfoWidth-postInfoWidth),
 		postInfo,
 	}, "")
+}
 
-	count := current * max / total
-	if count == max {
-		return barInfo
+func calculateSplitIndex(info string, width uint64, current uint64, total uint64) uint64 {
+	count := current * width / total
+	if count == width {
+		return 0
 	}
+	off := 0
+	for i, ch := range info {
+		off += monospace.String(string([]rune{ch}))
+		if off > int(count) {
+			return uint64(i)
+		}
+	}
+	return 0
+}
 
-	barInfoRunes := []rune(barInfo)
-	bar := strings.Join([]string{
+func formatBar(info string, index uint64) string {
+	infoRunes := []rune(info)
+	return strings.Join([]string{
 		resetColor,
 		negativeColor,
-		string(barInfoRunes[:count]),
+		string(infoRunes[:index]),
 		resetColor,
-		string(barInfoRunes[count:]),
+		string(infoRunes[index:]),
 	}, "")
-	return bar
 }
 
 var (
