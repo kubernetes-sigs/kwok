@@ -201,9 +201,11 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 		if GOOS == linux {
 			conf.Runtimes = append(conf.Runtimes,
 				consts.RuntimeTypeNerdctl,
-				consts.RuntimeTypeBinary,
 			)
 		}
+		conf.Runtimes = append(conf.Runtimes,
+			consts.RuntimeTypeBinary,
+		)
 	}
 	if conf.Runtime == "" && len(conf.Runtimes) == 1 {
 		conf.Runtime = conf.Runtimes[0]
@@ -274,13 +276,22 @@ func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 
 	conf.KubeAuditPolicy = envs.GetEnvWithPrefix("KUBE_AUDIT_POLICY", conf.KubeAuditPolicy)
 
+	kubectlBinaryPrefix := conf.KubeBinaryPrefix
 	if conf.KubeBinaryPrefix == "" {
-		conf.KubeBinaryPrefix = consts.KubeBinaryPrefix + "/" + conf.KubeVersion + "/bin/" + GOOS + "/" + GOARCH
+		// https://www.downloadkubernetes.com/
+		// No provided for control plane components outside of Linux,
+		// but kubectl is an exception.
+		kubectlBinaryPrefix = consts.KubeBinaryPrefix + "/" + conf.KubeVersion + "/bin/" + GOOS + "/" + GOARCH
+		if GOOS == linux {
+			conf.KubeBinaryPrefix = kubectlBinaryPrefix
+		} else {
+			conf.KubeBinaryPrefix = consts.KubeBinaryUnofficialPrefix + "/" + conf.KubeVersion + "-kwok.0-" + GOOS + "-" + GOARCH
+		}
 	}
 	conf.KubeBinaryPrefix = envs.GetEnvWithPrefix("KUBE_BINARY_PREFIX", conf.KubeBinaryPrefix)
 
 	if conf.KubectlBinary == "" {
-		conf.KubectlBinary = conf.KubeBinaryPrefix + "/kubectl" + conf.BinSuffix
+		conf.KubectlBinary = kubectlBinaryPrefix + "/kubectl" + conf.BinSuffix
 	}
 	conf.KubectlBinary = envs.GetEnvWithPrefix("KUBECTL_BINARY", conf.KubectlBinary)
 

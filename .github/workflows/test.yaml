@@ -176,22 +176,6 @@ jobs:
       run: |
         brew install coreutils bash
 
-      # No binary is provided by default for control plane components outside of Linux
-      # https://kwok.sigs.k8s.io/docs/user/kwokctl-platform-specific-binaries/
-    - name: Setup Kubernetes Binary
-      if: ${{ matrix.kwokctl-runtime == 'binary' && matrix.os != 'ubuntu-latest' }}
-      shell: bash
-      env:
-        KUBE_VERSION: v1.29.0
-      run: |
-        mkdir -p "${GITHUB_WORKSPACE//\\//}/workdir"
-        cat << EOF >"${GITHUB_WORKSPACE//\\//}/workdir/kwok.yaml"
-        kind: KwokctlConfiguration
-        apiVersion: config.kwok.x-k8s.io/v1alpha1
-        options:
-          kubeBinaryPrefix: "https://github.com/kwok-ci/k8s/releases/download/${KUBE_VERSION}-kwok.0-$(go env GOOS)-$(go env GOARCH)"
-        EOF
-
       # TODO: workaround for https://github.com/actions/runner-images/issues/7753 (caused by https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394).
       # Remove this when this issue is fixed and available in the ubuntu runner image
     - name: Setup Podman for Ubuntu
