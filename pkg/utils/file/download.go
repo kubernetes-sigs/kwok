@@ -59,7 +59,7 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 			return "", false
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to untar %s: %w", cacheTar, err)
 		}
 		if clean {
 			err = os.Remove(cacheTar)
@@ -153,17 +153,21 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 		logger.Info("Download")
 
 		var transport = http.DefaultTransport
-		var retry = 10
+		var retry = 0
 		transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, err error) error {
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				return err
 			}
-			if retry > 0 {
-				retry--
-				time.Sleep(time.Second)
-				return nil
+			if retry > 10 {
+				return err
 			}
-			return err
+			logger.Warn("Retry after 1s",
+				"err", err,
+				"retry", retry,
+			)
+			retry++
+			time.Sleep(time.Second)
+			return nil
 		})
 
 		if !quiet {
@@ -204,7 +208,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 			return "", err
 		}
 
-		_, err = io.Copy(d, resp.Body)
+		contentLength, err := io.Copy(d, resp.Body)
 		if err != nil {
 			_ = d.Close()
 			fmt.Println()
@@ -213,6 +217,9 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 		err = d.Close()
 		if err != nil {
 			logger.Error("Failed to close file", err)
+		}
+		if resp.ContentLength != contentLength {
+			return "", fmt.Errorf("content length mismatch: %d != %d", resp.ContentLength, contentLength)
 		}
 
 		err = os.Rename(cache+".tmp", cache)
