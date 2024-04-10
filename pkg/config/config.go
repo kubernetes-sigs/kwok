@@ -267,40 +267,32 @@ func mutateToVersiondConfig[V versiondObject, I InternalObject](fun func(I) (V, 
 }
 
 // Load loads the given path into the context.
-func Load(ctx context.Context, src ...string) ([]InternalObject, error) {
+func Load(ctx context.Context, src ...string) ([]InternalObject, []json.RawMessage, error) {
 	raws, err := loadRawMessages(src)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	result := map[string][]versiondObject{}
-
-	logger := log.FromContext(ctx)
+	unsupported := []json.RawMessage{}
 	meta := metav1.TypeMeta{}
 	for _, raw := range raws {
 		err := json.Unmarshal(raw, &meta)
 		if err != nil {
-			logger.Error("Unsupported config", err,
-				"src", src,
-			)
-			continue
+			return nil, nil, err
 		}
 
 		gvk := meta.GroupVersionKind()
 
 		handler, ok := configHandlers[gvk.Kind]
 		if !ok {
-			logger.Warn("Unsupported type",
-				"apiVersion", meta.APIVersion,
-				"kind", meta.Kind,
-				"src", src,
-			)
+			unsupported = append(unsupported, raw)
 			continue
 		}
 
 		vobj, err := handler.Unmarshal(raw)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		result[gvk.Kind] = append(result[gvk.Kind], vobj)
 	}
@@ -311,25 +303,22 @@ func Load(ctx context.Context, src ...string) ([]InternalObject, error) {
 	for _, kind := range kinds {
 		handler, ok := configHandlers[kind]
 		if !ok {
-			logger.Warn("Unsupported type",
-				"kind", kind,
-				"src", src,
-			)
+			// This should never happen
 			continue
 		}
 		versiondObjs := result[kind]
 		internalObjs, err := handler.MutateToInternal(versiondObjs)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		objs = append(objs, internalObjs...)
 	}
 
-	return objs, nil
+	return objs, unsupported, nil
 }
 
 // Save saves the given objects to the given path.
-func Save(ctx context.Context, dist string, objs []InternalObject) error {
+func Save(ctx context.Context, dist string, objs []InternalObject, unsupported []json.RawMessage) error {
 	dist = path.Clean(dist)
 	err := file.MkdirAll(path.Dir(dist))
 	if err != nil {
@@ -346,18 +335,16 @@ func Save(ctx context.Context, dist string, objs []InternalObject) error {
 			_ = file.Remove(dist)
 		}
 	}()
-	return SaveTo(ctx, f, objs)
+	return SaveTo(ctx, f, objs, unsupported)
 }
 
 // SaveTo saves the given objects to the given writer.
-func SaveTo(ctx context.Context, w io.Writer, objs []InternalObject) error {
+func SaveTo(ctx context.Context, w io.Writer, objs []InternalObject, unsupported []json.RawMessage) error {
 	logger := log.FromContext(ctx)
-	for i, obj := range objs {
-		if i != 0 {
-			_, err := w.Write([]byte("\n---\n"))
-			if err != nil {
-				return err
-			}
+	for _, obj := range objs {
+		_, err := w.Write([]byte("\n---\n"))
+		if err != nil {
+			return err
 		}
 
 		data, err := Marshal(obj)
@@ -371,6 +358,22 @@ func SaveTo(ctx context.Context, w io.Writer, objs []InternalObject) error {
 			return err
 		}
 
+		_, err = w.Write(data)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, raw := range unsupported {
+		_, err := w.Write([]byte("\n---\n"))
+		if err != nil {
+			return err
+		}
+
+		data, err := yaml.JSONToYAML(raw)
+		if err != nil {
+			return err
+		}
 		_, err = w.Write(data)
 		if err != nil {
 			return err

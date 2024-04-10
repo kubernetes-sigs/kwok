@@ -340,6 +340,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 		"elapsed", time.Since(start),
 	)
 
+	err = rt.PreInit(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to pre init %q: %w", name, err)
+	}
+
 	err = rt.InitCRDs(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to init crds %q: %w", name, err)

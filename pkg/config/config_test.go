@@ -37,22 +37,22 @@ func TestConfig(t *testing.T) {
 		&internalversion.KwokctlConfiguration{},
 		&internalversion.Stage{},
 	}
-	err := Save(ctx, config, data)
+	err := Save(ctx, config, data, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	want, err := Load(ctx, config)
+	want, _, err := Load(ctx, config)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = Save(ctx, config, want)
+	err = Save(ctx, config, want, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got, err := Load(ctx, config)
+	got, _, err := Load(ctx, config)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -130,8 +130,17 @@ type Runtime interface {
 	// GetWorkdirPath get the workdir path of cluster
 	GetWorkdirPath(name string) string
 
+	// PreInit pre init the cluster
+	PreInit(ctx context.Context) error
+
+	// AddCRDs add the crds of cluster
+	AddCRDs(ctx context.Context, crds ...[]byte) error
+
 	// InitCRDs init the crds of cluster
 	InitCRDs(ctx context.Context) error
+
+	// AddCRs add the crds of cluster
+	AddCRs(ctx context.Context, crs ...[]byte) error
 
 	// InitCRs init the crs of cluster
 	InitCRs(ctx context.Context) error

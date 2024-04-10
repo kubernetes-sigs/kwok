@@ -19,13 +19,14 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/nxadm/tail"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/kustomize/crd"
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
@@ -70,6 +71,11 @@ type Cluster struct {
 	name    string
 	dryRun  bool
 	conf    *internalversion.KwokctlConfiguration
+
+	unsupported []json.RawMessage
+
+	crds [][]byte
+	crs  [][]byte
 
 	clientset client.Clientset
 }
@@ -138,11 +144,12 @@ func (c *Cluster) Workdir() string {
 
 // Load loads the cluster config
 func (c *Cluster) Load(ctx context.Context) (*internalversion.KwokctlConfiguration, error) {
-	objs, err := config.Load(ctx, c.GetWorkdirPath(ConfigName))
+	objs, unsupported, err := config.Load(ctx, c.GetWorkdirPath(ConfigName))
 	if err != nil {
 		return nil, err
 	}
 
+	c.unsupported = unsupported
 	configs := config.FilterWithType[*internalversion.KwokctlConfiguration](objs)
 	if len(configs) == 0 {
 		return nil, fmt.Errorf("failed to load config")
@@ -258,7 +265,10 @@ func (c *Cluster) Save(ctx context.Context) error {
 		objs = appendIntoInternalObjects(objs, stages...)
 	}
 
-	return config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)
+	unsupported := config.GetUnsupportedFromContext(ctx)
+	c.unsupported = unsupported
+
+	return config.Save(ctx, c.GetWorkdirPath(ConfigName), objs, unsupported)
 }
 
 func appendIntoInternalObjects[T config.InternalObject](objs []config.InternalObject, a ...T) []config.InternalObject {
@@ -542,21 +552,58 @@ func (c *Cluster) IsDryRun() bool {
 	return c.dryRun
 }
 
-// InitCRDs initializes the CRDs.
-func (c *Cluster) InitCRDs(ctx context.Context) error {
+// PreInit pre inits the cluster.
+func (c *Cluster) PreInit(ctx context.Context) error {
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 	conf := &config.Options
 
-	crds := conf.EnableCRDs
-	if len(crds) == 0 {
+	for _, name := range conf.EnableCRDs {
+		crd, ok := crdDefines[name]
+		if !ok {
+			return fmt.Errorf("no crd define found for %s", name)
+		}
+		c.crds = append(c.crds, crd)
+	}
+
+	meta := metav1.TypeMeta{}
+	for _, raw := range c.unsupported {
+		err := yaml.Unmarshal(raw, &meta)
+		if err != nil {
+			return err
+		}
+		if meta.Kind == "CustomResourceDefinition" {
+			c.crds = append(c.crds, raw)
+		} else {
+			c.crs = append(c.crs, raw)
+		}
+	}
+
+	return nil
+}
+
+// AddCRDs adds the CRDs.
+func (c *Cluster) AddCRDs(ctx context.Context, crds ...[]byte) error {
+	c.crds = append(c.crds, crds...)
+	return nil
+}
+
+// InitCRDs initializes the CRDs.
+func (c *Cluster) InitCRDs(ctx context.Context) error {
+	if c.IsDryRun() {
+		dryrun.PrintMessage("# Init CRDs")
 		return nil
 	}
 
-	if c.IsDryRun() {
-		dryrun.PrintMessage("# Init CRDs %s", strings.Join(crds, ","))
+	buf := bytes.NewBuffer(nil)
+	for _, raw := range c.crds {
+		_, _ = buf.WriteString("\n---\n")
+		_, _ = buf.Write(raw)
+	}
+
+	if buf.Len() == 0 {
 		return nil
 	}
 
@@ -564,19 +611,6 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	buf := bytes.NewBuffer(nil)
-	for _, name := range crds {
-		c, ok := crdDefines[name]
-		if !ok {
-			return fmt.Errorf("no crd define found for %s", name)
-		}
-		_, _ = buf.WriteString("\n---\n")
-		_, _ = buf.Write(c)
-	}
-
-	logger := log.FromContext(ctx)
-	ctx = log.NewContext(ctx, logger.With("crds", strings.Join(crds, ",")))
 
 	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
 		Clientset: clientset,
@@ -587,12 +621,46 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 	}
 
 	decoder := yaml.NewDecoder(buf)
-	err = loader.Load(ctx, decoder)
+	return loader.Load(ctx, decoder)
+}
+
+// AddCRs adds the CRs.
+func (c *Cluster) AddCRs(ctx context.Context, crs ...[]byte) error {
+	c.crs = append(c.crs, crs...)
+	return nil
+}
+
+// InitCRs initializes the CRs.
+func (c *Cluster) InitCRs(ctx context.Context) error {
+	if c.IsDryRun() {
+		return nil
+	}
+
+	buf := bytes.NewBuffer(nil)
+	for _, raw := range c.crs {
+		_, _ = buf.WriteString("\n---\n")
+		_, _ = buf.Write(raw)
+	}
+
+	if buf.Len() == 0 {
+		return nil
+	}
+
+	clientset, err := c.GetClientset(ctx)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
+		Clientset: clientset,
+		NoFilers:  true,
+	})
+	if err != nil {
+		return err
+	}
+
+	decoder := yaml.NewDecoder(buf)
+	return loader.Load(ctx, decoder)
 }
 
 var crdDefines = map[string][]byte{
