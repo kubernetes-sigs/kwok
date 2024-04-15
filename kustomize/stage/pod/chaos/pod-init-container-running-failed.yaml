@@ -19,7 +19,7 @@ spec:
       values:
       - 'Pending'
   delay:
-    durationMilliseconds: 1000 
+    durationMilliseconds: 1000
     durationFrom:
       expressionFrom: '.metadata.annotations["pod-init-container-running-failed.stage.kwok.x-k8s.io/delay"]'
     jitterDurationMilliseconds: 1000
@@ -36,7 +36,6 @@ spec:
       {{ $failureReason := or ( index .metadata.annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/reason" ) $defaultReason }}
       {{ $failureMessage := or ( index .metadata.annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/message" ) $defaultMessage }}
       {{ $failureExitCode := or ( index .metadata.annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/exit-code" ) $defaultExitCode }}
-      
       conditions:
       - lastProbeTime: null
         lastTransitionTime: {{ $now | Quote }}
@@ -51,7 +50,6 @@ spec:
         status: "False"
         reason: ""
         type: ContainersReady
-      
       initContainerStatuses:
       {{ range $index, $item := .spec.initContainers }}
       {{ if or ( not $initContainerName ) ( eq $item.name $initContainerName ) }}
@@ -80,7 +78,6 @@ spec:
             startedAt: {{ $now | Quote }}
       {{ end }}
       {{ end }}
-      
       containerStatuses:
       {{ range $index, $item := .spec.containers }}
       - image: {{ $item.image | Quote }}
@@ -92,7 +89,6 @@ spec:
           waiting:
             reason: PodInitializing
       {{ end }}
-      
       hostIP: {{ NodeIPWith .spec.nodeName | Quote }}
       podIP: {{ PodIPWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) | Quote }}
       phase: Failed
