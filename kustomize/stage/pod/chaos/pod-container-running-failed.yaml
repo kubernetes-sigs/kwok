@@ -1,0 +1,81 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pod-container-running-failed
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  selector:
+    matchExpressions:
+    - key: '.metadata.labels["pod-container-running-failed.stage.kwok.x-k8s.io"]'
+      operator: 'In'
+      values:
+      - 'true'
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - 'Running'
+  delay:
+    durationMilliseconds: 1000
+    durationFrom:
+      expressionFrom: '.metadata.annotations["pod-container-running-failed.stage.kwok.x-k8s.io/delay"]'
+    jitterDurationMilliseconds: 1000
+    jitterDurationFrom:
+      expressionFrom: '.metadata.annotations["pod-container-running-failed.stage.kwok.x-k8s.io/jitter-delay"]'
+  weight: 10000
+  next:
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $defaultReason := "containerFailed" }}
+      {{ $defaultMessage := "container failed" }}
+      {{ $defaultExitCode := 1 }}
+      {{ $containerName := or ( index .metadata.annotations "pod-container-running-failed.stage.kwok.x-k8s.io/container-name" ) "" }}
+      {{ $failureReason := or ( index .metadata.annotations "pod-container-running-failed.stage.kwok.x-k8s.io/reason" ) $defaultReason }}
+      {{ $failureMessage := or ( index .metadata.annotations "pod-container-running-failed.stage.kwok.x-k8s.io/message" ) $defaultMessage }}
+      {{ $failureExitCode := or ( index .metadata.annotations "pod-container-running-failed.stage.kwok.x-k8s.io/exit-code" ) $defaultExitCode }}
+      conditions:
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        status: "True"
+        reason: ""
+        type: Initialized
+      - lastTransitionTime: {{ $now | Quote }}
+        status: "False"
+        reason: ""
+        type: Ready
+      - lastTransitionTime: {{ $now | Quote }}
+        status: "False"
+        reason: ""
+        type: ContainersReady
+      containerStatuses:
+      {{ range $index, $item := .spec.containers }}
+      {{ if or ( not $containerName ) ( eq $item.name $containerName ) }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        ready: false
+        restartCount: 0
+        started: false
+        state:
+          terminated:
+            exitCode: {{ $failureExitCode }}
+            finishedAt: {{ $now | Quote }}
+            reason: {{ $failureReason }}
+            message: {{ $failureMessage }}
+            startedAt: {{ $now | Quote }}
+      {{ else }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        ready: true
+        restartCount: 0
+        state:
+          running:
+            startedAt: {{ $now | Quote }}
+      {{ end }}
+      {{ end }}
+      hostIP: {{ NodeIPWith .spec.nodeName | Quote }}
+      podIP: {{ PodIPWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) | Quote }}
+      phase: Failed
+      startTime: {{ $now | Quote }}
