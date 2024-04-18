@@ -53,7 +53,7 @@ func nodeIsReady(name string) func(obj k8s.Object) bool {
 		if ok && cond.Status == corev1.ConditionTrue {
 			return true
 		}
-		return true
+		return false
 	}
 }
 
