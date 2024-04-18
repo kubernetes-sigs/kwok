@@ -17,14 +17,18 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
+	"encoding/json"
 	"math"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
+	"k8s.io/apimachinery/pkg/util/strategicpatch"
 
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -150,4 +154,42 @@ func shouldRetry(err error) bool {
 	}
 	// ignore all other cases
 	return false
+}
+
+// checkNeedPatch checks if the object needs to be patched
+func checkNeedPatch[T any](obj T, patchData []byte) (bool, error) {
+	original, err := json.Marshal(obj)
+	if err != nil {
+		return false, err
+	}
+
+	sum, err := strategicpatch.StrategicMergePatch(original, patchData, obj)
+	if err != nil {
+		return false, err
+	}
+
+	var tmp T
+	err = json.Unmarshal(sum, &tmp)
+	if err != nil {
+		return false, err
+	}
+
+	dist, err := json.Marshal(tmp)
+	if err != nil {
+		return false, err
+	}
+
+	if bytes.Equal(original, dist) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// wrapPatchData wraps the patch data with the parent key
+func wrapPatchData(parent string, patchData []byte) []byte {
+	if parent == "" {
+		return patchData
+	}
+	return []byte("{" + strconv.Quote(parent) + ":" + string(patchData) + "}")
 }

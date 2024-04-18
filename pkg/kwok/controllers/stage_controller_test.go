@@ -69,7 +69,13 @@ func TestStageController(t *testing.T) {
 					},
 				},
 				Next: internalversion.StageNext{
-					StatusTemplate: `phase: Available`,
+					Patches: []internalversion.StagePatch{
+						{
+							Template:    `phase: Available`,
+							Subresource: "status",
+							Root:        "status",
+						},
+					},
 				},
 			},
 		},

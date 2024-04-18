@@ -4994,6 +4994,8 @@ ImpersonationConfig
 <p>
 <em>Appears on: </em>
 <a href="#kwok.x-k8s.io/v1alpha1.StageNext">StageNext</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.StagePatch">StagePatch</a>
 </p>
 <p>
 <p>ImpersonationConfig describes the configuration for impersonating clients</p>
@@ -6131,13 +6133,27 @@ bool
 </tr>
 <tr>
 <td>
+<code>patches</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StagePatch">
+[]StagePatch
+</a>
+</em>
+</td>
+<td>
+<p>Patches means that the resource will be patched.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>statusTemplate</code>
 <em>
 string
 </em>
 </td>
 <td>
-<p>StatusTemplate indicates the template for modifying the status of the resource in the next.</p>
+<p>StatusTemplate indicates the template for modifying the status of the resource in the next.
+Deprecated: Use Patches instead.</p>
 </td>
 </tr>
 <tr>
@@ -6149,7 +6165,8 @@ string
 </td>
 <td>
 <p>StatusSubresource indicates the name of the subresource that will be patched. The support for
-this field is not available in Pod and Node resources.</p>
+this field is not available in Pod and Node resources.
+Deprecated: Use Patches instead.</p>
 </td>
 </tr>
 <tr>
@@ -6163,6 +6180,77 @@ ImpersonationConfig
 </td>
 <td>
 <p>StatusPatchAs indicates the impersonating configuration for client when patching status.
+In most cases this will be empty, in which case the default client service account will be used.
+When this is not empty, a corresponding rbac change is required to grant <code>impersonate</code> privilege.
+The support for this field is not available in Pod and Node resources.
+Deprecated: Use Patches instead.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.StagePatch">
+StagePatch
+<a href="#kwok.x-k8s.io%2fv1alpha1.StagePatch"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageNext">StageNext</a>
+</p>
+<p>
+<p>StagePatch describes the patch for the resource.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>subresource</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Subresource indicates the name of the subresource that will be patched.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>root</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Root indicates the root of the template calculated by the patch.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Template indicates the template for modifying the resource in the next.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>impersonation</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ImpersonationConfig">
+ImpersonationConfig
+</a>
+</em>
+</td>
+<td>
+<p>Impersonation indicates the impersonating configuration for client when patching status.
 In most cases this will be empty, in which case the default client service account will be used.
 When this is not empty, a corresponding rbac change is required to grant <code>impersonate</code> privilege.
 The support for this field is not available in Pod and Node resources.</p>
