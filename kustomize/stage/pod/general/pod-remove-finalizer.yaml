@@ -17,7 +17,11 @@ spec:
   weight: 1
   delay:
     durationMilliseconds: 1000
+    durationFrom:
+      expressionFrom: '.metadata.annotations["pod-remove-finalizer.stage.kwok.x-k8s.io/delay"]'
     jitterDurationMilliseconds: 5000
+    jitterDurationFrom:
+      expressionFrom: '.metadata.annotations["pod-remove-finalizer.stage.kwok.x-k8s.io/jitter-delay"]'
   next:
     finalizers:
       remove:
