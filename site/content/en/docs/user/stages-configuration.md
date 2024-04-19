@@ -255,7 +255,7 @@ This example shows how to configure the simplest and fastest stages of Pod resou
 [Default Node Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/node/fast
 [Default Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/fast
 [General Pod Stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/general
-[Stage API]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Stage
+[Stage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Stage
 [Resource Lifecycle Simulation Controller]: {{< relref "/docs/design/architecture" >}}
 [How Delay is Calculated]: {{< relref "/docs/user/stages-configuration#how-delay-is-calculated" >}}
 [go template in `kwok`]: {{< relref "/docs/user/go-template" >}}

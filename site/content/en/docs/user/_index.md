@@ -29,15 +29,17 @@ Here are some tips to help you get started.
 
 ## Configuration
 
-If any special concerns, you can configure KWOK with options and stages.
+If any special concerns, you can configure KWOK with the following options:
 
-- [Options]
+- [Configuration]
 - [Stages]
-- [PortForward]
-- [Exec]
-- [Logs]
-- [Attach]
-- [ResourceUsage]
+- Pod Interaction
+  - [PortForward]
+  - [Exec]
+  - [Logs]
+  - [Attach]
+- [Metrics]
+  - [ResourceUsage]
 
 I hope this helps you get started with KWOK! Good luck and have fun!
 
@@ -48,10 +50,11 @@ I hope this helps you get started with KWOK! Good luck and have fun!
 [`kwokctl` Manages Clusters]: {{< relref "/docs/user/kwokctl-manage-cluster" >}}
 [`kwokctl` Snapshots Cluster]: {{< relref "/docs/user/kwokctl-snapshot" >}}
 [All in One Image]: {{< relref "/docs/user/all-in-one-image" >}}
-[Options]: {{< relref "/docs/user/configuration" >}}
+[Configuration]: {{< relref "/docs/user/configuration" >}}
 [Stages]: {{< relref "/docs/user/stages-configuration" >}}
 [PortForward]: {{< relref "/docs/user/port-forward-configuration" >}}
 [Exec]: {{< relref "/docs/user/exec-configuration" >}}
 [Logs]: {{< relref "/docs/user/logs-configuration" >}}
 [Attach]: {{< relref "/docs/user/attach-configuration" >}}
+[Metrics]: {{< relref "/docs/user/metrics-configuration" >}}
 [ResourceUsage]: {{< relref "/docs/user/resource-usage-configuration" >}}
