@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	kindv1alpha4 "sigs.k8s.io/kwok/pkg/kwokctl/runtime/kind/config/kind/v1alpha4"
-	kubeadmv1beta4 "sigs.k8s.io/kwok/pkg/kwokctl/runtime/kind/config/kubeadm/v1beta3"
+	kubeadmv1beta3 "sigs.k8s.io/kwok/pkg/kwokctl/runtime/kind/config/kubeadm/v1beta3"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -454,14 +454,14 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 	return &c, nil
 }
 
-func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta4.ClusterConfiguration, error) {
-	c := kubeadmv1beta4.ClusterConfiguration{
+func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta3.ClusterConfiguration, error) {
+	c := kubeadmv1beta3.ClusterConfiguration{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ClusterConfiguration",
 			APIVersion: "kubeadm.k8s.io/v1beta3",
 		},
-		Etcd: kubeadmv1beta4.Etcd{
-			Local: &kubeadmv1beta4.LocalEtcd{
+		Etcd: kubeadmv1beta3.Etcd{
+			Local: &kubeadmv1beta3.LocalEtcd{
 				DataDir: "/var/lib/etcd",
 			},
 		},
@@ -486,9 +486,9 @@ func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta4.ClusterCon
 	}
 
 	if len(conf.ApiserverExtraVolumes) > 0 {
-		c.APIServer.ExtraVolumes = []kubeadmv1beta4.HostPathMount{}
+		c.APIServer.ExtraVolumes = []kubeadmv1beta3.HostPathMount{}
 		for _, vol := range conf.ApiserverExtraVolumes {
-			c.APIServer.ExtraVolumes = append(c.APIServer.ExtraVolumes, kubeadmv1beta4.HostPathMount{
+			c.APIServer.ExtraVolumes = append(c.APIServer.ExtraVolumes, kubeadmv1beta3.HostPathMount{
 				Name:      vol.Name,
 				HostPath:  fmt.Sprintf("/var/components/apiserver%s", vol.MountPath),
 				MountPath: vol.MountPath,
@@ -506,9 +506,9 @@ func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta4.ClusterCon
 	}
 
 	if len(conf.ControllerManagerExtraVolumes) > 0 {
-		c.ControllerManager.ExtraVolumes = []kubeadmv1beta4.HostPathMount{}
+		c.ControllerManager.ExtraVolumes = []kubeadmv1beta3.HostPathMount{}
 		for _, vol := range conf.ControllerManagerExtraVolumes {
-			c.ControllerManager.ExtraVolumes = append(c.ControllerManager.ExtraVolumes, kubeadmv1beta4.HostPathMount{
+			c.ControllerManager.ExtraVolumes = append(c.ControllerManager.ExtraVolumes, kubeadmv1beta3.HostPathMount{
 				Name:      vol.Name,
 				HostPath:  fmt.Sprintf("/var/components/controller-manager%s", vol.MountPath),
 				MountPath: vol.MountPath,
@@ -526,9 +526,9 @@ func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta4.ClusterCon
 	}
 
 	if len(conf.SchedulerExtraVolumes) > 0 {
-		c.Scheduler.ExtraVolumes = []kubeadmv1beta4.HostPathMount{}
+		c.Scheduler.ExtraVolumes = []kubeadmv1beta3.HostPathMount{}
 		for _, vol := range conf.SchedulerExtraVolumes {
-			c.Scheduler.ExtraVolumes = append(c.Scheduler.ExtraVolumes, kubeadmv1beta4.HostPathMount{
+			c.Scheduler.ExtraVolumes = append(c.Scheduler.ExtraVolumes, kubeadmv1beta3.HostPathMount{
 				Name:      vol.Name,
 				HostPath:  fmt.Sprintf("/var/components/scheduler%s", vol.MountPath),
 				MountPath: vol.MountPath,
