@@ -116,18 +116,42 @@ type StageNext struct {
 	Finalizers *StageFinalizers `json:"finalizers,omitempty"`
 	// Delete means that the resource will be deleted if true.
 	Delete bool `json:"delete,omitempty"`
+	// Patches means that the resource will be patched.
+	Patches []StagePatch `json:"patches,omitempty"`
+
 	// StatusTemplate indicates the template for modifying the status of the resource in the next.
+	// Deprecated: Use Patches instead.
+	//+k8s:conversion-gen=false
 	StatusTemplate string `json:"statusTemplate,omitempty"`
 	// StatusSubresource indicates the name of the subresource that will be patched. The support for
 	// this field is not available in Pod and Node resources.
 	// +default="status"
 	// +kubebuilder:default=status
+	// Deprecated: Use Patches instead.
+	//+k8s:conversion-gen=false
 	StatusSubresource *string `json:"statusSubresource,omitempty"`
 	// StatusPatchAs indicates the impersonating configuration for client when patching status.
 	// In most cases this will be empty, in which case the default client service account will be used.
 	// When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
 	// The support for this field is not available in Pod and Node resources.
+	// Deprecated: Use Patches instead.
+	//+k8s:conversion-gen=false
 	StatusPatchAs *ImpersonationConfig `json:"statusPatchAs,omitempty"`
+}
+
+// StagePatch describes the patch for the resource.
+type StagePatch struct {
+	// Subresource indicates the name of the subresource that will be patched.
+	Subresource string `json:"subresource,omitempty"`
+	// Root indicates the root of the template calculated by the patch.
+	Root string `json:"root,omitempty"`
+	// Template indicates the template for modifying the resource in the next.
+	Template string `json:"template,omitempty"`
+	// Impersonation indicates the impersonating configuration for client when patching status.
+	// In most cases this will be empty, in which case the default client service account will be used.
+	// When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
+	// The support for this field is not available in Pod and Node resources.
+	Impersonation *ImpersonationConfig `json:"impersonation,omitempty"`
 }
 
 // ImpersonationConfig describes the configuration for impersonating clients

@@ -135,12 +135,46 @@ spec:
                           type: object
                         type: array
                     type: object
+                  patches:
+                    description: Patches means that the resource will be patched.
+                    items:
+                      description: StagePatch describes the patch for the resource.
+                      properties:
+                        impersonation:
+                          description: |-
+                            Impersonation indicates the impersonating configuration for client when patching status.
+                            In most cases this will be empty, in which case the default client service account will be used.
+                            When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
+                            The support for this field is not available in Pod and Node resources.
+                          properties:
+                            username:
+                              description: Username the target username for the client
+                                to impersonate
+                              type: string
+                          required:
+                          - username
+                          type: object
+                        root:
+                          description: Root indicates the root of the template calculated
+                            by the patch.
+                          type: string
+                        subresource:
+                          description: Subresource indicates the name of the subresource
+                            that will be patched.
+                          type: string
+                        template:
+                          description: Template indicates the template for modifying
+                            the resource in the next.
+                          type: string
+                      type: object
+                    type: array
                   statusPatchAs:
                     description: |-
                       StatusPatchAs indicates the impersonating configuration for client when patching status.
                       In most cases this will be empty, in which case the default client service account will be used.
                       When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
                       The support for this field is not available in Pod and Node resources.
+                      Deprecated: Use Patches instead.
                     properties:
                       username:
                         description: Username the target username for the client to
@@ -154,10 +188,12 @@ spec:
                     description: |-
                       StatusSubresource indicates the name of the subresource that will be patched. The support for
                       this field is not available in Pod and Node resources.
+                      Deprecated: Use Patches instead.
                     type: string
                   statusTemplate:
-                    description: StatusTemplate indicates the template for modifying
-                      the status of the resource in the next.
+                    description: |-
+                      StatusTemplate indicates the template for modifying the status of the resource in the next.
+                      Deprecated: Use Patches instead.
                     type: string
                 type: object
               resourceRef:

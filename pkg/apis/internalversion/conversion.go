@@ -17,6 +17,8 @@ limitations under the License.
 package internalversion
 
 import (
+	"k8s.io/apimachinery/pkg/conversion"
+
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/utils/path"
@@ -387,4 +389,42 @@ func ConvertToInternalMetric(in *v1alpha1.Metric) (*Metric, error) {
 		return nil, err
 	}
 	return &out, nil
+}
+
+// Convert_v1alpha1_StageNext_To_internalversion_StageNext converts a v1alpha1.StageNext to an internal version.
+func Convert_v1alpha1_StageNext_To_internalversion_StageNext(in *v1alpha1.StageNext, out *StageNext, s conversion.Scope) error {
+	err := autoConvert_v1alpha1_StageNext_To_internalversion_StageNext(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.StatusTemplate != "" {
+		template := in.StatusTemplate
+
+		subresource := "status"
+		if in.StatusSubresource != nil {
+			subresource = *in.StatusSubresource
+		}
+
+		var impersonation *ImpersonationConfig
+		if in.StatusPatchAs != nil {
+			impersonation = &ImpersonationConfig{
+				Username: in.StatusPatchAs.Username,
+			}
+		}
+		patch := StagePatch{
+			Subresource:   subresource,
+			Root:          "status",
+			Template:      template,
+			Impersonation: impersonation,
+		}
+
+		out.Patches = append([]StagePatch{patch}, out.Patches...)
+	}
+	return nil
+}
+
+// Convert_internalversion_StagePatch_To_v1alpha1_StagePatch converts an internal version StagePatch to a v1alpha1.StagePatch.
+func Convert_internalversion_StagePatch_To_v1alpha1_StagePatch(in *StagePatch, out *v1alpha1.StagePatch, s conversion.Scope) error {
+	return autoConvert_internalversion_StagePatch_To_v1alpha1_StagePatch(in, out, s)
 }
