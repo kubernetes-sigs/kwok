@@ -7,44 +7,45 @@ docker pull docker.io/kindest/node:v1.29.0
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
-kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+kubeadmConfigPatches:
+- |
+  apiServer:
+    extraArgs:
+      enable-priority-and-fairness: "false"
+      max-mutating-requests-inflight: "0"
+      max-requests-inflight: "0"
+  apiVersion: kubeadm.k8s.io/v1beta3
+  controllerManager:
+    extraArgs:
+      kube-api-burst: "10000"
+      kube-api-qps: "5000"
+  dns: {}
+  etcd:
+    local:
+      dataDir: /var/lib/etcd
+  kind: ClusterConfiguration
+  networking: {}
+  scheduler:
+    extraArgs:
+      kube-api-burst: "10000"
+      kube-api-qps: "5000"
 networking:
   apiServerPort: 32766
 nodes:
-- role: control-plane
+- extraMounts:
+  - containerPath: /etc/kwok/
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+  - containerPath: /etc/kubernetes/manifests
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
+  - containerPath: /etc/kubernetes/pki
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
   extraPortMappings:
   - containerPort: 2379
     hostPort: 32765
     protocol: TCP
-  kubeadmConfigPatches:
-  - |
-    kind: ClusterConfiguration
-    apiServer:
-      extraArgs:
-        "max-requests-inflight": "0"
-        "max-mutating-requests-inflight": "0"
-        "enable-priority-and-fairness": "false"
-  - |
-    kind: ClusterConfiguration
-    controllerManager:
-      extraArgs:
-        "kube-api-qps": "5000"
-        "kube-api-burst": "10000"
-  - |
-    kind: ClusterConfiguration
-    scheduler:
-      extraArgs:
-        "kube-api-qps": "5000"
-        "kube-api-burst": "10000"
-  # mount the local file on the control plane
-  extraMounts:
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
-    containerPath: /etc/kwok/
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
-    containerPath: /etc/kubernetes/manifests
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
-    containerPath: /etc/kubernetes/pki
+  role: control-plane
 EOF
 docker pull localhost/kwok:test
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml

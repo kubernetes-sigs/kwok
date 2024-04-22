@@ -7,12 +7,72 @@ docker pull docker.io/kindest/node:v1.29.0
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
-kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+kubeadmConfigPatches:
+- |
+  apiServer:
+    extraArgs:
+      enable-priority-and-fairness: "false"
+      max-mutating-requests-inflight: "0"
+      max-requests-inflight: "0"
+      v: "5"
+    extraVolumes:
+    - hostPath: /var/components/apiserver/extras/tmp
+      mountPath: /extras/tmp
+      name: tmp-apiserver
+      pathType: DirectoryOrCreate
+  apiVersion: kubeadm.k8s.io/v1beta3
+  controllerManager:
+    extraArgs:
+      kube-api-burst: "10000"
+      kube-api-qps: "5000"
+      v: "5"
+    extraVolumes:
+    - hostPath: /var/components/controller-manager/extras/tmp
+      mountPath: /extras/tmp
+      name: tmp-controller-manager
+      pathType: DirectoryOrCreate
+  dns: {}
+  etcd:
+    local:
+      dataDir: /var/lib/etcd
+      extraArgs:
+        log-level: debug
+  kind: ClusterConfiguration
+  networking: {}
+  scheduler:
+    extraArgs:
+      kube-api-burst: "10000"
+      kube-api-qps: "5000"
+      v: "5"
+    extraVolumes:
+    - hostPath: /var/components/scheduler/extras/tmp
+      mountPath: /extras/tmp
+      name: tmp-scheduler
+      pathType: DirectoryOrCreate
 networking:
   apiServerPort: 32766
 nodes:
-- role: control-plane
+- extraMounts:
+  - containerPath: /etc/kwok/
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+  - containerPath: /etc/kubernetes/manifests
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
+  - containerPath: /etc/kubernetes/pki
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+  - containerPath: /var/components/apiserver/extras/tmp
+    hostPath: <ROOT_DIR>/extras/apiserver
+  - containerPath: /var/components/controller-manager/extras/tmp
+    hostPath: <ROOT_DIR>/extras/controller-manager
+  - containerPath: /var/components/scheduler/extras/tmp
+    hostPath: <ROOT_DIR>/extras/scheduler
+  - containerPath: /var/components/controller/extras/tmp
+    hostPath: <ROOT_DIR>/extras/controller
+  - containerPath: /var/components/prometheus/extras/tmp
+    hostPath: <ROOT_DIR>/extras/prometheus
+  - containerPath: /var/components/prometheus/etc/prometheus/prometheus.yaml
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
   extraPortMappings:
   - containerPort: 9090
     hostPort: 9090
@@ -20,88 +80,7 @@ nodes:
   - containerPort: 2379
     hostPort: 32765
     protocol: TCP
-  kubeadmConfigPatches:
-  - |
-    kind: ClusterConfiguration
-    etcd:
-      local:
-        extraArgs:
-          "log-level": "debug"
-        extraVolumes:
-        - name: tmp-etcd
-          hostPath: /var/components/etcd/extras/tmp
-          mountPath: /extras/tmp
-          readOnly: false
-          pathType: DirectoryOrCreate
-  - |
-    kind: ClusterConfiguration
-    apiServer:
-      extraArgs:
-        "v": "5"
-        "max-requests-inflight": "0"
-        "max-mutating-requests-inflight": "0"
-        "enable-priority-and-fairness": "false"
-      extraVolumes:
-      - name: tmp-apiserver
-        hostPath: /var/components/apiserver/extras/tmp
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-  - |
-    kind: ClusterConfiguration
-    controllerManager:
-      extraArgs:
-        "v": "5"
-        "kube-api-qps": "5000"
-        "kube-api-burst": "10000"
-      extraVolumes:
-      - name: tmp-controller-manager
-        hostPath: /var/components/controller-manager/extras/tmp
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-  - |
-    kind: ClusterConfiguration
-    scheduler:
-      extraArgs:
-        "v": "5"
-        "kube-api-qps": "5000"
-        "kube-api-burst": "10000"
-      extraVolumes:
-      - name: tmp-scheduler
-        hostPath: /var/components/scheduler/extras/tmp
-        mountPath: /extras/tmp
-        readOnly: false
-        pathType: DirectoryOrCreate
-  # mount the local file on the control plane
-  extraMounts:
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
-    containerPath: /etc/kwok/
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
-    containerPath: /etc/kubernetes/manifests
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
-    containerPath: /etc/kubernetes/pki
-  - hostPath: <ROOT_DIR>/extras/etcd
-    containerPath: /var/components/etcd/extras/tmp
-    readOnly: false
-  - hostPath: <ROOT_DIR>/extras/apiserver
-    containerPath: /var/components/apiserver/extras/tmp
-    readOnly: false
-  - hostPath: <ROOT_DIR>/extras/controller-manager
-    containerPath: /var/components/controller-manager/extras/tmp
-    readOnly: false
-  - hostPath: <ROOT_DIR>/extras/scheduler
-    containerPath: /var/components/scheduler/extras/tmp
-    readOnly: false
-  - hostPath: <ROOT_DIR>/extras/controller
-    containerPath: /var/components/controller/extras/tmp
-    readOnly: false
-  - hostPath: <ROOT_DIR>/extras/prometheus
-    containerPath: /var/components/prometheus/extras/tmp
-    readOnly: false
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
-    containerPath: /var/components/prometheus/etc/prometheus/prometheus.yaml
-    readOnly: false
+  role: control-plane
 EOF
 docker pull localhost/kwok:test
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml

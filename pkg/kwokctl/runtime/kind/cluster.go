@@ -301,10 +301,10 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	var featureGates []string
 	var runtimeConfig []string
 	if conf.KubeFeatureGates != "" {
-		featureGates = strings.Split(strings.ReplaceAll(conf.KubeFeatureGates, "=", ": "), ",")
+		featureGates = strings.Split(conf.KubeFeatureGates, ",")
 	}
 	if conf.KubeRuntimeConfig != "" {
-		runtimeConfig = strings.Split(strings.ReplaceAll(conf.KubeRuntimeConfig, "=", ": "), ",")
+		runtimeConfig = strings.Split(conf.KubeRuntimeConfig, ",")
 	}
 
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)

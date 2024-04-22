@@ -17,29 +17,26 @@ limitations under the License.
 package kind
 
 import (
-	"bytes"
 	"fmt"
-	"text/template"
+	"strconv"
+	"strings"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	kindv1alpha4 "sigs.k8s.io/kwok/pkg/kwokctl/runtime/kind/config/kind/v1alpha4"
+	kubeadmv1beta3 "sigs.k8s.io/kwok/pkg/kwokctl/runtime/kind/config/kubeadm/v1beta3"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/version"
-
-	_ "embed"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
-
-//go:embed kind.yaml.tpl
-var kindYamlTpl string
-
-var kindYamlTemplate = template.Must(template.New("kind_config").Parse(kindYamlTpl))
 
 // BuildKind builds the kind yaml content.
 func BuildKind(conf BuildKindConfig) (string, error) {
-	buf := bytes.NewBuffer(nil)
-
 	var err error
 	conf, err = expendExtrasForBuildKind(conf)
 	if err != nil {
@@ -51,11 +48,26 @@ func BuildKind(conf BuildKindConfig) (string, error) {
 		return "", fmt.Errorf("failed to expand host volume paths: %w", err)
 	}
 
-	err = kindYamlTemplate.Execute(buf, conf)
+	kubeadmConfig, err := buildKubeadmConfigV1beta3(conf)
 	if err != nil {
-		return "", fmt.Errorf("failed to execute kind yaml template: %w", err)
+		return "", fmt.Errorf("failed to build kubeadm config: %w", err)
 	}
-	return buf.String(), nil
+	kubeadmConfigData, err := yaml.Marshal(kubeadmConfig)
+	if err != nil {
+		return "", err
+	}
+
+	kindConfig, err := buildKindConfigV1alpha4(conf)
+	if err != nil {
+		return "", fmt.Errorf("failed to build kind config: %w", err)
+	}
+	kindConfig.KubeadmConfigPatches = []string{string(kubeadmConfigData)}
+	kindConfigData, err := yaml.Marshal(kindConfig)
+	if err != nil {
+		return "", err
+	}
+
+	return string(kindConfigData), nil
 }
 
 func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
@@ -133,7 +145,7 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		if conf.KubeVersion.LT(version.NewVersion(1, 22, 0)) {
 			return conf, fmt.Errorf("the kube-apiserver version is less than 1.22.0, so the --jaeger-port cannot be enabled")
 		} else if conf.KubeVersion.LT(version.NewVersion(1, 27, 0)) {
-			conf.FeatureGates = append(conf.FeatureGates, "APIServerTracing: true")
+			conf.FeatureGates = append(conf.FeatureGates, "APIServerTracing=true")
 		}
 	}
 
@@ -281,4 +293,241 @@ type BuildKindConfig struct {
 	BindAddress      string
 	DisableQPSLimits bool
 	KubeVersion      version.Version
+}
+
+func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error) {
+	var extraPortMappings []kindv1alpha4.PortMapping
+
+	if conf.DashboardPort != 0 {
+		extraPortMappings = append(extraPortMappings, kindv1alpha4.PortMapping{
+			ContainerPort: 8080,
+			HostPort:      int32(conf.DashboardPort),
+			Protocol:      kindv1alpha4.PortMappingProtocolTCP,
+		})
+	}
+
+	if conf.PrometheusPort != 0 {
+		extraPortMappings = append(extraPortMappings, kindv1alpha4.PortMapping{
+			ContainerPort: 9090,
+			HostPort:      int32(conf.PrometheusPort),
+			Protocol:      kindv1alpha4.PortMappingProtocolTCP,
+		})
+	}
+
+	if conf.JaegerPort != 0 {
+		extraPortMappings = append(extraPortMappings, kindv1alpha4.PortMapping{
+			ContainerPort: 16686,
+			HostPort:      int32(conf.JaegerPort),
+			Protocol:      kindv1alpha4.PortMappingProtocolTCP,
+		})
+	}
+
+	if conf.KwokControllerPort != 0 {
+		extraPortMappings = append(extraPortMappings, kindv1alpha4.PortMapping{
+			ContainerPort: 10247,
+			HostPort:      int32(conf.KwokControllerPort),
+			Protocol:      kindv1alpha4.PortMappingProtocolTCP,
+		})
+	}
+
+	if conf.EtcdPort != 0 {
+		extraPortMappings = append(extraPortMappings, kindv1alpha4.PortMapping{
+			ContainerPort: 2379,
+			HostPort:      int32(conf.EtcdPort),
+			Protocol:      kindv1alpha4.PortMappingProtocolTCP,
+		})
+	}
+
+	var extraMounts = []kindv1alpha4.Mount{
+		{
+			HostPath:      conf.Workdir,
+			ContainerPath: "/etc/kwok/",
+		},
+		{
+			HostPath:      fmt.Sprintf("%s/manifests", conf.Workdir),
+			ContainerPath: "/etc/kubernetes/manifests",
+		},
+		{
+			HostPath:      fmt.Sprintf("%s/pki", conf.Workdir),
+			ContainerPath: "/etc/kubernetes/pki",
+		},
+	}
+
+	for _, vol := range conf.EtcdExtraVolumes {
+		extraMounts = append(extraMounts, kindv1alpha4.Mount{
+			HostPath:      vol.HostPath,
+			ContainerPath: fmt.Sprintf("/var/components/etcd%s", vol.MountPath),
+			Readonly:      vol.ReadOnly,
+		})
+	}
+
+	for _, vol := range conf.ApiserverExtraVolumes {
+		extraMounts = append(extraMounts, kindv1alpha4.Mount{
+			HostPath:      vol.HostPath,
+			ContainerPath: fmt.Sprintf("/var/components/apiserver%s", vol.MountPath),
+			Readonly:      vol.ReadOnly,
+		})
+	}
+
+	for _, vol := range conf.ControllerManagerExtraVolumes {
+		extraMounts = append(extraMounts, kindv1alpha4.Mount{
+			HostPath:      vol.HostPath,
+			ContainerPath: fmt.Sprintf("/var/components/controller-manager%s", vol.MountPath),
+			Readonly:      vol.ReadOnly,
+		})
+	}
+
+	for _, vol := range conf.SchedulerExtraVolumes {
+		extraMounts = append(extraMounts, kindv1alpha4.Mount{
+			HostPath:      vol.HostPath,
+			ContainerPath: fmt.Sprintf("/var/components/scheduler%s", vol.MountPath),
+			Readonly:      vol.ReadOnly,
+		})
+	}
+
+	for _, vol := range conf.KwokControllerExtraVolumes {
+		extraMounts = append(extraMounts, kindv1alpha4.Mount{
+			HostPath:      vol.HostPath,
+			ContainerPath: fmt.Sprintf("/var/components/controller%s", vol.MountPath),
+			Readonly:      vol.ReadOnly,
+		})
+	}
+
+	for _, vol := range conf.PrometheusExtraVolumes {
+		extraMounts = append(extraMounts, kindv1alpha4.Mount{
+			HostPath:      vol.HostPath,
+			ContainerPath: fmt.Sprintf("/var/components/prometheus%s", vol.MountPath),
+			Readonly:      vol.ReadOnly,
+		})
+	}
+
+	featureGates := map[string]bool{}
+	for _, fg := range conf.FeatureGates {
+		kv := strings.SplitN(fg, "=", 2)
+		if len(kv) == 2 {
+			featureGates[kv[0]], _ = strconv.ParseBool(kv[1])
+		} else {
+			return nil, fmt.Errorf("invalid feature gate: %s", fg)
+		}
+	}
+
+	runtimeConfig := map[string]string{}
+	for _, rc := range conf.RuntimeConfig {
+		kv := strings.SplitN(rc, "=", 2)
+		if len(kv) == 2 {
+			runtimeConfig[kv[0]] = kv[1]
+		} else {
+			return nil, fmt.Errorf("invalid runtime config: %s", rc)
+		}
+	}
+
+	c := kindv1alpha4.Cluster{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Cluster",
+			APIVersion: "kind.x-k8s.io/v1alpha4",
+		},
+		FeatureGates:  featureGates,
+		RuntimeConfig: runtimeConfig,
+
+		Networking: kindv1alpha4.Networking{
+			APIServerPort: int32(conf.KubeApiserverPort),
+		},
+
+		Nodes: []kindv1alpha4.Node{
+			{
+				Role:              kindv1alpha4.ControlPlaneRole,
+				ExtraPortMappings: extraPortMappings,
+				ExtraMounts:       extraMounts,
+			},
+		},
+	}
+
+	return &c, nil
+}
+
+func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta3.ClusterConfiguration, error) {
+	c := kubeadmv1beta3.ClusterConfiguration{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ClusterConfiguration",
+			APIVersion: "kubeadm.k8s.io/v1beta3",
+		},
+		Etcd: kubeadmv1beta3.Etcd{
+			Local: &kubeadmv1beta3.LocalEtcd{
+				DataDir: "/var/lib/etcd",
+			},
+		},
+	}
+
+	if len(conf.EtcdExtraArgs) > 0 {
+		c.Etcd.Local.ExtraArgs = map[string]string{}
+		for _, arg := range conf.EtcdExtraArgs {
+			c.Etcd.Local.ExtraArgs[arg.Key] = arg.Value
+		}
+	}
+
+	if len(conf.EtcdExtraVolumes) > 0 {
+		return nil, fmt.Errorf("etcd extra volumes are not supported")
+	}
+
+	if len(conf.ApiserverExtraArgs) > 0 {
+		c.APIServer.ExtraArgs = map[string]string{}
+		for _, arg := range conf.ApiserverExtraArgs {
+			c.APIServer.ExtraArgs[arg.Key] = arg.Value
+		}
+	}
+
+	if len(conf.ApiserverExtraVolumes) > 0 {
+		c.APIServer.ExtraVolumes = []kubeadmv1beta3.HostPathMount{}
+		for _, vol := range conf.ApiserverExtraVolumes {
+			c.APIServer.ExtraVolumes = append(c.APIServer.ExtraVolumes, kubeadmv1beta3.HostPathMount{
+				Name:      vol.Name,
+				HostPath:  fmt.Sprintf("/var/components/apiserver%s", vol.MountPath),
+				MountPath: vol.MountPath,
+				ReadOnly:  vol.ReadOnly,
+				PathType:  corev1.HostPathType(vol.PathType),
+			})
+		}
+	}
+
+	if len(conf.ControllerManagerExtraArgs) > 0 {
+		c.ControllerManager.ExtraArgs = map[string]string{}
+		for _, arg := range conf.ControllerManagerExtraArgs {
+			c.ControllerManager.ExtraArgs[arg.Key] = arg.Value
+		}
+	}
+
+	if len(conf.ControllerManagerExtraVolumes) > 0 {
+		c.ControllerManager.ExtraVolumes = []kubeadmv1beta3.HostPathMount{}
+		for _, vol := range conf.ControllerManagerExtraVolumes {
+			c.ControllerManager.ExtraVolumes = append(c.ControllerManager.ExtraVolumes, kubeadmv1beta3.HostPathMount{
+				Name:      vol.Name,
+				HostPath:  fmt.Sprintf("/var/components/controller-manager%s", vol.MountPath),
+				MountPath: vol.MountPath,
+				ReadOnly:  vol.ReadOnly,
+				PathType:  corev1.HostPathType(vol.PathType),
+			})
+		}
+	}
+
+	if len(conf.SchedulerExtraArgs) > 0 {
+		c.Scheduler.ExtraArgs = map[string]string{}
+		for _, arg := range conf.SchedulerExtraArgs {
+			c.Scheduler.ExtraArgs[arg.Key] = arg.Value
+		}
+	}
+
+	if len(conf.SchedulerExtraVolumes) > 0 {
+		c.Scheduler.ExtraVolumes = []kubeadmv1beta3.HostPathMount{}
+		for _, vol := range conf.SchedulerExtraVolumes {
+			c.Scheduler.ExtraVolumes = append(c.Scheduler.ExtraVolumes, kubeadmv1beta3.HostPathMount{
+				Name:      vol.Name,
+				HostPath:  fmt.Sprintf("/var/components/scheduler%s", vol.MountPath),
+				MountPath: vol.MountPath,
+				ReadOnly:  vol.ReadOnly,
+				PathType:  corev1.HostPathType(vol.PathType),
+			})
+		}
+	}
+
+	return &c, nil
 }
