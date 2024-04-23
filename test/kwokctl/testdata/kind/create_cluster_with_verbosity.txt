@@ -21,12 +21,83 @@ endpoint: 0.0.0.0:4317
 samplingRatePerMillion: 1000000
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
-kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+kubeadmConfigPatches:
+- |
+  apiServer:
+    extraArgs:
+      audit-log-path: /var/log/kubernetes/audit.log
+      audit-policy-file: /etc/kubernetes/audit/audit.yaml
+      enable-priority-and-fairness: "false"
+      max-mutating-requests-inflight: "0"
+      max-requests-inflight: "0"
+      tracing-config-file: /etc/kubernetes/apiserver-tracing-config.yaml
+      v: "4"
+    extraVolumes:
+    - hostPath: /var/components/apiserver/etc/kubernetes/audit/audit.yaml
+      mountPath: /etc/kubernetes/audit/audit.yaml
+      name: audit-policy-file
+      pathType: File
+      readOnly: true
+    - hostPath: /var/components/apiserver/var/log/kubernetes/audit.log
+      mountPath: /var/log/kubernetes/audit.log
+      name: audit-log-path
+      pathType: File
+    - hostPath: /var/components/apiserver/etc/kubernetes/apiserver-tracing-config.yaml
+      mountPath: /etc/kubernetes/apiserver-tracing-config.yaml
+      name: apiserver-tracing-config
+      pathType: File
+      readOnly: true
+  apiVersion: kubeadm.k8s.io/v1beta3
+  controllerManager:
+    extraArgs:
+      kube-api-burst: "10000"
+      kube-api-qps: "5000"
+      v: "4"
+  dns: {}
+  etcd:
+    local:
+      dataDir: /var/lib/etcd
+      extraArgs:
+        log-level: debug
+  kind: ClusterConfiguration
+  networking: {}
+  scheduler:
+    extraArgs:
+      config: /etc/kubernetes/scheduler/scheduler.yaml
+      kube-api-burst: "10000"
+      kube-api-qps: "5000"
+      v: "4"
+    extraVolumes:
+    - hostPath: /var/components/scheduler/etc/kubernetes/scheduler/scheduler.yaml
+      mountPath: /etc/kubernetes/scheduler/scheduler.yaml
+      name: config
+      pathType: File
+      readOnly: true
 networking:
   apiServerPort: 32766
 nodes:
-- role: control-plane
+- extraMounts:
+  - containerPath: /etc/kwok/
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+  - containerPath: /etc/kubernetes/manifests
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
+  - containerPath: /etc/kubernetes/pki
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+  - containerPath: /var/components/apiserver/etc/kubernetes/audit/audit.yaml
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
+    readOnly: true
+  - containerPath: /var/components/apiserver/var/log/kubernetes/audit.log
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
+  - containerPath: /var/components/apiserver/etc/kubernetes/apiserver-tracing-config.yaml
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
+    readOnly: true
+  - containerPath: /var/components/scheduler/etc/kubernetes/scheduler/scheduler.yaml
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+    readOnly: true
+  - containerPath: /var/components/prometheus/etc/prometheus/prometheus.yaml
+    hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
   extraPortMappings:
   - containerPort: 8080
     hostPort: 8000
@@ -40,84 +111,7 @@ nodes:
   - containerPort: 2379
     hostPort: 32765
     protocol: TCP
-  kubeadmConfigPatches:
-  - |
-    kind: ClusterConfiguration
-    etcd:
-      local:
-        extraArgs:
-          "log-level": "debug"
-  - |
-    kind: ClusterConfiguration
-    apiServer:
-      extraArgs:
-        "audit-policy-file": "/etc/kubernetes/audit/audit.yaml"
-        "audit-log-path": "/var/log/kubernetes/audit.log"
-        "tracing-config-file": "/etc/kubernetes/apiserver-tracing-config.yaml"
-        "v": "4"
-        "max-requests-inflight": "0"
-        "max-mutating-requests-inflight": "0"
-        "enable-priority-and-fairness": "false"
-      extraVolumes:
-      - name: audit-policy-file
-        hostPath: /var/components/apiserver/etc/kubernetes/audit/audit.yaml
-        mountPath: /etc/kubernetes/audit/audit.yaml
-        readOnly: true
-        pathType: File
-      - name: audit-log-path
-        hostPath: /var/components/apiserver/var/log/kubernetes/audit.log
-        mountPath: /var/log/kubernetes/audit.log
-        readOnly: false
-        pathType: File
-      - name: apiserver-tracing-config
-        hostPath: /var/components/apiserver/etc/kubernetes/apiserver-tracing-config.yaml
-        mountPath: /etc/kubernetes/apiserver-tracing-config.yaml
-        readOnly: true
-        pathType: File
-  - |
-    kind: ClusterConfiguration
-    controllerManager:
-      extraArgs:
-        "v": "4"
-        "kube-api-qps": "5000"
-        "kube-api-burst": "10000"
-  - |
-    kind: ClusterConfiguration
-    scheduler:
-      extraArgs:
-        "config": "/etc/kubernetes/scheduler/scheduler.yaml"
-        "v": "4"
-        "kube-api-qps": "5000"
-        "kube-api-burst": "10000"
-      extraVolumes:
-      - name: config
-        hostPath: /var/components/scheduler/etc/kubernetes/scheduler/scheduler.yaml
-        mountPath: /etc/kubernetes/scheduler/scheduler.yaml
-        readOnly: true
-        pathType: File
-  # mount the local file on the control plane
-  extraMounts:
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
-    containerPath: /etc/kwok/
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
-    containerPath: /etc/kubernetes/manifests
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
-    containerPath: /etc/kubernetes/pki
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
-    containerPath: /var/components/apiserver/etc/kubernetes/audit/audit.yaml
-    readOnly: true
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
-    containerPath: /var/components/apiserver/var/log/kubernetes/audit.log
-    readOnly: false
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
-    containerPath: /var/components/apiserver/etc/kubernetes/apiserver-tracing-config.yaml
-    readOnly: true
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
-    containerPath: /var/components/scheduler/etc/kubernetes/scheduler/scheduler.yaml
-    readOnly: true
-  - hostPath: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
-    containerPath: /var/components/prometheus/etc/prometheus/prometheus.yaml
-    readOnly: false
+  role: control-plane
 EOF
 docker pull localhost/kwok:test
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml
