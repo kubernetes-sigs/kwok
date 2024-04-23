@@ -32,10 +32,11 @@ spec:
       {{ $defaultReason := "initContainerError" }}
       {{ $defaultMessage := "initContainer reported errors" }}
       {{ $defaultExitCode := 1 }}
-      {{ $initContainerName := or ( index .metadata.annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/container-name" ) "" }}
-      {{ $failureReason := or ( index .metadata.annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/reason" ) $defaultReason }}
-      {{ $failureMessage := or ( index .metadata.annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/message" ) $defaultMessage }}
-      {{ $failureExitCode := or ( index .metadata.annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/exit-code" ) $defaultExitCode }}
+      {{ $annotations := or .metadata.annotations dict }}
+      {{ $initContainerName := or ( index $annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/container-name" ) "" }}
+      {{ $failureReason := or ( index $annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/reason" ) $defaultReason }}
+      {{ $failureMessage := or ( index $annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/message" ) $defaultMessage }}
+      {{ $failureExitCode := or ( index $annotations "pod-init-container-running-failed.stage.kwok.x-k8s.io/exit-code" ) $defaultExitCode }}
       conditions:
       - lastProbeTime: null
         lastTransitionTime: {{ $now | Quote }}
