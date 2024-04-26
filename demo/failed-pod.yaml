@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: failed-pod
+  labels:
+    pod-init-container-running-failed.stage.kwok.x-k8s.io: "true"
+  annotations:
+    pod-init-container-running-failed.stage.kwok.x-k8s.io/container-name: nccl-test
+    pod-init-container-running-failed.stage.kwok.x-k8s.io/reason: nccl-test-failed
+    pod-init-container-running-failed.stage.kwok.x-k8s.io/message: "nccl test failed"
+    pod-init-container-running-failed.stage.kwok.x-k8s.io/exit-code: "3"
+    pod-init-container-running-failed.stage.kwok.x-k8s.io/delay: "1000"
+    pod-init-container-running-failed.stage.kwok.x-k8s.io/jitter-delay: "5000"
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: type
+            operator: In
+            values:
+            - kwok
+            # A taints was added to an automatically created Node.
+            # You can remove taints of Node or add this tolerations.
+  tolerations:
+  - key: "kwok.x-k8s.io/node"
+    operator: "Exists"
+    effect: "NoSchedule"
+  initContainers:
+  - image: nccl
+    name: nccl-test
+  containers:
+  - image: llm
+    name: training-job
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100Mi
