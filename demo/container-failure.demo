@@ -1,0 +1,27 @@
+# Demo: inject failure to an app. container using kwokctl
+
+# Create a cluster with kwok 
+kwokctl create cluster --enable-crds Stage
+
+# Apply stage files
+kubectl apply -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/stage-fast.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/kwok/raw/main/kustomize/stage/pod/chaos/pod-container-running-failed.yaml
+kubectl get stages
+
+# Create three nodes.
+kwokctl scale node --replicas 3
+kubectl get nodes
+
+# Create three pods
+kwokctl scale pod --replicas 3
+kubectl get pod
+
+# Inject an error to a pod's container
+kubectl patch pod pod-000000 --type=merge --patch '{"metadata": { "labels":{"pod-container-running-failed.stage.kwok.x-k8s.io":"true"}}}'
+kubectl get pod
+
+# Clean up
+kwokctl delete cluster
+
+# Thank you!
+clear
