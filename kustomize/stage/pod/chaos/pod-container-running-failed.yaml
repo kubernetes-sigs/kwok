@@ -32,10 +32,11 @@ spec:
       {{ $defaultReason := "containerFailed" }}
       {{ $defaultMessage := "container failed" }}
       {{ $defaultExitCode := 1 }}
-      {{ $containerName := or ( index .metadata.annotations "pod-container-running-failed.stage.kwok.x-k8s.io/container-name" ) "" }}
-      {{ $failureReason := or ( index .metadata.annotations "pod-container-running-failed.stage.kwok.x-k8s.io/reason" ) $defaultReason }}
-      {{ $failureMessage := or ( index .metadata.annotations "pod-container-running-failed.stage.kwok.x-k8s.io/message" ) $defaultMessage }}
-      {{ $failureExitCode := or ( index .metadata.annotations "pod-container-running-failed.stage.kwok.x-k8s.io/exit-code" ) $defaultExitCode }}
+      {{ $annotations := or .metadata.annotations dict }}
+      {{ $containerName := or ( index $annotations "pod-container-running-failed.stage.kwok.x-k8s.io/container-name" ) "" }}
+      {{ $failureReason := or ( index $annotations "pod-container-running-failed.stage.kwok.x-k8s.io/reason" ) $defaultReason }}
+      {{ $failureMessage := or ( index $annotations "pod-container-running-failed.stage.kwok.x-k8s.io/message" ) $defaultMessage }}
+      {{ $failureExitCode := or ( index $annotations "pod-container-running-failed.stage.kwok.x-k8s.io/exit-code" ) $defaultExitCode }}
       conditions:
       - lastProbeTime: null
         lastTransitionTime: {{ $now | Quote }}
