@@ -214,7 +214,7 @@ cross-cluster-image:
 		--builder=${BUILDER} \
 		--push=${PUSH}
 
-## manifest: Generate manifest to deploy kwok
+## manifests: Generate manifests to deploy kwok
 .PHONY: manifests
 manifests:
 	@./hack/manifests.sh \
@@ -227,7 +227,7 @@ manifests:
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 
-## integration-tests: Run integration tests
+## integration-test: Run integration tests
 .PHONY: integration-test
 integration-test:
 	@echo "Not implemented yet"
