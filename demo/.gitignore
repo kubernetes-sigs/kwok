@@ -3,5 +3,9 @@ node_modules
 package.json
 package-lock.json
 
+# py
+py_modules
+
 # output
+*.cast
 *.mp4

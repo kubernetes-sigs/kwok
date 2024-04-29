@@ -12,22 +12,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ASCIINEMA=./py_modules/bin/asciinema
 SVG_TERM=./node_modules/.bin/svg-term
 SVG_TO_VIDEO=./node_modules/.bin/svg-to-video
 
+$(ASCIINEMA):
+	pip3 install asciinema --target ./py_modules
+
 $(SVG_TERM):
-	pip3 install asciinema
 	npm i --save-dev svg-term-cli
 
 $(SVG_TO_VIDEO):
 	npm i --save-dev @wzshiming/svg-to-video
 
-%.svg: %.demo
+.PRECIOUS: %.cast
+%.cast: %.demo
+	@$(MAKE) $(ASCIINEMA)
+	@echo "Recording $@"
+	$(ASCIINEMA) rec \
+		--overwrite \
+		--cols 86 \
+		--rows 24 \
+		--env "" \
+		--command "cd .. && ./demo/play-demo.sh ./demo/$<" \
+		"$@"
+
+.PRECIOUS: %.svg
+%.svg: %.cast
 	@$(MAKE) $(SVG_TERM)
 	@echo "Generating $@"
 	@$(SVG_TERM) --out "$@" \
 	  --window \
-	  --command "cd .. && ./demo/play-demo.sh ./demo/$<"
+	  --term xresources \
+	  --profile ./.xresources \
+	  --in "$<"
 
 %.mp4: %.svg
 	@$(MAKE) $(SVG_TO_VIDEO)
