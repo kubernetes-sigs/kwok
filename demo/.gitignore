@@ -1,7 +1,0 @@
-# npm
-node_modules
-package.json
-package-lock.json
-
-# output
-*.mp4

@@ -252,3 +252,17 @@ release:
 .PHONY: help
 help:
 	@cat $(MAKEFILE_LIST) | grep -e '^## ' | sed -e 's/^## //'
+
+.PRECIOUS: %.cast
+%.cast: %.demo
+	@./hack/democtl.sh "$<" "$@" \
+		--ps1='\033[1;96m~/sigs.k8s.io/kwok\033[1;94m$$\033[0m '
+
+.PRECIOUS: %.svg
+%.svg: %.cast
+	@./hack/democtl.sh "$<" "$@" \
+		--term xresources \
+	  	--profile ./.xresources
+
+%.mp4: %.cast
+	@./hack/democtl.sh "$<" "$@"
