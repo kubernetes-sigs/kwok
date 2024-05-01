@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    kwok.x-k8s.io/node: fake
+  labels:
+    beta.kubernetes.io/arch: amd64
+    beta.kubernetes.io/os: linux
+    gpu_affinity_capable: "true"
+    healthcolor: green
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: virtual-dgxa100.40g-0
+    kubernetes.io/os: linux
+    kubernetes.io/role: agent
+    node-role.bcp.ngc.nvidia.com/role: user-workload
+    node-role.kubernetes.io/agent: ""
+    nodeGroup: gpu
+    nodeInstance: dgxa100.40g.8.norm
+    nodeType: gpu
+    pod_gpu_size.static: dynamic
+    preempt_upon_cordon: "true"
+    type: kwok
+  name: virtual-gpu-node
+spec:
+  taints: # Avoid scheduling actual running pods to fake Node
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "256"
+    ephemeral-storage: 15Ti
+    hugepages-1Gi: "0"
+    hugepages-2Mi: "0"
+    intel.com/mlnx_sriov_rdma1: "1"
+    intel.com/mlnx_sriov_rdma2: "1"
+    intel.com/mlnx_sriov_rdma3: "1"
+    intel.com/mlnx_sriov_rdma4: "1"
+    intel.com/mlnx_sriov_rdma5: "1"
+    intel.com/mlnx_sriov_rdma6: "1"
+    intel.com/mlnx_sriov_rdma7: "1"
+    intel.com/mlnx_sriov_rdma8: "1"
+    memory: 1Ti
+    nvidia.com/gpu: "8"
+    pods: "110"
+  capacity:
+    cpu: "256"
+    ephemeral-storage: 15Ti
+    hugepages-1Gi: "0"
+    hugepages-2Mi: "0"
+    intel.com/mlnx_sriov_rdma1: "1"
+    intel.com/mlnx_sriov_rdma2: "1"
+    intel.com/mlnx_sriov_rdma3: "1"
+    intel.com/mlnx_sriov_rdma4: "1"
+    intel.com/mlnx_sriov_rdma5: "1"
+    intel.com/mlnx_sriov_rdma6: "1"
+    intel.com/mlnx_sriov_rdma7: "1"
+    intel.com/mlnx_sriov_rdma8: "1"
+    memory: 1Ti
+    nvidia.com/gpu: "8"
+    pods: "110"
+  conditions:
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: Node is healthy
+    reason: NodeReady
+    status: "True"
+    type: AggregatedNodeHealth
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: Flannel is running on this node
+    reason: FlannelIsUp
+    status: "False"
+    type: NetworkUnavailable
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: acs kernel module is disabled
+    reason: ACSModuleDisabled
+    status: "False"
+    type: ACSModuleCheck
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: kernel has no deadlock
+    reason: KernelHasNoDeadlock
+    status: "False"
+    type: KernelDeadlock
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: Filesystem is read-only
+    reason: FilesystemIsReadOnly
+    status: "False"
+    type: ReadonlyFilesystem
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: Flannel is running on this node
+    reason: FlannelDeviceAvailable
+    status: "False"
+    type: FlannelNetworkDeviceProblem
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: Dgx has /raid
+    reason: DgxRaidOk
+    status: "False"
+    type: DgxRaidProblem
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: Node is in NW Topology CM or feature disabled
+    reason: NodeIsAdded
+    status: "False"
+    type: NodeNotInNWTopologyCM
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: GPU has a DBE/MSBE problem
+    reason: GpuHasNoDbeMsbeProblem
+    status: "False"
+    type: GpuDbeMsbeProblem
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: ceph client is backlisted resulting in hung mounts
+    reason: CephClientBlackListed
+    status: "False"
+    type: CephMountsHung
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: nv_peer_mem is loaded and active
+    reason: NvPeerMemKernelModuleOK
+    status: "False"
+    type: NvPeerMemProblem
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: RoCE interface(s) spoof check is OFF (OK)
+    reason: RoCESpoofCheck
+    status: "False"
+    type: RoCESpoofCheckProblem
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: GPU has HW Slowdown in Active State
+    reason: GpuHWSlowDownNotActive
+    status: "False"
+    type: GpuHWSlowDown
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: RoCE interface(s) are UP
+    reason: RoCECarrierSignal
+    status: "False"
+    type: RoCELinksProblem
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: kubelet has sufficient memory available
+    reason: KubeletHasSufficientMemory
+    status: "False"
+    type: MemoryPressure
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: kubelet has no disk pressure
+    reason: KubeletHasNoDiskPressure
+    status: "False"
+    type: DiskPressure
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: kubelet has sufficient PID available
+    reason: KubeletHasSufficientPID
+    status: "False"
+    type: PIDPressure
+  - lastHeartbeatTime: null
+    lastTransitionTime: null
+    message: kubelet is posting ready status. AppArmor enabled
+    reason: KubeletReady
+    status: "True"
+    type: Ready
+  phase: Running
