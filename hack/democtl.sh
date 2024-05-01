@@ -366,10 +366,10 @@ function main() {
     exit 0
   fi
 
-  OUTPUT_FILE="${ARGS[1]}"
-
-  # If the output file is not specified, use the same name as the input file.
-  if [[ "${OUTPUT_FILE}" == "true" ]]; then
+  if [[ "${#ARGS[*]}" -gt 1 ]]; then
+    OUTPUT_FILE="${ARGS[1]}"
+  else
+    # If the output file is not specified, use the same name as the input file.
     OUTPUT_FILE="$(ext_replace "${INPUT_FILE}" "svg")"
   fi
 
