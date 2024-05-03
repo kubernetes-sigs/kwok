@@ -1,0 +1,291 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kwok.fullname" . }}
+  labels:
+    {{- include "kwok.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - attaches
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - attaches/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterattaches
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterattaches/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterexecs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterexecs/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterlogs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterlogs/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterportforwards
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterportforwards/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterresourceusages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - clusterresourceusages/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - execs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - execs/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - logs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - logs/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - metrics
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - metrics/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - portforwards
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - portforwards/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - resourceusages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - resourceusages/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - stages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - stages/status
+  verbs:
+  - patch
+  - update

@@ -1,0 +1,19 @@
+image:
+  pullPolicy: IfNotPresent
+  repository: registry.k8s.io/kwok/kwok
+  tag: v0.5.2
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+allowDefaultNamespace: false
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+resources: {}
+
+affinity: {}

@@ -1,0 +1,18 @@
+{{ $now := Now }}
+{{ $root := . }}
+containerStatuses:
+{{ range $index, $item := .spec.containers }}
+{{ $origin := index $root.status.containerStatuses $index }}
+- image: {{ $item.image | Quote }}
+  name: {{ $item.name | Quote }}
+  ready: false
+  restartCount: 0
+  started: false
+  state:
+    terminated:
+      exitCode: 0
+      finishedAt: {{ $now | Quote }}
+      reason: Completed
+      startedAt: {{ $now | Quote }}
+{{ end }}
+phase: Succeeded
