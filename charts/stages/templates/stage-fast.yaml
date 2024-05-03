@@ -60,7 +60,7 @@ metadata:
 spec:
   next:
     statusTemplate: |
-      {{ .Files.Get "resources/stages/node-initialize" | nindent 6 }}
+      {{ .Files.Get "resources/node-initialize" | nindent 6 }}
   resourceRef:
     apiGroup: v1
     kind: Node
@@ -78,7 +78,7 @@ metadata:
 spec:
   next:
     statusTemplate: |
-      {{ .Files.Get "resources/stages/pod-complete" | nindent 6 }}
+      {{ .Files.Get "resources/pod-complete" | nindent 6 }}
   resourceRef:
     apiGroup: v1
     kind: Pod
@@ -119,7 +119,7 @@ metadata:
 spec:
   next:
     statusTemplate: |
-      {{ .Files.Get "resources/stages/pod-ready" | nindent 6 }}
+      {{ .Files.Get "resources/pod-ready" | nindent 6 }}
   resourceRef:
     apiGroup: v1
     kind: Pod
