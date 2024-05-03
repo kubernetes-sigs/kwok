@@ -35,7 +35,8 @@ CACHE_DIR=${TMPDIR:-/tmp}/democtl
 SELFPATH="$(realpath "$0")"
 ARGS=()
 
-export PATH="${CACHE_DIR}/py_modules/bin:${CACHE_DIR}/node_modules/.bin:${PATH}:${PATH}"
+export PYTHONPATH="${CACHE_DIR}/py_modules"
+export PATH="${PYTHONPATH}/bin:${CACHE_DIR}/node_modules/.bin:${PATH}:${PATH}"
 
 function usage() {
   echo "Usage: ${0} <input> <output> [--help] [options...]"
@@ -108,7 +109,7 @@ function install_asciinema() {
   if command_exist asciinema; then
     return 0
   elif command_exist pip3; then
-    pip3 install asciinema --target "${CACHE_DIR}/py_modules" >&2
+    pip3 install asciinema --target "${PYTHONPATH}" >&2
   else
     echo "asciinema is not installed" >&2
     return 1
