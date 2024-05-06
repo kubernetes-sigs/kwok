@@ -24,6 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -41,6 +42,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
@@ -335,7 +337,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 		result = nil
 	} else if len(next.Patches) != 0 {
 		for _, patch := range next.Patches {
-			patchData, err := c.computeMergePatch(resource, patch.Root, patch.Template)
+			patchData, patchType, err := c.computePatch(resource, patch)
 			if err != nil {
 				return shouldRetry(err), fmt.Errorf("failed to compute resource %s: %w", resource.GetName(), err)
 			}
@@ -344,7 +346,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 					"reason", "do not need to modify",
 				)
 			} else {
-				result, err = c.patchResource(ctx, resource, patchData, patch)
+				result, err = c.patchResource(ctx, resource, patchData, patchType, patch)
 				if err != nil {
 					return shouldRetry(err), fmt.Errorf("failed to patch resource %s: %w", resource.GetName(), err)
 				}
@@ -361,7 +363,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 }
 
 // patchResource patches the resource
-func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patchData []byte, patch internalversion.StagePatch) (*unstructured.Unstructured, error) {
+func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patchData []byte, patchType types.PatchType, patch internalversion.StagePatch) (*unstructured.Unstructured, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"resource", log.KObj(resource),
@@ -391,7 +393,8 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 		)
 		subresource = []string{patch.Subresource}
 	}
-	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patchData, metav1.PatchOptions{}, subresource...)
+
+	result, err := cli.Patch(ctx, resource.GetName(), patchType, patchData, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +459,66 @@ loop:
 	logger.Info("Stop watch resources")
 }
 
+func (c *StageController) computePatch(resource *unstructured.Unstructured, patch internalversion.StagePatch) ([]byte, types.PatchType, error) {
+	switch format.ElemOrDefault(patch.Type) {
+	case internalversion.StagePatchTypeJSONPatch:
+		patchData, err := c.computeJSONPatch(resource, patch.Root, patch.Template)
+		if err != nil {
+			return nil, "", err
+		}
+		return patchData, types.JSONPatchType, nil
+	case internalversion.StagePatchTypeStrategicMergePatch:
+		patchData, err := c.computeStrategicMergePatch(resource, patch.Root, patch.Template)
+		if err != nil {
+			return nil, "", err
+		}
+		return patchData, types.StrategicMergePatchType, nil
+	case internalversion.StagePatchTypeMergePatch, "":
+		patchData, err := c.computeMergePatch(resource, patch.Root, patch.Template)
+		if err != nil {
+			return nil, "", err
+		}
+		return patchData, types.MergePatchType, nil
+	}
+
+	return nil, "", fmt.Errorf("unknown patch type %s", *patch.Type)
+}
+
 func (c *StageController) computeMergePatch(resource *unstructured.Unstructured, root, tpl string) ([]byte, error) {
+	patchData, err := c.renderer.ToJSON(tpl, resource.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	var base any = resource.Object
+
+	if root != "" {
+		base, _, err = unstructured.NestedFieldNoCopy(resource.Object, root)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if base != nil {
+		original, err := json.Marshal(base)
+		if err != nil {
+			return nil, err
+		}
+
+		sum, err := jsonpatch.MergePatch(original, patchData)
+		if err != nil {
+			return nil, err
+		}
+
+		if bytes.Equal(sum, original) {
+			return nil, nil
+		}
+	}
+
+	return wrapMergePatchData(root, patchData)
+}
+
+func (c *StageController) computeStrategicMergePatch(resource *unstructured.Unstructured, root, tpl string) ([]byte, error) {
 	patchData, err := c.renderer.ToJSON(tpl, resource.Object)
 	if err != nil {
 		return nil, err
@@ -478,22 +540,57 @@ func (c *StageController) computeMergePatch(resource *unstructured.Unstructured,
 			}
 		}
 
-		original, err := json.Marshal(base)
-		if err != nil {
-			return nil, err
-		}
+		if base != nil {
+			original, err := json.Marshal(base)
+			if err != nil {
+				return nil, err
+			}
 
-		sum, err := strategicpatch.StrategicMergePatchUsingLookupPatchMeta(original, patchData, patchMeta)
-		if err != nil {
-			return nil, err
-		}
+			sum, err := strategicpatch.StrategicMergePatchUsingLookupPatchMeta(original, patchData, patchMeta)
+			if err != nil {
+				return nil, err
+			}
 
-		if bytes.Equal(sum, original) {
-			return nil, nil
+			if bytes.Equal(sum, original) {
+				return nil, nil
+			}
 		}
 	}
 
-	return wrapPatchData(root, patchData), nil
+	return wrapMergePatchData(root, patchData)
+}
+
+func (c *StageController) computeJSONPatch(resource *unstructured.Unstructured, root, tpl string) ([]byte, error) {
+	patchData, err := c.renderer.ToJSON(tpl, resource.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	patchData, err = wrapJSONPatchData(root, patchData)
+	if err != nil {
+		return nil, err
+	}
+
+	patch, err := jsonpatch.DecodePatch(patchData)
+	if err != nil {
+		return nil, err
+	}
+
+	original, err := json.Marshal(resource.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	sum, err := patch.Apply(original)
+	if err != nil {
+		return nil, err
+	}
+
+	if bytes.Equal(sum, original) {
+		return nil, nil
+	}
+
+	return patchData, nil
 }
 
 // addStageJob adds a stage to be applied into the underlying weight delay queue and the associated helper map

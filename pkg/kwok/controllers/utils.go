@@ -21,10 +21,10 @@ import (
 	"encoding/json"
 	"math"
 	"net"
-	"strconv"
 	"sync"
 	"time"
 
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
@@ -156,8 +156,8 @@ func shouldRetry(err error) bool {
 	return false
 }
 
-// checkNeedPatch checks if the object needs to be patched
-func checkNeedPatch[T any](obj T, patchData []byte) (bool, error) {
+// checkNeedStrategicMergePatch checks if the object needs to be patched
+func checkNeedStrategicMergePatch[T any](obj T, patchData []byte) (bool, error) {
 	original, err := json.Marshal(obj)
 	if err != nil {
 		return false, err
@@ -186,10 +186,92 @@ func checkNeedPatch[T any](obj T, patchData []byte) (bool, error) {
 	return true, nil
 }
 
-// wrapPatchData wraps the patch data with the parent key
-func wrapPatchData(parent string, patchData []byte) []byte {
-	if parent == "" {
-		return patchData
+// checkNeedMergePatch checks if the object needs to be patched
+func checkNeedMergePatch[T any](obj T, patchData []byte) (bool, error) {
+	original, err := json.Marshal(obj)
+	if err != nil {
+		return false, err
 	}
-	return []byte("{" + strconv.Quote(parent) + ":" + string(patchData) + "}")
+
+	sum, err := jsonpatch.MergePatch(original, patchData)
+	if err != nil {
+		return false, err
+	}
+
+	var tmp T
+	err = json.Unmarshal(sum, &tmp)
+	if err != nil {
+		return false, err
+	}
+
+	dist, err := json.Marshal(tmp)
+	if err != nil {
+		return false, err
+	}
+
+	if bytes.Equal(original, dist) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// checkNeedJSONPatch checks if the object needs to be patched
+func checkNeedJSONPatch[T any](obj T, patchData []byte) (bool, error) {
+	original, err := json.Marshal(obj)
+	if err != nil {
+		return false, err
+	}
+
+	patch, err := jsonpatch.DecodePatch(patchData)
+	if err != nil {
+		return false, err
+	}
+
+	sum, err := patch.Apply(original)
+	if err != nil {
+		return false, err
+	}
+
+	if bytes.Equal(original, sum) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// wrapMergePatchData wraps the patch data with the parent key
+func wrapMergePatchData(parent string, patchData []byte) ([]byte, error) {
+	if parent == "" {
+		return patchData, nil
+	}
+	return json.Marshal(map[string]json.RawMessage{
+		parent: patchData,
+	})
+}
+
+// wrapJSONPatchData wraps the patch data with the parent key
+func wrapJSONPatchData(parent string, patchData []byte) ([]byte, error) {
+	if parent == "" {
+		return patchData, nil
+	}
+
+	var data []jsonpatchData
+	err := json.Unmarshal(patchData, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range data {
+		data[i].Path = "/" + parent + data[i].Path
+	}
+
+	return json.Marshal(data)
+}
+
+type jsonpatchData struct {
+	Op    string          `json:"op"`
+	Path  string          `json:"path"`
+	Value json.RawMessage `json:"value,omitempty"`
+	From  string          `json:"from,omitempty"`
 }

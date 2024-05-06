@@ -147,12 +147,27 @@ type StagePatch struct {
 	Root string `json:"root,omitempty"`
 	// Template indicates the template for modifying the resource in the next.
 	Template string `json:"template,omitempty"`
+	// Type indicates the type of the patch.
+	// +kubebuilder:validation:Enum=json;merge;strategic
+	Type *StagePatchType `json:"type,omitempty"`
 	// Impersonation indicates the impersonating configuration for client when patching status.
 	// In most cases this will be empty, in which case the default client service account will be used.
 	// When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
 	// The support for this field is not available in Pod and Node resources.
 	Impersonation *ImpersonationConfig `json:"impersonation,omitempty"`
 }
+
+// StagePatchType is the type of the patch.
+type StagePatchType string
+
+const (
+	// StagePatchTypeJSONPatch is the JSON patch type.
+	StagePatchTypeJSONPatch StagePatchType = "json"
+	// StagePatchTypeMergePatch is the merge patch type.
+	StagePatchTypeMergePatch StagePatchType = "merge"
+	// StagePatchTypeStrategicMergePatch is the strategic merge patch type.
+	StagePatchTypeStrategicMergePatch StagePatchType = "strategic"
+)
 
 // ImpersonationConfig describes the configuration for impersonating clients
 type ImpersonationConfig struct {

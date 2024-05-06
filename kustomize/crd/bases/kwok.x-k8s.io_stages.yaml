@@ -166,6 +166,13 @@ spec:
                           description: Template indicates the template for modifying
                             the resource in the next.
                           type: string
+                        type:
+                          description: Type indicates the type of the patch.
+                          enum:
+                          - json
+                          - merge
+                          - strategic
+                          type: string
                       type: object
                     type: array
                   statusPatchAs:

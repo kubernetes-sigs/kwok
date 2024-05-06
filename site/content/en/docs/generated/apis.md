@@ -6242,6 +6242,19 @@ string
 </tr>
 <tr>
 <td>
+<code>type</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StagePatchType">
+StagePatchType
+</a>
+</em>
+</td>
+<td>
+<p>Type indicates the type of the patch.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>impersonation</code>
 <em>
 <a href="#kwok.x-k8s.io/v1alpha1.ImpersonationConfig">
@@ -6254,6 +6267,43 @@ ImpersonationConfig
 In most cases this will be empty, in which case the default client service account will be used.
 When this is not empty, a corresponding rbac change is required to grant <code>impersonate</code> privilege.
 The support for this field is not available in Pod and Node resources.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.StagePatchType">
+StagePatchType
+(<code>string</code> alias)
+<a href="#kwok.x-k8s.io%2fv1alpha1.StagePatchType"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.StagePatch">StagePatch</a>
+</p>
+<p>
+<p>StagePatchType is the type of the patch.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&#34;json&#34;</code></td>
+<td><p>StagePatchTypeJSONPatch is the JSON patch type.</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;merge&#34;</code></td>
+<td><p>StagePatchTypeMergePatch is the merge patch type.</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;strategic&#34;</code></td>
+<td><p>StagePatchTypeStrategicMergePatch is the strategic merge patch type.</p>
 </td>
 </tr>
 </tbody>

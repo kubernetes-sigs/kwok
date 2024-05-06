@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
@@ -353,7 +354,7 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 	} else if len(next.Patches) != 0 {
 		c.markPodIP(pod)
 		for _, patch := range next.Patches {
-			patchData, err := c.computeMergePatch(pod, patch.Root, patch.Template)
+			patchData, patchType, err := c.computePatch(pod, patch)
 			if err != nil {
 				return shouldRetry(err), fmt.Errorf("failed to compute the pod %s: %w", pod.Name, err)
 			}
@@ -362,7 +363,7 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 					"reason", "do not need to modify",
 				)
 			} else {
-				result, err = c.patchResource(ctx, pod, patchData, patch)
+				result, err = c.patchResource(ctx, pod, patchData, patchType, patch)
 				if err != nil {
 					return shouldRetry(err), fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
 				}
@@ -386,7 +387,7 @@ func (c *PodController) readOnly(nodeName string) bool {
 }
 
 // patchResource patches the resource
-func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patchData []byte, patch internalversion.StagePatch) (*corev1.Pod, error) {
+func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patchData []byte, patchType types.PatchType, patch internalversion.StagePatch) (*corev1.Pod, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
@@ -400,7 +401,7 @@ func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patc
 		)
 		subresource = []string{patch.Subresource}
 	}
-	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.StrategicMergePatchType, patchData, metav1.PatchOptions{}, subresource...)
+	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, patchType, patchData, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
@@ -575,6 +576,70 @@ func (c *PodController) markPodIP(pod *corev1.Pod) {
 	}
 }
 
+func (c *PodController) computePatch(pod *corev1.Pod, patch internalversion.StagePatch) ([]byte, types.PatchType, error) {
+	switch format.ElemOrDefault(patch.Type) {
+	case internalversion.StagePatchTypeJSONPatch:
+		patchData, err := c.computeJSONPatch(pod, patch.Root, patch.Template)
+		if err != nil {
+			return nil, "", err
+		}
+		return patchData, types.JSONPatchType, nil
+	case internalversion.StagePatchTypeStrategicMergePatch, "":
+		patchData, err := c.computeStrategicMergePatch(pod, patch.Root, patch.Template)
+		if err != nil {
+			return nil, "", err
+		}
+		return patchData, types.StrategicMergePatchType, nil
+	case internalversion.StagePatchTypeMergePatch:
+		patchData, err := c.computeMergePatch(pod, patch.Root, patch.Template)
+		if err != nil {
+			return nil, "", err
+		}
+		return patchData, types.MergePatchType, nil
+	}
+
+	return nil, "", fmt.Errorf("unknown patch type %s", *patch.Type)
+}
+
+func (c *PodController) computeStrategicMergePatch(pod *corev1.Pod, root, tpl string) ([]byte, error) {
+	patchData, err := c.renderer.ToJSON(tpl, pod)
+	if err != nil {
+		return nil, err
+	}
+
+	var hasChange bool
+	switch root {
+	default:
+		return nil, fmt.Errorf("root %q is not supported", root)
+	case "":
+		hasChange, err = checkNeedStrategicMergePatch(*pod, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "metadata":
+		hasChange, err = checkNeedStrategicMergePatch(pod.ObjectMeta, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "spec":
+		hasChange, err = checkNeedStrategicMergePatch(pod.Spec, patchData)
+		if err != nil {
+			return nil, err
+		}
+	case "status":
+		hasChange, err = checkNeedStrategicMergePatch(pod.Status, patchData)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if !hasChange {
+		return nil, nil
+	}
+
+	return wrapMergePatchData(root, patchData)
+}
+
 func (c *PodController) computeMergePatch(pod *corev1.Pod, root, tpl string) ([]byte, error) {
 	patchData, err := c.renderer.ToJSON(tpl, pod)
 	if err != nil {
@@ -586,22 +651,22 @@ func (c *PodController) computeMergePatch(pod *corev1.Pod, root, tpl string) ([]
 	default:
 		return nil, fmt.Errorf("root %q is not supported", root)
 	case "":
-		hasChange, err = checkNeedPatch(*pod, patchData)
+		hasChange, err = checkNeedMergePatch(*pod, patchData)
 		if err != nil {
 			return nil, err
 		}
 	case "metadata":
-		hasChange, err = checkNeedPatch(pod.ObjectMeta, patchData)
+		hasChange, err = checkNeedMergePatch(pod.ObjectMeta, patchData)
 		if err != nil {
 			return nil, err
 		}
 	case "spec":
-		hasChange, err = checkNeedPatch(pod.Spec, patchData)
+		hasChange, err = checkNeedMergePatch(pod.Spec, patchData)
 		if err != nil {
 			return nil, err
 		}
 	case "status":
-		hasChange, err = checkNeedPatch(pod.Status, patchData)
+		hasChange, err = checkNeedMergePatch(pod.Status, patchData)
 		if err != nil {
 			return nil, err
 		}
@@ -611,7 +676,29 @@ func (c *PodController) computeMergePatch(pod *corev1.Pod, root, tpl string) ([]
 		return nil, nil
 	}
 
-	return wrapPatchData(root, patchData), nil
+	return wrapMergePatchData(root, patchData)
+}
+
+func (c *PodController) computeJSONPatch(pod *corev1.Pod, root, tpl string) ([]byte, error) {
+	patchData, err := c.renderer.ToJSON(tpl, pod)
+	if err != nil {
+		return nil, err
+	}
+
+	patchData, err = wrapJSONPatchData(root, patchData)
+	if err != nil {
+		return nil, err
+	}
+
+	hasChange, err := checkNeedJSONPatch(*pod, patchData)
+	if err != nil {
+		return nil, err
+	}
+	if !hasChange {
+		return nil, nil
+	}
+
+	return patchData, nil
 }
 
 func (c *PodController) funcNodeIP() string {
