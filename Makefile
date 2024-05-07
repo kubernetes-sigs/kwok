@@ -255,7 +255,8 @@ help:
 
 .PRECIOUS: %.cast
 %.cast: %.demo
-	@./hack/democtl.sh "$<" "$@" \
+	@WORK_DIR=$(shell dirname $<) \
+	./hack/democtl.sh "$<" "$@" \
 		--ps1='\033[1;96m~/sigs.k8s.io/kwok\033[1;94m$$\033[0m '
 
 .PRECIOUS: %.svg
