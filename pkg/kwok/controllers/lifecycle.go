@@ -116,20 +116,21 @@ func NewLifecycleStage(s *internalversion.Stage, env *cel.Environment) (*Lifecyc
 	}
 	if selector.MatchExpressions != nil {
 		for _, express := range selector.MatchExpressions {
-			requirement, err := expression.NewRequirement(express.Key, express.Operator, express.Values)
-			if err != nil {
-				return nil, err
+			if express.SelectorJQ != nil {
+				requirement, err := expression.NewRequirement(express.Key, express.Operator, express.Values)
+				if err != nil {
+					return nil, err
+				}
+				stage.matchExpressions = append(stage.matchExpressions, requirement)
+			} else if express.SelectorCEL != nil {
+				program, err := env.Compile(express.Expression)
+				if err != nil {
+					return nil, err
+				}
+				stage.matchConditions = append(stage.matchConditions, program)
+			} else {
+				return nil, fmt.Errorf("invalid expression")
 			}
-			stage.matchExpressions = append(stage.matchExpressions, requirement)
-		}
-	}
-	if selector.MatchConditions != nil {
-		for _, express := range selector.MatchConditions {
-			program, err := env.Compile(express.Expression)
-			if err != nil {
-				return nil, err
-			}
-			stage.matchConditions = append(stage.matchConditions, program)
 		}
 	}
 

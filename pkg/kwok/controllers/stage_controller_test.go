@@ -60,11 +60,13 @@ func TestStageController(t *testing.T) {
 			},
 			Spec: internalversion.StageSpec{
 				Selector: &internalversion.StageSelector{
-					MatchExpressions: []internalversion.SelectorRequirement{
+					MatchExpressions: []internalversion.SelectorExpression{
 						{
-							Key:      ".status.phase",
-							Operator: "NotIn",
-							Values:   []string{"Available"},
+							SelectorJQ: &internalversion.SelectorJQ{
+								Key:      ".status.phase",
+								Operator: "NotIn",
+								Values:   []string{"Available"},
+							},
 						},
 					},
 				},
