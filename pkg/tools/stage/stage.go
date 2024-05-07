@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -60,12 +61,17 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 		return stage.Spec.ResourceRef == want
 	})
 
-	lc, err := lifecycle.NewLifecycle(stages)
+	lc, err := lifecycle.NewLifecycle(stages, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	lcstages, err := lc.ListAllPossible(ctx, testTarget.GetLabels(), testTarget.GetAnnotations(), testTarget)
+	jsonStandard, err := expression.ToJSONStandard(testTarget)
+	if err != nil {
+		return nil, err
+	}
+
+	lcstages, err := lc.ListAllPossible(ctx, testTarget.GetLabels(), testTarget.GetAnnotations(), testTarget, jsonStandard)
 	if err != nil {
 		return nil, err
 	}
