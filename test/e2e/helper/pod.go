@@ -77,6 +77,15 @@ func (b PodBuilder) WithNodeName(nodeName string) *PodBuilder {
 	return &b
 }
 
+// WithAnnotation will set annotation for pod.
+func (b PodBuilder) WithAnnotation(key, value string) *PodBuilder {
+	if b.pod.ObjectMeta.Annotations == nil {
+		b.pod.ObjectMeta.Annotations = map[string]string{}
+	}
+	b.pod.ObjectMeta.Annotations[key] = value
+	return &b
+}
+
 // Build will build a pod.
 func (b PodBuilder) Build() *corev1.Pod {
 	return b.pod.DeepCopy()

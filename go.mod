@@ -9,6 +9,7 @@ require (
 	github.com/containernetworking/plugins v1.4.0
 	github.com/creack/pty v1.1.21
 	github.com/emicklei/go-restful/v3 v3.11.2
+	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/google/cel-go v0.17.7
 	github.com/google/go-cmp v0.6.0
@@ -63,7 +64,6 @@ require (
 	github.com/docker/docker v24.0.9+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
-	github.com/evanphx/json-patch/v5 v5.8.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect

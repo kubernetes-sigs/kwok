@@ -2514,6 +2514,7 @@ func autoConvert_internalversion_StagePatch_To_v1alpha1_StagePatch(in *StagePatc
 	out.Subresource = in.Subresource
 	out.Root = in.Root
 	out.Template = in.Template
+	out.Type = (*v1alpha1.StagePatchType)(unsafe.Pointer(in.Type))
 	out.Impersonation = (*v1alpha1.ImpersonationConfig)(unsafe.Pointer(in.Impersonation))
 	return nil
 }
@@ -2522,6 +2523,7 @@ func autoConvert_v1alpha1_StagePatch_To_internalversion_StagePatch(in *v1alpha1.
 	out.Subresource = in.Subresource
 	out.Root = in.Root
 	out.Template = in.Template
+	out.Type = (*StagePatchType)(unsafe.Pointer(in.Type))
 	out.Impersonation = (*ImpersonationConfig)(unsafe.Pointer(in.Impersonation))
 	return nil
 }
