@@ -4990,6 +4990,38 @@ SecurityContext
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExpressionCEL">
+ExpressionCEL
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExpressionCEL"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.SelectorExpression">SelectorExpression</a>
+</p>
+<p>
+<p>ExpressionCEL is the expression which will be evaluated by CEL.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>expression</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Expression represents the expression which will be evaluated by CEL.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ExpressionFromSource">
 ExpressionFromSource
 <a href="#kwok.x-k8s.io%2fv1alpha1.ExpressionFromSource"> #</a>
@@ -5970,6 +6002,116 @@ int64
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.SelectorExpression">
+SelectorExpression
+<a href="#kwok.x-k8s.io%2fv1alpha1.SelectorExpression"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageSelector">StageSelector</a>
+</p>
+<p>
+<p>SelectorExpression is a resource selector expression is a set of requirements that must be true for a match.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ExpressionCEL</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExpressionCEL">
+ExpressionCEL
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>ExpressionCEL</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>SelectorJQ</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.SelectorJQ">
+SelectorJQ
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>SelectorJQ</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.SelectorJQ">
+SelectorJQ
+<a href="#kwok.x-k8s.io%2fv1alpha1.SelectorJQ"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.SelectorExpression">SelectorExpression</a>
+</p>
+<p>
+<p>SelectorJQ is a resource selector requirement is a selector that contains values, a key,
+and an operator that relates the key and values.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>key</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key represents the expression which will be evaluated by JQ.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>operator</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.SelectorOperator">
+SelectorOperator
+</a>
+</em>
+</td>
+<td>
+<p>Represents a scope&rsquo;s relationship to a set of values.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>An array of string values.
+If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
+If the operator is Exists or DoesNotExist, the values array must be empty.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.SelectorOperator">
 SelectorOperator
 (<code>string</code> alias)
@@ -5977,7 +6119,7 @@ SelectorOperator
 </h3>
 <p>
 <em>Appears on: </em>
-<a href="#kwok.x-k8s.io/v1alpha1.SelectorRequirement">SelectorRequirement</a>
+<a href="#kwok.x-k8s.io/v1alpha1.SelectorJQ">SelectorJQ</a>
 </p>
 <p>
 <p>SelectorOperator is a label selector operator is the set of operators that can be used in a selector requirement.</p>
@@ -6008,65 +6150,6 @@ SelectorOperator
 <tr>
 <td><code>&#34;NotIn&#34;</code></td>
 <td><p>SelectorOpNotIn is the negated set inclusion operator.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="kwok.x-k8s.io/v1alpha1.SelectorRequirement">
-SelectorRequirement
-<a href="#kwok.x-k8s.io%2fv1alpha1.SelectorRequirement"> #</a>
-</h3>
-<p>
-<em>Appears on: </em>
-<a href="#kwok.x-k8s.io/v1alpha1.StageSelector">StageSelector</a>
-</p>
-<p>
-<p>SelectorRequirement is a resource selector requirement is a selector that contains values, a key,
-and an operator that relates the key and values.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>key</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The name of the scope that the selector applies to.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>operator</code>
-<em>
-<a href="#kwok.x-k8s.io/v1alpha1.SelectorOperator">
-SelectorOperator
-</a>
-</em>
-</td>
-<td>
-<p>Represents a scope&rsquo;s relationship to a set of values.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>values</code>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>An array of string values.
-If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
-If the operator is Exists or DoesNotExist, the values array must be empty.</p>
 </td>
 </tr>
 </tbody>
@@ -6585,8 +6668,8 @@ operator is &ldquo;In&rdquo;, and the values array contains only &ldquo;value&rd
 <td>
 <code>matchExpressions</code>
 <em>
-<a href="#kwok.x-k8s.io/v1alpha1.SelectorRequirement">
-[]SelectorRequirement
+<a href="#kwok.x-k8s.io/v1alpha1.SelectorExpression">
+[]SelectorExpression
 </a>
 </em>
 </td>

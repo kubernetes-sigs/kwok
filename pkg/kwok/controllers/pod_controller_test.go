@@ -191,7 +191,7 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("failed to watch nodes: %w", err))
 	}
 
-	lc, _ := lifecycle.NewLifecycle(podStages)
+	lc, _ := lifecycle.NewLifecycle(podStages, nil)
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
 		TypedClient:                           clientset,

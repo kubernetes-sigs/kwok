@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"time"
 
@@ -43,6 +44,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/cel"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
@@ -59,6 +61,7 @@ var (
 // Controller is a fake kubelet implementation that can be used to test
 type Controller struct {
 	conf Config
+	env  *cel.Environment
 
 	stagesManager *StagesManager
 
@@ -158,7 +161,26 @@ func NewController(conf Config) (*Controller, error) {
 		return nil, err
 	}
 
+	types := slices.Clone(cel.DefaultTypes)
+	conversions := slices.Clone(cel.DefaultConversions)
+	funcs := maps.Clone(cel.DefaultFuncs)
+	methods := maps.Clone(cel.FuncsToMethods(cel.DefaultFuncs))
+	vars := map[string]any{
+		"self": map[any]any{},
+	}
+	env, err := cel.NewEnvironment(cel.EnvironmentConfig{
+		Types:       types,
+		Conversions: conversions,
+		Methods:     methods,
+		Funcs:       funcs,
+		Vars:        vars,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	c := &Controller{
+		env:  env,
 		conf: conf,
 	}
 
@@ -543,7 +565,7 @@ func (c *Controller) Start(ctx context.Context) error {
 
 	if len(c.conf.LocalStages) != 0 {
 		for ref, stage := range c.conf.LocalStages {
-			lifecycle, err := lifecycle.NewLifecycle(stage)
+			lifecycle, err := lifecycle.NewLifecycle(stage, c.env)
 			if err != nil {
 				return err
 			}

@@ -218,16 +218,24 @@ type StageSelector struct {
 	// operator is "In", and the values array contains only "value". The requirements are ANDed.
 	MatchAnnotations map[string]string `json:"matchAnnotations,omitempty"`
 	// MatchExpressions is a list of label selector requirements. The requirements are ANDed.
-	MatchExpressions []SelectorRequirement `json:"matchExpressions,omitempty"`
+	MatchExpressions []SelectorExpression `json:"matchExpressions,omitempty"`
 }
 
-// SelectorRequirement is a resource selector requirement is a selector that contains values, a key,
+// SelectorExpression is a resource selector expression is a set of requirements that must be true for a match.
+// +kubebuilder:validation:XValidation:rule="has(self.expression) != has(self.key)",message="expression and key are mutually exclusive"
+// +kubebuilder:validation:XValidation:rule="!has(self.expression) || (has(self.key) && has(self.operator))",message="key and operator must be set together"
+type SelectorExpression struct {
+	*ExpressionCEL `json:",inline"`
+	*SelectorJQ    `json:",inline"`
+}
+
+// SelectorJQ is a resource selector requirement is a selector that contains values, a key,
 // and an operator that relates the key and values.
-type SelectorRequirement struct {
-	// The name of the scope that the selector applies to.
-	Key string `json:"key"`
+type SelectorJQ struct {
+	// Key represents the expression which will be evaluated by JQ.
+	Key string `json:"key,omitempty"`
 	// Represents a scope's relationship to a set of values.
-	Operator SelectorOperator `json:"operator"`
+	Operator SelectorOperator `json:"operator,omitempty"`
 	// An array of string values.
 	// If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
 	// If the operator is Exists or DoesNotExist, the values array must be empty.

@@ -61,11 +61,13 @@ func TestStageController(t *testing.T) {
 			},
 			Spec: internalversion.StageSpec{
 				Selector: &internalversion.StageSelector{
-					MatchExpressions: []internalversion.SelectorRequirement{
+					MatchExpressions: []internalversion.SelectorExpression{
 						{
-							Key:      ".status.phase",
-							Operator: "NotIn",
-							Values:   []string{"Available"},
+							SelectorJQ: &internalversion.SelectorJQ{
+								Key:      ".status.phase",
+								Operator: "NotIn",
+								Values:   []string{"Available"},
+							},
 						},
 					},
 				},
@@ -80,7 +82,7 @@ func TestStageController(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 	patchMeta, _ := strategicpatch.NewPatchMetaFromStruct(corev1.PersistentVolume{})
 	controller, err := NewStageController(StageControllerConfig{
 		PlayStageParallelism: 1,
