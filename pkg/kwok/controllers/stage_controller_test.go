@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
+	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
@@ -53,7 +54,7 @@ func TestStageController(t *testing.T) {
 
 	gvr := corev1.SchemeGroupVersion.WithResource("persistentvolumes")
 
-	lifecycle, _ := NewLifecycle([]*internalversion.Stage{
+	lc, _ := lifecycle.NewLifecycle([]*internalversion.Stage{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "pv-available",
@@ -86,7 +87,7 @@ func TestStageController(t *testing.T) {
 		GVR:                  gvr,
 		DynamicClient:        client,
 		Schema:               patchMeta,
-		Lifecycle:            resources.NewStaticGetter(lifecycle),
+		Lifecycle:            resources.NewStaticGetter(lc),
 		FuncMap:              defaultFuncMap,
 	})
 	if err != nil {

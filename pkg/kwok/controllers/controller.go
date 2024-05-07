@@ -50,6 +50,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
+	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/patch"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -374,7 +375,7 @@ func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 var podRef = internalversion.StageResourceRef{APIGroup: "v1", Kind: "Pod"}
 var nodeRef = internalversion.StageResourceRef{APIGroup: "v1", Kind: "Node"}
 
-func (c *Controller) startStageController(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[Lifecycle]) error {
+func (c *Controller) startStageController(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[lifecycle.Lifecycle]) error {
 	switch ref {
 	case podRef:
 		err := c.initPodController(ctx, lifecycle)
@@ -457,7 +458,7 @@ func (c *Controller) onNodeUnmanaged(nodeName string) {
 	c.onNodeUnmanagedFunc(nodeName)
 }
 
-func (c *Controller) initNodeController(ctx context.Context, lifecycle resources.Getter[Lifecycle]) (err error) {
+func (c *Controller) initNodeController(ctx context.Context, lifecycle resources.Getter[lifecycle.Lifecycle]) (err error) {
 	c.nodes, err = NewNodeController(NodeControllerConfig{
 		Clock:                                 c.conf.Clock,
 		TypedClient:                           c.conf.TypedClient,
@@ -485,7 +486,7 @@ func (c *Controller) initNodeController(ctx context.Context, lifecycle resources
 
 	return nil
 }
-func (c *Controller) initPodController(ctx context.Context, lifecycle resources.Getter[Lifecycle]) (err error) {
+func (c *Controller) initPodController(ctx context.Context, lifecycle resources.Getter[lifecycle.Lifecycle]) (err error) {
 	c.pods, err = NewPodController(PodControllerConfig{
 		Clock:                                 c.conf.Clock,
 		EnableCNI:                             c.conf.EnableCNI,
@@ -521,7 +522,7 @@ func (c *Controller) initPodController(ctx context.Context, lifecycle resources.
 	return nil
 }
 
-func (c *Controller) initStageController(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[Lifecycle]) error {
+func (c *Controller) initStageController(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[lifecycle.Lifecycle]) error {
 	logger := log.FromContext(ctx)
 
 	gv, err := schema.ParseGroupVersion(ref.APIGroup)
@@ -581,7 +582,7 @@ func (c *Controller) Start(ctx context.Context) error {
 
 	if len(c.conf.LocalStages) != 0 {
 		for ref, stage := range c.conf.LocalStages {
-			lifecycle, err := NewLifecycle(stage)
+			lifecycle, err := lifecycle.NewLifecycle(stage)
 			if err != nil {
 				return err
 			}
