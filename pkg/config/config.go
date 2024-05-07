@@ -17,6 +17,7 @@ limitations under the License.
 package config
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -28,6 +29,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -60,7 +63,7 @@ func loadRawMessages(src []string) ([]json.RawMessage, error) {
 		if err != nil {
 			return nil, err
 		}
-		r, err := loadRawFromFile(p)
+		r, err := loadRawMessage(p)
 		if err != nil {
 			return nil, err
 		}
@@ -508,6 +511,18 @@ func FilterWithoutTypeFromContext[T InternalObject](ctx context.Context) (out []
 	return FilterWithoutType[T](objs)
 }
 
+func loadRawMessage(uri string) ([]json.RawMessage, error) {
+	stat, err := os.Stat(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	if stat.IsDir() {
+		return loadRawFromKustomize(uri)
+	}
+	return loadRawFromFile(uri)
+}
+
 func loadRawFromFile(p string) ([]json.RawMessage, error) {
 	file, err := os.Open(p)
 	if err != nil {
@@ -517,6 +532,23 @@ func loadRawFromFile(p string) ([]json.RawMessage, error) {
 		_ = file.Close()
 	}()
 	return loadRaw(file)
+}
+
+func loadRawFromKustomize(dir string) ([]json.RawMessage, error) {
+	k := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
+	fs := filesys.MakeFsOnDisk()
+
+	objs, err := k.Run(fs, dir)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := objs.AsYaml()
+	if err != nil {
+		return nil, err
+	}
+
+	return loadRaw(bytes.NewReader(config))
 }
 
 func loadRaw(r io.Reader) ([]json.RawMessage, error) {
