@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
+	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -78,11 +79,11 @@ func TestNodeController(t *testing.T) {
 	nodeInit, _ := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
 	nodeStages := []*internalversion.Stage{nodeInit}
 
-	lifecycle, _ := NewLifecycle(nodeStages)
+	lc, _ := lifecycle.NewLifecycle(nodeStages)
 	nodes, err := NewNodeController(NodeControllerConfig{
 		TypedClient:          clientset,
 		NodeIP:               "10.0.0.1",
-		Lifecycle:            resources.NewStaticGetter(lifecycle),
+		Lifecycle:            resources.NewStaticGetter(lc),
 		FuncMap:              defaultFuncMap,
 		PlayStageParallelism: 2,
 	})

@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
@@ -29,14 +30,14 @@ import (
 // StagesManagerConfig is the configuration for a stages manager
 type StagesManagerConfig struct {
 	StageGetter resources.DynamicGetter[[]*internalversion.Stage]
-	StartFunc   func(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[Lifecycle]) error
+	StartFunc   func(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[lifecycle.Lifecycle]) error
 }
 
 // StagesManager is a stages manager
 // It is a dynamic getter for stages and start a stage controller
 type StagesManager struct {
 	stageGetter resources.DynamicGetter[[]*internalversion.Stage]
-	startFunc   func(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[Lifecycle]) error
+	startFunc   func(ctx context.Context, ref internalversion.StageResourceRef, lifecycle resources.Getter[lifecycle.Lifecycle]) error
 	cache       map[internalversion.StageResourceRef]context.CancelCauseFunc
 }
 
@@ -83,13 +84,13 @@ func (c *StagesManager) manage(ctx context.Context) {
 			continue
 		}
 
-		lifecycle := resources.NewFilter[Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) Lifecycle {
-			return slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*LifecycleStage, bool) {
+		lifecycle := resources.NewFilter[lifecycle.Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) lifecycle.Lifecycle {
+			return slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*lifecycle.Stage, bool) {
 				if stage.Spec.ResourceRef != ref {
 					return nil, false
 				}
 
-				lifecycleStage, err := NewLifecycleStage(stage)
+				lifecycleStage, err := lifecycle.NewStage(stage)
 				if err != nil {
 					logger.Error("failed to create lifecycle stage", err, "ref", ref)
 					return nil, false

@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"sync/atomic"
@@ -27,19 +26,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 	netutils "k8s.io/utils/net"
 
-	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
+	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -97,7 +94,7 @@ type NodeController struct {
 	renderer                              gotpl.Renderer
 	preprocessChan                        chan *corev1.Node
 	playStageParallelism                  uint
-	lifecycle                             resources.Getter[Lifecycle]
+	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*corev1.Node]]
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Node]]
 	backoff                               wait.Backoff
@@ -117,7 +114,7 @@ type NodeControllerConfig struct {
 	NodeIP                                string
 	NodeName                              string
 	NodePort                              int
-	Lifecycle                             resources.Getter[Lifecycle]
+	Lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	PlayStageParallelism                  uint
 	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
@@ -266,30 +263,6 @@ loop:
 	logger.Info("Stop watch nodes")
 }
 
-// finalizersModify modifies the finalizers of a node
-func (c *NodeController) finalizersModify(ctx context.Context, node *corev1.Node, finalizers *internalversion.StageFinalizers) (*corev1.Node, error) {
-	ops := finalizersModify(node.Finalizers, finalizers)
-	if len(ops) == 0 {
-		return nil, nil
-	}
-	data, err := json.Marshal(ops)
-	if err != nil {
-		return nil, err
-	}
-
-	logger := log.FromContext(ctx)
-	logger = logger.With(
-		"node", node.Name,
-	)
-
-	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, data, metav1.PatchOptions{})
-	if err != nil {
-		return nil, err
-	}
-	logger.Info("Patch node finalizers")
-	return result, nil
-}
-
 // deleteResource deletes a node
 func (c *NodeController) deleteResource(ctx context.Context, node *corev1.Node) error {
 	logger := log.FromContext(ctx)
@@ -350,8 +323,8 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		return err
 	}
 
-	lifecycle := c.lifecycle.Get()
-	stage, err := lifecycle.Match(node.Labels, node.Annotations, data)
+	lc := c.lifecycle.Get()
+	stage, err := lc.Match(node.Labels, node.Annotations, data)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}
@@ -419,7 +392,7 @@ func (c *NodeController) playStageWorker(ctx context.Context) {
 
 // playStage plays the stage.
 // The returned boolean indicates whether the applying action needs to be retried.
-func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *LifecycleStage) (bool, error) {
+func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *lifecycle.Stage) (bool, error) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
 	logger = logger.With(
@@ -432,40 +405,49 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 		err    error
 	)
 
-	if next.Event != nil && c.recorder != nil {
+	if event := next.Event(); event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
 			Kind:      "Node",
 			UID:       node.UID,
 			Name:      node.Name,
 			Namespace: "",
-		}, next.Event.Type, next.Event.Reason, next.Event.Message)
+		}, event.Type, event.Reason, event.Message)
 	}
 
-	if next.Finalizers != nil {
-		result, err = c.finalizersModify(ctx, node, next.Finalizers)
+	patch, err := next.Finalizers(node.Finalizers)
+	if err != nil {
+		return false, fmt.Errorf("failed to get finalizers for node %s: %w", node.Name, err)
+	}
+	if patch != nil {
+		result, err = c.patchResource(ctx, node, patch)
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of node %s: %w", node.Name, err)
 		}
 	}
 
-	if next.Delete {
+	if next.Delete() {
 		err = c.deleteResource(ctx, node)
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to delete node %s: %w", node.Name, err)
 		}
 		result = nil
-	} else if len(next.Patches) != 0 {
-		for _, patch := range next.Patches {
-			patchData, patchType, err := c.computePatch(node, patch)
+	} else {
+		patches, err := next.Patches(node, c.renderer)
+		if err != nil {
+			return false, fmt.Errorf("failed to get patches for node %s: %w", node.Name, err)
+		}
+
+		for _, patch := range patches {
+			changed, err := checkNeedPatchWithTyped(node, patch.Data, patch.Type)
 			if err != nil {
-				return shouldRetry(err), fmt.Errorf("failed to compute the node %s: %w", node.Name, err)
+				return false, fmt.Errorf("failed to check need patch for node %s: %w", node.Name, err)
 			}
-			if patchData == nil {
+			if !changed {
 				logger.Debug("Skip node",
 					"reason", "do not need to modify",
 				)
 			} else {
-				result, err = c.patchResource(ctx, node, patchData, patchType, patch)
+				result, err = c.patchResource(ctx, node, patch)
 				if err != nil {
 					return shouldRetry(err), fmt.Errorf("failed to patch node %s: %w", node.Name, err)
 				}
@@ -489,7 +471,7 @@ func (c *NodeController) readOnly(nodeName string) bool {
 }
 
 // patchResource patches the resource
-func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, patchData []byte, patchType types.PatchType, patch internalversion.StagePatch) (*corev1.Node, error) {
+func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, patch *lifecycle.Patch) (*corev1.Node, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
@@ -502,137 +484,12 @@ func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, p
 		)
 		subresource = []string{patch.Subresource}
 	}
-	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, patchType, patchData, metav1.PatchOptions{}, subresource...)
+	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
 	logger.Info("Patch node")
 	return result, nil
-}
-
-func (c *NodeController) computePatch(node *corev1.Node, patch internalversion.StagePatch) ([]byte, types.PatchType, error) {
-	switch format.ElemOrDefault(patch.Type) {
-	case internalversion.StagePatchTypeJSONPatch:
-		patchData, err := c.computeJSONPatch(node, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.JSONPatchType, nil
-	case internalversion.StagePatchTypeStrategicMergePatch, "":
-		patchData, err := c.computeStrategicMergePatch(node, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.StrategicMergePatchType, nil
-	case internalversion.StagePatchTypeMergePatch:
-		patchData, err := c.computeMergePatch(node, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.MergePatchType, nil
-	}
-
-	return nil, "", fmt.Errorf("unknown patch type %s", *patch.Type)
-}
-
-func (c *NodeController) computeStrategicMergePatch(node *corev1.Node, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, node)
-	if err != nil {
-		return nil, err
-	}
-
-	var hasChange bool
-	switch root {
-	default:
-		return nil, fmt.Errorf("root %q is not supported", root)
-	case "":
-		hasChange, err = checkNeedStrategicMergePatch(*node, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "metadata":
-		hasChange, err = checkNeedStrategicMergePatch(node.ObjectMeta, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "spec":
-		hasChange, err = checkNeedStrategicMergePatch(node.Spec, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "status":
-		hasChange, err = checkNeedStrategicMergePatch(node.Status, patchData)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if !hasChange {
-		return nil, nil
-	}
-
-	return wrapMergePatchData(root, patchData)
-}
-
-func (c *NodeController) computeMergePatch(node *corev1.Node, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, node)
-	if err != nil {
-		return nil, err
-	}
-
-	var hasChange bool
-	switch root {
-	default:
-		return nil, fmt.Errorf("root %q is not supported", root)
-	case "":
-		hasChange, err = checkNeedMergePatch(*node, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "metadata":
-		hasChange, err = checkNeedMergePatch(node.ObjectMeta, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "spec":
-		hasChange, err = checkNeedMergePatch(node.Spec, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "status":
-		hasChange, err = checkNeedMergePatch(node.Status, patchData)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if !hasChange {
-		return nil, nil
-	}
-
-	return wrapMergePatchData(root, patchData)
-}
-
-func (c *NodeController) computeJSONPatch(node *corev1.Node, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, node)
-	if err != nil {
-		return nil, err
-	}
-
-	patchData, err = wrapJSONPatchData(root, patchData)
-	if err != nil {
-		return nil, err
-	}
-
-	hasChange, err := checkNeedJSONPatch(*node, patchData)
-	if err != nil {
-		return nil, err
-	}
-	if !hasChange {
-		return nil, nil
-	}
-
-	return patchData, nil
 }
 
 // putNodeInfo puts node info

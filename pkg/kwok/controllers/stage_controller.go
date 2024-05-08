@@ -17,34 +17,29 @@ limitations under the License.
 package controllers
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync/atomic"
 	"time"
 
-	jsonpatch "github.com/evanphx/json-patch/v5"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 
-	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
+	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -62,7 +57,7 @@ type StageController struct {
 	renderer                              gotpl.Renderer
 	preprocessChan                        chan *unstructured.Unstructured
 	playStageParallelism                  uint
-	lifecycle                             resources.Getter[Lifecycle]
+	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*unstructured.Unstructured]]
 	backoff                               wait.Backoff
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*unstructured.Unstructured]]
@@ -78,7 +73,7 @@ type StageControllerConfig struct {
 	GVR                                   schema.GroupVersionResource
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
-	Lifecycle                             resources.Getter[Lifecycle]
+	Lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	PlayStageParallelism                  uint
 	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
@@ -133,35 +128,6 @@ func (c *StageController) Start(ctx context.Context, events <-chan informer.Even
 	}
 	go c.watchResources(ctx, events)
 	return nil
-}
-
-// finalizersModify modifies the finalizers of a resource
-func (c *StageController) finalizersModify(ctx context.Context, resource *unstructured.Unstructured, finalizers *internalversion.StageFinalizers) (*unstructured.Unstructured, error) {
-	ops := finalizersModify(resource.GetFinalizers(), finalizers)
-	if len(ops) == 0 {
-		return nil, nil
-	}
-	data, err := json.Marshal(ops)
-	if err != nil {
-		return nil, err
-	}
-
-	logger := log.FromContext(ctx)
-	logger = logger.With(
-		"resource", log.KObj(resource),
-	)
-
-	nri := c.dynamicClient.Resource(c.gvr)
-	var cli dynamic.ResourceInterface = nri
-	if ns := resource.GetNamespace(); ns != "" {
-		cli = nri.Namespace(ns)
-	}
-	result, err := cli.Patch(ctx, resource.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
-	if err != nil {
-		return nil, err
-	}
-	logger.Info("Patch resource finalizers")
-	return result, nil
 }
 
 // deleteResource deletes a resource
@@ -229,8 +195,8 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 		return err
 	}
 
-	lifecycle := c.lifecycle.Get()
-	stage, err := lifecycle.Match(resource.GetLabels(), resource.GetAnnotations(), data)
+	lc := c.lifecycle.Get()
+	stage, err := lc.Match(resource.GetLabels(), resource.GetAnnotations(), data)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}
@@ -299,7 +265,7 @@ func (c *StageController) playStageWorker(ctx context.Context) {
 
 // playStage plays the stage.
 // The returned boolean indicates whether the applying action needs to be retried.
-func (c *StageController) playStage(ctx context.Context, resource *unstructured.Unstructured, stage *LifecycleStage) (bool, error) {
+func (c *StageController) playStage(ctx context.Context, resource *unstructured.Unstructured, stage *lifecycle.Stage) (bool, error) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
 	logger = logger.With(
@@ -312,41 +278,50 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 		err    error
 	)
 
-	if next.Event != nil && c.recorder != nil {
+	if event := next.Event(); event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
 			APIVersion: resource.GetAPIVersion(),
 			Kind:       resource.GetKind(),
 			UID:        resource.GetUID(),
 			Name:       resource.GetName(),
 			Namespace:  resource.GetNamespace(),
-		}, next.Event.Type, next.Event.Reason, next.Event.Message)
+		}, event.Type, event.Reason, event.Message)
 	}
 
-	if next.Finalizers != nil {
-		result, err = c.finalizersModify(ctx, resource, next.Finalizers)
+	patch, err := next.Finalizers(resource.GetFinalizers())
+	if err != nil {
+		return false, fmt.Errorf("failed to get finalizers for resource %s: %w", resource.GetName(), err)
+	}
+	if patch != nil {
+		result, err = c.patchResource(ctx, resource, patch)
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of resource %s: %w", resource.GetName(), err)
 		}
 	}
 
-	if next.Delete {
+	if next.Delete() {
 		err = c.deleteResource(ctx, resource)
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to delete resource %s: %w", resource.GetName(), err)
 		}
 		result = nil
-	} else if len(next.Patches) != 0 {
-		for _, patch := range next.Patches {
-			patchData, patchType, err := c.computePatch(resource, patch)
+	} else {
+		patches, err := next.Patches(resource.Object, c.renderer)
+		if err != nil {
+			return false, fmt.Errorf("failed to get patches for resource %s: %w", resource.GetName(), err)
+		}
+		for _, patch := range patches {
+			changed, err := checkNeedPatch(resource.Object, patch.Data, patch.Type, c.schema)
 			if err != nil {
-				return shouldRetry(err), fmt.Errorf("failed to compute resource %s: %w", resource.GetName(), err)
+				return false, fmt.Errorf("failed to check need patch for resource %s: %w", resource.GetName(), err)
 			}
-			if patchData == nil {
+
+			if !changed {
 				logger.Debug("Skip resource",
 					"reason", "do not need to modify",
 				)
 			} else {
-				result, err = c.patchResource(ctx, resource, patchData, patchType, patch)
+				result, err = c.patchResource(ctx, resource, patch)
 				if err != nil {
 					return shouldRetry(err), fmt.Errorf("failed to patch resource %s: %w", resource.GetName(), err)
 				}
@@ -363,7 +338,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 }
 
 // patchResource patches the resource
-func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patchData []byte, patchType types.PatchType, patch internalversion.StagePatch) (*unstructured.Unstructured, error) {
+func (c *StageController) patchResource(ctx context.Context, resource *unstructured.Unstructured, patch *lifecycle.Patch) (*unstructured.Unstructured, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"resource", log.KObj(resource),
@@ -394,7 +369,7 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 		subresource = []string{patch.Subresource}
 	}
 
-	result, err := cli.Patch(ctx, resource.GetName(), patchType, patchData, metav1.PatchOptions{}, subresource...)
+	result, err := cli.Patch(ctx, resource.GetName(), patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
@@ -457,140 +432,6 @@ loop:
 		}
 	}
 	logger.Info("Stop watch resources")
-}
-
-func (c *StageController) computePatch(resource *unstructured.Unstructured, patch internalversion.StagePatch) ([]byte, types.PatchType, error) {
-	switch format.ElemOrDefault(patch.Type) {
-	case internalversion.StagePatchTypeJSONPatch:
-		patchData, err := c.computeJSONPatch(resource, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.JSONPatchType, nil
-	case internalversion.StagePatchTypeStrategicMergePatch:
-		patchData, err := c.computeStrategicMergePatch(resource, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.StrategicMergePatchType, nil
-	case internalversion.StagePatchTypeMergePatch, "":
-		patchData, err := c.computeMergePatch(resource, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.MergePatchType, nil
-	}
-
-	return nil, "", fmt.Errorf("unknown patch type %s", *patch.Type)
-}
-
-func (c *StageController) computeMergePatch(resource *unstructured.Unstructured, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, resource.Object)
-	if err != nil {
-		return nil, err
-	}
-
-	var base any = resource.Object
-
-	if root != "" {
-		base, _, err = unstructured.NestedFieldNoCopy(resource.Object, root)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if base != nil {
-		original, err := json.Marshal(base)
-		if err != nil {
-			return nil, err
-		}
-
-		sum, err := jsonpatch.MergePatch(original, patchData)
-		if err != nil {
-			return nil, err
-		}
-
-		if bytes.Equal(sum, original) {
-			return nil, nil
-		}
-	}
-
-	return wrapMergePatchData(root, patchData)
-}
-
-func (c *StageController) computeStrategicMergePatch(resource *unstructured.Unstructured, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, resource.Object)
-	if err != nil {
-		return nil, err
-	}
-
-	if c.schema != nil {
-		var base any = resource.Object
-		var patchMeta = c.schema
-
-		if root != "" {
-			base, _, err = unstructured.NestedFieldNoCopy(resource.Object, root)
-			if err != nil {
-				return nil, err
-			}
-
-			patchMeta, _, err = c.schema.LookupPatchMetadataForStruct(root)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		if base != nil {
-			original, err := json.Marshal(base)
-			if err != nil {
-				return nil, err
-			}
-
-			sum, err := strategicpatch.StrategicMergePatchUsingLookupPatchMeta(original, patchData, patchMeta)
-			if err != nil {
-				return nil, err
-			}
-
-			if bytes.Equal(sum, original) {
-				return nil, nil
-			}
-		}
-	}
-
-	return wrapMergePatchData(root, patchData)
-}
-
-func (c *StageController) computeJSONPatch(resource *unstructured.Unstructured, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, resource.Object)
-	if err != nil {
-		return nil, err
-	}
-
-	patchData, err = wrapJSONPatchData(root, patchData)
-	if err != nil {
-		return nil, err
-	}
-
-	patch, err := jsonpatch.DecodePatch(patchData)
-	if err != nil {
-		return nil, err
-	}
-
-	original, err := json.Marshal(resource.Object)
-	if err != nil {
-		return nil, err
-	}
-
-	sum, err := patch.Apply(original)
-	if err != nil {
-		return nil, err
-	}
-
-	if bytes.Equal(sum, original) {
-		return nil, nil
-	}
-
-	return patchData, nil
 }
 
 // addStageJob adds a stage to be applied into the underlying weight delay queue and the associated helper map

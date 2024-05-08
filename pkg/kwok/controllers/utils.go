@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math"
 	"net"
 	"sync"
@@ -27,9 +28,11 @@ import (
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 
+	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -119,7 +122,7 @@ func labelsParse(selector string) (labels.Selector, error) {
 
 type resourceStageJob[T any] struct {
 	Resource T
-	Stage    *LifecycleStage
+	Stage    *lifecycle.Stage
 	Key      string
 	// RetryCount is used for tracking the retry times of a job.
 	// Must be initialized to 0.
@@ -156,8 +159,32 @@ func shouldRetry(err error) bool {
 	return false
 }
 
-// checkNeedStrategicMergePatch checks if the object needs to be patched
-func checkNeedStrategicMergePatch[T any](obj T, patchData []byte) (bool, error) {
+func checkNeedPatchWithTyped[T any](obj T, patchData []byte, patchType types.PatchType) (bool, error) {
+	switch patchType {
+	case types.JSONPatchType:
+		return checkNeedJSONPatch(obj, patchData)
+	case types.StrategicMergePatchType:
+		return checkNeedStrategicMergePatchWithTyped(obj, patchData)
+	case types.MergePatchType:
+		return checkNeedMergePatchWithTyped(obj, patchData)
+	}
+	return false, fmt.Errorf("unknown patch type %s", patchType)
+}
+
+func checkNeedPatch(obj any, patchData []byte, patchType types.PatchType, schema strategicpatch.LookupPatchMeta) (bool, error) {
+	switch patchType {
+	case types.JSONPatchType:
+		return checkNeedJSONPatch(obj, patchData)
+	case types.StrategicMergePatchType:
+		return checkNeedStrategicMergePatchWithMeta(obj, patchData, schema)
+	case types.MergePatchType:
+		return checkNeedMergePatch(obj, patchData)
+	}
+	return false, fmt.Errorf("unknown patch type %s", patchType)
+}
+
+// checkNeedStrategicMergePatchWithTyped checks if the object needs to be patched
+func checkNeedStrategicMergePatchWithTyped[T any](obj T, patchData []byte) (bool, error) {
 	original, err := json.Marshal(obj)
 	if err != nil {
 		return false, err
@@ -186,8 +213,8 @@ func checkNeedStrategicMergePatch[T any](obj T, patchData []byte) (bool, error) 
 	return true, nil
 }
 
-// checkNeedMergePatch checks if the object needs to be patched
-func checkNeedMergePatch[T any](obj T, patchData []byte) (bool, error) {
+// checkNeedMergePatchWithTyped checks if the object needs to be patched
+func checkNeedMergePatchWithTyped[T any](obj T, patchData []byte) (bool, error) {
 	original, err := json.Marshal(obj)
 	if err != nil {
 		return false, err
@@ -217,7 +244,7 @@ func checkNeedMergePatch[T any](obj T, patchData []byte) (bool, error) {
 }
 
 // checkNeedJSONPatch checks if the object needs to be patched
-func checkNeedJSONPatch[T any](obj T, patchData []byte) (bool, error) {
+func checkNeedJSONPatch(obj any, patchData []byte) (bool, error) {
 	original, err := json.Marshal(obj)
 	if err != nil {
 		return false, err
@@ -240,38 +267,38 @@ func checkNeedJSONPatch[T any](obj T, patchData []byte) (bool, error) {
 	return true, nil
 }
 
-// wrapMergePatchData wraps the patch data with the parent key
-func wrapMergePatchData(parent string, patchData []byte) ([]byte, error) {
-	if parent == "" {
-		return patchData, nil
-	}
-	return json.Marshal(map[string]json.RawMessage{
-		parent: patchData,
-	})
-}
-
-// wrapJSONPatchData wraps the patch data with the parent key
-func wrapJSONPatchData(parent string, patchData []byte) ([]byte, error) {
-	if parent == "" {
-		return patchData, nil
-	}
-
-	var data []jsonpatchData
-	err := json.Unmarshal(patchData, &data)
+func checkNeedStrategicMergePatchWithMeta(obj any, patchData []byte, schema strategicpatch.LookupPatchMeta) (bool, error) {
+	original, err := json.Marshal(obj)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	for i := range data {
-		data[i].Path = "/" + parent + data[i].Path
+	sum, err := strategicpatch.StrategicMergePatchUsingLookupPatchMeta(original, patchData, schema)
+	if err != nil {
+		return false, err
 	}
 
-	return json.Marshal(data)
+	if bytes.Equal(sum, original) {
+		return false, nil
+	}
+
+	return true, nil
 }
 
-type jsonpatchData struct {
-	Op    string          `json:"op"`
-	Path  string          `json:"path"`
-	Value json.RawMessage `json:"value,omitempty"`
-	From  string          `json:"from,omitempty"`
+func checkNeedMergePatch(obj any, patchData []byte) (bool, error) {
+	original, err := json.Marshal(obj)
+	if err != nil {
+		return false, err
+	}
+
+	sum, err := jsonpatch.MergePatch(original, patchData)
+	if err != nil {
+		return false, err
+	}
+
+	if bytes.Equal(sum, original) {
+		return false, nil
+	}
+
+	return true, nil
 }

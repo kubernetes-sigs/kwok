@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package lifecycle
 
 import (
 	"context"
@@ -33,7 +33,7 @@ import (
 func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {
 	lcs := Lifecycle{}
 	for _, stage := range stages {
-		lc, err := NewLifecycleStage(stage)
+		lc, err := NewStage(stage)
 		if err != nil {
 			return nil, fmt.Errorf("lifecycle stage: %w", err)
 		}
@@ -46,10 +46,10 @@ func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {
 }
 
 // Lifecycle is a list of lifecycle stage.
-type Lifecycle []*LifecycleStage
+type Lifecycle []*Stage
 
-func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*LifecycleStage, error) {
-	out := []*LifecycleStage{}
+func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*Stage, error) {
+	out := []*Stage{}
 	for _, stage := range s {
 		ok, err := stage.match(label, annotation, data)
 		if err != nil {
@@ -63,7 +63,7 @@ func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*Lif
 }
 
 // Match returns matched stage.
-func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*LifecycleStage, error) {
+func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*Stage, error) {
 	data, err := expression.ToJSONStandard(data)
 	if err != nil {
 		return nil, err
@@ -101,9 +101,9 @@ func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*Lifec
 	return stages[len(stages)-1], nil
 }
 
-// NewLifecycleStage returns a new LifecycleStage.
-func NewLifecycleStage(s *internalversion.Stage) (*LifecycleStage, error) {
-	stage := &LifecycleStage{
+// NewStage returns a new Stage.
+func NewStage(s *internalversion.Stage) (*Stage, error) {
+	stage := &Stage{
 		name: s.Name,
 	}
 	selector := s.Spec.Selector
@@ -171,8 +171,8 @@ func NewLifecycleStage(s *internalversion.Stage) (*LifecycleStage, error) {
 	return stage, nil
 }
 
-// LifecycleStage is a resource lifecycle stage manager
-type LifecycleStage struct {
+// Stage is a resource lifecycle stage manager
+type Stage struct {
 	name             string
 	matchLabels      labels.Selector
 	matchAnnotations labels.Selector
@@ -187,7 +187,7 @@ type LifecycleStage struct {
 	immediateNextStage bool
 }
 
-func (s *LifecycleStage) match(label, annotation labels.Set, jsonStandard interface{}) (bool, error) {
+func (s *Stage) match(label, annotation labels.Set, jsonStandard interface{}) (bool, error) {
 	if s.matchLabels != nil {
 		if !s.matchLabels.Matches(label) {
 			return false, nil
@@ -215,7 +215,7 @@ func (s *LifecycleStage) match(label, annotation labels.Set, jsonStandard interf
 
 // Delay returns the delay duration of the stage.
 // It's not a constant value, it can be a random value.
-func (s *LifecycleStage) Delay(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
+func (s *Stage) Delay(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
 	if s.duration == nil {
 		return 0, false
 	}
@@ -243,16 +243,16 @@ func (s *LifecycleStage) Delay(ctx context.Context, v interface{}, now time.Time
 }
 
 // Next returns the next of the stage.
-func (s *LifecycleStage) Next() *internalversion.StageNext {
-	return s.next
+func (s *Stage) Next() *Next {
+	return newNext(s.next)
 }
 
 // Name returns the name of the stage
-func (s *LifecycleStage) Name() string {
+func (s *Stage) Name() string {
 	return s.name
 }
 
 // ImmediateNextStage returns whether the stage is immediate next stage.
-func (s *LifecycleStage) ImmediateNextStage() bool {
+func (s *Stage) ImmediateNextStage() bool {
 	return s.immediateNextStage
 }

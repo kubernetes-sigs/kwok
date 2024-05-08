@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync/atomic"
 	"time"
@@ -26,19 +25,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 
-	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
+	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
@@ -65,7 +62,7 @@ type PodController struct {
 	podsOnNode                            maps.SyncMap[string, *maps.SyncMap[log.ObjectRef, *PodInfo]]
 	preprocessChan                        chan *corev1.Pod
 	playStageParallelism                  uint
-	lifecycle                             resources.Getter[Lifecycle]
+	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*corev1.Pod]]
 	backoff                               wait.Backoff
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Pod]]
@@ -90,7 +87,7 @@ type PodControllerConfig struct {
 	CIDR                                  string
 	NodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
 	NodeHasMetric                         func(nodeName string) bool
-	Lifecycle                             resources.Getter[Lifecycle]
+	Lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	PlayStageParallelism                  uint
 	FuncMap                               gotpl.FuncMap
 	Recorder                              record.EventRecorder
@@ -158,31 +155,6 @@ func (c *PodController) Start(ctx context.Context, events <-chan informer.Event[
 	return nil
 }
 
-// finalizersModify modifies the finalizers of a pod
-func (c *PodController) finalizersModify(ctx context.Context, pod *corev1.Pod, finalizers *internalversion.StageFinalizers) (*corev1.Pod, error) {
-	ops := finalizersModify(pod.Finalizers, finalizers)
-	if len(ops) == 0 {
-		return nil, nil
-	}
-	data, err := json.Marshal(ops)
-	if err != nil {
-		return nil, err
-	}
-
-	logger := log.FromContext(ctx)
-	logger = logger.With(
-		"pod", log.KObj(pod),
-		"node", pod.Spec.NodeName,
-	)
-
-	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.JSONPatchType, data, metav1.PatchOptions{})
-	if err != nil {
-		return nil, err
-	}
-	logger.Info("Patch pod finalizers")
-	return result, nil
-}
-
 // deleteResource deletes a pod
 func (c *PodController) deleteResource(ctx context.Context, pod *corev1.Pod) error {
 	logger := log.FromContext(ctx)
@@ -246,8 +218,8 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		return err
 	}
 
-	lifecycle := c.lifecycle.Get()
-	stage, err := lifecycle.Match(pod.Labels, pod.Annotations, data)
+	lc := c.lifecycle.Get()
+	stage, err := lc.Match(pod.Labels, pod.Annotations, data)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}
@@ -315,7 +287,7 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 
 // playStage plays the stage.
 // The returned boolean indicates whether the applying action needs to be retried.
-func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *LifecycleStage) (bool, error) {
+func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *lifecycle.Stage) (bool, error) {
 	next := stage.Next()
 	logger := log.FromContext(ctx)
 	logger = logger.With(
@@ -329,41 +301,49 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *L
 		err    error
 	)
 
-	if next.Event != nil && c.recorder != nil {
+	if event := next.Event(); event != nil && c.recorder != nil {
 		c.recorder.Event(&corev1.ObjectReference{
 			Kind:      "Pod",
 			UID:       pod.UID,
 			Name:      pod.Name,
 			Namespace: pod.Namespace,
-		}, next.Event.Type, next.Event.Reason, next.Event.Message)
+		}, event.Type, event.Reason, event.Message)
 	}
 
-	if next.Finalizers != nil {
-		result, err = c.finalizersModify(ctx, pod, next.Finalizers)
+	patch, err := next.Finalizers(pod.Finalizers)
+	if err != nil {
+		return false, fmt.Errorf("failed to get finalizers for pod %s: %w", pod.Name, err)
+	}
+	if patch != nil {
+		result, err = c.patchResource(ctx, pod, patch)
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of pod %s: %w", pod.Name, err)
 		}
 	}
 
-	if next.Delete {
+	if next.Delete() {
 		err = c.deleteResource(ctx, pod)
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to delete pod %s: %w", pod.Name, err)
 		}
 		result = nil
-	} else if len(next.Patches) != 0 {
+	} else {
 		c.markPodIP(pod)
-		for _, patch := range next.Patches {
-			patchData, patchType, err := c.computePatch(pod, patch)
+		patches, err := next.Patches(pod, c.renderer)
+		if err != nil {
+			return false, fmt.Errorf("failed to get patches for pod %s: %w", pod.Name, err)
+		}
+		for _, patch := range patches {
+			changed, err := checkNeedPatchWithTyped(pod, patch.Data, patch.Type)
 			if err != nil {
-				return shouldRetry(err), fmt.Errorf("failed to compute the pod %s: %w", pod.Name, err)
+				return false, fmt.Errorf("failed to check need patch for pod %s: %w", pod.Name, err)
 			}
-			if patchData == nil {
+			if !changed {
 				logger.Debug("Skip pod",
 					"reason", "do not need to modify",
 				)
 			} else {
-				result, err = c.patchResource(ctx, pod, patchData, patchType, patch)
+				result, err = c.patchResource(ctx, pod, patch)
 				if err != nil {
 					return shouldRetry(err), fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
 				}
@@ -387,7 +367,7 @@ func (c *PodController) readOnly(nodeName string) bool {
 }
 
 // patchResource patches the resource
-func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patchData []byte, patchType types.PatchType, patch internalversion.StagePatch) (*corev1.Pod, error) {
+func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patch *lifecycle.Patch) (*corev1.Pod, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
@@ -401,7 +381,7 @@ func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patc
 		)
 		subresource = []string{patch.Subresource}
 	}
-	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, patchType, patchData, metav1.PatchOptions{}, subresource...)
+	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
@@ -574,131 +554,6 @@ func (c *PodController) markPodIP(pod *corev1.Pod) {
 			}
 		}
 	}
-}
-
-func (c *PodController) computePatch(pod *corev1.Pod, patch internalversion.StagePatch) ([]byte, types.PatchType, error) {
-	switch format.ElemOrDefault(patch.Type) {
-	case internalversion.StagePatchTypeJSONPatch:
-		patchData, err := c.computeJSONPatch(pod, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.JSONPatchType, nil
-	case internalversion.StagePatchTypeStrategicMergePatch, "":
-		patchData, err := c.computeStrategicMergePatch(pod, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.StrategicMergePatchType, nil
-	case internalversion.StagePatchTypeMergePatch:
-		patchData, err := c.computeMergePatch(pod, patch.Root, patch.Template)
-		if err != nil {
-			return nil, "", err
-		}
-		return patchData, types.MergePatchType, nil
-	}
-
-	return nil, "", fmt.Errorf("unknown patch type %s", *patch.Type)
-}
-
-func (c *PodController) computeStrategicMergePatch(pod *corev1.Pod, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, pod)
-	if err != nil {
-		return nil, err
-	}
-
-	var hasChange bool
-	switch root {
-	default:
-		return nil, fmt.Errorf("root %q is not supported", root)
-	case "":
-		hasChange, err = checkNeedStrategicMergePatch(*pod, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "metadata":
-		hasChange, err = checkNeedStrategicMergePatch(pod.ObjectMeta, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "spec":
-		hasChange, err = checkNeedStrategicMergePatch(pod.Spec, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "status":
-		hasChange, err = checkNeedStrategicMergePatch(pod.Status, patchData)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if !hasChange {
-		return nil, nil
-	}
-
-	return wrapMergePatchData(root, patchData)
-}
-
-func (c *PodController) computeMergePatch(pod *corev1.Pod, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, pod)
-	if err != nil {
-		return nil, err
-	}
-
-	var hasChange bool
-	switch root {
-	default:
-		return nil, fmt.Errorf("root %q is not supported", root)
-	case "":
-		hasChange, err = checkNeedMergePatch(*pod, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "metadata":
-		hasChange, err = checkNeedMergePatch(pod.ObjectMeta, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "spec":
-		hasChange, err = checkNeedMergePatch(pod.Spec, patchData)
-		if err != nil {
-			return nil, err
-		}
-	case "status":
-		hasChange, err = checkNeedMergePatch(pod.Status, patchData)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if !hasChange {
-		return nil, nil
-	}
-
-	return wrapMergePatchData(root, patchData)
-}
-
-func (c *PodController) computeJSONPatch(pod *corev1.Pod, root, tpl string) ([]byte, error) {
-	patchData, err := c.renderer.ToJSON(tpl, pod)
-	if err != nil {
-		return nil, err
-	}
-
-	patchData, err = wrapJSONPatchData(root, patchData)
-	if err != nil {
-		return nil, err
-	}
-
-	hasChange, err := checkNeedJSONPatch(*pod, patchData)
-	if err != nil {
-		return nil, err
-	}
-	if !hasChange {
-		return nil, nil
-	}
-
-	return patchData, nil
 }
 
 func (c *PodController) funcNodeIP() string {
