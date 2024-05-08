@@ -247,7 +247,7 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 	}
 
 	lifecycle := c.lifecycle.Get()
-	stage, err := lifecycle.Match(pod.Labels, pod.Annotations, data)
+	stage, err := lifecycle.Match(ctx, pod.Labels, pod.Annotations, pod, data)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}
