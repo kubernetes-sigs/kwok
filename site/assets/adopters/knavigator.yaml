@@ -1,0 +1,7 @@
+name: Knavigator
+description: The Knavigator project from NVIDIA uses KWOK to create virtual nodes for testing in kubernetes.
+contacts:
+- dmitsh
+links:
+- name: Knavigator
+  url: https://github.com/NVIDIA/knavigator
