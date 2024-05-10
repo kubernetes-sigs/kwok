@@ -19,13 +19,13 @@ KWOK_REPO=kubernetes-sigs/kwok
 KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
 ```
 
-## Deployment kwok and set up CRDs
+## Deploy kwok and set up custom resource definitions (CRDs)
 
 ``` bash
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/kwok.yaml"
 ```
 
-## Set up default CRs of Stages (required)
+## Set up default custom resources (CRs) of stages (required)
 
 {{< hint "warning" >}}
 NOTE: This configures the pod/node emulation behavior, if not it will do nothing.
@@ -35,7 +35,7 @@ NOTE: This configures the pod/node emulation behavior, if not it will do nothing
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/stage-fast.yaml"
 ```
 
-## Set up default CRs of resource usage (optional)
+## Set up default custom resources (CRs) of resource usage (optional)
 
 This allows to simulate the resource usage of nodes, pods and containers.
 
