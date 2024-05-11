@@ -62,6 +62,41 @@ func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*Sta
 	return out, nil
 }
 
+// ListAllPossible returns all possible stages.
+func (s Lifecycle) ListAllPossible(label, annotation labels.Set, data interface{}) ([]*Stage, error) {
+	data, err := expression.ToJSONStandard(data)
+	if err != nil {
+		return nil, err
+	}
+	stages, err := s.match(label, annotation, data)
+	if err != nil {
+		return nil, err
+	}
+	if len(stages) == 0 {
+		return nil, nil
+	}
+	if len(stages) == 1 {
+		return stages, nil
+	}
+
+	totalWeights := 0
+	for _, stage := range stages {
+		totalWeights += stage.weight
+	}
+	if totalWeights == 0 {
+		return stages, nil
+	}
+
+	stagesWithWeights := make([]*Stage, 0, len(stages))
+	for _, stage := range stages {
+		if stage.weight == 0 {
+			continue
+		}
+		stagesWithWeights = append(stagesWithWeights, stage)
+	}
+	return stagesWithWeights, nil
+}
+
 // Match returns matched stage.
 func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*Stage, error) {
 	data, err := expression.ToJSONStandard(data)
@@ -255,4 +290,9 @@ func (s *Stage) Name() string {
 // ImmediateNextStage returns whether the stage is immediate next stage.
 func (s *Stage) ImmediateNextStage() bool {
 	return s.immediateNextStage
+}
+
+// Weight returns the weight of the stage.
+func (s *Stage) Weight() int {
+	return s.weight
 }

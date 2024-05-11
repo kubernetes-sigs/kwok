@@ -27,6 +27,7 @@ import (
 	"sort"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
@@ -323,6 +324,27 @@ func Load(ctx context.Context, src ...string) ([]InternalObject, error) {
 			return nil, err
 		}
 		objs = append(objs, internalObjs...)
+	}
+
+	return objs, nil
+}
+
+// LoadUnstructured loads the given path into the context.
+func LoadUnstructured(src ...string) ([]InternalObject, error) {
+	raws, err := loadRawMessages(src)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []InternalObject{}
+	for _, raw := range raws {
+		obj := unstructured.Unstructured{}
+		err := json.Unmarshal(raw, &obj)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, &obj)
 	}
 
 	return objs, nil

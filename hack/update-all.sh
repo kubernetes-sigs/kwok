@@ -78,6 +78,11 @@ if [[ "${UPDATE_SPELLING:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/update-spelling.sh || failed+=(spelling)
 fi
 
+if [[ "${UPDATE_STAGES:-true}" == "true" ]]; then
+  echo "[*] Update stages..."
+  "${ROOT_DIR}"/hack/update-stages.sh || failed+=(stages)
+fi
+
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Update failed for: ${failed[*]}"
   exit 1

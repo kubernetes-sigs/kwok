@@ -18,11 +18,8 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	coordinationv1 "k8s.io/api/coordination/v1"
@@ -45,7 +42,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config/resources"
-	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
@@ -54,50 +50,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/patch"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
-	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 var (
-	startTime = time.Now().Format(time.RFC3339Nano)
-
-	defaultFuncMap = gotpl.FuncMap{
-		"Quote": func(s any) string {
-			data, err := json.Marshal(s)
-			if err != nil {
-				return strconv.Quote(fmt.Sprint(s))
-			}
-			if len(data) == 0 {
-				return `""`
-			}
-			if data[0] == '"' {
-				return string(data)
-			}
-			return strconv.Quote(string(data))
-		},
-		"Now": func() string {
-			return time.Now().Format(time.RFC3339Nano)
-		},
-		"StartTime": func() string {
-			return startTime
-		},
-		"YAML": func(s interface{}, indent ...int) (string, error) {
-			d, err := yaml.Marshal(s)
-			if err != nil {
-				return "", err
-			}
-
-			data := string(d)
-			if len(indent) == 1 && indent[0] > 0 {
-				pad := strings.Repeat(" ", indent[0]*2)
-				data = strings.ReplaceAll("\n"+data, "\n", "\n"+pad)
-			}
-			return data, nil
-		},
-		"Version": func() string {
-			return consts.Version
-		},
-	}
-
 	nodeKind = corev1.SchemeGroupVersion.WithKind("Node")
 )
 
@@ -170,6 +125,7 @@ type Config struct {
 	ID                                    string
 	EnableMetrics                         bool
 	EnablePodCache                        bool
+	FuncMap                               gotpl.FuncMap
 }
 
 func (c Config) validate() error {
@@ -471,7 +427,7 @@ func (c *Controller) initNodeController(ctx context.Context, lifecycle resources
 		OnNodeUnmanagedFunc:                   c.onNodeUnmanaged,
 		Lifecycle:                             lifecycle,
 		PlayStageParallelism:                  c.conf.NodePlayStageParallelism,
-		FuncMap:                               defaultFuncMap,
+		FuncMap:                               c.conf.FuncMap,
 		Recorder:                              c.recorder,
 		ReadOnlyFunc:                          c.readOnlyFunc,
 		EnableMetrics:                         c.conf.EnableMetrics,
@@ -505,7 +461,7 @@ func (c *Controller) initPodController(ctx context.Context, lifecycle resources.
 
 			return c.nodes.Get(nodeName)
 		},
-		FuncMap:       defaultFuncMap,
+		FuncMap:       c.conf.FuncMap,
 		Recorder:      c.recorder,
 		ReadOnlyFunc:  c.readOnlyFunc,
 		EnableMetrics: c.conf.EnableMetrics,
@@ -558,7 +514,7 @@ func (c *Controller) initStageController(ctx context.Context, ref internalversio
 		DisregardStatusWithLabelSelector:      c.conf.DisregardStatusWithLabelSelector,
 		Lifecycle:                             lifecycle,
 		PlayStageParallelism:                  1,
-		FuncMap:                               defaultFuncMap,
+		FuncMap:                               c.conf.FuncMap,
 		Recorder:                              c.recorder,
 	})
 	if err != nil {

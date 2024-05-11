@@ -88,7 +88,6 @@ func TestStageController(t *testing.T) {
 		DynamicClient:        client,
 		Schema:               patchMeta,
 		Lifecycle:            resources.NewStaticGetter(lc),
-		FuncMap:              defaultFuncMap,
 	})
 	if err != nil {
 		t.Fatal(err)

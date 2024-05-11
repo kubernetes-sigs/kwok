@@ -84,7 +84,6 @@ func TestNodeController(t *testing.T) {
 		TypedClient:          clientset,
 		NodeIP:               "10.0.0.1",
 		Lifecycle:            resources.NewStaticGetter(lc),
-		FuncMap:              defaultFuncMap,
 		PlayStageParallelism: 2,
 	})
 	if err != nil {

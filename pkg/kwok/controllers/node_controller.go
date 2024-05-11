@@ -42,43 +42,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
-var (
-	// https://kubernetes.io/docs/concepts/architecture/nodes/#condition
-	nodeConditions = []corev1.NodeCondition{
-		{
-			Type:    corev1.NodeReady,
-			Status:  corev1.ConditionTrue,
-			Reason:  "KubeletReady",
-			Message: "kubelet is posting ready status",
-		},
-		{
-			Type:    corev1.NodeMemoryPressure,
-			Status:  corev1.ConditionFalse,
-			Reason:  "KubeletHasSufficientMemory",
-			Message: "kubelet has sufficient memory available",
-		},
-		{
-			Type:    corev1.NodeDiskPressure,
-			Status:  corev1.ConditionFalse,
-			Reason:  "KubeletHasNoDiskPressure",
-			Message: "kubelet has no disk pressure",
-		},
-		{
-			Type:    corev1.NodePIDPressure,
-			Status:  corev1.ConditionFalse,
-			Reason:  "KubeletHasSufficientPID",
-			Message: "kubelet has sufficient PID available",
-		},
-		{
-			Type:    corev1.NodeNetworkUnavailable,
-			Status:  corev1.ConditionFalse,
-			Reason:  "RouteCreated",
-			Message: "RouteController created a route",
-		},
-	}
-	nodeConditionsData, _ = expression.ToJSONStandard(nodeConditions)
-)
-
 // NodeController is a fake nodes implementation that can be used to test
 type NodeController struct {
 	clock                                 clock.Clock
@@ -171,9 +134,6 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		"NodeIP":   c.funcNodeIP,
 		"NodeName": c.funcNodeName,
 		"NodePort": c.funcNodePort,
-		"NodeConditions": func() interface{} {
-			return nodeConditionsData
-		},
 	}, conf.FuncMap)
 	c.renderer = gotpl.NewRenderer(funcMap)
 	return c, nil

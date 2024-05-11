@@ -1,0 +1,7 @@
+apiGroup: v1
+kind: Pod
+name: pod-terminating
+stages:
+- next:
+  - kind: delete
+  stage: pod-delete

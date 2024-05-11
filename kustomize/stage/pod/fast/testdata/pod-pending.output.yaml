@@ -1,0 +1,34 @@
+apiGroup: v1
+kind: Pod
+name: pod-pending
+stages:
+- next:
+  - data:
+      status:
+        conditions:
+        - lastTransitionTime: <Now>
+          status: "True"
+          type: Initialized
+        - lastTransitionTime: <Now>
+          status: "True"
+          type: Ready
+        - lastTransitionTime: <Now>
+          status: "True"
+          type: ContainersReady
+        containerStatuses:
+        - image: image
+          name: container
+          ready: true
+          restartCount: 0
+          state:
+            running:
+              startedAt: <Now>
+        hostIP: <NodeIPWith("node")>
+        initContainerStatuses: null
+        phase: Running
+        podIP: <PodIPWith("node", false, "", "pod-pending", "")>
+        startTime: <Now>
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-ready

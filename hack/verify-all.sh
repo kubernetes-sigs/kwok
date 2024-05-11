@@ -93,6 +93,11 @@ if [[ "${VERIFY_SPELLING:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-spelling.sh || failed+=(spelling)
 fi
 
+if [[ "${VERIFY_STAGES:-true}" == "true" ]]; then
+  echo "[*] Verifying stages..."
+  "${ROOT_DIR}"/hack/verify-stages.sh || failed+=(stages)
+fi
+
 # exit based on verify scripts
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Verify failed for: ${failed[*]}"

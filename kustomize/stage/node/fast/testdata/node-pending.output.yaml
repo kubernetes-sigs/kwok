@@ -1,0 +1,59 @@
+apiGroup: v1
+kind: Node
+name: node-pending
+stages:
+- next:
+  - data:
+      status:
+        addresses:
+        - address: <NodeIP>
+          type: InternalIP
+        - address: <NodeName>
+          type: Hostname
+        allocatable:
+          cpu: 1k
+          memory: 1Ti
+          pods: 1M
+        capacity:
+          cpu: 1k
+          memory: 1Ti
+          pods: 1M
+        conditions:
+        - lastHeartbeatTime: <Now>
+          lastTransitionTime: <Now>
+          message: kubelet is posting ready status
+          reason: KubeletReady
+          status: "True"
+          type: Ready
+        - lastHeartbeatTime: <Now>
+          lastTransitionTime: <Now>
+          message: kubelet has sufficient memory available
+          reason: KubeletHasSufficientMemory
+          status: "False"
+          type: MemoryPressure
+        - lastHeartbeatTime: <Now>
+          lastTransitionTime: <Now>
+          message: kubelet has no disk pressure
+          reason: KubeletHasNoDiskPressure
+          status: "False"
+          type: DiskPressure
+        - lastHeartbeatTime: <Now>
+          lastTransitionTime: <Now>
+          message: kubelet has sufficient PID available
+          reason: KubeletHasSufficientPID
+          status: "False"
+          type: PIDPressure
+        - lastHeartbeatTime: <Now>
+          lastTransitionTime: <Now>
+          message: RouteController created a route
+          reason: RouteCreated
+          status: "False"
+          type: NetworkUnavailable
+        daemonEndpoints:
+          kubeletEndpoint:
+            Port: <NodePort>
+        phase: Running
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: node-initialize
