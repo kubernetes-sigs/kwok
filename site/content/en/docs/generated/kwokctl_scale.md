@@ -12,7 +12,7 @@ kwokctl scale [node, pod, ...] [name] [flags]
   -h, --help                help for scale
   -n, --namespace string    Namespace of resource to scale
       --param stringArray   Parameter to update
-      --replicas uint       Number of replicas (default 1)
+      --replicas int        Number of replicas (default 1)
       --serial-length int   Length of serial number (default 6)
 ```
 
