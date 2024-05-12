@@ -65,7 +65,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			logger.Warn("Cluster is not exists")
+			logger.Warn("Cluster does not exist")
 		}
 		return err
 	}
