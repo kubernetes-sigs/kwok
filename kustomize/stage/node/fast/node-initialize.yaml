@@ -62,17 +62,18 @@ spec:
         memory: 1Ti
         pods: 1M
       {{ end }}
-      {{ with .status.nodeInfo }}
+
+      {{ $nodeInfo := .status.nodeInfo }}
+      {{ $kwokVersion := printf "kwok-%s" Version }}
       nodeInfo:
-        architecture: {{ with .architecture }} {{ . }} {{ else }} "amd64" {{ end }}
-        bootID: {{ with .bootID }} {{ . }} {{ else }} "" {{ end }}
-        containerRuntimeVersion: {{ with .containerRuntimeVersion }} {{ . }} {{ else }} "kwok-{{ Version }}" {{ end }}
-        kernelVersion: {{ with .kernelVersion }} {{ . }} {{ else }} "kwok-{{ Version }}" {{ end }}
-        kubeProxyVersion: {{ with .kubeProxyVersion }} {{ . }} {{ else }} "kwok-{{ Version }}" {{ end }}
-        kubeletVersion: {{ with .kubeletVersion }} {{ . }} {{ else }} "kwok-{{ Version }}" {{ end }}
-        machineID: {{ with .machineID }} {{ . }} {{ else }} "" {{ end }}
-        operatingSystem: {{ with .operatingSystem }} {{ . }} {{ else }} "linux" {{ end }}
-        osImage: {{ with .osImage }} {{ . }} {{ else }} "" {{ end }}
-        systemUUID: {{ with .systemUUID }} {{ . }} {{ else }} "" {{ end }}
-      {{ end }}
+        architecture: {{ or $nodeInfo.architecture "amd64" }}
+        bootID: {{ or $nodeInfo.bootID `""` }}
+        containerRuntimeVersion: {{ or $nodeInfo.containerRuntimeVersion $kwokVersion }}
+        kernelVersion: {{ or $nodeInfo.kernelVersion $kwokVersion }}
+        kubeProxyVersion: {{ or $nodeInfo.kubeProxyVersion $kwokVersion }}
+        kubeletVersion: {{ or $nodeInfo.kubeletVersion $kwokVersion }}
+        machineID: {{ or $nodeInfo.machineID `""` }}
+        operatingSystem: {{ or $nodeInfo.operatingSystem "linux" }}
+        osImage: {{ or $nodeInfo.osImage `""` }}
+        systemUUID: {{ or $nodeInfo.systemUUID `""` }}
       phase: Running
