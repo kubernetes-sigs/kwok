@@ -201,7 +201,6 @@ func TestPodController(t *testing.T) {
 		DisregardStatusWithAnnotationSelector: annotationSelector.String(),
 		Lifecycle:                             resources.NewStaticGetter(lc),
 		NodeGetFunc:                           nodeGetFunc,
-		FuncMap:                               defaultFuncMap,
 		PlayStageParallelism:                  2,
 	})
 	if err != nil {

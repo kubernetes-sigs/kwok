@@ -1,0 +1,24 @@
+apiGroup: v1
+kind: Pod
+name: pod-running-with-job
+stages:
+- next:
+  - data:
+      status:
+        containerStatuses:
+        - image: image
+          name: container
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: <Now>
+              reason: Completed
+              startedAt: <Now>
+        phase: Succeeded
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-complete

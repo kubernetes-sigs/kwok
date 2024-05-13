@@ -1,0 +1,12 @@
+# @Stage: ../pod-ready.yaml
+# @Stage: ../pod-delete.yaml
+# @Stage: ../pod-complete.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pending
+spec:
+  containers:
+  - name: container
+    image: image
+  nodeName: node
