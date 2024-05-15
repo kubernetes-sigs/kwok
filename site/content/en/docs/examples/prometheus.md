@@ -25,9 +25,9 @@ docker run -d --name=grafana -p 3000:3000 docker.io/grafana/grafana:9.4.7
 ```
 
 1. Open your web browser and go to [http://localhost:3000]
-2. On the login page, enter `admin` for username and password
-3. Add the Prometheus data source, `http://host.docker.internal:9090`, on Grafana
-4. Import via [grafana.com code] `16248` on Grafana
+2. On the login page, enter `admin` for username and password.
+3. Add the Prometheus data source, `http://host.docker.internal:9090`, on Grafana, replacing `hostIP` with the IP address of your host.
+4. Import via [grafana.com code] `16248` on Grafana.
 
 Now you can see the Grafana dashboard for the cluster.
 
