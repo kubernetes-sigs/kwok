@@ -35,7 +35,7 @@ type LogsSpec struct {
 	Logs []Log
 }
 
-// Log holds information how to forward logs.
+// Log holds information on how to forward logs.
 type Log struct {
 	// Containers is list of container names.
 	Containers []string

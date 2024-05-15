@@ -61,7 +61,7 @@ type PortForwardSpec struct {
 	Forwards []Forward `json:"forwards"`
 }
 
-// Forward holds information how to forward based on ports.
+// Forward holds information on how to forward based on ports.
 type Forward struct {
 	// Ports is a list of ports to forward.
 	// if not set, all ports will be forwarded.
@@ -73,7 +73,7 @@ type Forward struct {
 	Command []string `json:"command,omitempty"`
 }
 
-// ForwardTarget holds information how to forward to a target.
+// ForwardTarget holds information on how to forward to a target.
 type ForwardTarget struct {
 	// Port is the port to forward to.
 	// +kubebuilder:validation:Required

@@ -61,16 +61,16 @@ type ExecSpec struct {
 	Execs []ExecTarget `json:"execs"`
 }
 
-// ExecTarget holds information how to exec.
+// ExecTarget holds information on how to exec.
 type ExecTarget struct {
 	// Containers is a list of containers to exec.
 	// if not set, all containers will be execed.
 	Containers []string `json:"containers,omitempty"`
-	// Local holds information how to exec to a local target.
+	// Local holds information on how to exec to a local target.
 	Local *ExecTargetLocal `json:"local,omitempty"`
 }
 
-// ExecTargetLocal holds information how to exec to a local target.
+// ExecTargetLocal holds information on how to exec to a local target.
 type ExecTargetLocal struct {
 	// WorkDir is the working directory to exec with.
 	WorkDir string `json:"workDir,omitempty"`

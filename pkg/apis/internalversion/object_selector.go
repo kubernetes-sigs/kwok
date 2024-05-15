@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
-// ObjectSelector holds information how to match based on namespace and name.
+// ObjectSelector holds information on how to match based on namespace and name.
 type ObjectSelector struct {
 	// MatchNamespaces is a list of namespaces to match.
 	// if not set, all namespaces will be matched.
