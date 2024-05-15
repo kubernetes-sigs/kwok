@@ -3911,7 +3911,7 @@ AttachConfig
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterAttachSpec">ClusterAttachSpec</a>
 </p>
 <p>
-<p>AttachConfig holds information how to attach.</p>
+<p>AttachConfig holds information on how to attach.</p>
 </p>
 <table>
 <thead>
@@ -4725,7 +4725,7 @@ ExecTarget
 <a href="#kwok.x-k8s.io/v1alpha1.ExecSpec">ExecSpec</a>
 </p>
 <p>
-<p>ExecTarget holds information how to exec.</p>
+<p>ExecTarget holds information on how to exec.</p>
 </p>
 <table>
 <thead>
@@ -4757,7 +4757,7 @@ ExecTargetLocal
 </em>
 </td>
 <td>
-<p>Local holds information how to exec to a local target.</p>
+<p>Local holds information on how to exec to a local target.</p>
 </td>
 </tr>
 </tbody>
@@ -4771,7 +4771,7 @@ ExecTargetLocal
 <a href="#kwok.x-k8s.io/v1alpha1.ExecTarget">ExecTarget</a>
 </p>
 <p>
-<p>ExecTargetLocal holds information how to exec to a local target.</p>
+<p>ExecTargetLocal holds information on how to exec to a local target.</p>
 </p>
 <table>
 <thead>
@@ -4895,7 +4895,7 @@ Forward
 <a href="#kwok.x-k8s.io/v1alpha1.PortForwardSpec">PortForwardSpec</a>
 </p>
 <p>
-<p>Forward holds information how to forward based on ports.</p>
+<p>Forward holds information on how to forward based on ports.</p>
 </p>
 <table>
 <thead>
@@ -4953,7 +4953,7 @@ ForwardTarget
 <a href="#kwok.x-k8s.io/v1alpha1.Forward">Forward</a>
 </p>
 <p>
-<p>ForwardTarget holds information how to forward to a target.</p>
+<p>ForwardTarget holds information on how to forward to a target.</p>
 </p>
 <table>
 <thead>
@@ -5069,7 +5069,7 @@ Log
 <a href="#kwok.x-k8s.io/v1alpha1.LogsSpec">LogsSpec</a>
 </p>
 <p>
-<p>Log holds information how to forward logs.</p>
+<p>Log holds information on how to forward logs.</p>
 </p>
 <table>
 <thead>
@@ -5482,7 +5482,7 @@ ObjectSelector
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageSpec">ClusterResourceUsageSpec</a>
 </p>
 <p>
-<p>ObjectSelector holds information how to match based on namespace and name.</p>
+<p>ObjectSelector holds information on how to match based on namespace and name.</p>
 </p>
 <table>
 <thead>

@@ -47,7 +47,7 @@ type Forward struct {
 	Command []string
 }
 
-// ForwardTarget holds information how to forward to a target.
+// ForwardTarget holds information on how to forward to a target.
 type ForwardTarget struct {
 	// Port is the port to forward to.
 	Port int32
