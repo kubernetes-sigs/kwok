@@ -72,7 +72,7 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 	logger.Debug("Deleting network")
 	err := c.Exec(ctx, c.runtime, args...)
 	if err != nil {
-		if c.runtime != consts.RuntimeTypeNerdctl {
+		if !c.isNerdctl {
 			return err
 		}
 
@@ -118,7 +118,7 @@ func (c *Cluster) inspectNetwork(ctx context.Context, name string) (exist bool) 
 // On Nerdctl, need to check if --restart=unless-stopped is supported
 // https://github.com/containerd/containerd/pull/6744
 func (c *Cluster) isCanNerdctlUnlessStopped(ctx context.Context) (bool, error) {
-	if c.runtime != consts.RuntimeTypeNerdctl {
+	if !c.isNerdctl {
 		return false, fmt.Errorf("canNerdctlUnlessStopped only for nerdctl")
 	}
 
@@ -171,9 +171,11 @@ func (c *Cluster) labelArgs() []string {
 		// https://github.com/containers/podman-compose/blob/f6dbce36181c44d0d08b6f4ca166508542875ce1/podman_compose.py#L729
 		args = append(args, "--label=io.podman.compose.project="+c.Name())
 		args = append(args, "--label=com.docker.compose.project="+c.Name())
-	case consts.RuntimeTypeNerdctl:
-		// https://github.com/containerd/nerdctl/blob/3c9300207f45c4a0422d8381d58c5be06bb49b39/pkg/labels/labels.go#L33
-		args = append(args, "--label=com.docker.compose.project="+c.Name())
+	default:
+		if c.isNerdctl {
+			// https://github.com/containerd/nerdctl/blob/3c9300207f45c4a0422d8381d58c5be06bb49b39/pkg/labels/labels.go#L33
+			args = append(args, "--label=com.docker.compose.project="+c.Name())
+		}
 	}
 	return args
 }
@@ -226,22 +228,24 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 		for _, link := range component.Links {
 			args = append(args, "--requires="+c.Name()+"-"+link)
 		}
-	case consts.RuntimeTypeNerdctl:
+	default:
 		// Nerdctl does not support --link and --requires
 	}
 
 	switch c.runtime {
 	case consts.RuntimeTypeDocker, consts.RuntimeTypePodman:
 		args = append(args, "--restart=unless-stopped")
-	case consts.RuntimeTypeNerdctl:
-		canNerdctlUnlessStopped, err := c.isCanNerdctlUnlessStopped(ctx)
-		if err != nil {
-			logger.Error("Failed to check unless-stopped support", err)
-		}
-		if canNerdctlUnlessStopped {
-			args = append(args, "--restart=unless-stopped")
-		} else {
-			args = append(args, "--restart=always")
+	default:
+		if c.isNerdctl {
+			canNerdctlUnlessStopped, err := c.isCanNerdctlUnlessStopped(ctx)
+			if err != nil {
+				logger.Error("Failed to check unless-stopped support", err)
+			}
+			if canNerdctlUnlessStopped {
+				args = append(args, "--restart=unless-stopped")
+			} else {
+				args = append(args, "--restart=always")
+			}
 		}
 	}
 
@@ -291,7 +295,7 @@ func (c *Cluster) deleteComponent(ctx context.Context, componentName string) err
 			logger.Debug("Component does not exist")
 			return nil
 		} else if running {
-			if c.runtime == consts.RuntimeTypeNerdctl {
+			if c.isNerdctl {
 				// TODO: Remove this after nerdctl fix
 				// https://github.com/containerd/nerdctl/issues/1980
 				if canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx); canNerdctlUnlessStopped {
@@ -402,7 +406,7 @@ func (c *Cluster) startComponent(ctx context.Context, componentName string) erro
 	if err != nil {
 		// TODO: Remove this after nerdctl fix
 		// https://github.com/containerd/nerdctl/issues/2270
-		if c.runtime == consts.RuntimeTypeNerdctl {
+		if c.isNerdctl {
 			errMessage := err.Error()
 			switch {
 			case strings.Contains(errMessage, "already exists"),

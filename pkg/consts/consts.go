@@ -41,7 +41,7 @@ var (
 
 	EtcdBinaryPrefix = "https://github.com/etcd-io/etcd/releases/download"
 
-	KindVersion         = "0.19.0"
+	KindVersion         = "0.23.0"
 	KindBinaryPrefix    = "https://github.com/kubernetes-sigs/kind/releases/download"
 	KindNodeImagePrefix = "docker.io/kindest"
 
@@ -69,12 +69,34 @@ var (
 
 // The following runtime is provided.
 const (
-	RuntimeTypeKind       = "kind"
+	// RuntimeTypeBinary is the binary runtime.
+	RuntimeTypeBinary = "binary"
+
+	// Container runtime type, will create a container for each component.
+
+	// RuntimeTypeDocker is the docker runtime.
+	RuntimeTypeDocker = "docker"
+	// RuntimeTypePodman is the podman runtime.
+	RuntimeTypePodman = "podman"
+	// RuntimeTypeNerdctl is the nerdctl runtime.
+	RuntimeTypeNerdctl = "nerdctl"
+	// RuntimeTypeLima is the lima runtime.
+	RuntimeTypeLima = "lima"
+	// RuntimeTypeFinch is the finch runtime.
+	RuntimeTypeFinch = "finch"
+
+	// Cluster runtime type, creates a cluster and deploys the components in the cluster.
+
+	// RuntimeTypeKind is the kind runtime.
+	RuntimeTypeKind = "kind"
+	// RuntimeTypeKindPodman is the kind runtime with podman.
 	RuntimeTypeKindPodman = RuntimeTypeKind + "-" + RuntimeTypePodman
-	RuntimeTypeDocker     = "docker"
-	RuntimeTypeNerdctl    = "nerdctl"
-	RuntimeTypePodman     = "podman"
-	RuntimeTypeBinary     = "binary"
+	// RuntimeTypeKindNerdctl is the kind runtime with nerdctl.
+	RuntimeTypeKindNerdctl = RuntimeTypeKind + "-" + RuntimeTypeNerdctl
+	// RuntimeTypeKindLima is the kind runtime with lima.
+	RuntimeTypeKindLima = RuntimeTypeKind + "-" + RuntimeTypeLima
+	// RuntimeTypeKindFinch is the kind runtime with finch.
+	RuntimeTypeKindFinch = RuntimeTypeKind + "-" + RuntimeTypeFinch
 )
 
 // The following components is provided.
