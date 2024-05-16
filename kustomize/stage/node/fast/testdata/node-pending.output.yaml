@@ -52,6 +52,17 @@ stages:
         daemonEndpoints:
           kubeletEndpoint:
             Port: <NodePort>
+        nodeInfo:
+          architecture: amd64
+          bootID: ""
+          containerRuntimeVersion: kwok-<Version>
+          kernelVersion: kwok-<Version>
+          kubeProxyVersion: kwok-<Version>
+          kubeletVersion: kwok-<Version>
+          machineID: ""
+          operatingSystem: linux
+          osImage: ""
+          systemUUID: ""
         phase: Running
     kind: patch
     subresource: status
