@@ -69,55 +69,6 @@ function bump() {
   done
 }
 
-function send_pr() {
-  local status
-  local branch
-  local body
-  local diff_data
-
-  status=$(git status -s)
-  if [[ "${status}" == "" ]]; then
-    echo "No modification"
-    return 1
-  fi
-
-  # Use the fixed branch as the key to prevent duplicate PRs from being created
-  branch="dependabot/bump-releases"
-
-  if [[ "$(git branch -r --list "origin/${branch}")" == *"origin/${branch}"* ]]; then
-    echo "Remote branch already exists"
-    return 0
-  fi
-  if ! git checkout -B "${branch}"; then
-    echo "Branch already exists"
-    return 0
-  fi
-
-  if [[ "$(git config --global user.name)" == "" ]]; then
-    git config --global user.name "github-actions"
-    git config --global user.email "actions@github.com"
-  fi
-
-  diff_data="$(git diff)"
-
-  git commit -a -m "Bump supported_releases.txt"
-  if ! git push --set-upstream origin "${branch}"; then
-    echo "Failed push branch ${branch}"
-    return 1
-  fi
-
-  body="
-\`\`\` diff
-
-${diff_data}
-
-\`\`\`
-
-/kind feature
-"
-  gh pr create --title="Automated Bump supported_releases.txt" --body="${body}"
-}
-
 function main() {
   local record_data
   local latest_data
@@ -140,13 +91,6 @@ function main() {
 
   # Update feature gate data
   "${ROOT_DIR}/pkg/kwokctl/k8s/feature_gates_data.sh" "$(echo "${out}" | head -n 1 | awk -F. '{print $2}')"
-
-  # Update the generated files
-  make -C "${ROOT_DIR}" update
-
-  if [[ "${SEND_PR}" == "true" ]]; then
-    send_pr
-  fi
 }
 
 main
