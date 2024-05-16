@@ -5482,7 +5482,7 @@ ObjectSelector
 <a href="#kwok.x-k8s.io/v1alpha1.ClusterResourceUsageSpec">ClusterResourceUsageSpec</a>
 </p>
 <p>
-<p>ObjectSelector holds information on how on to match based on namespace and name.</p>
+<p>ObjectSelector holds information on how to match based on namespace and name.</p>
 </p>
 <table>
 <thead>
