@@ -318,7 +318,10 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 
 		if flags.Options.Runtime == consts.RuntimeTypeKind ||
-			flags.Options.Runtime == consts.RuntimeTypeKindPodman {
+			flags.Options.Runtime == consts.RuntimeTypeKindPodman ||
+			flags.Options.Runtime == consts.RuntimeTypeKindNerdctl ||
+			flags.Options.Runtime == consts.RuntimeTypeKindLima ||
+			flags.Options.Runtime == consts.RuntimeTypeKindFinch {
 			// override kubeconfig for kind
 			defer setContext()
 		} else {

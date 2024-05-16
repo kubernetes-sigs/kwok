@@ -180,6 +180,9 @@ func (c *Cluster) Save(ctx context.Context) error {
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.StageKind) &&
 		conf.Options.Runtime != consts.RuntimeTypeKind &&
 		conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
+		conf.Options.Runtime != consts.RuntimeTypeKindNerdctl &&
+		conf.Options.Runtime != consts.RuntimeTypeKindLima &&
+		conf.Options.Runtime != consts.RuntimeTypeKindFinch &&
 		len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
 		defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds != 0)
 		if err != nil {
@@ -191,6 +194,9 @@ func (c *Cluster) Save(ctx context.Context) error {
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.StageKind) {
 		if conf.Options.Runtime != consts.RuntimeTypeKind &&
 			conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
+			conf.Options.Runtime != consts.RuntimeTypeKindNerdctl &&
+			conf.Options.Runtime != consts.RuntimeTypeKindLima &&
+			conf.Options.Runtime != consts.RuntimeTypeKindFinch &&
 			len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
 			defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds != 0)
 			if err != nil {

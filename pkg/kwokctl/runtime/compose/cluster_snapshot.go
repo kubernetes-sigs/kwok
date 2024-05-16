@@ -71,7 +71,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	}()
 
 	etcdContainerName := c.Name() + "-etcd"
-	if conf.Runtime != consts.RuntimeTypeNerdctl {
+	if !c.isNerdctl {
 		// Restart etcd and kube-apiserver
 		components := []string{
 			consts.ComponentEtcd,

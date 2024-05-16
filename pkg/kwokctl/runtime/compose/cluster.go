@@ -49,7 +49,16 @@ type Cluster struct {
 
 	runtime string
 
+	isNerdctl               bool
 	canNerdctlUnlessStopped *bool
+}
+
+// NewDockerCluster creates a new Runtime for docker.
+func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypeDocker,
+	}, nil
 }
 
 // NewPodmanCluster creates a new Runtime for podman.
@@ -63,16 +72,27 @@ func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
 // NewNerdctlCluster creates a new Runtime for nerdctl.
 func NewNerdctlCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
-		Cluster: runtime.NewCluster(name, workdir),
-		runtime: consts.RuntimeTypeNerdctl,
+		Cluster:   runtime.NewCluster(name, workdir),
+		runtime:   consts.RuntimeTypeNerdctl,
+		isNerdctl: true,
 	}, nil
 }
 
-// NewDockerCluster creates a new Runtime for docker.
-func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
+// NewLimaCluster creates a new Runtime for lima.
+func NewLimaCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
-		Cluster: runtime.NewCluster(name, workdir),
-		runtime: consts.RuntimeTypeDocker,
+		Cluster:   runtime.NewCluster(name, workdir),
+		runtime:   consts.RuntimeTypeNerdctl + "." + consts.RuntimeTypeLima,
+		isNerdctl: true,
+	}, nil
+}
+
+// NewFinchCluster creates a new Runtime for finch.
+func NewFinchCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster:   runtime.NewCluster(name, workdir),
+		runtime:   consts.RuntimeTypeFinch,
+		isNerdctl: true,
 	}, nil
 }
 
@@ -903,7 +923,7 @@ func (c *Cluster) Stop(ctx context.Context) error {
 }
 
 func (c *Cluster) start(ctx context.Context) error {
-	if c.runtime == consts.RuntimeTypeNerdctl {
+	if c.isNerdctl {
 		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
 		if !canNerdctlUnlessStopped {
 			// TODO: Remove this, nerdctl stop will restart containers
@@ -925,7 +945,7 @@ func (c *Cluster) start(ctx context.Context) error {
 		return err
 	}
 
-	if c.runtime == consts.RuntimeTypeNerdctl {
+	if c.isNerdctl {
 		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
 		if !canNerdctlUnlessStopped {
 			backupFilename := c.GetWorkdirPath("restart.db")
@@ -949,7 +969,7 @@ func (c *Cluster) start(ctx context.Context) error {
 }
 
 func (c *Cluster) stop(ctx context.Context) error {
-	if c.runtime == consts.RuntimeTypeNerdctl {
+	if c.isNerdctl {
 		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
 		if !canNerdctlUnlessStopped {
 			err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
@@ -968,7 +988,7 @@ func (c *Cluster) stop(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if c.runtime == consts.RuntimeTypeNerdctl {
+	if c.isNerdctl {
 		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
 		if !canNerdctlUnlessStopped {
 			// TODO: Remove this, nerdctl stop will restart containers
