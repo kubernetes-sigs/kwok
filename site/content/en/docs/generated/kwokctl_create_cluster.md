@@ -34,7 +34,7 @@ kwokctl create cluster [flags]
                                                  (default "docker.io/jaegertracing/all-in-one:1.53.0")
       --jaeger-port uint32                      Port to expose Jaeger UI
       --kind-binary string                      Binary of kind, only for kind/kind-podman runtime
-                                                 (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.19.0/kind-linux-amd64")
+                                                 (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.23.0/kind-linux-amd64")
       --kind-node-image string                  Image of kind node, only for kind/kind-podman runtime
                                                 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
                                                  (default "docker.io/kindest/node:v1.29.0")
@@ -80,7 +80,7 @@ kwokctl create cluster [flags]
                                                  (default "docker.io/prom/prometheus:v2.49.1")
       --prometheus-port uint32                  Port to expose Prometheus metrics
       --quiet-pull                              Pull without printing progress information
-      --runtime string                          Runtime of the cluster (binary or docker or kind or kind-podman or nerdctl or podman)
+      --runtime string                          Runtime of the cluster (binary or docker or finch or kind or kind-finch or kind-lima or kind-nerdctl or kind-podman or lima or nerdctl or podman)
       --secure-port                             The apiserver port on which to serve HTTPS with authentication and authorization, is not available before Kubernetes 1.13.0 (default true)
       --timeout duration                        Timeout for waiting for the cluster to be created
       --wait duration                           Wait for the cluster to be ready
