@@ -18,9 +18,9 @@ package slices
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
-	"fmt"
 )
 
 func TestContains(t *testing.T) {
@@ -445,13 +445,13 @@ func TestGroupBy(t *testing.T) {
 		},
 		{
 			name: "test group by length",
-			args: args[[]string, string, string]{ 
+			args: args[[]string, string, string]{
 				s: []string{"apple", "banana", "cherry", "date"},
-				f: func(s string) string { 
+				f: func(s string) string {
 					return fmt.Sprintf("%d", len(s))
 				},
 			},
-			want: map[string][]string{ 
+			want: map[string][]string{
 				"5": {"apple"},
 				"6": {"banana", "cherry"},
 				"4": {"date"},
@@ -476,4 +476,3 @@ func TestGroupBy(t *testing.T) {
 		})
 	}
 }
-
