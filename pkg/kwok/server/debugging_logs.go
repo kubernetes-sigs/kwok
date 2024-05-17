@@ -293,7 +293,10 @@ func readLogs(ctx context.Context, logsFile string, opts *logOptions, stdout, st
 
 				if recreated {
 					newF, err := os.Open(logsFile)
-					if err != nil && !os.IsNotExist(err) {
+					if err != nil {
+						if os.IsNotExist(err) {
+							continue
+						}
 						return fmt.Errorf("failed to open log file %q: %w", logsFile, err)
 					}
 
