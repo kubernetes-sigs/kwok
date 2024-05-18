@@ -17,6 +17,7 @@ limitations under the License.
 package pools
 
 import (
+	"sync/atomic"
 	"testing"
 )
 
@@ -51,5 +52,37 @@ func TestPool(t *testing.T) {
 
 	if pool.Get() != 3 {
 		t.Errorf("expected 3, got %d", pool.Get())
+	}
+}
+
+func TestPool_ConcurrentAccess(t *testing.T) {
+	var index int32
+	pool := NewPool(func() int {
+		return int(atomic.AddInt32(&index, 1))
+	})
+
+	// Test concurrent access to the pool
+	done := make(chan bool)
+	for i := 0; i < 10; i++ {
+		go func(val int) {
+			pool.Put(val)
+			done <- true
+		}(i)
+	}
+
+	for i := 0; i < 10; i++ {
+		<-done
+	}
+
+	values := make(map[int]bool)
+	for i := 0; i < 10; i++ {
+		val := pool.Get()
+		if val < 0 || val >= 10 {
+			t.Errorf("unexpected value %d", val)
+		}
+		if values[val] {
+			t.Errorf("duplicate value found: %d", val)
+		}
+		values[val] = true
 	}
 }
