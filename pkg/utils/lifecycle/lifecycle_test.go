@@ -64,9 +64,19 @@ func TestListAllPossibleStages(t *testing.T) {
 	}
 	var data interface{}
 	var possibleStages []*Stage
+	var matches bool
 	possibleStages, err = lc.ListAllPossible(label, annotation, data)
 	if err != nil {
 		t.Fatal("Could not list all possible Stages:", err)
+	}
+	for i := 0; i < len(possibleStages); i++ {
+		matches, err = possibleStages[i].match(label, annotation, data)
+		if err != nil {
+			t.Fatal("Could not match stages")
+		}
+		if matches != true {
+			t.Fatal("Expected the stage to be matched")
+		}
 	}
 	t.Log("List of all possible stages:", possibleStages)
 }
