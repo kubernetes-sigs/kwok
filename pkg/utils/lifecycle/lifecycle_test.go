@@ -74,7 +74,7 @@ func TestListAllPossibleStages(t *testing.T) {
 		if err != nil {
 			t.Fatal("Could not match stages")
 		}
-		if matches != true {
+		if !matches {
 			t.Fatal("Expected the stage to be matched")
 		}
 	}
