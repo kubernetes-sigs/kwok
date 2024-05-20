@@ -85,23 +85,3 @@ func TestFuncsToMethods_MixedFunctionsAndNonFunctions(t *testing.T) {
 	output := FuncsToMethods(input)
 	compareFuncMaps(t, expected, output)
 }
-
-func TestFuncsToMethods(t *testing.T) {
-	type args struct {
-		funcs map[string][]any
-	}
-	tests := []struct {
-		name string
-		args args
-		want map[string][]any
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := FuncsToMethods(tt.args.funcs); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FuncsToMethods() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
