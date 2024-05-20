@@ -27,6 +27,8 @@ linters:
   - nolintlint
   - prealloc
   - revive
+  - staticcheck
+  - stylecheck
   - typecheck
   - unconvert
   - unparam
@@ -56,7 +58,12 @@ linters-settings:
       alias: metav1
     - pkg: k8s.io/apimachinery/pkg/api/errors
       alias: apierrors
-
+  staticcheck:
+    run:
+      go: "1.22"
+  stylecheck:
+    run:
+      go: "1.22"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     checks: ["all", "-ST1000", "-ST1003"]
   depguard:
@@ -175,6 +182,8 @@ linters-settings:
       disabled: true
     - name: error-strings
       disabled: true
+    - name: max-control-nesting
+      arguments: [6]
 issues:
   max-same-issues: 0
   max-issues-per-linter: 0
@@ -188,4 +197,4 @@ run:
   timeout: 10m
   allow-parallel-runners: false
   skip-dirs-use-default: true
-  go: '1.21'
+  go: "1.22"
