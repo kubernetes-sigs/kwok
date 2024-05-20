@@ -33,7 +33,7 @@ BUILDX_VERSION=0.9.1
 
 KUSTOMIZE_VERSION=5.3.0
 
-GO_VERSION=1.21.4
+GO_VERSION=1.22.3
 
 function command_exist() {
   local command="${1}"

@@ -43,7 +43,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.21"
+        go-version: "1.22"
 
     - name: Test
       shell: bash
@@ -82,7 +82,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.21"
+        go-version: "1.22"
 
     - name: Test e2e default
       shell: bash
@@ -108,7 +108,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.21"
+        go-version: "1.22"
 
     - name: Install Kind
       shell: bash
@@ -168,7 +168,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.21"
+        go-version: "1.22"
 
     - name: Install CoreUtils for MacOS
       if: ${{ startsWith(matrix.os, 'macos-') }}
