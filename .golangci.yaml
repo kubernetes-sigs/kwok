@@ -59,9 +59,9 @@ linters-settings:
     - pkg: k8s.io/apimachinery/pkg/api/errors
       alias: apierrors
   staticcheck:
-    go: "1.21"
+    go: "1.22"
   stylecheck:
-    go: "1.21"
+    go: "1.22"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     checks: ["all", "-ST1000", "-ST1003"]
   depguard:
@@ -193,4 +193,4 @@ run:
   skip-dirs-use-default: true
   skip-files:
   - ".*\\.zz_generated\\..*"
-  go: '1.21'
+  go: "1.22"
