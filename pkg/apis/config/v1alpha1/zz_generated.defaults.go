@@ -120,20 +120,5 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 				b.Protocol = "TCP"
 			}
 		}
-		for j := range a.Envs {
-			b := &a.Envs[j]
-			if b.Value == "" {
-				b.Value = ""
-			}
-		}
-	}
-	for i := range in.ComponentsPatches {
-		a := &in.ComponentsPatches[i]
-		for j := range a.ExtraEnvs {
-			b := &a.ExtraEnvs[j]
-			if b.Value == "" {
-				b.Value = ""
-			}
-		}
 	}
 }
