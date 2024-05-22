@@ -68,6 +68,9 @@ func TestListAllPossibleStages(t *testing.T) {
 	if err != nil {
 		t.Fatal("Could not list all possible Stages:", err)
 	}
+	if possibleStages == nil {
+		t.Fatal("Did not expect the list of all possible stages to be empty")
+	}
 	for i := 0; i < len(possibleStages); i++ {
 		stageLabels := possibleStages[i].matchLabels
 		stageAnnotation := possibleStages[i].matchAnnotations
