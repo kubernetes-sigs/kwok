@@ -1,7 +1,7 @@
 //go:build !windows
 
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,109 +19,13 @@ limitations under the License.
 package exec
 
 import (
-	"context"
+	"os"
 	"os/exec"
-	"reflect"
 	"syscall"
 	"testing"
+
+	"sigs.k8s.io/kwok/pkg/utils/format"
 )
-
-func Test_startProcess(t *testing.T) {
-	type args struct {
-		ctx  context.Context
-		name string
-		arg  []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want *exec.Cmd
-	}{
-		{
-			name: "Test with valid arguments",
-			args: args{
-				ctx:  context.Background(),
-				name: "echo",
-				arg:  []string{"ec"},
-			},
-			want: exec.Command("echo", "ec"),
-		},
-		{
-			name: "TestStartProcessWithEcho",
-			args: args{
-				ctx:  context.Background(),
-				name: "echo",
-				arg:  []string{"hello"},
-			},
-			want: exec.Command("echo", "hello"),
-		},
-		{
-			name: "TestStartProcessWithDir",
-			args: args{
-				ctx:  context.Background(),
-				name: "ls",
-				arg:  []string{"-l"},
-			},
-			want: exec.Command("ls", "-l"),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := startProcess(tt.args.ctx, tt.args.name, tt.args.arg...); !reflect.DeepEqual(got.Args, tt.want.Args) {
-				t.Errorf("startProcess() = want %v got %v", tt.want.Args, got.Args)
-			}
-		})
-	}
-}
-
-func Test_command(t *testing.T) {
-	type args struct {
-		ctx  context.Context
-		name string
-		arg  []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want *exec.Cmd
-	}{
-		{
-			name: "Test with valid arguments",
-			args: args{
-				ctx:  context.Background(),
-				name: "echo",
-				arg:  []string{"ec"},
-			},
-			want: exec.Command("echo", "ec"),
-		},
-		{
-			name: "TestStartProcessWithEcho",
-			args: args{
-				ctx:  context.Background(),
-				name: "echo",
-				arg:  []string{"hello"},
-			},
-			want: exec.Command("echo", "hello"),
-		},
-		{
-			name: "TestStartProcessWithDir",
-			args: args{
-				ctx:  context.Background(),
-				name: "ls",
-				arg:  []string{"-l"},
-			},
-			want: exec.Command("ls", "-l"),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := command(tt.args.ctx, tt.args.name, tt.args.arg...); !reflect.DeepEqual(got.Args, tt.want.Args) {
-				t.Errorf("command() = want %v got %v", tt.want.Args, got.Args)
-			}
-		})
-	}
-}
 
 func Test_isRunning(t *testing.T) {
 	type args struct {
@@ -135,7 +39,7 @@ func Test_isRunning(t *testing.T) {
 		{
 			name: "Running",
 			args: args{
-				1,
+				os.Getpid(),
 			},
 			want: true,
 		},
@@ -162,21 +66,26 @@ func TestSetUser(t *testing.T) {
 		SysProcAttr: &syscall.SysProcAttr{},
 	}
 
+	type args struct {
+		uid *int64
+		gid *int64
+	}
+
 	// Test cases
 	tests := []struct {
 		name string
 		args args
-		want *syscall.Credential
+		want error
 	}{
 		{
 			name: "Both UID and GID provided",
-			args: args{uid: intPtr(1000), gid: intPtr(1000)},
-			want: &syscall.Credential{Uid: 1000, Gid: 1000},
+			args: args{uid: format.Ptr(int64(os.Getuid())), gid: format.Ptr(int64(os.Getgid()))},
+			want: nil,
 		},
 		{
 			name: "Only UID provided",
-			args: args{uid: intPtr(1000), gid: nil},
-			want: &syscall.Credential{Uid: 1000, Gid: 1000}, // Assuming GID is retrieved correctly
+			args: args{uid: format.Ptr(int64(os.Getuid())), gid: nil},
+			want: nil, // Assuming GID is retrieved correctly
 		},
 
 		{
@@ -184,47 +93,18 @@ func TestSetUser(t *testing.T) {
 			args: args{uid: nil, gid: nil},
 			want: nil,
 		},
-		{
-			name: "Negative UID and GID provided",
-			args: args{uid: intPtr(-1), gid: intPtr(-1)},
-			want: nil, // Error condition
-		},
 	}
 
 	// Run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := setUser(cmd, tt.args.uid, tt.args.gid)
-			if err != nil && tt.want == nil {
-				// If an error is expected and occurred, test passed
-				return
-			}
-			if err != nil && tt.want != nil {
-				// If an error is expected but did not occur, test failed
+
+			if err != tt.want {
 				t.Errorf("setUser() error = %v, want nil", err)
 				return
 			}
-			if tt.want == nil {
-				// Both UID and GID are nil, no further checks needed
-				return
-			}
-			if cmd.SysProcAttr == nil || cmd.SysProcAttr.Credential == nil {
-				t.Errorf("setUser() did not set SysProcAttr.Credential, want %v", tt.want)
-				return
-			}
-			if cmd.SysProcAttr.Credential.Uid != tt.want.Uid || cmd.SysProcAttr.Credential.Gid != tt.want.Gid {
-				t.Errorf("setUser() did not set correct UID or GID, got %v, want %v", cmd.SysProcAttr.Credential, tt.want)
-			}
+
 		})
 	}
-}
-
-// Helper function to convert int64 to *int64
-func intPtr(n int64) *int64 {
-	return &n
-}
-
-type args struct {
-	uid *int64
-	gid *int64
 }

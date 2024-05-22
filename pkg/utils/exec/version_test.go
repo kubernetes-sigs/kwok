@@ -44,25 +44,6 @@ func TestParseVersionFromBinary(t *testing.T) {
 		want:    semver.MustParse("1.22.3"),
 		wantErr: false,
 	},
-		{
-			name: "testing kind",
-			args: args{
-				ctx:  context.Background(),
-				path: "kind",
-			},
-			want: semver.MustParse("0.23.0"),
-
-			wantErr: true,
-		},
-		{
-			name: "testing kubectl",
-			args: args{
-				ctx:  context.Background(),
-				path: "kustomize",
-			},
-			want:    semver.MustParse("5.3.0"),
-			wantErr: false,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

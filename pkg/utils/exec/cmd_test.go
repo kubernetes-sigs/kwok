@@ -19,7 +19,6 @@ package exec
 import (
 	"os/exec"
 	"testing"
-	"time"
 )
 
 func TestKillProcess(t *testing.T) {
@@ -70,8 +69,6 @@ func TestIsRunning(t *testing.T) {
 		t.Fatalf("failed to wait for process to exit: %v", err)
 	}
 
-	// Ensure the process is no longer running
-	time.Sleep(1 * time.Second) // Give the system some time to update the process state
 	if IsRunning(pid) {
 		t.Fatalf("expected process %d to be stopped", pid)
 	}
