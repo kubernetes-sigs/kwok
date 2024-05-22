@@ -75,23 +75,19 @@ func TestSetUser(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want error
 	}{
 		{
 			name: "Both UID and GID provided",
 			args: args{uid: format.Ptr(int64(os.Getuid())), gid: format.Ptr(int64(os.Getgid()))},
-			want: nil,
 		},
 		{
 			name: "Only UID provided",
 			args: args{uid: format.Ptr(int64(os.Getuid())), gid: nil},
-			want: nil, // Assuming GID is retrieved correctly
 		},
 
 		{
 			name: "No UID or GID provided",
 			args: args{uid: nil, gid: nil},
-			want: nil,
 		},
 	}
 
@@ -99,8 +95,7 @@ func TestSetUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := setUser(cmd, tt.args.uid, tt.args.gid)
-
-			if err != tt.want {
+			if err != nil {
 				t.Errorf("setUser() error = %v, want nil", err)
 				return
 			}
