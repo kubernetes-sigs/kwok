@@ -99,7 +99,6 @@ func TestSetUser(t *testing.T) {
 				t.Errorf("setUser() error = %v, want nil", err)
 				return
 			}
-
 		})
 	}
 }
