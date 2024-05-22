@@ -18,6 +18,7 @@ package printers
 
 import (
 	"bytes"
+	"io"
 	"testing"
 )
 
@@ -42,4 +43,76 @@ func TestWriteRows(t *testing.T) {
 	if buffer.String() != want {
 		t.Fatalf("unexpected output: %v", buffer.String())
 	}
+}
+
+// TestWriteSingleRow tests writing a single row.
+func TestWriteSingleRow(t *testing.T) {
+	buffer := &bytes.Buffer{}
+	tablePrinter := NewTablePrinter(buffer)
+
+	err := tablePrinter.Write([]string{"Hello", "World"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := "Hello   World\n"
+	if buffer.String() != want {
+		t.Fatalf("unexpected output: got %q, want %q", buffer.String(), want)
+	}
+}
+
+// TestWriteEmptyRow tests writing an empty row.
+func TestWriteEmptyRow(t *testing.T) {
+	buffer := &bytes.Buffer{}
+	tablePrinter := NewTablePrinter(buffer)
+
+	err := tablePrinter.Write([]string{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := "\n"
+	if buffer.String() != want {
+		t.Fatalf("unexpected output: got %q, want %q", buffer.String(), want)
+	}
+}
+func TestWriteWithEmptyColumns(t *testing.T) {
+	buffer := &bytes.Buffer{}
+	tablePrinter := NewTablePrinter(buffer)
+
+	err := tablePrinter.WriteAll([][]string{
+		{"Hello", ""},
+		{"", "World"},
+		{"", ""},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := "" +
+		"Hello   \n" +
+		"        World\n" +
+		"        \n"
+
+	if buffer.String() != want {
+		t.Fatalf("unexpected output: got %q, want %q", buffer.String(), want)
+	}
+}
+
+// TestWriteErrorPropagation tests if errors from the writer are propagated correctly.
+func TestWriteErrorPropagation(t *testing.T) {
+	errorWriter := &ErrorWriter{}
+	tablePrinter := NewTablePrinter(errorWriter)
+
+	err := tablePrinter.Write([]string{"Hello", "World"})
+	if err == nil {
+		t.Fatalf("expected an error but got nil")
+	}
+}
+
+// ErrorWriter is a mock writer that always returns an error.
+type ErrorWriter struct{}
+
+func (e *ErrorWriter) Write(p []byte) (n int, err error) {
+	return 0, io.ErrShortWrite
 }
