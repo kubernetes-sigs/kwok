@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
+
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
