@@ -77,7 +77,6 @@ func TestCompress(t *testing.T) {
 			}
 		} else if buf.String() != "hello world" {
 			t.Errorf("expected 'hello world', got %s", buf.String())
-
 		}
 	}
 }
