@@ -25,7 +25,12 @@ func TestCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 	err = Create(filePath)
@@ -44,7 +49,12 @@ func TestCopy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	srcFilePath := filepath.Join(tmpDir, "srcfile.txt")
 	dstFilePath := filepath.Join(tmpDir, "dstfile.txt")
@@ -76,7 +86,12 @@ func TestRename(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	oldFilePath := filepath.Join(tmpDir, "oldfile.txt")
 	newFilePath := filepath.Join(tmpDir, "newfile.txt")
@@ -103,7 +118,12 @@ func TestAppend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 
@@ -137,7 +157,11 @@ func TestExists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 
@@ -161,7 +185,12 @@ func TestRemove(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 
@@ -186,7 +215,11 @@ func TestRemoveAll(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	dirPath := filepath.Join(tmpDir, "testdir")
 	err = MkdirAll(dirPath)
@@ -214,7 +247,11 @@ func TestOpen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 
@@ -222,15 +259,17 @@ func TestOpen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	content := []byte("Hello, World!")
 	_, err = file.Write(content)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-
-	file.Close()
 
 	readContent, err := os.ReadFile(filePath)
 	if err != nil {
@@ -248,7 +287,11 @@ func TestRead(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 
@@ -274,7 +317,11 @@ func TestWrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 
@@ -300,7 +347,11 @@ func TestWriteWithMode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 
@@ -336,7 +387,11 @@ func TestMkdirAll(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	dirPath := filepath.Join(tmpDir, "parent", "child")
 

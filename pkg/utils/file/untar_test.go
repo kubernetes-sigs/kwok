@@ -62,7 +62,12 @@ func TestUntar(t *testing.T) {
 			if tt.files != nil {
 				createTarGz(t, tt.src, tt.files)
 			}
-			defer os.Remove(tt.src)
+
+			defer func() {
+				if err := os.RemoveAll(tt.src); err != nil {
+					t.Fatalf("Failed to close : %v", err)
+				}
+			}()
 
 			err := untar(ctx, tt.src, func(file string) (string, bool) {
 				return "output/" + file, true
@@ -96,7 +101,7 @@ type testFile struct {
 // createTarGz creates a .tar.gz file with specified test files and their content.
 func createTarGz(t *testing.T, src string, files []testFile) {
 	// Create the directory structure
-	if err := os.MkdirAll(filepath.Dir(src), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(src), 0750); err != nil {
 		t.Fatalf("failed to create directory: %v", err)
 	}
 
@@ -105,15 +110,28 @@ func createTarGz(t *testing.T, src string, files []testFile) {
 	if err != nil {
 		t.Fatalf("failed to create .tar.gz file: %v", err)
 	}
-	defer tarGzFile.Close()
+	defer func() {
+		if err := tarGzFile.Close(); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	// Create the gzip writer
 	gzw := gzip.NewWriter(tarGzFile)
-	defer gzw.Close()
+	defer func() {
+		if err := gzw.Close(); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	// Create the tar writer
 	tw := tar.NewWriter(gzw)
-	defer tw.Close()
+
+	defer func() {
+		if err := tw.Close(); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
 
 	// Write each test file to the tar archive
 	for _, file := range files {

@@ -54,14 +54,20 @@ func TestCompress(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to write data: %v", err)
 		}
-		writer.Close()
+		if err := writer.Close(); err != nil {
+			t.Fatalf("failed to close: %v", err)
+		}
 
 		if test.expected {
 			gr, err := gzip.NewReader(&buf)
 			if err != nil {
 				t.Fatalf("expected gzip compression, got error: %v", err)
 			}
-			defer gr.Close()
+			defer func() {
+				if err := gr.Close(); err != nil {
+					t.Fatalf("Failed to close : %v", err)
+				}
+			}()
 			data, err := io.ReadAll(gr)
 			if err != nil {
 				t.Fatalf("failed to read gzip data: %v", err)
@@ -69,10 +75,9 @@ func TestCompress(t *testing.T) {
 			if string(data) != "hello world" {
 				t.Errorf("expected 'hello world', got %s", string(data))
 			}
-		} else {
-			if buf.String() != "hello world" {
-				t.Errorf("expected 'hello world', got %s", buf.String())
-			}
+		} else if buf.String() != "hello world" {
+			t.Errorf("expected 'hello world', got %s", buf.String())
+
 		}
 	}
 }
@@ -111,7 +116,10 @@ func TestDecompress(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to write gzip data: %v", err)
 			}
-			gw.Close()
+
+			if err := gw.Close(); err != nil {
+				t.Fatalf("failed to close: %v", err)
+			}
 		} else {
 			buf.WriteString("hello world")
 		}
@@ -120,7 +128,12 @@ func TestDecompress(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to decompress data: %v", err)
 		}
-		defer reader.Close()
+
+		defer func() {
+			if err := reader.Close(); err != nil {
+				t.Fatalf("Failed to close : %v", err)
+			}
+		}()
 
 		data, err := io.ReadAll(reader)
 		if err != nil {
