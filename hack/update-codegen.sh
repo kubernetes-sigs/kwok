@@ -45,26 +45,23 @@ function gen() {
     "${ROOT_DIR}/pkg/apis/action/v1alpha1"/zz_generated.*.go
   echo "Generating deepcopy"
   deepcopy-gen \
-    --input-dirs ./pkg/apis/internalversion/ \
-    --input-dirs ./pkg/apis/v1alpha1/ \
-    --input-dirs ./pkg/apis/config/v1alpha1/ \
-    --input-dirs ./pkg/apis/action/v1alpha1/ \
-    --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
-    --output-file-base zz_generated.deepcopy \
+    ./pkg/apis/internalversion/ \
+    ./pkg/apis/v1alpha1/ \
+    ./pkg/apis/config/v1alpha1/ \
+    ./pkg/apis/action/v1alpha1/ \
+    --output-file zz_generated.deepcopy.go \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
   echo "Generating defaulter"
   defaulter-gen \
-    --input-dirs ./pkg/apis/v1alpha1/ \
-    --input-dirs ./pkg/apis/config/v1alpha1/ \
-    --input-dirs ./pkg/apis/action/v1alpha1/ \
-    --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
-    --output-file-base zz_generated.defaults \
+    ./pkg/apis/v1alpha1/ \
+    ./pkg/apis/config/v1alpha1/ \
+    ./pkg/apis/action/v1alpha1/ \
+    --output-file zz_generated.defaults.go \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
   echo "Generating conversion"
   conversion-gen \
-    --input-dirs ./pkg/apis/internalversion/ \
-    --trim-path-prefix sigs.k8s.io/kwok/pkg/apis \
-    --output-file-base zz_generated.conversion \
+    ./pkg/apis/internalversion/ \
+    --output-file zz_generated.conversion.go \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
 
   rm -rf "${ROOT_DIR}/pkg/client"
@@ -73,7 +70,8 @@ function gen() {
     --clientset-name versioned \
     --input-base "" \
     --input sigs.k8s.io/kwok/pkg/apis/v1alpha1 \
-    --output-package sigs.k8s.io/kwok/pkg/client/clientset \
+    --output-pkg sigs.k8s.io/kwok/pkg/client/clientset \
+    --output-dir ./pkg/client/clientset \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt \
     --plural-exceptions="Logs:Logs,ClusterLogs:ClusterLogs"
 }
