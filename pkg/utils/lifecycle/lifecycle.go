@@ -366,6 +366,33 @@ func (s *Stage) DelayRangePossible(ctx context.Context, v interface{}, now time.
 	return []time.Duration{duration, jitterDuration}, true
 }
 
+// DelayRange returns the delay range
+func (s *Stage) DelayRange(ctx context.Context, v interface{}) ([]string, bool) {
+	if s.duration == nil {
+		return nil, false
+	}
+
+	duration, ok := s.duration.Info(ctx, v)
+	if !ok {
+		return nil, false
+	}
+
+	if s.jitterDuration == nil {
+		return []string{duration}, true
+	}
+
+	jitterDuration, ok := s.jitterDuration.Info(ctx, v)
+	if !ok {
+		return []string{duration}, true
+	}
+
+	if jitterDuration < duration {
+		return []string{jitterDuration}, true
+	}
+
+	return []string{duration, jitterDuration}, true
+}
+
 // Next returns the next of the stage.
 func (s *Stage) Next() *Next {
 	return newNext(s.next)

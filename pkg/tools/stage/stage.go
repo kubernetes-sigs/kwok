@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -84,15 +83,19 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 	return meta, nil
 }
 
-var now = time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC)
-
 func testingStage(ctx context.Context, testTarget Obj, stage *lifecycle.Stage) (any, error) {
 	meta := map[string]any{
 		"stage": stage.Name(),
 	}
 
-	delay, ok := stage.DelayRangePossible(ctx, testTarget, now)
+	delayRange, ok := stage.DelayRange(ctx, testTarget)
 	if ok {
+		delay := map[string]string{
+			"min": delayRange[0],
+		}
+		if len(delayRange) > 1 {
+			delay["max"] = delayRange[1]
+		}
 		meta["delay"] = delay
 	}
 
