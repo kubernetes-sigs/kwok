@@ -18,13 +18,13 @@ package lifecycle
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func TestListAllPossibleStages(t *testing.T) {
@@ -85,7 +85,6 @@ func TestListAllPossibleStages(t *testing.T) {
 			}
 		}
 	}
-	t.Log("List of all possible stages:", possibleStages)
 }
 
 func TestLifecycleMatch(t *testing.T) {
@@ -124,12 +123,10 @@ func TestLifecycleMatch(t *testing.T) {
 		"g": "h",
 	}
 	var data interface{}
-	var matchedStage *Stage
-	matchedStage, err = lc.Match(label, annotation, data)
+	_, err = lc.Match(label, annotation, data)
 	if err != nil {
 		t.Fatal("Could not match Stage:", err)
 	}
-	t.Log("Matched stage:", matchedStage)
 }
 
 func TestStageMatch(t *testing.T) {
@@ -212,7 +209,7 @@ func TestStageMatch(t *testing.T) {
 			Expected: false,
 		},
 		{
-			Scenario: "Test MatchExpressions",
+			Scenario: "Test MatchExpressions that dont match",
 			Stage: &internalversion.Stage{
 				Spec: internalversion.StageSpec{
 					Selector: &internalversion.StageSelector{
@@ -233,17 +230,39 @@ func TestStageMatch(t *testing.T) {
 			},
 			Expected: false,
 		},
+		{
+			Scenario: "Test MatchExpressions that match",
+			Stage: &internalversion.Stage{
+				Spec: internalversion.StageSpec{
+					Selector: &internalversion.StageSelector{
+						MatchExpressions: []internalversion.SelectorRequirement{
+							{
+								Key:      ".test",
+								Operator: internalversion.SelectorOpNotIn,
+								Values:   []string{"b", "c"},
+							},
+							{
+								Key:      ".test",
+								Operator: internalversion.SelectorOpNotIn,
+								Values:   []string{"b", "f"},
+							},
+						},
+					},
+				},
+			},
+			Expected: true,
+		},
 	} {
 		t.Run(tc.Scenario, func(t *testing.T) {
 			var actual bool
 			var matchData interface{}
 			stage, err := NewStage(tc.Stage)
 			if err != nil {
-				t.Error(fmt.Errorf("Could not create new stage: %w", err))
+				t.Fatalf("Could not create new stage: %v", err)
 			}
 			actual, err = stage.match(tc.Label, tc.Annotation, matchData)
 			if err != nil {
-				t.Error(fmt.Errorf("Could not match: %w", err))
+				t.Fatalf("Could not create new stage: %v", err)
 			}
 			if tc.Expected && !actual {
 				t.Error("Expected a match")
@@ -267,7 +286,7 @@ func TestStageDelay(t *testing.T) {
 				Spec: internalversion.StageSpec{
 					Selector: &internalversion.StageSelector{},
 					Delay: &internalversion.StageDelay{
-						DurationMilliseconds: func(v int64) *int64 { return &v }(9),
+						DurationMilliseconds: format.Ptr(int64(9)),
 					},
 				},
 			},
@@ -279,8 +298,8 @@ func TestStageDelay(t *testing.T) {
 				Spec: internalversion.StageSpec{
 					Selector: &internalversion.StageSelector{},
 					Delay: &internalversion.StageDelay{
-						DurationMilliseconds:       func(v int64) *int64 { return &v }(9),
-						JitterDurationMilliseconds: func(v int64) *int64 { return &v }(4),
+						DurationMilliseconds:       format.Ptr(int64(9)),
+						JitterDurationMilliseconds: format.Ptr(int64(4)),
 					},
 				},
 			},
@@ -292,7 +311,7 @@ func TestStageDelay(t *testing.T) {
 				Spec: internalversion.StageSpec{
 					Selector: &internalversion.StageSelector{},
 					Delay: &internalversion.StageDelay{
-						JitterDurationMilliseconds: func(v int64) *int64 { return &v }(4),
+						JitterDurationMilliseconds: format.Ptr(int64(4)),
 					},
 				},
 			},
@@ -313,9 +332,8 @@ func TestStageDelay(t *testing.T) {
 			var v interface{}
 			stage, err := NewStage(tc.Stage)
 			if err != nil {
-				t.Error(fmt.Errorf("Could not create new stage: %w", err))
+				t.Fatalf("Could not create new stage: %v", err)
 			}
-			t.Log("STAGESS:", stage.duration)
 			_, actual = stage.Delay(context.Background(), v, time.Now())
 			if tc.Expected && !actual {
 				t.Error("Expected a valid duration")
