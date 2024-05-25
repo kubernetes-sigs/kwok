@@ -108,7 +108,7 @@ A Stage with `delete` being `true` represents a "Delete Stage", which means to `
 
 It is the [Resource Lifecycle Simulation Controller] in `kwok` that applies the Stages. The controller watches resource events from the apiserver and applies a Stage on a resource when it receives an associated event.
 Let’s take a particular resource as an example. Starting from receiving an `Added` event of the resource, `kwok` checks whether the associated object matches a Stage. `kwok` then updates the resource status
-if a "Change Stage" is matched. The update action itself consequently causes a new `Modified` to be generated, which will be caught by the controller later and trigger the next check and apply round.
+if a "Change Stage" is matched. The update action itself consequently causes a new `Modified` resource to be generated, which will be caught by the controller later and trigger the next check and apply round.
 `kwok` deletes the resource until a "Delete Stage” is matched.
 
 ```goat { height=600 width=550 }
@@ -210,7 +210,7 @@ This example shows how to configure the simplest and fastest stages of Pod resou
 ``` goat { height=510 width=550 }
       o
       |
-      | Pod scheduled to Node that managed by kwok
+      | Pod scheduled to a Node managed by kwok
       v
  .---------.
 | pod-ready |
@@ -230,13 +230,13 @@ This example shows how to configure the simplest and fastest stages of Pod resou
 |           |
  '---. .---'
       |
-      | .metadata.deletionTimestamp be set
+      | .metadata.deletionTimestamp is set
       v
  .----------.
 | pod-delete |
  '----+-----'
       |
-      | Pod be deleted
+      | Pod is deleted
       v
       o
 ```
