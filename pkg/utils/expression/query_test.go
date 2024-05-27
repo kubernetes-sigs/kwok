@@ -41,9 +41,34 @@ func TestQuery_Execute(t *testing.T) {
 				src: ".status.podIP",
 				v:   &corev1.Pod{},
 			},
-			want: []interface{}{
-				nil,
+			want: []interface{}{},
+		},
+		{
+			args: args{
+				src: ".status.nothing",
+				v:   &corev1.Pod{},
 			},
+			want: []interface{}{},
+		},
+		{
+			args: args{
+				src: ".metadata.annotations[\"x\"]",
+				v:   &corev1.Pod{},
+			},
+			want: []interface{}{},
+		},
+		{
+			args: args{
+				src: ".metadata.annotations[\"x\"]",
+				v: &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"x": "",
+						},
+					},
+				},
+			},
+			want: []interface{}{""},
 		},
 		{
 			args: args{

@@ -60,6 +60,9 @@ func (q *Query) Execute(ctx context.Context, v interface{}) ([]interface{}, erro
 		if _, ok := v.(error); ok {
 			return nil, nil
 		}
+		if v == nil {
+			continue
+		}
 		out = append(out, v)
 	}
 	return out, nil
