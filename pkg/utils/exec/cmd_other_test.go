@@ -61,11 +61,6 @@ func Test_isRunning(t *testing.T) {
 }
 
 func TestSetUser(t *testing.T) {
-	// Mock cmd
-	cmd := &exec.Cmd{
-		SysProcAttr: &syscall.SysProcAttr{},
-	}
-
 	type args struct {
 		uid *int64
 		gid *int64
@@ -84,7 +79,10 @@ func TestSetUser(t *testing.T) {
 			name: "Only UID provided",
 			args: args{uid: format.Ptr(int64(os.Getuid())), gid: nil},
 		},
-
+		{
+			name: "Only GID provided",
+			args: args{uid: nil, gid: format.Ptr(int64(os.Getgid()))},
+		},
 		{
 			name: "No UID or GID provided",
 			args: args{uid: nil, gid: nil},
@@ -94,6 +92,9 @@ func TestSetUser(t *testing.T) {
 	// Run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			cmd := &exec.Cmd{
+				SysProcAttr: &syscall.SysProcAttr{},
+			}
 			err := setUser(cmd, tt.args.uid, tt.args.gid)
 			if err != nil {
 				t.Errorf("setUser() error = %v, want nil", err)
