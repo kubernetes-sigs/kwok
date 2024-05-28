@@ -24,25 +24,30 @@ func TestCompress(t *testing.T) {
 	tests := []struct {
 		name     string
 		ext      string
+		data     []byte
 		expected bool
 	}{{
 		name:     "test.txt",
 		ext:      ".txt",
+		data: []byte("hello world"),
 		expected: false,
 	},
 		{
 			name:     "test.gz",
 			ext:      ".gz",
+			data: []byte("hello world"),
 			expected: true,
 		},
 		{
 			name:     "test.tgz",
 			ext:      ".tgz",
+			data: []byte("hello world"),
 			expected: true,
 		},
 		{
 			name:     "test.zip",
 			ext:      ".zip",
+			data: []byte("hello world"),
 			expected: false,
 		},
 	}
@@ -50,7 +55,7 @@ func TestCompress(t *testing.T) {
 	for _, test := range tests {
 		var buf bytes.Buffer
 		writer := Compress(test.name, &buf)
-		_, err := writer.Write([]byte("hello world"))
+		_, err := writer.Write(test.data)
 		if err != nil {
 			t.Fatalf("failed to write data: %v", err)
 		}
@@ -84,34 +89,46 @@ func TestCompress(t *testing.T) {
 func TestDecompress(t *testing.T) {
 	tests := []struct {
 		name       string
+		data       []byte
+
 		compressed bool
 	}{{
 
 		name:       "test.txt",
+		data:[]byte("hello world"),
 		compressed: false,
+	},
+	{
+
+		name:       "test.gz",
+		data:[]byte("hello world"),
+		compressed: true,
 	},
 		{
 
-			name:       "test.gz",
+			name:       "test.tgz",
+			data:[]byte("hello world"),
 			compressed: true,
 		},
 		{
-
-			name:       "test.tgz",
+			name:       "test.gzip",
+			data:       compressData([]byte("hello world")),
 			compressed: true,
 		},
 		{
 
 			name:       "test.zip",
+			data:[]byte("hello world"),
 			compressed: false,
 		},
 	}
 
 	for _, test := range tests {
+		
 		var buf bytes.Buffer
 		if test.compressed {
 			gw := gzip.NewWriter(&buf)
-			_, err := gw.Write([]byte("hello world"))
+			_, err := gw.Write(test.data)
 			if err != nil {
 				t.Fatalf("failed to write gzip data: %v", err)
 			}
@@ -142,4 +159,16 @@ func TestDecompress(t *testing.T) {
 			t.Errorf("expected 'hello world', got %s", string(data))
 		}
 	}
+}
+func compressData(data []byte) []byte {
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	_, err := gw.Write(data)
+	if err != nil {
+		panic(err)
+	}
+	if err := gw.Close(); err != nil {
+		panic(err)
+	}
+	return buf.Bytes()
 }
