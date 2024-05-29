@@ -17,18 +17,76 @@ limitations under the License.
 package file
 
 import (
+	"compress/gzip"
 	"context"
+	"io"
 	"io/fs"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
-func TestDownloadWithCacheAndExtract(t *testing.T) {
+func TestDownloadWithCacheAndExntract(t *testing.T) {
+	// Create a test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set the response header to indicate gzipped content
+		w.Header().Set("Content-Encoding", "gzip")
+
+		// Create a gzip writer
+		gz := gzip.NewWriter(w)
+
+		defer func() {
+			if err := gz.Close(); err != nil {
+				t.Fatalf("Failed to close : %v", err)
+			}
+		}()
+		// Write gzipped content
+		_, err := gz.Write([]byte("Hello, World! This is a gzipped response."))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+
+	// Make a request to the test server
+	resp, err := http.Get(ts.URL)
+	if err != nil {
+		t.Fatalf("Failed to make request to test server: %v", err)
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
+
+	// Create a temporary file in the /tmp directory
+	tmpfile, err := os.CreateTemp("/tmp", "response-*.gz")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer func() {
+		if err := tmpfile.Close(); err != nil {
+			t.Fatalf("Failed to close : %v", err)
+		}
+	}()
+
+	// Write the response body to the temporary file
+	_, err = io.Copy(tmpfile, resp.Body)
+	if err != nil {
+		t.Fatalf("Failed to write response to file: %v", err)
+	}
+
 	ctx := context.Background()
 	cacheDir := "/tmp/cache"
-	src := "http://example.com/file.tar.gz"
+	src := "tmpfile"
 	dest := "/tmp/dest/file"
 	match := "file"
 	mode := fs.FileMode(0644)
@@ -46,7 +104,7 @@ func TestDownloadWithCacheAndExtract(t *testing.T) {
 	}
 
 	// Call the function
-	err := DownloadWithCacheAndExtract(ctx, cacheDir, src, dest, match, mode, quiet, clean)
+	err = DownloadWithCacheAndExtract(ctx, cacheDir, src, dest, match, mode, quiet, clean)
 
 	// Assert: No error should be returned
 	if err != nil {
