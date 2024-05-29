@@ -19,6 +19,7 @@ package exec
 import (
 	"errors"
 	"os/exec"
+	"runtime"
 	"syscall"
 	"testing"
 )
@@ -26,6 +27,9 @@ import (
 func TestKillProcess(t *testing.T) {
 	// Start a new process (e.g., sleep for 10 seconds)
 	cmd := exec.Command("sleep", "10")
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("timeout", "/T", "10")
+	}
 	if err := cmd.Start(); err != nil {
 		t.Fatalf("failed to start test process: %v", err)
 	}
@@ -46,14 +50,23 @@ func TestKillProcess(t *testing.T) {
 		// Check if the error indicates the process was killed
 		var exiterr *exec.ExitError
 		if errors.As(err, &exiterr) {
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				if status.Signaled() && status.Signal() == syscall.SIGKILL {
+			if runtime.GOOS == "windows" {
+				// On Windows, we expect an exit code of 1 for a killed process
+				if exiterr.ExitCode() == 1 {
 					t.Logf("process %d was killed as expected", pid)
 				} else {
-					t.Fatalf("process %d exited with status %v, expected to be killed", pid, status)
+					t.Fatalf("process %d exited with code %d, expected to be killed", pid, exiterr.ExitCode())
 				}
 			} else {
-				t.Fatalf("failed to get exit status for process %d: %v", pid, err)
+				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+					if status.Signaled() && status.Signal() == syscall.SIGKILL {
+						t.Logf("process %d was killed as expected", pid)
+					} else {
+						t.Fatalf("process %d exited with status %v, expected to be killed", pid, status)
+					}
+				} else {
+					t.Fatalf("failed to get exit status for process %d: %v", pid, err)
+				}
 			}
 		}
 	} else {

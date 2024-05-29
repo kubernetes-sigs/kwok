@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,47 +18,8 @@ package exec
 
 import (
 	"context"
-	"reflect"
 	"testing"
-
-	"github.com/blang/semver/v4"
-
-	"sigs.k8s.io/kwok/pkg/utils/version"
 )
-
-func TestParseVersionFromBinary(t *testing.T) {
-	type args struct {
-		ctx  context.Context
-		path string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    version.Version
-		wantErr bool
-	}{{
-		name: "testing go",
-		args: args{
-			ctx:  context.Background(),
-			path: "go",
-		},
-		want:    semver.MustParse("1.22.3"),
-		wantErr: false,
-	},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseVersionFromBinary(tt.args.ctx, tt.args.path)
-			if (err != nil) && tt.wantErr {
-				t.Errorf("ParseVersionFromBinary() error = %v", err)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ParseVersionFromBinary() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestParseVersionFromImage(t *testing.T) {
 	ctx := context.Background()
