@@ -24,6 +24,8 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
@@ -68,24 +70,35 @@ func TestSetUser(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name string
-		args args
+		name           string
+		args           args
+		expectedUID    *uint32
+		expectedGID    *uint32
+		expectedErrMsg string
 	}{
 		{
-			name: "Both UID and GID provided",
-			args: args{uid: format.Ptr(int64(os.Getuid())), gid: format.Ptr(int64(os.Getgid()))},
+			name:        "Both UID and GID provided",
+			args:        args{uid: format.Ptr(int64(os.Getuid())), gid: format.Ptr(int64(os.Getgid()))},
+			expectedUID: format.Ptr(uint32(os.Getuid())),
+			expectedGID: format.Ptr(uint32(os.Getgid())),
 		},
 		{
-			name: "Only UID provided",
-			args: args{uid: format.Ptr(int64(os.Getuid())), gid: nil},
+			name:        "Only UID provided",
+			args:        args{uid: format.Ptr(int64(os.Getuid())), gid: nil},
+			expectedUID: format.Ptr(uint32(os.Getuid())),
+			expectedGID: nil,
 		},
 		{
-			name: "Only GID provided",
-			args: args{uid: nil, gid: format.Ptr(int64(os.Getgid()))},
+			name:        "Only GID provided",
+			args:        args{uid: nil, gid: format.Ptr(int64(os.Getgid()))},
+			expectedUID: nil,
+			expectedGID: format.Ptr(uint32(os.Getgid())),
 		},
 		{
-			name: "No UID or GID provided",
-			args: args{uid: nil, gid: nil},
+			name:        "No UID or GID provided",
+			args:        args{uid: nil, gid: nil},
+			expectedUID: nil,
+			expectedGID: nil,
 		},
 	}
 
@@ -95,10 +108,23 @@ func TestSetUser(t *testing.T) {
 			cmd := &exec.Cmd{
 				SysProcAttr: &syscall.SysProcAttr{},
 			}
+
 			err := setUser(cmd, tt.args.uid, tt.args.gid)
-			if err != nil {
-				t.Errorf("setUser() error = %v, want nil", err)
-				return
+
+			if tt.expectedErrMsg != "" {
+				assert.EqualError(t, err, tt.expectedErrMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			if tt.expectedUID != nil {
+				assert.NotNil(t, cmd.SysProcAttr.Credential)
+				assert.Equal(t, *tt.expectedUID, cmd.SysProcAttr.Credential.Uid)
+			}
+
+			if tt.expectedGID != nil {
+				assert.NotNil(t, cmd.SysProcAttr.Credential)
+				assert.Equal(t, *tt.expectedGID, cmd.SysProcAttr.Credential.Gid)
 			}
 		})
 	}

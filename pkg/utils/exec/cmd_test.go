@@ -46,31 +46,31 @@ func TestKillProcess(t *testing.T) {
 		t.Fatalf("failed to kill process %d: %v", pid, err)
 	}
 	err = cmd.Wait()
-	if err != nil {
-		// Check if the error indicates the process was killed
-		var exiterr *exec.ExitError
-		if errors.As(err, &exiterr) {
-			if runtime.GOOS == "windows" {
-				// On Windows, we expect an exit code of 1 for a killed process
-				if exiterr.ExitCode() == 1 {
+	if err == nil {
+		t.Fatalf("process %d exited normally, expected to be killed", pid)
+	}
+
+	// Check if the error indicates the process was killed
+	var exiterr *exec.ExitError
+	if errors.As(err, &exiterr) {
+		if runtime.GOOS == "windows" {
+			// On Windows, we expect an exit code of 1 for a killed process
+			if exiterr.ExitCode() == 1 {
+				t.Logf("process %d was killed as expected", pid)
+			} else {
+				t.Fatalf("process %d exited with code %d, expected to be killed", pid, exiterr.ExitCode())
+			}
+		} else {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				if status.Signaled() && status.Signal() == syscall.SIGKILL {
 					t.Logf("process %d was killed as expected", pid)
 				} else {
-					t.Fatalf("process %d exited with code %d, expected to be killed", pid, exiterr.ExitCode())
+					t.Fatalf("process %d exited with status %v, expected to be killed", pid, status)
 				}
 			} else {
-				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-					if status.Signaled() && status.Signal() == syscall.SIGKILL {
-						t.Logf("process %d was killed as expected", pid)
-					} else {
-						t.Fatalf("process %d exited with status %v, expected to be killed", pid, status)
-					}
-				} else {
-					t.Fatalf("failed to get exit status for process %d: %v", pid, err)
-				}
+				t.Fatalf("failed to get exit status for process %d: %v", pid, err)
 			}
 		}
-	} else {
-		t.Fatalf("process %d exited normally, expected to be killed", pid)
 	}
 
 	// Ensure the process is no longer running
