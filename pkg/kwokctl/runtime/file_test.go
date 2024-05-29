@@ -45,7 +45,7 @@ func TestCreateFile(t *testing.T) {
 }
 
 func TestCopyFile(t *testing.T) {
-    // Create a temporary directory
+	// Create a temporary directory
 	tmpDir := t.TempDir()
 
 	// Define the path for the test files
@@ -81,7 +81,7 @@ func TestCopyFile(t *testing.T) {
 }
 
 func TestRenameFile(t *testing.T) {
-    // Create a temporary directory
+	// Create a temporary directory
 	tmpDir := t.TempDir()
 
 	// Define the path for the test files
@@ -112,7 +112,7 @@ func TestRenameFile(t *testing.T) {
 }
 
 func TestAppendToFile(t *testing.T) {
-    // Create a temporary directory
+	// Create a temporary directory
 	tmpDir := t.TempDir()
 
 	// Define the path for the test file
@@ -147,10 +147,10 @@ func TestAppendToFile(t *testing.T) {
 }
 
 func compareFileContent(t *testing.T, initialContent, appendContent, fileContent []byte) {
-    expectedContent := append(initialContent, appendContent...)
-    if string(fileContent) != string(expectedContent) {
-        t.Errorf("AppendToFile did not append the content to the file as expected")
-    }
+	expectedContent := append(initialContent, appendContent...)
+	if string(fileContent) != string(expectedContent) {
+		t.Errorf("AppendToFile did not append the content to the file as expected")
+	}
 }
 
 func TestRemove(t *testing.T) {
@@ -181,7 +181,7 @@ func TestRemove(t *testing.T) {
 }
 
 func TestRemoveAll(t *testing.T) {
-    // Create a temporary directory
+	// Create a temporary directory
 	tmpDir := t.TempDir()
 
 	// Create a mock subdirectory and file

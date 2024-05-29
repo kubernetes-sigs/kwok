@@ -73,9 +73,9 @@ func TestGetUsedPorts(t *testing.T) {
 	tmpDir := t.TempDir()
 	// Defer the removal of the temporary directory
 	defer func() {
-    	if err := os.RemoveAll(tmpDir); err != nil {
-        	t.Errorf("error removing temporary directory: %v", err)
-    	}
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("error removing temporary directory: %v", err)
+		}
 	}()
 
 	// Create some temporary cluster directories
