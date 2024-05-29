@@ -40,7 +40,7 @@ func TestListClusters(t *testing.T) {
 	clusterDirs := []string{"cluster1", "cluster2"}
 	for _, clusterDir := range clusterDirs {
 		clusterPath := filepath.Join(tmpDir, clusterDir)
-		if err := os.MkdirAll(clusterPath, 0755); err != nil {
+		if err := os.MkdirAll(clusterPath, 0750); err != nil {
 			t.Fatal(err)
 		}
 
@@ -71,12 +71,17 @@ func TestGetUsedPorts(t *testing.T) {
 
 	// Create a temporary directory for testing clusters
 	tmpDir := t.TempDir()
-	defer os.RemoveAll(tmpDir)
+	// Defer the removal of the temporary directory
+	defer func() {
+    	if err := os.RemoveAll(tmpDir); err != nil {
+        	t.Errorf("error removing temporary directory: %v", err)
+    	}
+	}()
 
 	// Create some temporary cluster directories
 	clusterDirs := []string{"cluster1", "cluster2"}
 	for _, clusterDir := range clusterDirs {
-		if err := os.MkdirAll(tmpDir+"/"+clusterDir, 0755); err != nil {
+		if err := os.MkdirAll(tmpDir+"/"+clusterDir, 0750); err != nil {
 			t.Fatal(err)
 		}
 	}

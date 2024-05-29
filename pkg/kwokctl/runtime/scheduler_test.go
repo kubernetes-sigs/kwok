@@ -32,13 +32,13 @@ func TestCopySchedulerConfig(t *testing.T) {
 	kubeconfigPath := filepath.Join(tmpDir, "kubeconfig.yaml")
 
 	// Create a temporary old scheduler configuration file
-	err := os.WriteFile(oldSchedulerConfig, []byte("old scheduler config"), 0644)
+	err := os.WriteFile(oldSchedulerConfig, []byte("old scheduler config"), 0640)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Create a temporary kubeconfig file
-	err = os.WriteFile(kubeconfigPath, []byte("kubeconfig"), 0644)
+	err = os.WriteFile(kubeconfigPath, []byte("kubeconfig"), 0640)
 	if err != nil {
 		t.Fatal(err)
 	}

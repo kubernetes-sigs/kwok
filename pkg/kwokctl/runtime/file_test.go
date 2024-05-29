@@ -45,8 +45,7 @@ func TestCreateFile(t *testing.T) {
 }
 
 func TestCopyFile(t *testing.T) {
-
-	// Create a temporary directory
+    // Create a temporary directory
 	tmpDir := t.TempDir()
 
 	// Define the path for the test files
@@ -54,7 +53,7 @@ func TestCopyFile(t *testing.T) {
 	destFilePath := filepath.Join(tmpDir, "dest.txt")
 
 	// Create a mock source file
-	if err := os.WriteFile(srcFilePath, []byte("source"), 0644); err != nil {
+	if err := os.WriteFile(srcFilePath, []byte("source"), 0640); err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
 
@@ -82,8 +81,7 @@ func TestCopyFile(t *testing.T) {
 }
 
 func TestRenameFile(t *testing.T) {
-
-	// Create a temporary directory
+    // Create a temporary directory
 	tmpDir := t.TempDir()
 
 	// Define the path for the test files
@@ -91,7 +89,7 @@ func TestRenameFile(t *testing.T) {
 	newFilePath := filepath.Join(tmpDir, "new.txt")
 
 	// Create a mock source file
-	if err := os.WriteFile(oldFilePath, []byte("content"), 0644); err != nil {
+	if err := os.WriteFile(oldFilePath, []byte("content"), 0640); err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
 
@@ -114,8 +112,7 @@ func TestRenameFile(t *testing.T) {
 }
 
 func TestAppendToFile(t *testing.T) {
-
-	// Create a temporary directory
+    // Create a temporary directory
 	tmpDir := t.TempDir()
 
 	// Define the path for the test file
@@ -126,7 +123,7 @@ func TestAppendToFile(t *testing.T) {
 
 	// Write initial content to the file
 	initialContent := []byte("initial content")
-	if err := os.WriteFile(testFilePath, initialContent, 0644); err != nil {
+	if err := os.WriteFile(testFilePath, initialContent, 0640); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -146,7 +143,9 @@ func TestAppendToFile(t *testing.T) {
 	}
 
 	// Check if the content contains both initial and appended content
-	expectedContent := append(initialContent, appendContent...)
+	tempContent := append(initialContent, appendContent...)
+	expectedContent := append(initialContent[:0], tempContent...)
+	
 	if string(fileContent) != string(expectedContent) {
 		t.Errorf("AppendToFile did not append the content to the file as expected")
 	}
@@ -180,15 +179,14 @@ func TestRemove(t *testing.T) {
 }
 
 func TestRemoveAll(t *testing.T) {
-
-	// Create a temporary directory
+    // Create a temporary directory
 	tmpDir := t.TempDir()
 
 	// Create a mock subdirectory and file
 	subDir := filepath.Join(tmpDir, "subdir")
 	testFilePath := filepath.Join(subDir, "test.txt")
 
-	if err := os.Mkdir(subDir, 0755); err != nil {
+	if err := os.Mkdir(subDir, 0750); err != nil {
 		t.Fatalf("Failed to create subdirectory: %v", err)
 	}
 	if _, err := os.Create(testFilePath); err != nil {
