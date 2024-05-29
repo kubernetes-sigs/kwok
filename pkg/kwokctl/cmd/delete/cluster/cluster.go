@@ -59,86 +59,82 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func runE(ctx context.Context, flags *flagpole) error {
-    if flags.All {
-        return deleteAllClusters(ctx, flags)
-    }
+	if flags.All {
+		return deleteAllClusters(ctx, flags)
+	}
 
-    return deleteCluster(ctx, flags.Name, flags.Kubeconfig)
+	return deleteCluster(ctx, flags.Name, flags.Kubeconfig)
 }
 
 func deleteAllClusters(ctx context.Context, flags *flagpole) error {
-    clustersDir := config.ClustersDir
-    clusters, err := os.ReadDir(clustersDir)
-    if err != nil {
-        return err
-    }
+	clusters, err := runtime.ListClusters(ctx)
+	if err != nil {
+		return err
+	}
 
-    for _, cluster := range clusters {
-        if cluster.IsDir() {
-            clusterName := cluster.Name()
-            err := deleteCluster(ctx, clusterName, flags.Kubeconfig)
-            if err != nil {
-                log.FromContext(ctx).Error("Failed to delete cluster", err, "cluster",clusterName,)
-            }
-        }
-    }
-    return nil
+	for _, clusterName := range clusters {
+		err := deleteCluster(ctx, clusterName, flags.Kubeconfig)
+		if err != nil {
+			log.FromContext(ctx).Error("Failed to delete cluster", err, "cluster", clusterName)
+		}
+	}
+	return nil
 }
 
 func deleteCluster(ctx context.Context, name string, kubeconfigPath string) error {
-    name = config.ClusterName(name)
-    workdir := path.Join(config.ClustersDir, name)
+	name = config.ClusterName(name)
+	workdir := path.Join(config.ClustersDir, name)
 
-    logger := log.FromContext(ctx)
-    logger = logger.With("cluster", name)
-    ctx = log.NewContext(ctx, logger)
+	logger := log.FromContext(ctx)
+	logger = logger.With("cluster", name)
+	ctx = log.NewContext(ctx, logger)
 
-    var err error
-    kubeconfigPath, err = path.Expand(kubeconfigPath)
-    if err != nil {
-        return err
-    }
+	var err error
+	kubeconfigPath, err = path.Expand(kubeconfigPath)
+	if err != nil {
+		return err
+	}
 
-    rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
-    if err != nil {
-        if errors.Is(err, os.ErrNotExist) {
-            logger.Warn("Cluster does not exist")
-            return nil
-        }
-        return err
-    }
+	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			logger.Warn("Cluster does not exist")
+			return nil
+		}
+		return err
+	}
 
-    // Stop the cluster
-    start := time.Now()
-    logger.Info("Cluster is stopping")
-    err = rt.Down(ctx)
-    if err != nil {
-        return err
-    }
-    logger.Info("Cluster is stopped",
-        "elapsed", time.Since(start),
-    )
+	// Stop the cluster
+	start := time.Now()
+	logger.Info("Cluster is stopping")
+	err = rt.Down(ctx)
+	if err != nil {
+		return err
+	}
+	logger.Info("Cluster is stopped",
+		"elapsed", time.Since(start),
+	)
 
-    // Delete the cluster
-    start = time.Now()
-    logger.Info("Cluster is deleting")
-    if kubeconfigPath != "" {
-        err = rt.RemoveContext(ctx, kubeconfigPath)
-        if err != nil {
-            logger.Error("Failed to remove context from kubeconfig", err,
-                "kubeconfig", kubeconfigPath,
-            )
-        }
-        logger.Debug("Remove context from kubeconfig",
-            "kubeconfig", kubeconfigPath,
-        )
-    }
-    err = rt.Uninstall(ctx)
-    if err != nil {
-        return err
-    }
-    logger.Info("Cluster is deleted",
-        "elapsed", time.Since(start),
-    )
-    return nil
+	// Delete the cluster
+	start = time.Now()
+	logger.Info("Cluster is deleting")
+	if kubeconfigPath != "" {
+		err = rt.RemoveContext(ctx, kubeconfigPath)
+		if err != nil {
+			logger.Error("Failed to remove context from kubeconfig", err,
+				"kubeconfig", kubeconfigPath,
+			)
+		}
+		logger.Debug("Remove context from kubeconfig",
+			"kubeconfig", kubeconfigPath,
+		)
+	}
+	err = rt.Uninstall(ctx)
+	if err != nil {
+		return err
+	}
+	logger.Info("Cluster is deleted",
+		"elapsed", time.Since(start),
+	)
+	return nil
 }
