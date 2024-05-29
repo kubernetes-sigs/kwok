@@ -143,11 +143,9 @@ func TestAppendToFile(t *testing.T) {
 	}
 
 	// Check if the content contains both initial and appended content
-	compareFileContent(t, initialContent, appendContent, fileContent)
-}
+	expectedContent := initialContent
+	expectedContent = append(expectedContent, appendContent...)
 
-func compareFileContent(t *testing.T, initialContent, appendContent, fileContent []byte) {
-	expectedContent := append(initialContent, appendContent...)
 	if string(fileContent) != string(expectedContent) {
 		t.Errorf("AppendToFile did not append the content to the file as expected")
 	}
