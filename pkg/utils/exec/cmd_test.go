@@ -25,7 +25,7 @@ import (
 )
 
 func TestKillProcess(t *testing.T) {
-	// Start a new process (e.g., sleep for 10 seconds)
+	// Start new process (e.g., sleep for 10 seconds)
 	cmd := exec.Command("sleep", "10")
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("timeout", "/T", "10")
