@@ -59,9 +59,11 @@ linters-settings:
     - pkg: k8s.io/apimachinery/pkg/api/errors
       alias: apierrors
   staticcheck:
-    go: "1.22"
+    run:
+      go: "1.22"
   stylecheck:
-    go: "1.22"
+    run:
+      go: "1.22"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     checks: ["all", "-ST1000", "-ST1003"]
   depguard:
@@ -180,17 +182,20 @@ linters-settings:
       disabled: true
     - name: error-strings
       disabled: true
+    - name: max-control-nesting
+      arguments:
+      - 6
 issues:
   max-same-issues: 0
   max-issues-per-linter: 0
   # We are disabling default golangci exclusions because we want to help reviewers to focus on reviewing the most relevant
   # changes in PRs and avoid nitpicking.
   exclude-use-default: false
+  exclude-files:
+  - ".*\\.zz_generated\\..*"
 run:
   concurrency: 1
   timeout: 10m
   allow-parallel-runners: false
   skip-dirs-use-default: true
-  skip-files:
-  - ".*\\.zz_generated\\..*"
   go: "1.22"
