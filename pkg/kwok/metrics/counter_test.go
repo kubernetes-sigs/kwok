@@ -62,5 +62,4 @@ func TestNewCounter(t *testing.T) {
 	`)); err != nil {
 		t.Fatalf("unexpected metrics after second set: %s", err)
 	}
-
 }
