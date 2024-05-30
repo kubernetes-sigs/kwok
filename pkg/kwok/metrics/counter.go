@@ -46,6 +46,7 @@ func NewCounter(opts CounterOpts) Counter {
 	c := &counter{
 		value: &atomic.Pointer[float64]{},
 	}
+	c.value.Store(new(float64))
 	c.CounterFunc = prometheus.NewCounterFunc(opts,
 		func() float64 {
 			return *c.value.Load()

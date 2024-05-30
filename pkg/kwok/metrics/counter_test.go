@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,10 +18,8 @@ package metrics
 
 import (
 	"strings"
-	"sync/atomic"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
@@ -32,20 +30,7 @@ func TestNewCounter(t *testing.T) {
 		Help: "This is a test counter",
 	}
 
-	// Initialize a float64 value
-	initialValue := float64(0)
-
-	// Create a new counter and ensure its atomic pointer is initialized properly
-	c := &counter{
-		value: &atomic.Pointer[float64]{},
-	}
-	c.value.Store(&initialValue)
-	c.CounterFunc = prometheus.NewCounterFunc(opts, func() float64 {
-		return *c.value.Load()
-	})
-
-	// Register the counter with Prometheus's default registry
-	prometheus.MustRegister(c)
+	c := NewCounter(opts)
 
 	// Ensure the counter starts at 0
 	if err := testutil.CollectAndCompare(c, strings.NewReader(`
@@ -78,6 +63,4 @@ func TestNewCounter(t *testing.T) {
 		t.Fatalf("unexpected metrics after second set: %s", err)
 	}
 
-	// Clean up the counter from the default registry
-	prometheus.Unregister(c)
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
@@ -33,9 +32,6 @@ func TestNewGauge(t *testing.T) {
 
 	// Create a new gauge
 	gauge := NewGauge(opts)
-
-	// Register the gauge with Prometheus's default registry
-	prometheus.MustRegister(gauge)
 
 	// Ensure the gauge starts at 0
 	if err := testutil.CollectAndCompare(gauge, strings.NewReader(`
@@ -75,7 +71,4 @@ func TestNewGauge(t *testing.T) {
 	`)); err != nil {
 		t.Fatalf("unexpected metrics after set: %s", err)
 	}
-
-	// Clean up the gauge from the default registry
-	prometheus.Unregister(gauge)
 }
