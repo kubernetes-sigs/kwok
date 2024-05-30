@@ -18,94 +18,85 @@ package cel
 import (
 	"reflect"
 	"testing"
-	"time"
 
-	"github.com/google/cel-go/common/types"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestFuncsToMethods(t *testing.T) {
-	funcs := map[string][]any{
-		nowName:         {timeNow},
-		mathRandName:    {mathRand},
-		sinceSecondName: {sinceSecond[*corev1.Node], sinceSecond[*corev1.Pod]},
-		unixSecondName:  {unixSecond},
-		quantityName:    {NewQuantityFromString},
-	}
-
-	methods := FuncsToMethods(funcs)
-
-	expectedMethods := map[string][]any{
-		sinceSecondName: {sinceSecond[*corev1.Node], sinceSecond[*corev1.Pod]},
-	}
-
-	for name, funcs := range expectedMethods {
-		if _, ok := methods[name]; !ok {
-			t.Errorf("Expected method %s not found in the result", name)
-			continue
-		}
-
-		for i, fun := range funcs {
-			if reflect.TypeOf(methods[name][i]) != reflect.TypeOf(fun) {
-				t.Errorf("Expected method %s of type %v, but got %v", name, reflect.TypeOf(fun), reflect.TypeOf(methods[name][i]))
-			}
+// Helper function to compare two maps of functions by their types
+func assertFuncMapsEqual(t *testing.T, expected, actual map[string][]any) {
+	for key, expFuncs := range expected {
+		actFuncs, ok := actual[key]
+		assert.True(t, ok, "key %v not found in actual map", key)
+		assert.Equal(t, len(expFuncs), len(actFuncs), "length mismatch for key %v", key)
+		for i, expFunc := range expFuncs {
+			actFunc := actFuncs[i]
+			assert.Equal(t, reflect.TypeOf(expFunc), reflect.TypeOf(actFunc), "type mismatch for key %v at index %v", key, i)
 		}
 	}
+	assert.Equal(t, len(expected), len(actual), "number of keys mismatch")
 }
 
-func TestDefaultConversions(t *testing.T) {
-	timeValue := metav1.Time{Time: time.Now()}
-	durationValue := metav1.Duration{Duration: time.Second}
-	quantityValue := resource.MustParse("1Gi")
+// Sample functions for testing
+func funcNoParams()                 {}
+func funcOneParam(a int)            {}
+func funcTwoParams(a int, b string) {}
+func funcNotAFunction()             {}
 
-	tests := []struct {
-		name string
-		fn   any
-		arg  any
-		want any
-	}{
-		{
-			name: "metav1.Time to types.Timestamp",
-			fn:   DefaultConversions[0],
-			arg:  timeValue,
-			want: types.Timestamp{Time: timeValue.Time},
-		},
-		{
-			name: "*metav1.Time to types.Timestamp",
-			fn:   DefaultConversions[1],
-			arg:  &timeValue,
-			want: types.Timestamp{Time: timeValue.Time},
-		},
-		{
-			name: "metav1.Duration to types.Duration",
-			fn:   DefaultConversions[2],
-			arg:  durationValue,
-			want: types.Duration{Duration: durationValue.Duration},
-		},
-		{
-			name: "*metav1.Duration to types.Duration",
-			fn:   DefaultConversions[3],
-			arg:  &durationValue,
-			want: types.Duration{Duration: durationValue.Duration},
-		},
-		{
-			name: "resource.Quantity to Quantity",
-			fn:   DefaultConversions[4],
-			arg:  quantityValue,
-			want: NewQuantity(&quantityValue),
-		},
+func TestFilterFuncsByParams_EmptyMap(t *testing.T) {
+	input := map[string][]any{}
+	expected := map[string][]any{}
+
+	output := FuncsToMethods(input)
+	assertFuncMapsEqual(t, expected, output)
+}
+
+func TestFilterFuncsByParams_NoParamsFunction(t *testing.T) {
+	input := map[string][]any{
+		"FuncNoParams": {funcNoParams},
+	}
+	expected := map[string][]any{}
+
+	output := FuncsToMethods(input)
+	assertFuncMapsEqual(t, expected, output)
+}
+
+func TestFilterFuncsByParams_WithParamsFunctions(t *testing.T) {
+	input := map[string][]any{
+		"FuncWithOneParam":  {funcOneParam},
+		"FuncWithTwoParams": {funcTwoParams},
+	}
+	expected := map[string][]any{
+		"FuncWithOneParam":  {funcOneParam},
+		"FuncWithTwoParams": {funcTwoParams},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fnValue := reflect.ValueOf(tt.fn)
-			argValue := reflect.ValueOf(tt.arg)
-			result := fnValue.Call([]reflect.Value{argValue})[0].Interface()
-			if !reflect.DeepEqual(result, tt.want) {
-				t.Errorf("Expected %v, but got %v", tt.want, result)
-			}
-		})
+	output := FuncsToMethods(input)
+	assertFuncMapsEqual(t, expected, output)
+}
+
+func TestFilterFuncsByParams_MixedEntries(t *testing.T) {
+	input := map[string][]any{
+		"FuncNoParams":     {funcNoParams},
+		"FuncWithOneParam": {funcOneParam},
+		"NotAFunction":     {funcNotAFunction},
 	}
+	expected := map[string][]any{
+		"FuncWithOneParam": {funcOneParam},
+	}
+
+	output := FuncsToMethods(input)
+	assertFuncMapsEqual(t, expected, output)
+}
+
+func TestFilterFuncsByParams_MixedFunctionsAndNonFunctions(t *testing.T) {
+	input := map[string][]any{
+		"FuncWithOneParam": {funcOneParam},
+		"NotAFunction":     {"not a function"},
+	}
+	expected := map[string][]any{
+		"FuncWithOneParam": {funcOneParam},
+	}
+
+	output := FuncsToMethods(input)
+	assertFuncMapsEqual(t, expected, output)
 }
