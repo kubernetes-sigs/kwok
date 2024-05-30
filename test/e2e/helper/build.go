@@ -28,7 +28,46 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
-// BuildKwokImage builds the kwok image and returns a function that can be used
+// BuildKwokBaseImage builds the kwok Base image and returns a function that can be used
+func BuildKwokBaseImage(rootDir string, image string, baseImage string, builder string) env.Func {
+	return func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
+		ref := strings.SplitN(image, ":", 2)
+		if len(ref) != 2 {
+			return nil, fmt.Errorf("invalid image reference %q", image)
+		}
+		ctx = exec.WithStdIO(ctx)
+		ctx = exec.WithDir(ctx, rootDir)
+
+		err := exec.Exec(ctx, "./hack/releases.sh", "--bin", "kwok", "--platform", "linux/"+runtime.GOARCH)
+		if err != nil {
+			return ctx, err
+		}
+
+		err = exec.Exec(ctx, "./images/kwok/build.sh", "--base-image", baseImage, "--image", ref[0], "--version", ref[1], "--platform", "linux/"+runtime.GOARCH)
+		if err != nil {
+			return ctx, err
+		}
+		return ctx, nil
+	}
+}
+
+func BuildKindImage(cn string, rootDir string) env.Func {
+	return func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
+		ctx = exec.WithStdIO(ctx)
+		ctx = exec.WithDir(ctx, rootDir)
+		err := exec.Exec(ctx, "kind", "create", "cluster", "--name="+cn)
+		if err != nil {
+			return ctx, err
+		}
+		err = exec.Exec(ctx, "kind", "load", "docker-image", "--name="+cn, "kwok-with-cni:test")
+		if err != nil {
+			return ctx, err
+		}
+
+		return ctx, nil
+	}
+}
+
 func BuildKwokImage(rootDir string, image string, builder string) env.Func {
 	return func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
 		ref := strings.SplitN(image, ":", 2)
