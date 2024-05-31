@@ -1,3 +1,8 @@
+/*
+Package portforward provides commands for forwarding a local port to a port on a pod.
+It supports different runtime environments such as binary, Docker, Podman, Nerdctl, and kind.
+This is useful for accessing component ports that are not actively exposed when the cluster is created.
+*/
 package portforward
 
 import (
@@ -6,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -23,7 +27,6 @@ type flagpole struct {
 	Name      string
 	LocalPort string
 	*internalversion.KwokctlConfiguration
-
 }
 
 // NewCommand returns a new cobra.Command for port-forward in a cluster
@@ -63,34 +66,40 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		}
 		return err
 	}
-    
-	if flags.Options.Runtime == consts.RuntimeTypeKind {
-		return portForwardKind(ctx, name, flags.LocalPort, *logger)
-	} else if flags.Options.Runtime == consts.RuntimeTypeDocker || flags.Options.Runtime == consts.RuntimeTypeKindPodman ||
-	flags.Options.Runtime == consts.RuntimeTypeKindNerdctl {
-		return portForwardContainer(ctx, name, flags.LocalPort, *logger)
-	} else if flags.Options.Runtime == consts.RuntimeTypeBinary {
-        return portForwardBinary(name, flags.LocalPort, *logger)
-	}
-	err = rt.KubectlInCluster(exec.WithStdIO(ctx), args...)
 
-	if err != nil {
-		return err
+	switch flags.Options.Runtime {
+	case consts.RuntimeTypeKind:
+		return portForwardKind(ctx, name, flags.LocalPort, *logger)
+	case consts.RuntimeTypeDocker, consts.RuntimeTypeKindPodman, consts.RuntimeTypeKindNerdctl:
+		return portForwardContainer(ctx, name, flags.LocalPort, *logger)
+	case consts.RuntimeTypeBinary:
+		return portForwardBinary(name, flags.LocalPort, *logger)
+	default:
+		err := rt.KubectlInCluster(exec.WithStdIO(ctx), args...)
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
 func portForwardBinary(name string, localPort string, logger log.Logger) error {
 	logger.Info("Starting TCP forward for binary runtime", "name", name, "port", localPort)
-	// Add  TCP forward implementation here
-	return nil
+	cmd, err := exec.Command(context.TODO(), "nc", "-l", "-p", localPort, "-c", fmt.Sprintf("nc %s %s", "target-ip", localPort)) // Adjust target-ip and port as necessary
+	if err != nil {
+		return err
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func portForwardContainer(ctx context.Context, name string, localPort string, logger log.Logger) error {
 	logger.Info("Starting TCP forward for container runtime", "name", name, "port", localPort)
 	cmd, err := exec.Command(ctx, "docker", "exec", "-i", name, "nc", "localhost", localPort)
 	if err != nil {
-		
+		return err
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -99,7 +108,7 @@ func portForwardContainer(ctx context.Context, name string, localPort string, lo
 
 func portForwardKind(ctx context.Context, name string, localPort string, logger log.Logger) error {
 	logger.Info("Converting to kubectl port-forward for kind runtime", "name", name, "port", localPort)
-	cmd, err := exec.Command(ctx, "kubectl", "port-forward", name, fmt.Sprintf("%d:%d", localPort, localPort))
+	cmd, err := exec.Command(ctx, "kubectl", "port-forward", name, fmt.Sprintf("%s:%s", localPort, localPort))
 	if err != nil {
 		return err
 	}
@@ -109,15 +118,15 @@ func portForwardKind(ctx context.Context, name string, localPort string, logger 
 
 	err = cmd.Start()
 	if err != nil {
-		return fmt.Errorf("cmd start: %s %s: %w", "kubectl", strings.Join([]string{"port-forward", name, fmt.Sprintf("%d:%d", localPort, localPort)}, " "), err)
+		return fmt.Errorf("cmd start: kubectl port-forward %s %s: %w", name, localPort, err)
 	}
 
 	err = cmd.Wait()
 	if err != nil {
 		if buf, ok := cmd.Stderr.(*bytes.Buffer); ok {
-			return fmt.Errorf("cmd wait: %s %s: %w\n%s", "kubectl", strings.Join([]string{"port-forward", name, fmt.Sprintf("%d:%d", localPort, localPort)}, " "), err, buf.String())
+			return fmt.Errorf("cmd wait: kubectl port-forward %s %s: %w\n%s", name, localPort, err, buf.String())
 		}
-		return fmt.Errorf("cmd wait: %s %s: %w", "kubectl", strings.Join([]string{"port-forward", name, fmt.Sprintf("%d:%d", localPort, localPort)}, " "), err)
+		return fmt.Errorf("cmd wait: kubectl port-forward %s %s: %w", name, localPort, err)
 	}
 
 	return nil
