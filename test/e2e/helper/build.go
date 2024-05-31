@@ -51,15 +51,19 @@ func BuildKwokBaseImage(rootDir string, image string, baseImage string, builder 
 	}
 }
 
-func BuildKindImage(cn string, rootDir string) env.Func {
+func BuildKindImage(cn string, rootDir string, image string) env.Func {
 	return func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
+		ref := strings.SplitN(image, ":", 2)
+		if len(ref) != 2 {
+			return nil, fmt.Errorf("invalid image reference %q", image)
+		}
 		ctx = exec.WithStdIO(ctx)
 		ctx = exec.WithDir(ctx, rootDir)
 		err := exec.Exec(ctx, "kind", "create", "cluster", "--name="+cn)
 		if err != nil {
 			return ctx, err
 		}
-		err = exec.Exec(ctx, "kind", "load", "docker-image", "--name="+cn, "kwok-with-cni:test")
+		err = exec.Exec(ctx, "kind", "load", "docker-image", "--name="+cn, ref[0]+":"+ref[1])
 		if err != nil {
 			return ctx, err
 		}

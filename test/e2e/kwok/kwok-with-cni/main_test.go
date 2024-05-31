@@ -1,5 +1,5 @@
 /*
-	Copyright 2023 The Kubernetes Authors.
+	Copyright 2024 The Kubernetes Authors.
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-// Package default_test is a test environment for kwok.
+// Package kwok_with_cni is a test environment for kwok.
 package kwok_with_cni
 
 import (
@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 	crs := path.Join(rootDir, "kustomize/stage/fast")
 	testEnv.Setup(
 		helper.BuildKwokBaseImage(rootDir, testImage, baseImage, consts.RuntimeTypeDocker),
-		helper.BuildKindImage(clusterName, rootDir),
+		helper.BuildKindImage(clusterName, rootDir, testImage),
 		envfuncs.CreateCluster(kind.NewProvider(), clusterName),
 		helper.WaitForAllNodesReady(),
 		envfuncs.LoadImageToCluster(clusterName, testImage),
