@@ -36,6 +36,7 @@ type flagpole struct {
 	Name       string
 	Kubeconfig string
 	All        bool
+	Force      bool
 }
 
 // NewCommand returns a new cobra.Command for cluster deletion
@@ -56,7 +57,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "The path to the kubeconfig file that will remove the deleted cluster")
 	cmd.Flags().BoolVar(&flags.All, "all", flags.All, "Delete all clusters managed by kwokctl")
-
+	cmd.Flags().BoolVar(&flags.Force, "force", false, "Force delete the cluster")
 	return cmd
 }
 
@@ -70,13 +71,13 @@ func runE(ctx context.Context, flags *flagpole) error {
 			return err
 		}
 		for _, cluster := range clusters {
-			err = deleteCluster(ctx, cluster, flags.Kubeconfig)
+			err = deleteCluster(ctx, cluster, flags.Kubeconfig, flags.Force)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
-		err = deleteCluster(ctx, flags.Name, flags.Kubeconfig)
+		err = deleteCluster(ctx, flags.Name, flags.Kubeconfig, flags.Force)
 		if err != nil {
 			return err
 		}
@@ -85,7 +86,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	return nil
 }
 
-func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath string) error {
+func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath string, force bool) error {
 	name := config.ClusterName(clusterName)
 	workdir := path.Join(config.ClustersDir, clusterName)
 
@@ -106,6 +107,13 @@ func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath strin
 			return nil
 		}
 		return err
+	}
+
+	if err := rt.Available(ctx); err != nil {
+		if !force {
+			return err
+		}
+		logger.Warn("Unavailable runtime but proceed with force delete", "err", err)
 	}
 
 	// Stop the cluster
