@@ -36,6 +36,7 @@ type flagpole struct {
 	Name       string
 	Kubeconfig string
 	All        bool
+	Force      bool
 }
 
 // NewCommand returns a new cobra.Command for cluster deletion
@@ -43,6 +44,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 	flags.Kubeconfig = path.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
 	flags.All = false
+	flags.Force = false
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -57,6 +59,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "The path to the kubeconfig file that will remove the deleted cluster")
 	cmd.Flags().BoolVar(&flags.All, "all", flags.All, "Delete all clusters managed by kwokctl")
+	cmd.Flags().BoolVar(&flags.Force, "force", flags.Force, "Delete cluster depending on runtime availability")
+
 	return cmd
 }
 
@@ -69,12 +73,14 @@ func runE(ctx context.Context, flags *flagpole) error {
 		if err != nil {
 			return err
 		}
+		for _, cluster := range clusters {
+			err = deleteCluster(ctx, cluster, flags.Kubeconfig, flags)
+			if err != nil {
+				return err
+			}
+		}
 	} else {
-		clusters = []string{flags.Name}
-	}
-
-	for _, cluster := range clusters {
-		err = deleteCluster(ctx, cluster, flags.Kubeconfig)
+		err = deleteCluster(ctx, flags.Name, flags.Kubeconfig, flags)
 		if err != nil {
 			return err
 		}
@@ -83,7 +89,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	return nil
 }
 
-func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath string) error {
+func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath string, flags *flagpole) error {
 	name := config.ClusterName(clusterName)
 	workdir := path.Join(config.ClustersDir, clusterName)
 
@@ -104,6 +110,15 @@ func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath strin
 			return nil
 		}
 		return err
+	}
+
+	err = rt.Available(ctx)
+	if err != nil {
+		if !flags.Force {
+			var err error
+			return err
+		}
+		logger.Warn("Unavailable runtime but proceed with force delete")
 	}
 
 	// Stop the cluster
