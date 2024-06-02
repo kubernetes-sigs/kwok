@@ -100,7 +100,6 @@ func TestBuildDashboardMetricsScraperComponent_EmptyConfigPaths(t *testing.T) {
 	if !reflect.DeepEqual(component.Args, expectedArgs) {
 		t.Errorf("expected args %v, got %v", expectedArgs, component.Args)
 	}
-
 }
 
 // Creates component with correct default arguments for native runtime
