@@ -72,6 +72,7 @@ func BuildKindImage(cn string, rootDir string, image string) env.Func {
 	}
 }
 
+// BuildKwokImage builds the kwok image and returns a function that can be used
 func BuildKwokImage(rootDir string, image string, builder string) env.Func {
 	return func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
 		ref := strings.SplitN(image, ":", 2)
