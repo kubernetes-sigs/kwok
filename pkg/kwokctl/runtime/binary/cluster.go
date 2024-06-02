@@ -129,23 +129,23 @@ func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports 
 }
 
 type env struct {
-	kwokctlConfig           *internalversion.KwokctlConfiguration
-	verbosity               log.Level
-	inClusterKubeconfigPath string
-	kubeconfigPath          string
-	etcdDataPath            string
-	kwokConfigPath          string
-	pkiPath                 string
-	auditLogPath            string
-	auditPolicyPath         string
-	workdir                 string
-	caCertPath              string
-	adminKeyPath            string
-	adminCertPath           string
+	kwokctlConfig                 *internalversion.KwokctlConfiguration
+	verbosity                     log.Level
+	inClusterKubeconfigPath       string
+	kubeconfigPath                string
+	etcdDataPath                  string
+	kwokConfigPath                string
+	pkiPath                       string
+	auditLogPath                  string
+	auditPolicyPath               string
+	workdir                       string
+	caCertPath                    string
+	adminKeyPath                  string
+	adminCertPath                 string
 	kubeControllerManagerCertPath string
 	kubeControllerManagerKeyPath  string
-	scheme                  string
-	usedPorts               sets.Sets[uint32]
+	scheme                        string
+	usedPorts                     sets.Sets[uint32]
 }
 
 func (c *Cluster) env(ctx context.Context) (*env, error) {
@@ -189,23 +189,23 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	usedPorts := runtime.GetUsedPorts(ctx)
 
 	return &env{
-		kwokctlConfig:           config,
-		verbosity:               verbosity,
-		inClusterKubeconfigPath: inClusterKubeconfigPath,
-		kubeconfigPath:          kubeconfigPath,
-		etcdDataPath:            etcdDataPath,
-		kwokConfigPath:          kwokConfigPath,
-		pkiPath:                 pkiPath,
-		auditLogPath:            auditLogPath,
-		auditPolicyPath:         auditPolicyPath,
-		workdir:                 workdir,
-		caCertPath:              caCertPath,
-		adminKeyPath:            adminKeyPath,
-		adminCertPath:           adminCertPath,
-		kubeControllerManagerKeyPath: kubeControllerManagerKeyPath,
+		kwokctlConfig:                 config,
+		verbosity:                     verbosity,
+		inClusterKubeconfigPath:       inClusterKubeconfigPath,
+		kubeconfigPath:                kubeconfigPath,
+		etcdDataPath:                  etcdDataPath,
+		kwokConfigPath:                kwokConfigPath,
+		pkiPath:                       pkiPath,
+		auditLogPath:                  auditLogPath,
+		auditPolicyPath:               auditPolicyPath,
+		workdir:                       workdir,
+		caCertPath:                    caCertPath,
+		adminKeyPath:                  adminKeyPath,
+		adminCertPath:                 adminCertPath,
+		kubeControllerManagerKeyPath:  kubeControllerManagerKeyPath,
 		kubeControllerManagerCertPath: kubeControllerManagerCertPath,
-		scheme:                  scheme,
-		usedPorts:               usedPorts,
+		scheme:                        scheme,
+		usedPorts:                     usedPorts,
 	}, nil
 }
 
