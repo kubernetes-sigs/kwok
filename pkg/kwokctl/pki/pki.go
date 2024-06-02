@@ -74,6 +74,32 @@ func GeneratePki(pkiPath string, sans ...string) error {
 	if err != nil {
 		return fmt.Errorf("failed to write admin cert and key: %w", err)
 	}
+
+	// Generate certificates for components
+	components := []struct {
+		name   string
+		user   string
+		groups []string
+	}{
+		{"kube-controller-manager", "system:kube-controller-manager", []string{"system:kube-controller-manager"}},
+		// Add other components here
+	}
+
+	for _, component := range components {
+		componentSANs := DefaultAltNames
+		if len(sans) != 0 {
+			componentSANs = append(componentSANs, sans...)
+		}
+		componentCert, componentKey, err := GenerateSignCert(component.user, caCert, caKey, notBefore, notAfter, component.groups, componentSANs)
+		if err != nil {
+			return fmt.Errorf("failed to generate cert and key for %s: %w", component.name, err)
+		}
+		err = WriteCertAndKey(pkiPath, component.name, componentCert, componentKey)
+		if err != nil {
+			return fmt.Errorf("failed to write cert and key for %s: %w", component.name, err)
+		}
+	}
+
 	return nil
 }
 

@@ -142,6 +142,8 @@ type env struct {
 	caCertPath              string
 	adminKeyPath            string
 	adminCertPath           string
+	kubeControllerManagerCertPath string
+	kubeControllerManagerKeyPath  string
 	scheme                  string
 	usedPorts               sets.Sets[uint32]
 }
@@ -171,6 +173,8 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	caCertPath := path.Join(pkiPath, "ca.crt")
 	adminKeyPath := path.Join(pkiPath, "admin.key")
 	adminCertPath := path.Join(pkiPath, "admin.crt")
+	kubeControllerManagerKeyPath := path.Join(pkiPath, "kube-controller-manager.key")
+	kubeControllerManagerCertPath := path.Join(pkiPath, "kube-controller-manager.crt")
 	auditLogPath := ""
 	auditPolicyPath := ""
 
@@ -198,6 +202,8 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 		caCertPath:              caCertPath,
 		adminKeyPath:            adminKeyPath,
 		adminCertPath:           adminCertPath,
+		kubeControllerManagerKeyPath: kubeControllerManagerKeyPath,
+		kubeControllerManagerCertPath: kubeControllerManagerCertPath,
 		scheme:                  scheme,
 		usedPorts:               usedPorts,
 	}, nil
@@ -482,6 +488,8 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			CaCertPath:                         env.caCertPath,
 			AdminCertPath:                      env.adminCertPath,
 			AdminKeyPath:                       env.adminKeyPath,
+			KubeControllerManagerCertPath:      env.kubeControllerManagerCertPath, // Add path for kube-controller-manager cert
+			KubeControllerManagerKeyPath:       env.kubeControllerManagerKeyPath,
 			KubeAuthorization:                  conf.KubeAuthorization,
 			KubeconfigPath:                     env.inClusterKubeconfigPath,
 			KubeFeatureGates:                   conf.KubeFeatureGates,

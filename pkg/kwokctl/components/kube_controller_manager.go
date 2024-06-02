@@ -41,6 +41,8 @@ type BuildKubeControllerManagerComponentConfig struct {
 	CaCertPath                         string
 	AdminCertPath                      string
 	AdminKeyPath                       string
+	KubeControllerManagerCertPath      string // Add field for kube-controller-manager specific cert
+	KubeControllerManagerKeyPath       string 
 	KubeAuthorization                  bool
 	KubeconfigPath                     string
 	KubeFeatureGates                   string
@@ -89,13 +91,13 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
-				HostPath:  conf.AdminCertPath,
-				MountPath: "/etc/kubernetes/pki/admin.crt",
+				HostPath:  conf.KubeControllerManagerCertPath,
+				MountPath: "/etc/kubernetes/pki/kube-controller-manager.crt",
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
-				HostPath:  conf.AdminKeyPath,
-				MountPath: "/etc/kubernetes/pki/admin.key",
+				HostPath:  conf.KubeControllerManagerKeyPath,
+				MountPath: "/etc/kubernetes/pki/kube-controller-manager.key",
 				ReadOnly:  true,
 			},
 		)
@@ -119,6 +121,8 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10257",
+				"--tls-cert-file=/etc/kubernetes/pki/kube-controller-manager.crt", // Add argument for kube-controller-manager specific cert
+				"--tls-private-key-file=/etc/kubernetes/pki/kube-controller-manager.key", // Add argument for kube-controller-manager specific key
 			)
 			if conf.Port > 0 {
 				ports = append(
@@ -133,21 +137,23 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				Scheme:             "https",
 				Host:               conf.ProjectName + "-" + consts.ComponentKubeControllerManager + ":10257",
 				Path:               "/metrics",
-				CertPath:           "/etc/kubernetes/pki/admin.crt",
-				KeyPath:            "/etc/kubernetes/pki/admin.key",
+				CertPath:           "/etc/kubernetes/pki/kube-controller-manager.crt", // Update metric to use kube-controller-manager specific cert
+				KeyPath:            "/etc/kubernetes/pki/kube-controller-manager.key", // Update metric to use kube-controller-manager specific key
 				InsecureSkipVerify: true,
 			}
 		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
+				"--tls-cert-file="+conf.KubeControllerManagerCertPath, // Add argument for kube-controller-manager specific cert
+				"--tls-private-key-file="+conf.KubeControllerManagerKeyPath, // Add argument for kube-controller-manager specific key
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             "https",
 				Host:               net.LocalAddress + ":" + format.String(conf.Port),
 				Path:               "/metrics",
-				CertPath:           conf.AdminCertPath,
-				KeyPath:            conf.AdminKeyPath,
+				CertPath:           conf.KubeControllerManagerCertPath, // Update metric to use kube-controller-manager specific cert
+				KeyPath:            conf.KubeControllerManagerKeyPath, // Update metric to use kube-controller-manager specific key
 				InsecureSkipVerify: true,
 			}
 		}
@@ -197,12 +203,12 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--root-ca-file=/etc/kubernetes/pki/ca.crt",
-				"--service-account-private-key-file=/etc/kubernetes/pki/admin.key",
+				"--service-account-private-key-file=/etc/kubernetes/pki/kube-controller-manager.key", // Update to use kube-controller-manager specific key
 			)
 		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--root-ca-file="+conf.CaCertPath,
-				"--service-account-private-key-file="+conf.AdminKeyPath,
+				"--service-account-private-key-file="+conf.KubeControllerManagerKeyPath, // Update to use kube-controller-manager specific key
 			)
 		}
 	}

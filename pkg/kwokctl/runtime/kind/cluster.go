@@ -586,8 +586,8 @@ func (c *Cluster) addKubeControllerManager(_ context.Context, env *env) (err err
 				Scheme:             "https",
 				Host:               "127.0.0.1:10257",
 				Path:               "/metrics",
-				CertPath:           "/etc/kubernetes/pki/admin.crt",
-				KeyPath:            "/etc/kubernetes/pki/admin.key",
+				CertPath:           "/etc/kubernetes/pki/kube-controller-manager.crt",
+				KeyPath:            "/etc/kubernetes/pki/kube-controller-manager.key",
 				InsecureSkipVerify: true,
 			},
 		})
