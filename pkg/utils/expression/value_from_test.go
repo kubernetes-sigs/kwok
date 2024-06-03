@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,8 +30,6 @@ import (
 func TestDurationFrom_Get(t *testing.T) {
 	now := time.Now().Truncate(time.Second)
 	nowPlusOneSecond := metav1.NewTime(now.Add(time.Second))
-	nowPlusOneHour := now.Add(time.Hour)
-	validRFC3339Time := nowPlusOneHour.Format(time.RFC3339Nano)
 
 	type args struct {
 		value *time.Duration
@@ -125,22 +123,6 @@ func TestDurationFrom_Get(t *testing.T) {
 			},
 			want:   time.Hour,
 			wantOk: true,
-		},
-		{
-			name: "Invalid duration string src",
-			args: args{
-				value: nil,
-				src:   format.Ptr(".metadata.annotations.invalidDuration"),
-				v: corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Annotations: map[string]string{
-							"invalidDuration": "invalid-duration",
-						},
-					},
-				},
-			},
-			want:   0,
-			wantOk: false,
 		},
 		{
 			name: "Empty string src",
@@ -243,6 +225,80 @@ func TestDurationFrom_Get(t *testing.T) {
 			},
 			want:   0,
 			wantOk: false,
+		},
+		{
+			name: "Value present with valid RFC3339 time src",
+			args: args{
+				value: format.Ptr(time.Duration(5)),
+				src:   format.Ptr(".metadata.annotations.validRFC3339"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validRFC3339": now.Add(time.Hour).Format(time.RFC3339Nano),
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Value present with valid duration string src",
+			args: args{
+				value: format.Ptr(time.Duration(5)),
+				src:   format.Ptr(".metadata.annotations.validDuration"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validDuration": "1h",
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Value present with non-existent field in src",
+			args: args{
+				value: format.Ptr(time.Duration(5)),
+				src:   format.Ptr(".metadata.nonExistentField"),
+				v:     corev1.Pod{},
+			},
+			want:   5,
+			wantOk: true,
+		},
+		{
+			name: "Value 0 with valid RFC3339 time src",
+			args: args{
+				value: format.Ptr(time.Duration(0)),
+				src:   format.Ptr(".metadata.annotations.validRFC3339"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validRFC3339": now.Add(time.Hour).Format(time.RFC3339Nano),
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Value 0 with valid duration string src",
+			args: args{
+				value: format.Ptr(time.Duration(0)),
+				src:   format.Ptr(".metadata.annotations.validDuration"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validDuration": "1h",
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
 		},
 	}
 	for _, tt := range tests {
