@@ -86,7 +86,7 @@ func TestDurationFrom_Get(t *testing.T) {
 				v: corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
 						Annotations: map[string]string{
-							"validRFC3339": validRFC3339Time,
+							"validRFC3339": now.Add(time.Hour).Format(time.RFC3339Nano),
 						},
 					},
 				},
