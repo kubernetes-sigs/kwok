@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -61,28 +61,38 @@ func TestPool_ConcurrentAccess(t *testing.T) {
 		return int(atomic.AddInt32(&index, 1))
 	})
 
-	// Test concurrent access to the pool
-	done := make(chan bool)
-	for i := 0; i < 10; i++ {
-		go func(val int) {
-			pool.Put(val)
-			done <- true
-		}(i)
-	}
+	const numItems = 10
 
-	for i := 0; i < 10; i++ {
-		<-done
-	}
+	putCh := make(chan int, numItems)
+	getCh := make(chan int, numItems)
 
-	values := make(map[int]bool)
-	for i := 0; i < 10; i++ {
-		val := pool.Get()
-		if val < 0 || val >= 10 {
-			t.Errorf("unexpected value %d", val)
+	// Put items into the pool concurrently
+	go func() {
+		for i := 0; i < numItems; i++ {
+			putCh <- i
 		}
-		if values[val] {
+		close(putCh)
+	}()
+
+	// Retrieve items from the pool concurrently
+	go func() {
+		for i := 0; i < numItems; i++ {
+			getCh <- pool.Get()
+		}
+		close(getCh)
+	}()
+
+	// Collect retrieved items and check for duplicates
+	retrievedValues := make(map[int]bool)
+	for val := range getCh {
+		if retrievedValues[val] {
 			t.Errorf("duplicate value found: %d", val)
 		}
-		values[val] = true
+		retrievedValues[val] = true
+	}
+
+	// Check if all values are retrieved
+	if len(retrievedValues) != numItems {
+		t.Errorf("expected to retrieve %d values, got %d", numItems, len(retrievedValues))
 	}
 }
