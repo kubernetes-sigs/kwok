@@ -24,57 +24,101 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
 
-func TestBuildDashboardMetricsScraperComponent(t *testing.T) {
-	type args struct {
-		conf BuildDashboardMetricsScraperComponentConfig
+// Without paths
+func TestBuildDashboardMetricsScraperWithoutPaths(t *testing.T) {
+	conf := BuildDashboardMetricsScraperComponentConfig{
+		Runtime:        "native",
+		KubeconfigPath: "",
+		Image:          "test-image",
+		Workdir:        "/workdir",
 	}
-	tests := []struct {
-		name          string
-		args          args
-		want          internalversion.Component
-		wantComponent string
+	component, err := BuildDashboardMetricsScraperComponent(conf)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	fmt.Printf("%+v\n", component)
 
-		wantErr bool
-	}{{
-		name: "as",
-		args: args{
-			conf: BuildDashboardMetricsScraperComponentConfig{
-				Runtime:        "native",
-				KubeconfigPath: "",
-				Image:          "test-image",
-				Workdir:        "/workdir",
+	expectedArgs := internalversion.Component{
+		Name:  "dashboard-metrics-scraper",
+		Links: []string{"metrics-server"},
+		Image: "test-image",
+		User:  "root",
+		Args: []string{
+			"--db-file=/metrics.db",
+			"--kubeconfig=/root/.kube/config",
+		},
+		WorkDir: "/workdir",
+		Volumes: []internalversion.Volume{{ReadOnly: true,
+			MountPath: "/root/.kube/config"},
+
+			{ReadOnly: true, MountPath: "/etc/kubernetes/pki/ca.crt"},
+			{ReadOnly: true,
+				MountPath: "/etc/kubernetes/pki/admin.crt",
+			},
+			{ReadOnly: true, MountPath: "/etc/kubernetes/pki/admin.key"},
+		},
+	}
+
+	if !reflect.DeepEqual(component, expectedArgs) {
+		t.Errorf("expected args %v, got %v", expectedArgs, component)
+	}
+}
+
+// With paths
+func TestBuildDashboardMetricsScraperWithPaths(t *testing.T) {
+	conf := BuildDashboardMetricsScraperComponentConfig{
+		Runtime:        "containerd",
+		Binary:         "binary",
+		Image:          "dashboard-image",
+		Workdir:        "/workdir",
+		CaCertPath:     "/path/to/ca.crt",
+		AdminCertPath:  "/path/to/admin.crt",
+		AdminKeyPath:   "/path/to/admin.key",
+		KubeconfigPath: "/path/to/kubeconfig",
+	}
+	component, err := BuildDashboardMetricsScraperComponent(conf)
+	fmt.Printf("%+v\n", component)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	expectedArgs := internalversion.Component{
+		Name:  "dashboard-metrics-scraper",
+		Links: []string{"metrics-server"},
+		Image: "dashboard-image",
+		User:  "root",
+		Args: []string{
+			"--db-file=/metrics.db",
+			"--kubeconfig=/root/.kube/config",
+		},
+		WorkDir: "/workdir",
+		Volumes: []internalversion.Volume{
+			{
+				ReadOnly:  true,
+				HostPath:  "/path/to/kubeconfig",
+				MountPath: "/root/.kube/config",
+			},
+
+			{
+				ReadOnly:  true,
+				HostPath:  "/path/to/ca.crt",
+				MountPath: "/etc/kubernetes/pki/ca.crt",
+			},
+			{
+				ReadOnly:  true,
+				HostPath:  "/path/to/admin.crt",
+				MountPath: "/etc/kubernetes/pki/admin.crt",
+			},
+			{
+				ReadOnly:  true,
+				HostPath:  "/path/to/admin.key",
+				MountPath: "/etc/kubernetes/pki/admin.key",
 			},
 		},
-		wantComponent: `{dashboard-metrics-scraper [metrics-server]  test-image [] root [--db-file=/metrics.db --kubeconfig=/root/.kube/config] /workdir [] [] [{ true  /root/.kube/config } { true  /etc/kubernetes/pki/ca.crt } { true  /etc/kubernetes/pki/admin.crt } { true  /etc/kubernetes/pki/admin.key }] <nil> <nil> }`,
-	},
-		{
-			name: "ss",
-			args: args{
-				conf: BuildDashboardMetricsScraperComponentConfig{
-					Runtime:        "containerd",
-					Binary:         "binary",
-					Image:          "dashboard-image",
-					Workdir:        "/workdir",
-					CaCertPath:     "/path/to/ca.crt",
-					AdminCertPath:  "/path/to/admin.crt",
-					AdminKeyPath:   "/path/to/admin.key",
-					KubeconfigPath: "/path/to/kubeconfig",
-				},
-			},
-			wantComponent: "{dashboard-metrics-scraper [metrics-server]  dashboard-image [] root [--db-file=/metrics.db --kubeconfig=/root/.kube/config] /workdir [] [] [{ true /path/to/kubeconfig /root/.kube/config } { true /path/to/ca.crt /etc/kubernetes/pki/ca.crt } { true /path/to/admin.crt /etc/kubernetes/pki/admin.crt } { true /path/to/admin.key /etc/kubernetes/pki/admin.key }] <nil> <nil> }"},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotComponent, err := BuildDashboardMetricsScraperComponent(tt.args.conf)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("BuildDashboardMetricsScraperComponent() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			a := fmt.Sprintf("%v", gotComponent)
-			if !reflect.DeepEqual(a, tt.wantComponent) {
-				t.Errorf("BuildDashboardMetricsScraperComponent() = %v, want %v", gotComponent, a)
-			}
-		})
+
+	if !reflect.DeepEqual(component, expectedArgs) {
+		t.Errorf("expected args %v, got %v", expectedArgs, component)
 	}
 }
 
