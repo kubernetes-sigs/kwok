@@ -10,7 +10,6 @@ kwokctl delete cluster [flags]
 
 ```
       --all                 Delete all clusters managed by kwokctl
-      --force               Delete cluster depending on runtime availability
   -h, --help                help for cluster
       --kubeconfig string   The path to the kubeconfig file that will remove the deleted cluster (default "~/.kube/config")
 ```
