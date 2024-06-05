@@ -35,12 +35,14 @@ import (
 type flagpole struct {
 	Name       string
 	Kubeconfig string
+	All        bool
 }
 
-// NewCommand returns a new cobra.Command for cluster creation
+// NewCommand returns a new cobra.Command for cluster deletion
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 	flags.Kubeconfig = path.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
+	flags.All = false
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -48,23 +50,51 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Short: "Deletes a cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
+
 			return runE(cmd.Context(), flags)
 		},
 	}
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "The path to the kubeconfig file that will remove the deleted cluster")
+	cmd.Flags().BoolVar(&flags.All, "all", flags.All, "Delete all clusters managed by kwokctl")
+
 	return cmd
 }
 
 func runE(ctx context.Context, flags *flagpole) error {
-	name := config.ClusterName(flags.Name)
-	workdir := path.Join(config.ClustersDir, flags.Name)
+	var clusters []string
+	var err error
+
+	if flags.All {
+		clusters, err = runtime.ListClusters(ctx)
+		if err != nil {
+			return err
+		}
+		for _, cluster := range clusters {
+			err = deleteCluster(ctx, cluster, flags.Kubeconfig)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		err = deleteCluster(ctx, flags.Name, flags.Kubeconfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath string) error {
+	name := config.ClusterName(clusterName)
+	workdir := path.Join(config.ClustersDir, clusterName)
 
 	logger := log.FromContext(ctx)
-	logger = logger.With("cluster", flags.Name)
+	logger = logger.With("cluster", clusterName)
 	ctx = log.NewContext(ctx, logger)
 
 	var err error
-	flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
+	kubeconfigPath, err = path.Expand(kubeconfigPath)
 	if err != nil {
 		return err
 	}
@@ -73,6 +103,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			logger.Warn("Cluster does not exist")
+			return nil
 		}
 		return err
 	}
@@ -91,15 +122,15 @@ func runE(ctx context.Context, flags *flagpole) error {
 	// Delete the cluster
 	start = time.Now()
 	logger.Info("Cluster is deleting")
-	if flags.Kubeconfig != "" {
-		err = rt.RemoveContext(ctx, flags.Kubeconfig)
+	if kubeconfigPath != "" {
+		err = rt.RemoveContext(ctx, kubeconfigPath)
 		if err != nil {
 			logger.Error("Failed to remove context from kubeconfig", err,
-				"kubeconfig", flags.Kubeconfig,
+				"kubeconfig", kubeconfigPath,
 			)
 		}
 		logger.Debug("Remove context from kubeconfig",
-			"kubeconfig", flags.Kubeconfig,
+			"kubeconfig", kubeconfigPath,
 		)
 	}
 	err = rt.Uninstall(ctx)
