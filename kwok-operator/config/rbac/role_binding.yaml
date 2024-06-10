@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrolebinding
+    app.kubernetes.io/instance: kwok-operator-crb
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kwok-operator
+    app.kubernetes.io/part-of: kwok-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: kwok-operator-crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kwok-operator-cr
+subjects:
+- kind: ServiceAccount
+  name: kwok-operator-sa
+  namespace: kwok-operator
