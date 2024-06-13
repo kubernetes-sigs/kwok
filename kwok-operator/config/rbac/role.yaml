@@ -1,0 +1,44 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kwok-operator-cr
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.sigs.k8s.io
+  resources:
+  - nodepools
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.sigs.k8s.io  
+  resources:
+  - nodepools/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kwok.sigs.k8s.io
+  resources:
+  - nodepools/status
+  verbs:
+  - get
+  - patch
+  - update

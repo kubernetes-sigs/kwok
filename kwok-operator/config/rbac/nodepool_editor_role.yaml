@@ -1,0 +1,31 @@
+# permissions for end users to edit nodepools.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: nodepool-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kwok-operator
+    app.kubernetes.io/part-of: kwok-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: nodepool-editor-role
+rules:
+- apiGroups:
+  - kwok.sigs.k8s.io
+  resources:
+  - nodepools
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.sigs.k8s.io
+  resources:
+  - nodepools/status
+  verbs:
+  - get
