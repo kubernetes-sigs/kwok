@@ -1,4 +1,4 @@
-module github.com/run-ai/kwok-operator
+module github.com/lliranbabi/kwok/kwok-operator
 
 go 1.22.0
 

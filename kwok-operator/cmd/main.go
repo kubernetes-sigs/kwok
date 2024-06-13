@@ -34,8 +34,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	kwoksigsv1beta1 "github.com/run-ai/kwok-operator/api/v1beta1"
-	"github.com/run-ai/kwok-operator/internal/controller"
+	kwoksigsv1beta1 "github.com/lliranbabi/kwok/kwok-operator/api/v1beta1"
+	"github.com/lliranbabi/kwok/kwok-operator/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 

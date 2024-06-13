@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/run-ai/kwok-operator/test/utils"
+	"github.com/lliranbabi/kwok/kwok-operator/test/utils"
 )
 
 const namespace = "kwok-operator"

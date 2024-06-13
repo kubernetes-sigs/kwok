@@ -9,7 +9,7 @@ plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: kwok-operator
-repo: github.com/run-ai/kwok-operator
+repo: github.com/lliranbabi/kwok/kwok-operator
 resources:
 - api:
     crdVersion: v1
@@ -18,6 +18,6 @@ resources:
   domain: k8s.io
   group: kwok.sigs
   kind: NodePool
-  path: github.com/run-ai/kwok-operator/api/v1beta1
+  path: github.com/lliranbabi/kwok/kwok-operator/api/v1beta1
   version: v1beta1
 version: "3"

@@ -3,7 +3,6 @@
 resources:
 - bases/kwok-operator.clusterserviceversion.yaml
 - ../default
-- ../samples
 - ../scorecard
 - ../rbac
 
