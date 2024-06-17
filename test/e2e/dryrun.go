@@ -20,47 +20,44 @@ import (
 	"context"
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
-)
 
-func getCurrentClusterDetails(clusterName string) (string, error) {
-	cmd := exec.Command("kwokctl", "get", "cluster", clusterName, "-o", "json")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	out := string(output[:])
-	return out, err
-}
+	"sigs.k8s.io/kwok/pkg/utils/path"
+)
 
 func loadExpectedClusterDetails(filepath string) (string, error) {
 	data, err := os.ReadFile(filepath)
 	if err != nil {
 		return "", err
 	}
-	out := string(data[:])
-	return out, err
+	out := string(data)
+	return out, nil
 }
 
-func CaseDryrun(clusterName string) *features.FeatureBuilder {
+func CaseDryrun(clusterName string, kwokctlPath string, rootDir string) *features.FeatureBuilder {
 	f := features.New("Dry run")
 	f = f.Assess("test cluster dryrun", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-		got, err := getCurrentClusterDetails(clusterName)
-		if err != nil {
-			t.Fatal("Could not get cluster details:", err)
-		}
 		var expected string
-		pwd := os.Getenv("PWD")
-		rootDir := path.Join(pwd, "../../../..")
-		expected, err = loadExpectedClusterDetails(rootDir + "test/kwokctl/testdata/binary/create_cluster_with_extra.txt")
+		var err error
+		expected, err = loadExpectedClusterDetails(path.Join(rootDir, "test/kwokctl/testdata/binary/create_cluster.txt"))
 		if err != nil {
 			t.Fatal("Could not get expected cluster details:", err)
 		}
+		t.Log("EXPECTED CLUSTER:", expected)
+		cmd := exec.Command(kwokctlPath, "create", "cluster", "--name", clusterName, "--dry-run", "--runtime=binary", "--kube-authorization=false", "--disable-qps-limits", "--quiet-pull", "--timeout=30m", "--wait=30m")
+		var output []byte
+		output, err = cmd.Output()
+		if err != nil {
+			t.Fatal("Could not get the output of the command:", err)
+		}
+		got := string(output)
+		got = strings.ReplaceAll(got, clusterName, "<CLUSTER_NAME>")
+		got = strings.ReplaceAll(got, rootDir, "<ROOT_DIR>")
+		t.Log("GOT CLUSTER:", got)
 		if !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expected)) {
 			t.Fatalf("Expected %s but got %s", expected, got)
 		}

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package dryrun_test
+package binary_test
 
 import (
 	"testing"
@@ -23,6 +23,6 @@ import (
 )
 
 func TestDryRun(t *testing.T) {
-	f0 := e2e.CaseDryrun(clusterName).Feature()
+	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir).Feature()
 	testEnv.Test(t, f0)
 }
