@@ -108,6 +108,11 @@ if [[ "${VERIFY_DEPENDENCIES_VERSION:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-dependencies-version.sh || failed+=(dependencies-version)
 fi
 
+if [[ "${VERIFY_DRY_RUN_TESTDATA:-true}" == "true" ]]; then
+  echo "[*] Verifying testdata..."
+  "${ROOT_DIR}"/hack/verify-testdata.sh || failed+=(testdata)
+fi
+
 # exit based on verify scripts
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Verify failed for: ${failed[*]}"
