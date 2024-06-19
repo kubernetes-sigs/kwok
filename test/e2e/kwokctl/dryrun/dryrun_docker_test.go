@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/kwok/test/e2e"
 )
 
-func TestDryRun(t *testing.T) {
-	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir).Feature()
+func TestDockerDryRun(t *testing.T) {
+	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "docker").Feature()
 	testEnv.Test(t, f0)
 }

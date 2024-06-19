@@ -39,16 +39,17 @@ func loadExpectedClusterDetails(filepath string) (string, error) {
 	return out, nil
 }
 
-func CaseDryrun(clusterName string, kwokctlPath string, rootDir string) *features.FeatureBuilder {
+func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string) *features.FeatureBuilder {
 	f := features.New("Dry run")
 	f = f.Assess("test cluster dryrun", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		var expected string
 		var err error
-		expected, err = loadExpectedClusterDetails(path.Join(rootDir, "test/kwokctl/testdata/binary/create_cluster.txt"))
+		absPath := "test/kwokctl/testdata/" + clusterRuntime + "/create_cluster.txt"
+		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
 		if err != nil {
 			t.Fatal("Could not get expected cluster details:", err)
 		}
-		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--kube-authorization=false", "--runtime=binary")
+		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--kube-authorization=false", "--runtime", clusterRuntime)
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {
@@ -67,7 +68,6 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string) *feature
 		got = strings.ReplaceAll(got, extensions[runtime.GOOS], "<TAR>")
 		if !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expected)) {
 			t.Fatalf("Expected %s but got %s", expected, got)
-			t.Fatal("Failed")
 		}
 		return ctx
 	})
