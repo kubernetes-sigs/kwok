@@ -20,6 +20,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -47,19 +48,26 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string) *feature
 		if err != nil {
 			t.Fatal("Could not get expected cluster details:", err)
 		}
-		t.Log("EXPECTED CLUSTER:", expected)
-		cmd := exec.Command(kwokctlPath, "create", "cluster", "--name", clusterName, "--dry-run", "--runtime=binary", "--kube-authorization=false", "--disable-qps-limits", "--quiet-pull", "--timeout=30m", "--wait=30m")
+		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--kube-authorization=false", "--runtime=binary")
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {
 			t.Fatal("Could not get the output of the command:", err)
 		}
 		got := string(output)
+		extensions := map[string]string{
+			"windows": "zip",
+			"linux":   "tar.gz",
+			"darwin":  "tar.gz",
+		}
 		got = strings.ReplaceAll(got, clusterName, "<CLUSTER_NAME>")
 		got = strings.ReplaceAll(got, rootDir, "<ROOT_DIR>")
-		t.Log("GOT CLUSTER:", got)
+		got = strings.ReplaceAll(got, runtime.GOOS, "<OS>")
+		got = strings.ReplaceAll(got, runtime.GOARCH, "<ARCH>")
+		got = strings.ReplaceAll(got, extensions[runtime.GOOS], "<TAR>")
 		if !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expected)) {
 			t.Fatalf("Expected %s but got %s", expected, got)
+			t.Fatal("Failed")
 		}
 		return ctx
 	})
