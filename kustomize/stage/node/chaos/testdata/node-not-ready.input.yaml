@@ -1,0 +1,11 @@
+# @Stage: ../node-not-ready.yaml
+apiVersion: v1
+kind: Node
+metadata:
+  name: node-not-ready
+  labels:
+    node-not-ready.stage.kwok.x-k8s.io: "true"
+  annotations:
+    node-not-ready.stage.kwok.x-k8s.io/type: NetworkUnavailable
+status:
+  phase: Running
