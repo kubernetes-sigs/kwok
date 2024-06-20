@@ -37,6 +37,8 @@ func loadExpectedClusterDetails(filepath string) (string, error) {
 		return "", err
 	}
 	out := string(data)
+	out = strings.ReplaceAll(out, "\n", " ")
+    out = strings.Join(strings.Fields(out), " ")
 	return out, nil
 }
 
@@ -52,6 +54,8 @@ func formatCmdOutput(output, clusterName, rootDir string) string {
 	got = strings.ReplaceAll(got, runtime.GOOS, "<OS>")
 	got = strings.ReplaceAll(got, runtime.GOARCH, "<ARCH>")
 	got = strings.ReplaceAll(got, extensions[runtime.GOOS], "<TAR>")
+	got = strings.ReplaceAll(got, "\n", " ")
+    got = strings.Join(strings.Fields(got), " ")
 	return got
 }
 
@@ -119,6 +123,7 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 			t.Fatal("Could not get expected cluster details:", err)
 		}
 		kubeAuditPath := path.Join(rootDir, "test/kwokctl/audit-policy.yaml")
+		// schedulerConfigPath:=path.Join(rootDir,"test/kwokctl/scheduler-config.yaml")
 		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime, "--prometheus-port=9090", "--jaeger-port=16686", "--dashboard-port=8000", "--enable-metrics-server", "--kube-audit-policy", kubeAuditPath)
 		var output []byte
 		output, err = cmd.Output()
