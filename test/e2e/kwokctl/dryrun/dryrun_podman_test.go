@@ -26,3 +26,8 @@ func TestPodmanDryRun(t *testing.T) {
 	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "podman").Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestPodmanDryRunWithExtra(t *testing.T) {
+	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "podman").Feature()
+	testEnv.Test(t, f0)
+}

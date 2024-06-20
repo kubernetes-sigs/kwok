@@ -65,7 +65,12 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 		if err != nil {
 			t.Fatal("Could not get expected cluster details:", err)
 		}
-		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--kube-authorization=false", "--runtime", clusterRuntime)
+		args := []string{
+			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m",
+			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--kube-authorization=false",
+			"--runtime", clusterRuntime,
+		}
+		cmd := exec.Command(kwokctlPath, args...)
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {
@@ -92,7 +97,12 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 			t.Fatal("Could not get expected cluster details:", err)
 		}
 		extraPath := path.Join(rootDir, "test/kwokctl/testdata/extra.yaml")
-		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime, "--config", extraPath)
+		args := []string{
+			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m",
+			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime,
+			"--config", extraPath,
+		}
+		cmd := exec.Command(kwokctlPath, args...)
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {
@@ -100,8 +110,8 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 		}
 		got := string(output)
 		got = formatCmdOutput(got, clusterName, rootDir)
-		if !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expected)) {
-			t.Fatalf("Expected %s \n but got %s", expected, got)
+		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
+			t.Fatalf("Expected vs got:\n%s", diff)
 		}
 		return ctx
 	})
@@ -118,10 +128,14 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 		if err != nil {
 			t.Fatal("Could not get expected cluster details:", err)
 		}
-
-		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m",
+		kubeAuditPath := path.Join(rootDir, "test/kwokctl/audit-policy.yaml")
+		args := []string{
+			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m",
 			"--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime, "--prometheus-port=9090",
-			"--jaeger-port=16686", "--dashboard-port=8000", "--enable-metrics-server", "--kube-audit-policy")
+			"--jaeger-port=16686", "--dashboard-port=8000", "--enable-metrics-server",
+			"--kube-audit-policy", kubeAuditPath,
+		}
+		cmd := exec.Command(kwokctlPath, args...)
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {
@@ -129,8 +143,8 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 		}
 		got := string(output)
 		got = formatCmdOutput(got, clusterName, rootDir)
-		if !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expected)) {
-			t.Fatalf("Expected %s but got %s", expected, got)
+		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
+			t.Fatalf("Expected vs got:\n%s", diff)
 		}
 		return ctx
 	})
