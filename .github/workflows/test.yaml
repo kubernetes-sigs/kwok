@@ -260,6 +260,11 @@ jobs:
       run: |
         ./hack/e2e-test.sh e2e/kwokctl/${{ matrix.kwokctl-runtime }} && rm -rf logs
 
+    - name: Test e2e dry run
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh e2e/kwokctl/dryrun
+
     - name: Test Export Logs
       shell: bash
       run: |

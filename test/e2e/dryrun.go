@@ -24,6 +24,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
@@ -37,6 +38,21 @@ func loadExpectedClusterDetails(filepath string) (string, error) {
 	}
 	out := string(data)
 	return out, nil
+}
+
+func formatCmdOutput(output, clusterName, rootDir string) string {
+	got := output
+	extensions := map[string]string{
+		"windows": "zip",
+		"linux":   "tar.gz",
+		"darwin":  "tar.gz",
+	}
+	got = strings.ReplaceAll(got, clusterName, "<CLUSTER_NAME>")
+	got = strings.ReplaceAll(got, rootDir, "<ROOT_DIR>")
+	got = strings.ReplaceAll(got, runtime.GOOS, "<OS>")
+	got = strings.ReplaceAll(got, runtime.GOARCH, "<ARCH>")
+	got = strings.ReplaceAll(got, extensions[runtime.GOOS], "<TAR>")
+	return got
 }
 
 func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string) *features.FeatureBuilder {
@@ -56,16 +72,63 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 			t.Fatal("Could not get the output of the command:", err)
 		}
 		got := string(output)
-		extensions := map[string]string{
-			"windows": "zip",
-			"linux":   "tar.gz",
-			"darwin":  "tar.gz",
+		got = formatCmdOutput(got, clusterName, rootDir)
+		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
+			t.Fatalf("Expected vs got:\n%s", diff)
 		}
-		got = strings.ReplaceAll(got, clusterName, "<CLUSTER_NAME>")
-		got = strings.ReplaceAll(got, rootDir, "<ROOT_DIR>")
-		got = strings.ReplaceAll(got, runtime.GOOS, "<OS>")
-		got = strings.ReplaceAll(got, runtime.GOARCH, "<ARCH>")
-		got = strings.ReplaceAll(got, extensions[runtime.GOOS], "<TAR>")
+		return ctx
+	})
+	return f
+}
+
+func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string) *features.FeatureBuilder {
+	f := features.New("Dry run with extra")
+	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+		var expected string
+		var err error
+		absPath := "test/kwokctl/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
+		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
+		if err != nil {
+			t.Fatal("Could not get expected cluster details:", err)
+		}
+		extraPath := path.Join(rootDir, "test/kwokctl/testdata/extra.yaml")
+		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime, "--config", extraPath)
+		var output []byte
+		output, err = cmd.Output()
+		if err != nil {
+			t.Fatal("Could not get the output of the command:", err)
+		}
+		got := string(output)
+		got = formatCmdOutput(got, clusterName, rootDir)
+		if !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expected)) {
+			t.Fatalf("Expected %s \n but got %s", expected, got)
+		}
+		return ctx
+	})
+	return f
+}
+
+func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string) *features.FeatureBuilder {
+	f := features.New("Dry run with extra")
+	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+		var expected string
+		var err error
+		absPath := "test/kwokctl/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
+		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
+		if err != nil {
+			t.Fatal("Could not get expected cluster details:", err)
+		}
+
+		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m",
+			"--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime, "--prometheus-port=9090",
+			"--jaeger-port=16686", "--dashboard-port=8000", "--enable-metrics-server", "--kube-audit-policy")
+		var output []byte
+		output, err = cmd.Output()
+		if err != nil {
+			t.Fatal("Could not get the output of the command:", err)
+		}
+		got := string(output)
+		got = formatCmdOutput(got, clusterName, rootDir)
 		if !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expected)) {
 			t.Fatalf("Expected %s but got %s", expected, got)
 		}
