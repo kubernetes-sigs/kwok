@@ -1,0 +1,28 @@
+# Scheduling pods with taints and tolerations
+
+# Create cluster
+kwokctl create cluster
+
+# View clusters
+kwokctl get clusters
+
+# Create a node
+kwokctl scale node --replicas 1
+
+# Taint node
+kubectl taint nodes node-000000 kwok.x-k8s.io/node=fake:NoSchedule
+
+# Deploy a pod without toleration
+kubectl apply -f ${WORK_DIR}/no-toleration-pod.yaml
+
+# Observe the pod
+kubectl get pod
+
+# Deploy a pod with toleration
+kubectl apply -f ${WORK_DIR}/with-toleration-pod.yaml
+
+# Observe the pods
+kubectl get pod
+
+# Delete the cluster
+kwokctl delete cluster

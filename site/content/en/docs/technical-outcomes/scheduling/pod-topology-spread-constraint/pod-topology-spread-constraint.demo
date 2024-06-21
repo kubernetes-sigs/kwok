@@ -1,0 +1,25 @@
+# Scheduling pods using pod topology spread constraints
+
+# Create cluster
+kwokctl create cluster
+
+# View clusters
+kwokctl get clusters
+
+# Create nodes
+kwokctl scale node --replicas 4
+
+# Label nodes
+kubectl label nodes node-000000 topology.kubernetes.io/region=us-west-1
+kubectl label nodes node-000001 topology.kubernetes.io/region=us-west-1
+kubectl label nodes node-000002 topology.kubernetes.io/region=us-west-2
+kubectl label nodes node-000003 topology.kubernetes.io/region=us-west-2
+
+# Create deployment
+kubectl apply -f ${WORK_DIR}/deployment.yaml
+
+# Observe the topology spread
+kubectl get pod -o wide
+
+# Delete the cluster
+kwokctl delete cluster

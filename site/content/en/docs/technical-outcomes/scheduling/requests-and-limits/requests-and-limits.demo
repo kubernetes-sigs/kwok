@@ -1,0 +1,27 @@
+# Scheduling pods with resource requests and limits
+
+# Create cluster
+kwokctl create cluster
+
+# View cluster
+kwokctl get clusters
+
+# Create nodes
+kwokctl scale node node-1 --replicas 1 --param '.allocatable.cpu="4000m"'
+kwokctl scale node node-2 --replicas 1 --param '.allocatable.cpu="2000m"'
+
+# Deploy pods
+kubectl apply -f ${WORK_DIR}/pod-1.yaml
+
+kubectl apply -f ${WORK_DIR}/pod-2.yaml
+
+# View the node the pod is scheduled to
+kubectl get pod -o wide
+
+# View node resource usage
+kubectl describe node node-1-000000 | awk '/Allocated resources:/,/ephemeral-storage/'
+
+kubectl describe node node-2-000000 | awk '/Allocated resources:/,/ephemeral-storage/'
+
+# Delete the cluster
+kwokctl delete cluster
