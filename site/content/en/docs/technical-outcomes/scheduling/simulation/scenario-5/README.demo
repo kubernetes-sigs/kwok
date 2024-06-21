@@ -1,0 +1,40 @@
+# Scheduling pods using pod priority and preemption
+
+## Create cluster
+kwokctl create cluster
+
+## View clusters
+kwokctl get clusters
+
+## Deploy node
+kubectl apply -f node.yaml
+
+## Wait for a while so the node is running
+sleep 5
+
+## Create priority classes (low and high)
+kubectl apply -f priority-classes.yaml
+
+## Deploy a low-priority pod
+kubectl apply -f low-priority-pod.yaml
+
+## Deploy a high-priority pod
+kubectl apply -f high-priority-pod.yaml
+
+## Wait for a while so the pods are scheduled
+sleep 5
+
+## Observe the preemption
+kubectl get pod
+
+## Wait for a while so you can observe the result
+sleep 10
+
+## See more details about the preemption event
+kubectl describe pod high-priority-pod | awk '/Events:/,/pod to node/'
+
+## Wait for a while so you can observe the result
+sleep 10
+
+## Delete the cluster
+kwokctl delete cluster

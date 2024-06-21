@@ -28,7 +28,9 @@ which means that simulating a large number of nodes and pods requires a lot of m
 
 ### What's the difference with `kind`
 
-[kind] runs Kubernetes in Docker, creating a real cluster.
+[kind] runs Kubernetes in Docker, creating a real cluster. If you deploy a nginx pod to a 
+[kind] cluster, you could curl to its IP address and get an HTTP response containing its HTML
+page. But in a KWOK cluster, you get nothing because the pod isn't real.
 
 `kwokctl` can be used as an alternative to [kind] in some scenarios where you don’t need to actually run any pod.
 

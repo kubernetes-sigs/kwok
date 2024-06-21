@@ -1,0 +1,29 @@
+# Scheduling pods using pod topology spread constraints
+
+## Create cluster
+kwokctl create cluster
+
+## View clusters
+kwokctl get clusters
+
+## Deploy nodes
+kubectl apply -f node-in-us-west-1.yaml
+kubectl apply -f node-in-us-west-2.yaml
+
+## Wait for a while so the nodes are running
+sleep 5
+
+## Create deployment
+kubectl apply -f deployment.yaml
+
+## Wait for a while so the pods are scheduled
+sleep 5
+
+## Observe the topology spread
+kubectl get pod -o wide
+
+## Wait for a while so you can observe the result
+sleep 10
+
+## Delete the cluster
+kwokctl delete cluster

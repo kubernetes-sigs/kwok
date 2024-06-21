@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    kwok.x-k8s.io/node: fake
+  name: node-1
+  labels:
+    beta.kubernetes.io/arch: arm64
+    beta.kubernetes.io/os: linux
+    kubernetes.io/arch: arm64
+    kubernetes.io/hostname: kwok-node-0
+    kubernetes.io/os: linux
+    kubernetes.io/role: agent
+    kwok.x-k8s.io/kwokctl-scale: node
+    node-role.kubernetes.io/agent: ""
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: 4
+    memory: 4Gi
+    pods: "55"
+  capacity:
+    cpu: "4"
+    memory: 4Gi
+    pods: "55"
+  nodeInfo:
+    architecture: arm64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+---
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    kwok.x-k8s.io/node: fake
+  name: node-2
+  labels:
+    beta.kubernetes.io/arch: arm64
+    beta.kubernetes.io/os: linux
+    kubernetes.io/arch: arm64
+    kubernetes.io/hostname: kwok-node-0
+    kubernetes.io/os: linux
+    kubernetes.io/role: agent
+    kwok.x-k8s.io/kwokctl-scale: node
+    node-role.kubernetes.io/agent: ""
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "2"
+    memory: 2Gi
+    pods: "20"
+  capacity:
+    cpu: "2"
+    memory: 2Gi
+    pods: "20"
+  nodeInfo:
+    architecture: arm64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux

@@ -1,0 +1,40 @@
+# Scheduling pods with a limit Range
+
+## Create cluster
+kwokctl create cluster
+
+## View clusters
+kwokctl get clusters
+
+## Deploy node
+kubectl apply -f node.yaml
+
+## Wait for a while so the node is running
+sleep 5
+
+## Create a resource limit
+kubectl apply -f limit-range.yaml
+
+## Confirm the limit has the required values
+kubectl describe limitranges cpu-resource-constraint
+
+## Wait for a while so you can observe the result
+sleep 10
+
+## Deploy a pod above the resource limit
+kubectl apply -f pod-beyond-limit.yaml
+
+## Wait for a while so you can observe the result
+sleep 10
+
+## Deploy a pod with a newly defined resource limit
+kubectl apply -f pod-within-limit.yaml
+
+## Wait for a while so the pod is scheduled
+sleep 5
+
+## Confirm that the pod is running
+kubectl get pod
+
+## Delete the cluster
+kwokctl delete cluster
