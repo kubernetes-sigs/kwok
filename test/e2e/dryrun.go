@@ -74,7 +74,7 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--kube-authorization=false",
 			"--runtime", clusterRuntime,
 		}
-		cmd := exec.Command(kwokctlPath, args...)   // #nosec G204
+		cmd := exec.Command(kwokctlPath, args...) // #nosec G204
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {
@@ -106,7 +106,7 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime,
 			"--config", extraPath,
 		}
-		cmd := exec.Command(kwokctlPath, args...)   // #nosec G204
+		cmd := exec.Command(kwokctlPath, args...) // #nosec G204
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {
@@ -141,7 +141,7 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 			"--enable-metrics-server", "--kube-audit-policy", kubeAuditPath,
 			"--kube-scheduler-config", schedulerConfigPath,
 		}
-		cmd := exec.Command(kwokctlPath, args...)  // #nosec G204
+		cmd := exec.Command(kwokctlPath, args...) // #nosec G204
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {
