@@ -52,7 +52,7 @@
               name: tmp-scheduler
               pathType: DirectoryOrCreate
         networking:
-          apiServerPort: 32764
+          apiServerPort: 32766
         nodes:
         - extraMounts:
           - containerPath: /etc/kwok/
@@ -78,7 +78,7 @@
             hostPort: 9090
             protocol: TCP
           - containerPort: 2379
-            hostPort: 32763
+            hostPort: 32765
             protocol: TCP
           role: control-plane
         
@@ -339,7 +339,6 @@
             - 127.0.0.1:9090
         EOF
         # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-        # Download https://github.com/kubernetes-sigs/kind/releases/download/v0.23.0/kind-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kind
         KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.30.0 --wait 29m
         KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.6.0 --name kwok-<CLUSTER_NAME>
         KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v2.49.1 --name kwok-<CLUSTER_NAME>
@@ -349,4 +348,4 @@
         EOF
         kubectl cordon kwok-<CLUSTER_NAME>-control-plane
         docker exec kwok-<CLUSTER_NAME>-control-plane chmod -R +r /etc/kubernetes/pki
-        # Add context kwok-<CLUSTER_NAME> to /root/.kube/config
+        # Add context kwok-<CLUSTER_NAME> to /home/runner/.kube/config

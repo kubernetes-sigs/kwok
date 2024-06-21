@@ -35,7 +35,7 @@
         
           static_configs:
           - targets:
-            - 127.0.0.1:32763
+            - 127.0.0.1:32765
         - job_name: "kube-apiserver"
           scheme: https
           honor_timestamps: true
@@ -50,7 +50,7 @@
         
           static_configs:
           - targets:
-            - 127.0.0.1:32762
+            - 127.0.0.1:32764
         - job_name: "kube-controller-manager"
           scheme: https
           honor_timestamps: true
@@ -65,7 +65,7 @@
         
           static_configs:
           - targets:
-            - 127.0.0.1:32760
+            - 127.0.0.1:32762
         - job_name: "kube-scheduler"
           scheme: https
           honor_timestamps: true
@@ -80,10 +80,11 @@
         
           static_configs:
           - targets:
-            - 127.0.0.1:32759
+            - 127.0.0.1:32761
         - job_name: "kwok-controller-metrics-discovery"
           http_sd_configs:
-          - url: http://127.0.0.1:32761/discovery/prometheus
+          - url: http://127.0.0.1:32763/discovery/prometheus
+        
         - job_name: "kwok-controller"
           scheme: http
           honor_timestamps: true
@@ -93,7 +94,7 @@
         
           static_configs:
           - targets:
-            - 127.0.0.1:32761
+            - 127.0.0.1:32763
         - job_name: "prometheus"
           scheme: http
           honor_timestamps: true
@@ -110,7 +111,7 @@
         clusters:
         - cluster:
             certificate-authority: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
-            server: https://127.0.0.1:32762
+            server: https://127.0.0.1:32764
           name: kwok-<CLUSTER_NAME>
         contexts:
         - context:
@@ -128,16 +129,16 @@
         
         EOF
         # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-        # Add context kwok-<CLUSTER_NAME> to /root/.kube/config
-        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE etcd --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd --initial-advertise-peer-urls=http://0.0.0.0:32764 --listen-peer-urls=http://0.0.0.0:32764 --advertise-client-urls=http://0.0.0.0:32763 --listen-client-urls=http://0.0.0.0:32763 --initial-cluster=node0=http://0.0.0.0:32764 --log-level=debug ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/etcd.log 2>&1 &
+        # Add context kwok-<CLUSTER_NAME> to /home/runner/.kube/config
+        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE etcd --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd --initial-advertise-peer-urls=http://0.0.0.0:32766 --listen-peer-urls=http://0.0.0.0:32766 --advertise-client-urls=http://0.0.0.0:32765 --listen-client-urls=http://0.0.0.0:32765 --initial-cluster=node0=http://0.0.0.0:32766 --log-level=debug ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/etcd.log 2>&1 &
         echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/etcd.pid
-        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE kube-apiserver --etcd-prefix=/registry --allow-privileged=true --max-requests-inflight=0 --max-mutating-requests-inflight=0 --enable-priority-and-fairness=false --etcd-servers=http://127.0.0.1:32763 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --secure-port=32762 --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --client-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-signing-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-issuer=https://kubernetes.default.svc.cluster.local --proxy-client-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --proxy-client-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --v=5 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-apiserver.log 2>&1 &
+        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE kube-apiserver --etcd-prefix=/registry --allow-privileged=true --max-requests-inflight=0 --max-mutating-requests-inflight=0 --enable-priority-and-fairness=false --etcd-servers=http://127.0.0.1:32765 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --secure-port=32764 --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --client-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-signing-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-issuer=https://kubernetes.default.svc.cluster.local --proxy-client-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --proxy-client-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --v=5 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-apiserver.log 2>&1 &
         echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid
-        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE kube-controller-manager --node-monitor-period=25s --node-monitor-grace-period=3m20s --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32760 --root-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --kube-api-qps=5000 --kube-api-burst=10000 --v=5 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-controller-manager.log 2>&1 &
+        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE kube-controller-manager --node-monitor-period=25s --node-monitor-grace-period=3m20s --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32762 --root-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --kube-api-qps=5000 --kube-api-burst=10000 --v=5 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-controller-manager.log 2>&1 &
         echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-controller-manager.pid
-        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE kube-scheduler --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32759 --kube-api-qps=5000 --kube-api-burst=10000 --v=5 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-scheduler.log 2>&1 &
+        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE kube-scheduler --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32761 --kube-api-qps=5000 --kube-api-burst=10000 --v=5 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-scheduler.log 2>&1 &
         echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-scheduler.pid
-        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE kwok-controller --manage-all-nodes=true --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --config=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --node-ip= --node-name=localhost --node-port=32761 --server-address=0.0.0.0:32761 --node-lease-duration-seconds=200 --v=-4 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kwok-controller.log 2>&1 &
+        cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE kwok-controller --manage-all-nodes=true --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --config=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --node-ip= --node-name=localhost --node-port=32763 --server-address=0.0.0.0:32763 --node-lease-duration-seconds=200 --v=-4 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kwok-controller.log 2>&1 &
         echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kwok-controller.pid
         cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && TEST_KEY=TEST_VALUE prometheus --config.file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml --web.listen-address=0.0.0.0:9090 --log.level=debug ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/prometheus.log 2>&1 &
         echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/prometheus.pid

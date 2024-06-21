@@ -54,8 +54,8 @@ func formatCmdOutput(output, clusterName, rootDir string) string {
 	got = strings.ReplaceAll(got, runtime.GOOS, "<OS>")
 	got = strings.ReplaceAll(got, runtime.GOARCH, "<ARCH>")
 	got = strings.ReplaceAll(got, extensions[runtime.GOOS], "<TAR>")
-	// got = strings.ReplaceAll(got, "\n", " ")
-	// got = strings.Join(strings.Fields(got), " ")
+	got = strings.ReplaceAll(got, "\n", " ")
+	got = strings.Join(strings.Fields(got), " ")
 	return got
 }
 
@@ -77,7 +77,6 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 		}
 		got := string(output)
 		got = formatCmdOutput(got, clusterName, rootDir)
-		t.Log("GOT CLUSTER:",got)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
 			t.Fatalf("Expected vs got:\n%s", diff)
 		}
@@ -105,7 +104,6 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 		}
 		got := string(output)
 		got = formatCmdOutput(got, clusterName, rootDir)
-		t.Log("GOT CLUSTER:",got)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
 			t.Fatalf("Expected vs got:\n%s", diff)
 		}
@@ -134,7 +132,6 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 		}
 		got := string(output)
 		got = formatCmdOutput(got, clusterName, rootDir)
-		t.Log("GOT CLUSTER:",got)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
 			t.Fatalf("Expected vs got:\n%s", diff)
 		}
