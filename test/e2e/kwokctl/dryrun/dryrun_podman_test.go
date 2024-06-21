@@ -31,3 +31,8 @@ func TestPodmanDryRunWithExtra(t *testing.T) {
 	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "podman").Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestPodmanDryRunWithVerbosity(t *testing.T) {
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "podman").Feature()
+	testEnv.Test(t, f0)
+}

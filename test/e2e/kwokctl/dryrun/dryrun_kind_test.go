@@ -31,3 +31,8 @@ func TestKindDryRunWithExtra(t *testing.T) {
 	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "kind").Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestKindDryRunWithVerbosity(t *testing.T) {
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "kind").Feature()
+	testEnv.Test(t, f0)
+}

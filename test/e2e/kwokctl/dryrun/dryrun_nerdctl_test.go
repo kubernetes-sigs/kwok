@@ -31,3 +31,8 @@ func TestNerdctlDryRunWithExtra(t *testing.T) {
 	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "nerdctl").Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestNerdctlDryRunWithVerbosity(t *testing.T) {
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "nerdctl").Feature()
+	testEnv.Test(t, f0)
+}

@@ -38,7 +38,7 @@ func loadExpectedClusterDetails(filepath string) (string, error) {
 	}
 	out := string(data)
 	out = strings.ReplaceAll(out, "\n", " ")
-    out = strings.Join(strings.Fields(out), " ")
+	out = strings.Join(strings.Fields(out), " ")
 	return out, nil
 }
 
@@ -55,7 +55,7 @@ func formatCmdOutput(output, clusterName, rootDir string) string {
 	got = strings.ReplaceAll(got, runtime.GOARCH, "<ARCH>")
 	got = strings.ReplaceAll(got, extensions[runtime.GOOS], "<TAR>")
 	got = strings.ReplaceAll(got, "\n", " ")
-    got = strings.Join(strings.Fields(got), " ")
+	got = strings.Join(strings.Fields(got), " ")
 	return got
 }
 
@@ -64,7 +64,7 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 	f = f.Assess("test cluster dryrun", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		var expected string
 		var err error
-		absPath := "test/kwokctl/testdata/" + clusterRuntime + "/create_cluster.txt"
+		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster.txt"
 		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
 		if err != nil {
 			t.Fatal("Could not get expected cluster details:", err)
@@ -90,7 +90,7 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		var expected string
 		var err error
-		absPath := "test/kwokctl/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
+		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
 		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
 		if err != nil {
 			t.Fatal("Could not get expected cluster details:", err)
@@ -113,18 +113,18 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 }
 
 func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string) *features.FeatureBuilder {
-	f := features.New("Dry run with extra")
-	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+	f := features.New("Dry run with verbosity")
+	f = f.Assess("test cluster dryrun with verbosity", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		var expected string
 		var err error
-		absPath := "test/kwokctl/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
+		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_verbosity.txt"
 		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
 		if err != nil {
 			t.Fatal("Could not get expected cluster details:", err)
 		}
 		kubeAuditPath := path.Join(rootDir, "test/kwokctl/audit-policy.yaml")
-		// schedulerConfigPath:=path.Join(rootDir,"test/kwokctl/scheduler-config.yaml")
-		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime, "--prometheus-port=9090", "--jaeger-port=16686", "--dashboard-port=8000", "--enable-metrics-server", "--kube-audit-policy", kubeAuditPath)
+		schedulerConfigPath := path.Join(rootDir, "test/kwokctl/scheduler-config.yaml")
+		cmd := exec.Command(kwokctlPath, "create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime, "--prometheus-port=9090", "--jaeger-port=16686", "--dashboard-port=8000", "--enable-metrics-server", "--kube-audit-policy", kubeAuditPath, "--kube-scheduler-config", schedulerConfigPath)
 		var output []byte
 		output, err = cmd.Output()
 		if err != nil {

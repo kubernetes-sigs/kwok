@@ -31,3 +31,8 @@ func TestBinaryDryRunWithExtra(t *testing.T) {
 	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "binary").Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestBinaryDryRunWithVerbosity(t *testing.T) {
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "binary").Feature()
+	testEnv.Test(t, f0)
+}

@@ -31,3 +31,8 @@ func TestDockerDryRunWithExtra(t *testing.T) {
 	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "docker").Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestDockerDryRunWithVerbosity(t *testing.T) {
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "docker").Feature()
+	testEnv.Test(t, f0)
+}
