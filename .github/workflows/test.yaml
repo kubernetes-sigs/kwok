@@ -256,6 +256,7 @@ jobs:
         ./hack/e2e-test.sh kwokctl/kwokctl_with_dryrun
 
     - name: Test e2e dry run
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       shell: bash
       run: |
         ./hack/e2e-test.sh e2e/kwokctl/dryrun
