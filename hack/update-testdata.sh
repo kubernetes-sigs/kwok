@@ -25,7 +25,7 @@ function update() {
   local runtime="${1}"
   local filename="${2}"
   local data="${3}"
-  echo "${data}" > "${ROOT_DIR}/test/e2e/kwokctl/dryrun/testdata/${runtime}/${filename}"
+  echo "${data}" >"${ROOT_DIR}/test/e2e/kwokctl/dryrun/testdata/${runtime}/${filename}"
   echo "Testdata updated"
 }
 
