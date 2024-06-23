@@ -21,12 +21,9 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
-function update() {
-  local runtime="${1}"
-  local filename="${2}"
-  local data="${3}"
-  echo "${data}" > "${ROOT_DIR}/test/e2e/kwokctl/dryrun/testdata/${runtime}/${filename}"
-  echo "Testdata updated"
+function check() {
+  "${ROOT_DIR}"/hack/update-testdata.sh
+  git --no-pager diff --exit-code
 }
 
-cd "${ROOT_DIR}" && update
+cd "${ROOT_DIR}" && check
