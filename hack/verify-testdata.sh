@@ -22,7 +22,7 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 function check() {
-  chmod +x ${ROOT_DIR}/hack/update-testdata.sh
+  chmod +x "${ROOT_DIR}"/hack/update-testdata.sh
   "${ROOT_DIR}"/hack/update-testdata.sh
   git --no-pager diff --exit-code
 }
