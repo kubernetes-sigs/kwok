@@ -22,11 +22,13 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 function update() {
-  local runtime="${1}"
-  local filename="${2}"
+  local runtime="${1:-false}"
+  local filename="${2:-false}"
   shift 2
-  echo "$@" >"${ROOT_DIR}/test/e2e/kwokctl/dryrun/testdata/${runtime}/${filename}"
-  echo "Testdata updated"
+  if [[ runtime != "false" && filename != "false" ]]
+    echo "$@" >"${ROOT_DIR}/test/e2e/kwokctl/dryrun/testdata/${runtime}/${filename}"
+    echo "Testdata updated"
+  fi
 }
 
 cd "${ROOT_DIR}" && update
