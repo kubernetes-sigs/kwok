@@ -25,7 +25,7 @@ function update() {
   local runtime="${1:-false}"
   local filename="${2:-false}"
   shift 2
-  if [ runtime != "false" ] && [ filename != "false" ]; then
+  if [ "${runtime}" != "false" ] && [ "${filename}" != "false" ]; then
     echo "$@" >"${ROOT_DIR}/test/e2e/kwokctl/dryrun/testdata/${runtime}/${filename}"
     echo "Testdata updated"
   else
@@ -33,4 +33,4 @@ function update() {
   fi
 }
 
-cd "${ROOT_DIR}" && update
+cd "${ROOT_DIR}" && update "$@"
