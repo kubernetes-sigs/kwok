@@ -25,9 +25,11 @@ function update() {
   local runtime="${1:-false}"
   local filename="${2:-false}"
   shift 2
-  if [[ runtime != "false" && filename != "false" ]]
+  if [ runtime != "false" ] && [ filename != "false" ]; then
     echo "$@" >"${ROOT_DIR}/test/e2e/kwokctl/dryrun/testdata/${runtime}/${filename}"
     echo "Testdata updated"
+  else
+    echo "Runtime or filename not specified"
   fi
 }
 
