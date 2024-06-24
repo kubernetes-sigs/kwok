@@ -22,7 +22,6 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 function check() {
-  chmod +x "${ROOT_DIR}"/hack/update-testdata.sh
   if [[ "${UPDATE_DRY_RUN_TESTDATA:-"false"}" == "true" ]]; then
     "${ROOT_DIR}"/hack/update-testdata.sh
   fi

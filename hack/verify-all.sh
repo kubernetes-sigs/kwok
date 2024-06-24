@@ -100,7 +100,6 @@ fi
 
 if [[ "${VERIFY_DRY_RUN_TESTDATA:-true}" == "true" ]]; then
   echo "[*] Verifying testdata..."
-  chmod +x "${ROOT_DIR}"/hack/verify-testdata.sh
   "${ROOT_DIR}"/hack/verify-testdata.sh || failed+=(testdata)
 fi
 
