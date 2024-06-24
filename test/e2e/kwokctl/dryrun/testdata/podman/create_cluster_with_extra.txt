@@ -166,4 +166,4 @@ podman start kwok-<CLUSTER_NAME>-kube-apiserver
 podman start kwok-<CLUSTER_NAME>-kube-controller-manager
 podman start kwok-<CLUSTER_NAME>-kube-scheduler
 podman start kwok-<CLUSTER_NAME>-kwok-controller
-podman start kwok-<CLUSTER_NAME>-promet
+podman start kwok-<CLUSTER_NAME>-prometheus
