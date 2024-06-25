@@ -4,6 +4,11 @@ on:
     types: [opened, edited, synchronize, reopened]
     branches:
     - main
+
+env:
+  GO_VERSION: "1.22.3"
+  GOLANGCI_VERSION: "1.58.2"
+
 jobs:
   golangci:
     name: lint
@@ -11,10 +16,10 @@ jobs:
     steps:
     - uses: actions/setup-go@v5
       with:
-        go-version: "1.22"
+        go-version: ${{ env.GO_VERSION }}
     - uses: actions/checkout@v4
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v6
       with:
-        version: v1.58.2
+        version: v${{ env.GOLANGCI_VERSION }}
         args: --timeout=30m --config=.golangci.yaml

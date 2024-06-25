@@ -23,6 +23,7 @@ on:
 env:
   DOCKER_CLI_EXPERIMENTAL: "enabled"
   CGO_ENABLED: "0"
+  GO_VERSION: "1.22.3"
 
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#concurrency
 concurrency:
@@ -43,7 +44,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.22"
+        go-version: ${{ env.GO_VERSION }}
 
     - name: Test
       shell: bash
@@ -82,7 +83,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.22"
+        go-version: ${{ env.GO_VERSION }}
 
     - name: Test e2e default
       shell: bash
@@ -108,7 +109,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.22"
+        go-version: ${{ env.GO_VERSION }}
 
     - name: Install Kind
       shell: bash
@@ -168,7 +169,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.22"
+        go-version: ${{ env.GO_VERSION }}
 
     - name: Install CoreUtils for MacOS
       if: ${{ startsWith(matrix.os, 'macos-') }}
