@@ -2,7 +2,7 @@
 
 baseURL: https://kwok.sigs.k8s.io/
 title: KWOK
-theme: hugo-book
+theme: github.com/alex-shpak/hugo-book
 
 # Book configuration
 disablePathToLower: false
@@ -96,6 +96,10 @@ params:
   # /!\ This is an experimental feature, might be removed or changed at any time
   # (Optional, experimental, default false) Enables a drop-down menu for translations only if a translation is present.
   BookTranslatedOnly: false
+
+module:
+  imports:
+  - path: github.com/alex-shpak/hugo-book
 
 menu:
   before:
