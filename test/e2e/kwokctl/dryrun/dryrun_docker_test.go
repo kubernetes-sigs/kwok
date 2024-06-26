@@ -23,16 +23,16 @@ import (
 )
 
 func TestDockerDryRun(t *testing.T) {
-	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "docker").Feature()
+	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "docker", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestDockerDryRunWithExtra(t *testing.T) {
-	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "docker").Feature()
+	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "docker", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestDockerDryRunWithVerbosity(t *testing.T) {
-	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "docker").Feature()
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "docker", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }

@@ -23,16 +23,16 @@ import (
 )
 
 func TestKindDryRun(t *testing.T) {
-	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "kind").Feature()
+	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "kind", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestKindDryRunWithExtra(t *testing.T) {
-	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "kind").Feature()
+	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "kind", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestKindDryRunWithVerbosity(t *testing.T) {
-	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "kind").Feature()
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "kind", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }

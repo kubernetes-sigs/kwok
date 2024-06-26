@@ -18,6 +18,7 @@ limitations under the License.
 package dryrun_test
 
 import (
+	"flag"
 	"os"
 	"runtime"
 	"testing"
@@ -31,16 +32,18 @@ import (
 )
 
 var (
-	testEnv     env.Environment
-	pwd         = os.Getenv("PWD")
-	rootDir     = path.Join(pwd, "../../../..")
-	logsDir     = path.Join(rootDir, "logs")
-	clusterName = envconf.RandomName("kwok-e2e-dryrun", 16)
-	kwokctlPath = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	testEnv        env.Environment
+	pwd            = os.Getenv("PWD")
+	rootDir        = path.Join(pwd, "../../../..")
+	logsDir        = path.Join(rootDir, "logs")
+	clusterName    = envconf.RandomName("kwok-e2e-dryrun", 16)
+	kwokctlPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	updateTestdata = false
 )
 
 func init() {
 	_ = os.Setenv("KWOK_WORKDIR", path.Join(rootDir, "workdir"))
+	flag.BoolVar(&updateTestdata, "update-testdata", false, "update all of testdata")
 }
 
 func TestMain(m *testing.M) {

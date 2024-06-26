@@ -23,16 +23,16 @@ import (
 )
 
 func TestKindPodmanDryRun(t *testing.T) {
-	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "kind-podman").Feature()
+	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "kind-podman", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestKindPodmanDryRunWithExtra(t *testing.T) {
-	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "kind-podman").Feature()
+	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "kind-podman", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestKindPodmanDryRunWithVerbosity(t *testing.T) {
-	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "kind-podman").Feature()
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "kind-podman", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }

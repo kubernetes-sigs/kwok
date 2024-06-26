@@ -18,6 +18,7 @@ package e2e
 
 import (
 	"context"
+	"io/fs"
 	"os"
 	"os/exec"
 	"runtime"
@@ -59,7 +60,7 @@ func formatCmdOutput(output, clusterName, rootDir string) string {
 	return got
 }
 
-func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string) *features.FeatureBuilder {
+func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run")
 	f = f.Assess("test cluster dryrun", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		var expected string
@@ -83,14 +84,18 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 		got := string(output)
 		got = formatCmdOutput(got, clusterName, rootDir)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
-			t.Fatalf("Expected vs got:\n%s", diff)
+			if updateTestdata {
+				os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+			} else {
+				t.Fatalf("Expected vs got:\n%s", diff)
+			}
 		}
 		return ctx
 	})
 	return f
 }
 
-func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string) *features.FeatureBuilder {
+func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run with extra")
 	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		var expected string
@@ -115,14 +120,18 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 		got := string(output)
 		got = formatCmdOutput(got, clusterName, rootDir)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
-			t.Fatalf("Expected vs got:\n%s", diff)
+			if updateTestdata {
+				os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+			} else {
+				t.Fatalf("Expected vs got:\n%s", diff)
+			}
 		}
 		return ctx
 	})
 	return f
 }
 
-func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string) *features.FeatureBuilder {
+func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run with verbosity")
 	f = f.Assess("test cluster dryrun with verbosity", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		var expected string
@@ -150,7 +159,11 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 		got := string(output)
 		got = formatCmdOutput(got, clusterName, rootDir)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
-			t.Fatalf("Expected vs got:\n%s", diff)
+			if updateTestdata {
+				os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+			} else {
+				t.Fatalf("Expected vs got:\n%s", diff)
+			}
 		}
 		return ctx
 	})

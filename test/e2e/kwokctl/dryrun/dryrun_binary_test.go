@@ -23,16 +23,16 @@ import (
 )
 
 func TestBinaryDryRun(t *testing.T) {
-	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "binary").Feature()
+	f0 := e2e.CaseDryrun(clusterName, kwokctlPath, rootDir, "binary", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestBinaryDryRunWithExtra(t *testing.T) {
-	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "binary").Feature()
+	f0 := e2e.CaseDryrunWithExtra(clusterName, kwokctlPath, rootDir, "binary", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestBinaryDryRunWithVerbosity(t *testing.T) {
-	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "binary").Feature()
+	f0 := e2e.CaseDryrunWithVerbosity(clusterName, kwokctlPath, rootDir, "binary", updateTestdata).Feature()
 	testEnv.Test(t, f0)
 }
