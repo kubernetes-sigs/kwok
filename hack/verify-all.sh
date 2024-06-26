@@ -98,6 +98,10 @@ if [[ "${VERIFY_STAGES:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-stages.sh || failed+=(stages)
 fi
 
+
+
+
+
 if [[ "${VERIFY_DRY_RUN_TESTDATA:-true}" == "true" ]]; then
   echo "[*] Verifying testdata..."
   "${ROOT_DIR}"/hack/verify-testdata.sh || failed+=(testdata)
