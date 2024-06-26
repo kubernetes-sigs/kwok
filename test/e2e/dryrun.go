@@ -85,7 +85,10 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 		got = formatCmdOutput(got, clusterName, rootDir)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
 			if updateTestdata {
-				os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+				err = os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+				if err != nil {
+					t.Fatal("Could not write file:", err)
+				}
 			} else {
 				t.Fatalf("Expected vs got:\n%s", diff)
 			}
@@ -121,7 +124,10 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 		got = formatCmdOutput(got, clusterName, rootDir)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
 			if updateTestdata {
-				os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+				err = os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+				if err != nil {
+					t.Fatal("Could not write file:", err)
+				}
 			} else {
 				t.Fatalf("Expected vs got:\n%s", diff)
 			}
@@ -160,7 +166,10 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 		got = formatCmdOutput(got, clusterName, rootDir)
 		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
 			if updateTestdata {
-				os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+				err = os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+				if err != nil {
+					t.Fatal("Could not write file:", err)
+				}
 			} else {
 				t.Fatalf("Expected vs got:\n%s", diff)
 			}
