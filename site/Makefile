@@ -13,24 +13,21 @@
 # limitations under the License.
 
 HUGO_VERSION = $(shell grep -E '^[[:space:]]*HUGO_VERSION' ../netlify.toml | cut -d '=' -f 2 | tr -d '[:space:]' | tr -d '"')
-HUGO_IMAGE   = docker.io/klakegg/hugo:$(HUGO_VERSION)-ext
+HUGO_IMAGE   = docker.io/floryn90/hugo:$(HUGO_VERSION)-ext
 HUGO_BINARY  = $(shell which hugo)
 HUGO_DOCKER  = docker run --rm -it --volume $(realpath $(CURDIR)/..):/src -p 1313:1313 --workdir /src/site --entrypoint=hugo $(HUGO_IMAGE)
 HUGO		 = $(if $(HUGO_BINARY),$(HUGO_BINARY),$(HUGO_DOCKER))
 
 .PHONY: serve
-serve: themes/hugo-book
+serve:
 	$(HUGO) server --bind="0.0.0.0" \
 	--ignoreCache \
 	--buildFuture \
 	--disableFastRender
 
 .PHONY: build
-build: themes/hugo-book
+build:
 	$(HUGO) --enableGitInfo --buildFuture --minify
-
-themes/hugo-book:
-	git clone --depth 1 --branch v9 https://github.com/alex-shpak/hugo-book $@
 
 .PHONY: check
 check: check-version
