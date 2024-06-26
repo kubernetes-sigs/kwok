@@ -262,7 +262,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 	// Set up the cluster
 	_, err = rt.Config(ctx)
 	exist := err == nil
-	cleanUp := func() {}
 	if exist {
 		logger.Info("Cluster already exists")
 		if ready, err := rt.Ready(ctx); err == nil && ready {
@@ -271,7 +270,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 		logger.Info("Cluster is not ready yet, continue it")
 	} else {
-		cleanUp = func() {
+		cleanUp := func() {
 			subCtx := context.Background()
 			err := rt.Uninstall(subCtx)
 			if err != nil {
@@ -292,17 +291,21 @@ func runE(ctx context.Context, flags *flagpole) error {
 			cleanUp()
 			return err
 		}
+
+		// Create the cluster
+		start := time.Now()
+		logger.Info("Cluster is creating")
+		err = rt.Install(ctx)
+		if err != nil {
+			logger.Error("Failed to setup config", err)
+			cleanUp()
+			return err
+		}
+		logger.Info("Cluster is created",
+			"elapsed", time.Since(start),
+		)
 	}
 
-	// Create the cluster
-	start := time.Now()
-	logger.Info("Cluster is creating")
-	err = rt.Install(ctx)
-	if err != nil {
-		logger.Error("Failed to setup config", err)
-		cleanUp()
-		return err
-	}
 	if flags.Kubeconfig != "" {
 		setContext := func() {
 			err = rt.AddContext(ctx, flags.Kubeconfig)
@@ -328,12 +331,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 			setContext()
 		}
 	}
-	logger.Info("Cluster is created",
-		"elapsed", time.Since(start),
-	)
 
 	// Start the cluster
-	start = time.Now()
+	start := time.Now()
 	logger.Info("Cluster is starting")
 	err = rt.Up(ctx)
 	if err != nil {

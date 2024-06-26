@@ -98,13 +98,9 @@ if [[ "${VERIFY_STAGES:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-stages.sh || failed+=(stages)
 fi
 
-
-
-
-
-if [[ "${VERIFY_DRY_RUN_TESTDATA:-true}" == "true" ]]; then
-  echo "[*] Verifying testdata..."
-  "${ROOT_DIR}"/hack/verify-testdata.sh || failed+=(testdata)
+if [[ "${VERIFY_DEPENDENCIES_VERSION:-true}" == "true" ]]; then
+  echo "[*] Verifying dependencies version..."
+  "${ROOT_DIR}"/hack/verify-dependencies-version.sh || failed+=(dependencies-version)
 fi
 
 # exit based on verify scripts

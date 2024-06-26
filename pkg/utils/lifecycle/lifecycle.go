@@ -273,8 +273,11 @@ func (s *Stage) Delay(ctx context.Context, v interface{}, now time.Time) (time.D
 		return jitterDuration, true
 	}
 
-	//nolint:gosec
-	return duration + time.Duration(rand.Int63n(int64(jitterDuration-duration))), true
+	if jitter := jitterDuration - duration; jitter > 0 {
+		//nolint:gosec
+		duration += time.Duration(rand.Int63n(int64(jitter)))
+	}
+	return duration, true
 }
 
 // Next returns the next of the stage.
