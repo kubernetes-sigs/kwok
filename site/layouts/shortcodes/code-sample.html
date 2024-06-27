@@ -1,0 +1,25 @@
+{{ $page := .Page }}
+{{ $file := .Get "file" }}
+{{ $anchor := .Get "anchor" }}
+{{ $codelang := .Get "language" | default (path.Ext $file | strings.TrimPrefix ".") }}
+
+{{ $filename := $file }}
+{{ if not (hasPrefix $filename "/") }}
+{{ $filename = printf "%s/%s" $page.Path $file }}
+{{ end }}
+{{ $filename = safeURL $filename }}
+
+{{ $resource := readFile $filename}}
+
+{{ with $resource }}
+  {{ if eq $anchor "true" }}
+  <h6 id="{{ $file | anchorize }}">{{ $file }}
+    <a class="anchor" href="#{{ $file | anchorize }}">#</a>
+  </h6>
+  {{ end }}
+  <div class="highlight">
+      {{- highlight . $codelang "" -}}
+  </div>
+{{ else }}
+  {{ errorf "%q not found" $filename }}
+{{- end -}}
