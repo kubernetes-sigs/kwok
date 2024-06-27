@@ -152,10 +152,14 @@ menu:
     weight: 1060
     parent: user-guide
 
+  - identifier: examples
+    title: Examples
+    parent: user-guide
+
   - identifier: kwokctl-advanced-usage
     title: "`kwokctl` Advanced Usage"
     weight: 200010
-    parent: user-guide
+    parent: examples
   - identifier: snapshots
     pageRef: "/docs/user/kwokctl-snapshot"
     parent: kwokctl-advanced-usage
@@ -172,24 +176,32 @@ menu:
     pageRef: "/docs/user/kwokctl-platform-specific-binaries"
     parent: kwokctl-advanced-usage
 
-  - identifier: examples
-    title: Examples
-    parent: kwokctl-advanced-usage
+  - identifier: kwokctl-integration
+    title: "`kwokctl` Integration"
+    weight: 200020
+    parent: examples
   - identifier: argo
     pageRef: "/docs/examples/argo"
-    parent: examples
+    parent: kwokctl-integration
   - identifier: linkerd
     pageRef: "/docs/examples/linkerd"
-    parent: examples
+    parent: kwokctl-integration
   - identifier: istio
     pageRef: "/docs/examples/istio"
-    parent: examples
+    parent: kwokctl-integration
   - identifier: metrics-server
     pageRef: "/docs/examples/metrics-server"
-    parent: examples
+    parent: kwokctl-integration
   - identifier: metrics
     pageRef: "/docs/examples/prometheus"
+    parent: kwokctl-integration
+
+  - identifier: chaos
+    title: Chaos
     parent: examples
+  - identifier: injectfailure
+    pageRef: "/docs/user/examples/injectfailure"
+    parent: chaos
 
   - identifier: tools
     title: Tools
