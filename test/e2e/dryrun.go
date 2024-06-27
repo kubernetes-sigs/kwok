@@ -60,38 +60,49 @@ func formatCmdOutput(output, clusterName, rootDir string) string {
 	return got
 }
 
+func executeCommand(args []string, absPath string, clusterName string, kwokctlPath string, rootDir string, updateTestdata bool) (string, error) {
+	var expected string
+	var err error
+	expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
+	if err != nil {
+		return "", err
+	}
+	cmd := exec.Command(kwokctlPath, args...) // #nosec G204
+	var output []byte
+	output, err = cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	got := string(output)
+	got = formatCmdOutput(got, clusterName, rootDir)
+	if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
+		if updateTestdata {
+			err = os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
+			if err != nil {
+				return "", err
+			}
+		} else {
+			return diff, nil
+		}
+	}
+	return "", nil
+}
+
 func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run")
 	f = f.Assess("test cluster dryrun", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-		var expected string
-		var err error
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster.txt"
-		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
-		if err != nil {
-			t.Fatal("Could not get expected cluster details:", err)
-		}
 		args := []string{
 			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m",
 			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--kube-authorization=false",
 			"--runtime", clusterRuntime,
 		}
-		cmd := exec.Command(kwokctlPath, args...) // #nosec G204
-		var output []byte
-		output, err = cmd.Output()
+		diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
 		if err != nil {
-			t.Fatal("Could not get the output of the command:", err)
+			t.Fatal(err)
 		}
-		got := string(output)
-		got = formatCmdOutput(got, clusterName, rootDir)
-		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
-			if updateTestdata {
-				err = os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
-				if err != nil {
-					t.Fatal("Could not write file:", err)
-				}
-			} else {
-				t.Fatalf("Expected vs got:\n%s", diff)
-			}
+		if diff != "" {
+			t.Fatalf("Expected vs got:\n%s", diff)
 		}
 		return ctx
 	})
@@ -101,36 +112,19 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run with extra")
 	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-		var expected string
-		var err error
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
-		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
-		if err != nil {
-			t.Fatal("Could not get expected cluster details:", err)
-		}
 		extraPath := path.Join(rootDir, "test/kwokctl/testdata/extra.yaml")
 		args := []string{
 			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m",
 			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime,
 			"--config", extraPath,
 		}
-		cmd := exec.Command(kwokctlPath, args...) // #nosec G204
-		var output []byte
-		output, err = cmd.Output()
+		diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
 		if err != nil {
-			t.Fatal("Could not get the output of the command:", err)
+			t.Fatal(err)
 		}
-		got := string(output)
-		got = formatCmdOutput(got, clusterName, rootDir)
-		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
-			if updateTestdata {
-				err = os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
-				if err != nil {
-					t.Fatal("Could not write file:", err)
-				}
-			} else {
-				t.Fatalf("Expected vs got:\n%s", diff)
-			}
+		if diff != "" {
+			t.Fatalf("Expected vs got:\n%s", diff)
 		}
 		return ctx
 	})
@@ -140,13 +134,7 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run with verbosity")
 	f = f.Assess("test cluster dryrun with verbosity", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-		var expected string
-		var err error
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_verbosity.txt"
-		expected, err = loadExpectedClusterDetails(path.Join(rootDir, absPath))
-		if err != nil {
-			t.Fatal("Could not get expected cluster details:", err)
-		}
 		kubeAuditPath := path.Join(rootDir, "test/kwokctl/audit-policy.yaml")
 		schedulerConfigPath := path.Join(rootDir, "test/kwokctl/scheduler-config.yaml")
 		args := []string{
@@ -156,23 +144,12 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 			"--enable-metrics-server", "--kube-audit-policy", kubeAuditPath,
 			"--kube-scheduler-config", schedulerConfigPath,
 		}
-		cmd := exec.Command(kwokctlPath, args...) // #nosec G204
-		var output []byte
-		output, err = cmd.Output()
+		diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
 		if err != nil {
-			t.Fatal("Could not get the output of the command:", err)
+			t.Fatal(err)
 		}
-		got := string(output)
-		got = formatCmdOutput(got, clusterName, rootDir)
-		if diff := cmp.Diff(strings.TrimSpace(got), strings.TrimSpace(expected)); diff != "" {
-			if updateTestdata {
-				err = os.WriteFile(path.Join(rootDir, absPath), output, fs.FileMode(0644))
-				if err != nil {
-					t.Fatal("Could not write file:", err)
-				}
-			} else {
-				t.Fatalf("Expected vs got:\n%s", diff)
-			}
+		if diff != "" {
+			t.Fatalf("Expected vs got:\n%s", diff)
 		}
 		return ctx
 	})
