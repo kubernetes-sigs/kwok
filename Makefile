@@ -65,9 +65,11 @@ PRE_RELEASE ?=
 ifeq ($(STAGING_IMAGE_PREFIX),)
 KWOK_IMAGE ?= kwok
 CLUSTER_IMAGE ?= cluster
+CHARTS_IMAGE ?= charts
 else
 KWOK_IMAGE ?= $(STAGING_IMAGE_PREFIX)/kwok
 CLUSTER_IMAGE ?= $(STAGING_IMAGE_PREFIX)/cluster
+CHARTS_IMAGE ?= $(STAGING_IMAGE_PREFIX)/charts
 endif
 
 PLATFORM ?= $(GOOS)/$(GOARCH)
@@ -77,6 +79,8 @@ IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
 BINARY_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
 
 MANIFESTS ?= kwok kwokctl stage/fast metrics/usage
+
+CHARTS ?= kwok stage-fast
 
 BUILDER ?= docker
 DOCKER_CLI_EXPERIMENTAL ?= enabled
@@ -224,6 +228,15 @@ manifests:
 		--image-prefix=${IMAGE_PREFIX} \
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
+		--dry-run=${DRY_RUN} \
+		--push=${PUSH}
+
+## oci-charts: Generate helm oci-charts to deploy kwok
+.PHONY: oci-charts
+oci-charts:
+	@./hack/oci-charts.sh \
+        $(addprefix --chart=, $(CHARTS)) \
+		--image=${CHARTS_IMAGE} \
 		--dry-run=${DRY_RUN} \
 		--push=${PUSH}
 

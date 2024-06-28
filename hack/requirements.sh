@@ -23,6 +23,8 @@ LOCAL_BIN_DIR="${ROOT_DIR}/bin"
 
 export PATH="${LOCAL_BIN_DIR}:${PATH}"
 
+HELM_VERSION=3.15.2
+
 KIND_VERSION=0.23.0
 
 KUBE_VERSION=1.30.2
@@ -203,6 +205,21 @@ function install_kustomize() {
   fi
 
   kustomize version
+}
+
+function install_helm() {
+  if command_exist helm; then
+    return 0
+  fi
+  mkdir -p "${LOCAL_BIN_DIR}"
+  wget "https://get.helm.sh/helm-v${HELM_VERSION}-$(runtime_os)-$(runtime_arch).tar.gz" -O helm.tar.gz
+  tar xzf "helm.tar.gz $(runtime_os)-$(runtime_arch)/helm" --strip-components=1 -C "${LOCAL_BIN_DIR}"
+  rm helm.tar.gz
+  if ! command_exist helm; then
+    echo helm is installed but not effective >&2
+    return 1
+  fi
+  helm version
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
