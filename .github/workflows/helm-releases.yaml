@@ -36,5 +36,8 @@ jobs:
         commit-message: Release charts
         delete-branch: true
         title: 'Release charts'
+        labels: |
+          ok-to-test
+          release-note-none
         body: |
           Release charts
