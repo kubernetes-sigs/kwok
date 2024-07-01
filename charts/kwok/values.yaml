@@ -1,0 +1,19 @@
+image:
+  pullPolicy: IfNotPresent
+  repository: registry.k8s.io/kwok/kwok
+  # Overrides the image tag whose default is v{{ .Chart.AppVersion }}
+  tag: ""
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: "kwok-controller"
+
+podSecurityContext: {}
+securityContext: {}
+
+nodeSelector: {}
+resources: {}
+affinity: {}
+
+replicas: 1

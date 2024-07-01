@@ -98,6 +98,11 @@ if [[ "${VERIFY_STAGES:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-stages.sh || failed+=(stages)
 fi
 
+if [[ "${VERIFY_HELM_CHARTS:-true}" == "true" ]]; then
+  echo "[*] Verifying helm charts..."
+  "${ROOT_DIR}"/hack/verify-helm-charts.sh || failed+=(helm-charts)
+fi
+
 if [[ "${VERIFY_DEPENDENCIES_VERSION:-true}" == "true" ]]; then
   echo "[*] Verifying dependencies version..."
   "${ROOT_DIR}"/hack/verify-dependencies-version.sh || failed+=(dependencies-version)

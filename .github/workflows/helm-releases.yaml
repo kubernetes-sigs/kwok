@@ -1,0 +1,40 @@
+name: Releases Charts
+
+on:
+  push:
+    branches:
+    - release-*
+    - main
+    paths:
+    - charts/kwok/Chart.yaml
+    - charts/stage-fast/Chart.yaml
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  releases:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+
+    - name: Upload blob and build index
+      run: ./hack/releases-helm-charts.sh
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v6
+      with:
+        add-paths: |
+          site/static/charts/index.yaml
+        token: ${{ env.GH_TOKEN }}
+        branch: dependabot/bump-chart-releases
+        commit-message: Release charts
+        delete-branch: true
+        title: 'Release charts'
+        body: |
+          Release charts
