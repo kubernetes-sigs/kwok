@@ -21,21 +21,10 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
-function format() {
-  echo "Update yaml format"
-  mapfile -t findfiles < <(find . \( \
-    -iname "*.yaml" \
-    -o -iname "*.yml" \
-    \) \
-    -not \( \
-    -path ./vendor/\* \
-    -o -path ./demo/node_modules/\* \
-    -o -path ./site/themes/\* \
-    -o -path ./kustomize/crd/bases/\* \
-    -o -path ./kustomize/rbac/\* \
-    -o -path ./charts/kwok/templates/\* \
-    \))
-  go run github.com/google/yamlfmt/cmd/yamlfmt@v0.11.0 -conf .yamlfmt.yaml "${findfiles[@]}"
+function check() {
+  echo "Verify helm charts"
+  "${ROOT_DIR}"/hack/update-helm-charts.sh
+  git --no-pager diff --exit-code
 }
 
-cd "${ROOT_DIR}" && format
+cd "${ROOT_DIR}" && check

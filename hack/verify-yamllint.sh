@@ -55,6 +55,7 @@ function check() {
     -path ./vendor/\* \
     -o -path ./demo/node_modules/\* \
     -o -path ./site/themes/\* \
+    -o -path ./charts/kwok/templates/\* \
     \))
 
   "${COMMAND[@]}" -s -c .yamllint.conf "${findfiles[@]}"

@@ -2,6 +2,7 @@
 /bin/
 /artifacts/
 /workdir/
+*.tgz
 
 # used for the code generators only
 /vendor/

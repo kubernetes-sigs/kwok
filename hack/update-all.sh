@@ -83,6 +83,11 @@ if [[ "${UPDATE_STAGES:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/update-stages.sh || failed+=(stages)
 fi
 
+if [[ "${UPDATE_HELM_CHARTS:-true}" == "true" ]]; then
+  echo "[*] Update helm charts..."
+  "${ROOT_DIR}"/hack/update-helm-charts.sh || failed+=(helm-charts)
+fi
+
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Update failed for: ${failed[*]}"
   exit 1

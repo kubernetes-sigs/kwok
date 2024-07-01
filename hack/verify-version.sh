@@ -21,21 +21,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
-function format() {
-  echo "Update yaml format"
-  mapfile -t findfiles < <(find . \( \
-    -iname "*.yaml" \
-    -o -iname "*.yml" \
-    \) \
-    -not \( \
-    -path ./vendor/\* \
-    -o -path ./demo/node_modules/\* \
-    -o -path ./site/themes/\* \
-    -o -path ./kustomize/crd/bases/\* \
-    -o -path ./kustomize/rbac/\* \
-    -o -path ./charts/kwok/templates/\* \
-    \))
-  go run github.com/google/yamlfmt/cmd/yamlfmt@v0.11.0 -conf .yamlfmt.yaml "${findfiles[@]}"
-}
-
-cd "${ROOT_DIR}" && format
+go run sigs.k8s.io/zeitgeist@v0.5.3 validate \
+  --local-only \
+  --base-path "${ROOT_DIR}" \
+  --config "${ROOT_DIR}"/.dependencies.yaml \
+  2> >(sed -e $'s/\x1b\[[0-9;]*m//g' >&2)

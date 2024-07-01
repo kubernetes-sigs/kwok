@@ -1,0 +1,16 @@
+apiVersion: v2
+description: KWOK (Kubernetes WithOut Kubelet)
+type: application
+home: https://kwok.sigs.k8s.io
+icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+keywords:
+- kubernetes
+- kwok
+sources:
+- https://github.com/kubernetes-sigs/kwok
+name: kwok
+maintainers:
+- name: wzshiming
+  email: wzshiming@hotmail.com
+appVersion: v0.5.2
+version: 0.0.1
