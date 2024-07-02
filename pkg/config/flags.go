@@ -56,12 +56,12 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 	configPaths = loadConfig(configPaths, defaultConfigPath, file.Exists(defaultConfigPath))
 
 	logger := log.FromContext(ctx)
-	objs, err := Load(ctx, configPaths...)
+	objs, unsupported, err := Load(ctx, configPaths...)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(objs) == 0 {
+	if len(objs) == 0 && len(unsupported) == 0 {
 		logger.Debug("Load config",
 			"path", configPaths,
 			"err", "empty config",
@@ -70,11 +70,11 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 		logger.Debug("Load config",
 			"path", configPaths,
 			"count", len(objs),
-			"content", objs,
+			"unsupported", len(unsupported),
 		)
 	}
 
-	return setupContext(ctx, objs), nil
+	return setupContext(ctx, objs, unsupported), nil
 }
 
 // loadConfig loads the config paths.

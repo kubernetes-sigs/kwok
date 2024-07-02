@@ -30,7 +30,7 @@ func TestContext(t *testing.T) {
 		&metav1.ObjectMeta{
 			Name: "first",
 		},
-	})
+	}, nil)
 
 	addToContext(ctx, &metav1.ObjectMeta{
 		Name: "second",
