@@ -18,6 +18,7 @@ package expression
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -25,6 +26,8 @@ import (
 type DurationGetter interface {
 	// Get returns a duration value.
 	Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool)
+	// Info return a duration information
+	Info(ctx context.Context, v interface{}) (string, bool)
 }
 
 type durationFrom struct {
@@ -78,6 +81,33 @@ func (d *durationFrom) Get(ctx context.Context, v interface{}, now time.Time) (t
 	return 0, false
 }
 
+func (d *durationFrom) Info(ctx context.Context, v interface{}) (string, bool) {
+	out, err := d.query.Execute(ctx, v)
+	if err != nil {
+		return "", false
+	}
+	if len(out) == 0 {
+		if d.value != nil {
+			return d.value.String(), true
+		}
+		return "", false
+	}
+	if t, ok := out[0].(string); ok {
+		if t == "" {
+			return "", false
+		}
+		_, err := time.Parse(time.RFC3339Nano, t)
+		if err == nil {
+			return fmt.Sprintf("(now - %q)", t), true
+		}
+		du, err := time.ParseDuration(t)
+		if err == nil {
+			return du.String(), true
+		}
+	}
+	return "", false
+}
+
 type durationNoop struct {
 }
 
@@ -85,8 +115,16 @@ func (durationNoop) Get(ctx context.Context, v interface{}, now time.Time) (time
 	return 0, false
 }
 
+func (durationNoop) Info(ctx context.Context, v interface{}) (string, bool) {
+	return "", false
+}
+
 type duration int64
 
 func (i duration) Get(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
 	return time.Duration(i), true
+}
+
+func (i duration) Info(ctx context.Context, v interface{}) (string, bool) {
+	return time.Duration(i).String(), false
 }

@@ -1,0 +1,50 @@
+apiGroup: v1
+kind: Pod
+name: example-pod
+stages:
+- delay:
+    max: 5s
+    min: 1s
+  next:
+  - data:
+    - op: add
+      path: /metadata/finalizers
+      value:
+      - kwok.x-k8s.io/fake
+    kind: patch
+    type: application/json-patch+json
+  - data:
+      status:
+        conditions:
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          status: "True"
+          type: Initialized
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: 'containers with unready status: [ container ]'
+          reason: ContainersNotReady
+          status: "False"
+          type: Ready
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: 'containers with unready status: [ container ]'
+          reason: ContainersNotReady
+          status: "False"
+          type: ContainersReady
+        containerStatuses:
+        - image: image
+          name: container
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            waiting:
+              reason: ContainerCreating
+        hostIP: <NodeIPWith(<nil>)>
+        phase: Pending
+        podIP: <PodIPWith(<nil>, false, "", "example-pod", "")>
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-create
