@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-new-limit
+  namespace: default
+spec:
+  containers:
+  - name: fake-container
+    image: fake-image
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        cpu: "0.4"
+      limits:
+        cpu: "0.4"

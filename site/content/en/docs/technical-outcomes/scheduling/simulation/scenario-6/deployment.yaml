@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-app
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: fake-app
+  template:
+    metadata:
+      labels:
+        app: fake-app
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: "topology.kubernetes.io/region"
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: fake-app
+      containers:
+      - name: fake-container
+        image: fake

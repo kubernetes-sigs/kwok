@@ -1,0 +1,38 @@
+# Scheduling pods with resource requests and limits
+
+## Create cluster
+kwokctl create cluster
+
+## View cluster
+kwokctl get clusters
+
+## Deploy node
+kubectl apply -f node.yaml
+
+## Wait for a while so the nodes are running
+sleep 5
+
+## Deploy pods
+kubectl apply -f pod-1.yaml
+
+kubectl apply -f pod-2.yaml
+
+## Wait for a while so the pods are scheduled
+sleep 5
+
+## View the node the pod is scheduled to
+kubectl get pod -o wide
+
+## View node resource usage
+kubectl describe node node-1 | awk '/Allocated resources:/,/ephemeral-storage/'
+
+## Wait for a while so you can observe the result
+sleep 10
+
+kubectl describe node node-2 | awk '/Allocated resources:/,/ephemeral-storage/'
+
+## Wait for a while so you can observe the result
+sleep 10
+
+## Delete the cluster
+kwokctl delete cluster

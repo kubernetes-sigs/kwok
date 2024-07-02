@@ -1,0 +1,28 @@
+# Scheduling a pod to a particular node with node-affinity 
+
+## Create cluster
+kwokctl create cluster
+
+## View clusters
+kwokctl get clusters
+
+## Deploy nodes
+kubectl apply -f node.yaml
+
+## Wait for a while so the nodes are running
+sleep 5
+
+## Label node-1
+kubectl label node node-1 region=us-west-2
+
+## Deploy pod
+kubectl apply -f pod.yaml
+
+## Wait for a while so the pod is scheduled
+sleep 5
+
+## View the node the pod is scheduled to
+kubectl get pod -o wide
+
+## Delete the cluster
+kwokctl delete cluster
