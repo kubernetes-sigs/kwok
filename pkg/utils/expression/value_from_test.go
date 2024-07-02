@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ import (
 
 func TestDurationFrom_Get(t *testing.T) {
 	now := time.Now().Truncate(time.Second)
-	nowPlugOneSecond := metav1.NewTime(now.Add(time.Second))
+	nowPlusOneSecond := metav1.NewTime(now.Add(time.Second))
+
 	type args struct {
 		value *time.Duration
 		src   *string
@@ -43,6 +44,7 @@ func TestDurationFrom_Get(t *testing.T) {
 		wantOk  bool
 	}{
 		{
+			name: "No value, no src",
 			args: args{
 				value: nil,
 				src:   nil,
@@ -51,6 +53,7 @@ func TestDurationFrom_Get(t *testing.T) {
 			wantOk: false,
 		},
 		{
+			name: "Value 0, no src",
 			args: args{
 				value: format.Ptr(time.Duration(0)),
 				src:   nil,
@@ -60,16 +63,241 @@ func TestDurationFrom_Get(t *testing.T) {
 			wantOk: true,
 		},
 		{
+			name: "Value 1, valid src",
 			args: args{
 				value: format.Ptr(time.Duration(1)),
 				src:   format.Ptr(".metadata.deletionTimestamp"),
 				v: corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						DeletionTimestamp: &nowPlugOneSecond,
+						DeletionTimestamp: &nowPlusOneSecond,
 					},
 				},
 			},
 			want:   1 * time.Second,
+			wantOk: true,
+		},
+		{
+			name: "Valid RFC3339 time src",
+			args: args{
+				value: nil,
+				src:   format.Ptr(".metadata.annotations.validRFC3339"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validRFC3339": now.Add(time.Hour).Format(time.RFC3339Nano),
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Invalid RFC3339 time src",
+			args: args{
+				value: nil,
+				src:   format.Ptr(".metadata.annotations.invalidRFC3339"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"invalidRFC3339": "invalid-time",
+						},
+					},
+				},
+			},
+			want:   0,
+			wantOk: false,
+		},
+		{
+			name: "Valid duration string src",
+			args: args{
+				value: nil,
+				src:   format.Ptr(".metadata.annotations.validDuration"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validDuration": "1h",
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Empty string src",
+			args: args{
+				value: nil,
+				src:   format.Ptr(".metadata.annotations.emptyString"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"emptyString": "",
+						},
+					},
+				},
+			},
+			want:   0,
+			wantOk: false,
+		},
+		{
+			name: "Noop duration",
+			args: args{
+				value: nil,
+				src:   nil,
+				v:     nil,
+			},
+			want:   0,
+			wantOk: false,
+		},
+		{
+			name: "Simple integer duration",
+			args: args{
+				value: format.Ptr(time.Duration(5)),
+				src:   nil,
+				v:     nil,
+			},
+			want:   5,
+			wantOk: true,
+		},
+		{
+			name: "Nil value with nil src",
+			args: args{
+				value: nil,
+				src:   nil,
+				v:     corev1.Pod{},
+			},
+			want:   0,
+			wantOk: false,
+		},
+		{
+			name: "Nil value with valid src",
+			args: args{
+				value: nil,
+				src:   format.Ptr(".metadata.deletionTimestamp"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						DeletionTimestamp: &nowPlusOneSecond,
+					},
+				},
+			},
+			want:   1 * time.Second,
+			wantOk: true,
+		},
+		{
+			name: "Valid duration string with nil value",
+			args: args{
+				value: nil,
+				src:   format.Ptr(".metadata.annotations.validDuration"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validDuration": "2h",
+						},
+					},
+				},
+			},
+			want:   2 * time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Non-existent field in src",
+			args: args{
+				value: nil,
+				src:   format.Ptr(".metadata.nonExistentField"),
+				v:     corev1.Pod{},
+			},
+			want:   0,
+			wantOk: false,
+		},
+		{
+			name: "Non-string result from query",
+			args: args{
+				value: nil,
+				src:   format.Ptr(".spec.containers"),
+				v: corev1.Pod{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{Name: "container1"},
+						},
+					},
+				},
+			},
+			want:   0,
+			wantOk: false,
+		},
+		{
+			name: "Value present with valid RFC3339 time src",
+			args: args{
+				value: format.Ptr(time.Duration(5)),
+				src:   format.Ptr(".metadata.annotations.validRFC3339"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validRFC3339": now.Add(time.Hour).Format(time.RFC3339Nano),
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Value present with valid duration string src",
+			args: args{
+				value: format.Ptr(time.Duration(5)),
+				src:   format.Ptr(".metadata.annotations.validDuration"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validDuration": "1h",
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Value present with non-existent field in src",
+			args: args{
+				value: format.Ptr(time.Duration(5)),
+				src:   format.Ptr(".metadata.nonExistentField"),
+				v:     corev1.Pod{},
+			},
+			want:   5,
+			wantOk: true,
+		},
+		{
+			name: "Value 0 with valid RFC3339 time src",
+			args: args{
+				value: format.Ptr(time.Duration(0)),
+				src:   format.Ptr(".metadata.annotations.validRFC3339"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validRFC3339": now.Add(time.Hour).Format(time.RFC3339Nano),
+						},
+					},
+				},
+			},
+			want:   time.Hour,
+			wantOk: true,
+		},
+		{
+			name: "Value 0 with valid duration string src",
+			args: args{
+				value: format.Ptr(time.Duration(0)),
+				src:   format.Ptr(".metadata.annotations.validDuration"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"validDuration": "1h",
+						},
+					},
+				},
+			},
+			want:   time.Hour,
 			wantOk: true,
 		},
 	}
