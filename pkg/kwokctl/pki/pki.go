@@ -23,6 +23,7 @@ import (
 	"net"
 	"time"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
@@ -73,6 +74,44 @@ func GeneratePki(pkiPath string, sans ...string) error {
 	err = WriteCertAndKey(pkiPath, "admin", cert, key)
 	if err != nil {
 		return fmt.Errorf("failed to write admin cert and key: %w", err)
+	}
+
+	// Generate certificates for components
+	components := []internalversion.Component{
+		{
+			Name:  "kube-controller-manager",
+			User:  "system:kube-controller-manager",
+			Links: []string{},
+			Binary: "",
+			Image: "",
+			Command: []string{},
+			Args: []string{},
+			WorkDir: "",
+			Ports: []internalversion.Port{},
+			Envs: []internalversion.Env{},
+			Volumes: []internalversion.Volume{},
+			Metric: nil,
+			MetricsDiscovery: nil,
+			Version: "",
+		},
+		// Add other components here
+	}
+
+	for _, component := range components {
+		if component.Name == "kube-controller-manager" {
+		componentSANs := DefaultAltNames
+		if len(sans) != 0 {
+			componentSANs = append(componentSANs, sans...)
+		}
+		componentCert, componentKey, err := GenerateSignCert(component.User, caCert, caKey, notBefore, notAfter, DefaultGroups, componentSANs)
+		if err != nil {
+			return fmt.Errorf("failed to generate cert and key for %s: %w", component.Name, err)
+		}
+		err = WriteCertAndKey(pkiPath, component.Name, componentCert, componentKey)
+		if err != nil {
+			return fmt.Errorf("failed to write cert and key for %s: %w", component.Name, err)
+		}
+	}
 	}
 	return nil
 }
