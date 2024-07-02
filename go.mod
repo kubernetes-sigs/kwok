@@ -17,7 +17,7 @@ require (
 	github.com/itchyny/gojq v0.12.14
 	github.com/nxadm/tail v1.4.11
 	github.com/prometheus/client_golang v1.18.0
-	github.com/prometheus/client_model v0.5.0
+	github.com/prometheus/client_model v0.6.1
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/wzshiming/cmux v0.3.3
