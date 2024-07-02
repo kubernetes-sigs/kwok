@@ -51,15 +51,15 @@ var (
 
 	DashboardMetricsScraperVersion = "1.0.9"
 
-	PrometheusVersion      = "2.49.1"
+	PrometheusVersion      = "2.53.0"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
 
-	JaegerVersion      = "1.53.0"
+	JaegerVersion      = "1.58.1"
 	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
 	JaegerImagePrefix  = "docker.io/jaegertracing"
 
-	MetricsServerVersion      = "0.7.0"
+	MetricsServerVersion      = "0.7.1"
 	MetricsServerBinaryPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 	MetricsServerImagePrefix  = "registry.k8s.io/metrics-server"
 
