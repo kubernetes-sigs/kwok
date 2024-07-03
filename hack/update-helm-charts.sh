@@ -45,6 +45,13 @@ function sync_stage_to_chart() {
     >"${dest}"
 }
 
+function sync_to_chart() {
+  local src=$1
+  local dest=$2
+
+  cp "${src}" "${dest}"
+}
+
 function sync() {
   sync_object_to_chart kustomize/rbac/role.yaml charts/kwok/templates/role.yaml
   sync_object_to_chart kustomize/rbac/role_binding.yaml charts/kwok/templates/role_binding.yaml
@@ -56,6 +63,9 @@ function sync() {
 
   sync_stage_to_chart kustomize/stage/node/fast/node-initialize.yaml charts/stage-fast/templates/node-initialize.yaml
   sync_stage_to_chart kustomize/stage/node/heartbeat-with-lease/node-heartbeat-with-lease.yaml charts/stage-fast/templates/node-heartbeat-with-lease.yaml
+
+  sync_stage_to_chart kustomize/metrics/resource/metrics-resource.yaml charts/metrics-usage/templates/metrics-resource.yaml
+  sync_stage_to_chart kustomize/metrics/usage/usage-from-annotation.yaml charts/metrics-usage/templates/usage-from-annotation.yaml
 }
 
 cd "${ROOT_DIR}" && sync

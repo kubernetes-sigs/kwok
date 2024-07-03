@@ -1,0 +1,21 @@
+apiVersion: v2
+description: Default metrics usage policy of KWOK (Kubernetes WithOut Kubelet)
+type: application
+home: https://kwok.sigs.k8s.io
+icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+keywords:
+- kubernetes
+- kwok
+- kwok metrics usage policy
+sources:
+- https://github.com/kubernetes-sigs/kwok
+name: metrics-usage
+maintainers:
+- name: wzshiming
+  email: wzshiming@hotmail.com
+appVersion: v0.5.2
+version: 0.0.1
+dependencies:
+- name: kwok
+  version: 0.0.1
+  repository: https://kwok.sigs.k8s.io/charts/

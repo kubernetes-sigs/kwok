@@ -1,0 +1,17 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: ClusterResourceUsage
+metadata:
+  name: usage-from-annotation
+spec:
+  usages:
+  - usage:
+      cpu:
+        expression: |
+          "kwok.x-k8s.io/usage-cpu" in pod.metadata.annotations
+          ? Quantity(pod.metadata.annotations["kwok.x-k8s.io/usage-cpu"])
+          : Quantity("1m")
+      memory:
+        expression: |
+          "kwok.x-k8s.io/usage-memory" in pod.metadata.annotations
+          ? Quantity(pod.metadata.annotations["kwok.x-k8s.io/usage-memory"])
+          : Quantity("1Mi")
