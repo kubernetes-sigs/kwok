@@ -3,7 +3,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/etcd
-docker pull docker.io/kindest/node:v1.30.0
+docker pull docker.io/kindest/node:v1.30.2
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
@@ -163,7 +163,7 @@ spec:
     name: tmp-controller
 status: {}
 EOF
-docker pull docker.io/prom/prometheus:v2.49.1
+docker pull docker.io/prom/prometheus:v2.53.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
 apiVersion: v1
 kind: Pod
@@ -182,7 +182,7 @@ spec:
     env:
     - name: TEST_KEY
       value: TEST_VALUE
-    image: docker.io/prom/prometheus:v2.49.1
+    image: docker.io/prom/prometheus:v2.53.0
     imagePullPolicy: Never
     name: prometheus
     ports:
@@ -324,9 +324,9 @@ scrape_configs:
     - 127.0.0.1:9090
 EOF
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.30.0 --wait 29m
+KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.30.2 --wait 29m
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image localhost/kwok:test --name kwok-<CLUSTER_NAME>
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v2.49.1 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v2.53.0 --name kwok-<CLUSTER_NAME>
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF

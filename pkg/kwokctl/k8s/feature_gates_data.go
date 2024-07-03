@@ -1210,6 +1210,12 @@ var rawData = []FeatureSpec{
 	{"StreamingProxyRedirects", Beta, 6, 17},
 	{"StreamingProxyRedirects", Deprecated, 18, 23},
 
+	// StrictCostEnforcementForVAP
+	{"StrictCostEnforcementForVAP", Beta, 30, -1},
+
+	// StrictCostEnforcementForWebhooks
+	{"StrictCostEnforcementForWebhooks", Beta, 30, -1},
+
 	// StructuredAuthenticationConfiguration
 	{"StructuredAuthenticationConfiguration", Alpha, 29, 29},
 	{"StructuredAuthenticationConfiguration", Beta, 30, -1},
