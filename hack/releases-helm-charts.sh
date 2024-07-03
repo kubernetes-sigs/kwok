@@ -86,3 +86,4 @@ index_dir="${ROOT_DIR}/site/static/charts"
 
 package_and_index "${index_dir}" "${chart_dir}/kwok" "kwok-chart" || :
 package_and_index "${index_dir}" "${chart_dir}/stage-fast" "kwok-stage-fast-chart" || :
+package_and_index "${index_dir}" "${chart_dir}/metrics-usage" "kwok-metrics-usage-chart" || :

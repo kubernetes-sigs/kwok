@@ -10,6 +10,7 @@ on:
     - kustomize/**/*
     - go.mod
     - .github/workflows/test.yaml
+    - '!hack/releases-helm-chart.sh'
   push:
     paths:
     - pkg/**/*
@@ -19,6 +20,7 @@ on:
     - kustomize/**/*
     - go.mod
     - .github/workflows/test.yaml
+    - '!hack/releases-helm-chart.sh'
 
 env:
   DOCKER_CLI_EXPERIMENTAL: "enabled"

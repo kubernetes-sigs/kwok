@@ -1,0 +1,12 @@
+remote: origin
+target-branch: main
+
+validate-maintainers: false
+check-version-increment: false
+
+chart-repos:
+- kwok=https://kwok.sigs.k8s.io/charts/
+helm-extra-args: --timeout 800s
+
+chart-dirs:
+- charts

@@ -8,6 +8,7 @@ on:
     paths:
     - charts/kwok/Chart.yaml
     - charts/stage-fast/Chart.yaml
+    - charts/metrics-usage/Chart.yaml
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

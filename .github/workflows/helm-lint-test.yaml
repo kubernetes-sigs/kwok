@@ -4,9 +4,11 @@ on:
   pull_request:
     paths:
     - charts/**/*
+    - .ct.yaml
   push:
     paths:
     - charts/**/*
+    - .ct.yaml
 
 jobs:
   lint-test:
@@ -40,7 +42,7 @@ jobs:
 
     - name: Run chart-testing (lint)
       if: steps.list-changed.outputs.changed == 'true'
-      run: ct lint --target-branch ${{ github.event.repository.default_branch }}
+      run: ct lint --target-branch ${{ github.event.repository.default_branch }} --config ./.ct.yaml
 
     - name: Create kind cluster
       if: steps.list-changed.outputs.changed == 'true'
@@ -48,7 +50,7 @@ jobs:
 
     - name: Run chart-testing (install)
       if: steps.list-changed.outputs.changed == 'true'
-      run: ct install --target-branch ${{ github.event.repository.default_branch }}
+      run: ct install --target-branch ${{ github.event.repository.default_branch }} --config ./.ct.yaml
 
   linter-artifacthub:
     runs-on: ubuntu-latest
