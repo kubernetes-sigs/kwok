@@ -43,4 +43,4 @@ entries:
     urls:
     - https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/kwok-stage-fast-chart-0.0.1.tgz
     version: 0.0.1
-generated: "2024-07-01T13:25:24.505842662Z"
+generated: "2024-07-03T08:25:32.56870547Z"
