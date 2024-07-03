@@ -21,6 +21,28 @@ entries:
     urls:
     - https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/kwok-chart-0.0.1.tgz
     version: 0.0.1
+  metrics-usage:
+  - apiVersion: v2
+    appVersion: v0.5.2
+    created: "2024-07-03T10:24:41.875215613Z"
+    description: Default metrics usage policy of KWOK (Kubernetes WithOut Kubelet)
+    digest: aa8ff21ac9878940f7875bdaa9d71a70315f42c29b7ed8cfe9c9836026a54c81
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    - kwok metrics usage policy
+    maintainers:
+    - email: wzshiming@hotmail.com
+      name: wzshiming
+    name: metrics-usage
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/kwok-metrics-usage-chart-0.0.1.tgz
+    version: 0.0.1
   stage-fast:
   - apiVersion: v2
     appVersion: v0.5.2
@@ -43,4 +65,4 @@ entries:
     urls:
     - https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/kwok-stage-fast-chart-0.0.1.tgz
     version: 0.0.1
-generated: "2024-07-01T13:25:24.505842662Z"
+generated: "2024-07-03T10:24:41.874327983Z"
