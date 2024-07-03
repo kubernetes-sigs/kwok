@@ -28,10 +28,10 @@ kwokctl create cluster [flags]
       --extra-args component=key=value          Pass a single extra arg key-value pair to the component in the format component=key=value
       --heartbeat-factor float                  Scale factor for all about heartbeat (default 5)
   -h, --help                                    help for cluster
-      --jaeger-binary string                    Binary of Jaeger, only for binary runtime (default "https://github.com/jaegertracing/jaeger/releases/download/v1.53.0/jaeger-1.53.0-linux-amd64.tar.gz#jaeger-all-in-one")
+      --jaeger-binary string                    Binary of Jaeger, only for binary runtime (default "https://github.com/jaegertracing/jaeger/releases/download/v1.58.1/jaeger-1.58.1-linux-amd64.tar.gz#jaeger-all-in-one")
       --jaeger-image string                     Image of Jaeger, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_JAEGER_IMAGE_PREFIX}/all-in-one:${KWOK_JAEGER_VERSION}'
-                                                 (default "docker.io/jaegertracing/all-in-one:1.53.0")
+                                                 (default "docker.io/jaegertracing/all-in-one:1.58.1")
       --jaeger-port uint32                      Port to expose Jaeger UI
       --kind-binary string                      Binary of kind, only for kind/kind-podman runtime
                                                  (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.23.0/kind-linux-amd64")
@@ -69,15 +69,15 @@ kwokctl create cluster [flags]
       --kwok-controller-image string            Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
                                                  (default "registry.k8s.io/kwok/kwok:v0.6.0")
-      --metrics-server-binary string            Binary of metrics-server, only for binary runtime (default "https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.0/metrics-server-linux-amd64")
+      --metrics-server-binary string            Binary of metrics-server, only for binary runtime (default "https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.1/metrics-server-linux-amd64")
       --metrics-server-image string             Image of metrics-server, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_METRICS_SERVER_IMAGE_PREFIX}/metrics-server:${KWOK_METRICS_SERVER_VERSION}'
-                                                 (default "registry.k8s.io/metrics-server/metrics-server:v0.7.0")
+                                                 (default "registry.k8s.io/metrics-server/metrics-server:v0.7.1")
       --node-lease-duration-seconds uint        Duration of node lease in seconds (default 40)
-      --prometheus-binary string                Binary of Prometheus, only for binary runtime (default "https://github.com/prometheus/prometheus/releases/download/v2.49.1/prometheus-2.49.1.linux-amd64.tar.gz#prometheus")
+      --prometheus-binary string                Binary of Prometheus, only for binary runtime (default "https://github.com/prometheus/prometheus/releases/download/v2.53.0/prometheus-2.53.0.linux-amd64.tar.gz#prometheus")
       --prometheus-image string                 Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'
-                                                 (default "docker.io/prom/prometheus:v2.49.1")
+                                                 (default "docker.io/prom/prometheus:v2.53.0")
       --prometheus-port uint32                  Port to expose Prometheus metrics
       --quiet-pull                              Pull without printing progress information
       --runtime string                          Runtime of the cluster (binary or docker or finch or kind or kind-finch or kind-lima or kind-nerdctl or kind-podman or lima or nerdctl or podman)

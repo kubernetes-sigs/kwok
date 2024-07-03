@@ -10,7 +10,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 # Download https://dl.k8s.io/release/v1.30.2/bin/<OS>/<ARCH>/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
 # Download https://dl.k8s.io/release/v1.30.2/bin/<OS>/<ARCH>/kube-scheduler to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
 # Download <ROOT_DIR>/bin/<OS>/<ARCH>/kwok to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
-# Download https://github.com/prometheus/prometheus/releases/download/v2.49.1/prometheus-2.49.1.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
+# Download https://github.com/prometheus/prometheus/releases/download/v2.53.0/prometheus-2.53.0.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 global:
   scrape_interval: 15s
