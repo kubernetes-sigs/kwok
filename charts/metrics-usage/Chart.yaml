@@ -15,7 +15,3 @@ maintainers:
   email: wzshiming@hotmail.com
 appVersion: v0.5.2
 version: 0.0.1
-dependencies:
-- name: kwok
-  version: 0.0.1
-  repository: https://kwok.sigs.k8s.io/charts/
