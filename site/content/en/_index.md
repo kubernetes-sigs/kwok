@@ -18,6 +18,7 @@ KWOK stands for Kubernetes WithOut Kubelet. So far, it provides two tools:
 
 - `kwok` is the cornerstone of this project, responsible for simulating the lifecycle of fake nodes, pods, and other Kubernetes API resources.
 - `kwokctl` is a CLI tool designed to streamline the creation and management of clusters, with nodes simulated by `kwok`.
+- 🚧 `kwok-operator` is a Kubernetes operator for this project, responsible for managing the number of `kwok` and managing the number of any Kubernetes API resource.
 
 ### What's the difference with `kubemark`
 
