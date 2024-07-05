@@ -65,7 +65,7 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 		return nil, err
 	}
 
-	lcstages, err := lc.ListAllPossible(testTarget.GetLabels(), testTarget.GetAnnotations(), testTarget)
+	lcstages, err := lc.ListAllPossible(ctx, testTarget.GetLabels(), testTarget.GetAnnotations(), testTarget)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +94,8 @@ func testingStage(ctx context.Context, testTarget Obj, stage *lifecycle.Stage) (
 		meta["delay"] = delay
 	}
 
-	weight := stage.Weight()
-	if weight != 0 {
+	weight, ok := stage.Weight(ctx, testTarget)
+	if ok {
 		meta["weight"] = weight
 	}
 

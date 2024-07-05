@@ -63,7 +63,7 @@ func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*Sta
 }
 
 // ListAllPossible returns all possible stages.
-func (s Lifecycle) ListAllPossible(label, annotation labels.Set, data interface{}) ([]*Stage, error) {
+func (s Lifecycle) ListAllPossible(ctx context.Context, label, annotation labels.Set, data interface{}) ([]*Stage, error) {
 	data, err := expression.ToJSONStandard(data)
 	if err != nil {
 		return nil, err
@@ -79,17 +79,41 @@ func (s Lifecycle) ListAllPossible(label, annotation labels.Set, data interface{
 		return stages, nil
 	}
 
-	totalWeights := 0
+	var weights = make([]int64, 0, len(stages))
+	var totalWeights int64
+	var countError int
 	for _, stage := range stages {
-		totalWeights += stage.weight
+		w, ok := stage.Weight(ctx, data)
+		if ok {
+			totalWeights += w
+			weights = append(weights, w)
+		} else {
+			weights = append(weights, -1)
+			countError++
+		}
 	}
-	if totalWeights == 0 {
+
+	if countError == len(stages) {
 		return stages, nil
 	}
 
+	if totalWeights == 0 {
+		if countError == 0 {
+			return stages, nil
+		}
+		stagesWithWeights := make([]*Stage, 0, len(stages))
+		for i, stage := range stages {
+			if weights[i] < 0 {
+				continue
+			}
+			stagesWithWeights = append(stagesWithWeights, stage)
+		}
+		return stagesWithWeights, nil
+	}
+
 	stagesWithWeights := make([]*Stage, 0, len(stages))
-	for _, stage := range stages {
-		if stage.weight == 0 {
+	for i, stage := range stages {
+		if weights[i] <= 0 {
 			continue
 		}
 		stagesWithWeights = append(stagesWithWeights, stage)
@@ -98,7 +122,7 @@ func (s Lifecycle) ListAllPossible(label, annotation labels.Set, data interface{
 }
 
 // Match returns matched stage.
-func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*Stage, error) {
+func (s Lifecycle) Match(ctx context.Context, label, annotation labels.Set, data interface{}) (*Stage, error) {
 	data, err := expression.ToJSONStandard(data)
 	if err != nil {
 		return nil, err
@@ -113,22 +137,52 @@ func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*Stage
 	if len(stages) == 1 {
 		return stages[0], nil
 	}
-	totalWeights := 0
+
+	var weights = make([]int64, 0, len(stages))
+	var totalWeights int64
+	var countError int
 	for _, stage := range stages {
-		totalWeights += stage.weight
+		w, ok := stage.Weight(ctx, data)
+		if ok {
+			totalWeights += w
+			weights = append(weights, w)
+		} else {
+			weights = append(weights, -1)
+			countError++
+		}
 	}
-	if totalWeights == 0 {
+
+	if countError == len(stages) {
 		//nolint:gosec
 		return stages[rand.Intn(len(stages))], nil
 	}
 
+	if totalWeights == 0 {
+		if countError == 0 {
+			//nolint:gosec
+			return stages[rand.Intn(len(stages))], nil
+		}
+
+		stagesWithWeights := make([]*Stage, 0, len(stages))
+		for i, stage := range stages {
+			if weights[i] < 0 {
+				continue
+			}
+			stagesWithWeights = append(stagesWithWeights, stage)
+		}
+
+		//nolint:gosec
+		off := rand.Intn(len(stagesWithWeights))
+		return stagesWithWeights[off], nil
+	}
+
 	//nolint:gosec
-	off := rand.Intn(totalWeights)
-	for _, stage := range stages {
-		if stage.weight == 0 {
+	off := rand.Int63n(totalWeights)
+	for i, stage := range stages {
+		if weights[i] <= 0 {
 			continue
 		}
-		off -= stage.weight
+		off -= weights[i]
 		if off < 0 {
 			return stage, nil
 		}
@@ -195,11 +249,17 @@ func NewStage(s *internalversion.Stage) (*Stage, error) {
 		}
 	}
 
-	if weight := s.Spec.Weight; weight > 1 {
-		stage.weight = weight
-	} else {
-		stage.weight = 0
+	var weightFrom *string
+	if wf := s.Spec.WeightFrom; wf != nil {
+		weightFrom = &wf.ExpressionFrom
 	}
+
+	weightGetter, err := expression.NewIntFrom(format.Ptr[int64](int64(s.Spec.Weight)), weightFrom)
+	if err != nil {
+		return nil, err
+	}
+
+	stage.weight = weightGetter
 
 	stage.immediateNextStage = s.Spec.ImmediateNextStage
 
@@ -213,7 +273,7 @@ type Stage struct {
 	matchAnnotations labels.Selector
 	matchExpressions []*expression.Requirement
 
-	weight int
+	weight expression.IntGetter
 	next   *internalversion.StageNext
 
 	duration       expression.DurationGetter
@@ -296,6 +356,6 @@ func (s *Stage) ImmediateNextStage() bool {
 }
 
 // Weight returns the weight of the stage.
-func (s *Stage) Weight() int {
-	return s.weight
+func (s *Stage) Weight(ctx context.Context, v interface{}) (int64, bool) {
+	return s.weight.Get(ctx, v)
 }

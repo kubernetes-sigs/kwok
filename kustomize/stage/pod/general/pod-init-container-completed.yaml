@@ -17,6 +17,8 @@ spec:
     - key: '.status.initContainerStatuses.[].state.running.startedAt'
       operator: 'Exists'
   weight: 1
+  weightFrom:
+    expressionFrom: '.metadata.annotations["pod-init-container-completed.stage.kwok.x-k8s.io/weight"]'
   delay:
     durationMilliseconds: 1000
     durationFrom:

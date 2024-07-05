@@ -273,6 +273,17 @@ spec:
                   a random stage will be matched as the next stage based on the weight.
                 minimum: 0
                 type: integer
+              weightFrom:
+                description: |-
+                  WeightFrom means is the expression used to get the value.
+                  If it is a number type, convert to int.
+                  If it is a string type, the value get will be parsed by strconv.ParseInt.
+                properties:
+                  expressionFrom:
+                    description: ExpressionFrom is the expression used to get the
+                      value.
+                    type: string
+                type: object
             required:
             - next
             - resourceRef

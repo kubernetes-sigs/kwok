@@ -22,3 +22,4 @@ stages:
     subresource: status
     type: application/merge-patch+json
   stage: pod-complete
+  weight: 0

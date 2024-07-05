@@ -38,6 +38,10 @@ type StageSpec struct {
 	// Weight means when multiple stages share the same ResourceRef and Selector,
 	// a random stage will be matched as the next stage based on the weight.
 	Weight int
+	// WeightFrom means is the expression used to get the value.
+	// If it is a number type, convert to int.
+	// If it is a string type, the value get will be parsed by strconv.ParseInt.
+	WeightFrom *ExpressionFromSource
 	// Delay means there is a delay in this stage.
 	Delay *StageDelay
 	// Next indicates that this stage will be moved to.

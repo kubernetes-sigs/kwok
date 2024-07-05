@@ -1616,6 +1616,21 @@ a random stage will be matched as the next stage based on the weight.</p>
 </tr>
 <tr>
 <td>
+<code>weightFrom</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExpressionFromSource">
+ExpressionFromSource
+</a>
+</em>
+</td>
+<td>
+<p>WeightFrom means is the expression used to get the value.
+If it is a number type, convert to int.
+If it is a string type, the value get will be parsed by strconv.ParseInt.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>delay</code>
 <em>
 <a href="#kwok.x-k8s.io/v1alpha1.StageDelay">
@@ -4827,6 +4842,8 @@ ExpressionFromSource
 <p>
 <em>Appears on: </em>
 <a href="#kwok.x-k8s.io/v1alpha1.StageDelay">StageDelay</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.StageSpec">StageSpec</a>
 </p>
 <p>
 <p>ExpressionFromSource represents a source for the value of a from.</p>
@@ -6468,6 +6485,21 @@ int
 <td>
 <p>Weight means when multiple stages share the same ResourceRef and Selector,
 a random stage will be matched as the next stage based on the weight.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>weightFrom</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExpressionFromSource">
+ExpressionFromSource
+</a>
+</em>
+</td>
+<td>
+<p>WeightFrom means is the expression used to get the value.
+If it is a number type, convert to int.
+If it is a string type, the value get will be parsed by strconv.ParseInt.</p>
 </td>
 </tr>
 <tr>

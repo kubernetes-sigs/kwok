@@ -68,3 +68,4 @@ stages:
     subresource: status
     type: application/merge-patch+json
   stage: node-initialize
+  weight: 0

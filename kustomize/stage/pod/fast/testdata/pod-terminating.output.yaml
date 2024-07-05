@@ -5,3 +5,4 @@ stages:
 - next:
   - kind: delete
   stage: pod-delete
+  weight: 0
