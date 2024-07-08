@@ -2580,6 +2580,7 @@ func autoConvert_internalversion_StageSpec_To_v1alpha1_StageSpec(in *StageSpec, 
 	}
 	out.Selector = (*v1alpha1.StageSelector)(unsafe.Pointer(in.Selector))
 	out.Weight = in.Weight
+	out.WeightFrom = (*v1alpha1.ExpressionFromSource)(unsafe.Pointer(in.WeightFrom))
 	out.Delay = (*v1alpha1.StageDelay)(unsafe.Pointer(in.Delay))
 	if err := Convert_internalversion_StageNext_To_v1alpha1_StageNext(&in.Next, &out.Next, s); err != nil {
 		return err
@@ -2601,6 +2602,7 @@ func autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.St
 	}
 	out.Selector = (*StageSelector)(unsafe.Pointer(in.Selector))
 	out.Weight = in.Weight
+	out.WeightFrom = (*ExpressionFromSource)(unsafe.Pointer(in.WeightFrom))
 	out.Delay = (*StageDelay)(unsafe.Pointer(in.Delay))
 	if err := Convert_v1alpha1_StageNext_To_internalversion_StageNext(&in.Next, &out.Next, s); err != nil {
 		return err

@@ -69,6 +69,10 @@ type StageSpec struct {
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	Weight int `json:"weight,omitempty"`
+	// WeightFrom means is the expression used to get the value.
+	// If it is a number type, convert to int.
+	// If it is a string type, the value get will be parsed by strconv.ParseInt.
+	WeightFrom *ExpressionFromSource `json:"weightFrom,omitempty"`
 	// Delay means there is a delay in this stage.
 	Delay *StageDelay `json:"delay,omitempty"`
 	// Next indicates that this stage will be moved to.

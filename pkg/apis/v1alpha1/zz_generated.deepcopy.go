@@ -1919,6 +1919,11 @@ func (in *StageSpec) DeepCopyInto(out *StageSpec) {
 		*out = new(StageSelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.WeightFrom != nil {
+		in, out := &in.WeightFrom, &out.WeightFrom
+		*out = new(ExpressionFromSource)
+		**out = **in
+	}
 	if in.Delay != nil {
 		in, out := &in.Delay, &out.Delay
 		*out = new(StageDelay)

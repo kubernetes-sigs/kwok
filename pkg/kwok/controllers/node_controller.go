@@ -284,7 +284,7 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 	}
 
 	lc := c.lifecycle.Get()
-	stage, err := lc.Match(node.Labels, node.Annotations, data)
+	stage, err := lc.Match(ctx, node.Labels, node.Annotations, data)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}

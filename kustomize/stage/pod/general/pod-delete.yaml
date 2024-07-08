@@ -13,6 +13,8 @@ spec:
     - key: '.metadata.finalizers'
       operator: 'DoesNotExist'
   weight: 1
+  weightFrom:
+    expressionFrom: '.metadata.annotations["pod-delete.stage.kwok.x-k8s.io/weight"]'
   delay:
     durationMilliseconds: 1000
     durationFrom:

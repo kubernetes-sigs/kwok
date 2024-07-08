@@ -15,6 +15,8 @@ spec:
       values:
       - 'kwok.x-k8s.io/fake'
   weight: 1
+  weightFrom:
+    expressionFrom: '.metadata.annotations["pod-remove-finalizer.stage.kwok.x-k8s.io/weight"]'
   delay:
     durationMilliseconds: 1000
     durationFrom:

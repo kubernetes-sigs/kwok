@@ -24,6 +24,8 @@ spec:
     jitterDurationFrom:
       expressionFrom: '.metadata.annotations["node-not-ready.stage.kwok.x-k8s.io/jitter-delay"]'
   weight: 10000
+  weightFrom:
+    expressionFrom: '.metadata.annotations["node-not-ready.stage.kwok.x-k8s.io/weight"]'
   next:
     statusTemplate: |
       {{ $now := Now }}

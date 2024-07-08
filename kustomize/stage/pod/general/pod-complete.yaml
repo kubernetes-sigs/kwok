@@ -23,6 +23,8 @@ spec:
       values:
       - 'Job'
   weight: 1
+  weightFrom:
+    expressionFrom: '.metadata.annotations["pod-complete.stage.kwok.x-k8s.io/weight"]'
   delay:
     durationMilliseconds: 1000
     durationFrom:
