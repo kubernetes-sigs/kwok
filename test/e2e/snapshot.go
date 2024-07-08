@@ -19,6 +19,7 @@ package e2e
 import (
 	"context"
 	"os"
+	"runtime"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -32,7 +33,7 @@ import (
 )
 
 // CaseSnapshot is the snapshot of a test case.
-func CaseSnapshot(kwokctlPath, clusterName string, tmpDir string) *features.FeatureBuilder {
+func CaseSnapshot(kwokctlPath, clusterName string, clusterRuntime string, rootDir string, updateTestdata bool, tmpDir string) *features.FeatureBuilder {
 	node := helper.NewNodeBuilder("node0").
 		Build()
 	pod0 := helper.NewPodBuilder("pod0").
@@ -44,6 +45,21 @@ func CaseSnapshot(kwokctlPath, clusterName string, tmpDir string) *features.Feat
 	return features.New("Snapshot").
 		Setup(helper.CreateNode(node)).
 		Setup(helper.CreatePod(pod0)).
+		Assess("test dryrun snapshot save", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+			absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/snapshot_save_etcd.txt"
+			args := []string{
+				"--name", clusterName, "--dry-run", "snapshot", "save", "--path", dbPath, "--format", "etcd",
+			}
+			diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != "" && runtime.GOOS == "linux" {
+				updateCmd := "go test -v ./test/e2e/kwokctl/" + clusterRuntime + " -args --update-testdata"
+				t.Fatalf("Expected vs got:\n%s\nExeceute this command to update the testdata manually:%s", diff, updateCmd)
+			}
+			return ctx
+		}).
 		Assess("test snapshot", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			_, err := exec.Command(ctx, kwokctlPath, "snapshot", "save", "--name", clusterName, "--path", dbPath)
 			if err != nil {
@@ -54,6 +70,21 @@ func CaseSnapshot(kwokctlPath, clusterName string, tmpDir string) *features.Feat
 		}).
 		Assess("delete pod", helper.DeletePod(pod0)).
 		Assess("delete node", helper.DeleteNode(node)).
+		Assess("test dryrun snapshot restore", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+			absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/snapshot_restore_etcd.txt"
+			args := []string{
+				"--name", clusterName, "--dry-run", "snapshot", "restore", "--path", dbPath, "--format", "etcd",
+			}
+			diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != "" && runtime.GOOS == "linux" {
+				updateCmd := "go test -v ./test/e2e/kwokctl/" + clusterRuntime + " -args --update-testdata"
+				t.Fatalf("Expected vs got:\n%s\nExeceute this command to update the testdata manually:%s", diff, updateCmd)
+			}
+			return ctx
+		}).
 		Assess("test restore", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			_, err := exec.Command(ctx, kwokctlPath, "snapshot", "restore", "--name", clusterName, "--path", dbPath)
 			if err != nil {

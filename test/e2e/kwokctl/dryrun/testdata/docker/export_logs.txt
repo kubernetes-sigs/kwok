@@ -1,0 +1,10 @@
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/kwok.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components
+docker info ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/docker-info.txt
+etcd logs kwok-<CLUSTER_NAME>-etcd ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/etcd.log
+kube-apiserver logs kwok-<CLUSTER_NAME>-kube-apiserver ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kube-apiserver.log
+kube-controller-manager logs kwok-<CLUSTER_NAME>-kube-controller-manager ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kube-controller-manager.log
+kube-scheduler logs kwok-<CLUSTER_NAME>-kube-scheduler ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kube-scheduler.log
+kwok-controller logs kwok-<CLUSTER_NAME>-kwok-controller ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kwok-controller.log
+metrics-server logs kwok-<CLUSTER_NAME>-metrics-server ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/metrics-server.log

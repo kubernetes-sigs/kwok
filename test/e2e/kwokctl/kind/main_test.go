@@ -19,6 +19,7 @@ package kind_test
 
 import (
 	"context"
+	"flag"
 	"os"
 	"runtime"
 	"testing"
@@ -35,16 +36,17 @@ import (
 )
 
 var (
-	runtimeEnv  = consts.RuntimeTypeKind
-	testEnv     env.Environment
-	pwd         = os.Getenv("PWD")
-	rootDir     = path.Join(pwd, "../../../..")
-	logsDir     = path.Join(rootDir, "logs")
-	clusterName = envconf.RandomName("kwok-e2e-kind", 16)
-	namespace   = envconf.RandomName("ns", 16)
-	testImage   = "localhost/kwok:test"
-	kwokctlPath = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
-	baseArgs    = []string{
+	runtimeEnv     = consts.RuntimeTypeKind
+	testEnv        env.Environment
+	updateTestdata = false
+	pwd            = os.Getenv("PWD")
+	rootDir        = path.Join(pwd, "../../../..")
+	logsDir        = path.Join(rootDir, "logs")
+	clusterName    = envconf.RandomName("kwok-e2e-kind", 16)
+	namespace      = envconf.RandomName("ns", 16)
+	testImage      = "localhost/kwok:test"
+	kwokctlPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	baseArgs       = []string{
 		"--kwok-controller-image=" + testImage,
 		"--runtime=" + runtimeEnv,
 		"--enable-metrics-server",
@@ -54,6 +56,7 @@ var (
 
 func init() {
 	_ = os.Setenv("KWOK_WORKDIR", path.Join(rootDir, "workdir"))
+	flag.BoolVar(&updateTestdata, "update-testdata", false, "update all of testdata")
 }
 
 func TestMain(m *testing.M) {
