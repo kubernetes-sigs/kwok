@@ -45,8 +45,7 @@ func Pull(ctx context.Context, cacheDir, src, dest string, quiet bool) error {
 	logger.Info("Pull")
 
 	var transport = remote.DefaultTransport
-	var retry = 0
-	transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, err error) error {
+	transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, retry int, err error) error {
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return err
 		}
@@ -57,7 +56,6 @@ func Pull(ctx context.Context, cacheDir, src, dest string, quiet bool) error {
 			"err", err,
 			"retry", retry,
 		)
-		retry++
 		time.Sleep(time.Second)
 		return nil
 	})
