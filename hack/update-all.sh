@@ -88,6 +88,11 @@ if [[ "${UPDATE_HELM_CHARTS:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/update-helm-charts.sh || failed+=(helm-charts)
 fi
 
+if [[ "${UPDATE_DRY_RUN_TESTDATA:-true}" == "true" ]]; then
+  echo "[*] Update testdata..."
+  "${ROOT_DIR}"/hack/update-testdata.sh || failed+=(testdata)
+fi
+
 if [[ "${#failed[@]}" != 0 ]]; then
   echo "Update failed for: ${failed[*]}"
   exit 1

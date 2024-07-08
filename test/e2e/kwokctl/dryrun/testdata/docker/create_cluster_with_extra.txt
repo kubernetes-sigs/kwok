@@ -1,0 +1,154 @@
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+# Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
+docker pull registry.k8s.io/etcd:3.5.11-0
+docker pull registry.k8s.io/kube-apiserver:v1.30.2
+docker pull registry.k8s.io/kube-controller-manager:v1.30.2
+docker pull registry.k8s.io/kube-scheduler:v1.30.2
+docker pull registry.k8s.io/kwok/kwok:v0.6.0
+docker pull docker.io/prom/prometheus:v2.53.0
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+alerting:
+  alertmanagers:
+  - follow_redirects: true
+    enable_http2: true
+    scheme: http
+    timeout: 10s
+    api_version: v2
+    static_configs:
+    - targets: []
+scrape_configs:
+- job_name: "etcd"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-etcd:2379
+- job_name: "kube-apiserver"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "/etc/kubernetes/pki/admin.crt"
+    key_file: "/etc/kubernetes/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kube-apiserver:6443
+- job_name: "kube-controller-manager"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "/etc/kubernetes/pki/admin.crt"
+    key_file: "/etc/kubernetes/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kube-controller-manager:10257
+- job_name: "kube-scheduler"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "/etc/kubernetes/pki/admin.crt"
+    key_file: "/etc/kubernetes/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kube-scheduler:10259
+- job_name: "kwok-controller-metrics-discovery"
+  http_sd_configs:
+  - url: http://kwok-<CLUSTER_NAME>-kwok-controller:10247/discovery/prometheus
+- job_name: "kwok-controller"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kwok-controller:10247
+- job_name: "prometheus"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:9090
+EOF
+chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
+    server: https://127.0.0.1:32766
+  name: kwok-<CLUSTER_NAME>
+contexts:
+- context:
+    cluster: kwok-<CLUSTER_NAME>
+    user: kwok-<CLUSTER_NAME>
+  name: kwok-<CLUSTER_NAME>
+current-context: kwok-<CLUSTER_NAME>
+kind: Config
+preferences: {}
+users:
+- name: kwok-<CLUSTER_NAME>
+  user:
+    client-certificate: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt
+    client-key: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key
+EOF
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /etc/kubernetes/pki/ca.crt
+    server: https://kwok-<CLUSTER_NAME>-kube-apiserver:6443
+  name: kwok-<CLUSTER_NAME>
+contexts:
+- context:
+    cluster: kwok-<CLUSTER_NAME>
+    user: kwok-<CLUSTER_NAME>
+  name: kwok-<CLUSTER_NAME>
+current-context: kwok-<CLUSTER_NAME>
+kind: Config
+preferences: {}
+users:
+- name: kwok-<CLUSTER_NAME>
+  user:
+    client-certificate: /etc/kubernetes/pki/admin.crt
+    client-key: /etc/kubernetes/pki/admin.key
+EOF
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+docker network create kwok-<CLUSTER_NAME> --label=com.docker.compose.project=kwok-<CLUSTER_NAME>
+docker create --name=kwok-<CLUSTER_NAME>-etcd --pull=never --entrypoint=etcd --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=32765:2379/tcp --env=TEST_KEY=TEST_VALUE registry.k8s.io/etcd:3.5.11-0 --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=/etcd-data --initial-advertise-peer-urls=http://0.0.0.0:2380 --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --initial-cluster=node0=http://0.0.0.0:2380 --log-level=debug
+docker create --name=kwok-<CLUSTER_NAME>-kube-apiserver --pull=never --entrypoint=kube-apiserver --network=kwok-<CLUSTER_NAME> --link=kwok-<CLUSTER_NAME>-etcd --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=32766:6443/tcp --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/apiserver:/extras/tmp --env=TEST_KEY=TEST_VALUE registry.k8s.io/kube-apiserver:v1.30.2 --etcd-prefix=/registry --allow-privileged=true --max-requests-inflight=0 --max-mutating-requests-inflight=0 --enable-priority-and-fairness=false --etcd-servers=http://kwok-<CLUSTER_NAME>-etcd:2379 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --secure-port=6443 --tls-cert-file=/etc/kubernetes/pki/admin.crt --tls-private-key-file=/etc/kubernetes/pki/admin.key --client-ca-file=/etc/kubernetes/pki/ca.crt --service-account-key-file=/etc/kubernetes/pki/admin.key --service-account-signing-key-file=/etc/kubernetes/pki/admin.key --service-account-issuer=https://kubernetes.default.svc.cluster.local --proxy-client-key-file=/etc/kubernetes/pki/admin.key --proxy-client-cert-file=/etc/kubernetes/pki/admin.crt --v=5
+docker create --name=kwok-<CLUSTER_NAME>-kube-controller-manager --pull=never --entrypoint=kube-controller-manager --network=kwok-<CLUSTER_NAME> --link=kwok-<CLUSTER_NAME>-kube-apiserver --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/root/.kube/config:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/controller-manager:/extras/tmp --env=TEST_KEY=TEST_VALUE registry.k8s.io/kube-controller-manager:v1.30.2 --node-monitor-period=25s --node-monitor-grace-period=3m20s --kubeconfig=/root/.kube/config --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=10257 --root-ca-file=/etc/kubernetes/pki/ca.crt --service-account-private-key-file=/etc/kubernetes/pki/admin.key --kube-api-qps=5000 --kube-api-burst=10000 --v=5
+docker create --name=kwok-<CLUSTER_NAME>-kube-scheduler --pull=never --entrypoint=kube-scheduler --network=kwok-<CLUSTER_NAME> --link=kwok-<CLUSTER_NAME>-kube-apiserver --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/root/.kube/config:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/scheduler:/extras/tmp --env=TEST_KEY=TEST_VALUE registry.k8s.io/kube-scheduler:v1.30.2 --kubeconfig=/root/.kube/config --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=10259 --kube-api-qps=5000 --kube-api-burst=10000 --v=5
+docker create --name=kwok-<CLUSTER_NAME>-kwok-controller --pull=never --entrypoint=kwok --network=kwok-<CLUSTER_NAME> --link=kwok-<CLUSTER_NAME>-kube-apiserver --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/root/.kube/config:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml:/root/.kwok/kwok.yaml:ro --volume=<ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/controller:/extras/tmp --env=TEST_KEY=TEST_VALUE registry.k8s.io/kwok/kwok:v0.6.0 --manage-all-nodes=true --kubeconfig=/root/.kube/config --config=/root/.kwok/kwok.yaml --tls-cert-file=/etc/kubernetes/pki/admin.crt --tls-private-key-file=/etc/kubernetes/pki/admin.key --node-ip= --node-name=kwok-<CLUSTER_NAME>-kwok-controller --node-port=10247 --server-address=0.0.0.0:10247 --node-lease-duration-seconds=200 --v=-4
+docker create --name=kwok-<CLUSTER_NAME>-prometheus --pull=never --entrypoint=prometheus --network=kwok-<CLUSTER_NAME> --link=kwok-<CLUSTER_NAME>-etcd --link=kwok-<CLUSTER_NAME>-kube-apiserver --link=kwok-<CLUSTER_NAME>-kube-controller-manager --link=kwok-<CLUSTER_NAME>-kube-scheduler --link=kwok-<CLUSTER_NAME>-kwok-controller --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=9090:9090/tcp --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/prometheus:/extras/tmp --env=TEST_KEY=TEST_VALUE docker.io/prom/prometheus:v2.53.0 --config.file=/etc/prometheus/prometheus.yaml --web.listen-address=0.0.0.0:9090 --log.level=debug
+# Add context kwok-<CLUSTER_NAME> to ~/.kube/config
+docker start kwok-<CLUSTER_NAME>-etcd
+docker start kwok-<CLUSTER_NAME>-kube-apiserver
+docker start kwok-<CLUSTER_NAME>-kube-controller-manager
+docker start kwok-<CLUSTER_NAME>-kube-scheduler
+docker start kwok-<CLUSTER_NAME>-kwok-controller
+docker start kwok-<CLUSTER_NAME>-prometheus

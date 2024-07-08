@@ -1,0 +1,166 @@
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+# Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
+cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
+# Download https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-<OS>-<ARCH>.<TAR> and extract etcd to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd
+# Download https://dl.k8s.io/release/v1.30.2/bin/<OS>/<ARCH>/kube-apiserver to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-apiserver
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
+apiVersion: apiserver.config.k8s.io/v1alpha1
+kind: TracingConfiguration
+endpoint: 127.0.0.1:32762
+samplingRatePerMillion: 1000000
+EOF
+# Download https://dl.k8s.io/release/v1.30.2/bin/<OS>/<ARCH>/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
+# Download https://dl.k8s.io/release/v1.30.2/bin/<OS>/<ARCH>/kube-scheduler to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
+cp <ROOT_DIR>/test/kwokctl/scheduler-config.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+cat <<EOF >><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+clientConnection:
+  kubeconfig: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml"
+EOF
+# Download https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.0/kwok-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
+# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.1/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
+# Download https://github.com/prometheus/prometheus/releases/download/v2.53.0/prometheus-2.53.0.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
+# Download https://github.com/jaegertracing/jaeger/releases/download/v1.58.1/jaeger-1.58.1-<OS>-<ARCH>.<TAR> and extract jaeger-all-in-one to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+alerting:
+  alertmanagers:
+  - follow_redirects: true
+    enable_http2: true
+    scheme: http
+    timeout: 10s
+    api_version: v2
+    static_configs:
+    - targets: []
+scrape_configs:
+- job_name: "etcd"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:32765
+- job_name: "kube-apiserver"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt"
+    key_file: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:32764
+- job_name: "kube-controller-manager"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt"
+    key_file: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:32761
+- job_name: "kube-scheduler"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt"
+    key_file: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:32760
+- job_name: "kwok-controller-metrics-discovery"
+  http_sd_configs:
+  - url: http://127.0.0.1:32763/discovery/prometheus
+- job_name: "kwok-controller"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:32763
+- job_name: "metrics-server"
+  scheme: https
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  tls_config:
+    cert_file: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt"
+    key_file: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key"
+    insecure_skip_verify: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:32759
+- job_name: "prometheus"
+  scheme: http
+  honor_timestamps: true
+  metrics_path: /metrics
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - 127.0.0.1:9090
+EOF
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
+    server: https://127.0.0.1:32764
+  name: kwok-<CLUSTER_NAME>
+contexts:
+- context:
+    cluster: kwok-<CLUSTER_NAME>
+    user: kwok-<CLUSTER_NAME>
+  name: kwok-<CLUSTER_NAME>
+current-context: kwok-<CLUSTER_NAME>
+kind: Config
+preferences: {}
+users:
+- name: kwok-<CLUSTER_NAME>
+  user:
+    client-certificate: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt
+    client-key: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key
+EOF
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+# Add context kwok-<CLUSTER_NAME> to ~/.kube/config
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && etcd --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd --initial-advertise-peer-urls=http://0.0.0.0:32766 --listen-peer-urls=http://0.0.0.0:32766 --advertise-client-urls=http://0.0.0.0:32765 --listen-client-urls=http://0.0.0.0:32765 --initial-cluster=node0=http://0.0.0.0:32766 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/etcd.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/etcd.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && jaeger --collector.otlp.enabled=true --query.http-server.host-port=0.0.0.0:16686 --collector.otlp.grpc.host-port=127.0.0.1:32762 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/jaeger.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/jaeger.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && kube-apiserver --etcd-prefix=/registry --allow-privileged=true --max-requests-inflight=0 --max-mutating-requests-inflight=0 --enable-priority-and-fairness=false --etcd-servers=http://127.0.0.1:32765 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --secure-port=32764 --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --client-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-signing-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --service-account-issuer=https://kubernetes.default.svc.cluster.local --proxy-client-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --proxy-client-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --audit-policy-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml --audit-log-path=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log --tracing-config-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-apiserver.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && kube-controller-manager --node-monitor-period=25s --node-monitor-grace-period=3m20s --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32761 --root-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt --service-account-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --kube-api-qps=5000 --kube-api-burst=10000 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-controller-manager.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-controller-manager.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && kube-scheduler --config=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=32760 --kube-api-qps=5000 --kube-api-burst=10000 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-scheduler.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-scheduler.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && kwok-controller --manage-all-nodes=true --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --config=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key --node-ip= --node-name=localhost --node-port=32763 --server-address=0.0.0.0:32763 --node-lease-duration-seconds=200 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kwok-controller.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kwok-controller.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && metrics-server --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname --kubelet-use-node-status-port --kubelet-insecure-tls --metric-resolution=15s --bind-address=0.0.0.0 --secure-port=32759 --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authentication-kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --authorization-kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/metrics-server.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/metrics-server.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && prometheus --config.file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml --web.listen-address=0.0.0.0:9090 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/prometheus.log 2>&1 &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/prometheus.pid
+# Set up apiservice for metrics server
