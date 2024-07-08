@@ -1,6 +1,6 @@
 # Default stage policy of KWOK (Kubernetes WithOut Kubelet)
 
-[KWOK](https://github.com/kubernetes-sigs/kwok/) - Simulates thousands of Nodes and Clusters.
+[KWOK](https://kwok.sigs.k8s.io/) - Simulates thousands of Nodes and Clusters.
 
 ## Installing the Chart
 
@@ -21,4 +21,10 @@ Set up default stage policy (required)
 
 ```shell
 helm upgrade --install kwok kwok/stage-fast
+```
+
+Set up default metrics usage policy (optional)
+
+```shell
+helm upgrade --install kwok kwok/metrics-usage
 ```

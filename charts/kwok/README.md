@@ -1,6 +1,6 @@
 # KWOK (Kubernetes WithOut Kubelet)
 
-[KWOK](https://github.com/kubernetes-sigs/kwok/) - Simulates thousands of Nodes and Clusters.
+[KWOK](https://kwok.sigs.k8s.io/) - Simulates thousands of Nodes and Clusters.
 
 ## Installing the Chart
 
@@ -23,16 +23,27 @@ Set up default stage policy (required)
 helm upgrade --install kwok kwok/stage-fast
 ```
 
+Set up default metrics usage policy (optional)
+
+```shell
+helm upgrade --install kwok kwok/metrics-usage
+```
+
 ## Configuration
 
 The following table lists the configurable parameters of the kwok chart and their default values.
 
-| Parameter          | Description                                                                  | Default                     |
-|--------------------|------------------------------------------------------------------------------|-----------------------------|
-| `image.repository` | Image repository.                                                            | `registry.k8s.io/kwok/kwok` |
-| `image.tag`        | Image tag, will override the default tag derived from the chart app version. | `[chart appVersion]`        |
-| `image.pullPolicy` | Image pull policy.                                                           | `IfNotPresent`              |
-| `imagePullSecrets` | Image pull secrets.                                                          | `[]`                        |
-| `nameOverride`     | Override the `name` of the chart.                                            | `""`                        |
-| `fullnameOverride` | Override the `fullname` of the chart.                                        | `""`                        |
-| `replicas`         | The replica count for Deployment.                                            | `1`                         |
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` |  |
+| fullnameOverride | string | `"kwok-controller"` | Override the `fullname` of the chart. |
+| image.pullPolicy | string | `"IfNotPresent"` | Image pull policy. |
+| image.repository | string | `"registry.k8s.io/kwok/kwok"` | Image repository. |
+| image.tag | string | `""` | Overrides the image tag whose default is {{ .Chart.AppVersion }}. |
+| imagePullSecrets | list | `[]` | Image pull secrets. |
+| nameOverride | string | `""` | Override the `name` of the chart. |
+| nodeSelector | object | `{}` |  |
+| podSecurityContext | object | `{}` |  |
+| replicas | int | `1` | The replica count for Deployment. |
+| resources | object | `{}` |  |
+| securityContext | object | `{}` |  |

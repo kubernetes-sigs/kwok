@@ -52,6 +52,15 @@ function sync_to_chart() {
   cp "${src}" "${dest}"
 }
 
+function update_readme() {
+  local chart=$1
+  go run github.com/norwoodj/helm-docs/cmd/helm-docs@v1.13.1 \
+    -c charts/ \
+    -t ./_templates.gotmpl \
+    -t README.md.gotmpl \
+    -g "charts/${chart}"
+}
+
 function sync() {
   sync_object_to_chart kustomize/rbac/role.yaml charts/kwok/templates/role.yaml
   sync_object_to_chart kustomize/rbac/role_binding.yaml charts/kwok/templates/role_binding.yaml
@@ -66,6 +75,10 @@ function sync() {
 
   sync_stage_to_chart kustomize/metrics/resource/metrics-resource.yaml charts/metrics-usage/templates/metrics-resource.yaml
   sync_stage_to_chart kustomize/metrics/usage/usage-from-annotation.yaml charts/metrics-usage/templates/usage-from-annotation.yaml
+
+  update_readme kwok
+  update_readme stage-fast
+  update_readme metrics-usage
 }
 
 cd "${ROOT_DIR}" && sync
