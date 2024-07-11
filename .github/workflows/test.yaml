@@ -103,7 +103,6 @@ jobs:
       matrix:
         case:
         - kwok
-        - kwok-with-cni
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:

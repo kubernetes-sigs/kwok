@@ -12,7 +12,6 @@ kwok [flags]
       --cidr string                                    CIDR of the pod ip (default "10.0.0.1/24")
   -c, --config strings                                 config path (default [~/.kwok/kwok.yaml])
       --enable-crds strings                            List of CRDs to enable
-      --experimental-enable-cni                        Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux
   -h, --help                                           help for kwok
       --kubeconfig string                              Path to the kubeconfig file to use (default "~/.kube/config")
       --manage-all-nodes                               All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-single-node.
