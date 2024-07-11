@@ -153,8 +153,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 		logger.Info("Download")
 
 		var transport = http.DefaultTransport
-		var retry = 0
-		transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, err error) error {
+		transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, retry int, err error) error {
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				return err
 			}
@@ -165,7 +164,6 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 				"err", err,
 				"retry", retry,
 			)
-			retry++
 			time.Sleep(time.Second)
 			return nil
 		})
