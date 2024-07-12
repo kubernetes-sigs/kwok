@@ -46,6 +46,7 @@ func formatCmdOutput(got, clusterName, rootDir string) string {
 	got = strings.ReplaceAll(got, ".zip", ".<TAR>")
 	got = strings.ReplaceAll(got, ".tar.gz", ".<TAR>")
 	got = strings.ReplaceAll(got, homeDir, "~")
+	got = strings.ReplaceAll(got, "/root", "~")
 	got = emptyLine.ReplaceAllLiteralString(got, "\n")
 	return got
 }

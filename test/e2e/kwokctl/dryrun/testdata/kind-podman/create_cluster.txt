@@ -60,8 +60,8 @@ spec:
   - args:
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-    - --kubeconfig=/root/.kube/config
-    - --config=/root/.kwok/kwok.yaml
+    - --kubeconfig=~/.kube/config
+    - --config=~/.kwok/kwok.yaml
     - --tls-cert-file=/etc/kubernetes/pki/admin.crt
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     - --node-ip=$(POD_IP)
@@ -81,7 +81,7 @@ spec:
     name: kwok-controller
     resources: {}
     volumeMounts:
-    - mountPath: /root/.kube/config
+    - mountPath: ~/.kube/config
       name: volume-0
       readOnly: true
     - mountPath: /etc/kubernetes/pki/ca.crt
@@ -93,7 +93,7 @@ spec:
     - mountPath: /etc/kubernetes/pki/admin.key
       name: volume-3
       readOnly: true
-    - mountPath: /root/.kwok/kwok.yaml
+    - mountPath: ~/.kwok/kwok.yaml
       name: volume-4
       readOnly: true
   hostNetwork: true
