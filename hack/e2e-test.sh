@@ -37,17 +37,6 @@ function filter_skip() {
   done
 }
 
-function filter_e2e_option_cases() {
-  jq -r '. | select( .Action == "pass" ) | select( has("Test") ) | select( .Test | contains("/") | not ) | .Package + "@" + .Test' |
-    sed 's|^sigs.k8s.io/kwok/test/||g' |
-    sed 's|@Test|@|g'
-}
-
-function filter_e2e_cases() {
-  jq -r '. | select( .Action == "pass" ) | select( .Test == null ) | .Package' |
-    sed 's|^sigs.k8s.io/kwok/test/||g'
-}
-
 function shell_cases() {
   find "${test_dir}" -name '*.test.sh' |
     sed "s#^${test_dir}/##g" |
@@ -56,21 +45,23 @@ function shell_cases() {
 }
 
 function e2e_cases() {
-  go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwok/... -args --dry-run |
-    filter_e2e_cases |
-    filter_skip
-  go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwokctl/... -args --dry-run |
-    filter_e2e_cases |
-    filter_skip
+  find test/e2e -type f -name 'main_test.go' |
+    sed 's|/main_test.go$||g' |
+    sed 's|^test/||g'
 }
 
 function e2e_option_cases() {
-  go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwok/... -args --dry-run |
-    filter_e2e_option_cases |
-    filter_skip
-  go test -json -timeout 10s sigs.k8s.io/kwok/test/e2e/kwokctl/... -args --dry-run |
-    filter_e2e_option_cases |
-    filter_skip
+  local files
+  local cases
+  files=$(find test/e2e -type f -name '*_test.go' -not -name 'main_test.go')
+  for f in ${files}; do
+    cases=$(grep "^func Test" <"${f}" | sed 's|(.*||g' | sed 's|^func Test||g')
+    f="${f%\/*}"
+    f="${f#*\/}"
+    for c in ${cases}; do
+      echo "${f}@${c}"
+    done
+  done
 }
 
 function all_cases() {
