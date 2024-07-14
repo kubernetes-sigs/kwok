@@ -127,6 +127,9 @@ menu:
   - identifier: technical-outcomes-scheduling
     pageRef: "/docs/technical-outcomes/scheduling"
     parent: technical-outcomes
+  - identifier: technical-outcomes-scalability
+    pageRef: "/docs/technical-outcomes/scalability"
+    parent: technical-outcomes
 
   # User Guide Children
   - identifier: all-in-one-image
@@ -202,11 +205,11 @@ menu:
     weight: 200020
     parent: user-guide
   - identifier: kwok
-    title: '`kwok` CLI'
+    title: "`kwok` CLI"
     pageRef: "/docs/generated/kwok"
     parent: tools
   - identifier: kwokctl
-    title: '`kwokctl` CLI'
+    title: "`kwokctl` CLI"
     pageRef: "/docs/generated/kwokctl"
     parent: tools
 
@@ -298,6 +301,24 @@ menu:
     title: "Pod Topology Spread Constraint"
     pageRef: "/docs/technical-outcomes/scheduling/pod-topology-spread-constraint"
     parent: technical-outcomes-scheduling
+
+  # Technical Outcome Scalability Children
+  - identifier: technical-outcomes-scalability-scale-using-hpa
+    title: "Horizontal Pod Autoscaling"
+    pageRef: "/docs/technical-outcomes/scalability/scale-using-hpa"
+    parent: technical-outcomes-scalability
+  - identifier: technical-outcomes-scalability-scale-using-vpa
+    title: "Vertical Pod Autoscaling"
+    pageRef: "/docs/technical-outcomes/scalability/scale-using-vpa"
+    parent: technical-outcomes-scalability
+  - identifier: technical-outcomes-scalability-scale-using-ca
+    title: "Cluster Autoscaling"
+    pageRef: "/docs/technical-outcomes/scalability/scale-using-ca"
+    parent: technical-outcomes-scalability
+  - identifier: technical-outcomes-scalability-scale-using-karpenter
+    title: "Karpenter Autoscaling"
+    pageRef: "/docs/technical-outcomes/scalability/scale-using-karpenter"
+    parent: technical-outcomes-scalability
 
   after:
   - identifier: blog

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fake-app
+  template:
+    metadata:
+      labels:
+        app: fake-app
+      annotations:
+        kwok.x-k8s.io/usage-cpu: 200m
+    spec:
+      containers:
+      - name: fake-container
+        image: fake
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 1000m # The HPA calculates utilization based on the CPU request, not the limit.
+          limits:
+            cpu: 1200m
