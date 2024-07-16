@@ -40,8 +40,7 @@ function filter_skip() {
 function shell_cases() {
   find "${test_dir}" -name '*.test.sh' |
     sed "s#^${test_dir}/##g" |
-    sed "s#.test.sh\$##g" |
-    filter_skip
+    sed "s#.test.sh\$##g"
 }
 
 function e2e_cases() {
@@ -65,21 +64,21 @@ function e2e_option_cases() {
 }
 
 function all_cases() {
-  shell_cases
-  e2e_cases
+  shell_cases | filter_skip
+  e2e_cases | filter_skip
 }
 
 function usage() {
   echo "Usage: ${0} [cases...] [--help]"
   echo "  Empty argument will run all cases."
   echo "  CASES:"
-  for c in $(shell_cases); do
+  for c in $(shell_cases | filter_skip); do
     echo "    ${c}"
   done
-  for c in $(e2e_cases); do
+  for c in $(e2e_cases | filter_skip); do
     echo "    ${c}"
   done
-  for c in $(e2e_option_cases); do
+  for c in $(e2e_option_cases | filter_skip); do
     echo "    ${c}"
   done
 }
