@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+  namespace: default
+  labels:
+    region: us-west-2
+spec:
+  containers:
+  - name: fake-container
+    image: fake-image
+    ports:
+    - containerPort: 80
+  tolerations:
+  - key: "kwok.x-k8s.io/node"
+    operator: "Exists"
+    effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: region
+            operator: In
+            values:
+            - us-west-2

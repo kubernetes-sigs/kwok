@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-beyond-limit
+  namespace: default
+spec:
+  containers:
+  - name: fake-container
+    image: fake-image
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        cpu: 700m

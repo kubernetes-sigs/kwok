@@ -1,0 +1,28 @@
+# Scheduling pods with a limit Range
+
+# Create cluster
+kwokctl create cluster
+
+# View clusters
+kwokctl get clusters
+
+# Create a node
+kwokctl scale node --replicas 1
+
+# Create a resource limit
+kubectl apply -f ${WORK_DIR}/limit-range.yaml
+
+# Confirm the limit has the required values
+kubectl describe limitranges cpu-resource-constraint
+
+# Deploy a pod above the resource limit
+kubectl apply -f ${WORK_DIR}/pod-beyond-limit.yaml || true
+
+# Deploy a pod with a newly defined resource limit
+kubectl apply -f ${WORK_DIR}/pod-within-limit.yaml
+
+# Confirm that the pod is running
+kubectl get pod
+
+# Delete the cluster
+kwokctl delete cluster

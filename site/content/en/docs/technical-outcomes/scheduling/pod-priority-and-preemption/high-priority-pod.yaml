@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: high-priority-pod
+spec:
+  priorityClassName: high-priority
+  containers:
+  - name: high-priority-container
+    image: fake
+    resources:
+      requests:
+        cpu: 3000m
+      limits:
+        cpu: 3000m

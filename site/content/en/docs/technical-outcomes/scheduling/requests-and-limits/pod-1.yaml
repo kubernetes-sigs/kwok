@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+  namespace: default
+spec:
+  containers:
+  - name: fake-container
+    image: fake-image
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        cpu: 2700m
+      limits:
+        cpu: 3000m
+  tolerations:
+  - key: "kwok.x-k8s.io/node"
+    operator: "Exists"
+    effect: "NoSchedule"

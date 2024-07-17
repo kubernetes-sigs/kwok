@@ -121,6 +121,12 @@ menu:
   - identifier: contributing
     pageRef: "/docs/contributing"
     weight: 30
+  # Technical Outcomes
+  - identifier: technical-outcomes
+    title: Technical Outcomes
+  - identifier: technical-outcomes-scheduling
+    pageRef: "/docs/technical-outcomes/scheduling"
+    parent: technical-outcomes
 
   # User Guide Children
   - identifier: all-in-one-image
@@ -266,6 +272,32 @@ menu:
   - identifier: development
     pageRef: "/docs/contributing/development"
     parent: contributing
+
+  # Technical Outcome Scheduling Children
+  - identifier: technical-outcomes-scheduling-requests-and-limits
+    title: "Requests and Limits"
+    pageRef: "/docs/technical-outcomes/scheduling/requests-and-limits"
+    parent: technical-outcomes-scheduling
+  - identifier: technical-outcomes-scheduling-node-affinity
+    title: "Node Affinity"
+    pageRef: "/docs/technical-outcomes/scheduling/node-affinity"
+    parent: technical-outcomes-scheduling
+  - identifier: technical-outcomes-scheduling-taints-and-tolerations
+    title: "Taints and Tolerations"
+    pageRef: "/docs/technical-outcomes/scheduling/taints-and-tolerations"
+    parent: technical-outcomes-scheduling
+  - identifier: technical-outcomes-scheduling-limit-range
+    title: "Limit Range"
+    pageRef: "/docs/technical-outcomes/scheduling/limit-range"
+    parent: technical-outcomes-scheduling
+  - identifier: technical-outcomes-scheduling-pod-priority-and-preemption
+    title: "Pod Priority and Preemption"
+    pageRef: "/docs/technical-outcomes/scheduling/pod-priority-and-preemption"
+    parent: technical-outcomes-scheduling
+  - identifier: technical-outcomes-scheduling-pod-topology-spread-constraint
+    title: "Pod Topology Spread Constraint"
+    pageRef: "/docs/technical-outcomes/scheduling/pod-topology-spread-constraint"
+    parent: technical-outcomes-scheduling
 
   after:
   - identifier: blog
