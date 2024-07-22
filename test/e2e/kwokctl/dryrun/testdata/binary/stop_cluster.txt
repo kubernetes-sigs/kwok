@@ -1,0 +1,12 @@
+kill $(cat <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/metrics-server.pid)
+rm <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/metrics-server.pid
+kill $(cat <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-controller-manager.pid)
+rm <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-controller-manager.pid
+kill $(cat <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-scheduler.pid)
+rm <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-scheduler.pid
+kill $(cat <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kwok-controller.pid)
+rm <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kwok-controller.pid
+kill $(cat <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid)
+rm <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid
+kill $(cat <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/etcd.pid)
+rm <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/etcd.pid

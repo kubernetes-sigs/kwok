@@ -18,6 +18,7 @@ limitations under the License.
 package binary_test
 
 import (
+	"flag"
 	"os"
 	"runtime"
 	"testing"
@@ -32,16 +33,17 @@ import (
 )
 
 var (
-	runtimeEnv  = consts.RuntimeTypeBinary
-	testEnv     env.Environment
-	pwd         = os.Getenv("PWD")
-	rootDir     = path.Join(pwd, "../../../..")
-	logsDir     = path.Join(rootDir, "logs")
-	clusterName = envconf.RandomName("kwok-e2e-binary", 16)
-	namespace   = envconf.RandomName("ns", 16)
-	kwokPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwok"+helper.BinSuffix)
-	kwokctlPath = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
-	baseArgs    = []string{
+	runtimeEnv     = consts.RuntimeTypeBinary
+	testEnv        env.Environment
+	updateTestdata = false
+	pwd            = os.Getenv("PWD")
+	rootDir        = path.Join(pwd, "../../../..")
+	logsDir        = path.Join(rootDir, "logs")
+	clusterName    = envconf.RandomName("kwok-e2e-binary", 16)
+	namespace      = envconf.RandomName("ns", 16)
+	kwokPath       = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwok"+helper.BinSuffix)
+	kwokctlPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	baseArgs       = []string{
 		"--kwok-controller-binary=" + kwokPath,
 		"--runtime=" + runtimeEnv,
 		"--enable-metrics-server",
@@ -51,6 +53,7 @@ var (
 
 func init() {
 	_ = os.Setenv("KWOK_WORKDIR", path.Join(rootDir, "workdir"))
+	flag.BoolVar(&updateTestdata, "update-testdata", false, "update all of testdata")
 }
 
 func TestMain(m *testing.M) {

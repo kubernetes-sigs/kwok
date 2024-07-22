@@ -25,6 +25,12 @@ import (
 	"sigs.k8s.io/kwok/test/e2e"
 )
 
+func TestDryrunExportLogs(t *testing.T) {
+	f0 := e2e.CaseDryRunExportLogs(kwokctlPath, clusterName, runtimeEnv, rootDir, updateTestdata).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
 func TestHack(t *testing.T) {
 	f0 := e2e.CaseHack(kwokctlPath, clusterName, envconf.RandomName("node", 16)).
 		Feature()
@@ -74,13 +80,13 @@ func TestExec(t *testing.T) {
 }
 
 func TestRestart(t *testing.T) {
-	f0 := e2e.CaseRestart(kwokctlPath, clusterName).
+	f0 := e2e.CaseRestart(kwokctlPath, clusterName, runtimeEnv, rootDir, updateTestdata).
 		Feature()
 	testEnv.Test(t, f0)
 }
 
 func TestSnapshot(t *testing.T) {
-	f0 := e2e.CaseSnapshot(kwokctlPath, clusterName, pwd).
+	f0 := e2e.CaseSnapshot(kwokctlPath, clusterName, runtimeEnv, rootDir, updateTestdata, pwd).
 		Feature()
 	testEnv.Test(t, f0)
 }
