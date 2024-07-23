@@ -4,30 +4,34 @@ kubectl config use-context minikube
 kubectl get nodes
 
 # Deploy and install kwok
-kubectl apply -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/kwok.yaml --wait
+kubectl apply -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.0/kwok.yaml --wait
 kubectl get pod -n kube-system | grep kwok
 
 # Deploy pod stages
-kubectl apply -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/stage-fast.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.0/stage-fast.yaml
 kubectl apply -f https://github.com/kubernetes-sigs/kwok/raw/main/kustomize/stage/pod/chaos/pod-init-container-running-failed.yaml
 kubectl get stages
 
 # Add a virtual-gpu node
-grep allocatable ${WORK_DIR}/virtual-gpu-node.yaml -A 15 
+grep allocatable ${WORK_DIR}/virtual-gpu-node.yaml -A 15; sleep 2
 kubectl apply -f ${WORK_DIR}/virtual-gpu-node.yaml
 kubectl get nodes
-kubectl describe node virtual-gpu-node | grep Allocatable -A 15 
+kubectl describe node virtual-gpu-node | grep Allocatable -A 15; sleep 2 
 
 # Create a pod and inject an error to initContainer to simulate a preflight check error
 grep failed ${WORK_DIR}/failed-pod.yaml
-kubectl apply -f ${WORK_DIR}/failed-pod.yaml
+kubectl apply -f ${WORK_DIR}/failed-pod.yaml; sleep 5
 kubectl get pod
-kubectl describe pod failed-pod | grep "Init Containers" -A 10
+clear
+kubectl describe pod failed-pod | grep "Init Containers" -A 15; sleep 2
 
 # Clean up
 kubectl delete -f ${WORK_DIR}/failed-pod.yaml
 kubectl delete -f ${WORK_DIR}/virtual-gpu-node.yaml
-kubectl delete -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/kwok.yaml
+kubectl delete -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.0/kwok.yaml
+clear
+kubectl get nodes
+kubectl get pods
 
 # Thank you!
 

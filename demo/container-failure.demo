@@ -3,8 +3,9 @@
 # Create a cluster with kwok 
 kwokctl create cluster --enable-crds Stage
 
-# Apply stage files
-kubectl apply -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/stage-fast.yaml
+# Deploy kwok crds and stage files 
+kubectl apply -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.0/kwok.yaml
+#kubectl apply -f https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.0/stage-fast.yaml
 kubectl apply -f https://github.com/kubernetes-sigs/kwok/raw/main/kustomize/stage/pod/chaos/pod-container-running-failed.yaml
 kubectl get stages
 
