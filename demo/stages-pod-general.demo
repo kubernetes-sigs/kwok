@@ -1,5 +1,5 @@
 # Let's getting started with kwokctl!
-kwokctl -c ./stages/pod-general.yaml create cluster
+kwokctl -c ./kustomize/stage/pod/general/kustomization.yaml create cluster
 
 # Create an nodes.
 kwokctl scale node --replicas 2
