@@ -58,17 +58,17 @@ metadata:
 spec:
   containers:
   - args:
+    - --config=~/.kwok/kwok.yaml
+    - --kubeconfig=~/.kube/config
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-    - --kubeconfig=~/.kube/config
-    - --config=~/.kwok/kwok.yaml
-    - --tls-cert-file=/etc/kubernetes/pki/admin.crt
-    - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     - --node-ip=$(POD_IP)
+    - --node-lease-duration-seconds=40
     - --node-name=kwok-controller.kube-system.svc
     - --node-port=10247
     - --server-address=0.0.0.0:10247
-    - --node-lease-duration-seconds=40
+    - --tls-cert-file=/etc/kubernetes/pki/admin.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     command:
     - kwok
     env:
