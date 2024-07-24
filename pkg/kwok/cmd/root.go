@@ -97,9 +97,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
-	if config.GOOS != "linux" {
-		_ = cmd.Flags().MarkHidden("experimental-enable-cni")
-	}
+	_ = cmd.Flags().MarkDeprecated("experimental-enable-cni", "It will be removed and will be supported in the form of plugins")
 	return cmd
 }
 
