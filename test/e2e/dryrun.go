@@ -103,7 +103,7 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 	f := features.New("Dry run with extra")
 	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
-		extraPath := path.Join(rootDir, "test/kwokctl/testdata/extra.yaml")
+		extraPath := path.Join(rootDir, "test/e2e/kwokctl/dryrun/testdata/extra.yaml")
 		args := []string{
 			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m",
 			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime,

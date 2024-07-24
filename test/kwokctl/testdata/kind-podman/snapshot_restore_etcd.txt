@@ -1,8 +1,0 @@
-podman exec kwok-<CLUSTER_NAME>-control-plane mv /etc/kubernetes/manifests/etcd.yaml /etc/kubernetes/etcd.yaml.bak
-# Download https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-<OS>-<ARCH>.<TAR> and extract etcdctl to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcdctl
-ETCDCTL_API=3 etcdctl snapshot restore ./snapshot-empty-<CLUSTER_NAME> --data-dir <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
-podman cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd kwok-<CLUSTER_NAME>-control-plane:/var/lib/
-rm -rf <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
-podman exec kwok-<CLUSTER_NAME>-control-plane mv /etc/kubernetes/etcd.yaml.bak /etc/kubernetes/manifests/etcd.yaml
-podman stop kwok-<CLUSTER_NAME>-control-plane
-podman start kwok-<CLUSTER_NAME>-control-plane

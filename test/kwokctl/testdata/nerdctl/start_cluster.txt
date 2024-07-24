@@ -1,6 +1,0 @@
-nerdctl start kwok-<CLUSTER_NAME>-etcd
-nerdctl start kwok-<CLUSTER_NAME>-kube-apiserver
-nerdctl start kwok-<CLUSTER_NAME>-kube-controller-manager
-nerdctl start kwok-<CLUSTER_NAME>-kube-scheduler
-nerdctl start kwok-<CLUSTER_NAME>-kwok-controller
-nerdctl start kwok-<CLUSTER_NAME>-prometheus

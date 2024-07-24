@@ -1,6 +1,0 @@
-podman stop kwok-<CLUSTER_NAME>-prometheus --time=0
-podman stop kwok-<CLUSTER_NAME>-kube-controller-manager --time=0
-podman stop kwok-<CLUSTER_NAME>-kube-scheduler --time=0
-podman stop kwok-<CLUSTER_NAME>-kwok-controller --time=0
-podman stop kwok-<CLUSTER_NAME>-kube-apiserver --time=0
-podman stop kwok-<CLUSTER_NAME>-etcd --time=0

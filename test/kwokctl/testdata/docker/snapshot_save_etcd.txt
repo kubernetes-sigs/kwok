@@ -1,2 +1,0 @@
-docker exec --env=ETCDCTL_API=3 -i kwok-<CLUSTER_NAME>-etcd etcdctl snapshot save /snapshot.db
-docker cp kwok-<CLUSTER_NAME>-etcd:/snapshot.db ./snapshot-empty-<CLUSTER_NAME>
