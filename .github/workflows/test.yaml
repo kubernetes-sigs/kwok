@@ -246,16 +246,10 @@ jobs:
         sudo mkdir -p /var/run/kubernetes
         sudo chmod 777 /var/run/kubernetes
 
-    - name: Install kubectl and kustomize
+    - name: Install kubectl
       shell: bash
       run: |
-        ./hack/requirements.sh kubectl kustomize
-
-    - name: Test Dry Run
-      if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
-      shell: bash
-      run: |
-        ./hack/e2e-test.sh kwokctl/kwokctl_with_dryrun
+        ./hack/requirements.sh kubectl
 
     - name: Test e2e dry run
       if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
@@ -268,14 +262,6 @@ jobs:
       run: |
         ./hack/e2e-test.sh e2e/kwokctl/${{ matrix.kwokctl-runtime }} && rm -rf logs
 
-    - name: Test Export Logs
-      shell: bash
-      run: |
-        if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest' ]]; then
-          export SKIP_DRY_RUN=true
-        fi
-        ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_export_logs
-
     - name: Test Workable
       shell: bash
       run: |
@@ -283,20 +269,6 @@ jobs:
           export LAST_RELEASE_SIZE=20
         fi
         ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
-
-    - name: Test Snapshot
-      if: ${{ matrix.os != 'windows-latest' }} # TODO: fix snapshot test on windows
-      shell: bash
-      run: |
-        ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_snapshot
-
-    - name: Test Restart
-      shell: bash
-      run: |
-        if [[ "${{ matrix.kwokctl-runtime }}" != 'ubuntu-latest' ]]; then
-          export SKIP_DRY_RUN=true
-        fi
-        ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}_restart
 
     - name: Test Benchmark
       if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
