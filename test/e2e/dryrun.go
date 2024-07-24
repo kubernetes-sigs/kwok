@@ -131,6 +131,7 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m",
 			"--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime,
 			"--prometheus-port=9090", "--jaeger-port=16686", "--dashboard-port=8000",
+			"--kube-apiserver-insecure-port=6080",
 			"--enable-metrics-server", "--kube-audit-policy", kubeAuditPath,
 			"--kube-scheduler-config", schedulerConfigPath,
 		}
