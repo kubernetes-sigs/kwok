@@ -17,6 +17,7 @@ limitations under the License.
 // +k8s:deepcopy-gen=package
 // +k8s:defaulter-gen=TypeMeta
 // +k8s:conversion-gen=sigs.k8s.io/kwok/pkg/apis/v1alpha1
+// +k8s:conversion-gen=sigs.k8s.io/kwok/pkg/apis/operator/v1alpha1
 // +k8s:conversion-gen=sigs.k8s.io/kwok/pkg/apis/config/v1alpha1
 
 // Package internalversion implements the internal apiVersion of kwok's configuration
