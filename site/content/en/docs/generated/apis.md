@@ -14,6 +14,9 @@ bookToc: false
 <li>
 <a href="#kwok.x-k8s.io%2fv1alpha1">kwok.x-k8s.io/v1alpha1</a>
 </li>
+<li>
+<a href="#operator.kwok.x-k8s.io%2fv1alpha1">operator.kwok.x-k8s.io/v1alpha1</a>
+</li>
 </ul>
 <h2 id="action.kwok.x-k8s.io/v1alpha1">
 action.kwok.x-k8s.io/v1alpha1
@@ -1795,6 +1798,109 @@ StageStatus
 </td>
 <td>
 <p>Status holds status for the Stage</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="operator.kwok.x-k8s.io/v1alpha1">
+operator.kwok.x-k8s.io/v1alpha1
+<a href="#operator.kwok.x-k8s.io%2fv1alpha1"> #</a>
+</h2>
+<div>
+<p>Package v1alpha1 implements the v1alpha1 apiVersion of kwok&rsquo;s operator</p>
+</div>
+Resource Types:
+<ul>
+<li>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.Controller">Controller</a>
+</li></ul>
+<h3 id="operator.kwok.x-k8s.io/v1alpha1.Controller">
+Controller
+<a href="#operator.kwok.x-k8s.io%2fv1alpha1.Controller"> #</a>
+</h3>
+<p>
+<p>Controller provides controller configuration for a single pod.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+operator.kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>Controller</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>Standard list metadata.
+More info: <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code>
+<em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.ControllerSpec">
+ControllerSpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec holds spec for controller</p>
+<table>
+<tr>
+<td>
+<code>manages</code>
+<em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.TargetResourceRef">
+[]TargetResourceRef
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.ControllerStatus">
+ControllerStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status holds status for controller</p>
 </td>
 </tr>
 </tbody>
@@ -6727,6 +6833,264 @@ StageStatus
 </td>
 <td>
 <p>Conditions holds conditions for the Stage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="operator.kwok.x-k8s.io/v1alpha1.Condition">
+Condition
+<a href="#operator.kwok.x-k8s.io%2fv1alpha1.Condition"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.ControllerStatus">ControllerStatus</a>
+</p>
+<p>
+<p>Condition contains details for one aspect of the current state of this API Resource.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Type of condition in CamelCase or in foo.example.com/CamelCase.
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code>
+<em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.ConditionStatus">
+ConditionStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status of the condition</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lastTransitionTime</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>LastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reason</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Reason contains a programmatic identifier indicating the reason for the condition&rsquo;s last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Message is a human readable message indicating details about the transition.
+This may be an empty string.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="operator.kwok.x-k8s.io/v1alpha1.ConditionStatus">
+ConditionStatus
+(<code>string</code> alias)
+<a href="#operator.kwok.x-k8s.io%2fv1alpha1.ConditionStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.Condition">Condition</a>
+</p>
+<p>
+<p>ConditionStatus is the status of a condition.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&#34;False&#34;</code></td>
+<td><p>ConditionFalse means a resource is not in the condition.</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;True&#34;</code></td>
+<td><p>ConditionTrue means a resource is in the condition.</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;Unknown&#34;</code></td>
+<td><p>ConditionUnknown means kubernetes can&rsquo;t decide if a resource is in the condition or not.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="operator.kwok.x-k8s.io/v1alpha1.ControllerSpec">
+ControllerSpec
+<a href="#operator.kwok.x-k8s.io%2fv1alpha1.ControllerSpec"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.Controller">Controller</a>
+</p>
+<p>
+<p>ControllerSpec holds spec for controller.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>manages</code>
+<em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.TargetResourceRef">
+[]TargetResourceRef
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="operator.kwok.x-k8s.io/v1alpha1.ControllerStatus">
+ControllerStatus
+<a href="#operator.kwok.x-k8s.io%2fv1alpha1.ControllerStatus"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.Controller">Controller</a>
+</p>
+<p>
+<p>ControllerStatus holds status for controller</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code>
+<em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<p>Conditions holds conditions for controller</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="operator.kwok.x-k8s.io/v1alpha1.TargetResourceRef">
+TargetResourceRef
+<a href="#operator.kwok.x-k8s.io%2fv1alpha1.TargetResourceRef"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#operator.kwok.x-k8s.io/v1alpha1.ControllerSpec">ControllerSpec</a>
+</p>
+<p>
+<p>TargetResourceRef specifies the kind and version of the resource.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiGroup</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>APIGroup of the referent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Kind of the referent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Namespace of the resource</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the resource</p>
 </td>
 </tr>
 </tbody>

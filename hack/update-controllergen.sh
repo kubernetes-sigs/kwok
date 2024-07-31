@@ -36,6 +36,17 @@ function gen() {
     paths=./pkg/apis/v1alpha1/ \
     output:crd:artifacts:config=kustomize/crd/bases \
     output:rbac:artifacts:config=kustomize/rbac
+
+  rm -rf \
+    "${ROOT_DIR}/kustomize/operator/crd/bases" \
+    "${ROOT_DIR}/kustomize/operator/rbac/rbac.yaml"
+  echo "Generating kwok-operator crd/rbac"
+  controller-gen \
+    rbac:roleName=kwok-operator \
+    crd:allowDangerousTypes=true \
+    paths=./pkg/apis/operator/v1alpha1/ \
+    output:crd:artifacts:config=kustomize/operator/crd/bases \
+    output:rbac:artifacts:config=kustomize/operator/rbac
 }
 
 cd "${ROOT_DIR}" && gen

@@ -2,3 +2,5 @@ GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Versio
 gsutil cp -P ./bin/<OS>/<ARCH>/kwok bucket/releases/staging-prefix-<VERSION>/bin/<OS>/<ARCH>/kwok
 GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/<OS>/<ARCH>/kwokctl ./cmd/kwokctl
 gsutil cp -P ./bin/<OS>/<ARCH>/kwokctl bucket/releases/staging-prefix-<VERSION>/bin/<OS>/<ARCH>/kwokctl
+GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/<OS>/<ARCH>/kwok-operator ./cmd/kwok-operator
+gsutil cp -P ./bin/<OS>/<ARCH>/kwok-operator bucket/releases/staging-prefix-<VERSION>/bin/<OS>/<ARCH>/kwok-operator

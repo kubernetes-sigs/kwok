@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kwok-operator
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: kwok-operator
+        image: registry.k8s.io/kwok/operator
+        imagePullPolicy: IfNotPresent
+      serviceAccountName: kwok-operator
+      restartPolicy: Always

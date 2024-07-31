@@ -39,7 +39,7 @@ KUBE_RELEASES ?= $(shell echo $(SUPPORTED_KUBE_RELEASES) | cut -d ' ' -f 1-$(NUM
 # The latest kube release
 LATEST_KUBE_RELEASE ?= $(shell echo $(SUPPORTED_KUBE_RELEASES) | cut -d ' ' -f 1)
 
-BINARY ?= kwok kwokctl
+BINARY ?= kwok kwokctl kwok-operator
 
 IMAGE_PREFIX ?=
 
@@ -64,9 +64,11 @@ PRE_RELEASE ?=
 
 ifeq ($(STAGING_IMAGE_PREFIX),)
 KWOK_IMAGE ?= kwok
+KWOK_OPERATOR_IMAGE ?= operator
 CLUSTER_IMAGE ?= cluster
 else
 KWOK_IMAGE ?= $(STAGING_IMAGE_PREFIX)/kwok
+KWOK_OPERATOR_IMAGE ?= $(STAGING_IMAGE_PREFIX)/kwok-operator
 CLUSTER_IMAGE ?= $(STAGING_IMAGE_PREFIX)/cluster
 endif
 
@@ -76,7 +78,7 @@ IMAGE_PLATFORMS ?= linux/amd64 linux/arm64
 
 BINARY_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
 
-MANIFESTS ?= kwok kwokctl stage/fast metrics/usage
+MANIFESTS ?= kwok kwokctl operator stage/fast metrics/usage
 
 BUILDER ?= docker
 DOCKER_CLI_EXPERIMENTAL ?= enabled
@@ -143,7 +145,20 @@ else
 	@echo "Unsupported OS: $(GOOS)"
 endif
 
-## cross-build: Build kwok and kwokctl for all supported platforms
+## build-operator-image: Build operator binary and image
+.PHONY: build-operator-image
+build-operator-image:
+ifeq ($(GOOS),linux)
+	@make BINARY=kwok-operator build && \
+		make operator-image
+else ifeq ($(GOOS),darwin)
+	@make BINARY=kwok-operator BINARY_PLATFORMS=linux/$(GOARCH) cross-build && \
+		make IMAGE_PLATFORMS=linux/$(GOARCH) cross-operator-image
+else
+	@echo "Unsupported OS: $(GOOS)"
+endif
+
+## cross-build: Build kwok, kwok-operator and kwokctl for all supported platforms
 .PHONY: cross-build
 cross-build:
 	@./hack/releases.sh \
@@ -181,6 +196,31 @@ cross-image:
 		$(addprefix --platform=, $(IMAGE_PLATFORMS))  \
 		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
 		--image=${KWOK_IMAGE} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
+		--dry-run=${DRY_RUN} \
+		--builder=${BUILDER} \
+		--push=${PUSH}
+
+## operator-image: Build kwok operator image
+.PHONY: operator-image
+operator-image:
+	@./images/kwok-operator/build.sh \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
+		--image=${KWOK_OPERATOR_IMAGE} \
+		--version=${VERSION} \
+		--staging-prefix=${STAGING_PREFIX} \
+		--dry-run=${DRY_RUN} \
+		--builder=${BUILDER} \
+		--push=${PUSH}
+
+## cross-operator-image: Build kwok operator images for all supported platforms
+.PHONY: cross-operator-image
+cross-operator-image:
+	@./images/operator/build.sh \
+		$(addprefix --platform=, $(IMAGE_PLATFORMS))  \
+		$(addprefix --extra-tag=, $(EXTRA_TAGS)) \
+		--image=${KWOK_OPERATOR_IMAGE} \
 		--version=${VERSION} \
 		--staging-prefix=${STAGING_PREFIX} \
 		--dry-run=${DRY_RUN} \

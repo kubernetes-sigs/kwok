@@ -4,3 +4,6 @@ gh -R ghrelease release upload <VERSION> kwok-<OS>-<ARCH>
 GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/<OS>/<ARCH>/kwokctl ./cmd/kwokctl
 cp ./bin/<OS>/<ARCH>/kwokctl kwokctl-<OS>-<ARCH>
 gh -R ghrelease release upload <VERSION> kwokctl-<OS>-<ARCH>
+GOOS=<OS> GOARCH=<ARCH> go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/<OS>/<ARCH>/kwok-operator ./cmd/kwok-operator
+cp ./bin/<OS>/<ARCH>/kwok-operator kwok-operator-<OS>-<ARCH>
+gh -R ghrelease release upload <VERSION> kwok-operator-<OS>-<ARCH>
