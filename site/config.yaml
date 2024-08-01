@@ -130,6 +130,9 @@ menu:
   - identifier: technical-outcomes-scalability
     pageRef: "/docs/technical-outcomes/scalability"
     parent: technical-outcomes
+  - identifier: technical-outcomes-performance
+    pageRef: "/docs/technical-outcomes/performance"
+    parent: technical-outcomes
 
   # User Guide Children
   - identifier: all-in-one-image
@@ -319,6 +322,24 @@ menu:
     title: "Karpenter Autoscaling"
     pageRef: "/docs/technical-outcomes/scalability/scale-using-karpenter"
     parent: technical-outcomes-scalability
+
+  # Technical Outcome Performance Children
+  - identifier: technical-outcomes-performance-etcd
+    title: "Optimizing etcd Performance"
+    pageRef: "/docs/technical-outcomes/performance/etcd"
+    parent: technical-outcomes-performance
+  - identifier: technical-outcomes-performance-control-plane
+    title: "Control Plane Performance Evaluation"
+    pageRef: "/docs/technical-outcomes/performance/control-plane"
+    parent: technical-outcomes-performance
+  - identifier: technical-outcomes-performance-control-plane-single-cluster
+    title: "Single Cluster"
+    pageRef: "/docs/technical-outcomes/performance/control-plane/single-cluster"
+    parent: technical-outcomes-performance-control-plane
+  - identifier: technical-outcomes-performance-control-plane-multi-cluster
+    title: "Multi-Cluster"
+    pageRef: "/docs/technical-outcomes/performance/control-plane/multi-cluster"
+    parent: technical-outcomes-performance-control-plane
 
   after:
   - identifier: blog
