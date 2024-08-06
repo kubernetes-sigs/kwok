@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fake-app
+  template:
+    metadata:
+      labels:
+        app: fake-app
+    spec:
+      containers:
+      - name: fake-container
+        image: fake
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m

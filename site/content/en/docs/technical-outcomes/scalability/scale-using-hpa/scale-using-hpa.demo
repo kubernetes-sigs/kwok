@@ -1,0 +1,60 @@
+# Scale pod up & down using HPA
+
+# Get metrics usage
+wget https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.0/metrics-usage.yaml
+
+# Set up Cluster
+kwokctl create cluster --enable-metrics-server --config ./metrics-usage.yaml
+
+# Create a node
+kwokctl scale node --replicas 1
+
+# Create the pod
+kubectl apply -f ${WORK_DIR}/deployment.yaml
+
+# Wait for 50s
+sleep 50
+
+# Confirm metric of pod
+kubectl top pod
+
+# Deploy HPA
+kubectl apply -f ${WORK_DIR}/hpa.yaml
+
+# Wait for 5s
+sleep 5
+
+# See more details about the HPA event before scaleUp
+kubectl get hpa
+
+# Let's increase the usage metrics of the pod
+POD_NAME=$(kubectl top pods | awk 'NR>1 {print $1}')
+kubectl patch pod $POD_NAME --type=json -p='[{"op":"add","path":"/metadata/annotations","value":{"kwok.x-k8s.io/usage-cpu":"800m"}}]'
+
+# Wait for 30s
+sleep 30
+
+# See more details about the HPA event after scaleUp
+kubectl describe hpa | awk '/Events:/ {found=1} found {print}' | tail -n 1
+
+# Get scaled up HPA CPU utilization metrics
+kubectl get hpa
+
+# Let's reduce the usage metrics to the pods
+POD_NAME=$(kubectl top pods | awk 'NR>1 {print $1}')
+kubectl patch pod $POD_NAME --type=json -p='[{"op":"add","path":"/metadata/annotations","value":{"kwok.x-k8s.io/usage-cpu":"200m"}}]'
+
+# Wait for 30s
+sleep 30
+
+# See more details about the latest HPA event after scaleDown
+kubectl describe hpa | awk '/Events:/ {found=1} found {print}' | tail -n 1
+
+# Wait for 10s
+sleep 10
+
+# Get scaled down HPA CPU utilization metrics
+kubectl get hpa
+
+# Delete the cluster
+kwokctl delete cluster

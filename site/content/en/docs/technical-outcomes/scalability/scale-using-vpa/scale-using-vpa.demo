@@ -1,0 +1,40 @@
+# Scale pod CPU request up & down using VPA
+
+# Get metrics usage
+wget https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.0/metrics-usage.yaml
+
+# Set up Cluster
+kwokctl create cluster --enable-metrics-server --config ./metrics-usage.yaml --runtime binary
+
+# Create a node
+kwokctl scale node --replicas 1 --param '.allocatable.cpu="4000m"'
+
+# Create deployment
+kubectl apply -f ${WORK_DIR}/deployment.yaml
+
+# Set up VPA
+kubectl apply -f ${ROOT_DIR}/autoscaler/vertical-pod-autoscaler/deploy/vpa-v1-crd-gen.yaml
+kubectl apply -f ${ROOT_DIR}/autoscaler/vertical-pod-autoscaler/deploy/vpa-rbac.yaml
+
+# Deploy the three components of the Vertical Pod Autoscaler
+{ cd ${ROOT_DIR}/autoscaler/vertical-pod-autoscaler/ && NAMESPACE=kube-system go run ./pkg/admission-controller --kubeconfig ~/.kube/config --client-ca-file ~/.kwok/clusters/kwok/pki/ca.crt --tls-cert-file  ~/.kwok/clusters/kwok/pki/admin.crt --tls-private-key  ~/.kwok/clusters/kwok/pki/admin.key --webhook-address https://127.0.0.1 --webhook-port 8080 --register-by-url --port 8080 ;} &
+{ cd ${ROOT_DIR}/autoscaler/vertical-pod-autoscaler/ && NAMESPACE=kube-system go run ./pkg/recommender --kubeconfig ~/.kube/config ;} &
+{ cd ${ROOT_DIR}/autoscaler/vertical-pod-autoscaler/ && NAMESPACE=kube-system go run ./pkg/updater --kubeconfig ~/.kube/config ;} &
+
+# Create the VPA
+kubectl apply -f ${WORK_DIR}/vpa.yaml
+
+# Wait until the recommendation is provided
+kubectl wait --for=condition=RecommendationProvided=true vpa/fake-vpa --timeout=120s
+
+# Check recommended VPA values
+kubectl describe vpa fake-vpa | awk '/Recommendation:/,/Events:/' | sed '$d'
+
+# Wait 60s
+sleep 60
+
+# See the new applied CPU limits
+kubectl get pod -o yaml | grep -i cpu:
+
+# Delete the cluster
+kwokctl delete cluster
