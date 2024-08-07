@@ -84,12 +84,14 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 	return meta, nil
 }
 
+var now = time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC)
+
 func testingStage(ctx context.Context, testTarget Obj, stage *lifecycle.Stage) (any, error) {
 	meta := map[string]any{
 		"stage": stage.Name(),
 	}
 
-	delay, ok := stage.Delay(ctx, stage, time.Now())
+	delay, ok := stage.DelayRangePossible(ctx, testTarget, now)
 	if ok {
 		meta["delay"] = delay
 	}

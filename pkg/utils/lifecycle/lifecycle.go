@@ -329,15 +329,41 @@ func (s *Stage) Delay(ctx context.Context, v interface{}, now time.Time) (time.D
 		return duration, true
 	}
 
-	if jitterDuration < duration {
+	if jitterDuration <= duration {
 		return jitterDuration, true
 	}
 
-	if jitter := jitterDuration - duration; jitter > 0 {
-		//nolint:gosec
-		duration += time.Duration(rand.Int63n(int64(jitter)))
-	}
+	//nolint:gosec
+	duration += time.Duration(rand.Int63n(int64(jitterDuration - duration)))
+
 	return duration, true
+}
+
+// DelayRangePossible returns possible range of delay.
+func (s *Stage) DelayRangePossible(ctx context.Context, v interface{}, now time.Time) ([]time.Duration, bool) {
+	if s.duration == nil {
+		return nil, false
+	}
+
+	duration, ok := s.duration.Get(ctx, v, now)
+	if !ok {
+		return nil, false
+	}
+
+	if s.jitterDuration == nil {
+		return []time.Duration{duration}, true
+	}
+
+	jitterDuration, ok := s.jitterDuration.Get(ctx, v, now)
+	if !ok {
+		return []time.Duration{duration}, true
+	}
+
+	if jitterDuration <= duration {
+		return []time.Duration{jitterDuration}, true
+	}
+
+	return []time.Duration{duration, jitterDuration}, true
 }
 
 // Next returns the next of the stage.
