@@ -25,6 +25,12 @@ import (
 	"sigs.k8s.io/kwok/test/e2e"
 )
 
+func TestWorkable(t *testing.T) {
+	f0 := e2e.CaseWorkable(kwokctlPath, clusterName, runtimeEnv).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
 func TestBenchmarking(t *testing.T) {
 	if runtime.GOOS != "linux" {
 		t.Skip("skipping test on non-linux platform")

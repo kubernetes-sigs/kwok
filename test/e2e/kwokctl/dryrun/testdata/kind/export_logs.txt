@@ -7,4 +7,8 @@ kube-apiserver logs -n kube-system kube-apiserver-kwok-<CLUSTER_NAME>-control-pl
 kube-controller-manager logs -n kube-system kube-controller-manager-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kube-controller-manager.log
 kube-scheduler logs -n kube-system kube-scheduler-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kube-scheduler.log
 kwok-controller logs -n kube-system kwok-controller-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kwok-controller.log
+dashboard logs -n kube-system dashboard-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/dashboard.log
+dashboard-metrics-scraper logs -n kube-system dashboard-metrics-scraper-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/dashboard-metrics-scraper.log
 metrics-server logs -n kube-system metrics-server-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/metrics-server.log
+prometheus logs -n kube-system prometheus-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/prometheus.log
+jaeger logs -n kube-system jaeger-kwok-<CLUSTER_NAME>-control-plane ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/jaeger.log

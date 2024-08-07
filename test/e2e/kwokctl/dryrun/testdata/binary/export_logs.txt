@@ -8,3 +8,5 @@ cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-controller-manager.log <
 cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kube-scheduler.log <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kube-scheduler.log
 cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kwok-controller.log <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kwok-controller.log
 cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/metrics-server.log <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/metrics-server.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/prometheus.log <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/prometheus.log
+cp <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/jaeger.log <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/jaeger.log
