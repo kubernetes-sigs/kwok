@@ -2,7 +2,8 @@ apiGroup: v1
 kind: Node
 name: node-not-ready
 stages:
-- delay: 1000000000
+- delay:
+  - 1000000000
   next:
   - data:
       status:
