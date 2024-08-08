@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"golang.org/x/sync/errgroup"
 
@@ -116,10 +117,58 @@ func applyComponentPatch(component *internalversion.Component, patch internalver
 
 	component.Volumes = append(component.Volumes, patch.ExtraVolumes...)
 	component.Envs = append(component.Envs, patch.ExtraEnvs...)
+	applyComponentPatchArgs(component, patch)
+}
+
+func applyComponentPatchArgs(component *internalversion.Component, patch internalversion.ComponentPatches) {
+	if patch.Name != component.Name {
+		return
+	}
+	argsmap := make(map[string][]string)
+	for _, arg := range component.Args {
+		k, v := getKeyValueFromArg(arg)
+		if k == "" || v == "" {
+			continue
+		}
+		values := []string{}
+		if _, ok := argsmap[k]; ok {
+			values = argsmap[k]
+		}
+		values = append(values, v)
+		argsmap[k] = values
+	}
 
 	for _, a := range patch.ExtraArgs {
-		component.Args = append(component.Args, fmt.Sprintf("--%s=%s", a.Key, a.Value))
+		_, existOldArg := argsmap[a.Key]
+		values := []string{}
+		if _, ok := argsmap[a.Key]; ok {
+			values = argsmap[a.Key]
+		}
+		if existOldArg && a.Override {
+			values = []string{}
+		}
+		values = append(values, a.Value)
+		argsmap[a.Key] = values
 	}
+
+	component.Args = []string{}
+	for k, v := range argsmap {
+		for _, v1 := range v {
+			component.Args = append(component.Args, fmt.Sprintf("--%s=%s", k, v1))
+		}
+	}
+	sort.Strings(component.Args)
+}
+
+func getKeyValueFromArg(arg string) (string, string) {
+	if !strings.Contains(arg, "=") {
+		return "", ""
+	}
+	if !strings.HasPrefix(arg, "--") {
+		return "", ""
+	}
+	strstmp := strings.Split(arg, "=")
+	return strings.ReplaceAll(strstmp[0], "--", ""), strings.ReplaceAll(arg, strstmp[0]+"=", "")
 }
 
 // ExpandVolumesHostPaths expands relative paths specified in volumes to absolute paths
