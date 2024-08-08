@@ -94,3 +94,29 @@ var (
 func GetRuntimeMode(runtime string) string {
 	return runtimeTypeMap[runtime]
 }
+
+// PatchComponent patches a component.
+func PatchComponent(c internalversion.Component, patch internalversion.ComponentPatches) internalversion.Component {
+	for _, a := range patch.ExtraArgs {
+		c.Args = append(c.Args, fmt.Sprintf("--%s=%s", a.Key, a.Value))
+	}
+
+	for _, v := range patch.ExtraVolumes {
+		c.Volumes = append(c.Volumes, internalversion.Volume{
+			Name:      v.Name,
+			HostPath:  v.HostPath,
+			PathType:  v.PathType,
+			MountPath: v.MountPath,
+			ReadOnly:  v.ReadOnly,
+		})
+	}
+
+	for _, e := range patch.ExtraEnvs {
+		c.Envs = append(c.Envs, internalversion.Env{
+			Name:  e.Name,
+			Value: e.Value,
+		})
+	}
+
+	return c
+}
