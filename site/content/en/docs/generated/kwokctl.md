@@ -27,6 +27,7 @@ kwokctl [command] [flags]
 * [kwokctl hack](kwokctl_hack.md)	 - [experimental] Hack [get, put, delete] resources in etcd without apiserver
 * [kwokctl kubectl](kwokctl_kubectl.md)	 - kubectl in cluster
 * [kwokctl logs](kwokctl_logs.md)	 - Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, metrics-server, prometheus, jaeger]
+* [kwokctl port-forward](kwokctl_port-forward.md)	 - Forward a local port to a port on a pod
 * [kwokctl scale](kwokctl_scale.md)	 - Scale a resource in cluster
 * [kwokctl snapshot](kwokctl_snapshot.md)	 - Snapshot [save, restore, record, replay, export] one of cluster
 * [kwokctl start](kwokctl_start.md)	 - Start one of [cluster]
