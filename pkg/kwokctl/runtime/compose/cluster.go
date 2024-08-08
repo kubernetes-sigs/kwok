@@ -184,10 +184,14 @@ type env struct {
 	caCertPath                    string
 	adminKeyPath                  string
 	adminCertPath                 string
+	kubeControllerManagerCertPath string
+	kubeControllerManagerKeyPath  string
 	inClusterPkiPath              string
 	inClusterCaCertPath           string
 	inClusterAdminKeyPath         string
 	inClusterAdminCertPath        string
+	inClusterkubeControllerManagerCertPath       string
+	inClusterkubeControllerManagerKeyPath       string
 	inClusterPort                 uint32
 	scheme                        string
 	usedPorts                     sets.Sets[uint32]
@@ -220,6 +224,8 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	inClusterCaCertPath := path.Join(inClusterPkiPath, "ca.crt")
 	inClusterAdminKeyPath := path.Join(inClusterPkiPath, "admin.key")
 	inClusterAdminCertPath := path.Join(inClusterPkiPath, "admin.crt")
+	inClusterkubeControllerManagerCertPath := path.Join(inClusterPkiPath, "kube-controller-manager.crt")
+	inClusterkubeControllerManagerKeyPath  := path.Join(inClusterPkiPath, "kube-controller-manager.key")
 
 	inClusterPort := uint32(8080)
 	scheme := "http"
@@ -252,6 +258,8 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 		inClusterCaCertPath:           inClusterCaCertPath,
 		inClusterAdminKeyPath:         inClusterAdminKeyPath,
 		inClusterAdminCertPath:        inClusterAdminCertPath,
+		inClusterkubeControllerManagerCertPath: inClusterkubeControllerManagerCertPath,
+		inClusterkubeControllerManagerKeyPath: inClusterkubeControllerManagerKeyPath,
 		inClusterPort:                 inClusterPort,
 		scheme:                        scheme,
 		usedPorts:                     usedPorts,
@@ -501,6 +509,8 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			CaCertPath:                         env.caCertPath,
 			AdminCertPath:                      env.adminCertPath,
 			AdminKeyPath:                       env.adminKeyPath,
+			KubeControllerManagerCertPath: env.kubeControllerManagerCertPath,
+			KubeControllerManagerKeyPath: env.kubeControllerManagerKeyPath,
 			KubeAuthorization:                  conf.KubeAuthorization,
 			KubeconfigPath:                     env.inClusterOnHostKubeconfigPath,
 			KubeFeatureGates:                   conf.KubeFeatureGates,
