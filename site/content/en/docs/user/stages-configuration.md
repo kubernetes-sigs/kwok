@@ -190,8 +190,8 @@ Here are the steps to remove a pod in Kubernetes:
 
 To simulate this situation, you can set `jitterDurationFrom` of a "Delete Stage" (`next.delete: true`) to point to `metadata.deletionTimestamp`.
 This will cause the deletion operation to occur at a random moment before `metadata.deletionTimestamp` expires.
-You can also let `kwok` perform the deletion in a deterministic way by pointing `durationFrom` to `metadata.deletionTimple`,
-making the deletion happen exactly at `metadata.deletionTimple`.
+You can also let `kwok` perform the deletion in a deterministic way by pointing `durationFrom` to `metadata.deletionTimestamp`,
+making the deletion happen exactly at `metadata.deletionTimestamp`.
 
 ## Examples
 
