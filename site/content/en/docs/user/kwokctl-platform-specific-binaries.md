@@ -8,6 +8,8 @@ title: "Platform-Specific Binaries"
 
 This document provides details on how to build Kubernetes binaries and run `kwokctl` locally.
 
+In v0.6.0 and later, this will be enabled automatically and no longer needs to be configured.
+
 {{< /hint >}}
 
 ## Overview

@@ -3,3 +3,4 @@
 /resources
 /*.lock
 /public
+/_vendor

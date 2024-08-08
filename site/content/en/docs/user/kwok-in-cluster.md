@@ -53,18 +53,18 @@ The above configuration sets the CPU and memory usage of all the containers mana
 To override the defaults, you can add annotation `"kwok.x-k8s.io/usage-cpu"` (for cpu usage) and
 `"kwok.x-k8s.io/usage-memory"` (for memory usage) with any quantity value you want to the fake pods.
 
-The resource usage simulation used above is annotation-based and the configuration is available at [here][resource usage from annotation].
-For the explanation of how it works and more complex resource usage simulation methods, please refer to [ResourceUsage configuration].
+The resource usage simulation used above is annotation-based and the configuration is available at [here](https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/metrics/usage).
+For the explanation of how it works and more complex resource usage simulation methods, please refer to [ResourceUsage configuration]({{< relref "/docs/user/resource-usage-configuration" >}}).
 
 {{< /tab >}}
 
-{{< tab "Helm Chart (WIP)" >}}
+{{< tab "Helm Chart" >}}
 
 The kwok helm chart is listed on the [artifact hub](https://artifacthub.io/packages/helm/kwok/kwok).
 
 {{< /tab >}}
 
-{{< tab "Kustomize (<0.4)" >}}
+{{< tab "Kustomize (<v0.4)" >}}
 
 ## Variables preparation
 
@@ -116,5 +116,3 @@ kubectl apply -f "${KWOK_WORK_DIR}/kwok.yaml"
 Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
 
 [manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
-[resource usage from annotation]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/metrics/usage
-[ResourceUsage configuration]: {{< relref "/docs/user/resource-usage-configuration" >}}

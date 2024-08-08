@@ -9,7 +9,6 @@ disablePathToLower: false
 enableGitInfo: true
 disableKinds:
 - taxonomy
-- taxonomyTerm
 
 permalinks:
   posts: "/:section/:year/:month/:day/:slug/"
@@ -161,44 +160,48 @@ menu:
     weight: 1060
     parent: user-guide
 
-  - identifier: kwokctl-advanced-usage
-    title: "`kwokctl` Advanced Usage"
-    weight: 200010
-    parent: user-guide
-  - identifier: snapshots
-    pageRef: "/docs/user/kwokctl-snapshot"
-    parent: kwokctl-advanced-usage
-  - identifier: auditing
-    pageRef: "/docs/user/kwokctl-auditing"
-    parent: kwokctl-advanced-usage
-  - identifier: authorization
-    pageRef: "/docs/user/kwokctl-authorization"
-    parent: kwokctl-advanced-usage
-  - identifier: admission
-    pageRef: "/docs/user/kwokctl-admission"
-    parent: kwokctl-advanced-usage
-  - identifier: platform-specific-binaries
-    pageRef: "/docs/user/kwokctl-platform-specific-binaries"
-    parent: kwokctl-advanced-usage
-
   - identifier: examples
     title: Examples
-    parent: kwokctl-advanced-usage
+    parent: user-guide
+  - identifier: kwokctl-advanced
+    title: "`kwokctl` Advanced"
+    weight: 200010
+    parent: examples
+  - identifier: snapshots
+    pageRef: "/docs/user/kwokctl-snapshot"
+    parent: kwokctl-advanced
+  - identifier: auditing
+    pageRef: "/docs/user/kwokctl-auditing"
+    parent: kwokctl-advanced
+  - identifier: authorization
+    pageRef: "/docs/user/kwokctl-authorization"
+    parent: kwokctl-advanced
+  - identifier: admission
+    pageRef: "/docs/user/kwokctl-admission"
+    parent: kwokctl-advanced
+  - identifier: platform-specific-binaries
+    pageRef: "/docs/user/kwokctl-platform-specific-binaries"
+    parent: kwokctl-advanced
+
+  - identifier: kwokctl-integration
+    title: "`kwokctl` Integration"
+    weight: 200020
+    parent: examples
   - identifier: argo
     pageRef: "/docs/examples/argo"
-    parent: examples
+    parent: kwokctl-integration
   - identifier: linkerd
     pageRef: "/docs/examples/linkerd"
-    parent: examples
+    parent: kwokctl-integration
   - identifier: istio
     pageRef: "/docs/examples/istio"
-    parent: examples
+    parent: kwokctl-integration
   - identifier: metrics-server
     pageRef: "/docs/examples/metrics-server"
-    parent: examples
+    parent: kwokctl-integration
   - identifier: metrics
     pageRef: "/docs/examples/prometheus"
-    parent: examples
+    parent: kwokctl-integration
 
   - identifier: tools
     title: Tools
@@ -329,10 +332,10 @@ menu:
     pageRef: "/docs/adopters"
     weight: 20
   - identifier: roadmap
-    title: Roadmap ⛓
+    title: Roadmap ↩
     url: https://github.com/orgs/kubernetes-sigs/projects/21
     weight: 30
   - identifier: source-code
-    title: Source Code ⛓
+    title: Source Code ↩
     url: https://github.com/kubernetes-sigs/kwok
     weight: 40
