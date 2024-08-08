@@ -83,7 +83,7 @@ func GetUsedPorts(ctx context.Context) (rets sets.Sets[uint32]) {
 			continue
 		}
 
-		confs, err := config.Load(ctx, confPath)
+		confs, _, err := config.Load(ctx, confPath)
 		if err != nil {
 			logger.Warn("Failed to load config file", "path", confPath, "error", err)
 			continue

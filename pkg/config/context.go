@@ -18,6 +18,7 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 
 	"sigs.k8s.io/kwok/pkg/log"
 )
@@ -25,13 +26,15 @@ import (
 type configCtx int
 
 type configValue struct {
-	Objects []InternalObject
+	Objects     []InternalObject
+	Unsupported []json.RawMessage
 }
 
 // setupContext sets the given objects in the context.
-func setupContext(ctx context.Context, objs []InternalObject) context.Context {
+func setupContext(ctx context.Context, objs []InternalObject, unsupported []json.RawMessage) context.Context {
 	val := &configValue{
-		Objects: objs,
+		Objects:     objs,
+		Unsupported: unsupported,
 	}
 	return context.WithValue(ctx, configCtx(0), val)
 }
@@ -60,4 +63,17 @@ func GetFromContext(ctx context.Context) []InternalObject {
 	}
 
 	return val.Objects
+}
+
+// GetUnsupportedFromContext returns the unsupported objects from the context.
+func GetUnsupportedFromContext(ctx context.Context) []json.RawMessage {
+	v := ctx.Value(configCtx(0))
+	val, ok := v.(*configValue)
+	if !ok {
+		logger := log.FromContext(ctx)
+		logger.Warn("Unable to get unsupported from context")
+		return nil
+	}
+
+	return val.Unsupported
 }

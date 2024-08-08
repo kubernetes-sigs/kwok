@@ -43,12 +43,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 func runE(ctx context.Context) error {
 	list := config.GetFromContext(ctx)
+	unsupported := config.GetUnsupportedFromContext(ctx)
 	p := path.Join(config.WorkDir, consts.ConfigName)
 	if dryrun.DryRun {
 		dryrun.PrintMessage("# Tidy the config file")
 		return nil
 	}
-	err := config.Save(ctx, p, list)
+	err := config.Save(ctx, p, list, unsupported)
 	if err != nil {
 		return err
 	}

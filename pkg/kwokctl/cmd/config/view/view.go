@@ -49,7 +49,8 @@ func runE(ctx context.Context) error {
 		return nil
 	}
 	list := config.GetFromContext(ctx)
-	err := config.SaveTo(ctx, os.Stdout, list)
+	unsupported := config.GetUnsupportedFromContext(ctx)
+	err := config.SaveTo(ctx, os.Stdout, list, unsupported)
 	if err != nil {
 		return err
 	}

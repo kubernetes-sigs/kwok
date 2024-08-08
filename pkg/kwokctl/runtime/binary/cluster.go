@@ -17,7 +17,6 @@ limitations under the License.
 package binary
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -35,7 +34,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
-	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -46,7 +44,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // Cluster is an implementation of Runtime for binary
@@ -1219,23 +1216,19 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 	return nil
 }
 
-// InitCRs initializes the CRs.
-func (c *Cluster) InitCRs(ctx context.Context) error {
+// PreInit initializes the cluster
+func (c *Cluster) PreInit(ctx context.Context) error {
+	err := c.Cluster.PreInit(ctx)
+	if err != nil {
+		return err
+	}
+
 	config, err := c.Config(ctx)
 	if err != nil {
 		return err
 	}
 	conf := config.Options
 
-	if c.IsDryRun() {
-		if conf.EnableMetricsServer {
-			dryrun.PrintMessage("# Set up apiservice for metrics server")
-		}
-
-		return nil
-	}
-
-	buf := bytes.NewBuffer(nil)
 	if conf.EnableMetricsServer {
 		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{
 			Port:         conf.MetricsServerPort,
@@ -1244,28 +1237,10 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		_, _ = buf.WriteString(apiservice)
-		_, _ = buf.WriteString("---\n")
+		err = c.AddCRs(ctx, []byte(apiservice))
+		if err != nil {
+			return err
+		}
 	}
-
-	if buf.Len() == 0 {
-		return nil
-	}
-
-	clientset, err := c.GetClientset(ctx)
-	if err != nil {
-		return err
-	}
-
-	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
-		Clientset: clientset,
-		NoFilers:  true,
-	})
-	if err != nil {
-		return err
-	}
-
-	decoder := yaml.NewDecoder(buf)
-
-	return loader.Load(ctx, decoder)
+	return nil
 }
