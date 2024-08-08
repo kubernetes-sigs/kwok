@@ -1,0 +1,17 @@
+apiVersion: v2
+description: KWOK Operator
+type: application
+home: https://kwok.sigs.k8s.io
+icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+keywords:
+- kubernetes
+- kwok
+- operator
+sources:
+- https://github.com/kubernetes-sigs/kwok
+name: operator
+maintainers:
+- name: wzshiming
+  email: wzshiming@hotmail.com
+appVersion: v0.6.0
+version: 0.0.1
