@@ -180,17 +180,17 @@ metadata:
 spec:
   containers:
   - args:
+    - --config=~/.kwok/kwok.yaml
+    - --kubeconfig=~/.kube/config
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-    - --kubeconfig=~/.kube/config
-    - --config=~/.kwok/kwok.yaml
-    - --tls-cert-file=/etc/kubernetes/pki/admin.crt
-    - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     - --node-ip=$(POD_IP)
+    - --node-lease-duration-seconds=40
     - --node-name=kwok-controller.kube-system.svc
     - --node-port=10247
     - --server-address=0.0.0.0:10247
-    - --node-lease-duration-seconds=40
+    - --tls-cert-file=/etc/kubernetes/pki/admin.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     command:
     - kwok
     env:
@@ -252,16 +252,16 @@ metadata:
 spec:
   containers:
   - args:
-    - --insecure-bind-address=0.0.0.0
     - --bind-address=127.0.0.1
-    - --port=0
+    - --disable-settings-authorizer
     - --enable-insecure-login
     - --enable-skip-login
-    - --disable-settings-authorizer
+    - --insecure-bind-address=0.0.0.0
+    - --insecure-port=8080
+    - --kubeconfig=~/.kube/config
+    - --port=0
     - --sidecar-host=127.0.0.1:8000
     - --system-banner=Welcome to kwok-<CLUSTER_NAME>
-    - --kubeconfig=~/.kube/config
-    - --insecure-port=8080
     image: docker.io/kubernetesui/dashboard:v2.7.0
     imagePullPolicy: Never
     name: dashboard

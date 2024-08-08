@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"golang.org/x/sync/errgroup"
 
@@ -107,6 +108,29 @@ func ApplyComponentPatches(component *internalversion.Component, patches []inter
 	for _, patch := range patches {
 		applyComponentPatch(component, patch)
 	}
+	component.Args = sortArgsOnCommand(component.Args)
+}
+
+func sortArgsOnCommand(args []string) []string {
+	var tmp []string
+	out := make([]string, 0, len(args))
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "--") && arg != "--" {
+			tmp = append(tmp, arg)
+		} else {
+			if len(tmp) != 0 {
+				sort.Strings(tmp)
+				out = append(out, tmp...)
+				tmp = tmp[:0]
+			}
+			out = append(out, arg)
+		}
+	}
+	if len(tmp) != 0 {
+		sort.Strings(tmp)
+		out = append(out, tmp...)
+	}
+	return out
 }
 
 func applyComponentPatch(component *internalversion.Component, patch internalversion.ComponentPatches) {
