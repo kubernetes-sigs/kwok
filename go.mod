@@ -27,8 +27,8 @@ require (
 	github.com/wzshiming/httpseek v0.1.0
 	go.etcd.io/etcd/client/v3 v3.5.14
 	golang.org/x/sync v0.7.0
-	golang.org/x/sys v0.21.0
-	golang.org/x/term v0.21.0
+	golang.org/x/sys v0.23.0
+	golang.org/x/term v0.23.0
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
 	k8s.io/apiserver v0.30.2
