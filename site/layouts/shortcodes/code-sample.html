@@ -5,7 +5,7 @@
 
 {{ $filename := $file }}
 {{ if not (hasPrefix $filename "/") }}
-{{ $filename = printf "%s/%s" $page.Path $file }}
+{{ $filename = path.Join $page.Path $file }}
 {{ end }}
 {{ $filename = safeURL $filename }}
 
