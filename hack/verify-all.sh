@@ -43,7 +43,9 @@ if [[ "${VERIFY_GO_FORMAT:-true}" == "true" ]]; then
   "${ROOT_DIR}"/hack/verify-go-format.sh || failed+=(go-format)
 fi
 
-if [[ "${VERIFY_GO_LINT:-true}" == "true" ]]; then
+# TODO: Switch on after a while
+# https://github.com/golangci/golangci-lint/issues/4909
+if [[ "${VERIFY_GO_LINT:-false}" == "true" ]]; then
   echo "[*] Verifying go lint..."
   "${ROOT_DIR}"/hack/verify-go-lint.sh || failed+=(go-lint)
 fi

@@ -403,7 +403,7 @@ func Test_readLogs(t *testing.T) {
 			err = readLogs(ctx, file.Name(), opts, stdoutBuf, stderrBuf)
 
 			if err != nil && !errors.Is(err, errContextCanceled) {
-				t.Fatalf(err.Error())
+				t.Fatal(err)
 			}
 			if stderrBuf.Len() > 0 {
 				t.Fatalf("Stderr: %v", stderrBuf.String())

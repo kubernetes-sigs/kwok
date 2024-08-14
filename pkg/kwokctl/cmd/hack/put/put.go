@@ -179,7 +179,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		response = func(kv *etcd.KeyValue) error {
 			count++
 			if kv != nil {
-				fmt.Fprintf(os.Stdout, "%s\n", kv.Key)
+				_, _ = fmt.Fprintf(os.Stdout, "%s\n", kv.Key)
 			}
 			return nil
 		}

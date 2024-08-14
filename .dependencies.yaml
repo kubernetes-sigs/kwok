@@ -13,6 +13,8 @@ dependencies:
     match: "go "
   - path: .github/workflows/golangci-lint.yaml
     match: "GO_VERSION: "
+  - path: .golangci.yaml
+    match: "go: "
   - path: .github/workflows/releases.yaml
     match: "GO_VERSION: "
   - path: .github/workflows/test.yaml
@@ -21,7 +23,7 @@ dependencies:
     match: "GO_VERSION="
 
 - name: "golangci"
-  version: 1.58.2
+  version: 1.60.1
   refPaths:
   - path: .github/workflows/golangci-lint.yaml
     match: "GOLANGCI_VERSION: "
