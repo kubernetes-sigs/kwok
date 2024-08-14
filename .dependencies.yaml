@@ -7,7 +7,7 @@ dependencies:
     match: sigs.k8s.io/zeitgeist@v
 
 - name: "golang"
-  version: 1.22.3
+  version: 1.23.0
   refPaths:
   - path: go.mod
     match: "go "
