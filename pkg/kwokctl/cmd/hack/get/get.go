@@ -172,14 +172,14 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 			}
 			inMediaType, err := etcd.DetectMediaType(value)
 			if err != nil {
-				fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
+				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
 				return nil
 			}
 			_, data, err := etcd.Convert(inMediaType, outMediaType, value)
 			if err != nil {
-				fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
+				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
 			} else {
-				fmt.Fprintf(os.Stdout, "---\n# %s | %s\n%s\n", kv.Key, inMediaType, data)
+				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | %s\n%s\n", kv.Key, inMediaType, data)
 			}
 			return nil
 		}
@@ -193,27 +193,27 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 			}
 			inMediaType, err := etcd.DetectMediaType(value)
 			if err != nil {
-				fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
+				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
 				return nil
 			}
 			_, data, err := etcd.Convert(inMediaType, outMediaType, value)
 			if err != nil {
-				fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
+				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
 			} else {
-				fmt.Fprintf(os.Stdout, "---\n# %s | %s\n%s\n", kv.Key, inMediaType, data)
+				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | %s\n%s\n", kv.Key, inMediaType, data)
 			}
 			return nil
 		}
 	case "raw":
 		response = func(kv *etcd.KeyValue) error {
 			count++
-			fmt.Fprintf(os.Stdout, "%s\n%s\n", kv.Key, kv.Value)
+			_, _ = fmt.Fprintf(os.Stdout, "%s\n%s\n", kv.Key, kv.Value)
 			return nil
 		}
 	case "key":
 		response = func(kv *etcd.KeyValue) error {
 			count++
-			fmt.Fprintf(os.Stdout, "%s\n", kv.Key)
+			_, _ = fmt.Fprintf(os.Stdout, "%s\n", kv.Key)
 			return nil
 		}
 	default:

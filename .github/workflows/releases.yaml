@@ -8,7 +8,7 @@ env:
   PUSH: 'true'
   PRE_RELEASE: GA
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GO_VERSION: "1.22.3"
+  GO_VERSION: "1.23.0"
 
 jobs:
   releases:

@@ -58,12 +58,7 @@ linters-settings:
       alias: metav1
     - pkg: k8s.io/apimachinery/pkg/api/errors
       alias: apierrors
-  staticcheck:
-    run:
-      go: "1.22"
   stylecheck:
-    run:
-      go: "1.22"
     # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     checks: ["all", "-ST1000", "-ST1003"]
   depguard:
@@ -197,5 +192,5 @@ run:
   concurrency: 1
   timeout: 10m
   allow-parallel-runners: false
-  skip-dirs-use-default: true
-  go: "1.22"
+  allow-serial-runners: true
+  go: "1.23.0"
