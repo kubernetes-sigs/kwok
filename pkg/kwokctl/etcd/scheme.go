@@ -21,6 +21,7 @@ import (
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	admissionregistrationv1alpha1 "k8s.io/api/admissionregistration/v1alpha1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
+	apidiscoveryv2 "k8s.io/api/apidiscovery/v2"
 	apidiscoveryv2beta1 "k8s.io/api/apidiscovery/v2beta1"
 	apiserverinternalv1alpha1 "k8s.io/api/apiserverinternal/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -41,6 +42,7 @@ import (
 	certificatesv1alpha1 "k8s.io/api/certificates/v1alpha1"
 	certificatesv1beta1 "k8s.io/api/certificates/v1beta1"
 	coordinationv1 "k8s.io/api/coordination/v1"
+	coordinationv1alpha1 "k8s.io/api/coordination/v1alpha1"
 	coordinationv1beta1 "k8s.io/api/coordination/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -52,6 +54,7 @@ import (
 	flowcontrolv1beta1 "k8s.io/api/flowcontrol/v1beta1"
 	flowcontrolv1beta2 "k8s.io/api/flowcontrol/v1beta2"
 	flowcontrolv1beta3 "k8s.io/api/flowcontrol/v1beta3"
+	imagepolicyv1alpha1 "k8s.io/api/imagepolicy/v1alpha1"
 	networkingv1 "k8s.io/api/networking/v1"
 	networkingv1alpha1 "k8s.io/api/networking/v1alpha1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
@@ -63,13 +66,14 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	rbacv1alpha1 "k8s.io/api/rbac/v1alpha1"
 	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
-	resourcev1alpha2 "k8s.io/api/resource/v1alpha2"
+	resourcev1alpha3 "k8s.io/api/resource/v1alpha3"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	schedulingv1alpha1 "k8s.io/api/scheduling/v1alpha1"
 	schedulingv1beta1 "k8s.io/api/scheduling/v1beta1"
 	storagev1 "k8s.io/api/storage/v1"
 	storagev1alpha1 "k8s.io/api/storage/v1alpha1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
+	storagemigrationv1alpha1 "k8s.io/api/storagemigration/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -78,6 +82,7 @@ func AddToScheme(scheme *runtime.Scheme) {
 	_ = admissionregistrationv1.AddToScheme(scheme)
 	_ = admissionregistrationv1alpha1.AddToScheme(scheme)
 	_ = admissionregistrationv1beta1.AddToScheme(scheme)
+	_ = apidiscoveryv2.AddToScheme(scheme)
 	_ = apidiscoveryv2beta1.AddToScheme(scheme)
 	_ = apiserverinternalv1alpha1.AddToScheme(scheme)
 	_ = appsv1.AddToScheme(scheme)
@@ -98,6 +103,7 @@ func AddToScheme(scheme *runtime.Scheme) {
 	_ = certificatesv1alpha1.AddToScheme(scheme)
 	_ = certificatesv1beta1.AddToScheme(scheme)
 	_ = coordinationv1.AddToScheme(scheme)
+	_ = coordinationv1alpha1.AddToScheme(scheme)
 	_ = coordinationv1beta1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
 	_ = discoveryv1.AddToScheme(scheme)
@@ -109,6 +115,7 @@ func AddToScheme(scheme *runtime.Scheme) {
 	_ = flowcontrolv1beta1.AddToScheme(scheme)
 	_ = flowcontrolv1beta2.AddToScheme(scheme)
 	_ = flowcontrolv1beta3.AddToScheme(scheme)
+	_ = imagepolicyv1alpha1.AddToScheme(scheme)
 	_ = networkingv1.AddToScheme(scheme)
 	_ = networkingv1alpha1.AddToScheme(scheme)
 	_ = networkingv1beta1.AddToScheme(scheme)
@@ -120,10 +127,11 @@ func AddToScheme(scheme *runtime.Scheme) {
 	_ = rbacv1.AddToScheme(scheme)
 	_ = rbacv1alpha1.AddToScheme(scheme)
 	_ = rbacv1beta1.AddToScheme(scheme)
-	_ = resourcev1alpha2.AddToScheme(scheme)
+	_ = resourcev1alpha3.AddToScheme(scheme)
 	_ = schedulingv1.AddToScheme(scheme)
 	_ = schedulingv1alpha1.AddToScheme(scheme)
 	_ = schedulingv1beta1.AddToScheme(scheme)
+	_ = storagemigrationv1alpha1.AddToScheme(scheme)
 	_ = storagev1.AddToScheme(scheme)
 	_ = storagev1alpha1.AddToScheme(scheme)
 	_ = storagev1beta1.AddToScheme(scheme)

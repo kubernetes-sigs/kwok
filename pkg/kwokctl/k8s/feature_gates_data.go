@@ -27,7 +27,7 @@ var rawData = []FeatureSpec{
 	// APIPriorityAndFairness
 	{"APIPriorityAndFairness", Alpha, 17, 19},
 	{"APIPriorityAndFairness", Beta, 20, 28},
-	{"APIPriorityAndFairness", GA, 29, -1},
+	{"APIPriorityAndFairness", GA, 29, 30},
 
 	// APIResponseCompression
 	{"APIResponseCompression", Alpha, 8, 15},
@@ -47,7 +47,7 @@ var rawData = []FeatureSpec{
 	{"APIServerTracing", Beta, 27, -1},
 
 	// APIServingWithRoutine
-	{"APIServingWithRoutine", Beta, 30, -1},
+	{"APIServingWithRoutine", Alpha, 30, -1},
 
 	// Accelerators
 	{"Accelerators", Alpha, 6, 10},
@@ -70,27 +70,44 @@ var rawData = []FeatureSpec{
 	{"AggregatedDiscoveryEndpoint", Beta, 27, 29},
 	{"AggregatedDiscoveryEndpoint", GA, 30, -1},
 
+	// AllowDNSOnlyNodeCSR
+	{"AllowDNSOnlyNodeCSR", Deprecated, 31, -1},
+
 	// AllowInsecureBackendProxy
 	{"AllowInsecureBackendProxy", Beta, 17, 20},
 	{"AllowInsecureBackendProxy", GA, 21, 22},
 
+	// AllowInsecureKubeletCertificateSigningRequests
+	{"AllowInsecureKubeletCertificateSigningRequests", Deprecated, 31, -1},
+
 	// AllowServiceLBStatusOnNonLB
 	{"AllowServiceLBStatusOnNonLB", Deprecated, 29, -1},
+
+	// AnonymousAuthConfigurableEndpoints
+	{"AnonymousAuthConfigurableEndpoints", Alpha, 31, -1},
 
 	// AnyVolumeDataSource
 	{"AnyVolumeDataSource", Alpha, 18, 23},
 	{"AnyVolumeDataSource", Beta, 24, -1},
 
 	// AppArmor
-	{"AppArmor", Beta, 6, -1},
+	{"AppArmor", Beta, 6, 30},
+	{"AppArmor", GA, 31, -1},
 
 	// AppArmorFields
-	{"AppArmorFields", Beta, 30, -1},
+	{"AppArmorFields", Beta, 30, 30},
+	{"AppArmorFields", GA, 31, -1},
 
 	// AttachVolumeLimit
 	{"AttachVolumeLimit", Alpha, 11, 11},
 	{"AttachVolumeLimit", Beta, 12, 16},
 	{"AttachVolumeLimit", GA, 17, 20},
+
+	// AuthorizeNodeWithSelectors
+	{"AuthorizeNodeWithSelectors", Alpha, 31, -1},
+
+	// AuthorizeWithSelectors
+	{"AuthorizeWithSelectors", Alpha, 31, -1},
 
 	// BalanceAttachedNodeVolumes
 	{"BalanceAttachedNodeVolumes", Alpha, 11, 21},
@@ -198,7 +215,7 @@ var rawData = []FeatureSpec{
 
 	// CSIMigrationRBD
 	{"CSIMigrationRBD", Alpha, 23, 27},
-	{"CSIMigrationRBD", Deprecated, 28, -1},
+	{"CSIMigrationRBD", Deprecated, 28, 30},
 
 	// CSIMigrationvSphere
 	{"CSIMigrationvSphere", Beta, 19, 25},
@@ -210,7 +227,7 @@ var rawData = []FeatureSpec{
 	// CSINodeExpandSecret
 	{"CSINodeExpandSecret", Alpha, 25, 26},
 	{"CSINodeExpandSecret", Beta, 27, 28},
-	{"CSINodeExpandSecret", GA, 29, -1},
+	{"CSINodeExpandSecret", GA, 29, 30},
 
 	// CSINodeInfo
 	{"CSINodeInfo", Alpha, 12, 13},
@@ -262,16 +279,20 @@ var rawData = []FeatureSpec{
 	{"ComponentSLIs", Alpha, 26, 26},
 	{"ComponentSLIs", Beta, 27, -1},
 
+	// ConcurrentWatchObjectDecode
+	{"ConcurrentWatchObjectDecode", Beta, 31, -1},
+
 	// ConfigurableFSGroupPolicy
 	{"ConfigurableFSGroupPolicy", Alpha, 18, 19},
 	{"ConfigurableFSGroupPolicy", Beta, 20, 22},
 	{"ConfigurableFSGroupPolicy", GA, 23, 24},
 
 	// ConsistentHTTPGetHandlers
-	{"ConsistentHTTPGetHandlers", GA, 26, -1},
+	{"ConsistentHTTPGetHandlers", GA, 26, 30},
 
 	// ConsistentListFromCache
-	{"ConsistentListFromCache", Alpha, 28, -1},
+	{"ConsistentListFromCache", Alpha, 28, 30},
+	{"ConsistentListFromCache", Beta, 31, -1},
 
 	// ContainerCheckpoint
 	{"ContainerCheckpoint", Alpha, 25, 29},
@@ -285,6 +306,9 @@ var rawData = []FeatureSpec{
 	{"ControllerManagerLeaderMigration", Alpha, 21, 21},
 	{"ControllerManagerLeaderMigration", Beta, 22, 23},
 	{"ControllerManagerLeaderMigration", GA, 24, 26},
+
+	// CoordinatedLeaderElection
+	{"CoordinatedLeaderElection", Alpha, 31, -1},
 
 	// CronJobControllerV2
 	{"CronJobControllerV2", Alpha, 20, 20},
@@ -313,7 +337,8 @@ var rawData = []FeatureSpec{
 	{"CustomResourceDefaulting", GA, 17, 17},
 
 	// CustomResourceFieldSelectors
-	{"CustomResourceFieldSelectors", Alpha, 30, -1},
+	{"CustomResourceFieldSelectors", Alpha, 30, 30},
+	{"CustomResourceFieldSelectors", Beta, 31, -1},
 
 	// CustomResourcePublishOpenAPI
 	{"CustomResourcePublishOpenAPI", Alpha, 14, 14},
@@ -333,12 +358,15 @@ var rawData = []FeatureSpec{
 	// CustomResourceValidationExpressions
 	{"CustomResourceValidationExpressions", Alpha, 23, 24},
 	{"CustomResourceValidationExpressions", Beta, 25, 28},
-	{"CustomResourceValidationExpressions", GA, 29, -1},
+	{"CustomResourceValidationExpressions", GA, 29, 30},
 
 	// CustomResourceWebhookConversion
 	{"CustomResourceWebhookConversion", Alpha, 13, 14},
 	{"CustomResourceWebhookConversion", Beta, 15, 15},
 	{"CustomResourceWebhookConversion", GA, 16, 17},
+
+	// DRAControlPlaneController
+	{"DRAControlPlaneController", Alpha, 31, -1},
 
 	// DaemonSetUpdateSurge
 	{"DaemonSetUpdateSurge", Alpha, 21, 21},
@@ -349,7 +377,7 @@ var rawData = []FeatureSpec{
 	{"DebugContainers", Alpha, 8, 15},
 
 	// DefaultHostNetworkHostPortsInPodTemplates
-	{"DefaultHostNetworkHostPortsInPodTemplates", Deprecated, 28, -1},
+	{"DefaultHostNetworkHostPortsInPodTemplates", Deprecated, 28, 30},
 
 	// DefaultIngressClass
 	{"DefaultIngressClass", Beta, 18, 18},
@@ -367,7 +395,8 @@ var rawData = []FeatureSpec{
 
 	// DevicePluginCDIDevices
 	{"DevicePluginCDIDevices", Alpha, 28, 28},
-	{"DevicePluginCDIDevices", Beta, 29, -1},
+	{"DevicePluginCDIDevices", Beta, 29, 30},
+	{"DevicePluginCDIDevices", GA, 31, -1},
 
 	// DevicePlugins
 	{"DevicePlugins", Alpha, 8, 9},
@@ -379,16 +408,22 @@ var rawData = []FeatureSpec{
 	{"DisableAcceleratorUsageMetrics", Beta, 20, 24},
 	{"DisableAcceleratorUsageMetrics", GA, 25, 27},
 
+	// DisableAllocatorDualWrite
+	{"DisableAllocatorDualWrite", Alpha, 31, -1},
+
 	// DisableCloudProviders
 	{"DisableCloudProviders", Alpha, 22, 28},
-	{"DisableCloudProviders", Beta, 29, -1},
+	{"DisableCloudProviders", Beta, 29, 30},
+	{"DisableCloudProviders", GA, 31, -1},
 
 	// DisableKubeletCloudCredentialProviders
 	{"DisableKubeletCloudCredentialProviders", Alpha, 23, 28},
-	{"DisableKubeletCloudCredentialProviders", Beta, 29, -1},
+	{"DisableKubeletCloudCredentialProviders", Beta, 29, 30},
+	{"DisableKubeletCloudCredentialProviders", GA, 31, -1},
 
 	// DisableNodeKubeProxyVersion
-	{"DisableNodeKubeProxyVersion", Alpha, 29, -1},
+	{"DisableNodeKubeProxyVersion", Alpha, 29, 30},
+	{"DisableNodeKubeProxyVersion", Beta, 31, -1},
 
 	// DownwardAPIHugePages
 	{"DownwardAPIHugePages", Alpha, 20, 20},
@@ -423,7 +458,8 @@ var rawData = []FeatureSpec{
 	{"EfficientWatchResumption", GA, 24, -1},
 
 	// ElasticIndexedJob
-	{"ElasticIndexedJob", Beta, 27, -1},
+	{"ElasticIndexedJob", Beta, 27, 30},
+	{"ElasticIndexedJob", GA, 31, -1},
 
 	// EnableAggregatedDiscoveryTimeout
 	{"EnableAggregatedDiscoveryTimeout", Deprecated, 16, 16},
@@ -531,7 +567,8 @@ var rawData = []FeatureSpec{
 	{"HPAScaleToZero", Alpha, 16, -1},
 
 	// HonorPVReclaimPolicy
-	{"HonorPVReclaimPolicy", Alpha, 23, -1},
+	{"HonorPVReclaimPolicy", Alpha, 23, 30},
+	{"HonorPVReclaimPolicy", Beta, 31, -1},
 
 	// HugePageStorageMediumSize
 	{"HugePageStorageMediumSize", Alpha, 18, 18},
@@ -566,6 +603,9 @@ var rawData = []FeatureSpec{
 	{"ImageMaximumGCAge", Alpha, 29, 29},
 	{"ImageMaximumGCAge", Beta, 30, -1},
 
+	// ImageVolume
+	{"ImageVolume", Alpha, 31, -1},
+
 	// ImmutableEphemeralVolumes
 	{"ImmutableEphemeralVolumes", Alpha, 18, 18},
 	{"ImmutableEphemeralVolumes", Beta, 19, 20},
@@ -575,29 +615,29 @@ var rawData = []FeatureSpec{
 	{"InPlacePodVerticalScaling", Alpha, 27, -1},
 
 	// InTreePluginAWSUnregister
-	{"InTreePluginAWSUnregister", Alpha, 21, -1},
+	{"InTreePluginAWSUnregister", Alpha, 21, 30},
 
 	// InTreePluginAzureDiskUnregister
-	{"InTreePluginAzureDiskUnregister", Alpha, 21, -1},
+	{"InTreePluginAzureDiskUnregister", Alpha, 21, 30},
 
 	// InTreePluginAzureFileUnregister
-	{"InTreePluginAzureFileUnregister", Alpha, 21, -1},
+	{"InTreePluginAzureFileUnregister", Alpha, 21, 30},
 
 	// InTreePluginGCEUnregister
-	{"InTreePluginGCEUnregister", Alpha, 21, -1},
+	{"InTreePluginGCEUnregister", Alpha, 21, 30},
 
 	// InTreePluginOpenStackUnregister
-	{"InTreePluginOpenStackUnregister", Alpha, 21, -1},
+	{"InTreePluginOpenStackUnregister", Alpha, 21, 30},
 
 	// InTreePluginPortworxUnregister
 	{"InTreePluginPortworxUnregister", Alpha, 23, -1},
 
 	// InTreePluginRBDUnregister
 	{"InTreePluginRBDUnregister", Alpha, 23, 27},
-	{"InTreePluginRBDUnregister", Deprecated, 28, -1},
+	{"InTreePluginRBDUnregister", Deprecated, 28, 30},
 
 	// InTreePluginvSphereUnregister
-	{"InTreePluginvSphereUnregister", Alpha, 21, -1},
+	{"InTreePluginvSphereUnregister", Alpha, 21, 30},
 
 	// IndexedJob
 	{"IndexedJob", Alpha, 21, 21},
@@ -625,7 +665,8 @@ var rawData = []FeatureSpec{
 
 	// JobPodFailurePolicy
 	{"JobPodFailurePolicy", Alpha, 25, 25},
-	{"JobPodFailurePolicy", Beta, 26, -1},
+	{"JobPodFailurePolicy", Beta, 26, 30},
+	{"JobPodFailurePolicy", GA, 31, -1},
 
 	// JobPodReplacementPolicy
 	{"JobPodReplacementPolicy", Alpha, 28, 28},
@@ -634,10 +675,11 @@ var rawData = []FeatureSpec{
 	// JobReadyPods
 	{"JobReadyPods", Alpha, 23, 23},
 	{"JobReadyPods", Beta, 24, 28},
-	{"JobReadyPods", GA, 29, -1},
+	{"JobReadyPods", GA, 29, 30},
 
 	// JobSuccessPolicy
-	{"JobSuccessPolicy", Alpha, 30, -1},
+	{"JobSuccessPolicy", Alpha, 30, 30},
+	{"JobSuccessPolicy", Beta, 31, -1},
 
 	// JobTrackingWithFinalizers
 	{"JobTrackingWithFinalizers", Alpha, 22, 22},
@@ -658,10 +700,12 @@ var rawData = []FeatureSpec{
 
 	// KubeProxyDrainingTerminatingNodes
 	{"KubeProxyDrainingTerminatingNodes", Alpha, 28, 29},
-	{"KubeProxyDrainingTerminatingNodes", Beta, 30, -1},
+	{"KubeProxyDrainingTerminatingNodes", Beta, 30, 30},
+	{"KubeProxyDrainingTerminatingNodes", GA, 31, -1},
 
 	// KubeletCgroupDriverFromCRI
-	{"KubeletCgroupDriverFromCRI", Alpha, 28, -1},
+	{"KubeletCgroupDriverFromCRI", Alpha, 28, 30},
+	{"KubeletCgroupDriverFromCRI", Beta, 31, -1},
 
 	// KubeletConfigFile
 	{"KubeletConfigFile", Alpha, 8, 9},
@@ -696,7 +740,8 @@ var rawData = []FeatureSpec{
 	{"KubeletPodResourcesGetAllocatable", GA, 28, 29},
 
 	// KubeletSeparateDiskGC
-	{"KubeletSeparateDiskGC", Alpha, 29, -1},
+	{"KubeletSeparateDiskGC", Alpha, 29, 30},
+	{"KubeletSeparateDiskGC", Beta, 31, -1},
 
 	// KubeletTracing
 	{"KubeletTracing", Alpha, 25, 26},
@@ -731,11 +776,13 @@ var rawData = []FeatureSpec{
 	{"LocalStorageCapacityIsolation", GA, 25, 26},
 
 	// LocalStorageCapacityIsolationFSQuotaMonitoring
-	{"LocalStorageCapacityIsolationFSQuotaMonitoring", Alpha, 15, -1},
+	{"LocalStorageCapacityIsolationFSQuotaMonitoring", Alpha, 15, 30},
+	{"LocalStorageCapacityIsolationFSQuotaMonitoring", Beta, 31, -1},
 
 	// LogarithmicScaleDown
 	{"LogarithmicScaleDown", Alpha, 21, 21},
-	{"LogarithmicScaleDown", Beta, 22, -1},
+	{"LogarithmicScaleDown", Beta, 22, 30},
+	{"LogarithmicScaleDown", GA, 31, -1},
 
 	// LoggingAlphaOptions
 	{"LoggingAlphaOptions", Alpha, 25, -1},
@@ -744,7 +791,8 @@ var rawData = []FeatureSpec{
 	{"LoggingBetaOptions", Beta, 25, -1},
 
 	// MatchLabelKeysInPodAffinity
-	{"MatchLabelKeysInPodAffinity", Alpha, 29, -1},
+	{"MatchLabelKeysInPodAffinity", Alpha, 29, 30},
+	{"MatchLabelKeysInPodAffinity", Beta, 31, -1},
 
 	// MatchLabelKeysInPodTopologySpread
 	{"MatchLabelKeysInPodTopologySpread", Alpha, 25, 26},
@@ -787,13 +835,15 @@ var rawData = []FeatureSpec{
 	{"MultiCIDRRangeAllocator", Alpha, 25, 28},
 
 	// MultiCIDRServiceAllocator
-	{"MultiCIDRServiceAllocator", Alpha, 27, -1},
+	{"MultiCIDRServiceAllocator", Alpha, 27, 30},
+	{"MultiCIDRServiceAllocator", Beta, 31, -1},
 
 	// MutatingAdmissionPolicy
 	{"MutatingAdmissionPolicy", Alpha, 30, -1},
 
 	// NFTablesProxyMode
-	{"NFTablesProxyMode", Alpha, 29, -1},
+	{"NFTablesProxyMode", Alpha, 29, 30},
+	{"NFTablesProxyMode", Beta, 31, -1},
 
 	// NamespaceDefaultLabelName
 	{"NamespaceDefaultLabelName", Beta, 21, 21},
@@ -854,7 +904,8 @@ var rawData = []FeatureSpec{
 
 	// PDBUnhealthyPodEvictionPolicy
 	{"PDBUnhealthyPodEvictionPolicy", Alpha, 26, 26},
-	{"PDBUnhealthyPodEvictionPolicy", Beta, 27, -1},
+	{"PDBUnhealthyPodEvictionPolicy", Beta, 27, 30},
+	{"PDBUnhealthyPodEvictionPolicy", GA, 31, -1},
 
 	// PVCProtection
 	{"PVCProtection", Alpha, 9, 9},
@@ -866,7 +917,8 @@ var rawData = []FeatureSpec{
 
 	// PersistentVolumeLastPhaseTransitionTime
 	{"PersistentVolumeLastPhaseTransitionTime", Alpha, 28, 28},
-	{"PersistentVolumeLastPhaseTransitionTime", Beta, 29, -1},
+	{"PersistentVolumeLastPhaseTransitionTime", Beta, 29, 30},
+	{"PersistentVolumeLastPhaseTransitionTime", GA, 31, -1},
 
 	// PodAffinityNamespaceSelector
 	{"PodAffinityNamespaceSelector", Alpha, 21, 21},
@@ -886,7 +938,8 @@ var rawData = []FeatureSpec{
 
 	// PodDisruptionConditions
 	{"PodDisruptionConditions", Alpha, 25, 25},
-	{"PodDisruptionConditions", Beta, 26, -1},
+	{"PodDisruptionConditions", Beta, 26, 30},
+	{"PodDisruptionConditions", GA, 31, -1},
 
 	// PodHasNetworkCondition
 	{"PodHasNetworkCondition", Alpha, 25, 27},
@@ -937,7 +990,8 @@ var rawData = []FeatureSpec{
 	{"PodShareProcessNamespace", GA, 17, 18},
 
 	// PortForwardWebsockets
-	{"PortForwardWebsockets", Alpha, 30, -1},
+	{"PortForwardWebsockets", Alpha, 30, 30},
+	{"PortForwardWebsockets", Beta, 31, -1},
 
 	// PreferNominatedNode
 	{"PreferNominatedNode", Alpha, 21, 21},
@@ -950,7 +1004,8 @@ var rawData = []FeatureSpec{
 	{"ProbeTerminationGracePeriod", GA, 28, 28},
 
 	// ProcMountType
-	{"ProcMountType", Alpha, 12, -1},
+	{"ProcMountType", Alpha, 12, 30},
+	{"ProcMountType", Beta, 31, -1},
 
 	// ProxyTerminatingEndpoints
 	{"ProxyTerminatingEndpoints", Alpha, 22, 25},
@@ -966,16 +1021,20 @@ var rawData = []FeatureSpec{
 	// ReadWriteOncePod
 	{"ReadWriteOncePod", Alpha, 22, 26},
 	{"ReadWriteOncePod", Beta, 27, 28},
-	{"ReadWriteOncePod", GA, 29, -1},
+	{"ReadWriteOncePod", GA, 29, 30},
 
 	// RecoverVolumeExpansionFailure
 	{"RecoverVolumeExpansionFailure", Alpha, 23, -1},
 
 	// RecursiveReadOnlyMounts
-	{"RecursiveReadOnlyMounts", Alpha, 30, -1},
+	{"RecursiveReadOnlyMounts", Alpha, 30, 30},
+	{"RecursiveReadOnlyMounts", Beta, 31, -1},
 
 	// RelaxedEnvironmentVariableValidation
 	{"RelaxedEnvironmentVariableValidation", Alpha, 30, -1},
+
+	// ReloadKubeletServerCertificateFile
+	{"ReloadKubeletServerCertificateFile", Beta, 31, -1},
 
 	// RemainingItemCount
 	{"RemainingItemCount", Alpha, 15, 15},
@@ -989,6 +1048,12 @@ var rawData = []FeatureSpec{
 
 	// RequestManagement
 	{"RequestManagement", Alpha, 15, 16},
+
+	// ResilientWatchCacheInitialization
+	{"ResilientWatchCacheInitialization", Beta, 31, -1},
+
+	// ResourceHealthStatus
+	{"ResourceHealthStatus", Alpha, 31, -1},
 
 	// ResourceLimitsPriorityFunction
 	{"ResourceLimitsPriorityFunction", Alpha, 9, 18},
@@ -1004,7 +1069,8 @@ var rawData = []FeatureSpec{
 	{"RetroactiveDefaultStorageClass", GA, 28, 28},
 
 	// RetryGenerateName
-	{"RetryGenerateName", Alpha, 30, -1},
+	{"RetryGenerateName", Alpha, 30, 30},
+	{"RetryGenerateName", Beta, 31, -1},
 
 	// RootCAConfigMap
 	{"RootCAConfigMap", Beta, 20, 20},
@@ -1091,7 +1157,8 @@ var rawData = []FeatureSpec{
 	{"ServiceAccountTokenJTI", Beta, 30, -1},
 
 	// ServiceAccountTokenNodeBinding
-	{"ServiceAccountTokenNodeBinding", Alpha, 29, -1},
+	{"ServiceAccountTokenNodeBinding", Alpha, 29, 30},
+	{"ServiceAccountTokenNodeBinding", Beta, 31, -1},
 
 	// ServiceAccountTokenNodeBindingValidation
 	{"ServiceAccountTokenNodeBindingValidation", Alpha, 29, 29},
@@ -1139,7 +1206,7 @@ var rawData = []FeatureSpec{
 	// ServiceNodePortStaticSubrange
 	{"ServiceNodePortStaticSubrange", Alpha, 27, 27},
 	{"ServiceNodePortStaticSubrange", Beta, 28, 28},
-	{"ServiceNodePortStaticSubrange", GA, 29, -1},
+	{"ServiceNodePortStaticSubrange", GA, 29, 30},
 
 	// ServiceProxyAllowExternalIPs
 	{"ServiceProxyAllowExternalIPs", Deprecated, 7, 11},
@@ -1148,7 +1215,8 @@ var rawData = []FeatureSpec{
 	{"ServiceTopology", Alpha, 17, 21},
 
 	// ServiceTrafficDistribution
-	{"ServiceTrafficDistribution", Alpha, 30, -1},
+	{"ServiceTrafficDistribution", Alpha, 30, 30},
+	{"ServiceTrafficDistribution", Beta, 31, -1},
 
 	// SetHostnameAsFQDN
 	{"SetHostnameAsFQDN", Alpha, 19, 19},
@@ -1165,7 +1233,7 @@ var rawData = []FeatureSpec{
 
 	// SkipReadOnlyValidationGCE
 	{"SkipReadOnlyValidationGCE", Alpha, 28, 28},
-	{"SkipReadOnlyValidationGCE", Deprecated, 29, -1},
+	{"SkipReadOnlyValidationGCE", Deprecated, 29, 30},
 
 	// StableLoadBalancerNodeSet
 	{"StableLoadBalancerNodeSet", Beta, 27, 29},
@@ -1187,7 +1255,8 @@ var rawData = []FeatureSpec{
 
 	// StatefulSetStartOrdinal
 	{"StatefulSetStartOrdinal", Alpha, 26, 26},
-	{"StatefulSetStartOrdinal", Beta, 27, -1},
+	{"StatefulSetStartOrdinal", Beta, 27, 30},
+	{"StatefulSetStartOrdinal", GA, 31, -1},
 
 	// StorageNamespaceIndex
 	{"StorageNamespaceIndex", Beta, 30, -1},
@@ -1223,6 +1292,9 @@ var rawData = []FeatureSpec{
 	// StructuredAuthorizationConfiguration
 	{"StructuredAuthorizationConfiguration", Alpha, 29, 29},
 	{"StructuredAuthorizationConfiguration", Beta, 30, -1},
+
+	// SupplementalGroupsPolicy
+	{"SupplementalGroupsPolicy", Alpha, 31, -1},
 
 	// SupportIPVSProxyMode
 	{"SupportIPVSProxyMode", Alpha, 8, 8},
@@ -1323,7 +1395,8 @@ var rawData = []FeatureSpec{
 	{"ValidatingAdmissionPolicy", GA, 30, -1},
 
 	// VolumeAttributesClass
-	{"VolumeAttributesClass", Alpha, 29, -1},
+	{"VolumeAttributesClass", Alpha, 29, 30},
+	{"VolumeAttributesClass", Beta, 31, -1},
 
 	// VolumeCapacityPriority
 	{"VolumeCapacityPriority", Alpha, 21, -1},
@@ -1359,6 +1432,9 @@ var rawData = []FeatureSpec{
 	{"WatchBookmark", Alpha, 15, 15},
 	{"WatchBookmark", Beta, 16, 16},
 	{"WatchBookmark", GA, 17, -1},
+
+	// WatchCacheInitializationPostStartHook
+	{"WatchCacheInitializationPostStartHook", Beta, 31, -1},
 
 	// WatchFromStorageWithoutResourceVersion
 	{"WatchFromStorageWithoutResourceVersion", Beta, 27, -1},

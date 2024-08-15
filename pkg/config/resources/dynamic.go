@@ -68,8 +68,8 @@ type dynamicGetter[O any, T runtime.Object, L runtime.Object] struct {
 
 func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
 	var t T
-	store, controller := cache.NewInformer(
-		&cache.ListWatch{
+	store, controller := cache.NewInformerWithOptions(cache.InformerOptions{
+		ListerWatcher: &cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				return c.syncer.List(ctx, options)
 			},
@@ -77,9 +77,8 @@ func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
 				return c.syncer.Watch(ctx, options)
 			},
 		},
-		t,
-		0,
-		cache.ResourceEventHandlerFuncs{
+		ObjectType: t,
+		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				c.sync()
 			},
@@ -90,7 +89,7 @@ func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
 				c.sync()
 			},
 		},
-	)
+	})
 
 	c.store = store
 	c.controller = controller

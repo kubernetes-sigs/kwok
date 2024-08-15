@@ -1,6 +1,6 @@
-nerdctl build --build-arg=kube_version=v1.30.2 --tag=image-prefix/cluster:<VERSION>-k8s.v1.30.2 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
-nerdctl push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.30.2
-nerdctl build --build-arg=kube_version=v1.29.4 --tag=image-prefix/cluster:<VERSION>-k8s.v1.29.4 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
-nerdctl push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.29.4
-nerdctl build --build-arg=kube_version=v1.28.9 --tag=image-prefix/cluster:<VERSION>-k8s.v1.28.9 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
-nerdctl push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.28.9
+nerdctl build --build-arg=kube_version=v1.31.0 --tag=image-prefix/cluster:<VERSION>-k8s.v1.31.0 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
+nerdctl push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.31.0
+nerdctl build --build-arg=kube_version=v1.30.4 --tag=image-prefix/cluster:<VERSION>-k8s.v1.30.4 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
+nerdctl push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.30.4
+nerdctl build --build-arg=kube_version=v1.29.8 --tag=image-prefix/cluster:<VERSION>-k8s.v1.29.8 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
+nerdctl push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.29.8

@@ -139,8 +139,8 @@ func newCacheInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Optio
 			},
 		}
 	}
-	store, controller := cache.NewInformer(
-		&cache.ListWatch{
+	store, controller := cache.NewInformerWithOptions(cache.InformerOptions{
+		ListerWatcher: &cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				opt.setup(&opts)
 				return listWatch.List(opts)
@@ -150,10 +150,9 @@ func newCacheInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Optio
 				return listWatch.Watch(opts)
 			},
 		},
-		objType(t),
-		0,
-		eventHandler,
-	)
+		ObjectType: objType(t),
+		Handler:    eventHandler,
+	})
 
 	return store, controller
 }

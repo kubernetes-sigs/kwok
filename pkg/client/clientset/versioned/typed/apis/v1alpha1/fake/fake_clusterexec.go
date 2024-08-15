@@ -40,20 +40,22 @@ var clusterexecsKind = v1alpha1.SchemeGroupVersion.WithKind("ClusterExec")
 
 // Get takes name of the clusterExec, and returns the corresponding clusterExec object, and an error if there is any.
 func (c *FakeClusterExecs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ClusterExec, err error) {
+	emptyResult := &v1alpha1.ClusterExec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(clusterexecsResource, name), &v1alpha1.ClusterExec{})
+		Invokes(testing.NewRootGetActionWithOptions(clusterexecsResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterExec), err
 }
 
 // List takes label and field selectors, and returns the list of ClusterExecs that match those selectors.
 func (c *FakeClusterExecs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ClusterExecList, err error) {
+	emptyResult := &v1alpha1.ClusterExecList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(clusterexecsResource, clusterexecsKind, opts), &v1alpha1.ClusterExecList{})
+		Invokes(testing.NewRootListActionWithOptions(clusterexecsResource, clusterexecsKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -72,36 +74,39 @@ func (c *FakeClusterExecs) List(ctx context.Context, opts v1.ListOptions) (resul
 // Watch returns a watch.Interface that watches the requested clusterExecs.
 func (c *FakeClusterExecs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(clusterexecsResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(clusterexecsResource, opts))
 }
 
 // Create takes the representation of a clusterExec and creates it.  Returns the server's representation of the clusterExec, and an error, if there is any.
 func (c *FakeClusterExecs) Create(ctx context.Context, clusterExec *v1alpha1.ClusterExec, opts v1.CreateOptions) (result *v1alpha1.ClusterExec, err error) {
+	emptyResult := &v1alpha1.ClusterExec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(clusterexecsResource, clusterExec), &v1alpha1.ClusterExec{})
+		Invokes(testing.NewRootCreateActionWithOptions(clusterexecsResource, clusterExec, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterExec), err
 }
 
 // Update takes the representation of a clusterExec and updates it. Returns the server's representation of the clusterExec, and an error, if there is any.
 func (c *FakeClusterExecs) Update(ctx context.Context, clusterExec *v1alpha1.ClusterExec, opts v1.UpdateOptions) (result *v1alpha1.ClusterExec, err error) {
+	emptyResult := &v1alpha1.ClusterExec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(clusterexecsResource, clusterExec), &v1alpha1.ClusterExec{})
+		Invokes(testing.NewRootUpdateActionWithOptions(clusterexecsResource, clusterExec, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterExec), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeClusterExecs) UpdateStatus(ctx context.Context, clusterExec *v1alpha1.ClusterExec, opts v1.UpdateOptions) (*v1alpha1.ClusterExec, error) {
+func (c *FakeClusterExecs) UpdateStatus(ctx context.Context, clusterExec *v1alpha1.ClusterExec, opts v1.UpdateOptions) (result *v1alpha1.ClusterExec, err error) {
+	emptyResult := &v1alpha1.ClusterExec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(clusterexecsResource, "status", clusterExec), &v1alpha1.ClusterExec{})
+		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(clusterexecsResource, "status", clusterExec, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterExec), err
 }
@@ -115,7 +120,7 @@ func (c *FakeClusterExecs) Delete(ctx context.Context, name string, opts v1.Dele
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeClusterExecs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(clusterexecsResource, listOpts)
+	action := testing.NewRootDeleteCollectionActionWithOptions(clusterexecsResource, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ClusterExecList{})
 	return err
@@ -123,10 +128,11 @@ func (c *FakeClusterExecs) DeleteCollection(ctx context.Context, opts v1.DeleteO
 
 // Patch applies the patch and returns the patched clusterExec.
 func (c *FakeClusterExecs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterExec, err error) {
+	emptyResult := &v1alpha1.ClusterExec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(clusterexecsResource, name, pt, data, subresources...), &v1alpha1.ClusterExec{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clusterexecsResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterExec), err
 }

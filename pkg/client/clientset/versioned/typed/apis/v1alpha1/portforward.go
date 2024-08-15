@@ -20,12 +20,11 @@ package v1alpha1
 
 import (
 	"context"
-	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
@@ -40,6 +39,7 @@ type PortForwardsGetter interface {
 type PortForwardInterface interface {
 	Create(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.CreateOptions) (*v1alpha1.PortForward, error)
 	Update(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.UpdateOptions) (*v1alpha1.PortForward, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 	UpdateStatus(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.UpdateOptions) (*v1alpha1.PortForward, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
@@ -52,144 +52,18 @@ type PortForwardInterface interface {
 
 // portForwards implements PortForwardInterface
 type portForwards struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*v1alpha1.PortForward, *v1alpha1.PortForwardList]
 }
 
 // newPortForwards returns a PortForwards
 func newPortForwards(c *KwokV1alpha1Client, namespace string) *portForwards {
 	return &portForwards{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*v1alpha1.PortForward, *v1alpha1.PortForwardList](
+			"portforwards",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1alpha1.PortForward { return &v1alpha1.PortForward{} },
+			func() *v1alpha1.PortForwardList { return &v1alpha1.PortForwardList{} }),
 	}
-}
-
-// Get takes name of the portForward, and returns the corresponding portForward object, and an error if there is any.
-func (c *portForwards) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PortForward, err error) {
-	result = &v1alpha1.PortForward{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("portforwards").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of PortForwards that match those selectors.
-func (c *portForwards) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PortForwardList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.PortForwardList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("portforwards").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested portForwards.
-func (c *portForwards) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("portforwards").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a portForward and creates it.  Returns the server's representation of the portForward, and an error, if there is any.
-func (c *portForwards) Create(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.CreateOptions) (result *v1alpha1.PortForward, err error) {
-	result = &v1alpha1.PortForward{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("portforwards").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(portForward).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a portForward and updates it. Returns the server's representation of the portForward, and an error, if there is any.
-func (c *portForwards) Update(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.UpdateOptions) (result *v1alpha1.PortForward, err error) {
-	result = &v1alpha1.PortForward{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("portforwards").
-		Name(portForward.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(portForward).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *portForwards) UpdateStatus(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.UpdateOptions) (result *v1alpha1.PortForward, err error) {
-	result = &v1alpha1.PortForward{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("portforwards").
-		Name(portForward.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(portForward).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the portForward and deletes it. Returns an error if one occurs.
-func (c *portForwards) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("portforwards").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *portForwards) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("portforwards").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched portForward.
-func (c *portForwards) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PortForward, err error) {
-	result = &v1alpha1.PortForward{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("portforwards").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

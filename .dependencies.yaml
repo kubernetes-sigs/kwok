@@ -41,7 +41,7 @@ dependencies:
     match: "KindVersion"
 
 - name: "kubernetes"
-  version: 1.30.2
+  version: 1.31.0
   refPaths:
   - path: supported_releases.txt
     match: ""
