@@ -20,12 +20,11 @@ package v1alpha1
 
 import (
 	"context"
-	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
@@ -40,6 +39,7 @@ type ResourceUsagesGetter interface {
 type ResourceUsageInterface interface {
 	Create(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.CreateOptions) (*v1alpha1.ResourceUsage, error)
 	Update(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (*v1alpha1.ResourceUsage, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 	UpdateStatus(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (*v1alpha1.ResourceUsage, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
@@ -52,144 +52,18 @@ type ResourceUsageInterface interface {
 
 // resourceUsages implements ResourceUsageInterface
 type resourceUsages struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*v1alpha1.ResourceUsage, *v1alpha1.ResourceUsageList]
 }
 
 // newResourceUsages returns a ResourceUsages
 func newResourceUsages(c *KwokV1alpha1Client, namespace string) *resourceUsages {
 	return &resourceUsages{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*v1alpha1.ResourceUsage, *v1alpha1.ResourceUsageList](
+			"resourceusages",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1alpha1.ResourceUsage { return &v1alpha1.ResourceUsage{} },
+			func() *v1alpha1.ResourceUsageList { return &v1alpha1.ResourceUsageList{} }),
 	}
-}
-
-// Get takes name of the resourceUsage, and returns the corresponding resourceUsage object, and an error if there is any.
-func (c *resourceUsages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ResourceUsage, err error) {
-	result = &v1alpha1.ResourceUsage{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("resourceusages").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of ResourceUsages that match those selectors.
-func (c *resourceUsages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ResourceUsageList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.ResourceUsageList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("resourceusages").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested resourceUsages.
-func (c *resourceUsages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("resourceusages").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a resourceUsage and creates it.  Returns the server's representation of the resourceUsage, and an error, if there is any.
-func (c *resourceUsages) Create(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.CreateOptions) (result *v1alpha1.ResourceUsage, err error) {
-	result = &v1alpha1.ResourceUsage{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("resourceusages").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(resourceUsage).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a resourceUsage and updates it. Returns the server's representation of the resourceUsage, and an error, if there is any.
-func (c *resourceUsages) Update(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ResourceUsage, err error) {
-	result = &v1alpha1.ResourceUsage{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("resourceusages").
-		Name(resourceUsage.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(resourceUsage).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *resourceUsages) UpdateStatus(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ResourceUsage, err error) {
-	result = &v1alpha1.ResourceUsage{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("resourceusages").
-		Name(resourceUsage.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(resourceUsage).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the resourceUsage and deletes it. Returns an error if one occurs.
-func (c *resourceUsages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("resourceusages").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *resourceUsages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("resourceusages").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched resourceUsage.
-func (c *resourceUsages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ResourceUsage, err error) {
-	result = &v1alpha1.ResourceUsage{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("resourceusages").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

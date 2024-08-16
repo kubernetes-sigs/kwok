@@ -41,22 +41,24 @@ var portforwardsKind = v1alpha1.SchemeGroupVersion.WithKind("PortForward")
 
 // Get takes name of the portForward, and returns the corresponding portForward object, and an error if there is any.
 func (c *FakePortForwards) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PortForward, err error) {
+	emptyResult := &v1alpha1.PortForward{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(portforwardsResource, c.ns, name), &v1alpha1.PortForward{})
+		Invokes(testing.NewGetActionWithOptions(portforwardsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PortForward), err
 }
 
 // List takes label and field selectors, and returns the list of PortForwards that match those selectors.
 func (c *FakePortForwards) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PortForwardList, err error) {
+	emptyResult := &v1alpha1.PortForwardList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(portforwardsResource, portforwardsKind, c.ns, opts), &v1alpha1.PortForwardList{})
+		Invokes(testing.NewListActionWithOptions(portforwardsResource, portforwardsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -75,40 +77,43 @@ func (c *FakePortForwards) List(ctx context.Context, opts v1.ListOptions) (resul
 // Watch returns a watch.Interface that watches the requested portForwards.
 func (c *FakePortForwards) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(portforwardsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(portforwardsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a portForward and creates it.  Returns the server's representation of the portForward, and an error, if there is any.
 func (c *FakePortForwards) Create(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.CreateOptions) (result *v1alpha1.PortForward, err error) {
+	emptyResult := &v1alpha1.PortForward{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(portforwardsResource, c.ns, portForward), &v1alpha1.PortForward{})
+		Invokes(testing.NewCreateActionWithOptions(portforwardsResource, c.ns, portForward, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PortForward), err
 }
 
 // Update takes the representation of a portForward and updates it. Returns the server's representation of the portForward, and an error, if there is any.
 func (c *FakePortForwards) Update(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.UpdateOptions) (result *v1alpha1.PortForward, err error) {
+	emptyResult := &v1alpha1.PortForward{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(portforwardsResource, c.ns, portForward), &v1alpha1.PortForward{})
+		Invokes(testing.NewUpdateActionWithOptions(portforwardsResource, c.ns, portForward, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PortForward), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakePortForwards) UpdateStatus(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.UpdateOptions) (*v1alpha1.PortForward, error) {
+func (c *FakePortForwards) UpdateStatus(ctx context.Context, portForward *v1alpha1.PortForward, opts v1.UpdateOptions) (result *v1alpha1.PortForward, err error) {
+	emptyResult := &v1alpha1.PortForward{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(portforwardsResource, "status", c.ns, portForward), &v1alpha1.PortForward{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(portforwardsResource, "status", c.ns, portForward, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PortForward), err
 }
@@ -123,7 +128,7 @@ func (c *FakePortForwards) Delete(ctx context.Context, name string, opts v1.Dele
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakePortForwards) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(portforwardsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(portforwardsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.PortForwardList{})
 	return err
@@ -131,11 +136,12 @@ func (c *FakePortForwards) DeleteCollection(ctx context.Context, opts v1.DeleteO
 
 // Patch applies the patch and returns the patched portForward.
 func (c *FakePortForwards) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PortForward, err error) {
+	emptyResult := &v1alpha1.PortForward{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(portforwardsResource, c.ns, name, pt, data, subresources...), &v1alpha1.PortForward{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(portforwardsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PortForward), err
 }

@@ -40,20 +40,22 @@ var clusterresourceusagesKind = v1alpha1.SchemeGroupVersion.WithKind("ClusterRes
 
 // Get takes name of the clusterResourceUsage, and returns the corresponding clusterResourceUsage object, and an error if there is any.
 func (c *FakeClusterResourceUsages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ClusterResourceUsage, err error) {
+	emptyResult := &v1alpha1.ClusterResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(clusterresourceusagesResource, name), &v1alpha1.ClusterResourceUsage{})
+		Invokes(testing.NewRootGetActionWithOptions(clusterresourceusagesResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterResourceUsage), err
 }
 
 // List takes label and field selectors, and returns the list of ClusterResourceUsages that match those selectors.
 func (c *FakeClusterResourceUsages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ClusterResourceUsageList, err error) {
+	emptyResult := &v1alpha1.ClusterResourceUsageList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(clusterresourceusagesResource, clusterresourceusagesKind, opts), &v1alpha1.ClusterResourceUsageList{})
+		Invokes(testing.NewRootListActionWithOptions(clusterresourceusagesResource, clusterresourceusagesKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -72,36 +74,39 @@ func (c *FakeClusterResourceUsages) List(ctx context.Context, opts v1.ListOption
 // Watch returns a watch.Interface that watches the requested clusterResourceUsages.
 func (c *FakeClusterResourceUsages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(clusterresourceusagesResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(clusterresourceusagesResource, opts))
 }
 
 // Create takes the representation of a clusterResourceUsage and creates it.  Returns the server's representation of the clusterResourceUsage, and an error, if there is any.
 func (c *FakeClusterResourceUsages) Create(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.CreateOptions) (result *v1alpha1.ClusterResourceUsage, err error) {
+	emptyResult := &v1alpha1.ClusterResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(clusterresourceusagesResource, clusterResourceUsage), &v1alpha1.ClusterResourceUsage{})
+		Invokes(testing.NewRootCreateActionWithOptions(clusterresourceusagesResource, clusterResourceUsage, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterResourceUsage), err
 }
 
 // Update takes the representation of a clusterResourceUsage and updates it. Returns the server's representation of the clusterResourceUsage, and an error, if there is any.
 func (c *FakeClusterResourceUsages) Update(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ClusterResourceUsage, err error) {
+	emptyResult := &v1alpha1.ClusterResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(clusterresourceusagesResource, clusterResourceUsage), &v1alpha1.ClusterResourceUsage{})
+		Invokes(testing.NewRootUpdateActionWithOptions(clusterresourceusagesResource, clusterResourceUsage, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterResourceUsage), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeClusterResourceUsages) UpdateStatus(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (*v1alpha1.ClusterResourceUsage, error) {
+func (c *FakeClusterResourceUsages) UpdateStatus(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ClusterResourceUsage, err error) {
+	emptyResult := &v1alpha1.ClusterResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(clusterresourceusagesResource, "status", clusterResourceUsage), &v1alpha1.ClusterResourceUsage{})
+		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(clusterresourceusagesResource, "status", clusterResourceUsage, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterResourceUsage), err
 }
@@ -115,7 +120,7 @@ func (c *FakeClusterResourceUsages) Delete(ctx context.Context, name string, opt
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeClusterResourceUsages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(clusterresourceusagesResource, listOpts)
+	action := testing.NewRootDeleteCollectionActionWithOptions(clusterresourceusagesResource, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ClusterResourceUsageList{})
 	return err
@@ -123,10 +128,11 @@ func (c *FakeClusterResourceUsages) DeleteCollection(ctx context.Context, opts v
 
 // Patch applies the patch and returns the patched clusterResourceUsage.
 func (c *FakeClusterResourceUsages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterResourceUsage, err error) {
+	emptyResult := &v1alpha1.ClusterResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(clusterresourceusagesResource, name, pt, data, subresources...), &v1alpha1.ClusterResourceUsage{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clusterresourceusagesResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterResourceUsage), err
 }

@@ -41,22 +41,24 @@ var execsKind = v1alpha1.SchemeGroupVersion.WithKind("Exec")
 
 // Get takes name of the exec, and returns the corresponding exec object, and an error if there is any.
 func (c *FakeExecs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Exec, err error) {
+	emptyResult := &v1alpha1.Exec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(execsResource, c.ns, name), &v1alpha1.Exec{})
+		Invokes(testing.NewGetActionWithOptions(execsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Exec), err
 }
 
 // List takes label and field selectors, and returns the list of Execs that match those selectors.
 func (c *FakeExecs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ExecList, err error) {
+	emptyResult := &v1alpha1.ExecList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(execsResource, execsKind, c.ns, opts), &v1alpha1.ExecList{})
+		Invokes(testing.NewListActionWithOptions(execsResource, execsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -75,40 +77,43 @@ func (c *FakeExecs) List(ctx context.Context, opts v1.ListOptions) (result *v1al
 // Watch returns a watch.Interface that watches the requested execs.
 func (c *FakeExecs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(execsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(execsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a exec and creates it.  Returns the server's representation of the exec, and an error, if there is any.
 func (c *FakeExecs) Create(ctx context.Context, exec *v1alpha1.Exec, opts v1.CreateOptions) (result *v1alpha1.Exec, err error) {
+	emptyResult := &v1alpha1.Exec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(execsResource, c.ns, exec), &v1alpha1.Exec{})
+		Invokes(testing.NewCreateActionWithOptions(execsResource, c.ns, exec, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Exec), err
 }
 
 // Update takes the representation of a exec and updates it. Returns the server's representation of the exec, and an error, if there is any.
 func (c *FakeExecs) Update(ctx context.Context, exec *v1alpha1.Exec, opts v1.UpdateOptions) (result *v1alpha1.Exec, err error) {
+	emptyResult := &v1alpha1.Exec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(execsResource, c.ns, exec), &v1alpha1.Exec{})
+		Invokes(testing.NewUpdateActionWithOptions(execsResource, c.ns, exec, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Exec), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeExecs) UpdateStatus(ctx context.Context, exec *v1alpha1.Exec, opts v1.UpdateOptions) (*v1alpha1.Exec, error) {
+func (c *FakeExecs) UpdateStatus(ctx context.Context, exec *v1alpha1.Exec, opts v1.UpdateOptions) (result *v1alpha1.Exec, err error) {
+	emptyResult := &v1alpha1.Exec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(execsResource, "status", c.ns, exec), &v1alpha1.Exec{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(execsResource, "status", c.ns, exec, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Exec), err
 }
@@ -123,7 +128,7 @@ func (c *FakeExecs) Delete(ctx context.Context, name string, opts v1.DeleteOptio
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeExecs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(execsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(execsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ExecList{})
 	return err
@@ -131,11 +136,12 @@ func (c *FakeExecs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions,
 
 // Patch applies the patch and returns the patched exec.
 func (c *FakeExecs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Exec, err error) {
+	emptyResult := &v1alpha1.Exec{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(execsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Exec{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(execsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Exec), err
 }

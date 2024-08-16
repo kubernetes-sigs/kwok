@@ -20,12 +20,11 @@ package v1alpha1
 
 import (
 	"context"
-	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
@@ -40,6 +39,7 @@ type ClusterLogsGetter interface {
 type ClusterLogsInterface interface {
 	Create(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.CreateOptions) (*v1alpha1.ClusterLogs, error)
 	Update(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.UpdateOptions) (*v1alpha1.ClusterLogs, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 	UpdateStatus(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.UpdateOptions) (*v1alpha1.ClusterLogs, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
@@ -52,133 +52,18 @@ type ClusterLogsInterface interface {
 
 // clusterLogs implements ClusterLogsInterface
 type clusterLogs struct {
-	client rest.Interface
+	*gentype.ClientWithList[*v1alpha1.ClusterLogs, *v1alpha1.ClusterLogsList]
 }
 
 // newClusterLogs returns a ClusterLogs
 func newClusterLogs(c *KwokV1alpha1Client) *clusterLogs {
 	return &clusterLogs{
-		client: c.RESTClient(),
+		gentype.NewClientWithList[*v1alpha1.ClusterLogs, *v1alpha1.ClusterLogsList](
+			"clusterlogs",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			"",
+			func() *v1alpha1.ClusterLogs { return &v1alpha1.ClusterLogs{} },
+			func() *v1alpha1.ClusterLogsList { return &v1alpha1.ClusterLogsList{} }),
 	}
-}
-
-// Get takes name of the clusterLogs, and returns the corresponding clusterLogs object, and an error if there is any.
-func (c *clusterLogs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ClusterLogs, err error) {
-	result = &v1alpha1.ClusterLogs{}
-	err = c.client.Get().
-		Resource("clusterlogs").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of ClusterLogs that match those selectors.
-func (c *clusterLogs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ClusterLogsList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.ClusterLogsList{}
-	err = c.client.Get().
-		Resource("clusterlogs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested clusterLogs.
-func (c *clusterLogs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Resource("clusterlogs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a clusterLogs and creates it.  Returns the server's representation of the clusterLogs, and an error, if there is any.
-func (c *clusterLogs) Create(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.CreateOptions) (result *v1alpha1.ClusterLogs, err error) {
-	result = &v1alpha1.ClusterLogs{}
-	err = c.client.Post().
-		Resource("clusterlogs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(clusterLogs).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a clusterLogs and updates it. Returns the server's representation of the clusterLogs, and an error, if there is any.
-func (c *clusterLogs) Update(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.UpdateOptions) (result *v1alpha1.ClusterLogs, err error) {
-	result = &v1alpha1.ClusterLogs{}
-	err = c.client.Put().
-		Resource("clusterlogs").
-		Name(clusterLogs.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(clusterLogs).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *clusterLogs) UpdateStatus(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.UpdateOptions) (result *v1alpha1.ClusterLogs, err error) {
-	result = &v1alpha1.ClusterLogs{}
-	err = c.client.Put().
-		Resource("clusterlogs").
-		Name(clusterLogs.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(clusterLogs).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the clusterLogs and deletes it. Returns an error if one occurs.
-func (c *clusterLogs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Resource("clusterlogs").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *clusterLogs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Resource("clusterlogs").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched clusterLogs.
-func (c *clusterLogs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterLogs, err error) {
-	result = &v1alpha1.ClusterLogs{}
-	err = c.client.Patch(pt).
-		Resource("clusterlogs").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

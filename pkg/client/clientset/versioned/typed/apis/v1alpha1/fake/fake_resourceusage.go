@@ -41,22 +41,24 @@ var resourceusagesKind = v1alpha1.SchemeGroupVersion.WithKind("ResourceUsage")
 
 // Get takes name of the resourceUsage, and returns the corresponding resourceUsage object, and an error if there is any.
 func (c *FakeResourceUsages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ResourceUsage, err error) {
+	emptyResult := &v1alpha1.ResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(resourceusagesResource, c.ns, name), &v1alpha1.ResourceUsage{})
+		Invokes(testing.NewGetActionWithOptions(resourceusagesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ResourceUsage), err
 }
 
 // List takes label and field selectors, and returns the list of ResourceUsages that match those selectors.
 func (c *FakeResourceUsages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ResourceUsageList, err error) {
+	emptyResult := &v1alpha1.ResourceUsageList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(resourceusagesResource, resourceusagesKind, c.ns, opts), &v1alpha1.ResourceUsageList{})
+		Invokes(testing.NewListActionWithOptions(resourceusagesResource, resourceusagesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -75,40 +77,43 @@ func (c *FakeResourceUsages) List(ctx context.Context, opts v1.ListOptions) (res
 // Watch returns a watch.Interface that watches the requested resourceUsages.
 func (c *FakeResourceUsages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(resourceusagesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(resourceusagesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a resourceUsage and creates it.  Returns the server's representation of the resourceUsage, and an error, if there is any.
 func (c *FakeResourceUsages) Create(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.CreateOptions) (result *v1alpha1.ResourceUsage, err error) {
+	emptyResult := &v1alpha1.ResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(resourceusagesResource, c.ns, resourceUsage), &v1alpha1.ResourceUsage{})
+		Invokes(testing.NewCreateActionWithOptions(resourceusagesResource, c.ns, resourceUsage, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ResourceUsage), err
 }
 
 // Update takes the representation of a resourceUsage and updates it. Returns the server's representation of the resourceUsage, and an error, if there is any.
 func (c *FakeResourceUsages) Update(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ResourceUsage, err error) {
+	emptyResult := &v1alpha1.ResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(resourceusagesResource, c.ns, resourceUsage), &v1alpha1.ResourceUsage{})
+		Invokes(testing.NewUpdateActionWithOptions(resourceusagesResource, c.ns, resourceUsage, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ResourceUsage), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeResourceUsages) UpdateStatus(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (*v1alpha1.ResourceUsage, error) {
+func (c *FakeResourceUsages) UpdateStatus(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ResourceUsage, err error) {
+	emptyResult := &v1alpha1.ResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(resourceusagesResource, "status", c.ns, resourceUsage), &v1alpha1.ResourceUsage{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(resourceusagesResource, "status", c.ns, resourceUsage, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ResourceUsage), err
 }
@@ -123,7 +128,7 @@ func (c *FakeResourceUsages) Delete(ctx context.Context, name string, opts v1.De
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeResourceUsages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(resourceusagesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(resourceusagesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ResourceUsageList{})
 	return err
@@ -131,11 +136,12 @@ func (c *FakeResourceUsages) DeleteCollection(ctx context.Context, opts v1.Delet
 
 // Patch applies the patch and returns the patched resourceUsage.
 func (c *FakeResourceUsages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ResourceUsage, err error) {
+	emptyResult := &v1alpha1.ResourceUsage{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(resourceusagesResource, c.ns, name, pt, data, subresources...), &v1alpha1.ResourceUsage{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(resourceusagesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ResourceUsage), err
 }
