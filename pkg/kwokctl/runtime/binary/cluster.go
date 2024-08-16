@@ -731,7 +731,7 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 	conf := &env.kwokctlConfig.Options
 
 	for i := range env.kwokctlConfig.Components {
-		runtime.ApplyComponentPatches(&env.kwokctlConfig.Components[i], env.kwokctlConfig.ComponentsPatches)
+		runtime.ApplyComponentPatches(ctx, &env.kwokctlConfig.Components[i], env.kwokctlConfig.ComponentsPatches)
 	}
 
 	// Setup kubeconfig

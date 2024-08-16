@@ -61,6 +61,8 @@ type ExtraArgs struct {
 	Key string `json:"key"`
 	// Value is the value of the extra args.
 	Value string `json:"value"`
+	// Override is the value of is it override the arg
+	Override bool `json:"override"`
 }
 
 // ComponentPatches holds information about the component patches.
