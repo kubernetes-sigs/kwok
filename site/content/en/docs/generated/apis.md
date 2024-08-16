@@ -2264,6 +2264,17 @@ string
 <p>Value is the value of the extra args.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>override</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Override is the value of is it override the arg</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.HostPathType">

@@ -561,7 +561,7 @@ func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		runtime.ApplyComponentPatches(&kubectlProxyComponent, env.kwokctlConfig.ComponentsPatches)
+		runtime.ApplyComponentPatches(ctx, &kubectlProxyComponent, env.kwokctlConfig.ComponentsPatches)
 
 		dashboardPod, err := yaml.Marshal(components.ConvertToPod(kubectlProxyComponent))
 		if err != nil {
@@ -654,7 +654,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	})
 	kwokControllerComponent.Volumes = append(kwokControllerComponent.Volumes, logVolumes...)
 
-	runtime.ApplyComponentPatches(&kwokControllerComponent, env.kwokctlConfig.ComponentsPatches)
+	runtime.ApplyComponentPatches(ctx, &kwokControllerComponent, env.kwokctlConfig.ComponentsPatches)
 
 	pod := components.ConvertToPod(kwokControllerComponent)
 	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
@@ -709,7 +709,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 			return fmt.Errorf("failed to build dashboard component: %w", err)
 		}
 
-		runtime.ApplyComponentPatches(&dashboardComponent, env.kwokctlConfig.ComponentsPatches)
+		runtime.ApplyComponentPatches(ctx, &dashboardComponent, env.kwokctlConfig.ComponentsPatches)
 
 		dashboardPod, err := yaml.Marshal(components.ConvertToPod(dashboardComponent))
 		if err != nil {
@@ -859,7 +859,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			},
 		)
 
-		runtime.ApplyComponentPatches(&prometheusComponent, env.kwokctlConfig.ComponentsPatches)
+		runtime.ApplyComponentPatches(ctx, &prometheusComponent, env.kwokctlConfig.ComponentsPatches)
 
 		prometheusPod, err := yaml.Marshal(components.ConvertToPod(prometheusComponent))
 		if err != nil {
@@ -901,7 +901,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		runtime.ApplyComponentPatches(&jaegerComponent, env.kwokctlConfig.ComponentsPatches)
+		runtime.ApplyComponentPatches(ctx, &jaegerComponent, env.kwokctlConfig.ComponentsPatches)
 
 		jaegerPod, err := yaml.Marshal(components.ConvertToPod(jaegerComponent))
 		if err != nil {

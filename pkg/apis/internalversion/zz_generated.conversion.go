@@ -1350,6 +1350,7 @@ func Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSour
 func autoConvert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out *configv1alpha1.ExtraArgs, s conversion.Scope) error {
 	out.Key = in.Key
 	out.Value = in.Value
+	out.Override = in.Override
 	return nil
 }
 
@@ -1361,6 +1362,7 @@ func Convert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out 
 func autoConvert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(in *configv1alpha1.ExtraArgs, out *ExtraArgs, s conversion.Scope) error {
 	out.Key = in.Key
 	out.Value = in.Value
+	out.Override = in.Override
 	return nil
 }
 

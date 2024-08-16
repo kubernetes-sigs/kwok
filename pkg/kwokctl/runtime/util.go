@@ -20,12 +20,14 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"golang.org/x/sync/errgroup"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -103,23 +105,43 @@ func GetComponentPatches(conf *internalversion.KwokctlConfiguration, componentNa
 }
 
 // ApplyComponentPatches applies patches to a component.
-func ApplyComponentPatches(component *internalversion.Component, patches []internalversion.ComponentPatches) {
+func ApplyComponentPatches(ctx context.Context, component *internalversion.Component, patches []internalversion.ComponentPatches) {
 	for _, patch := range patches {
-		applyComponentPatch(component, patch)
+		applyComponentPatch(ctx, component, patch)
 	}
 }
 
-func applyComponentPatch(component *internalversion.Component, patch internalversion.ComponentPatches) {
+func applyComponentPatch(ctx context.Context, component *internalversion.Component, patch internalversion.ComponentPatches) {
 	if patch.Name != component.Name {
 		return
 	}
 
 	component.Volumes = append(component.Volumes, patch.ExtraVolumes...)
 	component.Envs = append(component.Envs, patch.ExtraEnvs...)
-
 	for _, a := range patch.ExtraArgs {
-		component.Args = append(component.Args, fmt.Sprintf("--%s=%s", a.Key, a.Value))
+		if a.Override {
+			component.Args = applyComponentArgsOverride(ctx, component.Args, a)
+		} else {
+			component.Args = append(component.Args, fmt.Sprintf("--%s=%s", a.Key, a.Value))
+		}
 	}
+}
+
+func applyComponentArgsOverride(ctx context.Context, args []string, a internalversion.ExtraArgs) []string {
+	k := fmt.Sprintf("--%s=", a.Key)
+	overrided := false
+	for i := len(args) - 1; i >= 0; i-- {
+		if strings.HasPrefix(args[i], k) {
+			args[i] = fmt.Sprintf("--%s=%s", a.Key, a.Value)
+			overrided = true
+			break
+		}
+	}
+	if !overrided {
+		logger := log.FromContext(ctx)
+		logger.Warn("have not match override", "key", a.Key)
+	}
+	return args
 }
 
 // ExpandVolumesHostPaths expands relative paths specified in volumes to absolute paths

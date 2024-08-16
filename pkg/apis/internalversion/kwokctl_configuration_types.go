@@ -47,6 +47,8 @@ type ExtraArgs struct {
 	Key string
 	// Value is the value of the extra args.
 	Value string
+	// Override is the value of is it override the arg
+	Override bool
 }
 
 // ComponentPatches holds information about the component patches.
