@@ -523,6 +523,10 @@ type Component struct {
 	// MetricsDiscovery is the metrics discovery of the component.
 	MetricsDiscovery *ComponentMetric `json:"metricsDiscovery,omitempty"`
 
+	// Address is the address of the component.
+	// +optional
+	Address string `json:"address,omitempty"`
+
 	// Version is the version of the component.
 	// +optional
 	Version string `json:"version,omitempty"`

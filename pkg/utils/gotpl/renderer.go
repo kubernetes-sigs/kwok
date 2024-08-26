@@ -101,7 +101,7 @@ func (r *renderer) ToText(text string, original interface{}) ([]byte, error) {
 
 	err := r.render(buf, text, original)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", err, buf.String())
+		return nil, fmt.Errorf("%w: %s", err, strings.TrimRight(buf.String(), "\x00"))
 	}
 	return slices.Clone(buf.Bytes()), nil
 }
@@ -113,12 +113,12 @@ func (r *renderer) ToJSON(text string, original interface{}) ([]byte, error) {
 
 	err := r.render(buf, text, original)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", err, buf.String())
+		return nil, fmt.Errorf("%w: %s", err, strings.TrimRight(buf.String(), "\x00"))
 	}
 
 	out, err := yaml.YAMLToJSON(buf.Bytes())
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", err, buf.String())
+		return nil, fmt.Errorf("%w: %s", err, strings.TrimRight(buf.String(), "\x00"))
 	}
 	return out, nil
 }

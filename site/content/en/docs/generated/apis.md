@@ -137,6 +137,9 @@ Resource Types:
 <a href="#config.kwok.x-k8s.io/v1alpha1.KwokConfiguration">KwokConfiguration</a>
 </li>
 <li>
+<a href="#config.kwok.x-k8s.io/v1alpha1.KwokctlComponent">KwokctlComponent</a>
+</li>
+<li>
 <a href="#config.kwok.x-k8s.io/v1alpha1.KwokctlConfiguration">KwokctlConfiguration</a>
 </li>
 <li>
@@ -202,6 +205,79 @@ KwokConfigurationOptions
 </td>
 <td>
 <p>Options holds information about the default value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlComponent">
+KwokctlComponent
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.KwokctlComponent"> #</a>
+</h3>
+<p>
+<p>KwokctlComponent  holds information about the kwokctl component.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+config.kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>KwokctlComponent</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>Standard list metadata.
+More info: <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>parameters</code>
+<em>
+encoding/json.RawMessage
+</em>
+</td>
+<td>
+<p>Parameters is the parameters for the kwokctl component configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Template is the template for the kwokctl component configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -2003,6 +2079,18 @@ ComponentMetric
 </td>
 <td>
 <p>MetricsDiscovery is the metrics discovery of the component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>address</code>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Address is the address of the component.</p>
 </td>
 </tr>
 <tr>
