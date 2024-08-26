@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/scale"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
@@ -115,7 +116,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		}
 	}
 
-	parameters, err := scale.NewParameters(ctx, krc.Parameters, flags.Params)
+	parameters, err := expression.NewParameters(ctx, krc.Parameters, flags.Params)
 	if err != nil {
 		return err
 	}
