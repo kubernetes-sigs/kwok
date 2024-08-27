@@ -14,11 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package dryrun_test is a test environment for kwok.
-package dryrun_test
+// Package benchmarking_test is a test benchmarking environment for kwok.
+package benchmark_test
 
 import (
-	"flag"
 	"os"
 	"runtime"
 	"testing"
@@ -27,23 +26,30 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/support/kwok"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
 var (
-	testEnv        env.Environment
-	pwd            = os.Getenv("PWD")
-	rootDir        = path.Join(pwd, "../../../..")
-	logsDir        = path.Join(rootDir, "logs")
-	clusterName    = envconf.RandomName("kwok-e2e-dryrun", 24)
-	kwokctlPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
-	updateTestdata = false
+	runtimeEnv  = consts.RuntimeTypeBinary
+	testEnv     env.Environment
+	pwd         = os.Getenv("PWD")
+	rootDir     = path.Join(pwd, "../../../..")
+	logsDir     = path.Join(rootDir, "logs")
+	clusterName = envconf.RandomName("kwok-e2e-benchmark", 24)
+	kwokPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwok"+helper.BinSuffix)
+	kwokctlPath = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	baseArgs    = []string{
+		"--kwok-controller-binary=" + kwokPath,
+		"--runtime=" + runtimeEnv,
+		"--wait=15m",
+		"--disable-kube-scheduler",
+	}
 )
 
 func init() {
 	_ = os.Setenv("KWOK_WORKDIR", path.Join(rootDir, "workdir"))
-	flag.BoolVar(&updateTestdata, "update-testdata", false, "update all of testdata")
 }
 
 func TestMain(m *testing.M) {
@@ -53,10 +59,13 @@ func TestMain(m *testing.M) {
 		WithName(clusterName).
 		WithPath(kwokctlPath)
 	testEnv.Setup(
+		helper.BuildKwokBinary(rootDir),
 		helper.BuildKwokctlBinary(rootDir),
+		helper.CreateCluster(k, baseArgs...),
 	)
 	testEnv.Finish(
 		helper.ExportLogs(k, logsDir),
+		helper.DestroyCluster(k),
 	)
 	os.Exit(testEnv.Run(m))
 }

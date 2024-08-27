@@ -39,7 +39,7 @@ var (
 	pwd            = os.Getenv("PWD")
 	rootDir        = path.Join(pwd, "../../../..")
 	logsDir        = path.Join(rootDir, "logs")
-	clusterName    = envconf.RandomName("kwok-e2e-docker", 16)
+	clusterName    = envconf.RandomName("kwok-e2e-docker", 24)
 	namespace      = envconf.RandomName("ns", 16)
 	testImage      = "localhost/kwok:test"
 	kwokctlPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
