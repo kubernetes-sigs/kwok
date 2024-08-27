@@ -37,6 +37,12 @@ func TestDryrunExportLogs(t *testing.T) {
 	testEnv.Test(t, f0)
 }
 
+func TestKwokctlPortForward(t *testing.T) {
+	f0 := e2e.CaseKwokctlPortForward(kwokctlPath, clusterName).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
 func TestHack(t *testing.T) {
 	f0 := e2e.CaseHack(kwokctlPath, clusterName, envconf.RandomName("node", 16)).
 		Feature()

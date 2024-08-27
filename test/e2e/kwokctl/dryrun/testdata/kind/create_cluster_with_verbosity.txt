@@ -106,9 +106,6 @@ nodes:
   - containerPort: 16686
     hostPort: 16686
     protocol: TCP
-  - containerPort: 2379
-    hostPort: 32765
-    protocol: TCP
   role: control-plane
 EOF
 docker pull registry.k8s.io/kubectl:v1.31.0
@@ -135,6 +132,8 @@ spec:
     ports:
     - containerPort: 8001
       hostPort: 8001
+      name: http
+      protocol: TCP
     resources: {}
     volumeMounts:
     - mountPath: ~/.kube/config
@@ -201,6 +200,11 @@ spec:
     image: registry.k8s.io/kwok/kwok:v0.7.0
     imagePullPolicy: Never
     name: kwok-controller
+    ports:
+    - containerPort: 10247
+      hostPort: 10247
+      name: http
+      protocol: TCP
     resources: {}
     volumeMounts:
     - mountPath: ~/.kube/config
@@ -384,6 +388,8 @@ spec:
     ports:
     - containerPort: 4443
       hostPort: 4443
+      name: https
+      protocol: TCP
     resources: {}
     volumeMounts:
     - mountPath: ~/.kube/config
@@ -439,6 +445,8 @@ spec:
     ports:
     - containerPort: 9090
       hostPort: 9090
+      name: http
+      protocol: TCP
     resources: {}
     volumeMounts:
     - mountPath: /etc/prometheus/prometheus.yaml
@@ -492,12 +500,19 @@ spec:
   - args:
     - --collector.otlp.enabled=true
     - --query.http-server.host-port=0.0.0.0:16686
+    - --collector.otlp.grpc.host-port=127.0.0.1:4317
     image: docker.io/jaegertracing/all-in-one:1.58.1
     imagePullPolicy: Never
     name: jaeger
     ports:
     - containerPort: 16686
       hostPort: 16686
+      name: http
+      protocol: TCP
+    - containerPort: 4317
+      hostPort: 4317
+      name: otlp-grpc
+      protocol: TCP
     resources: {}
   hostNetwork: true
   restartPolicy: Always

@@ -121,10 +121,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}()
 
-	etcdclient, err := rt.GetEtcdClient(ctx)
+	etcdclient, cancel, err := rt.GetEtcdClient(ctx)
 	if err != nil {
 		return err
 	}
+	defer cancel()
 
 	clientset, err := rt.GetClientset(ctx)
 	if err != nil {

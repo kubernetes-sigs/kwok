@@ -283,7 +283,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 	err = c.setupPorts(ctx,
 		env.usedPorts,
 		&env.kwokctlConfig.Options.KubeApiserverPort,
-		&env.kwokctlConfig.Options.EtcdPort,
 	)
 	if err != nil {
 		return err
@@ -775,13 +774,14 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 		}
 
 		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
-			Runtime:     conf.Runtime,
-			Workdir:     env.workdir,
-			Image:       conf.JaegerImage,
-			Version:     jaegerVersion,
-			BindAddress: net.PublicAddress,
-			Port:        conf.JaegerPort,
-			Verbosity:   env.verbosity,
+			Runtime:      conf.Runtime,
+			Workdir:      env.workdir,
+			Image:        conf.JaegerImage,
+			Version:      jaegerVersion,
+			BindAddress:  net.PublicAddress,
+			Port:         conf.JaegerPort,
+			OtlpGrpcPort: conf.JaegerOtlpGrpcPort,
+			Verbosity:    env.verbosity,
 		})
 		if err != nil {
 			return err

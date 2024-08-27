@@ -125,10 +125,11 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		}
 	}
 
-	etcdclient, err := rt.GetEtcdClient(ctx)
+	etcdclient, cancel, err := rt.GetEtcdClient(ctx)
 	if err != nil {
 		return err
 	}
+	defer cancel()
 
 	kubeconfigPath := rt.GetWorkdirPath(runtime.InHostKubeconfigName)
 	clientset, err := client.NewClientset("", kubeconfigPath)

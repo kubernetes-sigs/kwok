@@ -46,16 +46,41 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 	var ports []internalversion.Port
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-		ports = []internalversion.Port{
-			{
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "http",
 				HostPort: conf.Port,
 				Port:     16686,
+				Protocol: internalversion.ProtocolTCP,
 			},
-		}
+			internalversion.Port{
+				Name:     "otlp-grpc",
+				HostPort: conf.OtlpGrpcPort,
+				Port:     4317,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 		jaegerArgs = append(jaegerArgs,
 			"--query.http-server.host-port="+conf.BindAddress+":16686",
+			"--collector.otlp.grpc.host-port="+net.LocalAddress+":4317",
 		)
 	} else {
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "http",
+				HostPort: 0,
+				Port:     conf.Port,
+				Protocol: internalversion.ProtocolTCP,
+			},
+			internalversion.Port{
+				Name:     "otlp-grpc",
+				HostPort: 0,
+				Port:     conf.OtlpGrpcPort,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 		jaegerArgs = append(jaegerArgs,
 			"--query.http-server.host-port="+conf.BindAddress+":"+format.String(conf.Port),
 			"--collector.otlp.grpc.host-port="+net.LocalAddress+":"+format.String(conf.OtlpGrpcPort),

@@ -77,9 +77,6 @@ nodes:
   - containerPort: 9090
     hostPort: 9090
     protocol: TCP
-  - containerPort: 2379
-    hostPort: 32765
-    protocol: TCP
   role: control-plane
 EOF
 docker pull registry.k8s.io/kwok/kwok:v0.7.0
@@ -117,6 +114,11 @@ spec:
     image: registry.k8s.io/kwok/kwok:v0.7.0
     imagePullPolicy: Never
     name: kwok-controller
+    ports:
+    - containerPort: 10247
+      hostPort: 10247
+      name: http
+      protocol: TCP
     resources: {}
     volumeMounts:
     - mountPath: ~/.kube/config
@@ -188,6 +190,8 @@ spec:
     ports:
     - containerPort: 9090
       hostPort: 9090
+      name: http
+      protocol: TCP
     resources: {}
     volumeMounts:
     - mountPath: /etc/prometheus/prometheus.yaml

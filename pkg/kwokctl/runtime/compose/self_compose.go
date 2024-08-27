@@ -252,6 +252,9 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 	args = append(args, c.labelArgs()...)
 
 	for _, port := range component.Ports {
+		if port.HostPort == 0 {
+			continue
+		}
 		protocol := port.Protocol
 		if protocol == "" {
 			protocol = internalversion.ProtocolTCP

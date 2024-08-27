@@ -66,17 +66,29 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 				ReadOnly:  true,
 			},
 		)
-		ports = []internalversion.Port{
-			{
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "http",
 				HostPort: conf.Port,
 				Port:     9090,
+				Protocol: internalversion.ProtocolTCP,
 			},
-		}
+		)
 		prometheusArgs = append(prometheusArgs,
 			"--config.file=/etc/prometheus/prometheus.yaml",
 			"--web.listen-address="+conf.BindAddress+":9090",
 		)
 	} else {
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "http",
+				HostPort: 0,
+				Port:     conf.Port,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 		prometheusArgs = append(prometheusArgs,
 			"--config.file="+conf.ConfigPath,
 			"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),

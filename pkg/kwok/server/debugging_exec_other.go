@@ -27,6 +27,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 )
 
 func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io.Reader, out io.WriteCloser, resize <-chan clientremotecommand.TerminalSize) error {
@@ -54,7 +55,7 @@ func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io
 			io.Reader
 			io.Writer
 		}{in, out}
-		err := tunnel(ctx, pty, stm, buf1, buf2)
+		err := utilsnet.Tunnel(ctx, pty, stm, buf1, buf2)
 		if err != nil {
 			logger.Error("failed to tunnel", err)
 		}

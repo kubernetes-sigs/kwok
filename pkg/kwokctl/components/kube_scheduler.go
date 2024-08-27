@@ -124,15 +124,15 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10259",
 			)
-			if conf.Port != 0 {
-				ports = append(
-					ports,
-					internalversion.Port{
-						HostPort: conf.Port,
-						Port:     10259,
-					},
-				)
-			}
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "https",
+					HostPort: conf.Port,
+					Port:     10259,
+					Protocol: internalversion.ProtocolTCP,
+				},
+			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             "https",
 				Host:               conf.ProjectName + "-" + consts.ComponentKubeScheduler + ":10259",
@@ -145,6 +145,15 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
+			)
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "https",
+					HostPort: 0,
+					Port:     conf.Port,
+					Protocol: internalversion.ProtocolTCP,
+				},
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             "https",
@@ -165,15 +174,15 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				"--address="+conf.BindAddress,
 				"--port=10251",
 			)
-			if conf.Port != 0 {
-				ports = append(
-					ports,
-					internalversion.Port{
-						HostPort: conf.Port,
-						Port:     10251,
-					},
-				)
-			}
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "http",
+					HostPort: conf.Port,
+					Port:     10251,
+					Protocol: internalversion.ProtocolTCP,
+				},
+			)
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",
 				Host:   conf.ProjectName + "-" + consts.ComponentKubeScheduler + ":10251",
@@ -183,6 +192,15 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
 				"--address="+conf.BindAddress,
 				"--port="+format.String(conf.Port),
+			)
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "http",
+					HostPort: 0,
+					Port:     conf.Port,
+					Protocol: internalversion.ProtocolTCP,
+				},
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",

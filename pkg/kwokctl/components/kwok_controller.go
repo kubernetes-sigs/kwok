@@ -96,14 +96,15 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			},
 		)
 
-		if conf.Port != 0 {
-			ports = append(ports,
-				internalversion.Port{
-					HostPort: conf.Port,
-					Port:     10247,
-				},
-			)
-		}
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "http",
+				HostPort: conf.Port,
+				Port:     10247,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 		kwokControllerArgs = append(kwokControllerArgs,
 			"--kubeconfig=/root/.kube/config",
 			"--config=/root/.kwok/kwok.yaml",
@@ -116,6 +117,15 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
 	} else {
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "http",
+				HostPort: 0,
+				Port:     conf.Port,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 		kwokControllerArgs = append(kwokControllerArgs,
 			"--kubeconfig="+conf.KubeconfigPath,
 			"--config="+conf.ConfigPath,

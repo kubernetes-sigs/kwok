@@ -156,21 +156,46 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 }
 
 // GetEtcdClient returns the etcd client of cluster
-func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return nil, err
-	}
-	conf := &config.Options
-
+func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error) {
 	certFile := c.GetWorkdirPath("pki/etcd/server.crt")
 	keyFile := c.GetWorkdirPath("pki/etcd/server.key")
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return etcd.NewClient(etcd.ClientConfig{
+	config, err := c.Config(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	conf := &config.Options
+
+	if conf.EtcdPort == 0 {
+		unused, err := net.GetUnusedPort(ctx, nil)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		cli, err := etcd.NewClient(etcd.ClientConfig{
+			Endpoints: []string{"https://" + net.LocalAddress + ":" + format.String(unused)},
+			TLS: &tls.Config{
+				Certificates: []tls.Certificate{cert},
+				//nolint:gosec
+				InsecureSkipVerify: true,
+			},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+
+		cancel, err := c.PortForward(ctx, consts.ComponentEtcd, "2379", unused)
+		if err != nil {
+			return nil, nil, err
+		}
+		return cli, cancel, nil
+	}
+
+	cli, err := etcd.NewClient(etcd.ClientConfig{
 		Endpoints: []string{"https://" + net.LocalAddress + ":" + format.String(conf.EtcdPort)},
 		TLS: &tls.Config{
 			Certificates: []tls.Certificate{cert},
@@ -178,4 +203,8 @@ func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, error) {
 			InsecureSkipVerify: true,
 		},
 	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return cli, func() {}, nil
 }
