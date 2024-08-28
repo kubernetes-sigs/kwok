@@ -22,11 +22,14 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/emicklei/go-restful/v3"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 	remotecommandclient "k8s.io/client-go/tools/remotecommand"
+	crilogs "k8s.io/cri-client/pkg/logs"
 	remotecommandserver "k8s.io/kubelet/pkg/cri/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -46,12 +49,12 @@ func (s *Server) AttachContainer(ctx context.Context, name string, uid types.UID
 	if err != nil {
 		return err
 	}
-	opts := &logOptions{
-		tail:      0,
-		bytes:     -1, // -1 by default which means read all logs.
-		follow:    true,
-		timestamp: false,
-	}
+
+	var tailLines int64
+	opts := crilogs.NewLogOptions(&corev1.PodLogOptions{
+		TailLines: &tailLines,
+		Follow:    true,
+	}, time.Now())
 	return readLogs(ctx, attach.LogsFile, opts, out, errOut)
 }
 
