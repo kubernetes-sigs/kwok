@@ -1,6 +1,10 @@
 docker start kwok-<CLUSTER_NAME>-etcd
+docker start kwok-<CLUSTER_NAME>-jaeger
 docker start kwok-<CLUSTER_NAME>-kube-apiserver
 docker start kwok-<CLUSTER_NAME>-kube-controller-manager
 docker start kwok-<CLUSTER_NAME>-kube-scheduler
 docker start kwok-<CLUSTER_NAME>-kwok-controller
+docker start kwok-<CLUSTER_NAME>-dashboard
 docker start kwok-<CLUSTER_NAME>-metrics-server
+docker start kwok-<CLUSTER_NAME>-prometheus
+docker start kwok-<CLUSTER_NAME>-dashboard-metrics-scraper

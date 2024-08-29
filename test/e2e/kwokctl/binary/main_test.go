@@ -19,6 +19,7 @@ package binary_test
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"runtime"
 	"testing"
@@ -52,6 +53,10 @@ var (
 )
 
 func init() {
+	binPath := path.Join(rootDir, "bin")
+	currentPath := os.Getenv("PATH")
+	newPath := fmt.Sprintf("%s%c%s", binPath, os.PathListSeparator, currentPath)
+	_ = os.Setenv("PATH", newPath)
 	_ = os.Setenv("KWOK_WORKDIR", path.Join(rootDir, "workdir"))
 	flag.BoolVar(&updateTestdata, "update-testdata", false, "update all of testdata")
 }
@@ -67,6 +72,12 @@ func TestMain(m *testing.M) {
 		helper.BuildKwokctlBinary(rootDir),
 		helper.CreateCluster(k, append(baseArgs,
 			"--controller-port=10247",
+			"--prometheus-port=9090",
+			"--etcd-port=2400",
+			"--kube-scheduler-port=10250",
+			"--kube-controller-manager-port=10260",
+			"--dashboard-port=6060",
+			"--jaeger-port=16686",
 			"--config="+path.Join(rootDir, "test/e2e/port_forward.yaml"),
 			"--config="+path.Join(rootDir, "test/e2e/logs.yaml"),
 			"--config="+path.Join(rootDir, "test/e2e/attach.yaml"),

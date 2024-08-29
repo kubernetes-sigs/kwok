@@ -1,6 +1,10 @@
 podman start kwok-<CLUSTER_NAME>-etcd
+podman start kwok-<CLUSTER_NAME>-jaeger
 podman start kwok-<CLUSTER_NAME>-kube-apiserver
 podman start kwok-<CLUSTER_NAME>-kube-controller-manager
 podman start kwok-<CLUSTER_NAME>-kube-scheduler
 podman start kwok-<CLUSTER_NAME>-kwok-controller
+podman start kwok-<CLUSTER_NAME>-dashboard
 podman start kwok-<CLUSTER_NAME>-metrics-server
+podman start kwok-<CLUSTER_NAME>-prometheus
+podman start kwok-<CLUSTER_NAME>-dashboard-metrics-scraper

@@ -8,3 +8,7 @@ kube-controller-manager logs kwok-<CLUSTER_NAME>-kube-controller-manager ><ROOT_
 kube-scheduler logs kwok-<CLUSTER_NAME>-kube-scheduler ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kube-scheduler.log
 kwok-controller logs kwok-<CLUSTER_NAME>-kwok-controller ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/kwok-controller.log
 metrics-server logs kwok-<CLUSTER_NAME>-metrics-server ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/metrics-server.log
+prometheus logs kwok-<CLUSTER_NAME>-prometheus ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/prometheus.log
+jaeger logs kwok-<CLUSTER_NAME>-jaeger ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/jaeger.log
+dashboard logs kwok-<CLUSTER_NAME>-dashboard ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/dashboard.log
+dashboard-metrics-scraper logs kwok-<CLUSTER_NAME>-dashboard-metrics-scraper ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/dashboard-metrics-scraper.log
