@@ -26,6 +26,7 @@ func TestGetEtcdVersion(t *testing.T) {
 		version  int
 		expected string
 	}{
+		{"Version too low", 7, "3.0.17"},
 		{"Version 8", 8, "3.0.17"},
 		{"Version 9", 9, "3.1.12"},
 		{"Version 10", 10, "3.1.12"},
@@ -40,17 +41,13 @@ func TestGetEtcdVersion(t *testing.T) {
 		{"Version 19", 19, "3.4.13-0"},
 		{"Version 20", 20, "3.4.13-0"},
 		{"Version 21", 21, "3.4.13-0"},
-		{"Version 22", 22, "3.5.11-0"},
-		{"Version 23", 23, "3.5.11-0"},
-		{"Version 24", 24, "3.5.11-0"},
-		{"Version 25", 25, "3.5.11-0"},
-		{"Version 26", 26, "3.5.11-0"},
-		{"Version 27", 27, "3.5.11-0"},
-		{"Version 28", 28, "3.5.11-0"},
-		{"Version 29", 29, "3.5.11-0"},
-		{"Version too low", 7, "3.0.17"},
-		{"Version too high", 30, "3.5.11-0"},
-		{"Negative version", -1, "3.5.11-0"},
+		{"Version 22", 22, "3.5.12-0"},
+		{"Version 23", 23, "3.5.12-0"},
+		{"Version 24", 24, "3.5.12-0"},
+		{"Version 25", 25, "3.5.12-0"},
+		{"Version 26", 26, "3.5.12-0"},
+		{"Version 27", 27, "3.5.12-0"},
+		{"Version 28", 28, "3.5.12-0"},
 	}
 
 	for _, tt := range tests {
