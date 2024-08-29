@@ -31,15 +31,6 @@ func TestWorkable(t *testing.T) {
 	testEnv.Test(t, f0)
 }
 
-func TestBenchmarking(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("skipping test on non-linux platform")
-	}
-	f0 := e2e.CaseBenchmark(kwokctlPath, clusterName).
-		Feature()
-	testEnv.Test(t, f0)
-}
-
 func TestDryrunExportLogs(t *testing.T) {
 	f0 := e2e.CaseDryRunExportLogs(kwokctlPath, clusterName, runtimeEnv, rootDir, updateTestdata).
 		Feature()

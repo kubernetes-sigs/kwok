@@ -17,7 +17,6 @@ limitations under the License.
 package e2e
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os/exec"
@@ -51,7 +50,7 @@ func waitResource(ctx context.Context, t *testing.T, kwokctlPath, name, resource
 			return fmt.Errorf("resource %s not changed", resource)
 		}
 		prev = got
-		all := len(strings.Split(strings.TrimSpace(raw), "\n"))
+		all := strings.Count(raw, "\n")
 		t.Logf("%s %d/%d => %d\n", resource, got, all, want)
 		if gap != 0 && got != 0 && (all-got) > gap {
 			if tolerance > 0 {
@@ -68,14 +67,12 @@ func waitResource(ctx context.Context, t *testing.T, kwokctlPath, name, resource
 
 func scaleCreatePod(ctx context.Context, t *testing.T, kwokctlPath string, name string, size int) error {
 	cmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kubectl", "get", "node", "-o", "jsonpath={.items.*.metadata.name}") // #nosec G204
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+	out, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to run command: %w", err)
 	}
 	nodeName := ""
-	nodes := strings.Split(out.String(), " ")
+	nodes := strings.Split(string(out), " ")
 	for _, node := range nodes {
 		if strings.Contains(node, "fake-") {
 			nodeName = node
@@ -85,12 +82,12 @@ func scaleCreatePod(ctx context.Context, t *testing.T, kwokctlPath string, name 
 	if nodeName == "" {
 		return fmt.Errorf("no fake- node found")
 	}
+
 	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "pod", "fake-pod", "--replicas", strconv.Itoa(size), "--param", fmt.Sprintf(".nodeName=%q", nodeName)) // #nosec G204
-	scaleCmd.Stdout = nil
-	scaleCmd.Stderr = nil
 	if err := scaleCmd.Start(); err != nil {
 		return fmt.Errorf("failed to start scale command: %w", err)
 	}
+
 	if err := waitResource(ctx, t, kwokctlPath, name, "Pod", "Running", size, 5, 1); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
@@ -99,9 +96,6 @@ func scaleCreatePod(ctx context.Context, t *testing.T, kwokctlPath string, name 
 
 func scaleDeletePod(ctx context.Context, t *testing.T, kwokctlPath string, name string, size int) error {
 	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "pod", "fake-pod", "--replicas", strconv.Itoa(size)) // #nosec G204
-	scaleCmd.Stdout = nil
-	scaleCmd.Stderr = nil
-
 	if err := scaleCmd.Start(); err != nil {
 		return fmt.Errorf("failed to start scale command: %w", err)
 	}
@@ -109,15 +103,11 @@ func scaleDeletePod(ctx context.Context, t *testing.T, kwokctlPath string, name 
 	if err := waitResource(ctx, t, kwokctlPath, name, "Pod", "fake-pod-", size, 0, 0); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
-
 	return nil
 }
 
 func scaleCreateNode(ctx context.Context, t *testing.T, kwokctlPath string, name string, size int) error {
 	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "node", "fake-node", "--replicas", strconv.Itoa(size)) // #nosec G204
-	scaleCmd.Stdout = nil
-	scaleCmd.Stderr = nil
-
 	if err := scaleCmd.Start(); err != nil {
 		return fmt.Errorf("failed to start scale command: %w", err)
 	}
@@ -125,37 +115,39 @@ func scaleCreateNode(ctx context.Context, t *testing.T, kwokctlPath string, name
 	if err := waitResource(ctx, t, kwokctlPath, name, "Node", "Ready", size, 10, 5); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
-
 	return nil
 }
 
 func CaseBenchmark(kwokctlPath, clusterName string) *features.FeatureBuilder {
-	return features.New("Benchmarking").
+	return features.New("Benchmark").
 		Assess("Create nodes", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
 			ctx0, cancel := context.WithTimeout(ctx, 120*time.Second)
+			defer cancel()
+
 			err := scaleCreateNode(ctx0, t, kwokctlPath, clusterName, 2000)
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer cancel()
 			return ctx
 		}).
 		Assess("Create pods", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
 			ctx0, cancel := context.WithTimeout(ctx, 240*time.Second)
+			defer cancel()
+
 			err := scaleCreatePod(ctx0, t, kwokctlPath, clusterName, 5000)
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer cancel()
 			return ctx
 		}).
 		Assess("Delete pods", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
 			ctx0, cancel := context.WithTimeout(ctx, 240*time.Second)
+			defer cancel()
+
 			err := scaleDeletePod(ctx0, t, kwokctlPath, clusterName, 0)
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer cancel()
 			return ctx
 		})
 }

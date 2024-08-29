@@ -47,6 +47,8 @@ func formatCmdOutput(got, clusterName, rootDir string) string {
 	got = strings.ReplaceAll(got, ".tar.gz", ".<TAR>")
 	got = strings.ReplaceAll(got, homeDir, "~")
 	got = strings.ReplaceAll(got, "/root", "~")
+	got = strings.ReplaceAll(got, " --env=ETCD_UNSUPPORTED_ARCH=<ARCH> ", " ")
+	got = strings.ReplaceAll(got, " ETCD_UNSUPPORTED_ARCH=<ARCH> ", " ")
 	got = emptyLine.ReplaceAllLiteralString(got, "\n")
 	return got
 }
@@ -83,8 +85,13 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 	f = f.Assess("test cluster dryrun", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster.txt"
 		args := []string{
-			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m",
-			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--kube-authorization=false",
+			"create", "cluster", "--dry-run",
+			"--name", clusterName,
+			"--timeout=30m",
+			"--wait=30m",
+			"--quiet-pull",
+			"--disable-qps-limits",
+			"--kube-authorization=false",
 			"--runtime", clusterRuntime,
 		}
 		diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
@@ -105,9 +112,14 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
 		extraPath := path.Join(rootDir, "test/e2e/kwokctl/dryrun/testdata/extra.yaml")
 		args := []string{
-			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m",
-			"--wait=30m", "--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime,
+			"create", "cluster", "--dry-run",
+			"--runtime", clusterRuntime,
+			"--name", clusterName,
 			"--config", extraPath,
+			"--timeout=30m",
+			"--wait=30m",
+			"--quiet-pull",
+			"--disable-qps-limits",
 		}
 		diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
 		if err != nil {
@@ -128,11 +140,19 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 		kubeAuditPath := path.Join(rootDir, "test/kwokctl/audit-policy.yaml")
 		schedulerConfigPath := path.Join(rootDir, "test/kwokctl/scheduler-config.yaml")
 		args := []string{
-			"create", "cluster", "--dry-run", "--name", clusterName, "--timeout=30m", "--wait=30m",
-			"--quiet-pull", "--disable-qps-limits", "--runtime", clusterRuntime,
-			"--prometheus-port=9090", "--jaeger-port=16686", "--dashboard-port=8000",
+			"create", "cluster", "--dry-run",
+			"--runtime", clusterRuntime,
+			"--name", clusterName,
+			"--timeout=30m",
+			"--wait=30m",
+			"--quiet-pull",
+			"--disable-qps-limits",
+			"--prometheus-port=9090",
+			"--jaeger-port=16686",
+			"--dashboard-port=8000",
 			"--kube-apiserver-insecure-port=6080",
-			"--enable-metrics-server", "--kube-audit-policy", kubeAuditPath,
+			"--enable-metrics-server",
+			"--kube-audit-policy", kubeAuditPath,
 			"--kube-scheduler-config", schedulerConfigPath,
 		}
 		diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
