@@ -12,7 +12,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/google/cel-go v0.20.1
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-containerregistry v0.19.2
+	github.com/google/go-containerregistry v0.20.2
 	github.com/itchyny/gojq v0.12.16
 	github.com/nxadm/tail v1.4.11
 	github.com/prometheus/client_golang v1.19.1
@@ -62,7 +62,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/docker/cli v27.0.3+incompatible // indirect
+	github.com/docker/cli v27.1.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/fatih/color v1.17.0 // indirect
