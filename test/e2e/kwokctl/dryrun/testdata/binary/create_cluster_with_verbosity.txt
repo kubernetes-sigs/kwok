@@ -7,7 +7,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
 cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
-# Download https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-<OS>-<ARCH>.<TAR> and extract etcd to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd
+# Download https://github.com/etcd-io/etcd/releases/download/v3.5.15/etcd-v3.5.15-<OS>-<ARCH>.<TAR> and extract etcd to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcd
 # Download https://dl.k8s.io/release/v1.31.0/bin/<OS>/<ARCH>/kube-apiserver to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-apiserver
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1

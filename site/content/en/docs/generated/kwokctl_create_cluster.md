@@ -19,10 +19,10 @@ kwokctl create cluster [flags]
       --disable-qps-limits                      Disable QPS limits for components
       --enable-crds strings                     List of CRDs to enable
       --enable-metrics-server                   Enable the metrics-server
-      --etcd-binary string                      Binary of etcd, only for binary runtime (default "https://github.com/etcd-io/etcd/releases/download/v3.5.11/etcd-v3.5.11-linux-amd64.tar.gz#etcd")
+      --etcd-binary string                      Binary of etcd, only for binary runtime (default "https://github.com/etcd-io/etcd/releases/download/v3.5.15/etcd-v3.5.15-linux-amd64.tar.gz#etcd")
       --etcd-image string                       Image of etcd, only for docker/podman/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
-                                                 (default "registry.k8s.io/etcd:3.5.11-0")
+                                                 (default "registry.k8s.io/etcd:3.5.15-0")
       --etcd-port uint32                        Port of etcd given to the host. The behavior is unstable for kind/kind-podman runtime and may be modified in the future
       --etcd-prefix string                      prefix of the key (default "/registry")
       --extra-args component=key=value          Pass a single extra arg key-value pair to the component in the format component=key=value
