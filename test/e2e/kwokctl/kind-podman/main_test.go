@@ -77,12 +77,8 @@ func TestMain(m *testing.M) {
 				"--kube-controller-manager-port=10260",
 				"--dashboard-port=6060",
 				"--jaeger-port=16686",
-				"--config="+path.Join(rootDir, "test/e2e/port_forward.yaml"),
-				"--config="+path.Join(rootDir, "test/e2e/logs.yaml"),
-				"--config="+path.Join(rootDir, "test/e2e/attach.yaml"),
-				"--config="+path.Join(rootDir, "test/e2e/exec.yaml"),
-				"--config="+path.Join(rootDir, "kustomize/metrics/usage/usage-from-annotation.yaml"),
-				"--config="+path.Join(rootDir, "kustomize/metrics/resource/metrics-resource.yaml"),
+				"--config="+path.Join(rootDir, "test/e2e"),
+				"--config="+path.Join(rootDir, "kustomize/metrics/usage"),
 			)...)(ctx, cfg)
 			if err != nil {
 				logger := log.FromContext(ctx)
