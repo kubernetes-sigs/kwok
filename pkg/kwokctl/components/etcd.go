@@ -44,17 +44,6 @@ type BuildEtcdComponentConfig struct {
 
 // BuildEtcdComponent builds an etcd component.
 func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversion.Component, err error) {
-	exposePeerPort := true
-	if conf.PeerPort == 0 {
-		conf.PeerPort = 2380
-		exposePeerPort = false
-	}
-	exposePort := true
-	if conf.Port == 0 {
-		conf.Port = 2379
-		exposePort = false
-	}
-
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 
@@ -78,24 +67,21 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			"--data-dir=/etcd-data",
 		)
 
-		if exposePeerPort {
-			ports = append(
-				ports,
-				internalversion.Port{
-					HostPort: conf.PeerPort,
-					Port:     2380,
-				},
-			)
-		}
-		if exposePort {
-			ports = append(
-				ports,
-				internalversion.Port{
-					HostPort: conf.Port,
-					Port:     2379,
-				},
-			)
-		}
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "peer-http",
+				HostPort: conf.PeerPort,
+				Port:     2380,
+				Protocol: internalversion.ProtocolTCP,
+			},
+			internalversion.Port{
+				Name:     "http",
+				HostPort: conf.Port,
+				Port:     2379,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 		etcdArgs = append(etcdArgs,
 			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":2380",
 			"--listen-peer-urls=http://"+conf.BindAddress+":2380",
@@ -112,6 +98,23 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	} else {
 		etcdPeerPortStr := format.String(conf.PeerPort)
 		etcdClientPortStr := format.String(conf.Port)
+
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "peer-http",
+				HostPort: 0,
+				Port:     conf.PeerPort,
+				Protocol: internalversion.ProtocolTCP,
+			},
+			internalversion.Port{
+				Name:     "http",
+				HostPort: 0,
+				Port:     conf.Port,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
+
 		etcdArgs = append(etcdArgs,
 			"--data-dir="+conf.DataPath,
 			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,

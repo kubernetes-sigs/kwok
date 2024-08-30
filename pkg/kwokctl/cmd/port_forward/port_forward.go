@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,43 +14,41 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package logs contains a command to log a component of a cluster.
-package logs
+// Package port_forward implements the `port-forward` command
+package port_forward
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"path"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type flagpole struct {
-	Name   string
-	Follow bool
+	Name string
 }
 
-// NewCommand returns a new cobra.Command for getting the list of clusters
+// NewCommand returns a new cobra.Command for forwarding the port
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
-
 	cmd := &cobra.Command{
-		Use:   "logs [component]",
-		Short: "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, metrics-server, prometheus, jaeger]",
+		Args:  cobra.ExactArgs(2),
+		Use:   "port-forward [component] [local-port]:[port-name]",
+		Short: "Forward one local ports to a component",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return cmd.Help()
-			}
 			flags.Name = config.DefaultCluster
-			return runE(cmd.Context(), flags, args)
+			return runE(ctx, flags, args)
 		},
 	}
-	cmd.Flags().BoolVarP(&flags.Follow, "follow", "f", false, "Specify if the logs should be streamed")
 	return cmd
 }
 
@@ -58,8 +56,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	name := config.ClusterName(flags.Name)
 	workdir := path.Join(config.ClustersDir, flags.Name)
 
-	logger := log.FromContext(ctx)
-	logger = logger.With("cluster", flags.Name)
+	logger := log.FromContext(ctx).With("cluster", flags.Name)
 	ctx = log.NewContext(ctx, logger)
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
@@ -70,21 +67,35 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return err
 	}
 
-	if args[0] == "audit" {
-		if flags.Follow {
-			err = rt.AuditLogsFollow(ctx, os.Stdout)
-		} else {
-			err = rt.AuditLogs(ctx, os.Stdout)
-		}
-	} else {
-		if flags.Follow {
-			err = rt.LogsFollow(ctx, args[0], os.Stdout)
-		} else {
-			err = rt.Logs(ctx, args[0], os.Stdout)
-		}
-	}
+	hostPort, containerPort, err := splitParts(args[1])
 	if err != nil {
 		return err
 	}
+
+	port, err := strconv.ParseUint(hostPort, 0, 0)
+	if err != nil {
+		return err
+	}
+
+	cancel, err := rt.PortForward(ctx, args[0], containerPort, uint32(port))
+	if err != nil {
+		return err
+	}
+
+	defer cancel()
+	<-ctx.Done()
+
 	return nil
+}
+
+func splitParts(rawport string) (hostPort string, containerPort string, err error) {
+	parts := strings.Split(rawport, ":")
+	n := len(parts)
+
+	switch n {
+	case 2:
+		return parts[0], parts[1], nil
+	default:
+		return "", "", fmt.Errorf("unsupported port format: %s", rawport)
+	}
 }

@@ -105,10 +105,11 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return nil
 	}
 
-	etcdclient, err := rt.GetEtcdClient(ctx)
+	etcdclient, cancel, err := rt.GetEtcdClient(ctx)
 	if err != nil {
 		return err
 	}
+	defer cancel()
 
 	var targetGvr schema.GroupVersionResource
 	var targetName string

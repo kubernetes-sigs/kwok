@@ -80,16 +80,28 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 			"--kubeconfig=/root/.kube/config",
 			"--port=8001",
 		)
-		ports = []internalversion.Port{
-			{
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "http",
 				HostPort: conf.Port,
 				Port:     8001,
+				Protocol: internalversion.ProtocolTCP,
 			},
-		}
+		)
 	} else {
 		kubectlProxyArgs = append(kubectlProxyArgs,
 			"--kubeconfig="+conf.KubeconfigPath,
 			"--port="+format.String(conf.Port),
+		)
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "http",
+				HostPort: 0,
+				Port:     conf.Port,
+				Protocol: internalversion.ProtocolTCP,
+			},
 		)
 	}
 

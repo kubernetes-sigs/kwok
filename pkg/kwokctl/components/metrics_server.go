@@ -99,14 +99,15 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 			"--tls-cert-file=/etc/kubernetes/pki/admin.crt",
 			"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
 		)
-		if conf.Port != 0 {
-			ports = []internalversion.Port{
-				{
-					HostPort: conf.Port,
-					Port:     4443,
-				},
-			}
-		}
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "https",
+				HostPort: conf.Port,
+				Port:     4443,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 		metric = &internalversion.ComponentMetric{
 			Scheme:             "https",
 			Host:               metricsHost,
@@ -126,7 +127,15 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 			"--tls-cert-file="+conf.AdminCertPath,
 			"--tls-private-key-file="+conf.AdminKeyPath,
 		)
-
+		ports = append(
+			ports,
+			internalversion.Port{
+				Name:     "https",
+				HostPort: 0,
+				Port:     conf.Port,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 		metric = &internalversion.ComponentMetric{
 			Scheme:             "https",
 			Host:               metricsHost,

@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
@@ -74,7 +75,7 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 			s.bufPool.Put(buf1)
 			s.bufPool.Put(buf2)
 		}()
-		return tunnel(ctx, stream, dial, buf1, buf2)
+		return utilsnet.Tunnel(ctx, stream, dial, buf1, buf2)
 	}
 
 	return errors.New("no target or command")
@@ -143,38 +144,4 @@ func findPortInForwards(port int32, forwards []internalversion.Forward) (*intern
 		}
 	}
 	return defaultForward, defaultForward != nil
-}
-
-// tunnel create tunnels for two streams.
-func tunnel(ctx context.Context, c1, c2 io.ReadWriter, buf1, buf2 []byte) error {
-	errCh := make(chan error)
-	go func() {
-		_, err := io.CopyBuffer(c2, c1, buf1)
-		errCh <- err
-	}()
-	go func() {
-		_, err := io.CopyBuffer(c1, c2, buf2)
-		errCh <- err
-	}()
-	select {
-	case <-ctx.Done():
-		// Do nothing
-	case err1 := <-errCh:
-		select {
-		case <-ctx.Done():
-			if err1 != nil {
-				return err1
-			}
-			// Do nothing
-		case err2 := <-errCh:
-			if err1 != nil {
-				return err1
-			}
-			return err2
-		}
-	}
-	if err := ctx.Err(); err != nil && !errors.Is(err, context.Canceled) {
-		return err
-	}
-	return nil
 }

@@ -73,6 +73,9 @@ type Runtime interface {
 	// InspectComponent inspect the component
 	InspectComponent(ctx context.Context, name string) (ComponentStatus, error)
 
+	// PortForward expose the port of the component
+	PortForward(ctx context.Context, name string, portOrName string, hostPort uint32) (cancel func(), retErr error)
+
 	// Ready check the cluster is ready
 	Ready(ctx context.Context) (bool, error)
 
@@ -143,7 +146,7 @@ type Runtime interface {
 	GetClientset(ctx context.Context) (client.Clientset, error)
 
 	// GetEtcdClient returns the etcd client of cluster
-	GetEtcdClient(ctx context.Context) (etcd.Client, error)
+	GetEtcdClient(ctx context.Context) (etcd.Client, func(), error)
 }
 
 type SnapshotSaveWithYAMLConfig struct {

@@ -1,16 +1,15 @@
-## kwokctl logs
+## kwokctl port-forward
 
-Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, metrics-server, prometheus, jaeger]
+Forward one local ports to a component
 
 ```
-kwokctl logs [component] [flags]
+kwokctl port-forward [component] [local-port]:[port-name] [flags]
 ```
 
 ### Options
 
 ```
-  -f, --follow   Specify if the logs should be streamed
-  -h, --help     help for logs
+  -h, --help   help for port-forward
 ```
 
 ### Options inherited from parent commands

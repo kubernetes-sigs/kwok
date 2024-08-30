@@ -120,15 +120,15 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10257",
 			)
-			if conf.Port > 0 {
-				ports = append(
-					ports,
-					internalversion.Port{
-						HostPort: conf.Port,
-						Port:     10257,
-					},
-				)
-			}
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "https",
+					HostPort: conf.Port,
+					Port:     10257,
+					Protocol: internalversion.ProtocolTCP,
+				},
+			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             "https",
 				Host:               conf.ProjectName + "-" + consts.ComponentKubeControllerManager + ":10257",
@@ -141,6 +141,15 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
+			)
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "https",
+					HostPort: 0,
+					Port:     conf.Port,
+					Protocol: internalversion.ProtocolTCP,
+				},
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             "https",
@@ -162,15 +171,15 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				"--address="+conf.BindAddress,
 				"--port=10252",
 			)
-			if conf.Port > 0 {
-				ports = append(
-					ports,
-					internalversion.Port{
-						HostPort: conf.Port,
-						Port:     10252,
-					},
-				)
-			}
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "http",
+					HostPort: conf.Port,
+					Port:     10252,
+					Protocol: internalversion.ProtocolTCP,
+				},
+			)
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",
 				Host:   conf.ProjectName + "-" + consts.ComponentKubeControllerManager + ":10252",
@@ -180,6 +189,15 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
 				"--address="+conf.BindAddress,
 				"--port="+format.String(conf.Port),
+			)
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "http",
+					HostPort: 0,
+					Port:     conf.Port,
+					Protocol: internalversion.ProtocolTCP,
+				},
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",

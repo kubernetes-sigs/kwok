@@ -54,6 +54,8 @@ type Options struct {
 	PipeStdin bool
 	// Fork is true if the command should be forked.
 	Fork bool
+	// Wait is true if the command wait.
+	Wait bool
 }
 
 func (e *Options) deepCopy() *Options {
@@ -65,6 +67,7 @@ func (e *Options) deepCopy() *Options {
 		IOStreams: e.IOStreams,
 		PipeStdin: e.PipeStdin,
 		Fork:      e.Fork,
+		Wait:      e.Wait,
 	}
 }
 
@@ -152,13 +155,23 @@ func WithAllWriteToErrOut(ctx context.Context) context.Context {
 func WithFork(ctx context.Context, fork bool) context.Context {
 	ctx, opt := withExecOptions(ctx)
 	opt.Fork = fork
+	opt.Wait = !fork
+	return ctx
+}
+
+// WithWait returns a context with the given wait option.
+func WithWait(ctx context.Context, wait bool) context.Context {
+	ctx, opt := withExecOptions(ctx)
+	opt.Wait = wait
 	return ctx
 }
 
 func withExecOptions(ctx context.Context) (context.Context, *Options) {
 	v := ctx.Value(optCtx(0))
 	if v == nil {
-		opt := &Options{}
+		opt := &Options{
+			Wait: true,
+		}
 		return context.WithValue(ctx, optCtx(0), opt), opt
 	}
 	opt := v.(*Options).deepCopy()
@@ -169,7 +182,9 @@ func withExecOptions(ctx context.Context) (context.Context, *Options) {
 func GetExecOptions(ctx context.Context) *Options {
 	v := ctx.Value(optCtx(0))
 	if v == nil {
-		return &Options{}
+		return &Options{
+			Wait: true,
+		}
 	}
 	return v.(*Options).deepCopy()
 }
@@ -227,7 +242,7 @@ func Command(ctx context.Context, name string, args ...string) (cmd *Cmd, err er
 		return nil, fmt.Errorf("cmd start: %s %s: %w", name, strings.Join(args, " "), err)
 	}
 
-	if !opt.Fork {
+	if opt.Wait {
 		err = cmd.Wait()
 		if err != nil {
 			if buf, ok := cmd.Stderr.(*bytes.Buffer); ok {

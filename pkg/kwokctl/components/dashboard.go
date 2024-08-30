@@ -112,6 +112,14 @@ func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component inte
 			"--kubeconfig="+conf.KubeconfigPath,
 			"--insecure-port="+format.String(conf.Port),
 		)
+		ports = append(ports,
+			internalversion.Port{
+				Name:     "http",
+				Port:     conf.Port,
+				HostPort: 0,
+				Protocol: internalversion.ProtocolTCP,
+			},
+		)
 	}
 
 	component = internalversion.Component{

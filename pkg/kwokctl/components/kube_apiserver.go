@@ -139,12 +139,15 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		}
 
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-			ports = []internalversion.Port{
-				{
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "https",
 					HostPort: conf.Port,
 					Port:     6443,
+					Protocol: internalversion.ProtocolTCP,
 				},
-			}
+			)
 			volumes = append(volumes,
 				internalversion.Volume{
 					HostPath:  conf.CaCertPath,
@@ -183,6 +186,15 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				InsecureSkipVerify: true,
 			}
 		} else {
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "https",
+					HostPort: 0,
+					Port:     conf.Port,
+					Protocol: internalversion.ProtocolTCP,
+				},
+			)
 			kubeApiserverArgs = append(kubeApiserverArgs,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
@@ -206,12 +218,15 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		}
 	} else {
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-			ports = []internalversion.Port{
-				{
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "http",
 					HostPort: conf.Port,
 					Port:     8080,
+					Protocol: internalversion.ProtocolTCP,
 				},
-			}
+			)
 
 			kubeApiserverArgs = append(kubeApiserverArgs,
 				"--insecure-bind-address="+conf.BindAddress,
@@ -223,6 +238,15 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				Path:   "/metrics",
 			}
 		} else {
+			ports = append(
+				ports,
+				internalversion.Port{
+					Name:     "http",
+					HostPort: 0,
+					Port:     conf.Port,
+					Protocol: internalversion.ProtocolTCP,
+				},
+			)
 			kubeApiserverArgs = append(kubeApiserverArgs,
 				"--insecure-bind-address="+conf.BindAddress,
 				"--insecure-port="+format.String(conf.Port),
