@@ -12,7 +12,14 @@ env:
 jobs:
   golangci:
     name: lint
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        - macos-latest
+        - windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/setup-go@v5
       with:
@@ -22,4 +29,4 @@ jobs:
       uses: golangci/golangci-lint-action@v6
       with:
         version: v${{ env.GOLANGCI_VERSION }}
-        args: --timeout=30m --config=.golangci.yaml
+        args: --timeout=8m --config=.golangci.yaml --new --fix

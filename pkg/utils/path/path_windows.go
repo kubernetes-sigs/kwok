@@ -26,5 +26,5 @@ import (
 // Clean is a wrapper around filepath.Clean that converts all path separators to
 // forward slashes. This is useful for Windows paths that are used in URLs.
 func Clean(p string) string {
-	return strings.Replace(filepath.Clean(p), `\`, `/`, -1)
+	return strings.ReplaceAll(filepath.Clean(p), `\`, `/`)
 }
