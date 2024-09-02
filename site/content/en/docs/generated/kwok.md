@@ -14,6 +14,7 @@ kwok [flags]
       --enable-crds strings                            List of CRDs to enable
   -h, --help                                           help for kwok
       --kubeconfig string                              Path to the kubeconfig file to use (default "~/.kube/config")
+      --manage ManagesSelectorSlice                    Manages resources
       --manage-all-nodes                               All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-single-node.
       --manage-nodes-with-annotation-selector string   Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes and manage-single-node.
       --manage-nodes-with-label-selector string        Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes and manage-single-node.

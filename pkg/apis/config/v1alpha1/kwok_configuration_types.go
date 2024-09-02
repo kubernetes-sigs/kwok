@@ -70,6 +70,9 @@ type KwokConfigurationOptions struct {
 	// is the default value for flag --tls-private-key-file
 	TLSPrivateKeyFile string `json:"tlsPrivateKeyFile,omitempty"`
 
+	// Manages is the option to manage an resources
+	Manages ManagesSelectors `json:"manages,omitempty"`
+
 	// ManageSingleNode is the option to manage a single node name.
 	// is the default value for flag --manage-single-node
 	// Note: when `manage-all-nodes` is specified as true or
