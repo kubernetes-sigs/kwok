@@ -141,6 +141,9 @@ Resource Types:
 </li>
 <li>
 <a href="#config.kwok.x-k8s.io/v1alpha1.KwokctlResource">KwokctlResource</a>
+</li>
+<li>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ManagesSelector">ManagesSelector</a>
 </li></ul>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.KwokConfiguration">
 KwokConfiguration
@@ -378,6 +381,118 @@ string
 </td>
 <td>
 <p>Template is the template for the kwokctl resource configuration.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.ManagesSelector">
+ManagesSelector
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.ManagesSelector"> #</a>
+</h3>
+<p>
+<p>ManagesSelector holds information about the manages selector.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code>
+string
+</td>
+<td>
+<code>
+config.kwok.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+string
+</td>
+<td><code>ManagesSelector</code></td>
+</tr>
+<tr>
+<td>
+<code>kind</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Kind of the referent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>group</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Group of the referent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of the referent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Namespace of the referent. only valid if it is a namespaced.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the referent. specify only this one.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Labels of the referent. specify matched with labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Annotations of the referent. specify matched with annotations.</p>
 </td>
 </tr>
 </tbody>
@@ -2447,6 +2562,19 @@ is the default value for flag &ndash;tls-private-key-file</p>
 </tr>
 <tr>
 <td>
+<code>manages</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ManagesSelectors">
+ManagesSelectors
+</a>
+</em>
+</td>
+<td>
+<p>Manages is the option to manage an resources</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>manageSingleNode</code>
 <em>
 string
@@ -2457,7 +2585,8 @@ string
 is the default value for flag &ndash;manage-single-node
 Note: when <code>manage-all-nodes</code> is specified as true or
 <code>manage-nodes-with-label-selector</code> or <code>manage-nodes-with-annotation-selector</code> is specified,
-this is a no-op.</p>
+this is a no-op.
+Deprecated: use Manages instead</p>
 </td>
 </tr>
 <tr>
@@ -2472,7 +2601,8 @@ bool
 is the default value for flag &ndash;manage-all-nodes
 Note: when <code>manage-single-node</code> is specified as true or
 <code>manage-nodes-with-label-selector</code> or <code>manage-nodes-with-annotation-selector</code> is specified,
-this is a no-op.</p>
+this is a no-op.
+Deprecated: use Manages instead</p>
 </td>
 </tr>
 <tr>
@@ -2487,7 +2617,8 @@ string
 is the default value for flag &ndash;manage-nodes-with-annotation-selector
 Note: when <code>all-node-manage</code> is specified as true or
 <code>manage-single-node</code> is specified,
-this is a no-op.</p>
+this is a no-op.
+Deprecated: use Manages instead</p>
 </td>
 </tr>
 <tr>
@@ -2502,7 +2633,8 @@ string
 is the default value for flag &ndash;manage-nodes-with-label-selector
 Note: when <code>all-node-manage</code> is specified as true or
 <code>manage-single-node</code> is specified,
-this is a no-op.</p>
+this is a no-op.
+Deprecated: use Manages instead</p>
 </td>
 </tr>
 <tr>
@@ -3736,6 +3868,18 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.ManagesSelectors">
+ManagesSelectors
+(<code>[]sigs.k8s.io/kwok/pkg/apis/config/v1alpha1.ManagesSelector</code> alias)
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.ManagesSelectors"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.KwokConfigurationOptions">KwokConfigurationOptions</a>
+</p>
+<p>
+<p>ManagesSelectors holds information about the manages selectors.</p>
+</p>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.Port">
 Port
 <a href="#config.kwok.x-k8s.io%2fv1alpha1.Port"> #</a>
