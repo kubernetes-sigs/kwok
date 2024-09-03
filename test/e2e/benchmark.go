@@ -45,13 +45,12 @@ func waitResource(ctx context.Context, t *testing.T, kwokctlPath, name, resource
 		if got == want {
 			return nil
 		}
-		if got == prev {
-			t.Logf("Error %s %d not changed\n", resource, got)
+		all := strings.Count(raw, "\n")
+		t.Logf("%s %d/%d => %d\n", resource, got, all, want)
+		if prev != 0 && got == prev {
 			return fmt.Errorf("resource %s not changed", resource)
 		}
 		prev = got
-		all := strings.Count(raw, "\n")
-		t.Logf("%s %d/%d => %d\n", resource, got, all, want)
 		if gap != 0 && got != 0 && (all-got) > gap {
 			if tolerance > 0 {
 				t.Logf("Error %s gap too large, actual: %d, expected: %d, retrying...\n", resource, all-got, gap)

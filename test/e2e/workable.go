@@ -27,7 +27,9 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
+	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 )
@@ -49,14 +51,27 @@ func testWorkable(ctx context.Context, kwokctlPath, name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to scale pod: %w", err)
 	}
-	output, err := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kubectl", "get", "pod").Output()
+
+	err = wait.For(
+		func(ctx context.Context) (done bool, err error) {
+			output, err := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kubectl", "get", "pod").Output()
+			if err != nil {
+				return false, err
+			}
+			// TODO: Use json output instead and check that node and pod work as expected
+			if !strings.Contains(string(output), "Running") {
+				return false, fmt.Errorf("pod not running")
+			}
+
+			return true, nil
+		},
+		wait.WithContext(ctx),
+		wait.WithTimeout(10*time.Second),
+	)
 	if err != nil {
 		return err
 	}
-	// TODO: Use json output instead and check that node and pod work as expected
-	if !strings.Contains(string(output), "Running") {
-		return fmt.Errorf("pod not running")
-	}
+
 	return nil
 }
 
