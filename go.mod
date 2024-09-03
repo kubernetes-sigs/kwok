@@ -3,7 +3,7 @@ module sigs.k8s.io/kwok
 go 1.23.0
 
 require (
-	github.com/Masterminds/sprig/v3 v3.2.3
+	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/containerd/go-cni v1.1.10
 	github.com/containernetworking/plugins v1.4.0
@@ -49,8 +49,9 @@ require (
 )
 
 require (
+	dario.cat/mergo v1.0.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.2.1 // indirect
+	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -113,7 +114,7 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/spf13/cast v1.6.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/vbatts/tar-split v0.11.5 // indirect
 	github.com/vladimirvivien/gexe v0.3.0 // indirect
