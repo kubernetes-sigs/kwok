@@ -28,7 +28,7 @@ jobs:
       run: ./hack/releases-helm-charts.sh
 
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v6
+      uses: peter-evans/create-pull-request@v7
       with:
         add-paths: |
           site/static/charts/index.yaml
