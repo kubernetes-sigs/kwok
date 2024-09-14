@@ -57,6 +57,8 @@ kubeadmConfigPatches:
   etcd:
     local:
       dataDir: /var/lib/etcd
+      extraArgs:
+        quota-backend-bytes: "8589934592"
   kind: ClusterConfiguration
   networking: {}
   scheduler:

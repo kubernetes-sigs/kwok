@@ -452,6 +452,10 @@ type KwokctlConfigurationOptions struct {
 	// DisableQPSLimits specifies whether to disable QPS limits for components.
 	// +default=false
 	DisableQPSLimits *bool `json:"disableQPSLimits,omitempty"`
+
+	// EtcdQuotaBackendSize is the backend quota for etcd.
+	// +default="8Gi"
+	EtcdQuotaBackendSize string `json:"etcdQuotaBackendSize,omitempty"`
 }
 
 // Component is a component of the cluster.

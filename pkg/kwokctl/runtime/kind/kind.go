@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -220,6 +221,26 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 			},
 		)
 	}
+
+	if conf.EtcdQuotaBackendSize != "" {
+		quantity, err := resource.ParseQuantity(conf.EtcdQuotaBackendSize)
+		if err != nil {
+			return conf, err
+		}
+
+		etcdQuotaBackendSize, ok := quantity.AsInt64()
+		if !ok {
+			return conf, fmt.Errorf("failed to convert quota backend size to int64")
+		}
+
+		conf.EtcdExtraArgs = append(conf.EtcdExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "quota-backend-bytes",
+				Value: strconv.FormatInt(etcdQuotaBackendSize, 10),
+			},
+		)
+	}
+
 	return conf, nil
 }
 
@@ -291,9 +312,10 @@ type BuildKindConfig struct {
 	KwokControllerExtraVolumes    []internalversion.Volume
 	PrometheusExtraVolumes        []internalversion.Volume
 
-	BindAddress      string
-	DisableQPSLimits bool
-	KubeVersion      version.Version
+	BindAddress          string
+	DisableQPSLimits     bool
+	KubeVersion          version.Version
+	EtcdQuotaBackendSize string
 }
 
 func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error) {
@@ -347,7 +369,7 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 		})
 	}
 
-	var extraMounts = []kindv1alpha4.Mount{
+	extraMounts := []kindv1alpha4.Mount{
 		{
 			HostPath:      conf.Workdir,
 			ContainerPath: "/etc/kwok/",

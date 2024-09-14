@@ -3702,6 +3702,17 @@ bool
 <p>DisableQPSLimits specifies whether to disable QPS limits for components.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>etcdQuotaBackendSize</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>EtcdQuotaBackendSize is the backend quota for etcd.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlConfigurationStatus">

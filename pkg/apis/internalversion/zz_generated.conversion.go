@@ -1735,6 +1735,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	if err := v1.Convert_bool_To_Pointer_bool(&in.DisableQPSLimits, &out.DisableQPSLimits, s); err != nil {
 		return err
 	}
+	out.EtcdQuotaBackendSize = in.EtcdQuotaBackendSize
 	return nil
 }
 
@@ -1851,6 +1852,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	if err := v1.Convert_Pointer_bool_To_bool(&in.DisableQPSLimits, &out.DisableQPSLimits, s); err != nil {
 		return err
 	}
+	out.EtcdQuotaBackendSize = in.EtcdQuotaBackendSize
 	return nil
 }
 
