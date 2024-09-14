@@ -295,6 +295,9 @@ type KwokctlConfigurationOptions struct {
 
 	// DisableQPSLimits specifies whether to disable QPS limits for components.
 	DisableQPSLimits bool
+
+	// EtcdQuotaBackendSize is the backend quota for etcd.
+	EtcdQuotaBackendSize string
 }
 
 // Component is a component of the cluster.

@@ -143,6 +143,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease in seconds")
 	cmd.Flags().Float64Var(&flags.Options.HeartbeatFactor, "heartbeat-factor", flags.Options.HeartbeatFactor, "Scale factor for all about heartbeat")
+	cmd.Flags().StringVar(&flags.Options.EtcdQuotaBackendSize, "etcd-quota-backend-size", flags.Options.EtcdQuotaBackendSize, "Quota backend size for etcd")
 	cmd.Flags().StringArrayVar(&flags.ExtraArgs, "extra-args", flags.ExtraArgs, "Pass a single extra arg key-value pair to the component in the format `component=key=value`")
 
 	return cmd

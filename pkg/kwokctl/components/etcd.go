@@ -17,7 +17,11 @@ limitations under the License.
 package components
 
 import (
+	"fmt"
 	"runtime"
+	"strconv"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -29,17 +33,18 @@ import (
 
 // BuildEtcdComponentConfig is the configuration for building an etcd component.
 type BuildEtcdComponentConfig struct {
-	Runtime     string
-	Binary      string
-	Image       string
-	ProjectName string
-	Version     version.Version
-	DataPath    string
-	Workdir     string
-	BindAddress string
-	Port        uint32
-	PeerPort    uint32
-	Verbosity   log.Level
+	Runtime          string
+	Binary           string
+	Image            string
+	ProjectName      string
+	Version          version.Version
+	DataPath         string
+	Workdir          string
+	BindAddress      string
+	Port             uint32
+	PeerPort         uint32
+	Verbosity        log.Level
+	QuotaBackendSize string
 }
 
 // BuildEtcdComponent builds an etcd component.
@@ -47,10 +52,20 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 
+	quantity, err := resource.ParseQuantity(conf.QuotaBackendSize)
+	if err != nil {
+		return internalversion.Component{}, err
+	}
+
+	quotaBackendSize, ok := quantity.AsInt64()
+	if !ok {
+		return internalversion.Component{}, fmt.Errorf("failed to convert quota backend size to int64")
+	}
+
 	etcdArgs := []string{
 		"--name=node0",
 		"--auto-compaction-retention=1",
-		"--quota-backend-bytes=8589934592",
+		"--quota-backend-bytes=" + strconv.FormatInt(quotaBackendSize, 10),
 	}
 
 	var metric *internalversion.ComponentMetric

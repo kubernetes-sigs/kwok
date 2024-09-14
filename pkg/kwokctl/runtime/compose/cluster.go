@@ -365,15 +365,16 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 	}
 
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Runtime:     conf.Runtime,
-		ProjectName: c.Name(),
-		Workdir:     env.workdir,
-		Image:       conf.EtcdImage,
-		Version:     etcdVersion,
-		BindAddress: net.PublicAddress,
-		Port:        conf.EtcdPort,
-		DataPath:    env.etcdDataPath,
-		Verbosity:   env.verbosity,
+		Runtime:          conf.Runtime,
+		ProjectName:      c.Name(),
+		Workdir:          env.workdir,
+		Image:            conf.EtcdImage,
+		Version:          etcdVersion,
+		BindAddress:      net.PublicAddress,
+		Port:             conf.EtcdPort,
+		DataPath:         env.etcdDataPath,
+		Verbosity:        env.verbosity,
+		QuotaBackendSize: conf.EtcdQuotaBackendSize,
 	})
 	if err != nil {
 		return err

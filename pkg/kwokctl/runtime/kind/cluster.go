@@ -472,6 +472,7 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 		PrometheusExtraVolumes:        prometheusPatches.ExtraVolumes,
 		DisableQPSLimits:              conf.DisableQPSLimits,
 		KubeVersion:                   kubeVersion,
+		EtcdQuotaBackendSize:          conf.EtcdQuotaBackendSize,
 	})
 	if err != nil {
 		return err

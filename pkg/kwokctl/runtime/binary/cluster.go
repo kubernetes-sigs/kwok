@@ -328,16 +328,17 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 	}
 
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
-		Runtime:     conf.Runtime,
-		ProjectName: c.Name(),
-		Workdir:     env.workdir,
-		Binary:      etcdPath,
-		Version:     etcdVersion,
-		BindAddress: conf.BindAddress,
-		DataPath:    env.etcdDataPath,
-		Port:        conf.EtcdPort,
-		PeerPort:    conf.EtcdPeerPort,
-		Verbosity:   env.verbosity,
+		Runtime:          conf.Runtime,
+		ProjectName:      c.Name(),
+		Workdir:          env.workdir,
+		Binary:           etcdPath,
+		Version:          etcdVersion,
+		BindAddress:      conf.BindAddress,
+		DataPath:         env.etcdDataPath,
+		Port:             conf.EtcdPort,
+		PeerPort:         conf.EtcdPeerPort,
+		Verbosity:        env.verbosity,
+		QuotaBackendSize: conf.EtcdQuotaBackendSize,
 	})
 	if err != nil {
 		return err

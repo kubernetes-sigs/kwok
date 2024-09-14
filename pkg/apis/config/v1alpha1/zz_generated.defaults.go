@@ -112,6 +112,9 @@ func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {
 		var ptrVar1 bool = false
 		in.Options.DisableQPSLimits = &ptrVar1
 	}
+	if in.Options.EtcdQuotaBackendSize == "" {
+		in.Options.EtcdQuotaBackendSize = "8Gi"
+	}
 	for i := range in.Components {
 		a := &in.Components[i]
 		for j := range a.Ports {
