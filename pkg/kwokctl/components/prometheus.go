@@ -27,17 +27,19 @@ import (
 
 // BuildPrometheusComponentConfig is the configuration for building a prometheus component.
 type BuildPrometheusComponentConfig struct {
-	Runtime       string
-	Binary        string
-	Image         string
-	Version       version.Version
-	Workdir       string
-	BindAddress   string
-	Port          uint32
-	ConfigPath    string
-	AdminCertPath string
-	AdminKeyPath  string
-	Verbosity     log.Level
+	Runtime                      string
+	Binary                       string
+	Image                        string
+	Version                      version.Version
+	Workdir                      string
+	BindAddress                  string
+	Port                         uint32
+	ConfigPath                   string
+	AdminCertPath                string
+	AdminKeyPath                 string
+	Verbosity                    log.Level
+	DisableKubeControllerManager bool
+	DisableKubeScheduler         bool
 }
 
 // BuildPrometheusComponent builds a prometheus component.
@@ -107,16 +109,22 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 
 	envs := []internalversion.Env{}
 
+	links := []string{
+		consts.ComponentEtcd,
+		consts.ComponentKubeApiserver,
+		consts.ComponentKwokController,
+	}
+	if !conf.DisableKubeControllerManager {
+		links = append(links, consts.ComponentKubeControllerManager)
+	}
+	if !conf.DisableKubeScheduler {
+		links = append(links, consts.ComponentKubeScheduler)
+	}
+
 	return internalversion.Component{
 		Name:    consts.ComponentPrometheus,
 		Version: conf.Version.String(),
-		Links: []string{
-			consts.ComponentEtcd,
-			consts.ComponentKubeApiserver,
-			consts.ComponentKubeControllerManager,
-			consts.ComponentKubeScheduler,
-			consts.ComponentKwokController,
-		},
+		Links:   links,
 		Command: []string{consts.ComponentPrometheus},
 		Ports:   ports,
 		Volumes: volumes,

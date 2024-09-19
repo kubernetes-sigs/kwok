@@ -678,14 +678,16 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 		}
 
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
-			Runtime:     conf.Runtime,
-			Workdir:     env.workdir,
-			Binary:      prometheusPath,
-			Version:     prometheusVersion,
-			BindAddress: conf.BindAddress,
-			Port:        conf.PrometheusPort,
-			ConfigPath:  prometheusConfigPath,
-			Verbosity:   env.verbosity,
+			Runtime:                      conf.Runtime,
+			Workdir:                      env.workdir,
+			Binary:                       prometheusPath,
+			Version:                      prometheusVersion,
+			BindAddress:                  conf.BindAddress,
+			Port:                         conf.PrometheusPort,
+			ConfigPath:                   prometheusConfigPath,
+			Verbosity:                    env.verbosity,
+			DisableKubeControllerManager: conf.DisableKubeControllerManager,
+			DisableKubeScheduler:         conf.DisableKubeScheduler,
 		})
 		if err != nil {
 			return err
