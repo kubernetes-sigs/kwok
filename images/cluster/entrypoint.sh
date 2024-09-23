@@ -13,45 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-show_info() {
-  sleep 1
+export ALIVE=true
 
-  # Print some useful information
-  echo "###############################################################################"
-  echo "> kubectl -s :${KWOK_KUBE_APISERVER_PORT} version"
-  kwokctl kubectl version || true
-
-  echo "###############################################################################"
-  echo "# The following kubeconfig can be used to connect to the Kubernetes API server"
-  cat <<EOF
-apiVersion: v1
-clusters:
-- cluster:
-    server: http://127.0.0.1:${KWOK_KUBE_APISERVER_PORT}
-  name: kwok
-contexts:
-- context:
-    cluster: kwok
-  name: kwok
-current-context: kwok
-kind: Config
-preferences: {}
-users: null
-EOF
-
-  echo "###############################################################################"
-  echo "> kubectl -s :${KWOK_KUBE_APISERVER_PORT} get ns"
-  kwokctl kubectl get ns || true
-
-  echo "###############################################################################"
-  echo "# The above example works if your host's port is the same as the container's,"
-  echo "# otherwise, change it to your host's port"
+catch_exit() {
+  ALIVE=false
+  kwokctl stop cluster || true
+  exit 0
 }
 
-# Create a cluster
-KWOK_KUBE_APISERVER_PORT=0 kwokctl create cluster "$@" || exit 1
+keep_alive() {
+  while [ "${ALIVE}" = "true" ]; do
+    if ! output="$(kwokctl start cluster 2>&1)"; then
+      echo "Failed to start cluster: ${output}"
+    fi
+    sleep 10
+  done
+}
 
-show_info &
+show_info() {
+  echo "Start cluster and keep alive at 0.0.0.0:${KWOK_KUBE_APISERVER_INSECURE_PORT}"
+  echo "See more https://kwok.sigs.k8s.io/docs/user/all-in-one-image/"
+}
 
-# Start a proxy to the Kubernetes API server
-kwokctl kubectl proxy --port="${KWOK_KUBE_APISERVER_PORT}" --accept-hosts='^*$' --address="0.0.0.0"
+trap catch_exit EXIT
+
+kwokctl create cluster "$@" || exit 1
+
+show_info
+
+keep_alive
