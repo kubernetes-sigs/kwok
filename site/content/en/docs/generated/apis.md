@@ -2907,6 +2907,39 @@ is the default value for flag &ndash;kube-scheduler-config and env KWOK_KUBE_SCH
 </tr>
 <tr>
 <td>
+<code>components</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Components is the configuration for components.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>disable</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Disable is the configuration for disables components.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enable</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Enable is the configuration for enables components.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>disableKubeScheduler</code>
 <em>
 bool
@@ -2914,7 +2947,8 @@ bool
 </td>
 <td>
 <p>DisableKubeScheduler is the flag to disable kube-scheduler.
-is the default value for flag &ndash;disable-kube-scheduler and env KWOK_DISABLE_KUBE_SCHEDULER</p>
+is the default value for flag &ndash;disable-kube-scheduler and env KWOK_DISABLE_KUBE_SCHEDULER
+Deprecated: Use Disable instead</p>
 </td>
 </tr>
 <tr>
@@ -2926,7 +2960,8 @@ bool
 </td>
 <td>
 <p>DisableKubeControllerManager is the flag to disable kube-controller-manager.
-is the default value for flag &ndash;disable-kube-controller-manager and env KWOK_DISABLE_KUBE_CONTROLLER_MANAGER</p>
+is the default value for flag &ndash;disable-kube-controller-manager and env KWOK_DISABLE_KUBE_CONTROLLER_MANAGER
+Deprecated: Use Disable instead</p>
 </td>
 </tr>
 <tr>
@@ -2937,7 +2972,8 @@ bool
 </em>
 </td>
 <td>
-<p>EnableMetricsServer is the flag to enable metrics-server.</p>
+<p>EnableMetricsServer is the flag to enable metrics-server.
+Deprecated: Use Enable instead</p>
 </td>
 </tr>
 <tr>

@@ -253,6 +253,15 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	conf.DisableKubeScheduler = format.Ptr(envs.GetEnvWithPrefix("DISABLE_KUBE_SCHEDULER", *conf.DisableKubeScheduler))
 	conf.DisableKubeControllerManager = format.Ptr(envs.GetEnvWithPrefix("DISABLE_KUBE_CONTROLLER_MANAGER", *conf.DisableKubeControllerManager))
+	if len(conf.Components) == 0 {
+		conf.Components = []string{
+			consts.ComponentEtcd,
+			consts.ComponentKubeApiserver,
+			consts.ComponentKubeControllerManager,
+			consts.ComponentKubeScheduler,
+			consts.ComponentKwokController,
+		}
+	}
 
 	conf.KubeAuthorization = format.Ptr(envs.GetEnvWithPrefix("KUBE_AUTHORIZATION", *conf.KubeAuthorization))
 	conf.KubeAdmission = envs.GetEnvWithPrefix("KUBE_ADMISSION", conf.KubeAdmission)

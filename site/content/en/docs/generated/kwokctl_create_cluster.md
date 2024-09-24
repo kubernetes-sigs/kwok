@@ -9,16 +9,16 @@ kwokctl create cluster [flags]
 ### Options
 
 ```
+      --components strings                      Default of components (default [etcd,kube-apiserver,kube-controller-manager,kube-scheduler,kwok-controller])
       --controller-port uint32                  Port of kwok-controller given to the host
       --dashboard-image string                  Image of dashboard, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_DASHBOARD_IMAGE_PREFIX}/dashboard:${KWOK_DASHBOARD_VERSION}'
                                                  (default "docker.io/kubernetesui/dashboard:v2.7.0")
       --dashboard-port uint32                   Port of dashboard given to the host
-      --disable-kube-controller-manager         Disable the kube-controller-manager
-      --disable-kube-scheduler                  Disable the kube-scheduler
+      --disable strings                         Disable list of components
       --disable-qps-limits                      Disable QPS limits for components
+      --enable strings                          Enable list of components
       --enable-crds strings                     List of CRDs to enable
-      --enable-metrics-server                   Enable the metrics-server
       --etcd-binary string                      Binary of etcd, only for binary runtime (default "https://github.com/etcd-io/etcd/releases/download/v3.5.15/etcd-v3.5.15-linux-amd64.tar.gz#etcd")
       --etcd-image string                       Image of etcd, only for docker/podman/nerdctl runtime
                                                 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'

@@ -68,9 +68,15 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&flags.Options.SecurePort, "secure-port", flags.Options.SecurePort, `The apiserver port on which to serve HTTPS with authentication and authorization, is not available before Kubernetes 1.13.0`)
 	cmd.Flags().BoolVar(&flags.Options.QuietPull, "quiet-pull", flags.Options.QuietPull, `Pull without printing progress information`)
 	cmd.Flags().StringVar(&flags.Options.KubeSchedulerConfig, "kube-scheduler-config", flags.Options.KubeSchedulerConfig, `Path to a kube-scheduler configuration file`)
+	cmd.Flags().StringSliceVar(&flags.Options.Components, "components", flags.Options.Components, `Default of components`)
+	cmd.Flags().StringSliceVar(&flags.Options.Disable, "disable", flags.Options.Disable, `Disable list of components`)
+	cmd.Flags().StringSliceVar(&flags.Options.Enable, "enable", flags.Options.Enable, `Enable list of components`)
 	cmd.Flags().BoolVar(&flags.Options.DisableKubeScheduler, "disable-kube-scheduler", flags.Options.DisableKubeScheduler, `Disable the kube-scheduler`)
+	_ = cmd.Flags().MarkDeprecated("disable-kube-scheduler", "--disable-kube-scheduler will be removed in a future release, please use --disable kube-scheduler instead")
 	cmd.Flags().BoolVar(&flags.Options.DisableKubeControllerManager, "disable-kube-controller-manager", flags.Options.DisableKubeControllerManager, `Disable the kube-controller-manager`)
+	_ = cmd.Flags().MarkDeprecated("disable-kube-controller-manager", "--disable-kube-controller-manager will be removed in a future release, please use --disable kube-controller-manager instead")
 	cmd.Flags().BoolVar(&flags.Options.EnableMetricsServer, "enable-metrics-server", flags.Options.EnableMetricsServer, `Enable the metrics-server`)
+	_ = cmd.Flags().MarkDeprecated("enable-metrics-server", "--enable-metrics-server will be removed in a future release, please use --enable metrics-server instead")
 	cmd.Flags().StringVar(&flags.Options.EtcdImage, "etcd-image", flags.Options.EtcdImage, `Image of etcd, only for docker/podman/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
 `)

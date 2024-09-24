@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
+	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
@@ -171,6 +172,7 @@ func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports 
 
 type env struct {
 	kwokctlConfig                 *internalversion.KwokctlConfiguration
+	components                    []string
 	verbosity                     log.Level
 	inClusterOnHostKubeconfigPath string
 	inClusterKubeconfig           string
@@ -195,6 +197,11 @@ type env struct {
 
 func (c *Cluster) env(ctx context.Context) (*env, error) {
 	config, err := c.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	components, err := c.Components(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -235,6 +242,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 
 	return &env{
 		kwokctlConfig:                 config,
+		components:                    components,
 		verbosity:                     verbosity,
 		inClusterOnHostKubeconfigPath: inClusterOnHostKubeconfigPath,
 		inClusterKubeconfig:           inClusterKubeconfig,
@@ -445,128 +453,138 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 }
 
 func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentKubeApiserverInsecureProxy) {
+		return nil
+	}
+
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kubectl
-	if conf.KubeApiserverInsecurePort != 0 {
-		err := c.EnsureImage(ctx, c.runtime, conf.KubectlImage)
-		if err != nil {
-			return err
-		}
-
-		kubectlProxyComponent, err := components.BuildKubectlProxyComponent(components.BuildKubectlProxyComponentConfig{
-			Runtime:        conf.Runtime,
-			ProjectName:    c.Name(),
-			Workdir:        env.workdir,
-			Image:          conf.KubectlImage,
-			BindAddress:    net.PublicAddress,
-			Port:           conf.KubeApiserverInsecurePort,
-			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
-			CaCertPath:     env.caCertPath,
-			AdminCertPath:  env.adminCertPath,
-			AdminKeyPath:   env.adminKeyPath,
-			Verbosity:      env.verbosity,
-		})
-		if err != nil {
-			return err
-		}
-		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubectlProxyComponent)
+	err = c.EnsureImage(ctx, c.runtime, conf.KubectlImage)
+	if err != nil {
+		return err
 	}
+
+	kubectlProxyComponent, err := components.BuildKubectlProxyComponent(components.BuildKubectlProxyComponentConfig{
+		Runtime:        conf.Runtime,
+		ProjectName:    c.Name(),
+		Workdir:        env.workdir,
+		Image:          conf.KubectlImage,
+		BindAddress:    net.PublicAddress,
+		Port:           conf.KubeApiserverInsecurePort,
+		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+		CaCertPath:     env.caCertPath,
+		AdminCertPath:  env.adminCertPath,
+		AdminKeyPath:   env.adminKeyPath,
+		Verbosity:      env.verbosity,
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubectlProxyComponent)
 	return nil
 }
 
 func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentKubeControllerManager) {
+		return nil
+	}
+
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-controller-manager
-	if !conf.DisableKubeControllerManager {
-		err = c.EnsureImage(ctx, c.runtime, conf.KubeControllerManagerImage)
-		if err != nil {
-			return err
-		}
-		kubeControllerManagerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeControllerManagerImage, consts.ComponentKubeControllerManager)
-		if err != nil {
-			return err
-		}
-
-		kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
-			Runtime:                            conf.Runtime,
-			ProjectName:                        c.Name(),
-			Workdir:                            env.workdir,
-			Image:                              conf.KubeControllerManagerImage,
-			Version:                            kubeControllerManagerVersion,
-			BindAddress:                        net.PublicAddress,
-			Port:                               conf.KubeControllerManagerPort,
-			SecurePort:                         conf.SecurePort,
-			CaCertPath:                         env.caCertPath,
-			AdminCertPath:                      env.adminCertPath,
-			AdminKeyPath:                       env.adminKeyPath,
-			KubeAuthorization:                  conf.KubeAuthorization,
-			KubeconfigPath:                     env.inClusterOnHostKubeconfigPath,
-			KubeFeatureGates:                   conf.KubeFeatureGates,
-			Verbosity:                          env.verbosity,
-			DisableQPSLimits:                   conf.DisableQPSLimits,
-			NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
-			NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
-		})
-		if err != nil {
-			return err
-		}
-		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeControllerManagerComponent)
+	err = c.EnsureImage(ctx, c.runtime, conf.KubeControllerManagerImage)
+	if err != nil {
+		return err
 	}
+	kubeControllerManagerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeControllerManagerImage, consts.ComponentKubeControllerManager)
+	if err != nil {
+		return err
+	}
+
+	kubeControllerManagerComponent, err := components.BuildKubeControllerManagerComponent(components.BuildKubeControllerManagerComponentConfig{
+		Runtime:                            conf.Runtime,
+		ProjectName:                        c.Name(),
+		Workdir:                            env.workdir,
+		Image:                              conf.KubeControllerManagerImage,
+		Version:                            kubeControllerManagerVersion,
+		BindAddress:                        net.PublicAddress,
+		Port:                               conf.KubeControllerManagerPort,
+		SecurePort:                         conf.SecurePort,
+		CaCertPath:                         env.caCertPath,
+		AdminCertPath:                      env.adminCertPath,
+		AdminKeyPath:                       env.adminKeyPath,
+		KubeAuthorization:                  conf.KubeAuthorization,
+		KubeconfigPath:                     env.inClusterOnHostKubeconfigPath,
+		KubeFeatureGates:                   conf.KubeFeatureGates,
+		Verbosity:                          env.verbosity,
+		DisableQPSLimits:                   conf.DisableQPSLimits,
+		NodeMonitorPeriodMilliseconds:      conf.KubeControllerManagerNodeMonitorPeriodMilliseconds,
+		NodeMonitorGracePeriodMilliseconds: conf.KubeControllerManagerNodeMonitorGracePeriodMilliseconds,
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeControllerManagerComponent)
 	return nil
 }
 
 func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentKubeScheduler) {
+		return nil
+	}
+
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-scheduler
-	if !conf.DisableKubeScheduler {
-		schedulerConfigPath := ""
-		if conf.KubeSchedulerConfig != "" {
-			schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
-			err = c.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, env.inClusterKubeconfig)
-			if err != nil {
-				return err
-			}
-		}
-
-		err = c.EnsureImage(ctx, c.runtime, conf.KubeSchedulerImage)
+	schedulerConfigPath := ""
+	if conf.KubeSchedulerConfig != "" {
+		schedulerConfigPath = c.GetWorkdirPath(runtime.SchedulerConfigName)
+		err = c.CopySchedulerConfig(conf.KubeSchedulerConfig, schedulerConfigPath, env.inClusterKubeconfig)
 		if err != nil {
 			return err
 		}
-		kubeSchedulerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeSchedulerImage, consts.ComponentKubeScheduler)
-		if err != nil {
-			return err
-		}
-
-		kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
-			Runtime:          conf.Runtime,
-			ProjectName:      c.Name(),
-			Workdir:          env.workdir,
-			Image:            conf.KubeSchedulerImage,
-			Version:          kubeSchedulerVersion,
-			BindAddress:      net.PublicAddress,
-			Port:             conf.KubeSchedulerPort,
-			SecurePort:       conf.SecurePort,
-			CaCertPath:       env.caCertPath,
-			AdminCertPath:    env.adminCertPath,
-			AdminKeyPath:     env.adminKeyPath,
-			ConfigPath:       schedulerConfigPath,
-			KubeconfigPath:   env.inClusterOnHostKubeconfigPath,
-			KubeFeatureGates: conf.KubeFeatureGates,
-			Verbosity:        env.verbosity,
-			DisableQPSLimits: conf.DisableQPSLimits,
-		})
-		if err != nil {
-			return err
-		}
-		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeSchedulerComponent)
 	}
+
+	err = c.EnsureImage(ctx, c.runtime, conf.KubeSchedulerImage)
+	if err != nil {
+		return err
+	}
+	kubeSchedulerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeSchedulerImage, consts.ComponentKubeScheduler)
+	if err != nil {
+		return err
+	}
+
+	kubeSchedulerComponent, err := components.BuildKubeSchedulerComponent(components.BuildKubeSchedulerComponentConfig{
+		Runtime:          conf.Runtime,
+		ProjectName:      c.Name(),
+		Workdir:          env.workdir,
+		Image:            conf.KubeSchedulerImage,
+		Version:          kubeSchedulerVersion,
+		BindAddress:      net.PublicAddress,
+		Port:             conf.KubeSchedulerPort,
+		SecurePort:       conf.SecurePort,
+		CaCertPath:       env.caCertPath,
+		AdminCertPath:    env.adminCertPath,
+		AdminKeyPath:     env.adminKeyPath,
+		ConfigPath:       schedulerConfigPath,
+		KubeconfigPath:   env.inClusterOnHostKubeconfigPath,
+		KubeFeatureGates: conf.KubeFeatureGates,
+		Verbosity:        env.verbosity,
+		DisableQPSLimits: conf.DisableQPSLimits,
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeSchedulerComponent)
 	return nil
 }
 
 func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentKwokController) {
+		return nil
+	}
+
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kwok-controller
@@ -607,190 +625,198 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 }
 
 func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentMetricsServer) {
+		return nil
+	}
+
 	conf := &env.kwokctlConfig.Options
 
-	if conf.EnableMetricsServer {
-		err = c.EnsureImage(ctx, c.runtime, conf.MetricsServerImage)
-		if err != nil {
-			return err
-		}
-
-		metricsServerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.MetricsServerImage, consts.ComponentMetricsServer)
-		if err != nil {
-			return err
-		}
-
-		metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
-			Runtime:        conf.Runtime,
-			ProjectName:    c.Name(),
-			Workdir:        env.workdir,
-			Image:          conf.MetricsServerImage,
-			Version:        metricsServerVersion,
-			BindAddress:    conf.BindAddress,
-			Port:           conf.MetricsServerPort,
-			CaCertPath:     env.caCertPath,
-			AdminCertPath:  env.adminCertPath,
-			AdminKeyPath:   env.adminKeyPath,
-			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
-			Verbosity:      env.verbosity,
-		})
-		if err != nil {
-			return err
-		}
-		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, metricsServerComponent)
+	err = c.EnsureImage(ctx, c.runtime, conf.MetricsServerImage)
+	if err != nil {
+		return err
 	}
+
+	metricsServerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.MetricsServerImage, consts.ComponentMetricsServer)
+	if err != nil {
+		return err
+	}
+
+	metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
+		Runtime:        conf.Runtime,
+		ProjectName:    c.Name(),
+		Workdir:        env.workdir,
+		Image:          conf.MetricsServerImage,
+		Version:        metricsServerVersion,
+		BindAddress:    conf.BindAddress,
+		Port:           conf.MetricsServerPort,
+		CaCertPath:     env.caCertPath,
+		AdminCertPath:  env.adminCertPath,
+		AdminKeyPath:   env.adminKeyPath,
+		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+		Verbosity:      env.verbosity,
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, metricsServerComponent)
 	return nil
 }
 
 func (c *Cluster) setupPrometheusConfig(_ context.Context, env *env) (err error) {
-	conf := &env.kwokctlConfig.Options
-
-	// Configure the prometheus
-	if conf.PrometheusPort != 0 {
-		prometheusData, err := components.BuildPrometheus(components.BuildPrometheusConfig{
-			Components: env.kwokctlConfig.Components,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to generate prometheus yaml: %w", err)
-		}
-		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
-
-		// We don't need to check the permissions of the prometheus config file,
-		// because it's working in a non-root container.
-		err = c.WriteFileWithMode(prometheusConfigPath, []byte(prometheusData), 0644)
-		if err != nil {
-			return fmt.Errorf("failed to write prometheus yaml: %w", err)
-		}
+	if !slices.Contains(env.components, consts.ComponentPrometheus) {
+		return nil
 	}
 
+	// Configure the prometheus
+	prometheusData, err := components.BuildPrometheus(components.BuildPrometheusConfig{
+		Components: env.kwokctlConfig.Components,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to generate prometheus yaml: %w", err)
+	}
+	prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
+
+	// We don't need to check the permissions of the prometheus config file,
+	// because it's working in a non-root container.
+	err = c.WriteFileWithMode(prometheusConfigPath, []byte(prometheusData), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write prometheus yaml: %w", err)
+	}
 	return nil
 }
 
 func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentPrometheus) {
+		return nil
+	}
+
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the prometheus
-	if conf.PrometheusPort != 0 {
-		err = c.EnsureImage(ctx, c.runtime, conf.PrometheusImage)
-		if err != nil {
-			return err
-		}
-
-		prometheusVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.PrometheusImage, "")
-		if err != nil {
-			return err
-		}
-
-		prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
-
-		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
-			Runtime:                      conf.Runtime,
-			Workdir:                      env.workdir,
-			Image:                        conf.PrometheusImage,
-			Version:                      prometheusVersion,
-			BindAddress:                  net.PublicAddress,
-			Port:                         conf.PrometheusPort,
-			ConfigPath:                   prometheusConfigPath,
-			AdminCertPath:                env.adminCertPath,
-			AdminKeyPath:                 env.adminKeyPath,
-			Verbosity:                    env.verbosity,
-			DisableKubeControllerManager: conf.DisableKubeControllerManager,
-			DisableKubeScheduler:         conf.DisableKubeScheduler,
-		})
-		if err != nil {
-			return err
-		}
-		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, prometheusComponent)
+	err = c.EnsureImage(ctx, c.runtime, conf.PrometheusImage)
+	if err != nil {
+		return err
 	}
+
+	prometheusVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.PrometheusImage, "")
+	if err != nil {
+		return err
+	}
+
+	prometheusConfigPath := c.GetWorkdirPath(runtime.Prometheus)
+
+	prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
+		Runtime:                      conf.Runtime,
+		Workdir:                      env.workdir,
+		Image:                        conf.PrometheusImage,
+		Version:                      prometheusVersion,
+		BindAddress:                  net.PublicAddress,
+		Port:                         conf.PrometheusPort,
+		ConfigPath:                   prometheusConfigPath,
+		AdminCertPath:                env.adminCertPath,
+		AdminKeyPath:                 env.adminKeyPath,
+		Verbosity:                    env.verbosity,
+		DisableKubeControllerManager: !slices.Contains(env.components, consts.ComponentKubeControllerManager),
+		DisableKubeScheduler:         !slices.Contains(env.components, consts.ComponentKubeScheduler),
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, prometheusComponent)
 	return nil
 }
 
 func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentDashboard) {
+		return nil
+	}
+
 	conf := &env.kwokctlConfig.Options
 
-	if conf.DashboardPort != 0 {
-		err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
-		if err != nil {
-			return err
-		}
-		dashboardVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardImage, "")
-		if err != nil {
-			return err
-		}
+	err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
+	if err != nil {
+		return err
+	}
+	dashboardVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardImage, "")
+	if err != nil {
+		return err
+	}
 
-		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
+	enableMetricsServer := slices.Contains(env.components, consts.ComponentMetricsServer)
+	dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
+		Runtime:        conf.Runtime,
+		ProjectName:    c.Name(),
+		Workdir:        env.workdir,
+		Image:          conf.DashboardImage,
+		Version:        dashboardVersion,
+		BindAddress:    net.PublicAddress,
+		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+		CaCertPath:     env.caCertPath,
+		AdminCertPath:  env.adminCertPath,
+		AdminKeyPath:   env.adminKeyPath,
+		Port:           conf.DashboardPort,
+		Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
+		EnableMetrics:  enableMetricsServer,
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
+
+	if enableMetricsServer {
+		err = c.EnsureImage(ctx, c.runtime, conf.DashboardMetricsScraperImage)
+		if err != nil {
+			return err
+		}
+		dashboardMetricsScraperComponent, err := components.BuildDashboardMetricsScraperComponent(components.BuildDashboardMetricsScraperComponentConfig{
 			Runtime:        conf.Runtime,
-			ProjectName:    c.Name(),
 			Workdir:        env.workdir,
-			Image:          conf.DashboardImage,
-			Version:        dashboardVersion,
-			BindAddress:    net.PublicAddress,
+			Image:          conf.DashboardMetricsScraperImage,
 			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
 			CaCertPath:     env.caCertPath,
 			AdminCertPath:  env.adminCertPath,
 			AdminKeyPath:   env.adminKeyPath,
-			Port:           conf.DashboardPort,
-			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
-			EnableMetrics:  conf.EnableMetricsServer,
 		})
 		if err != nil {
 			return err
 		}
-		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
-
-		if conf.EnableMetricsServer {
-			err = c.EnsureImage(ctx, c.runtime, conf.DashboardMetricsScraperImage)
-			if err != nil {
-				return err
-			}
-			dashboardMetricsScraperComponent, err := components.BuildDashboardMetricsScraperComponent(components.BuildDashboardMetricsScraperComponentConfig{
-				Runtime:        conf.Runtime,
-				Workdir:        env.workdir,
-				Image:          conf.DashboardMetricsScraperImage,
-				KubeconfigPath: env.inClusterOnHostKubeconfigPath,
-				CaCertPath:     env.caCertPath,
-				AdminCertPath:  env.adminCertPath,
-				AdminKeyPath:   env.adminKeyPath,
-			})
-			if err != nil {
-				return err
-			}
-			env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardMetricsScraperComponent)
-		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardMetricsScraperComponent)
 	}
 	return nil
 }
 
 func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentJaeger) {
+		return nil
+	}
+
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the jaeger
-	if conf.JaegerPort != 0 {
-		err = c.EnsureImage(ctx, c.runtime, conf.JaegerImage)
-		if err != nil {
-			return err
-		}
-
-		jaegerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.JaegerImage, "")
-		if err != nil {
-			return err
-		}
-
-		jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
-			Runtime:      conf.Runtime,
-			Workdir:      env.workdir,
-			Image:        conf.JaegerImage,
-			Version:      jaegerVersion,
-			BindAddress:  net.PublicAddress,
-			Port:         conf.JaegerPort,
-			OtlpGrpcPort: conf.JaegerOtlpGrpcPort,
-			Verbosity:    env.verbosity,
-		})
-		if err != nil {
-			return err
-		}
-		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, jaegerComponent)
+	err = c.EnsureImage(ctx, c.runtime, conf.JaegerImage)
+	if err != nil {
+		return err
 	}
+
+	jaegerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.JaegerImage, "")
+	if err != nil {
+		return err
+	}
+
+	jaegerComponent, err := components.BuildJaegerComponent(components.BuildJaegerComponentConfig{
+		Runtime:      conf.Runtime,
+		Workdir:      env.workdir,
+		Image:        conf.JaegerImage,
+		Version:      jaegerVersion,
+		BindAddress:  net.PublicAddress,
+		Port:         conf.JaegerPort,
+		OtlpGrpcPort: conf.JaegerOtlpGrpcPort,
+		Verbosity:    env.verbosity,
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, jaegerComponent)
 	return nil
 }
 
@@ -1237,10 +1263,12 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	conf := config.Options
 
+	_, enableMetricsServer := slices.Find(config.Components, func(c internalversion.Component) bool {
+		return c.Name == consts.ComponentMetricsServer
+	})
 	if c.IsDryRun() {
-		if conf.EnableMetricsServer {
+		if enableMetricsServer {
 			dryrun.PrintMessage("# Set up apiservice for metrics server")
 		}
 
@@ -1248,7 +1276,7 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 	}
 
 	buf := bytes.NewBuffer(nil)
-	if conf.EnableMetricsServer {
+	if enableMetricsServer {
 		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{
 			Port:         4443,
 			ExternalName: c.Name() + "-metrics-server",

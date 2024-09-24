@@ -1669,6 +1669,9 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 		return err
 	}
 	out.KubeSchedulerConfig = in.KubeSchedulerConfig
+	out.Components = *(*[]string)(unsafe.Pointer(&in.Components))
+	out.Disable = *(*[]string)(unsafe.Pointer(&in.Disable))
+	out.Enable = *(*[]string)(unsafe.Pointer(&in.Enable))
 	if err := v1.Convert_bool_To_Pointer_bool(&in.DisableKubeScheduler, &out.DisableKubeScheduler, s); err != nil {
 		return err
 	}
@@ -1770,6 +1773,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 		return err
 	}
 	out.KubeSchedulerConfig = in.KubeSchedulerConfig
+	out.Components = *(*[]string)(unsafe.Pointer(&in.Components))
+	out.Disable = *(*[]string)(unsafe.Pointer(&in.Disable))
+	out.Enable = *(*[]string)(unsafe.Pointer(&in.Enable))
 	if err := v1.Convert_Pointer_bool_To_bool(&in.DisableKubeScheduler, &out.DisableKubeScheduler, s); err != nil {
 		return err
 	}

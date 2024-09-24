@@ -162,18 +162,30 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for flag --kube-scheduler-config and env KWOK_KUBE_SCHEDULER_CONFIG
 	KubeSchedulerConfig string `json:"kubeSchedulerConfig,omitempty"`
 
+	// Components is the configuration for components.
+	Components []string `json:"components,omitempty"`
+
+	// Disable is the configuration for disables components.
+	Disable []string `json:"disable,omitempty"`
+
+	// Enable is the configuration for enables components.
+	Enable []string `json:"enable,omitempty"`
+
 	// DisableKubeScheduler is the flag to disable kube-scheduler.
 	// is the default value for flag --disable-kube-scheduler and env KWOK_DISABLE_KUBE_SCHEDULER
 	// +default=false
+	// Deprecated: Use Disable instead
 	DisableKubeScheduler *bool `json:"disableKubeScheduler,omitempty"`
 
 	// DisableKubeControllerManager is the flag to disable kube-controller-manager.
 	// is the default value for flag --disable-kube-controller-manager and env KWOK_DISABLE_KUBE_CONTROLLER_MANAGER
 	// +default=false
+	// Deprecated: Use Disable instead
 	DisableKubeControllerManager *bool `json:"disableKubeControllerManager,omitempty"`
 
 	// EnableMetricsServer is the flag to enable metrics-server.
 	// +default=false
+	// Deprecated: Use Enable instead
 	EnableMetricsServer *bool `json:"enableMetricsServer,omitempty"`
 
 	// KubeImagePrefix is the prefix of the kubernetes image.
