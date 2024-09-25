@@ -953,9 +953,9 @@ func (c *Cluster) Up(ctx context.Context) error {
 
 	if conf.DisableKubeControllerManager {
 		defer func() {
-			err := c.StopComponent(ctx, consts.ComponentKubeScheduler)
+			err := c.StopComponent(ctx, consts.ComponentKubeControllerManager)
 			if err != nil {
-				logger.Error("Failed to disable kube-scheduler", err)
+				logger.Error("Failed to disable kube-controller-manager", err)
 			}
 		}()
 	}
