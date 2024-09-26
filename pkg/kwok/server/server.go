@@ -28,6 +28,8 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/wzshiming/cmux"
 	"github.com/wzshiming/cmux/pattern"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful"
+	oteltrace "go.opentelemetry.io/otel/trace"
 	corev1 "k8s.io/api/core/v1"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 
@@ -439,6 +441,10 @@ func (s *Server) InstallCRD(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (s *Server) InstallTracingFilter(tp oteltrace.TracerProvider) {
+	s.restfulCont.Filter(otelrestful.OTelFilter("kwok-controller", otelrestful.WithTracerProvider(tp)))
 }
 
 // Run runs the specified Server.

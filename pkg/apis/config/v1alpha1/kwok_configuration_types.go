@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	tracingv1 "k8s.io/component-base/tracing/api/v1"
 )
 
 const (
@@ -36,6 +37,8 @@ type KwokConfiguration struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Options holds information about the default value.
 	Options KwokConfigurationOptions `json:"options,omitempty"`
+	// Tracing holds tracing configuration.
+	Tracing TracingConfiguration `json:"tracing,omitempty"`
 }
 
 // KwokConfigurationOptions holds information about the options.
@@ -147,3 +150,6 @@ type KwokConfigurationOptions struct {
 	// +default=4
 	NodeLeaseParallelism uint `json:"nodeLeaseParallelism,omitempty"`
 }
+
+// TracingConfiguration provides versioned configuration for OpenTelemetry tracing clients.
+type TracingConfiguration tracingv1.TracingConfiguration

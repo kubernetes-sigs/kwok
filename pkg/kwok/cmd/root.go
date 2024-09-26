@@ -24,9 +24,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/attribute"
+	otelsdkresource "go.opentelemetry.io/otel/sdk/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/component-base/tracing"
+	tracingapi "k8s.io/component-base/tracing/api/v1"
 	"k8s.io/utils/clock"
 
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
@@ -95,6 +99,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.ServerAddress, "server-address", flags.Options.ServerAddress, "Address to expose the server on")
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease seconds")
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
+	cmd.Flags().StringVar(&flags.Tracing.Endpoint, "tracing-endpoint", flags.Tracing.Endpoint, "Tracing endpoint")
+	cmd.Flags().Int32Var(&flags.Tracing.SamplingRatePerMillion, "tracing-sampling-rate-per-million", flags.Tracing.SamplingRatePerMillion, "Tracing sampling rate per million")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
 	_ = cmd.Flags().MarkDeprecated("experimental-enable-cni", "It will be removed and will be supported in the form of plugins")
@@ -119,6 +125,12 @@ var crdDefines = map[string]struct{}{
 func runE(ctx context.Context, flags *flagpole) error {
 	logger := log.FromContext(ctx)
 
+	id, err := controllers.Identity()
+	if err != nil {
+		return err
+	}
+	ctx = log.NewContext(ctx, logger.With("id", id))
+
 	if flags.Kubeconfig != "" {
 		var err error
 		flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
@@ -139,7 +151,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	stagesData := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
-	err := checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.StageKind, stagesData)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.StageKind, stagesData)
 	if err != nil {
 		return err
 	}
@@ -174,6 +186,24 @@ func runE(ctx context.Context, flags *flagpole) error {
 		logger.Warn("Neither --kubeconfig nor --master was specified")
 		logger.Info("Using the inClusterConfig")
 	}
+
+	var tracingProvider tracing.TracerProvider
+	if flags.Tracing.Endpoint != "" {
+		resourceOpts := []otelsdkresource.Option{
+			otelsdkresource.WithAttributes(
+				attribute.Key("service.name").String("kwok-controller"),
+				attribute.Key("service.instance.id").String(id),
+			),
+		}
+		tracingProvider, err = tracing.NewProvider(ctx, &tracingapi.TracingConfiguration{
+			Endpoint:               &flags.Tracing.Endpoint,
+			SamplingRatePerMillion: &flags.Tracing.SamplingRatePerMillion,
+		}, nil, resourceOpts)
+		if err != nil {
+			return err
+		}
+	}
+
 	clientset, err := client.NewClientset(flags.Master, flags.Kubeconfig)
 	if err != nil {
 		return err
@@ -182,6 +212,10 @@ func runE(ctx context.Context, flags *flagpole) error {
 	restConfig, err := clientset.ToRESTConfig()
 	if err != nil {
 		return err
+	}
+
+	if tracingProvider != nil {
+		restConfig.Wrap(tracing.WrapperFor(tracingProvider))
 	}
 
 	dynamicClient, err := clientset.ToDynamicClient()
@@ -229,12 +263,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 		)
 	}
 
-	id, err := controllers.Identity()
-	if err != nil {
-		return err
-	}
-	ctx = log.NewContext(ctx, logger.With("id", id))
-
 	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
 	enableMetrics := len(metrics) != 0 || slices.Contains(flags.Options.EnableCRDs, v1alpha1.MetricKind)
 	ctr, err := controllers.NewController(controllers.Config{
@@ -274,7 +302,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	err = startServer(ctx, flags, ctr, typedKwokClient)
+	err = startServer(ctx, flags, ctr, typedKwokClient, tracingProvider)
 	if err != nil {
 		return err
 	}
@@ -283,7 +311,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	return nil
 }
 
-func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controller, typedKwokClient versioned.Interface) (err error) {
+func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controller, typedKwokClient versioned.Interface, tracingProvider tracing.TracerProvider) (err error) {
 	logger := log.FromContext(ctx)
 
 	serverAddress := flags.Options.ServerAddress
@@ -383,6 +411,10 @@ func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controll
 		svc.InstallHealthz()
 
 		svc.InstallServiceDiscovery()
+
+		if tracingProvider != nil {
+			svc.InstallTracingFilter(tracingProvider)
+		}
 
 		if flags.Options.EnableDebuggingHandlers {
 			svc.InstallDebuggingHandlers()

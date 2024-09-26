@@ -48,6 +48,7 @@ type BuildKwokControllerComponentConfig struct {
 	Verbosity                         log.Level
 	NodeLeaseDurationSeconds          uint
 	EnableCRDs                        []string
+	OtlpGrpcAddress                   string
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
@@ -171,6 +172,13 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 
 	if len(conf.EnableCRDs) != 0 {
 		kwokControllerArgs = append(kwokControllerArgs, "--enable-crds="+strings.Join(conf.EnableCRDs, ","))
+	}
+
+	if conf.OtlpGrpcAddress != "" {
+		kwokControllerArgs = append(kwokControllerArgs,
+			"--tracing-endpoint="+conf.OtlpGrpcAddress,
+			"--tracing-sampling-rate-per-million=1000000",
+		)
 	}
 
 	envs := []internalversion.Env{}
