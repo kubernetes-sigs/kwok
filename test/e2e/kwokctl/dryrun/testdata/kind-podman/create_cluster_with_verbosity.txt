@@ -58,6 +58,9 @@ kubeadmConfigPatches:
     local:
       dataDir: /var/lib/etcd
       extraArgs:
+        experimental-distributed-tracing-address: 127.0.0.1:4317
+        experimental-distributed-tracing-sampling-rate: "1000000"
+        experimental-enable-distributed-tracing: "true"
         quota-backend-bytes: "8589934592"
   kind: ClusterConfiguration
   networking: {}
@@ -502,7 +505,7 @@ spec:
   - args:
     - --collector.otlp.enabled=true
     - --query.http-server.host-port=0.0.0.0:16686
-    - --collector.otlp.grpc.host-port=127.0.0.1:4317
+    - --collector.otlp.grpc.host-port=0.0.0.0:4317
     image: docker.io/jaegertracing/all-in-one:1.58.1
     imagePullPolicy: Never
     name: jaeger

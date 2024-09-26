@@ -45,6 +45,7 @@ type BuildEtcdComponentConfig struct {
 	PeerPort         uint32
 	Verbosity        log.Level
 	QuotaBackendSize string
+	OtlpGrpcAddress  string
 }
 
 // BuildEtcdComponent builds an etcd component.
@@ -154,6 +155,14 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		if conf.Verbosity <= log.LevelDebug {
 			etcdArgs = append(etcdArgs, "--debug")
 		}
+	}
+
+	if conf.OtlpGrpcAddress != "" {
+		etcdArgs = append(etcdArgs,
+			"--experimental-enable-distributed-tracing=true",
+			"--experimental-distributed-tracing-address="+conf.OtlpGrpcAddress,
+			"--experimental-distributed-tracing-sampling-rate=1000000",
+		)
 	}
 
 	envs := []internalversion.Env{}
