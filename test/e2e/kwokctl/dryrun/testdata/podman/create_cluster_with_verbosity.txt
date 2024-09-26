@@ -30,98 +30,89 @@ podman pull docker.io/kubernetesui/dashboard:v2.7.0
 podman pull docker.io/kubernetesui/metrics-scraper:v1.0.9
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 global:
+  evaluation_interval: 15s
   scrape_interval: 15s
   scrape_timeout: 10s
-  evaluation_interval: 15s
-alerting:
-  alertmanagers:
-  - follow_redirects: true
-    enable_http2: true
-    scheme: http
-    timeout: 10s
-    api_version: v2
-    static_configs:
-    - targets: []
 scrape_configs:
-- job_name: "etcd"
-  scheme: http
-  honor_timestamps: true
-  metrics_path: /metrics
+- enable_http2: true
   follow_redirects: true
-  enable_http2: true
+  honor_timestamps: true
+  job_name: etcd
+  metrics_path: /metrics
+  scheme: http
   static_configs:
   - targets:
     - kwok-<CLUSTER_NAME>-etcd:2379
-- job_name: "kube-apiserver"
-  scheme: https
-  honor_timestamps: true
-  metrics_path: /metrics
+- enable_http2: true
   follow_redirects: true
-  enable_http2: true
-  tls_config:
-    cert_file: "/etc/kubernetes/pki/admin.crt"
-    key_file: "/etc/kubernetes/pki/admin.key"
-    insecure_skip_verify: true
+  honor_timestamps: true
+  job_name: kube-apiserver
+  metrics_path: /metrics
+  scheme: https
   static_configs:
   - targets:
     - kwok-<CLUSTER_NAME>-kube-apiserver:6443
-- job_name: "kube-controller-manager"
-  scheme: https
-  honor_timestamps: true
-  metrics_path: /metrics
-  follow_redirects: true
-  enable_http2: true
   tls_config:
-    cert_file: "/etc/kubernetes/pki/admin.crt"
-    key_file: "/etc/kubernetes/pki/admin.key"
+    cert_file: /etc/kubernetes/pki/admin.crt
     insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: kube-controller-manager
+  metrics_path: /metrics
+  scheme: https
   static_configs:
   - targets:
     - kwok-<CLUSTER_NAME>-kube-controller-manager:10257
-- job_name: "kube-scheduler"
-  scheme: https
-  honor_timestamps: true
-  metrics_path: /metrics
-  follow_redirects: true
-  enable_http2: true
   tls_config:
-    cert_file: "/etc/kubernetes/pki/admin.crt"
-    key_file: "/etc/kubernetes/pki/admin.key"
+    cert_file: /etc/kubernetes/pki/admin.crt
     insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: kube-scheduler
+  metrics_path: /metrics
+  scheme: https
   static_configs:
   - targets:
     - kwok-<CLUSTER_NAME>-kube-scheduler:10259
-- job_name: "kwok-controller-metrics-discovery"
-  http_sd_configs:
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
+- http_sd_configs:
   - url: http://kwok-<CLUSTER_NAME>-kwok-controller:10247/discovery/prometheus
-- job_name: "kwok-controller"
-  scheme: http
-  honor_timestamps: true
-  metrics_path: /metrics
+  job_name: kwok-controller-metrics-discovery
+- enable_http2: true
   follow_redirects: true
-  enable_http2: true
+  honor_timestamps: true
+  job_name: kwok-controller
+  metrics_path: /metrics
+  scheme: http
   static_configs:
   - targets:
     - kwok-<CLUSTER_NAME>-kwok-controller:10247
-- job_name: "metrics-server"
-  scheme: https
-  honor_timestamps: true
-  metrics_path: /metrics
+- enable_http2: true
   follow_redirects: true
-  enable_http2: true
-  tls_config:
-    cert_file: "/etc/kubernetes/pki/admin.crt"
-    key_file: "/etc/kubernetes/pki/admin.key"
-    insecure_skip_verify: true
+  honor_timestamps: true
+  job_name: metrics-server
+  metrics_path: /metrics
+  scheme: https
   static_configs:
   - targets:
     - kwok-<CLUSTER_NAME>-kwok-controller:4443
-- job_name: "prometheus"
-  scheme: http
-  honor_timestamps: true
-  metrics_path: /metrics
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
+- enable_http2: true
   follow_redirects: true
-  enable_http2: true
+  honor_timestamps: true
+  job_name: prometheus
+  metrics_path: /metrics
+  scheme: http
   static_configs:
   - targets:
     - 127.0.0.1:9090
