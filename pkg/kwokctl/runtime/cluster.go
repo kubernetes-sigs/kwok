@@ -409,6 +409,70 @@ func (c *Cluster) ListComponents(ctx context.Context) ([]internalversion.Compone
 	return config.Components, nil
 }
 
+// Components returns component names of the cluster
+func (c *Cluster) Components(ctx context.Context) ([]string, error) {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	enable := conf.Options.Enable
+	disable := conf.Options.Disable
+
+	if conf.Options.DisableKubeControllerManager {
+		disable = append(disable, consts.ComponentKubeControllerManager)
+	}
+
+	if conf.Options.DisableKubeScheduler {
+		disable = append(disable, consts.ComponentKubeScheduler)
+	}
+
+	if conf.Options.EnableMetricsServer {
+		enable = append(enable, consts.ComponentMetricsServer)
+	}
+	if conf.Options.KubeApiserverInsecurePort != 0 {
+		enable = append(enable, consts.ComponentKubeApiserverInsecureProxy)
+	}
+	if conf.Options.DashboardPort != 0 {
+		enable = append(enable, consts.ComponentDashboard)
+	}
+	if conf.Options.PrometheusPort != 0 {
+		enable = append(enable, consts.ComponentPrometheus)
+	}
+	if conf.Options.JaegerPort != 0 {
+		enable = append(enable, consts.ComponentJaeger)
+	}
+
+	components := conf.Options.Components
+	if len(enable) != 0 {
+		components = append(components, enable...)
+	}
+
+	if len(disable) != 0 {
+		components = slices.Filter(components, func(s string) bool {
+			return !slices.Contains(disable, s)
+		})
+	}
+
+	components = slices.Unique(components)
+
+	_, hasEtcd := slices.Find(components, func(s string) bool {
+		return s == consts.ComponentEtcd
+	})
+	if !hasEtcd {
+		return nil, fmt.Errorf("etcd must be enabled")
+	}
+
+	_, hasApiserver := slices.Find(components, func(s string) bool {
+		return s == consts.ComponentKubeApiserver
+	})
+	if !hasApiserver {
+		return nil, fmt.Errorf("kube-apiserver must be enabled")
+	}
+
+	return components, nil
+}
+
 // Kubectl runs kubectl.
 func (c *Cluster) Kubectl(ctx context.Context, args ...string) error {
 	kubectlPath, err := c.KubectlPath(ctx)

@@ -132,13 +132,25 @@ type KwokctlConfigurationOptions struct {
 	// KubeSchedulerConfig is the configuration path for kube-scheduler.
 	KubeSchedulerConfig string
 
+	// Components is the configuration for components.
+	Components []string
+
+	// Disable is the configuration for disables components.
+	Disable []string
+
+	// Enable is the configuration for enables components.
+	Enable []string
+
 	// DisableKubeScheduler is the flag to disable kube-scheduler.
+	// Deprecated: Use Disable instead
 	DisableKubeScheduler bool
 
 	// DisableKubeControllerManager is the flag to disable kube-controller-manager.
+	// Deprecated: Use Disable instead
 	DisableKubeControllerManager bool
 
 	// EnableMetricsServer is the flag to enable metrics-server.
+	// Deprecated: Use Enable instead
 	EnableMetricsServer bool
 
 	// EtcdImage is the image of etcd.
