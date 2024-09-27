@@ -150,6 +150,23 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		}
 	}
 
+	if conf.JaegerPort != 0 {
+		conf.EtcdExtraArgs = append(conf.EtcdExtraArgs,
+			internalversion.ExtraArgs{
+				Key:   "experimental-enable-distributed-tracing",
+				Value: "true",
+			},
+			internalversion.ExtraArgs{
+				Key:   "experimental-distributed-tracing-address",
+				Value: "127.0.0.1:4317",
+			},
+			internalversion.ExtraArgs{
+				Key:   "experimental-distributed-tracing-sampling-rate",
+				Value: "1000000",
+			},
+		)
+	}
+
 	if conf.Verbosity != log.LevelInfo {
 		v := format.String(log.ToKlogLevel(conf.Verbosity))
 		sl := log.ToLogSeverityLevel(conf.Verbosity)

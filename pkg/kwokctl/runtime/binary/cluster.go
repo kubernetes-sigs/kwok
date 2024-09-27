@@ -255,6 +255,16 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	if env.kwokctlConfig.Options.JaegerPort != 0 {
+		err = c.setupPorts(ctx,
+			env.usedPorts,
+			&env.kwokctlConfig.Options.JaegerOtlpGrpcPort,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = c.addEtcd(ctx, env)
 	if err != nil {
 		return err
@@ -327,6 +337,11 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
+	otlpGrpcAddress := ""
+	if conf.JaegerOtlpGrpcPort != 0 {
+		otlpGrpcAddress = net.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort)
+	}
+
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
 		Runtime:          conf.Runtime,
 		ProjectName:      c.Name(),
@@ -339,6 +354,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		PeerPort:         conf.EtcdPeerPort,
 		Verbosity:        env.verbosity,
 		QuotaBackendSize: conf.EtcdQuotaBackendSize,
+		OtlpGrpcAddress:  otlpGrpcAddress,
 	})
 	if err != nil {
 		return err
@@ -362,15 +378,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	}
 
 	kubeApiserverTracingConfigPath := ""
-	if conf.JaegerPort != 0 {
-		err = c.setupPorts(ctx,
-			env.usedPorts,
-			&conf.JaegerOtlpGrpcPort,
-		)
-		if err != nil {
-			return err
-		}
-
+	if conf.JaegerOtlpGrpcPort != 0 {
 		kubeApiserverTracingConfigData, err := k8s.BuildKubeApiserverTracingConfig(k8s.BuildKubeApiserverTracingConfigParam{
 			Endpoint: net.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort),
 		})

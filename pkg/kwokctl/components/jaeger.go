@@ -63,7 +63,7 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 		)
 		jaegerArgs = append(jaegerArgs,
 			"--query.http-server.host-port="+conf.BindAddress+":16686",
-			"--collector.otlp.grpc.host-port="+net.LocalAddress+":4317",
+			"--collector.otlp.grpc.host-port="+conf.BindAddress+":4317",
 		)
 	} else {
 		ports = append(

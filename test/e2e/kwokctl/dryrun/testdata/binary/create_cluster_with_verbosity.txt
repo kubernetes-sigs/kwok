@@ -154,7 +154,7 @@ users: null
 EOF
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config
-cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && etcd --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd --initial-advertise-peer-urls=http://0.0.0.0:32766 --listen-peer-urls=http://0.0.0.0:32766 --advertise-client-urls=http://0.0.0.0:32765 --listen-client-urls=http://0.0.0.0:32765 --initial-cluster=node0=http://0.0.0.0:32766 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/etcd.log 2>&1 &
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && etcd --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd --initial-advertise-peer-urls=http://0.0.0.0:32766 --listen-peer-urls=http://0.0.0.0:32766 --advertise-client-urls=http://0.0.0.0:32765 --listen-client-urls=http://0.0.0.0:32765 --initial-cluster=node0=http://0.0.0.0:32766 --experimental-enable-distributed-tracing=true --experimental-distributed-tracing-address=127.0.0.1:32762 --experimental-distributed-tracing-sampling-rate=1000000 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/etcd.log 2>&1 &
 echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/etcd.pid
 cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && jaeger --collector.otlp.enabled=true --query.http-server.host-port=0.0.0.0:16686 --collector.otlp.grpc.host-port=127.0.0.1:32762 ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/jaeger.log 2>&1 &
 echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/jaeger.pid

@@ -364,6 +364,11 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
+	otlpGrpcAddress := ""
+	if conf.JaegerPort != 0 {
+		otlpGrpcAddress = c.Name() + "-jaeger:4317"
+	}
+
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
 		Runtime:          conf.Runtime,
 		ProjectName:      c.Name(),
@@ -375,6 +380,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		DataPath:         env.etcdDataPath,
 		Verbosity:        env.verbosity,
 		QuotaBackendSize: conf.EtcdQuotaBackendSize,
+		OtlpGrpcAddress:  otlpGrpcAddress,
 	})
 	if err != nil {
 		return err
