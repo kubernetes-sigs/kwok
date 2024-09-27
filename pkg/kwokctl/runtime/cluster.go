@@ -28,6 +28,8 @@ import (
 	"github.com/nxadm/tail"
 
 	"sigs.k8s.io/kwok/kustomize/crd"
+	"sigs.k8s.io/kwok/kustomize/metrics/resource"
+	"sigs.k8s.io/kwok/kustomize/metrics/usage"
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
 	nodeheartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
 	nodeheartbeatwithlease "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat-with-lease"
@@ -210,8 +212,16 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.MetricKind) {
-		stages := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
-		objs = appendIntoInternalObjects(objs, stages...)
+		metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+		if len(metrics) != 0 {
+			objs = appendIntoInternalObjects(objs, metrics...)
+		} else if c.conf.Options.EnableMetricsServer {
+			m, err := config.UnmarshalWithType[*internalversion.Metric, string](resource.DefaultMetricsResource)
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, m)
+		}
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ResourceUsageKind) {
@@ -220,8 +230,16 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterResourceUsageKind) {
-		stages := config.FilterWithTypeFromContext[*internalversion.ClusterResourceUsage](ctx)
-		objs = appendIntoInternalObjects(objs, stages...)
+		cru := config.FilterWithTypeFromContext[*internalversion.ClusterResourceUsage](ctx)
+		if len(cru) != 0 {
+			objs = appendIntoInternalObjects(objs, cru...)
+		} else if c.conf.Options.EnableMetricsServer {
+			m, err := config.UnmarshalWithType[*internalversion.ClusterResourceUsage, string](usage.DefaultUsageFromAnnotation)
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, m)
+		}
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.AttachKind) {
