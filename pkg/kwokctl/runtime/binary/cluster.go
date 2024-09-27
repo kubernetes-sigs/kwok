@@ -129,21 +129,23 @@ func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports 
 }
 
 type env struct {
-	kwokctlConfig           *internalversion.KwokctlConfiguration
-	verbosity               log.Level
-	inClusterKubeconfigPath string
-	kubeconfigPath          string
-	etcdDataPath            string
-	kwokConfigPath          string
-	pkiPath                 string
-	auditLogPath            string
-	auditPolicyPath         string
-	workdir                 string
-	caCertPath              string
-	adminKeyPath            string
-	adminCertPath           string
-	scheme                  string
-	usedPorts               sets.Sets[uint32]
+	kwokctlConfig                 *internalversion.KwokctlConfiguration
+	verbosity                     log.Level
+	inClusterKubeconfigPath       string
+	kubeconfigPath                string
+	etcdDataPath                  string
+	kwokConfigPath                string
+	pkiPath                       string
+	auditLogPath                  string
+	auditPolicyPath               string
+	workdir                       string
+	caCertPath                    string
+	adminKeyPath                  string
+	adminCertPath                 string
+	kubeControllerManagerCertPath string
+	kubeControllerManagerKeyPath  string
+	scheme                        string
+	usedPorts                     sets.Sets[uint32]
 }
 
 func (c *Cluster) env(ctx context.Context) (*env, error) {
@@ -171,6 +173,8 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	caCertPath := path.Join(pkiPath, "ca.crt")
 	adminKeyPath := path.Join(pkiPath, "admin.key")
 	adminCertPath := path.Join(pkiPath, "admin.crt")
+	kubeControllerManagerKeyPath := path.Join(pkiPath, "kube-controller-manager.key")
+	kubeControllerManagerCertPath := path.Join(pkiPath, "kube-controller-manager.crt")
 	auditLogPath := ""
 	auditPolicyPath := ""
 
@@ -185,21 +189,23 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	usedPorts := runtime.GetUsedPorts(ctx)
 
 	return &env{
-		kwokctlConfig:           config,
-		verbosity:               verbosity,
-		inClusterKubeconfigPath: inClusterKubeconfigPath,
-		kubeconfigPath:          kubeconfigPath,
-		etcdDataPath:            etcdDataPath,
-		kwokConfigPath:          kwokConfigPath,
-		pkiPath:                 pkiPath,
-		auditLogPath:            auditLogPath,
-		auditPolicyPath:         auditPolicyPath,
-		workdir:                 workdir,
-		caCertPath:              caCertPath,
-		adminKeyPath:            adminKeyPath,
-		adminCertPath:           adminCertPath,
-		scheme:                  scheme,
-		usedPorts:               usedPorts,
+		kwokctlConfig:                 config,
+		verbosity:                     verbosity,
+		inClusterKubeconfigPath:       inClusterKubeconfigPath,
+		kubeconfigPath:                kubeconfigPath,
+		etcdDataPath:                  etcdDataPath,
+		kwokConfigPath:                kwokConfigPath,
+		pkiPath:                       pkiPath,
+		auditLogPath:                  auditLogPath,
+		auditPolicyPath:               auditPolicyPath,
+		workdir:                       workdir,
+		caCertPath:                    caCertPath,
+		adminKeyPath:                  adminKeyPath,
+		adminCertPath:                 adminCertPath,
+		kubeControllerManagerKeyPath:  kubeControllerManagerKeyPath,
+		kubeControllerManagerCertPath: kubeControllerManagerCertPath,
+		scheme:                        scheme,
+		usedPorts:                     usedPorts,
 	}, nil
 }
 
@@ -491,6 +497,8 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 			CaCertPath:                         env.caCertPath,
 			AdminCertPath:                      env.adminCertPath,
 			AdminKeyPath:                       env.adminKeyPath,
+			KubeControllerManagerCertPath:      env.kubeControllerManagerCertPath, // Add path for kube-controller-manager cert
+			KubeControllerManagerKeyPath:       env.kubeControllerManagerKeyPath,
 			KubeAuthorization:                  conf.KubeAuthorization,
 			KubeconfigPath:                     env.inClusterKubeconfigPath,
 			KubeFeatureGates:                   conf.KubeFeatureGates,
