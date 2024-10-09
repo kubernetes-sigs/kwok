@@ -27,6 +27,8 @@ import (
 	clientset "sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	kwokv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 	fakekwokv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/apis/v1alpha1/fake"
+	operatorv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/operator/v1alpha1"
+	fakeoperatorv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/operator/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -86,4 +88,9 @@ var (
 // KwokV1alpha1 retrieves the KwokV1alpha1Client
 func (c *Clientset) KwokV1alpha1() kwokv1alpha1.KwokV1alpha1Interface {
 	return &fakekwokv1alpha1.FakeKwokV1alpha1{Fake: &c.Fake}
+}
+
+// OperatorV1alpha1 retrieves the OperatorV1alpha1Client
+func (c *Clientset) OperatorV1alpha1() operatorv1alpha1.OperatorV1alpha1Interface {
+	return &fakeoperatorv1alpha1.FakeOperatorV1alpha1{Fake: &c.Fake}
 }

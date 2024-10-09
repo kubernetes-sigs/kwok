@@ -34,6 +34,9 @@ function format() {
     -o -path ./kustomize/crd/bases/\* \
     -o -path ./kustomize/rbac/\* \
     -o -path ./charts/kwok/templates/\* \
+    -o -path ./kustomize/operator/crd/bases/\* \
+    -o -path ./kustomize/operator/rbac/\* \
+    -o -path ./charts/operator/templates/\* \
     \))
   go run github.com/google/yamlfmt/cmd/yamlfmt@v0.11.0 -conf .yamlfmt.yaml "${findfiles[@]}"
 }

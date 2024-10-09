@@ -52,16 +52,23 @@ type KwokConfigurationOptions struct {
 	// TLSPrivateKeyFile is the ile containing x509 private key
 	TLSPrivateKeyFile string
 
+	// Manages is the option to manage the resource
+	Manages ManagesSelectors
+
 	// ManageSingleNode is the option to manage a single node name
+	// Deprecated: use Manages instead
 	ManageSingleNode string
 
 	// Default option to manage (i.e., maintain heartbeat/liveness of) all Nodes or not.
+	// Deprecated: use Manages instead
 	ManageAllNodes bool
 
 	// Default annotations specified on Nodes to demand manage.
+	// Deprecated: use Manages instead
 	ManageNodesWithAnnotationSelector string
 
 	// Default labels specified on Nodes to demand manage.
+	// Deprecated: use Manages instead
 	ManageNodesWithLabelSelector string
 
 	// If a Node/Pod is on a managed Node and has this annotation status will not be modified

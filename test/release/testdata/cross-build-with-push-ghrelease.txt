@@ -4,33 +4,51 @@ gh -R ghrelease release upload <VERSION> kwok-linux-amd64
 GOOS=linux GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/amd64/kwokctl ./cmd/kwokctl
 cp ./bin/linux/amd64/kwokctl kwokctl-linux-amd64
 gh -R ghrelease release upload <VERSION> kwokctl-linux-amd64
+GOOS=linux GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/amd64/kwok-operator ./cmd/kwok-operator
+cp ./bin/linux/amd64/kwok-operator kwok-operator-linux-amd64
+gh -R ghrelease release upload <VERSION> kwok-operator-linux-amd64
 GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/arm64/kwok ./cmd/kwok
 cp ./bin/linux/arm64/kwok kwok-linux-arm64
 gh -R ghrelease release upload <VERSION> kwok-linux-arm64
 GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/arm64/kwokctl ./cmd/kwokctl
 cp ./bin/linux/arm64/kwokctl kwokctl-linux-arm64
 gh -R ghrelease release upload <VERSION> kwokctl-linux-arm64
+GOOS=linux GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/linux/arm64/kwok-operator ./cmd/kwok-operator
+cp ./bin/linux/arm64/kwok-operator kwok-operator-linux-arm64
+gh -R ghrelease release upload <VERSION> kwok-operator-linux-arm64
 GOOS=darwin GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/amd64/kwok ./cmd/kwok
 cp ./bin/darwin/amd64/kwok kwok-darwin-amd64
 gh -R ghrelease release upload <VERSION> kwok-darwin-amd64
 GOOS=darwin GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/amd64/kwokctl ./cmd/kwokctl
 cp ./bin/darwin/amd64/kwokctl kwokctl-darwin-amd64
 gh -R ghrelease release upload <VERSION> kwokctl-darwin-amd64
+GOOS=darwin GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/amd64/kwok-operator ./cmd/kwok-operator
+cp ./bin/darwin/amd64/kwok-operator kwok-operator-darwin-amd64
+gh -R ghrelease release upload <VERSION> kwok-operator-darwin-amd64
 GOOS=darwin GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/arm64/kwok ./cmd/kwok
 cp ./bin/darwin/arm64/kwok kwok-darwin-arm64
 gh -R ghrelease release upload <VERSION> kwok-darwin-arm64
 GOOS=darwin GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/arm64/kwokctl ./cmd/kwokctl
 cp ./bin/darwin/arm64/kwokctl kwokctl-darwin-arm64
 gh -R ghrelease release upload <VERSION> kwokctl-darwin-arm64
+GOOS=darwin GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/darwin/arm64/kwok-operator ./cmd/kwok-operator
+cp ./bin/darwin/arm64/kwok-operator kwok-operator-darwin-arm64
+gh -R ghrelease release upload <VERSION> kwok-operator-darwin-arm64
 GOOS=windows GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/amd64/kwok.exe ./cmd/kwok
 cp ./bin/windows/amd64/kwok.exe kwok-windows-amd64.exe
 gh -R ghrelease release upload <VERSION> kwok-windows-amd64.exe
 GOOS=windows GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/amd64/kwokctl.exe ./cmd/kwokctl
 cp ./bin/windows/amd64/kwokctl.exe kwokctl-windows-amd64.exe
 gh -R ghrelease release upload <VERSION> kwokctl-windows-amd64.exe
+GOOS=windows GOARCH=amd64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/amd64/kwok-operator.exe ./cmd/kwok-operator
+cp ./bin/windows/amd64/kwok-operator.exe kwok-operator-windows-amd64.exe
+gh -R ghrelease release upload <VERSION> kwok-operator-windows-amd64.exe
 GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/arm64/kwok.exe ./cmd/kwok
 cp ./bin/windows/arm64/kwok.exe kwok-windows-arm64.exe
 gh -R ghrelease release upload <VERSION> kwok-windows-arm64.exe
 GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/arm64/kwokctl.exe ./cmd/kwokctl
 cp ./bin/windows/arm64/kwokctl.exe kwokctl-windows-arm64.exe
 gh -R ghrelease release upload <VERSION> kwokctl-windows-arm64.exe
+GOOS=windows GOARCH=arm64 go build -ldflags '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.31.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' -o ./bin/windows/arm64/kwok-operator.exe ./cmd/kwok-operator
+cp ./bin/windows/arm64/kwok-operator.exe kwok-operator-windows-arm64.exe
+gh -R ghrelease release upload <VERSION> kwok-operator-windows-arm64.exe

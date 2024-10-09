@@ -97,6 +97,11 @@ jobs:
       run: |
         ./hack/e2e-test.sh e2e/kwok/single
 
+    - name: Test e2e operator
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh e2e/kwok/operator
+
   test-kwok:
     strategy:
       fail-fast: false

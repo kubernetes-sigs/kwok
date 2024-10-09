@@ -47,6 +47,7 @@ function gen() {
   deepcopy-gen \
     ./pkg/apis/internalversion/ \
     ./pkg/apis/v1alpha1/ \
+    ./pkg/apis/operator/v1alpha1/ \
     ./pkg/apis/config/v1alpha1/ \
     ./pkg/apis/action/v1alpha1/ \
     --output-file zz_generated.deepcopy.go \
@@ -54,6 +55,7 @@ function gen() {
   echo "Generating defaulter"
   defaulter-gen \
     ./pkg/apis/v1alpha1/ \
+    ./pkg/apis/operator/v1alpha1/ \
     ./pkg/apis/config/v1alpha1/ \
     ./pkg/apis/action/v1alpha1/ \
     --output-file zz_generated.defaults.go \
@@ -70,6 +72,7 @@ function gen() {
     --clientset-name versioned \
     --input-base "" \
     --input sigs.k8s.io/kwok/pkg/apis/v1alpha1 \
+    --input sigs.k8s.io/kwok/pkg/apis/operator/v1alpha1 \
     --output-pkg sigs.k8s.io/kwok/pkg/client/clientset \
     --output-dir ./pkg/client/clientset \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt \
