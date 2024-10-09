@@ -179,34 +179,20 @@ func (c *Cluster) Save(ctx context.Context) error {
 	kwokConfigs := config.FilterWithTypeFromContext[*internalversion.KwokConfiguration](ctx)
 	objs = appendIntoInternalObjects(objs, kwokConfigs...)
 
-	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.StageKind) &&
-		conf.Options.Runtime != consts.RuntimeTypeKind &&
-		conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
-		conf.Options.Runtime != consts.RuntimeTypeKindNerdctl &&
-		conf.Options.Runtime != consts.RuntimeTypeKindLima &&
-		conf.Options.Runtime != consts.RuntimeTypeKindFinch &&
-		len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
-		defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds != 0)
-		if err != nil {
-			return err
-		}
-		objs = appendIntoInternalObjects(objs, defaultStages...)
-	}
-
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.StageKind) {
-		if conf.Options.Runtime != consts.RuntimeTypeKind &&
+		stages := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
+		if len(stages) == 0 &&
+			conf.Options.Runtime != consts.RuntimeTypeKind &&
 			conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
 			conf.Options.Runtime != consts.RuntimeTypeKindNerdctl &&
 			conf.Options.Runtime != consts.RuntimeTypeKindLima &&
-			conf.Options.Runtime != consts.RuntimeTypeKindFinch &&
-			len(config.FilterWithTypeFromContext[*internalversion.Stage](ctx)) == 0 {
+			conf.Options.Runtime != consts.RuntimeTypeKindFinch {
 			defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds != 0)
 			if err != nil {
 				return err
 			}
 			objs = appendIntoInternalObjects(objs, defaultStages...)
 		} else {
-			stages := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
 			objs = appendIntoInternalObjects(objs, stages...)
 		}
 	}
