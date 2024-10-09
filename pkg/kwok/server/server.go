@@ -55,6 +55,8 @@ type Server struct {
 
 	enableCRDs []string
 
+	noManageNode bool
+
 	restfulCont *restful.Container
 
 	idleTimeout           time.Duration
@@ -97,6 +99,8 @@ type Config struct {
 	TypedKwokClient versioned.Interface
 	EnableCRDs      []string
 
+	NoManageNode bool
+
 	ClusterPortForwards   []*internalversion.ClusterPortForward
 	PortForwards          []*internalversion.PortForward
 	ClusterExecs          []*internalversion.ClusterExec
@@ -124,6 +128,8 @@ func NewServer(conf Config) (*Server, error) {
 		restfulCont:           container,
 		idleTimeout:           1 * time.Hour,
 		streamCreationTimeout: remotecommandconsts.DefaultStreamCreationTimeout,
+
+		noManageNode: conf.NoManageNode,
 
 		clusterPortForwards:   resources.NewStaticGetter(conf.ClusterPortForwards),
 		portForwards:          resources.NewStaticGetter(conf.PortForwards),
@@ -161,6 +167,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 	for _, crd := range s.enableCRDs {
 		switch crd {
 		case v1alpha1.ClusterPortForwardKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.clusterPortForwards.Get()) != 0 {
 				return nil, fmt.Errorf("cluster port forwards already exists, cannot watch CRD")
 			}
@@ -184,6 +193,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, clusterPortForwards)
 			s.clusterPortForwards = clusterPortForwards
 		case v1alpha1.PortForwardKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.portForwards.Get()) != 0 {
 				return nil, fmt.Errorf("port forwards already exists, cannot watch CRD")
 			}
@@ -207,6 +219,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, portForwards)
 			s.portForwards = portForwards
 		case v1alpha1.ClusterExecKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.clusterExecs.Get()) != 0 {
 				return nil, fmt.Errorf("cluster execs already exists, cannot watch CRD")
 			}
@@ -230,6 +245,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, clusterExecs)
 			s.clusterExecs = clusterExecs
 		case v1alpha1.ExecKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.execs.Get()) != 0 {
 				return nil, fmt.Errorf("execs already exists, cannot watch CRD")
 			}
@@ -253,6 +271,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, execs)
 			s.execs = execs
 		case v1alpha1.ClusterLogsKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.clusterLogs.Get()) != 0 {
 				return nil, fmt.Errorf("cluster logs already exists, cannot watch CRD")
 			}
@@ -276,6 +297,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, clusterLogs)
 			s.clusterLogs = clusterLogs
 		case v1alpha1.LogsKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.logs.Get()) != 0 {
 				return nil, fmt.Errorf("logs already exists, cannot watch CRD")
 			}
@@ -299,6 +323,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, logs)
 			s.logs = logs
 		case v1alpha1.ClusterAttachKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.clusterAttaches.Get()) != 0 {
 				return nil, fmt.Errorf("cluster attaches already exists, cannot watch CRD")
 			}
@@ -322,6 +349,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, clusterAttaches)
 			s.clusterAttaches = clusterAttaches
 		case v1alpha1.AttachKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.attaches.Get()) != 0 {
 				return nil, fmt.Errorf("attaches already exists, cannot watch CRD")
 			}
@@ -345,6 +375,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, attaches)
 			s.attaches = attaches
 		case v1alpha1.ClusterResourceUsageKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.clusterResourceUsages.Get()) != 0 {
 				return nil, fmt.Errorf("cluster resource usage already exists, cannot watch CRD")
 			}
@@ -368,6 +401,9 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			starters = append(starters, clusterResourceUsages)
 			s.clusterResourceUsages = clusterResourceUsages
 		case v1alpha1.ResourceUsageKind:
+			if s.noManageNode {
+				continue
+			}
 			if len(s.resourceUsages.Get()) != 0 {
 				return nil, fmt.Errorf("resource usage already exists, cannot watch CRD")
 			}

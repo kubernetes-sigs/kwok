@@ -76,6 +76,7 @@ type Controller struct {
 	onNodeUnmanagedFunc func(nodeName string)
 	readOnlyFunc        func(nodeName string) bool
 
+	noManageNode                      bool
 	manageNodesWithLabelSelector      string
 	manageNodesWithAnnotationSelector string
 	manageNodesWithFieldSelector      string
@@ -107,6 +108,8 @@ type Config struct {
 	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
 	TypedKwokClient                       versioned.Interface
+	Manages                               internalversion.ManagesSelectors
+	NoManageNode                          bool
 	ManageSingleNode                      string
 	ManageAllNodes                        bool
 	ManageNodesWithAnnotationSelector     string
@@ -167,61 +170,65 @@ func (c *Controller) init(ctx context.Context) (err error) {
 		return fmt.Errorf("controller already started")
 	}
 
-	switch {
-	case c.conf.ManageSingleNode != "":
-		c.managePodsWithFieldSelector = fields.OneTermEqualSelector("spec.nodeName", c.conf.ManageSingleNode).String()
-		c.manageNodesWithFieldSelector = fields.OneTermEqualSelector("metadata.name", c.conf.ManageSingleNode).String()
-		c.manageNodeLeasesWithFieldSelector = fields.OneTermEqualSelector("metadata.name", c.conf.ManageSingleNode).String()
-	case c.conf.ManageAllNodes:
-		c.managePodsWithFieldSelector = fields.OneTermNotEqualSelector("spec.nodeName", "").String()
-	case c.conf.ManageNodesWithLabelSelector != "" || c.conf.ManageNodesWithAnnotationSelector != "":
-		c.manageNodesWithLabelSelector = c.conf.ManageNodesWithLabelSelector
-		c.manageNodesWithAnnotationSelector = c.conf.ManageNodesWithAnnotationSelector
-		c.managePodsWithFieldSelector = fields.OneTermNotEqualSelector("spec.nodeName", "").String()
-	}
-
 	c.broadcaster = record.NewBroadcaster()
 	c.recorder = c.broadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "kwok_controller"})
 	c.broadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{Interface: c.conf.TypedClient.CoreV1().Events("")})
-
-	c.nodesChan = make(chan informer.Event[*corev1.Node], 1)
-	c.podsChan = make(chan informer.Event[*corev1.Pod], 1)
-
-	nodesCli := c.conf.TypedClient.CoreV1().Nodes()
-	c.nodesInformer = informer.NewInformer[*corev1.Node, *corev1.NodeList](nodesCli)
-	c.nodeCacheGetter, err = c.nodesInformer.WatchWithCache(ctx, informer.Option{
-		LabelSelector:      c.manageNodesWithLabelSelector,
-		AnnotationSelector: c.manageNodesWithAnnotationSelector,
-		FieldSelector:      c.manageNodesWithFieldSelector,
-	}, c.nodesChan)
-	if err != nil {
-		return fmt.Errorf("failed to watch nodes: %w", err)
-	}
-
-	podsCli := c.conf.TypedClient.CoreV1().Pods(corev1.NamespaceAll)
-	c.podsInformer = informer.NewInformer[*corev1.Pod, *corev1.PodList](podsCli)
-
-	podWatchOption := informer.Option{
-		FieldSelector: c.managePodsWithFieldSelector,
-	}
-	if c.conf.EnablePodCache {
-		c.podCacheGetter, err = c.podsInformer.WatchWithLazyCache(ctx, podWatchOption, c.podsChan)
-	} else {
-		err = c.podsInformer.Watch(ctx, podWatchOption, c.podsChan)
-	}
-	if err != nil {
-		return fmt.Errorf("failed to watch pods: %w", err)
-	}
-
-	if c.conf.NodeLeaseDurationSeconds != 0 {
-		nodeLeasesCli := c.conf.TypedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease)
-		c.nodeLeasesInformer = informer.NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](nodeLeasesCli)
-	}
-
 	c.patchMeta = patch.NewPatchMetaFromOpenAPI3(c.conf.RESTClient)
 
-	c.podOnNodeManageQueue = queue.NewQueue[string]()
-	c.nodeManageQueue = queue.NewQueue[string]()
+	if c.conf.NoManageNode {
+		c.noManageNode = true
+	} else {
+		c.nodesChan = make(chan informer.Event[*corev1.Node], 1)
+		c.podsChan = make(chan informer.Event[*corev1.Pod], 1)
+
+		switch {
+		case c.conf.ManageSingleNode != "":
+			c.managePodsWithFieldSelector = fields.OneTermEqualSelector("spec.nodeName", c.conf.ManageSingleNode).String()
+			c.manageNodesWithFieldSelector = fields.OneTermEqualSelector("metadata.name", c.conf.ManageSingleNode).String()
+			c.manageNodeLeasesWithFieldSelector = fields.OneTermEqualSelector("metadata.name", c.conf.ManageSingleNode).String()
+		case c.conf.ManageAllNodes:
+			c.managePodsWithFieldSelector = fields.OneTermNotEqualSelector("spec.nodeName", "").String()
+		case c.conf.ManageNodesWithLabelSelector != "" || c.conf.ManageNodesWithAnnotationSelector != "":
+			c.manageNodesWithLabelSelector = c.conf.ManageNodesWithLabelSelector
+			c.manageNodesWithAnnotationSelector = c.conf.ManageNodesWithAnnotationSelector
+			c.managePodsWithFieldSelector = fields.OneTermNotEqualSelector("spec.nodeName", "").String()
+		}
+
+		nodesCli := c.conf.TypedClient.CoreV1().Nodes()
+		c.nodesInformer = informer.NewInformer[*corev1.Node, *corev1.NodeList](nodesCli)
+		c.nodeCacheGetter, err = c.nodesInformer.WatchWithCache(ctx, informer.Option{
+			LabelSelector:      c.manageNodesWithLabelSelector,
+			AnnotationSelector: c.manageNodesWithAnnotationSelector,
+			FieldSelector:      c.manageNodesWithFieldSelector,
+		}, c.nodesChan)
+		if err != nil {
+			return fmt.Errorf("failed to watch nodes: %w", err)
+		}
+
+		podsCli := c.conf.TypedClient.CoreV1().Pods(corev1.NamespaceAll)
+		c.podsInformer = informer.NewInformer[*corev1.Pod, *corev1.PodList](podsCli)
+
+		podWatchOption := informer.Option{
+			FieldSelector: c.managePodsWithFieldSelector,
+		}
+		if c.conf.EnablePodCache {
+			c.podCacheGetter, err = c.podsInformer.WatchWithLazyCache(ctx, podWatchOption, c.podsChan)
+		} else {
+			err = c.podsInformer.Watch(ctx, podWatchOption, c.podsChan)
+		}
+		if err != nil {
+			return fmt.Errorf("failed to watch pods: %w", err)
+		}
+
+		if c.conf.NodeLeaseDurationSeconds != 0 {
+			nodeLeasesCli := c.conf.TypedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease)
+			c.nodeLeasesInformer = informer.NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](nodeLeasesCli)
+		}
+
+		c.podOnNodeManageQueue = queue.NewQueue[string]()
+		c.nodeManageQueue = queue.NewQueue[string]()
+	}
+
 	return nil
 }
 
@@ -363,6 +370,7 @@ func (c *Controller) startStageController(ctx context.Context, ref internalversi
 func (c *Controller) initStagesManager(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 
+	manages := c.conf.Manages
 	c.stageGetter = resources.NewDynamicGetter[
 		[]*internalversion.Stage,
 		*v1alpha1.Stage,
@@ -374,6 +382,10 @@ func (c *Controller) initStagesManager(ctx context.Context) error {
 				r, err := internalversion.ConvertToInternalStage(obj)
 				if err != nil {
 					logger.Error("failed to convert to internal stage", err, "obj", obj)
+					return nil, false
+				}
+
+				if manages != nil && !manages.MatchStage(r) {
 					return nil, false
 				}
 				return r, true
@@ -499,6 +511,8 @@ func (c *Controller) initStageController(ctx context.Context, ref internalversio
 	logger.Info("watching stages", "gvr", gvr)
 	stageInformer := informer.NewInformer[*unstructured.Unstructured, *unstructured.UnstructuredList](c.conf.DynamicClient.Resource(gvr))
 	stageChan := make(chan informer.Event[*unstructured.Unstructured], 1)
+
+	// TODO: Support filters with manages
 	err = stageInformer.Watch(ctx, informer.Option{}, stageChan)
 	if err != nil {
 		return fmt.Errorf("failed to watch stages: %w", err)
@@ -537,7 +551,12 @@ func (c *Controller) Start(ctx context.Context) error {
 	}
 
 	if len(c.conf.LocalStages) != 0 {
+		manages := c.conf.Manages
+
 		for ref, stage := range c.conf.LocalStages {
+			if manages != nil {
+				stage = slices.Filter(stage, manages.MatchStage)
+			}
 			lifecycle, err := lifecycle.NewLifecycle(stage)
 			if err != nil {
 				return err

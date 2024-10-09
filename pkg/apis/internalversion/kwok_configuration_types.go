@@ -52,6 +52,9 @@ type KwokConfigurationOptions struct {
 	// TLSPrivateKeyFile is the ile containing x509 private key
 	TLSPrivateKeyFile string
 
+	// Manages is the option to manage the resource
+	Manages ManagesSelectors
+
 	// ManageSingleNode is the option to manage a single node name
 	ManageSingleNode string
 

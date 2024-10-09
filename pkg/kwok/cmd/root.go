@@ -82,6 +82,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().IntVar(&flags.Options.NodePort, "node-port", flags.Options.NodePort, "Port of the node")
 	cmd.Flags().StringVar(&flags.Options.TLSCertFile, "tls-cert-file", flags.Options.TLSCertFile, "File containing the default x509 Certificate for HTTPS")
 	cmd.Flags().StringVar(&flags.Options.TLSPrivateKeyFile, "tls-private-key-file", flags.Options.TLSPrivateKeyFile, "File containing the default x509 private key matching --tls-cert-file")
+	cmd.Flags().Var(&flags.Options.Manages, "manage", "Manages resources")
 	cmd.Flags().StringVar(&flags.Options.ManageSingleNode, "manage-single-node", flags.Options.ManageSingleNode, "Node that matches the name will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-all-nodes.")
 	cmd.Flags().BoolVar(&flags.Options.ManageAllNodes, "manage-all-nodes", flags.Options.ManageAllNodes, "All nodes will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-single-node.")
 	cmd.Flags().StringVar(&flags.Options.ManageNodesWithAnnotationSelector, "manage-nodes-with-annotation-selector", flags.Options.ManageNodesWithAnnotationSelector, "Nodes that match the annotation selector will be watched and managed. It's conflicted with manage-all-nodes and manage-single-node.")
@@ -215,18 +216,31 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	switch {
-	case flags.Options.ManageSingleNode != "":
-		logger.Info("Watch single node",
-			"node", flags.Options.ManageSingleNode,
-		)
-	case flags.Options.ManageAllNodes:
-		logger.Info("Watch all nodes")
-	case flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "":
-		logger.Info("Watch nodes",
-			"annotation", flags.Options.ManageNodesWithAnnotationSelector,
-			"label", flags.Options.ManageNodesWithLabelSelector,
-		)
+	manages := flags.Options.Manages
+	var nodeSel internalversion.ManageNodeSelector
+	if len(manages) != 0 {
+		nodeSel, err = manages.NodeSelector()
+		if err != nil {
+			return err
+		}
+	} else {
+		switch {
+		case flags.Options.ManageSingleNode != "":
+			logger.Info("Watch single node",
+				"node", flags.Options.ManageSingleNode,
+			)
+			nodeSel.ManageSingleNode = flags.Options.ManageSingleNode
+		case flags.Options.ManageAllNodes:
+			logger.Info("Watch all nodes")
+			nodeSel.ManageAllNodes = true
+		case flags.Options.ManageNodesWithAnnotationSelector != "" || flags.Options.ManageNodesWithLabelSelector != "":
+			logger.Info("Watch nodes",
+				"annotation", flags.Options.ManageNodesWithAnnotationSelector,
+				"label", flags.Options.ManageNodesWithLabelSelector,
+			)
+			nodeSel.ManageNodesWithLabelSelector = flags.Options.ManageNodesWithLabelSelector
+			nodeSel.ManageNodesWithAnnotationSelector = flags.Options.ManageNodesWithAnnotationSelector
+		}
 	}
 
 	id, err := controllers.Identity()
@@ -248,10 +262,12 @@ func runE(ctx context.Context, flags *flagpole) error {
 		EnableCNI:                             flags.Options.EnableCNI,
 		EnableMetrics:                         enableMetrics,
 		EnablePodCache:                        enableMetrics,
-		ManageSingleNode:                      flags.Options.ManageSingleNode,
-		ManageAllNodes:                        flags.Options.ManageAllNodes,
-		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
-		ManageNodesWithLabelSelector:          flags.Options.ManageNodesWithLabelSelector,
+		Manages:                               manages,
+		NoManageNode:                          nodeSel.IsEmpty(),
+		ManageSingleNode:                      nodeSel.ManageSingleNode,
+		ManageAllNodes:                        nodeSel.ManageAllNodes,
+		ManageNodesWithAnnotationSelector:     nodeSel.ManageNodesWithAnnotationSelector,
+		ManageNodesWithLabelSelector:          nodeSel.ManageNodesWithLabelSelector,
 		DisregardStatusWithAnnotationSelector: flags.Options.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      flags.Options.DisregardStatusWithLabelSelector,
 		CIDR:                                  flags.Options.CIDR,
@@ -274,7 +290,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	err = startServer(ctx, flags, ctr, typedKwokClient)
+	err = startServer(ctx, flags, ctr, typedKwokClient, nodeSel)
 	if err != nil {
 		return err
 	}
@@ -283,7 +299,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	return nil
 }
 
-func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controller, typedKwokClient versioned.Interface) (err error) {
+func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controller, typedKwokClient versioned.Interface, nodeSelector internalversion.ManageNodeSelector) (err error) {
 	logger := log.FromContext(ctx)
 
 	serverAddress := flags.Options.ServerAddress
@@ -292,99 +308,95 @@ func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controll
 	}
 
 	if serverAddress != "" {
-		clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterPortForwardKind, clusterPortForwards)
-		if err != nil {
-			return err
-		}
-
-		portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.PortForwardKind, portForwards)
-		if err != nil {
-			return err
-		}
-
-		clusterExecs := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterExecKind, clusterExecs)
-		if err != nil {
-			return err
-		}
-
-		execs := config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ExecKind, execs)
-		if err != nil {
-			return err
-		}
-
-		clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterLogsKind, clusterLogs)
-		if err != nil {
-			return err
-		}
-
-		logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.LogsKind, logs)
-		if err != nil {
-			return err
-		}
-
-		clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterAttachKind, clusterAttaches)
-		if err != nil {
-			return err
-		}
-
-		attaches := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.AttachKind, attaches)
-		if err != nil {
-			return err
-		}
-
-		clusterResourceUsages := config.FilterWithTypeFromContext[*internalversion.ClusterResourceUsage](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterResourceUsageKind, clusterResourceUsages)
-		if err != nil {
-			return err
-		}
-
-		resourceUsages := config.FilterWithTypeFromContext[*internalversion.ResourceUsage](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ResourceUsageKind, resourceUsages)
-		if err != nil {
-			return err
-		}
-
-		metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
-		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.MetricKind, metrics)
-		if err != nil {
-			return err
-		}
-
+		mangeNode := !nodeSelector.IsEmpty()
 		conf := server.Config{
-			TypedKwokClient:       typedKwokClient,
-			EnableCRDs:            flags.Options.EnableCRDs,
-			ClusterPortForwards:   clusterPortForwards,
-			PortForwards:          portForwards,
-			ClusterExecs:          clusterExecs,
-			Execs:                 execs,
-			ClusterLogs:           clusterLogs,
-			Logs:                  logs,
-			ClusterAttaches:       clusterAttaches,
-			Attaches:              attaches,
-			ClusterResourceUsages: clusterResourceUsages,
-			ResourceUsages:        resourceUsages,
-			Metrics:               metrics,
-			DataSource:            ctr,
-			NodeCacheGetter:       ctr.GetNodeCache(),
-			PodCacheGetter:        ctr.GetPodCache(),
+			TypedKwokClient: typedKwokClient,
+			NoManageNode:    nodeSelector.IsEmpty(),
+			EnableCRDs:      flags.Options.EnableCRDs,
+			DataSource:      ctr,
+			NodeCacheGetter: ctr.GetNodeCache(),
+			PodCacheGetter:  ctr.GetPodCache(),
 		}
+
+		if mangeNode {
+			conf.ClusterPortForwards = config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterPortForwardKind, conf.ClusterPortForwards)
+			if err != nil {
+				return err
+			}
+
+			conf.PortForwards = config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.PortForwardKind, conf.PortForwards)
+			if err != nil {
+				return err
+			}
+
+			conf.ClusterExecs = config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterExecKind, conf.ClusterExecs)
+			if err != nil {
+				return err
+			}
+
+			conf.Execs = config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ExecKind, conf.Execs)
+			if err != nil {
+				return err
+			}
+
+			conf.ClusterLogs = config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterLogsKind, conf.ClusterLogs)
+			if err != nil {
+				return err
+			}
+
+			conf.Logs = config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.LogsKind, conf.Logs)
+			if err != nil {
+				return err
+			}
+
+			conf.ClusterAttaches = config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterAttachKind, conf.ClusterAttaches)
+			if err != nil {
+				return err
+			}
+
+			conf.Attaches = config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.AttachKind, conf.Attaches)
+			if err != nil {
+				return err
+			}
+
+			conf.ClusterResourceUsages = config.FilterWithTypeFromContext[*internalversion.ClusterResourceUsage](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterResourceUsageKind, conf.ClusterResourceUsages)
+			if err != nil {
+				return err
+			}
+
+			conf.ResourceUsages = config.FilterWithTypeFromContext[*internalversion.ResourceUsage](ctx)
+			err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ResourceUsageKind, conf.ResourceUsages)
+			if err != nil {
+				return err
+			}
+		}
+
+		conf.Metrics = config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+		err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.MetricKind, conf.Metrics)
+		if err != nil {
+			return err
+		}
+
 		svc, err := server.NewServer(conf)
 		if err != nil {
 			return fmt.Errorf("failed to create server: %w", err)
 		}
 		svc.InstallHealthz()
 
-		svc.InstallServiceDiscovery()
+		if mangeNode {
+			svc.InstallServiceDiscovery()
+		}
 
-		if flags.Options.EnableDebuggingHandlers {
+		if mangeNode && flags.Options.EnableDebuggingHandlers {
 			svc.InstallDebuggingHandlers()
 			svc.InstallProfilingHandler(flags.Options.EnableProfilingHandler, flags.Options.EnableContentionProfiling)
 		} else {
