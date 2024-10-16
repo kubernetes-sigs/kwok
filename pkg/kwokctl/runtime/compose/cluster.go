@@ -604,6 +604,11 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
+	otlpGrpcAddress := ""
+	if conf.JaegerPort != 0 {
+		otlpGrpcAddress = c.Name() + "-jaeger:4317"
+	}
+
 	logVolumes := runtime.GetLogVolumes(ctx)
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
@@ -623,6 +628,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		Verbosity:                env.verbosity,
 		NodeLeaseDurationSeconds: conf.NodeLeaseDurationSeconds,
 		EnableCRDs:               conf.EnableCRDs,
+		OtlpGrpcAddress:          otlpGrpcAddress,
 	})
 	kwokControllerComponent.Volumes = append(kwokControllerComponent.Volumes, logVolumes...)
 

@@ -204,6 +204,19 @@ KwokConfigurationOptions
 <p>Options holds information about the default value.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tracing</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.TracingConfiguration">
+TracingConfiguration
+</a>
+</em>
+</td>
+<td>
+<p>Tracing holds tracing configuration.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlConfiguration">
@@ -3888,6 +3901,55 @@ Protocol
 <tr>
 <td><code>&#34;UDP&#34;</code></td>
 <td><p>ProtocolUDP is the UDP protocol.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.TracingConfiguration">
+TracingConfiguration
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.TracingConfiguration"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.KwokConfiguration">KwokConfiguration</a>
+</p>
+<p>
+<p>TracingConfiguration provides versioned configuration for OpenTelemetry tracing clients.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>endpoint</code>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Endpoint of the collector this component will report traces to.
+The connection is insecure, and does not currently support TLS.
+Recommended is unset, and endpoint is the otlp grpc default, localhost:4317.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>samplingRatePerMillion</code>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SamplingRatePerMillion is the number of samples to collect per million spans.
+Recommended is unset. If unset, sampler respects its parent span&rsquo;s sampling
+rate, but otherwise never samples.</p>
 </td>
 </tr>
 </tbody>
