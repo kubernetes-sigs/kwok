@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -109,7 +110,21 @@ func computePatch(renderer gotpl.Renderer, resource any, patch internalversion.S
 			return nil, "", err
 		}
 		return patchData, types.StrategicMergePatchType, nil
-	case internalversion.StagePatchTypeMergePatch, "":
+	case internalversion.StagePatchTypeMergePatch:
+		patchData, err := computeMergePatch(renderer, resource, patch.Root, patch.Template)
+		if err != nil {
+			return nil, "", err
+		}
+		return patchData, types.MergePatchType, nil
+	case "":
+		switch resource.(type) {
+		case *corev1.Node, *corev1.Pod:
+			patchData, err := computeMergePatch(renderer, resource, patch.Root, patch.Template)
+			if err != nil {
+				return nil, "", err
+			}
+			return patchData, types.StrategicMergePatchType, nil
+		}
 		patchData, err := computeMergePatch(renderer, resource, patch.Root, patch.Template)
 		if err != nil {
 			return nil, "", err
