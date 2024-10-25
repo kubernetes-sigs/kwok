@@ -831,16 +831,18 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 		}
 
 		prometheusComponent, err := components.BuildPrometheusComponent(components.BuildPrometheusComponentConfig{
-			Runtime:       conf.Runtime,
-			Workdir:       env.workdir,
-			Image:         conf.PrometheusImage,
-			Version:       prometheusVersion,
-			BindAddress:   net.PublicAddress,
-			Port:          9090,
-			ConfigPath:    "/var/components/prometheus/etc/prometheus/prometheus.yaml",
-			AdminCertPath: env.adminCertPath,
-			AdminKeyPath:  env.adminKeyPath,
-			Verbosity:     env.verbosity,
+			Runtime:                      conf.Runtime,
+			Workdir:                      env.workdir,
+			Image:                        conf.PrometheusImage,
+			Version:                      prometheusVersion,
+			BindAddress:                  net.PublicAddress,
+			Port:                         9090,
+			ConfigPath:                   "/var/components/prometheus/etc/prometheus/prometheus.yaml",
+			AdminCertPath:                env.adminCertPath,
+			AdminKeyPath:                 env.adminKeyPath,
+			Verbosity:                    env.verbosity,
+			DisableKubeControllerManager: conf.DisableKubeControllerManager,
+			DisableKubeScheduler:         conf.DisableKubeScheduler,
 		})
 		if err != nil {
 			return err
