@@ -118,6 +118,8 @@ func CreatePod(pod *corev1.Pod) features.Func {
 			t.Fatal(err)
 		}
 
+		shouldHasPodScheduled := pod.Spec.NodeName == ""
+
 		t.Log("creating pod", log.KObj(pod))
 		err = client.Create(ctx, pod)
 		if err != nil {
@@ -141,6 +143,19 @@ func CreatePod(pod *corev1.Pod) features.Func {
 
 		if pod.Spec.NodeName == "" {
 			t.Fatal("pod node name is empty", log.KObj(pod))
+		}
+
+		_, hasPodScheduled := slices.Find(pod.Status.Conditions, func(cond corev1.PodCondition) bool {
+			return cond.Type == corev1.PodScheduled && cond.Status == corev1.ConditionTrue
+		})
+		if shouldHasPodScheduled {
+			if !hasPodScheduled {
+				t.Fatal("pod is scheduled, but there are no PodScheduled conditions", log.KObj(pod))
+			}
+		} else {
+			if hasPodScheduled {
+				t.Fatal("Pod is not scheduled, but there are PodScheduled conditions", log.KObj(pod))
+			}
 		}
 
 		if pod.Status.PodIP != "" {
