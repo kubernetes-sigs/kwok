@@ -3,7 +3,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/etcd
-docker pull docker.io/kindest/node:v1.30.2
+docker pull docker.io/kindest/node:v1.30.4
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
@@ -82,7 +82,7 @@ nodes:
     protocol: TCP
   role: control-plane
 EOF
-docker pull registry.k8s.io/kwok/kwok:v0.6.0
+docker pull registry.k8s.io/kwok/kwok:v0.6.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml
 apiVersion: v1
 kind: Pod
@@ -114,7 +114,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: registry.k8s.io/kwok/kwok:v0.6.0
+    image: registry.k8s.io/kwok/kwok:v0.6.1
     imagePullPolicy: Never
     name: kwok-controller
     resources: {}
@@ -324,8 +324,8 @@ scrape_configs:
     - 127.0.0.1:9090
 EOF
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.30.2 --wait 29m
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.6.0 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.30.4 --wait 29m
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.6.1 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v2.53.0 --name kwok-<CLUSTER_NAME>
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
