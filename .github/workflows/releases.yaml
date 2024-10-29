@@ -10,6 +10,10 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GO_VERSION: "1.22.3"
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   releases:
     runs-on: ubuntu-latest
