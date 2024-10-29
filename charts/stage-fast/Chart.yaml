@@ -13,5 +13,5 @@ name: stage-fast
 maintainers:
 - name: wzshiming
   email: wzshiming@hotmail.com
-appVersion: v0.6.0
-version: 0.1.0
+appVersion: v0.6.1
+version: 0.1.1
