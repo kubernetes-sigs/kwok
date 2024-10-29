@@ -24,7 +24,7 @@ var (
 
 	// Version is the version of the project.
 	// It will be overwritten during the `make build` process.
-	Version      = "0.6.0"
+	Version      = "0.6.1"
 	BinaryPrefix = "https://github.com/kubernetes-sigs/kwok/releases/download"
 	ImagePrefix  = "registry.k8s.io/kwok"
 
@@ -34,7 +34,7 @@ var (
 
 	// KubeVersion is the version of Kubernetes.
 	// It will be overwritten during the `make build` process.
-	KubeVersion                = "1.30.2"
+	KubeVersion                = "1.30.4"
 	KubeBinaryPrefix           = "https://dl.k8s.io/release"
 	KubeBinaryUnofficialPrefix = "https://github.com/kwok-ci/k8s/releases/download"
 	KubeImagePrefix            = "registry.k8s.io"

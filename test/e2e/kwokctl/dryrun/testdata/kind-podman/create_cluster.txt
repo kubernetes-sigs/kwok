@@ -3,7 +3,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/etcd
-podman pull docker.io/kindest/node:v1.30.2
+podman pull docker.io/kindest/node:v1.30.4
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
@@ -47,7 +47,7 @@ nodes:
     protocol: TCP
   role: control-plane
 EOF
-podman pull registry.k8s.io/kwok/kwok:v0.6.0
+podman pull registry.k8s.io/kwok/kwok:v0.6.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml
 apiVersion: v1
 kind: Pod
@@ -76,7 +76,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: registry.k8s.io/kwok/kwok:v0.6.0
+    image: registry.k8s.io/kwok/kwok:v0.6.1
     imagePullPolicy: Never
     name: kwok-controller
     resources: {}
@@ -120,11 +120,11 @@ spec:
 status: {}
 EOF
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.30.2 --wait 29m
+KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.30.4 --wait 29m
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok
-podman save registry.k8s.io/kwok/kwok:v0.6.0 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.6.0.tar
-KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.6.0.tar --name kwok-<CLUSTER_NAME>
-rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.6.0.tar
+podman save registry.k8s.io/kwok/kwok:v0.6.1 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.6.1.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.6.1.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.6.1.tar
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF

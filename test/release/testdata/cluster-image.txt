@@ -1,3 +1,3 @@
-docker buildx build --build-arg=kube_version=v1.30.2 --tag=image-prefix/cluster:<VERSION>-k8s.v1.30.2 --platform=linux/<ARCH> --load -f ./images/cluster/Dockerfile .
-docker buildx build --build-arg=kube_version=v1.29.4 --tag=image-prefix/cluster:<VERSION>-k8s.v1.29.4 --platform=linux/<ARCH> --load -f ./images/cluster/Dockerfile .
-docker buildx build --build-arg=kube_version=v1.28.9 --tag=image-prefix/cluster:<VERSION>-k8s.v1.28.9 --platform=linux/<ARCH> --load -f ./images/cluster/Dockerfile .
+docker buildx build --build-arg=kube_version=v1.30.4 --tag=image-prefix/cluster:<VERSION>-k8s.v1.30.4 --platform=linux/<ARCH> --load -f ./images/cluster/Dockerfile .
+docker buildx build --build-arg=kube_version=v1.29.8 --tag=image-prefix/cluster:<VERSION>-k8s.v1.29.8 --platform=linux/<ARCH> --load -f ./images/cluster/Dockerfile .
+docker buildx build --build-arg=kube_version=v1.28.13 --tag=image-prefix/cluster:<VERSION>-k8s.v1.28.13 --platform=linux/<ARCH> --load -f ./images/cluster/Dockerfile .
