@@ -65,7 +65,7 @@ expression: |
 With CEL expressions, it is even possible to simulate resource usages dynamically. For example, the following expression
 yields memory usage that grows linearly with time.
 ```yaml
-expression: (pod.SinceSecond() / 60.0) * Quantity("1Mi")
+expression: 'Quantity("1Mi") * (pod.SinceSecond() / 60.0)'
 ```
 Please refer to [CEL expressions in `kwok`][CEL expressions] for an exhausted list that may be helpful to configure dynamic resource usage.
 
