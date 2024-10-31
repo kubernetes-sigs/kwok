@@ -36,7 +36,15 @@ We can use `--filter` to filter the resources you want to save or restore.
 ### Save Cluster
 
 ``` bash
-kwokctl snapshot save --path cluster.yaml --format k8s
+kwokctl snapshot record --path cluster.yaml --snapshot
+```
+
+### Save Cluster and Record Resources Changes 
+
+Recording continues until an interrupt signal is sent.
+
+``` bash
+kwokctl snapshot record --path cluster.yaml
 ```
 
 ### Restore Cluster
@@ -46,7 +54,15 @@ and the `ownerReference` field of the resources is updated to re-link them with 
 so we can preserve the hierarchy and dependencies of the resources in restore.
 
 ``` bash
-kwokctl snapshot restore --path cluster.yaml --format k8s
+kwokctl snapshot replay --path cluster.yaml --snapshot
+```
+
+### Restore Cluster and Replay Resources Changes
+
+After the cluster snapshot is restored and the recorded resource changes are replayed.
+
+``` bash
+kwokctl snapshot replay --path cluster.yaml
 ```
 
 ## Export External Cluster
@@ -58,6 +74,12 @@ This is useful when you want to snapshot a cluster that is not managed by `kwokc
 kwokctl snapshot export --path external-snapshot.yaml --kubeconfig /path/to/kubeconfig
 ```
 
+or like that record
+
+``` bash
+kwokctl snapshot export --path external-snapshot.yaml --kubeconfig /path/to/kubeconfig --record
+```
+
 ### Restore External Cluster
 
 Let's restore the cluster we just exported.
@@ -67,5 +89,12 @@ so we can preserve the hierarchy and dependencies of the resources in restore.
 
 ``` bash
 kwokctl create cluster
-kwokctl snapshot restore --path external-snapshot.yaml --format k8s
+kwokctl snapshot replay --path external-snapshot.yaml --snapshot
+```
+
+or
+
+``` bash
+kwokctl create cluster
+kwokctl snapshot replay --path external-snapshot.yaml
 ```
