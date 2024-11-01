@@ -355,6 +355,9 @@ type Component struct {
 	// MetricsDiscovery is the metrics discovery of the component.
 	MetricsDiscovery *ComponentMetric
 
+	// Address is the address of the component.
+	Address string
+
 	// Version is the version of the component.
 	Version string
 }
