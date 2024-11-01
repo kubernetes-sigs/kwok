@@ -232,13 +232,16 @@ spec:
                     description: MatchExpressions is a list of label selector requirements.
                       The requirements are ANDed.
                     items:
-                      description: |-
-                        SelectorRequirement is a resource selector requirement is a selector that contains values, a key,
-                        and an operator that relates the key and values.
+                      description: SelectorExpression is a resource selector expression
+                        is a set of requirements that must be true for a match.
                       properties:
+                        expression:
+                          description: Expression represents the expression which
+                            will be evaluated by CEL.
+                          type: string
                         key:
-                          description: The name of the scope that the selector applies
-                            to.
+                          description: Key represents the expression which will be
+                            evaluated by JQ.
                           type: string
                         operator:
                           description: Represents a scope's relationship to a set
@@ -252,10 +255,12 @@ spec:
                           items:
                             type: string
                           type: array
-                      required:
-                      - key
-                      - operator
                       type: object
+                      x-kubernetes-validations:
+                      - message: expression and key are mutually exclusive
+                        rule: has(self.expression) != has(self.key)
+                      - message: key and operator must be set together
+                        rule: '!has(self.expression) || (has(self.key) && has(self.operator))'
                     type: array
                   matchLabels:
                     additionalProperties:
