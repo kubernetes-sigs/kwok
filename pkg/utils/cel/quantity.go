@@ -47,7 +47,7 @@ type Quantity struct {
 // NewQuantity creates a new Quantity
 func NewQuantity(q *resource.Quantity) Quantity {
 	if q == nil {
-		q = resource.NewScaledQuantity(0, resource.Nano)
+		q = resource.NewMilliQuantity(0, resource.DecimalSI)
 	}
 	return Quantity{Quantity: q}
 }
@@ -61,18 +61,18 @@ func NewQuantityFromString(s string) (Quantity, error) {
 	return NewQuantity(&r), nil
 }
 
-func newQuantityFromNanoInt64(v int64) Quantity {
-	r := resource.NewScaledQuantity(v, resource.Nano)
+func newQuantityFromMilliInt64(v int64) Quantity {
+	r := resource.NewMilliQuantity(v, resource.DecimalSI)
 	return NewQuantity(r)
 }
 
 func newQuantityFromFloat64(v float64) Quantity {
-	r := resource.NewScaledQuantity(int64(v*10e9), resource.Nano)
+	r := resource.NewMilliQuantity(int64(v*1e3), resource.DecimalSI)
 	return NewQuantity(r)
 }
 
-func (q Quantity) nano() int64 {
-	return q.Quantity.ScaledValue(resource.Nano)
+func (q Quantity) milli() int64 {
+	return q.Quantity.MilliValue()
 }
 
 func (q Quantity) float() float64 {
@@ -157,10 +157,10 @@ func (q Quantity) Divide(other ref.Val) ref.Val {
 	switch other.Type() {
 	case types.IntType:
 		otherInt := other.(types.Int)
-		return newQuantityFromNanoInt64(q.nano() / int64(otherInt))
+		return newQuantityFromMilliInt64(q.milli() / int64(otherInt))
 	case types.UintType:
 		otherUint := other.(types.Uint)
-		return newQuantityFromNanoInt64(q.nano() / int64(otherUint))
+		return newQuantityFromMilliInt64(q.milli() / int64(otherUint))
 	case types.DoubleType:
 		otherDouble := other.(types.Double)
 		return newQuantityFromFloat64(q.float() / float64(otherDouble))
@@ -174,10 +174,10 @@ func (q Quantity) Multiply(other ref.Val) ref.Val {
 	switch other.Type() {
 	case types.IntType:
 		otherInt := other.(types.Int)
-		return newQuantityFromNanoInt64(q.nano() * int64(otherInt))
+		return newQuantityFromMilliInt64(q.milli() * int64(otherInt))
 	case types.UintType:
 		otherUint := other.(types.Uint)
-		return newQuantityFromNanoInt64(q.nano() * int64(otherUint))
+		return newQuantityFromMilliInt64(q.milli() * int64(otherUint))
 	case types.DoubleType:
 		otherDouble := other.(types.Double)
 		return newQuantityFromFloat64(q.float() * float64(otherDouble))

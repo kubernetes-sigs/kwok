@@ -18,6 +18,7 @@ package metrics
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 
@@ -112,7 +113,9 @@ func TestResourceEvaluation(t *testing.T) {
 		t.Fatalf("evaluation failed: %v", err)
 	}
 
-	if actual != 18 {
-		t.Errorf("expected %v, got %v", 18, actual)
+	const epsilon = 1e-9
+	expected := 1.8
+	if math.Abs(actual-expected) > epsilon {
+		t.Errorf("expected %v, got %v", expected, actual)
 	}
 }
