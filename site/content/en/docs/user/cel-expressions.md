@@ -9,8 +9,6 @@ The page provides a concise note on writing CEL expressions in `kwok` CRs.
 Below is the list of all CRs in `kwok` that contains CEL based fields.
 * [Metric]
 * [ResourceUsage]
-* [ClusterResourceUsage]
-
 
 You must follow [the CEL language specification] when writing the expressions.
 For predefined functions of CEL, please refer to [CEL predefined functions].
@@ -21,14 +19,14 @@ An exhaustive list of all the extension functions with their usages is given bel
 * `Now()`: takes no parameters and returns the current timestamp.
 * `Rand()`: takes no parameters and returns a random `float64` value.
 * `SinceSecond()` returns the seconds elapsed since a given resource (`pod` or `node`) was created.
-  For example: `SinceSecond(pod)`, `node.SinceSecond(node)`.
+  For example: `SinceSecond(pod)`, `SinceSecond(node)`.
 * `UnixSecond()` returns the Unix time of a given time of type `time.Time`.
   For example: , `UnixSecond(Now())`, `UnixSecond(node.metadata.creationTimestamp)`.
 * `Quantity()` returns a float64 value of a given Quantity value. For example: `Quantity("100m")`, `Quantity("10Mi")`.
-* `Usage()` returns the current instantaneous resource usage with the simulation data in [ResourceUsage (ClusterResourceUsage)].
+* `Usage()` returns the current instantaneous resource usage with the simulation data in [ResourceUsage].
   For example: `Usage(pod, "memory")`, `Usage(node, "memory")`, `Usage(pod, "memory", container.name)` return the
   current working set of a resource (pod, node or container) in bytes.
-* `CumulativeUsage()` returns the cumulative resource usage in seconds with the simulation data given in [ResourceUsage (ClusterResourceUsage)].
+* `CumulativeUsage()` Only available in [Metric], returns the cumulative resource usage in seconds with the simulation data given in [ResourceUsage].
   For example: `CumulativeUsage(pod, "cpu")`, `CumulativeUsage(node, "cpu")`, `CumulativeUsage(pod, "cpu", container.name)`
   return a cumulative cpu time consumed by a resource (pod, node or container) in core-seconds.
 
@@ -54,12 +52,12 @@ The detailed limitations are described below.
 ## Functions Limitation
 
 Function `Usage()` and `CumulativeUsage()` can only be used in the Metric resource.
-For other functions listed above, users are also allowed to use them in ResourceUsage and ClusterResourceUsage
+For other functions listed above, users are also allowed to use them in [Metric]
 to build dynamic resource usage patterns.
 
 The reason behind is that when `kwok` evaluates functions `Usage()` or `CumulativeUsage()`,
-it actually takes the simulation data given in ResourceUsage and ClusterResourceUsage to obtain metric values.
-Therefore, please ensure that the associated ResourceUsage or ClusterResourceUsage with the needed resource types
+it actually takes the simulation data given in [ResourceUsage] to obtain metric values.
+Therefore, please ensure that the associated [ResourceUsage] with the needed resource types
 (cpu or memory) are also provided when using function `Usage()` and `CumulativeUsage()`.
 
 ## Variables Limitation
@@ -69,9 +67,7 @@ When using the three special CEL variables `node`, `pod`, and `container` in Met
 * When `dimension` is `pod`: only `node`, `pod` can be used.
 * When `dimension` is `container`: `node`, `pod`, `container` all can be used.
 
-
-[Metric]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Metric
-[ResourceUsage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ResourceUsage
-[ClusterResourceUsage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage
+[Metric]: {{< relref "/docs/user/metrics-configuration/" >}}
+[ResourceUsage]: {{< relref "/docs/user/resource-usage-configuration/" >}}
 [the CEL language specification]: https://github.com/google/cel-spec/blob/master/doc/langdef.md
 [CEL predefined functions]: https://github.com/google/cel-spec/blob/master/doc/langdef.md#list-of-standard-definitions
