@@ -23,10 +23,16 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
+	toolsportforward "k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 	"k8s.io/kubelet/pkg/cri/streaming/portforward"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -51,6 +57,10 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 	forward, err := getPodsForward(s.portForwards.Get(), s.clusterPortForwards.Get(), podName, podNamespace, port)
 	if err != nil {
 		return err
+	}
+
+	if m := forward.Mapping; m != nil {
+		return s.portForwardMappingToContainer(ctx, m.Namespace, m.Name, port, stream)
 	}
 
 	if len(forward.Command) > 0 {
@@ -144,4 +154,113 @@ func findPortInForwards(port int32, forwards []internalversion.Forward) (*intern
 		}
 	}
 	return defaultForward, defaultForward != nil
+}
+
+// portForwardMappingToContainer returns port forward for a container in a pod with mapping.
+func (s *Server) portForwardMappingToContainer(ctx context.Context, namespace, name string, port int32, stream io.ReadWriteCloser) error {
+	defer func() {
+		_ = stream.Close()
+	}()
+
+	req := s.typedClient.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(name).
+		Namespace(namespace).
+		SubResource("portforward")
+
+	req.VersionedParams(&corev1.PodPortForwardOptions{
+		Ports: []int32{port},
+	}, scheme.ParameterCodec)
+
+	roundTripper, upgrader, err := spdy.RoundTripperFor(s.restConfig)
+	if err != nil {
+		return err
+	}
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, req.URL())
+
+	streamConn, _, err := dialer.Dial(toolsportforward.PortForwardProtocolV1Name)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		_ = streamConn.Close()
+	}()
+
+	requestID := 0
+
+	// create error stream
+	headers := http.Header{}
+	headers.Set(corev1.StreamType, corev1.StreamTypeError)
+	headers.Set(corev1.PortHeader, fmt.Sprintf("%d", port))
+	headers.Set(corev1.PortForwardRequestIDHeader, strconv.Itoa(requestID))
+	errorStream, err := streamConn.CreateStream(headers)
+	if err != nil {
+		return err
+	}
+	// we're not writing to this stream
+	_ = errorStream.Close()
+	defer streamConn.RemoveStreams(errorStream)
+
+	errorChan := make(chan error)
+	go func() {
+		message, err := io.ReadAll(errorStream)
+		switch {
+		case err != nil:
+			errorChan <- fmt.Errorf("error reading from error stream for port: %w", err)
+		case len(message) > 0:
+			errorChan <- fmt.Errorf("an error occurred forwarding: %s", string(message))
+		}
+		close(errorChan)
+	}()
+
+	// create data stream
+	headers.Set(corev1.StreamType, corev1.StreamTypeData)
+	dataStream, err := streamConn.CreateStream(headers)
+	if err != nil {
+		return fmt.Errorf("error creating forwarding stream for port: %w", err)
+	}
+	defer streamConn.RemoveStreams(dataStream)
+
+	localError := make(chan struct{})
+	remoteDone := make(chan struct{})
+
+	go func() {
+		// Copy from the remote side to the local port.
+		if _, err := io.Copy(stream, dataStream); err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
+			runtime.HandleError(fmt.Errorf("error copying from remote stream to local connection: %w", err))
+		}
+
+		// inform the select below that the remote copy is done
+		close(remoteDone)
+	}()
+
+	go func() {
+		// inform server we're not sending any more data after copy unblocks
+		defer func() {
+			_ = dataStream.Close()
+		}()
+
+		// Copy from the local port to the remote side.
+		if _, err := io.Copy(dataStream, stream); err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
+			runtime.HandleError(fmt.Errorf("error copying from local connection to remote stream: %w", err))
+			// break out of the select below without waiting for the other copy to finish
+			close(localError)
+		}
+	}()
+
+	// wait for either a local->remote error or for copying from remote->local to finish
+	select {
+	case <-remoteDone:
+	case <-localError:
+	case <-ctx.Done():
+	}
+
+	// always expect something on errorChan (it may be nil)
+	err = <-errorChan
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

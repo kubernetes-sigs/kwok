@@ -69,6 +69,8 @@ type Log struct {
 	LogsFile *string `json:"logsFile,omitempty"`
 	// Follow up if true
 	Follow *bool `json:"follow,omitempty"`
+	// Mapping is mapping to target
+	Mapping *MappingTarget `json:"mapping,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

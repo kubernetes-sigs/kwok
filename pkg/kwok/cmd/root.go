@@ -302,7 +302,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	err = startServer(ctx, flags, ctr, typedKwokClient, tracingProvider)
+	err = startServer(ctx, flags, ctr, typedKwokClient, typedClient, restConfig, tracingProvider)
 	if err != nil {
 		return err
 	}
@@ -311,7 +311,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	return nil
 }
 
-func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controller, typedKwokClient versioned.Interface, tracingProvider tracing.TracerProvider) (err error) {
+func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controller, typedKwokClient versioned.Interface, typedClient kubernetes.Interface, restConfig *rest.Config, tracingProvider tracing.TracerProvider) (err error) {
 	logger := log.FromContext(ctx)
 
 	serverAddress := flags.Options.ServerAddress
@@ -388,6 +388,8 @@ func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controll
 
 		conf := server.Config{
 			TypedKwokClient:       typedKwokClient,
+			TypedClient:           typedClient,
+			RestConfig:            restConfig,
 			EnableCRDs:            flags.Options.EnableCRDs,
 			ClusterPortForwards:   clusterPortForwards,
 			PortForwards:          portForwards,

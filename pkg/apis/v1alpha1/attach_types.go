@@ -67,6 +67,8 @@ type AttachConfig struct {
 	Containers []string `json:"containers,omitempty"`
 	// LogsFile is the file from which the attach starts
 	LogsFile *string `json:"logsFile,omitempty"`
+	// Mapping is mapping to target
+	Mapping *MappingTarget `json:"mapping,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

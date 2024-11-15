@@ -25,8 +25,10 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
+	"k8s.io/client-go/kubernetes/scheme"
 	remotecommandclient "k8s.io/client-go/tools/remotecommand"
 	remotecommandserver "k8s.io/kubelet/pkg/cri/streaming/remotecommand"
 
@@ -46,6 +48,10 @@ func (s *Server) ExecInContainer(ctx context.Context, name string, uid types.UID
 	execTarget, err := getExecTarget(s.execs.Get(), s.clusterExecs.Get(), podName, podNamespace, container)
 	if err != nil {
 		return err
+	}
+
+	if m := execTarget.Mapping; m != nil {
+		return s.execMappingToContainer(ctx, m.Namespace, m.Name, m.Container, cmd, in, out, errOut, tty, resize, timeout)
 	}
 
 	// Currently only support local exec.
@@ -164,4 +170,42 @@ func (s *Server) getExec(req *restful.Request, resp *restful.Response) {
 		s.streamCreationTimeout,
 		remotecommandconsts.SupportedStreamingProtocols,
 	)
+}
+
+// execMappingToContainer executes a command in a container with mapping.
+func (s *Server) execMappingToContainer(ctx context.Context, namespace, name, container string, cmd []string, in io.Reader, out, errOut io.WriteCloser, tty bool, resize <-chan remotecommandclient.TerminalSize, timeout time.Duration) error {
+	req := s.typedClient.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(name).
+		Namespace(namespace).
+		SubResource("exec").
+		Timeout(timeout)
+
+	execOptions := &corev1.PodExecOptions{
+		Command:   cmd,
+		Container: container,
+		TTY:       tty,
+		Stdin:     in != nil,
+		Stdout:    out != nil,
+		Stderr:    errOut != nil,
+	}
+
+	req.VersionedParams(execOptions, scheme.ParameterCodec)
+
+	executor, err := remotecommandclient.NewSPDYExecutor(s.restConfig, http.MethodPost, req.URL())
+	if err != nil {
+		return fmt.Errorf("unable to create executor: %w", err)
+	}
+
+	err = executor.StreamWithContext(ctx, remotecommandclient.StreamOptions{
+		Stdin:             in,
+		Stdout:            out,
+		Stderr:            errOut,
+		Tty:               tty,
+		TerminalSizeQueue: newTranslatorSizeQueue(resize),
+	})
+	if err != nil {
+		return fmt.Errorf("unable to stream output: %w", err)
+	}
+	return nil
 }

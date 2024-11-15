@@ -52,6 +52,19 @@ spec:
                       items:
                         type: string
                       type: array
+                    mapping:
+                      description: Mapping is mapping to target
+                      properties:
+                        container:
+                          type: string
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      required:
+                      - name
+                      - namespace
+                      type: object
                     ports:
                       description: |-
                         Ports is a list of ports to forward.

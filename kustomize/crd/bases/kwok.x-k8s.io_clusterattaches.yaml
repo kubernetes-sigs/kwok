@@ -52,6 +52,19 @@ spec:
                     logsFile:
                       description: LogsFile is the file from which the attach starts
                       type: string
+                    mapping:
+                      description: Mapping is mapping to target
+                      properties:
+                        container:
+                          type: string
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      required:
+                      - name
+                      - namespace
+                      type: object
                   type: object
                 type: array
               selector:

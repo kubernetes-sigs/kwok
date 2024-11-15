@@ -46,6 +46,14 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 		return err
 	}
 
+	if logOptions.Container == "" {
+		logOptions.Container = container
+	}
+
+	if m := log.Mapping; m != nil {
+		return s.logsMappingToContainer(ctx, m.Namespace, m.Name, logOptions, stdout)
+	}
+
 	opts := crilogs.NewLogOptions(logOptions, time.Now())
 	return readLogs(ctx, log.LogsFile, opts, stdout, stderr)
 }
@@ -152,4 +160,27 @@ var errUnavailable = status.Error(codes.Unavailable, "Unavailable")
 
 func (runtimeServiceStub) ContainerStatus(ctx context.Context, containerID string, verbose bool) (*runtimeapi.ContainerStatusResponse, error) {
 	return nil, errUnavailable
+}
+
+// logsMappingToContainer returns logs for a container in a pod with mapping.
+func (s *Server) logsMappingToContainer(ctx context.Context, namespace, name string, logOptions *corev1.PodLogOptions, stdout io.Writer) error {
+	req := s.typedClient.CoreV1().
+		Pods(namespace).
+		GetLogs(name, logOptions)
+
+	stm, err := req.Stream(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = stm.Close()
+	}()
+
+	_, err = io.Copy(stdout, stm)
+	if err != nil {
+		if ctx.Err() == nil {
+			return err
+		}
+	}
+	return nil
 }

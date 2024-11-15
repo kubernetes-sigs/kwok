@@ -45,6 +45,8 @@ type Forward struct {
 	// Command is the command to run to forward with stdin/stdout.
 	// if set, Target will be ignored.
 	Command []string
+	// Mapping is mapping to target
+	Mapping *MappingTarget
 }
 
 // ForwardTarget holds information how to forward to a target.
