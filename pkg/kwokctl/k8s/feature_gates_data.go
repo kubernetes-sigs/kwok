@@ -423,7 +423,7 @@ var rawData = []FeatureSpec{
 
 	// DisableNodeKubeProxyVersion
 	{"DisableNodeKubeProxyVersion", Alpha, 29, 30},
-	{"DisableNodeKubeProxyVersion", Beta, 31, -1},
+	{"DisableNodeKubeProxyVersion", Deprecated, 31, -1},
 
 	// DownwardAPIHugePages
 	{"DownwardAPIHugePages", Alpha, 20, 20},

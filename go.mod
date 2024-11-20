@@ -33,16 +33,16 @@ require (
 	golang.org/x/sys v0.27.0
 	golang.org/x/term v0.24.0
 	google.golang.org/grpc v1.68.0
-	k8s.io/api v0.31.0
-	k8s.io/apimachinery v0.31.0
-	k8s.io/apiserver v0.31.0
-	k8s.io/client-go v0.31.0
-	k8s.io/code-generator v0.31.0
-	k8s.io/component-base v0.31.0
-	k8s.io/cri-api v0.31.0
-	k8s.io/cri-client v0.31.0
+	k8s.io/api v0.31.2
+	k8s.io/apimachinery v0.31.2
+	k8s.io/apiserver v0.31.2
+	k8s.io/client-go v0.31.2
+	k8s.io/code-generator v0.31.2
+	k8s.io/component-base v0.31.2
+	k8s.io/cri-api v0.31.2
+	k8s.io/cri-client v0.31.2
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340
-	k8s.io/kubelet v0.31.0
+	k8s.io/kubelet v0.31.2
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/controller-tools v0.16.1
@@ -156,7 +156,7 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.31.0 // indirect
+	k8s.io/apiextensions-apiserver v0.31.2 // indirect
 	k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect

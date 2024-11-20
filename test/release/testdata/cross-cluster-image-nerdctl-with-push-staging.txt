@@ -1,6 +1,6 @@
-nerdctl build --build-arg=kube_version=v1.31.0 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.31.0 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
-nerdctl push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.31.0
-nerdctl build --build-arg=kube_version=v1.30.4 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.30.4 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
-nerdctl push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.30.4
-nerdctl build --build-arg=kube_version=v1.29.8 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.29.8 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
-nerdctl push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.29.8
+nerdctl build --build-arg=kube_version=v1.31.2 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.31.2 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
+nerdctl push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.31.2
+nerdctl build --build-arg=kube_version=v1.30.6 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.30.6 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
+nerdctl push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.30.6
+nerdctl build --build-arg=kube_version=v1.29.10 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.29.10 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
+nerdctl push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.29.10
