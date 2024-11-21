@@ -101,6 +101,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
 	cmd.Flags().StringVar(&flags.Tracing.Endpoint, "tracing-endpoint", flags.Tracing.Endpoint, "Tracing endpoint")
 	cmd.Flags().Int32Var(&flags.Tracing.SamplingRatePerMillion, "tracing-sampling-rate-per-million", flags.Tracing.SamplingRatePerMillion, "Tracing sampling rate per million")
+	cmd.Flags().UintVar(&flags.Options.PodPlayStageParallelism, "pod-play-stage-parallelism", 4, "Number of pod play stage parallelism")
 
 	cmd.Flags().BoolVar(&flags.Options.EnableCNI, "experimental-enable-cni", flags.Options.EnableCNI, "Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux")
 	_ = cmd.Flags().MarkDeprecated("experimental-enable-cni", "It will be removed and will be supported in the form of plugins")
