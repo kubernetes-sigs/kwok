@@ -62,7 +62,7 @@ jobs:
       if: ${{ matrix.builder == 'nerdctl' }}
       shell: bash
       run: |
-        curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.3/nerdctl-full-1.7.3-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+        curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.7/nerdctl-full-1.7.7-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
         sudo systemctl daemon-reload
         sudo systemctl enable --now containerd
         containerd-rootless-setuptool.sh install
@@ -222,7 +222,7 @@ jobs:
       run: |
         sudo mkdir -p /etc/cni/net.d
         sudo chmod 777 /etc/cni/net.d
-        curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.3/nerdctl-full-1.7.3-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
+        curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.7/nerdctl-full-1.7.7-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
         sudo systemctl daemon-reload
         sudo systemctl enable --now containerd
         containerd-rootless-setuptool.sh install
