@@ -1,0 +1,49 @@
+name: Benchmark
+
+on:
+  pull_request:
+    paths:
+    - pkg/**/*
+    - cmd/**/*
+    - test/**/*
+    - hack/**/*
+    - kustomize/**/*
+    - go.mod
+    - .github/workflows/benchmark.yaml
+    - '!hack/releases-helm-chart.sh'
+  push:
+    paths:
+    - pkg/**/*
+    - cmd/**/*
+    - test/**/*
+    - hack/**/*
+    - kustomize/**/*
+    - go.mod
+    - .github/workflows/benchmark.yaml
+    - '!hack/releases-helm-chart.sh'
+
+env:
+  CGO_ENABLED: "0"
+  GO_VERSION: "1.23.0"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Test Benchmark
+      shell: bash
+      run: |
+        ./hack/e2e-test.sh e2e/kwokctl/benchmark
+
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: kwok-logs-benchmark
+        path: ${{ github.workspace }}/logs

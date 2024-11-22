@@ -101,6 +101,7 @@ func (g *clientset) ToRESTConfig() (*rest.Config, error) {
 		restConfig.RateLimiter = flowcontrol.NewFakeAlwaysRateLimiter()
 		restConfig.UserAgent = version.DefaultUserAgent()
 		restConfig.NegotiatedSerializer = unstructuredscheme.NewUnstructuredNegotiatedSerializer()
+		// restConfig.Wrap(newRoundTripperPool)
 		g.restConfig = restConfig
 
 		for _, opt := range g.opts {
