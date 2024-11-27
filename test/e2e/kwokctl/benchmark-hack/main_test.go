@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package benchmarking_test is a test benchmarking environment for kwok.
-package benchmark_test
+// Package benchmark_hack_test is a test benchmarking environment for kwok.
+package benchmark_hack_test
 
 import (
 	"os"
@@ -37,7 +37,7 @@ var (
 	pwd         = os.Getenv("PWD")
 	rootDir     = path.Join(pwd, "../../../..")
 	logsDir     = path.Join(rootDir, "logs")
-	clusterName = envconf.RandomName("kwok-e2e-benchmark", 24)
+	clusterName = envconf.RandomName("kwok-e2e-benchmark-hack", 24)
 	kwokPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwok"+helper.BinSuffix)
 	kwokctlPath = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
 	baseArgs    = []string{
