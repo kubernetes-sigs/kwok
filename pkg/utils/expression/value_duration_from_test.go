@@ -72,6 +72,18 @@ func TestDurationFrom_Get(t *testing.T) {
 			want:   1 * time.Second,
 			wantOk: true,
 		},
+		{
+			args: args{
+				src: format.Ptr(".metadata.annotations[\"custom-duration\"]"),
+				v: corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{"custom-duration": "7s"},
+					},
+				},
+			},
+			want:   7 * time.Second,
+			wantOk: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
