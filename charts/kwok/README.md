@@ -37,6 +37,7 @@ The following table lists the configurable parameters of the kwok chart and thei
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | fullnameOverride | string | `"kwok-controller"` | Override the `fullname` of the chart. |
+| hostNetwork | bool | `false` | Change `hostNetwork` to `true` if you want to deploy in a kind cluster. |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy. |
 | image.repository | string | `"registry.k8s.io/kwok/kwok"` | Image repository. |
 | image.tag | string | `""` | Overrides the image tag whose default is {{ .Chart.AppVersion }}. |

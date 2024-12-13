@@ -24,3 +24,6 @@ affinity: {}
 
 # -- The replica count for Deployment.
 replicas: 1
+
+# -- Change `hostNetwork` to `true` if you want to deploy in a kind cluster.
+hostNetwork: false
