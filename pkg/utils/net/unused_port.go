@@ -20,17 +20,21 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 
 	"sigs.k8s.io/kwok/pkg/utils/sets"
 )
 
 var (
-	errGetUnusedPort        = fmt.Errorf("unable to get an unused port")
+	errGetUnusedPort = fmt.Errorf("unable to get an unused port")
+	unusedPortSync   sync.Mutex
 	lastUsedPort     uint32 = 32767
 )
 
 // GetUnusedPort returns an unused port on the local machine.
 func GetUnusedPort(ctx context.Context, used sets.Sets[uint32]) (uint32, error) {
+	unusedPortSync.Lock()
+	defer unusedPortSync.Unlock()
 	for lastUsedPort > 10000 && ctx.Err() == nil {
 		lastUsedPort--
 		if used.Has(lastUsedPort) {
