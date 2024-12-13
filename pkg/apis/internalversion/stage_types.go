@@ -163,13 +163,19 @@ type StageSelector struct {
 	// operator is "In", and the values array contains only "value". The requirements are ANDed.
 	MatchAnnotations map[string]string
 	// MatchExpressions is a list of label selector requirements. The requirements are ANDed.
-	MatchExpressions []SelectorRequirement
+	MatchExpressions []SelectorExpression
 }
 
-// SelectorRequirement is a resource selector requirement is a selector that contains values, a key,
+// SelectorExpression is a resource selector expression is a set of requirements that must be true for a match.
+type SelectorExpression struct {
+	*ExpressionCEL
+	*SelectorJQ
+}
+
+// SelectorJQ is a resource selector requirement is a selector that contains values, a key,
 // and an operator that relates the key and values.
-type SelectorRequirement struct {
-	// The name of the scope that the selector applies to.
+type SelectorJQ struct {
+	// Key represents the expression which will be evaluated by JQ.
 	Key string
 	// Represents a scope's relationship to a set of values.
 	Operator SelectorOperator
