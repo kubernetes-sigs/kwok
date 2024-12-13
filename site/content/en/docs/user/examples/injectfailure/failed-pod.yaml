@@ -9,8 +9,8 @@ metadata:
     pod-init-container-running-failed.stage.kwok.x-k8s.io/reason: nccl-test-failed
     pod-init-container-running-failed.stage.kwok.x-k8s.io/message: "nccl test failed"
     pod-init-container-running-failed.stage.kwok.x-k8s.io/exit-code: "3"
-    pod-init-container-running-failed.stage.kwok.x-k8s.io/delay: "1000"
-    pod-init-container-running-failed.stage.kwok.x-k8s.io/jitter-delay: "5000"
+    pod-init-container-running-failed.stage.kwok.x-k8s.io/delay: "5s"
+    pod-init-container-running-failed.stage.kwok.x-k8s.io/jitter-delay: "5s"
 spec:
   affinity:
     nodeAffinity:
