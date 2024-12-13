@@ -43,4 +43,6 @@ type Log struct {
 	LogsFile string
 	// Follow up if true
 	Follow bool
+	// Mapping is mapping to target
+	Mapping *MappingTarget
 }
