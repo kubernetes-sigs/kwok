@@ -57,3 +57,4 @@ spec:
             startedAt: {{ $now | Quote }}
       {{ end }}
       phase: Running
+      startTime: {{ $now | Quote }}

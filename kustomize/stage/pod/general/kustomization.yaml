@@ -6,5 +6,4 @@ resources:
 - pod-init-container-completed.yaml
 - pod-ready.yaml
 - pod-complete.yaml
-- pod-remove-finalizer.yaml
 - pod-delete.yaml
