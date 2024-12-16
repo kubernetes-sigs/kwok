@@ -110,6 +110,12 @@ var configHandlers = map[string]configHandler{
 		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalKwokctlResource),
 		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1alpha1KwokctlResource),
 	},
+	configv1alpha1.KwokctlComponentKind: {
+		Unmarshal:        unmarshalConfig[*configv1alpha1.KwokctlComponent],
+		Marshal:          marshalConfig,
+		MutateToInternal: mutateToInternalConfig(internalversion.ConvertToInternalKwokctlComponent),
+		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1alpha1KwokctlComponent),
+	},
 	v1alpha1.StageKind: {
 		Unmarshal:        unmarshalConfig[*v1alpha1.Stage],
 		Marshal:          marshalConfig,

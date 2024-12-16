@@ -1,0 +1,54 @@
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokctlComponent
+metadata:
+  name: dashboard
+parameters:
+  image: ""
+  binary: ""
+  version: "2.7.0"
+  bindAddress: "0.0.0.0"
+  port: 8000
+template: |-
+  {{ $version :=
+    ( or
+      ( env "KWOK_DASHBOARD_VERSION" )
+      .version
+    )
+  }}
+  {{ $image :=
+    ( or 
+      .image
+      ( env "KWOK_DASHBOARD_IMAGE" )
+      ( join
+        "" 
+        ( list 
+          ( or
+            ( env "KWOK_DASHBOARD_IMAGE_PREFIX" )
+            "docker.io/kubernetesui"
+          ) 
+          "/dashboard:v"
+          $version
+        )
+      )
+    )
+  }}
+  image: {{ $image }}
+  binary: {{ .binary }}
+  links:
+  - kube-apiserver
+  ports:
+  - name: http
+    port: {{ .port }}
+    hostPort: {{ .port }}
+    protocol: TCP
+  args:
+  - --insecure-bind-address={{ .bindAddress }}
+  - --insecure-port={{ .port }}
+  - --bind-address=127.0.0.1
+  - --port=0
+  - --enable-insecure-login
+  - --enable-skip-login
+  - --disable-settings-authorizer
+  - --metrics-provider=none
+  - --system-banner=Welcome to {{ ClusterName }}
+  - --kubeconfig={{ Kubeconfig }}
