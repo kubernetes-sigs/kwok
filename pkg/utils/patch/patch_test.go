@@ -94,6 +94,44 @@ func TestStrategicMerge(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "test3",
+			args: args[testStruct]{
+				original: testStruct{
+					A: "a",
+					C: []testStructItem{
+						{
+							A: "a",
+						},
+					},
+				},
+				patch: testStruct{
+					B: 1,
+					C: []testStructItem{
+						{
+							A: "b",
+							B: 1,
+						},
+						{
+							A: "a",
+						},
+					},
+				},
+			},
+			wantResult: testStruct{
+				A: "a",
+				B: 1,
+				C: []testStructItem{
+					{
+						A: "b",
+						B: 1,
+					},
+					{
+						A: "a",
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -104,6 +142,66 @@ func TestStrategicMerge(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotResult, tt.wantResult) {
 				t.Errorf("StrategicMerge() gotResult = %v, want %v", gotResult, tt.wantResult)
+			}
+		})
+	}
+}
+
+func TestStrategicMergePatch(t *testing.T) {
+	type args[T any] struct {
+		original  T
+		patchData []byte
+	}
+	type testCase[T any] struct {
+		name       string
+		args       args[T]
+		wantResult T
+		wantErr    bool
+	}
+	tests := []testCase[testStruct]{
+		{
+			name: "test1",
+			args: args[testStruct]{
+				original: testStruct{
+					A: "a",
+				},
+				patchData: []byte(`{"B":1}`),
+			},
+			wantResult: testStruct{
+				A: "a",
+				B: 1,
+			},
+		},
+		{
+			name: "test2",
+			args: args[testStruct]{
+				original: testStruct{
+					A: "b",
+					B: 2,
+				},
+				patchData: []byte(`{"C":[{"A":"c","B":3}]}`),
+			},
+			wantResult: testStruct{
+				A: "b",
+				B: 2,
+				C: []testStructItem{
+					{
+						A: "c",
+						B: 3,
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult, err := StrategicMergePatch(tt.args.original, tt.args.patchData)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("StrategicMergePatch() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotResult, tt.wantResult) {
+				t.Errorf("StrategicMergePatch() gotResult = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
 	}
