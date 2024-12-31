@@ -3,6 +3,26 @@ entries:
   kwok:
   - apiVersion: v2
     appVersion: v0.6.1
+    created: "2024-12-31T07:26:30.289099405Z"
+    description: KWOK (Kubernetes WithOut Kubelet)
+    digest: 41fabea2d0def7fb3bfe40bb9d7097ed7a9ee2da7499af0d6c3c0ebade930d43
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    maintainers:
+    - email: wzshiming@hotmail.com
+      name: wzshiming
+    name: kwok
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/kubernetes-sigs/kwok/releases/download/v0.6.1/kwok-chart-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: v0.6.1
     created: "2024-10-29T11:32:11.305786039Z"
     description: KWOK (Kubernetes WithOut Kubelet)
     digest: 8b0de438da261a98535ac200d0db2610bbbe955deae061316f36e9196dd8af40
@@ -189,4 +209,4 @@ entries:
     urls:
     - https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/kwok-stage-fast-chart-0.0.1.tgz
     version: 0.0.1
-generated: "2024-10-29T11:32:11.305153951Z"
+generated: "2024-12-31T07:26:30.288472967Z"
