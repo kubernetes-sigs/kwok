@@ -27,9 +27,6 @@ spec:
       type: Normal
       reason: Created
       message: Created container
-    finalizers:
-      add:
-      - value: 'kwok.x-k8s.io/fake'
     statusTemplate: |
       {{ $now := Now }}
 
