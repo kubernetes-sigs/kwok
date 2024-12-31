@@ -32,6 +32,8 @@ import (
 	oteltrace "go.opentelemetry.io/otel/trace"
 	corev1 "k8s.io/api/core/v1"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
@@ -54,6 +56,8 @@ type Server struct {
 	ctx context.Context
 
 	typedKwokClient versioned.Interface
+	typedClient     kubernetes.Interface
+	restConfig      *rest.Config
 
 	enableCRDs []string
 
@@ -97,7 +101,10 @@ type DataSource interface {
 // Config holds configurations needed by the server handlers.
 type Config struct {
 	TypedKwokClient versioned.Interface
-	EnableCRDs      []string
+	TypedClient     kubernetes.Interface
+	RestConfig      *rest.Config
+
+	EnableCRDs []string
 
 	ClusterPortForwards   []*internalversion.ClusterPortForward
 	PortForwards          []*internalversion.PortForward
@@ -122,6 +129,8 @@ func NewServer(conf Config) (*Server, error) {
 
 	s := &Server{
 		typedKwokClient:       conf.TypedKwokClient,
+		typedClient:           conf.TypedClient,
+		restConfig:            conf.RestConfig,
 		enableCRDs:            conf.EnableCRDs,
 		restfulCont:           container,
 		idleTimeout:           1 * time.Hour,
