@@ -19,6 +19,7 @@ package gotpl
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +36,15 @@ var (
 	// genericFuncs is generic template functions.
 	genericFuncs = sprig.TxtFuncMap()
 )
+
+func init() {
+	genericFuncs["GOOS"] = func() string {
+		return runtime.GOOS
+	}
+	genericFuncs["GOARCH"] = func() string {
+		return runtime.GOARCH
+	}
+}
 
 var (
 	startTime = time.Now().Format(time.RFC3339Nano)
