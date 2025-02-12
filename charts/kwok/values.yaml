@@ -27,3 +27,22 @@ replicas: 1
 
 # -- Change `hostNetwork` to `true` if you want to deploy in a kind cluster.
 hostNetwork: false
+tolerations:
+- operator: Exists
+  effect: NoSchedule
+  key: node-role.kubernetes.io/control-plane
+- operator: Exists
+  effect: NoSchedule
+  key: node-role.kubernetes.io/master
+volumes: []
+env:
+- name: POD_IP
+  valueFrom:
+    fieldRef:
+      fieldPath: status.podIP
+- name: HOST_IP
+  valueFrom:
+    fieldRef:
+      fieldPath: status.hostIP
+volumeMounts: []
+enableDeployment: true
