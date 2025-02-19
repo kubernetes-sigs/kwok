@@ -36,6 +36,11 @@ The following table lists the configurable parameters of the kwok chart and thei
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
+| enableDeployment | bool | `true` |  |
+| env[0].name | string | `"POD_IP"` |  |
+| env[0].valueFrom.fieldRef.fieldPath | string | `"status.podIP"` |  |
+| env[1].name | string | `"HOST_IP"` |  |
+| env[1].valueFrom.fieldRef.fieldPath | string | `"status.hostIP"` |  |
 | fullnameOverride | string | `"kwok-controller"` | Override the `fullname` of the chart. |
 | hostNetwork | bool | `false` | Change `hostNetwork` to `true` if you want to deploy in a kind cluster. |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy. |
@@ -48,3 +53,11 @@ The following table lists the configurable parameters of the kwok chart and thei
 | replicas | int | `1` | The replica count for Deployment. |
 | resources | object | `{}` |  |
 | securityContext | object | `{}` |  |
+| tolerations[0].effect | string | `"NoSchedule"` |  |
+| tolerations[0].key | string | `"node-role.kubernetes.io/control-plane"` |  |
+| tolerations[0].operator | string | `"Exists"` |  |
+| tolerations[1].effect | string | `"NoSchedule"` |  |
+| tolerations[1].key | string | `"node-role.kubernetes.io/master"` |  |
+| tolerations[1].operator | string | `"Exists"` |  |
+| volumeMounts | list | `[]` |  |
+| volumes | list | `[]` |  |

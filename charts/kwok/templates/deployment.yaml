@@ -1,3 +1,4 @@
+{{ if .Values.enableDeployment }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,14 +52,7 @@ spec:
         - --enable-crds=ResourceUsage
         - --enable-crds=ClusterResourceUsage
         env:
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: HOST_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
+          {{ toYaml .Values.env | nindent 10 }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         securityContext:
           {{- toYaml .Values.securityContext | nindent 10 }}
@@ -89,6 +83,8 @@ spec:
           initialDelaySeconds: 2
           periodSeconds: 10
           timeoutSeconds: 2
+        volumeMounts:
+          {{- toYaml .Values.volumeMounts | nindent 10 }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
       {{- with .Values.nodeSelector }}
@@ -104,3 +100,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       hostNetwork: {{ .Values.hostNetwork }}
+      volumes:
+        {{- toYaml .Values.volumes | nindent 8 }}
+{{ end }}
