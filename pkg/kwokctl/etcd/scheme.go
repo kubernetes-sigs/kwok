@@ -42,7 +42,7 @@ import (
 	certificatesv1alpha1 "k8s.io/api/certificates/v1alpha1"
 	certificatesv1beta1 "k8s.io/api/certificates/v1beta1"
 	coordinationv1 "k8s.io/api/coordination/v1"
-	coordinationv1alpha1 "k8s.io/api/coordination/v1alpha1"
+	coordinationv1alpha2 "k8s.io/api/coordination/v1alpha2"
 	coordinationv1beta1 "k8s.io/api/coordination/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -67,6 +67,7 @@ import (
 	rbacv1alpha1 "k8s.io/api/rbac/v1alpha1"
 	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	resourcev1alpha3 "k8s.io/api/resource/v1alpha3"
+	resourcev1beta1 "k8s.io/api/resource/v1beta1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	schedulingv1alpha1 "k8s.io/api/scheduling/v1alpha1"
 	schedulingv1beta1 "k8s.io/api/scheduling/v1beta1"
@@ -103,7 +104,7 @@ func AddToScheme(scheme *runtime.Scheme) {
 	_ = certificatesv1alpha1.AddToScheme(scheme)
 	_ = certificatesv1beta1.AddToScheme(scheme)
 	_ = coordinationv1.AddToScheme(scheme)
-	_ = coordinationv1alpha1.AddToScheme(scheme)
+	_ = coordinationv1alpha2.AddToScheme(scheme)
 	_ = coordinationv1beta1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
 	_ = discoveryv1.AddToScheme(scheme)
@@ -128,6 +129,7 @@ func AddToScheme(scheme *runtime.Scheme) {
 	_ = rbacv1alpha1.AddToScheme(scheme)
 	_ = rbacv1beta1.AddToScheme(scheme)
 	_ = resourcev1alpha3.AddToScheme(scheme)
+	_ = resourcev1beta1.AddToScheme(scheme)
 	_ = schedulingv1.AddToScheme(scheme)
 	_ = schedulingv1alpha1.AddToScheme(scheme)
 	_ = schedulingv1beta1.AddToScheme(scheme)

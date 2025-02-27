@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type ClusterResourceUsagesGetter interface {
 
 // ClusterResourceUsageInterface has methods to work with ClusterResourceUsage resources.
 type ClusterResourceUsageInterface interface {
-	Create(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.CreateOptions) (*v1alpha1.ClusterResourceUsage, error)
-	Update(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (*v1alpha1.ClusterResourceUsage, error)
+	Create(ctx context.Context, clusterResourceUsage *apisv1alpha1.ClusterResourceUsage, opts v1.CreateOptions) (*apisv1alpha1.ClusterResourceUsage, error)
+	Update(ctx context.Context, clusterResourceUsage *apisv1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (*apisv1alpha1.ClusterResourceUsage, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (*v1alpha1.ClusterResourceUsage, error)
+	UpdateStatus(ctx context.Context, clusterResourceUsage *apisv1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (*apisv1alpha1.ClusterResourceUsage, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ClusterResourceUsage, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ClusterResourceUsageList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apisv1alpha1.ClusterResourceUsage, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apisv1alpha1.ClusterResourceUsageList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterResourceUsage, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apisv1alpha1.ClusterResourceUsage, err error)
 	ClusterResourceUsageExpansion
 }
 
 // clusterResourceUsages implements ClusterResourceUsageInterface
 type clusterResourceUsages struct {
-	*gentype.ClientWithList[*v1alpha1.ClusterResourceUsage, *v1alpha1.ClusterResourceUsageList]
+	*gentype.ClientWithList[*apisv1alpha1.ClusterResourceUsage, *apisv1alpha1.ClusterResourceUsageList]
 }
 
 // newClusterResourceUsages returns a ClusterResourceUsages
 func newClusterResourceUsages(c *KwokV1alpha1Client) *clusterResourceUsages {
 	return &clusterResourceUsages{
-		gentype.NewClientWithList[*v1alpha1.ClusterResourceUsage, *v1alpha1.ClusterResourceUsageList](
+		gentype.NewClientWithList[*apisv1alpha1.ClusterResourceUsage, *apisv1alpha1.ClusterResourceUsageList](
 			"clusterresourceusages",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1alpha1.ClusterResourceUsage { return &v1alpha1.ClusterResourceUsage{} },
-			func() *v1alpha1.ClusterResourceUsageList { return &v1alpha1.ClusterResourceUsageList{} }),
+			func() *apisv1alpha1.ClusterResourceUsage { return &apisv1alpha1.ClusterResourceUsage{} },
+			func() *apisv1alpha1.ClusterResourceUsageList { return &apisv1alpha1.ClusterResourceUsageList{} },
+		),
 	}
 }

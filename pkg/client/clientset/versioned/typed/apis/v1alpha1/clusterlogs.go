@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type ClusterLogsGetter interface {
 
 // ClusterLogsInterface has methods to work with ClusterLogs resources.
 type ClusterLogsInterface interface {
-	Create(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.CreateOptions) (*v1alpha1.ClusterLogs, error)
-	Update(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.UpdateOptions) (*v1alpha1.ClusterLogs, error)
+	Create(ctx context.Context, clusterLogs *apisv1alpha1.ClusterLogs, opts v1.CreateOptions) (*apisv1alpha1.ClusterLogs, error)
+	Update(ctx context.Context, clusterLogs *apisv1alpha1.ClusterLogs, opts v1.UpdateOptions) (*apisv1alpha1.ClusterLogs, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, clusterLogs *v1alpha1.ClusterLogs, opts v1.UpdateOptions) (*v1alpha1.ClusterLogs, error)
+	UpdateStatus(ctx context.Context, clusterLogs *apisv1alpha1.ClusterLogs, opts v1.UpdateOptions) (*apisv1alpha1.ClusterLogs, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ClusterLogs, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ClusterLogsList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apisv1alpha1.ClusterLogs, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apisv1alpha1.ClusterLogsList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterLogs, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apisv1alpha1.ClusterLogs, err error)
 	ClusterLogsExpansion
 }
 
 // clusterLogs implements ClusterLogsInterface
 type clusterLogs struct {
-	*gentype.ClientWithList[*v1alpha1.ClusterLogs, *v1alpha1.ClusterLogsList]
+	*gentype.ClientWithList[*apisv1alpha1.ClusterLogs, *apisv1alpha1.ClusterLogsList]
 }
 
 // newClusterLogs returns a ClusterLogs
 func newClusterLogs(c *KwokV1alpha1Client) *clusterLogs {
 	return &clusterLogs{
-		gentype.NewClientWithList[*v1alpha1.ClusterLogs, *v1alpha1.ClusterLogsList](
+		gentype.NewClientWithList[*apisv1alpha1.ClusterLogs, *apisv1alpha1.ClusterLogsList](
 			"clusterlogs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1alpha1.ClusterLogs { return &v1alpha1.ClusterLogs{} },
-			func() *v1alpha1.ClusterLogsList { return &v1alpha1.ClusterLogsList{} }),
+			func() *apisv1alpha1.ClusterLogs { return &apisv1alpha1.ClusterLogs{} },
+			func() *apisv1alpha1.ClusterLogsList { return &apisv1alpha1.ClusterLogsList{} },
+		),
 	}
 }

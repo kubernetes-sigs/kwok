@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type ResourceUsagesGetter interface {
 
 // ResourceUsageInterface has methods to work with ResourceUsage resources.
 type ResourceUsageInterface interface {
-	Create(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.CreateOptions) (*v1alpha1.ResourceUsage, error)
-	Update(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (*v1alpha1.ResourceUsage, error)
+	Create(ctx context.Context, resourceUsage *apisv1alpha1.ResourceUsage, opts v1.CreateOptions) (*apisv1alpha1.ResourceUsage, error)
+	Update(ctx context.Context, resourceUsage *apisv1alpha1.ResourceUsage, opts v1.UpdateOptions) (*apisv1alpha1.ResourceUsage, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (*v1alpha1.ResourceUsage, error)
+	UpdateStatus(ctx context.Context, resourceUsage *apisv1alpha1.ResourceUsage, opts v1.UpdateOptions) (*apisv1alpha1.ResourceUsage, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ResourceUsage, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ResourceUsageList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apisv1alpha1.ResourceUsage, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apisv1alpha1.ResourceUsageList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ResourceUsage, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apisv1alpha1.ResourceUsage, err error)
 	ResourceUsageExpansion
 }
 
 // resourceUsages implements ResourceUsageInterface
 type resourceUsages struct {
-	*gentype.ClientWithList[*v1alpha1.ResourceUsage, *v1alpha1.ResourceUsageList]
+	*gentype.ClientWithList[*apisv1alpha1.ResourceUsage, *apisv1alpha1.ResourceUsageList]
 }
 
 // newResourceUsages returns a ResourceUsages
 func newResourceUsages(c *KwokV1alpha1Client, namespace string) *resourceUsages {
 	return &resourceUsages{
-		gentype.NewClientWithList[*v1alpha1.ResourceUsage, *v1alpha1.ResourceUsageList](
+		gentype.NewClientWithList[*apisv1alpha1.ResourceUsage, *apisv1alpha1.ResourceUsageList](
 			"resourceusages",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.ResourceUsage { return &v1alpha1.ResourceUsage{} },
-			func() *v1alpha1.ResourceUsageList { return &v1alpha1.ResourceUsageList{} }),
+			func() *apisv1alpha1.ResourceUsage { return &apisv1alpha1.ResourceUsage{} },
+			func() *apisv1alpha1.ResourceUsageList { return &apisv1alpha1.ResourceUsageList{} },
+		),
 	}
 }

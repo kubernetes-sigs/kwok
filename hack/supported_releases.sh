@@ -88,9 +88,6 @@ function main() {
   fi
 
   echo "${out}" >"${record}"
-
-  # Update feature gate data
-  "${ROOT_DIR}/pkg/kwokctl/k8s/feature_gates_data.sh" "$(echo "${out}" | head -n 1 | awk -F. '{print $2}')"
 }
 
 main
