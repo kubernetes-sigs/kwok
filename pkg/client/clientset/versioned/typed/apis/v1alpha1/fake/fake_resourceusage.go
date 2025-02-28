@@ -19,129 +19,34 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 )
 
-// FakeResourceUsages implements ResourceUsageInterface
-type FakeResourceUsages struct {
+// fakeResourceUsages implements ResourceUsageInterface
+type fakeResourceUsages struct {
+	*gentype.FakeClientWithList[*v1alpha1.ResourceUsage, *v1alpha1.ResourceUsageList]
 	Fake *FakeKwokV1alpha1
-	ns   string
 }
 
-var resourceusagesResource = v1alpha1.SchemeGroupVersion.WithResource("resourceusages")
-
-var resourceusagesKind = v1alpha1.SchemeGroupVersion.WithKind("ResourceUsage")
-
-// Get takes name of the resourceUsage, and returns the corresponding resourceUsage object, and an error if there is any.
-func (c *FakeResourceUsages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ResourceUsage, err error) {
-	emptyResult := &v1alpha1.ResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(resourceusagesResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeResourceUsages(fake *FakeKwokV1alpha1, namespace string) apisv1alpha1.ResourceUsageInterface {
+	return &fakeResourceUsages{
+		gentype.NewFakeClientWithList[*v1alpha1.ResourceUsage, *v1alpha1.ResourceUsageList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("resourceusages"),
+			v1alpha1.SchemeGroupVersion.WithKind("ResourceUsage"),
+			func() *v1alpha1.ResourceUsage { return &v1alpha1.ResourceUsage{} },
+			func() *v1alpha1.ResourceUsageList { return &v1alpha1.ResourceUsageList{} },
+			func(dst, src *v1alpha1.ResourceUsageList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.ResourceUsageList) []*v1alpha1.ResourceUsage {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.ResourceUsageList, items []*v1alpha1.ResourceUsage) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.ResourceUsage), err
-}
-
-// List takes label and field selectors, and returns the list of ResourceUsages that match those selectors.
-func (c *FakeResourceUsages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ResourceUsageList, err error) {
-	emptyResult := &v1alpha1.ResourceUsageList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(resourceusagesResource, resourceusagesKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.ResourceUsageList{ListMeta: obj.(*v1alpha1.ResourceUsageList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ResourceUsageList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested resourceUsages.
-func (c *FakeResourceUsages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(resourceusagesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a resourceUsage and creates it.  Returns the server's representation of the resourceUsage, and an error, if there is any.
-func (c *FakeResourceUsages) Create(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.CreateOptions) (result *v1alpha1.ResourceUsage, err error) {
-	emptyResult := &v1alpha1.ResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(resourceusagesResource, c.ns, resourceUsage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ResourceUsage), err
-}
-
-// Update takes the representation of a resourceUsage and updates it. Returns the server's representation of the resourceUsage, and an error, if there is any.
-func (c *FakeResourceUsages) Update(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ResourceUsage, err error) {
-	emptyResult := &v1alpha1.ResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(resourceusagesResource, c.ns, resourceUsage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ResourceUsage), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeResourceUsages) UpdateStatus(ctx context.Context, resourceUsage *v1alpha1.ResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ResourceUsage, err error) {
-	emptyResult := &v1alpha1.ResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(resourceusagesResource, "status", c.ns, resourceUsage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ResourceUsage), err
-}
-
-// Delete takes name of the resourceUsage and deletes it. Returns an error if one occurs.
-func (c *FakeResourceUsages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(resourceusagesResource, c.ns, name, opts), &v1alpha1.ResourceUsage{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeResourceUsages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(resourceusagesResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.ResourceUsageList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched resourceUsage.
-func (c *FakeResourceUsages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ResourceUsage, err error) {
-	emptyResult := &v1alpha1.ResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(resourceusagesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ResourceUsage), err
 }

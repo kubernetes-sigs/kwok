@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type ClusterAttachesGetter interface {
 
 // ClusterAttachInterface has methods to work with ClusterAttach resources.
 type ClusterAttachInterface interface {
-	Create(ctx context.Context, clusterAttach *v1alpha1.ClusterAttach, opts v1.CreateOptions) (*v1alpha1.ClusterAttach, error)
-	Update(ctx context.Context, clusterAttach *v1alpha1.ClusterAttach, opts v1.UpdateOptions) (*v1alpha1.ClusterAttach, error)
+	Create(ctx context.Context, clusterAttach *apisv1alpha1.ClusterAttach, opts v1.CreateOptions) (*apisv1alpha1.ClusterAttach, error)
+	Update(ctx context.Context, clusterAttach *apisv1alpha1.ClusterAttach, opts v1.UpdateOptions) (*apisv1alpha1.ClusterAttach, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, clusterAttach *v1alpha1.ClusterAttach, opts v1.UpdateOptions) (*v1alpha1.ClusterAttach, error)
+	UpdateStatus(ctx context.Context, clusterAttach *apisv1alpha1.ClusterAttach, opts v1.UpdateOptions) (*apisv1alpha1.ClusterAttach, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ClusterAttach, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ClusterAttachList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apisv1alpha1.ClusterAttach, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apisv1alpha1.ClusterAttachList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterAttach, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apisv1alpha1.ClusterAttach, err error)
 	ClusterAttachExpansion
 }
 
 // clusterAttaches implements ClusterAttachInterface
 type clusterAttaches struct {
-	*gentype.ClientWithList[*v1alpha1.ClusterAttach, *v1alpha1.ClusterAttachList]
+	*gentype.ClientWithList[*apisv1alpha1.ClusterAttach, *apisv1alpha1.ClusterAttachList]
 }
 
 // newClusterAttaches returns a ClusterAttaches
 func newClusterAttaches(c *KwokV1alpha1Client) *clusterAttaches {
 	return &clusterAttaches{
-		gentype.NewClientWithList[*v1alpha1.ClusterAttach, *v1alpha1.ClusterAttachList](
+		gentype.NewClientWithList[*apisv1alpha1.ClusterAttach, *apisv1alpha1.ClusterAttachList](
 			"clusterattaches",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1alpha1.ClusterAttach { return &v1alpha1.ClusterAttach{} },
-			func() *v1alpha1.ClusterAttachList { return &v1alpha1.ClusterAttachList{} }),
+			func() *apisv1alpha1.ClusterAttach { return &apisv1alpha1.ClusterAttach{} },
+			func() *apisv1alpha1.ClusterAttachList { return &apisv1alpha1.ClusterAttachList{} },
+		),
 	}
 }

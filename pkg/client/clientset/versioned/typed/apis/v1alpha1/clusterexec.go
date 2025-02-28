@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type ClusterExecsGetter interface {
 
 // ClusterExecInterface has methods to work with ClusterExec resources.
 type ClusterExecInterface interface {
-	Create(ctx context.Context, clusterExec *v1alpha1.ClusterExec, opts v1.CreateOptions) (*v1alpha1.ClusterExec, error)
-	Update(ctx context.Context, clusterExec *v1alpha1.ClusterExec, opts v1.UpdateOptions) (*v1alpha1.ClusterExec, error)
+	Create(ctx context.Context, clusterExec *apisv1alpha1.ClusterExec, opts v1.CreateOptions) (*apisv1alpha1.ClusterExec, error)
+	Update(ctx context.Context, clusterExec *apisv1alpha1.ClusterExec, opts v1.UpdateOptions) (*apisv1alpha1.ClusterExec, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, clusterExec *v1alpha1.ClusterExec, opts v1.UpdateOptions) (*v1alpha1.ClusterExec, error)
+	UpdateStatus(ctx context.Context, clusterExec *apisv1alpha1.ClusterExec, opts v1.UpdateOptions) (*apisv1alpha1.ClusterExec, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ClusterExec, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ClusterExecList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apisv1alpha1.ClusterExec, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apisv1alpha1.ClusterExecList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterExec, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apisv1alpha1.ClusterExec, err error)
 	ClusterExecExpansion
 }
 
 // clusterExecs implements ClusterExecInterface
 type clusterExecs struct {
-	*gentype.ClientWithList[*v1alpha1.ClusterExec, *v1alpha1.ClusterExecList]
+	*gentype.ClientWithList[*apisv1alpha1.ClusterExec, *apisv1alpha1.ClusterExecList]
 }
 
 // newClusterExecs returns a ClusterExecs
 func newClusterExecs(c *KwokV1alpha1Client) *clusterExecs {
 	return &clusterExecs{
-		gentype.NewClientWithList[*v1alpha1.ClusterExec, *v1alpha1.ClusterExecList](
+		gentype.NewClientWithList[*apisv1alpha1.ClusterExec, *apisv1alpha1.ClusterExecList](
 			"clusterexecs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1alpha1.ClusterExec { return &v1alpha1.ClusterExec{} },
-			func() *v1alpha1.ClusterExecList { return &v1alpha1.ClusterExecList{} }),
+			func() *apisv1alpha1.ClusterExec { return &apisv1alpha1.ClusterExec{} },
+			func() *apisv1alpha1.ClusterExecList { return &apisv1alpha1.ClusterExecList{} },
+		),
 	}
 }

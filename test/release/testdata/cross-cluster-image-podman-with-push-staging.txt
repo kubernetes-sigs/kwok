@@ -1,6 +1,6 @@
-podman build --build-arg=kube_version=v1.31.2 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.31.2 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
-podman push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.31.2
-podman build --build-arg=kube_version=v1.30.6 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.30.6 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
-podman push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.30.6
-podman build --build-arg=kube_version=v1.29.10 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.29.10 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
-podman push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.29.10
+podman build --build-arg=kube_version=v1.32.2 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.32.2 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
+podman push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.32.2
+podman build --build-arg=kube_version=v1.31.6 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.31.6 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
+podman push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.31.6
+podman build --build-arg=kube_version=v1.30.10 --tag=image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.30.10 --platform=linux/amd64 --platform=linux/arm64 -f ./images/cluster/Dockerfile .
+podman push --platform=linux/amd64 --platform=linux/arm64 image-prefix/cluster:staging-prefix-<VERSION>-k8s.v1.30.10

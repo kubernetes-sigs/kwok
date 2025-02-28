@@ -29,51 +29,51 @@ type FakeKwokV1alpha1 struct {
 }
 
 func (c *FakeKwokV1alpha1) Attaches(namespace string) v1alpha1.AttachInterface {
-	return &FakeAttaches{c, namespace}
+	return newFakeAttaches(c, namespace)
 }
 
 func (c *FakeKwokV1alpha1) ClusterAttaches() v1alpha1.ClusterAttachInterface {
-	return &FakeClusterAttaches{c}
+	return newFakeClusterAttaches(c)
 }
 
 func (c *FakeKwokV1alpha1) ClusterExecs() v1alpha1.ClusterExecInterface {
-	return &FakeClusterExecs{c}
+	return newFakeClusterExecs(c)
 }
 
 func (c *FakeKwokV1alpha1) ClusterLogs() v1alpha1.ClusterLogsInterface {
-	return &FakeClusterLogs{c}
+	return newFakeClusterLogs(c)
 }
 
 func (c *FakeKwokV1alpha1) ClusterPortForwards() v1alpha1.ClusterPortForwardInterface {
-	return &FakeClusterPortForwards{c}
+	return newFakeClusterPortForwards(c)
 }
 
 func (c *FakeKwokV1alpha1) ClusterResourceUsages() v1alpha1.ClusterResourceUsageInterface {
-	return &FakeClusterResourceUsages{c}
+	return newFakeClusterResourceUsages(c)
 }
 
 func (c *FakeKwokV1alpha1) Execs(namespace string) v1alpha1.ExecInterface {
-	return &FakeExecs{c, namespace}
+	return newFakeExecs(c, namespace)
 }
 
 func (c *FakeKwokV1alpha1) Logs(namespace string) v1alpha1.LogsInterface {
-	return &FakeLogs{c, namespace}
+	return newFakeLogs(c, namespace)
 }
 
 func (c *FakeKwokV1alpha1) Metrics() v1alpha1.MetricInterface {
-	return &FakeMetrics{c}
+	return newFakeMetrics(c)
 }
 
 func (c *FakeKwokV1alpha1) PortForwards(namespace string) v1alpha1.PortForwardInterface {
-	return &FakePortForwards{c, namespace}
+	return newFakePortForwards(c, namespace)
 }
 
 func (c *FakeKwokV1alpha1) ResourceUsages(namespace string) v1alpha1.ResourceUsageInterface {
-	return &FakeResourceUsages{c, namespace}
+	return newFakeResourceUsages(c, namespace)
 }
 
 func (c *FakeKwokV1alpha1) Stages() v1alpha1.StageInterface {
-	return &FakeStages{c}
+	return newFakeStages(c)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

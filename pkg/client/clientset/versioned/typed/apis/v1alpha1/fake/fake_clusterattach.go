@@ -19,120 +19,34 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 )
 
-// FakeClusterAttaches implements ClusterAttachInterface
-type FakeClusterAttaches struct {
+// fakeClusterAttaches implements ClusterAttachInterface
+type fakeClusterAttaches struct {
+	*gentype.FakeClientWithList[*v1alpha1.ClusterAttach, *v1alpha1.ClusterAttachList]
 	Fake *FakeKwokV1alpha1
 }
 
-var clusterattachesResource = v1alpha1.SchemeGroupVersion.WithResource("clusterattaches")
-
-var clusterattachesKind = v1alpha1.SchemeGroupVersion.WithKind("ClusterAttach")
-
-// Get takes name of the clusterAttach, and returns the corresponding clusterAttach object, and an error if there is any.
-func (c *FakeClusterAttaches) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ClusterAttach, err error) {
-	emptyResult := &v1alpha1.ClusterAttach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootGetActionWithOptions(clusterattachesResource, name, options), emptyResult)
-	if obj == nil {
-		return emptyResult, err
+func newFakeClusterAttaches(fake *FakeKwokV1alpha1) apisv1alpha1.ClusterAttachInterface {
+	return &fakeClusterAttaches{
+		gentype.NewFakeClientWithList[*v1alpha1.ClusterAttach, *v1alpha1.ClusterAttachList](
+			fake.Fake,
+			"",
+			v1alpha1.SchemeGroupVersion.WithResource("clusterattaches"),
+			v1alpha1.SchemeGroupVersion.WithKind("ClusterAttach"),
+			func() *v1alpha1.ClusterAttach { return &v1alpha1.ClusterAttach{} },
+			func() *v1alpha1.ClusterAttachList { return &v1alpha1.ClusterAttachList{} },
+			func(dst, src *v1alpha1.ClusterAttachList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.ClusterAttachList) []*v1alpha1.ClusterAttach {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.ClusterAttachList, items []*v1alpha1.ClusterAttach) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.ClusterAttach), err
-}
-
-// List takes label and field selectors, and returns the list of ClusterAttaches that match those selectors.
-func (c *FakeClusterAttaches) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ClusterAttachList, err error) {
-	emptyResult := &v1alpha1.ClusterAttachList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootListActionWithOptions(clusterattachesResource, clusterattachesKind, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.ClusterAttachList{ListMeta: obj.(*v1alpha1.ClusterAttachList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ClusterAttachList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested clusterAttaches.
-func (c *FakeClusterAttaches) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewRootWatchActionWithOptions(clusterattachesResource, opts))
-}
-
-// Create takes the representation of a clusterAttach and creates it.  Returns the server's representation of the clusterAttach, and an error, if there is any.
-func (c *FakeClusterAttaches) Create(ctx context.Context, clusterAttach *v1alpha1.ClusterAttach, opts v1.CreateOptions) (result *v1alpha1.ClusterAttach, err error) {
-	emptyResult := &v1alpha1.ClusterAttach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateActionWithOptions(clusterattachesResource, clusterAttach, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ClusterAttach), err
-}
-
-// Update takes the representation of a clusterAttach and updates it. Returns the server's representation of the clusterAttach, and an error, if there is any.
-func (c *FakeClusterAttaches) Update(ctx context.Context, clusterAttach *v1alpha1.ClusterAttach, opts v1.UpdateOptions) (result *v1alpha1.ClusterAttach, err error) {
-	emptyResult := &v1alpha1.ClusterAttach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateActionWithOptions(clusterattachesResource, clusterAttach, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ClusterAttach), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeClusterAttaches) UpdateStatus(ctx context.Context, clusterAttach *v1alpha1.ClusterAttach, opts v1.UpdateOptions) (result *v1alpha1.ClusterAttach, err error) {
-	emptyResult := &v1alpha1.ClusterAttach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(clusterattachesResource, "status", clusterAttach, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ClusterAttach), err
-}
-
-// Delete takes name of the clusterAttach and deletes it. Returns an error if one occurs.
-func (c *FakeClusterAttaches) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteActionWithOptions(clusterattachesResource, name, opts), &v1alpha1.ClusterAttach{})
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeClusterAttaches) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionActionWithOptions(clusterattachesResource, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.ClusterAttachList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched clusterAttach.
-func (c *FakeClusterAttaches) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterAttach, err error) {
-	emptyResult := &v1alpha1.ClusterAttach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clusterattachesResource, name, pt, data, opts, subresources...), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ClusterAttach), err
 }

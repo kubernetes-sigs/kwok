@@ -19,129 +19,30 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 )
 
-// FakeExecs implements ExecInterface
-type FakeExecs struct {
+// fakeExecs implements ExecInterface
+type fakeExecs struct {
+	*gentype.FakeClientWithList[*v1alpha1.Exec, *v1alpha1.ExecList]
 	Fake *FakeKwokV1alpha1
-	ns   string
 }
 
-var execsResource = v1alpha1.SchemeGroupVersion.WithResource("execs")
-
-var execsKind = v1alpha1.SchemeGroupVersion.WithKind("Exec")
-
-// Get takes name of the exec, and returns the corresponding exec object, and an error if there is any.
-func (c *FakeExecs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Exec, err error) {
-	emptyResult := &v1alpha1.Exec{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(execsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeExecs(fake *FakeKwokV1alpha1, namespace string) apisv1alpha1.ExecInterface {
+	return &fakeExecs{
+		gentype.NewFakeClientWithList[*v1alpha1.Exec, *v1alpha1.ExecList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("execs"),
+			v1alpha1.SchemeGroupVersion.WithKind("Exec"),
+			func() *v1alpha1.Exec { return &v1alpha1.Exec{} },
+			func() *v1alpha1.ExecList { return &v1alpha1.ExecList{} },
+			func(dst, src *v1alpha1.ExecList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.ExecList) []*v1alpha1.Exec { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1alpha1.ExecList, items []*v1alpha1.Exec) { list.Items = gentype.FromPointerSlice(items) },
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.Exec), err
-}
-
-// List takes label and field selectors, and returns the list of Execs that match those selectors.
-func (c *FakeExecs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ExecList, err error) {
-	emptyResult := &v1alpha1.ExecList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(execsResource, execsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.ExecList{ListMeta: obj.(*v1alpha1.ExecList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ExecList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested execs.
-func (c *FakeExecs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(execsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a exec and creates it.  Returns the server's representation of the exec, and an error, if there is any.
-func (c *FakeExecs) Create(ctx context.Context, exec *v1alpha1.Exec, opts v1.CreateOptions) (result *v1alpha1.Exec, err error) {
-	emptyResult := &v1alpha1.Exec{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(execsResource, c.ns, exec, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Exec), err
-}
-
-// Update takes the representation of a exec and updates it. Returns the server's representation of the exec, and an error, if there is any.
-func (c *FakeExecs) Update(ctx context.Context, exec *v1alpha1.Exec, opts v1.UpdateOptions) (result *v1alpha1.Exec, err error) {
-	emptyResult := &v1alpha1.Exec{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(execsResource, c.ns, exec, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Exec), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeExecs) UpdateStatus(ctx context.Context, exec *v1alpha1.Exec, opts v1.UpdateOptions) (result *v1alpha1.Exec, err error) {
-	emptyResult := &v1alpha1.Exec{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(execsResource, "status", c.ns, exec, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Exec), err
-}
-
-// Delete takes name of the exec and deletes it. Returns an error if one occurs.
-func (c *FakeExecs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(execsResource, c.ns, name, opts), &v1alpha1.Exec{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeExecs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(execsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.ExecList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched exec.
-func (c *FakeExecs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Exec, err error) {
-	emptyResult := &v1alpha1.Exec{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(execsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Exec), err
 }

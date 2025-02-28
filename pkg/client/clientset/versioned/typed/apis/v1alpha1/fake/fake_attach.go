@@ -19,129 +19,32 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 )
 
-// FakeAttaches implements AttachInterface
-type FakeAttaches struct {
+// fakeAttaches implements AttachInterface
+type fakeAttaches struct {
+	*gentype.FakeClientWithList[*v1alpha1.Attach, *v1alpha1.AttachList]
 	Fake *FakeKwokV1alpha1
-	ns   string
 }
 
-var attachesResource = v1alpha1.SchemeGroupVersion.WithResource("attaches")
-
-var attachesKind = v1alpha1.SchemeGroupVersion.WithKind("Attach")
-
-// Get takes name of the attach, and returns the corresponding attach object, and an error if there is any.
-func (c *FakeAttaches) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Attach, err error) {
-	emptyResult := &v1alpha1.Attach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(attachesResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeAttaches(fake *FakeKwokV1alpha1, namespace string) apisv1alpha1.AttachInterface {
+	return &fakeAttaches{
+		gentype.NewFakeClientWithList[*v1alpha1.Attach, *v1alpha1.AttachList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("attaches"),
+			v1alpha1.SchemeGroupVersion.WithKind("Attach"),
+			func() *v1alpha1.Attach { return &v1alpha1.Attach{} },
+			func() *v1alpha1.AttachList { return &v1alpha1.AttachList{} },
+			func(dst, src *v1alpha1.AttachList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.AttachList) []*v1alpha1.Attach { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1alpha1.AttachList, items []*v1alpha1.Attach) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.Attach), err
-}
-
-// List takes label and field selectors, and returns the list of Attaches that match those selectors.
-func (c *FakeAttaches) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AttachList, err error) {
-	emptyResult := &v1alpha1.AttachList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(attachesResource, attachesKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.AttachList{ListMeta: obj.(*v1alpha1.AttachList).ListMeta}
-	for _, item := range obj.(*v1alpha1.AttachList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested attaches.
-func (c *FakeAttaches) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(attachesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a attach and creates it.  Returns the server's representation of the attach, and an error, if there is any.
-func (c *FakeAttaches) Create(ctx context.Context, attach *v1alpha1.Attach, opts v1.CreateOptions) (result *v1alpha1.Attach, err error) {
-	emptyResult := &v1alpha1.Attach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(attachesResource, c.ns, attach, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Attach), err
-}
-
-// Update takes the representation of a attach and updates it. Returns the server's representation of the attach, and an error, if there is any.
-func (c *FakeAttaches) Update(ctx context.Context, attach *v1alpha1.Attach, opts v1.UpdateOptions) (result *v1alpha1.Attach, err error) {
-	emptyResult := &v1alpha1.Attach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(attachesResource, c.ns, attach, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Attach), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeAttaches) UpdateStatus(ctx context.Context, attach *v1alpha1.Attach, opts v1.UpdateOptions) (result *v1alpha1.Attach, err error) {
-	emptyResult := &v1alpha1.Attach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(attachesResource, "status", c.ns, attach, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Attach), err
-}
-
-// Delete takes name of the attach and deletes it. Returns an error if one occurs.
-func (c *FakeAttaches) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(attachesResource, c.ns, name, opts), &v1alpha1.Attach{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeAttaches) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(attachesResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.AttachList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched attach.
-func (c *FakeAttaches) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Attach, err error) {
-	emptyResult := &v1alpha1.Attach{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(attachesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Attach), err
 }

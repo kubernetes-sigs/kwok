@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	scheme "sigs.k8s.io/kwok/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type MetricsGetter interface {
 
 // MetricInterface has methods to work with Metric resources.
 type MetricInterface interface {
-	Create(ctx context.Context, metric *v1alpha1.Metric, opts v1.CreateOptions) (*v1alpha1.Metric, error)
-	Update(ctx context.Context, metric *v1alpha1.Metric, opts v1.UpdateOptions) (*v1alpha1.Metric, error)
+	Create(ctx context.Context, metric *apisv1alpha1.Metric, opts v1.CreateOptions) (*apisv1alpha1.Metric, error)
+	Update(ctx context.Context, metric *apisv1alpha1.Metric, opts v1.UpdateOptions) (*apisv1alpha1.Metric, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, metric *v1alpha1.Metric, opts v1.UpdateOptions) (*v1alpha1.Metric, error)
+	UpdateStatus(ctx context.Context, metric *apisv1alpha1.Metric, opts v1.UpdateOptions) (*apisv1alpha1.Metric, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Metric, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.MetricList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apisv1alpha1.Metric, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apisv1alpha1.MetricList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Metric, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apisv1alpha1.Metric, err error)
 	MetricExpansion
 }
 
 // metrics implements MetricInterface
 type metrics struct {
-	*gentype.ClientWithList[*v1alpha1.Metric, *v1alpha1.MetricList]
+	*gentype.ClientWithList[*apisv1alpha1.Metric, *apisv1alpha1.MetricList]
 }
 
 // newMetrics returns a Metrics
 func newMetrics(c *KwokV1alpha1Client) *metrics {
 	return &metrics{
-		gentype.NewClientWithList[*v1alpha1.Metric, *v1alpha1.MetricList](
+		gentype.NewClientWithList[*apisv1alpha1.Metric, *apisv1alpha1.MetricList](
 			"metrics",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1alpha1.Metric { return &v1alpha1.Metric{} },
-			func() *v1alpha1.MetricList { return &v1alpha1.MetricList{} }),
+			func() *apisv1alpha1.Metric { return &apisv1alpha1.Metric{} },
+			func() *apisv1alpha1.MetricList { return &apisv1alpha1.MetricList{} },
+		),
 	}
 }

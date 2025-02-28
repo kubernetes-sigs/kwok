@@ -19,120 +19,34 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/kwok/pkg/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/kwok/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 )
 
-// FakeClusterResourceUsages implements ClusterResourceUsageInterface
-type FakeClusterResourceUsages struct {
+// fakeClusterResourceUsages implements ClusterResourceUsageInterface
+type fakeClusterResourceUsages struct {
+	*gentype.FakeClientWithList[*v1alpha1.ClusterResourceUsage, *v1alpha1.ClusterResourceUsageList]
 	Fake *FakeKwokV1alpha1
 }
 
-var clusterresourceusagesResource = v1alpha1.SchemeGroupVersion.WithResource("clusterresourceusages")
-
-var clusterresourceusagesKind = v1alpha1.SchemeGroupVersion.WithKind("ClusterResourceUsage")
-
-// Get takes name of the clusterResourceUsage, and returns the corresponding clusterResourceUsage object, and an error if there is any.
-func (c *FakeClusterResourceUsages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ClusterResourceUsage, err error) {
-	emptyResult := &v1alpha1.ClusterResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootGetActionWithOptions(clusterresourceusagesResource, name, options), emptyResult)
-	if obj == nil {
-		return emptyResult, err
+func newFakeClusterResourceUsages(fake *FakeKwokV1alpha1) apisv1alpha1.ClusterResourceUsageInterface {
+	return &fakeClusterResourceUsages{
+		gentype.NewFakeClientWithList[*v1alpha1.ClusterResourceUsage, *v1alpha1.ClusterResourceUsageList](
+			fake.Fake,
+			"",
+			v1alpha1.SchemeGroupVersion.WithResource("clusterresourceusages"),
+			v1alpha1.SchemeGroupVersion.WithKind("ClusterResourceUsage"),
+			func() *v1alpha1.ClusterResourceUsage { return &v1alpha1.ClusterResourceUsage{} },
+			func() *v1alpha1.ClusterResourceUsageList { return &v1alpha1.ClusterResourceUsageList{} },
+			func(dst, src *v1alpha1.ClusterResourceUsageList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.ClusterResourceUsageList) []*v1alpha1.ClusterResourceUsage {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.ClusterResourceUsageList, items []*v1alpha1.ClusterResourceUsage) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.ClusterResourceUsage), err
-}
-
-// List takes label and field selectors, and returns the list of ClusterResourceUsages that match those selectors.
-func (c *FakeClusterResourceUsages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ClusterResourceUsageList, err error) {
-	emptyResult := &v1alpha1.ClusterResourceUsageList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootListActionWithOptions(clusterresourceusagesResource, clusterresourceusagesKind, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.ClusterResourceUsageList{ListMeta: obj.(*v1alpha1.ClusterResourceUsageList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ClusterResourceUsageList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested clusterResourceUsages.
-func (c *FakeClusterResourceUsages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewRootWatchActionWithOptions(clusterresourceusagesResource, opts))
-}
-
-// Create takes the representation of a clusterResourceUsage and creates it.  Returns the server's representation of the clusterResourceUsage, and an error, if there is any.
-func (c *FakeClusterResourceUsages) Create(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.CreateOptions) (result *v1alpha1.ClusterResourceUsage, err error) {
-	emptyResult := &v1alpha1.ClusterResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateActionWithOptions(clusterresourceusagesResource, clusterResourceUsage, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ClusterResourceUsage), err
-}
-
-// Update takes the representation of a clusterResourceUsage and updates it. Returns the server's representation of the clusterResourceUsage, and an error, if there is any.
-func (c *FakeClusterResourceUsages) Update(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ClusterResourceUsage, err error) {
-	emptyResult := &v1alpha1.ClusterResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateActionWithOptions(clusterresourceusagesResource, clusterResourceUsage, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ClusterResourceUsage), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeClusterResourceUsages) UpdateStatus(ctx context.Context, clusterResourceUsage *v1alpha1.ClusterResourceUsage, opts v1.UpdateOptions) (result *v1alpha1.ClusterResourceUsage, err error) {
-	emptyResult := &v1alpha1.ClusterResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(clusterresourceusagesResource, "status", clusterResourceUsage, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ClusterResourceUsage), err
-}
-
-// Delete takes name of the clusterResourceUsage and deletes it. Returns an error if one occurs.
-func (c *FakeClusterResourceUsages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteActionWithOptions(clusterresourceusagesResource, name, opts), &v1alpha1.ClusterResourceUsage{})
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeClusterResourceUsages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionActionWithOptions(clusterresourceusagesResource, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.ClusterResourceUsageList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched clusterResourceUsage.
-func (c *FakeClusterResourceUsages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterResourceUsage, err error) {
-	emptyResult := &v1alpha1.ClusterResourceUsage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clusterresourceusagesResource, name, pt, data, opts, subresources...), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ClusterResourceUsage), err
 }
