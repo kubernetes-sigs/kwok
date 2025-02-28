@@ -95,6 +95,9 @@ type Controller struct {
 
 	podOnNodeManageQueue queue.Queue[string]
 	nodeManageQueue      queue.Queue[string]
+
+	podOnNodeManageQueueParallelism *queue.AdaptiveQueue[string]
+	nodeManageQueueParallelism      *queue.AdaptiveQueue[string]
 }
 
 // Config is the configuration for the controller
@@ -295,6 +298,7 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		c.nodeLeases.ReleaseHold(nodeName)
 	}
 
+	c.nodeManageQueueParallelism = queue.NewAdaptiveQueue(ctx, c.nodeManageQueue, c.nodeLeaseSyncWorker)
 	go c.nodeLeaseSyncWorker(ctx)
 
 	err = c.nodeLeases.Start(ctx)
@@ -307,7 +311,7 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName, ok := c.nodeManageQueue.GetOrWaitWithDone(ctx.Done())
+		nodeName, ok := c.nodeManageQueueParallelism.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
@@ -339,6 +343,7 @@ func (c *Controller) startStageController(ctx context.Context, ref internalversi
 			return fmt.Errorf("failed to init pod controller: %w", err)
 		}
 
+		c.podOnNodeManageQueueParallelism = queue.NewAdaptiveQueue(ctx, c.podOnNodeManageQueue, c.podsOnNodeSyncWorker)
 		go c.podsOnNodeSyncWorker(ctx)
 
 	case nodeRef:
@@ -559,7 +564,7 @@ func (c *Controller) Start(ctx context.Context) error {
 func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName, ok := c.podOnNodeManageQueue.GetOrWaitWithDone(ctx.Done())
+		nodeName, ok := c.podOnNodeManageQueueParallelism.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
