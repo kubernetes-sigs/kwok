@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
+	"k8s.io/client-go/kubernetes/scheme"
 	remotecommandclient "k8s.io/client-go/tools/remotecommand"
 	crilogs "k8s.io/cri-client/pkg/logs"
 	remotecommandserver "k8s.io/kubelet/pkg/cri/streaming/remotecommand"
@@ -48,6 +49,10 @@ func (s *Server) AttachContainer(ctx context.Context, name string, uid types.UID
 	attach, err := getPodAttach(s.attaches.Get(), s.clusterAttaches.Get(), podName, podNamespace, containerName)
 	if err != nil {
 		return err
+	}
+
+	if m := attach.Mapping; m != nil {
+		return s.attachMappingToContainer(ctx, m.Namespace, m.Name, m.Container, in, out, errOut, tty, resize)
 	}
 
 	var tailLines int64
@@ -119,4 +124,62 @@ func findAttachInAttaches(containerName string, attaches []internalversion.Attac
 		}
 	}
 	return defaultAttach, defaultAttach != nil
+}
+
+// attachMappingToContainer attaches to a container in a pod,
+// copying data between in/out/err and the container's stdin/stdout/stderr.
+func (s *Server) attachMappingToContainer(ctx context.Context, namespace, name, container string, in io.Reader, out, errOut io.WriteCloser, tty bool, resize <-chan remotecommandclient.TerminalSize) error {
+	req := s.typedClient.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(name).
+		Namespace(namespace).
+		SubResource("attach")
+
+	attachOptions := &corev1.PodAttachOptions{
+		Container: container,
+		TTY:       tty,
+		Stdin:     in != nil,
+		Stdout:    out != nil,
+		Stderr:    errOut != nil,
+	}
+
+	req.VersionedParams(attachOptions, scheme.ParameterCodec)
+
+	executor, err := remotecommandclient.NewSPDYExecutor(s.restConfig, http.MethodPost, req.URL())
+	if err != nil {
+		return fmt.Errorf("unable to create executor: %w", err)
+	}
+
+	err = executor.StreamWithContext(ctx, remotecommandclient.StreamOptions{
+		Stdin:             in,
+		Stdout:            out,
+		Stderr:            errOut,
+		Tty:               tty,
+		TerminalSizeQueue: newTranslatorSizeQueue(resize),
+	})
+	if err != nil {
+		return fmt.Errorf("unable to stream: %w", err)
+	}
+	return nil
+}
+
+func newTranslatorSizeQueue(resize <-chan remotecommandclient.TerminalSize) remotecommandclient.TerminalSizeQueue {
+	return &translatorSizeQueue{
+		resizeChan: resize,
+	}
+}
+
+// translatorSizeQueue feeds the size events from the WebSocket
+// resizeChan into the SPDY client input. Implements TerminalSizeQueue
+// interface.
+type translatorSizeQueue struct {
+	resizeChan <-chan remotecommandclient.TerminalSize
+}
+
+func (t *translatorSizeQueue) Next() *remotecommandclient.TerminalSize {
+	size, ok := <-t.resizeChan
+	if !ok {
+		return nil
+	}
+	return &size
 }
