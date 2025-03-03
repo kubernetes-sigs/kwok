@@ -11,7 +11,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.12.1
 	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/google/cel-go v0.22.0
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.20.2
 	github.com/itchyny/gojq v0.12.16
 	github.com/nxadm/tail v1.4.11
