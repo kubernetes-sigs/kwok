@@ -18,6 +18,7 @@ package e2e
 
 import (
 	"sigs.k8s.io/e2e-framework/pkg/features"
+
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
