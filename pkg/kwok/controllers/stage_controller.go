@@ -59,6 +59,7 @@ type StageController struct {
 	playStageParallelism                  uint
 	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*unstructured.Unstructured]]
+	delayQueueParallelism                 *queue.AdaptiveQueue[resourceStageJob[*unstructured.Unstructured]]
 	backoff                               wait.Backoff
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*unstructured.Unstructured]]
 	recorder                              record.EventRecorder
@@ -123,6 +124,7 @@ func NewStageController(conf StageControllerConfig) (*StageController, error) {
 // It will modify the resources status to we want
 func (c *StageController) Start(ctx context.Context, events <-chan informer.Event[*unstructured.Unstructured]) error {
 	go c.preprocessWorker(ctx)
+	c.delayQueueParallelism = queue.NewAdaptiveQueue(ctx, c.delayQueue, c.playStageWorker)
 	for i := uint(0); i < c.playStageParallelism; i++ {
 		go c.playStageWorker(ctx)
 	}
@@ -236,7 +238,7 @@ func (c *StageController) playStageWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
 	for ctx.Err() == nil {
-		resource, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		resource, ok := c.delayQueueParallelism.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}

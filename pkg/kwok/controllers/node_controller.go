@@ -60,6 +60,7 @@ type NodeController struct {
 	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*corev1.Node]]
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Node]]
+	delayQueueParallelism                 *queue.AdaptiveQueue[resourceStageJob[*corev1.Node]]
 	backoff                               wait.Backoff
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
@@ -143,6 +144,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 // if nodeSelectorFunc is not nil, it will use it to determine if the node should be managed
 func (c *NodeController) Start(ctx context.Context, events <-chan informer.Event[*corev1.Node]) error {
 	go c.preprocessWorker(ctx)
+	c.delayQueueParallelism = queue.NewAdaptiveQueue(ctx, c.delayQueue, c.playStageWorker)
 	for i := uint(0); i < c.playStageParallelism; i++ {
 		go c.playStageWorker(ctx)
 	}
@@ -323,7 +325,7 @@ func (c *NodeController) playStageWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
 	for ctx.Err() == nil {
-		node, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		node, ok := c.delayQueueParallelism.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
