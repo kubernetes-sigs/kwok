@@ -71,6 +71,8 @@ type Forward struct {
 	// Command is the command to run to forward with stdin/stdout.
 	// if set, Target will be ignored.
 	Command []string `json:"command,omitempty"`
+	// Mapping is mapping to target
+	Mapping *MappingTarget `json:"mapping,omitempty"`
 }
 
 // ForwardTarget holds information how to forward to a target.
