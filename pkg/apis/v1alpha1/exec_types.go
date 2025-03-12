@@ -68,6 +68,8 @@ type ExecTarget struct {
 	Containers []string `json:"containers,omitempty"`
 	// Local holds information how to exec to a local target.
 	Local *ExecTargetLocal `json:"local,omitempty"`
+	// Mapping is mapping to target
+	Mapping *MappingTarget `json:"mapping,omitempty"`
 }
 
 // ExecTargetLocal holds information how to exec to a local target.
