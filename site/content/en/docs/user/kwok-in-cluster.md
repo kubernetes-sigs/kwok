@@ -107,6 +107,17 @@ Finally, we're able to deploy `kwok`:
 kubectl apply -f "${KWOK_WORK_DIR}/kwok.yaml"
 ```
 
+## Apply the default custom resources (CRs) of stages (required)
+
+{{< hint "warning" >}}
+NOTE: This configures the pod/node emulation behavior, if not it will do nothing.
+When running versions <0.4 this step isn't required.
+{{< /hint >}}
+
+``` bash 
+kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/stage-fast.yaml"
+```
+
 {{< /tab >}}
 
 {{< /tabs>}}
