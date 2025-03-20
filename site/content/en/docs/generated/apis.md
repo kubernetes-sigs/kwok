@@ -4079,6 +4079,19 @@ string
 <p>LogsFile is the file from which the attach starts</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>mapping</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MappingTarget">
+MappingTarget
+</a>
+</em>
+</td>
+<td>
+<p>Mapping is mapping to target</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.AttachSpec">
@@ -4896,6 +4909,19 @@ ExecTargetLocal
 <p>Local holds information how to exec to a local target.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>mapping</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MappingTarget">
+MappingTarget
+</a>
+</em>
+</td>
+<td>
+<p>Mapping is mapping to target</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ExecTargetLocal">
@@ -5080,6 +5106,19 @@ ForwardTarget
 if set, Target will be ignored.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>mapping</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MappingTarget">
+MappingTarget
+</a>
+</em>
+</td>
+<td>
+<p>Mapping is mapping to target</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ForwardTarget">
@@ -5250,6 +5289,19 @@ bool
 <p>Follow up if true</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>mapping</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.MappingTarget">
+MappingTarget
+</a>
+</em>
+</td>
+<td>
+<p>Mapping is mapping to target</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.LogsSpec">
@@ -5316,6 +5368,63 @@ LogsStatus
 </td>
 <td>
 <p>Conditions holds conditions for logs</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.MappingTarget">
+MappingTarget
+<a href="#kwok.x-k8s.io%2fv1alpha1.MappingTarget"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.AttachConfig">AttachConfig</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ExecTarget">ExecTarget</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.Forward">Forward</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.Log">Log</a>
+</p>
+<p>
+<p>MappingTarget is a target for a Pod</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>container</code>
+<em>
+string
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>

@@ -47,3 +47,27 @@ func TestJsonpatch(t *testing.T) {
 		Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestAttachMapping(t *testing.T) {
+	f0 := e2e.CaseAttachMapping(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestExecMapping(t *testing.T) {
+	f0 := e2e.CaseExecMapping(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestLogsMapping(t *testing.T) {
+	f0 := e2e.CaseLogsMapping(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestPortForwardMapping(t *testing.T) {
+	f0 := e2e.CasePortForwardMapping(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}

@@ -42,6 +42,8 @@ type ExecTarget struct {
 	Containers []string
 	// Local holds information how to exec to a local target.
 	Local *ExecTargetLocal
+	// Mapping is mapping to target
+	Mapping *MappingTarget
 }
 
 // ExecTargetLocal holds information how to exec to a local target.
