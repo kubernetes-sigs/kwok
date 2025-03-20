@@ -33,12 +33,12 @@ require (
 	golang.org/x/sys v0.30.0
 	golang.org/x/term v0.29.0
 	google.golang.org/grpc v1.71.0
-	k8s.io/api v0.32.2
-	k8s.io/apimachinery v0.32.2
+	k8s.io/api v0.32.3
+	k8s.io/apimachinery v0.32.3
 	k8s.io/apiserver v0.32.2
-	k8s.io/client-go v0.32.2
+	k8s.io/client-go v0.32.3
 	k8s.io/code-generator v0.32.2
-	k8s.io/component-base v0.32.2
+	k8s.io/component-base v0.32.3
 	k8s.io/cri-api v0.32.2
 	k8s.io/cri-client v0.32.2
 	k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7
