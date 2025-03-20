@@ -28,6 +28,9 @@ var (
 	BinaryPrefix = "https://github.com/kubernetes-sigs/kwok/releases/download"
 	ImagePrefix  = "registry.k8s.io/kwok"
 
+	// KwokctlDefaultConfigURL is the URL from which kwokctl will fetch the default configuration when started for the first time
+	KwokctlDefaultConfigURL = "https://kwok.sigs.k8s.io/config/0.7/kwok.yaml"
+
 	// PreRelease is the pre-release version of the project.
 	// It will be overwritten during the `make build` process.
 	PreRelease = "alpha"
