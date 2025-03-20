@@ -49,8 +49,9 @@ type NodeLeaseController struct {
 	// mutateLeaseFunc allows customizing a lease object
 	mutateLeaseFunc func(*coordinationv1.Lease) error
 
-	delayQueue   queue.WeightDelayingQueue[string]
-	holdLeaseSet maps.SyncMap[string, bool]
+	delayQueue            queue.WeightDelayingQueue[string]
+	holdLeaseSet          maps.SyncMap[string, bool]
+	delayQueueParallelism *queue.AdaptiveQueue[string]
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)
@@ -99,6 +100,7 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 
 // Start starts the NodeLeaseController
 func (c *NodeLeaseController) Start(ctx context.Context) error {
+	c.delayQueueParallelism = queue.NewAdaptiveQueue(ctx, c.delayQueue, c.syncWorker)
 	for i := uint(0); i < c.leaseParallelism; i++ {
 		go c.syncWorker(ctx)
 	}
@@ -108,7 +110,7 @@ func (c *NodeLeaseController) Start(ctx context.Context) error {
 func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		nodeName, ok := c.delayQueueParallelism.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
