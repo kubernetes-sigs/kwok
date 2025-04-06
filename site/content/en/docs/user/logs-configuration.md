@@ -27,9 +27,11 @@ spec:
   - containers:
     - <string>
     logsFile: <string>
+    previousLogsFile: <string>
     follow: <bool>
 ```
 The logs simulation setting of a pod is specified via `logs` field.
+The `previousLogsFile` field specifies the file path of the previous terminated container logs.
 The `logs` field is organized by groups, with each corresponding to a collection of containers that shares a same logs simulation config.
 Each group consists of a list of container names (`containers`) and the shared simulation settings (`logsFile` and `follow`).
 
@@ -61,6 +63,7 @@ spec:
   - containers:
     - <string>
     logsFile: <string>
+    previousLogsFile: <string>
     follow: <bool>
 ```
 
