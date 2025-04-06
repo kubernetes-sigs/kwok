@@ -56,6 +56,10 @@ spec:
                       description: LogsFile is the file from which the log forward
                         starts
                       type: string
+                    previousLogsFile:
+                      description: PreviousLogsFile is the file containing previous
+                        container logs
+                      type: string
                   type: object
                 type: array
             required:

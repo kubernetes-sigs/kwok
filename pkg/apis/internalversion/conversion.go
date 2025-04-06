@@ -193,6 +193,13 @@ func ConvertToInternalClusterLogs(in *v1alpha1.ClusterLogs) (*ClusterLogs, error
 				return nil, err
 			}
 		}
+		previousLogsFile := out.Spec.Logs[i].PreviousLogsFile
+		if previousLogsFile != "" {
+			out.Spec.Logs[i].PreviousLogsFile, err = path.Expand(previousLogsFile)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	return &out, nil
 }
@@ -254,6 +261,13 @@ func ConvertToInternalLogs(in *v1alpha1.Logs) (*Logs, error) {
 		logsFile := out.Spec.Logs[i].LogsFile
 		if logsFile != "" {
 			out.Spec.Logs[i].LogsFile, err = path.Expand(logsFile)
+			if err != nil {
+				return nil, err
+			}
+		}
+		previousLogsFile := out.Spec.Logs[i].PreviousLogsFile
+		if previousLogsFile != "" {
+			out.Spec.Logs[i].PreviousLogsFile, err = path.Expand(previousLogsFile)
 			if err != nil {
 				return nil, err
 			}

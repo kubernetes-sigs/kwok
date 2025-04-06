@@ -41,6 +41,8 @@ type Log struct {
 	Containers []string
 	// LogsFile is the file from which the log forward starts
 	LogsFile string
+	// PreviousLogsFile is the file containing previous container logs
+	PreviousLogsFile string
 	// Follow up if true
 	Follow bool
 }

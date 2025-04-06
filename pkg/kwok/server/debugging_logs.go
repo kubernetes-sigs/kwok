@@ -47,7 +47,11 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 	}
 
 	opts := crilogs.NewLogOptions(logOptions, time.Now())
-	return readLogs(ctx, log.LogsFile, opts, stdout, stderr)
+	logsFile := log.LogsFile
+	if logOptions.Previous {
+		logsFile = log.PreviousLogsFile
+	}
+	return readLogs(ctx, logsFile, opts, stdout, stderr)
 }
 
 // getContainerLogs handles containerLogs request against the Kubelet

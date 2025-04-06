@@ -67,6 +67,8 @@ type Log struct {
 	Containers []string `json:"containers,omitempty"`
 	// LogsFile is the file from which the log forward starts
 	LogsFile *string `json:"logsFile,omitempty"`
+	// PreviousLogsFile is the file containing previous container logs
+	PreviousLogsFile *string `json:"previousLogsFile,omitempty"`
 	// Follow up if true
 	Follow *bool `json:"follow,omitempty"`
 }
