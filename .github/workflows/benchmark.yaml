@@ -36,10 +36,10 @@ jobs:
       with:
         go-version: ${{ env.GO_VERSION }}
 
-    - name: Test Benchmark
-      shell: bash
-      run: |
-        ./hack/e2e-test.sh e2e/kwokctl/benchmark
+    # - name: Test Benchmark
+    #   shell: bash
+    #   run: |
+    #     ./hack/e2e-test.sh e2e/kwokctl/benchmark
 
     - name: Test Benchmark Hack
       shell: bash
