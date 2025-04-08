@@ -5241,6 +5241,17 @@ string
 </tr>
 <tr>
 <td>
+<code>previousLogsFile</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>PreviousLogsFile is the file containing previous container logs</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>follow</code>
 <em>
 bool
