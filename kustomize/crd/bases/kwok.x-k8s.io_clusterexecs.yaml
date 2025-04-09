@@ -91,6 +91,19 @@ spec:
                           description: WorkDir is the working directory to exec with.
                           type: string
                       type: object
+                    mapping:
+                      description: Mapping is mapping to target
+                      properties:
+                        container:
+                          type: string
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      required:
+                      - name
+                      - namespace
+                      type: object
                   type: object
                 type: array
               selector:
