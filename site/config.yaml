@@ -206,6 +206,14 @@ menu:
     pageRef: "/docs/examples/prometheus"
     parent: kwokctl-integration
 
+  - identifier: pressure-to-cluster
+    title: "Pressure to Cluster"
+    weight: 200030
+    parent: examples
+  - identifier: kwok-flow-control-exemption
+    pageRef: "/docs/user/kwok-flow-control-exemption"
+    parent: pressure-to-cluster
+
   - identifier: tools
     title: Tools
     weight: 200020
