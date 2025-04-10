@@ -1018,6 +1018,11 @@ func (in *Log) DeepCopyInto(out *Log) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.PreviousLogsFile != nil {
+		in, out := &in.PreviousLogsFile, &out.PreviousLogsFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.Follow != nil {
 		in, out := &in.Follow, &out.Follow
 		*out = new(bool)
