@@ -149,6 +149,16 @@ func setKwokConfigurationDefaults(config *configv1alpha1.KwokConfiguration) *con
 
 	configv1alpha1.SetObjectDefaults_KwokConfiguration(config)
 
+	if config.Options.PodPlayStageParallelism == 0 {
+		config.Options.PodPlayStageParallelism = uint(4 * runtime.NumCPU())
+	}
+	if config.Options.NodePlayStageParallelism == 0 {
+		config.Options.NodePlayStageParallelism = uint(4 * runtime.NumCPU())
+	}
+	if config.Options.NodeLeaseParallelism == 0 {
+		config.Options.NodeLeaseParallelism = uint(4 * runtime.NumCPU())
+	}
+
 	return config
 }
 
