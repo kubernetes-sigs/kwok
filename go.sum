@@ -224,8 +224,8 @@ github.com/vishvananda/netns v0.0.4 h1:Oeaw1EM2JMxD51g9uhtC0D7erkIjgmj8+JZc26m1Y
 github.com/vishvananda/netns v0.0.4/go.mod h1:SpkAiCQRtJ6TvvxPnOSyH3BMl6unz3xZlaprSwhNNJM=
 github.com/vladimirvivien/gexe v0.3.0 h1:4xwiOwGrDob5OMR6E92B9olDXYDglXdHhzR1ggYtWJM=
 github.com/vladimirvivien/gexe v0.3.0/go.mod h1:fp7cy60ON1xjhtEI/+bfSEIXX35qgmI+iRYlGOqbBFM=
-github.com/wzshiming/cmux v0.3.3 h1:WlcKUwSN4vpClnHiyX9I4RtZ4xJeAqfrf4ltxSWuPoQ=
-github.com/wzshiming/cmux v0.3.3/go.mod h1:lPhqJN2E3frzkxrPdjesxL09z7nTcuZ6i8Is+2G/Xw4=
+github.com/wzshiming/cmux v0.4.2 h1:tI73lL5ztVfiqw7R5m5BkxT1+vQ2PBo/oV6qPbNGPiA=
+github.com/wzshiming/cmux v0.4.2/go.mod h1:JgE61QfZAjEyNMX0iZo9zIKY6pr9bHVY132yYPwHW5U=
 github.com/wzshiming/ctc v1.2.3 h1:q+hW3IQNsjIlOFBTGZZZeIXTElFM4grF4spW/errh/c=
 github.com/wzshiming/ctc v1.2.3/go.mod h1:2tVAtIY7SUyraSk0JxvwmONNPFL4ARavPuEsg5+KA28=
 github.com/wzshiming/easycel v0.6.0 h1:TwvbeAhi3a1Hf2wjcxlHQvE3W5pQAnhHynekCg5caJY=
@@ -234,8 +234,8 @@ github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27 h1:jKLZ5tGpOZRid6G
 github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27/go.mod h1:TYK5eJtSD5cVebob9fE7D3jR1fbRU1EwkoPzbLWsOAk=
 github.com/wzshiming/httpseek v0.1.0 h1:lEgL7EBELT/VV9UaTp+m3kw5Pe1KOUdY+IPnKkag6tI=
 github.com/wzshiming/httpseek v0.1.0/go.mod h1:YoZhlLIwNjTBDXIT8NpK5zRjOgZouRXPaBfjVXdqMMs=
-github.com/wzshiming/trie v0.1.1 h1:02AaBSZGhs6Aqljp8fz4xq/Mg8omFBPIlrUS0pJ11ks=
-github.com/wzshiming/trie v0.1.1/go.mod h1:c9thxXTh4KcGkejt4sUsO4c5GUmWpxeWzOJ7AZJaI+8=
+github.com/wzshiming/trie v0.3.1 h1:YpuoqmEQFJiW0mns/mM6Qk4kdWrXc8kc28/KR1vn0m8=
+github.com/wzshiming/trie v0.3.1/go.mod h1:c9thxXTh4KcGkejt4sUsO4c5GUmWpxeWzOJ7AZJaI+8=
 github.com/wzshiming/winseq v0.0.0-20200112104235-db357dc107ae/go.mod h1:VTAq37rkGeV+WOybvZwjXiJOicICdpLCN8ifpISjK20=
 github.com/wzshiming/winseq v0.0.0-20200720163736-7fa652d2b50e h1:lp2XFXaf81Y9yhE4rIt66qe6ss0jSQsBpIYWz8D/5N0=
 github.com/wzshiming/winseq v0.0.0-20200720163736-7fa652d2b50e/go.mod h1:VTAq37rkGeV+WOybvZwjXiJOicICdpLCN8ifpISjK20=

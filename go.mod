@@ -19,7 +19,7 @@ require (
 	github.com/prometheus/client_model v0.6.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.6
-	github.com/wzshiming/cmux v0.3.3
+	github.com/wzshiming/cmux v0.4.2
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.6.0
 	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
@@ -123,7 +123,7 @@ require (
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/vbatts/tar-split v0.11.5 // indirect
 	github.com/vladimirvivien/gexe v0.3.0 // indirect
-	github.com/wzshiming/trie v0.1.1 // indirect
+	github.com/wzshiming/trie v0.3.1 // indirect
 	github.com/wzshiming/winseq v0.0.0-20200720163736-7fa652d2b50e // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
