@@ -4,3 +4,4 @@ resources:
 - service_account.yaml
 - role.yaml
 - role_binding.yaml
+- flow_schema.yaml

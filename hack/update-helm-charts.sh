@@ -65,6 +65,7 @@ function sync() {
   sync_object_to_chart kustomize/rbac/role.yaml charts/kwok/templates/role.yaml
   sync_object_to_chart kustomize/rbac/role_binding.yaml charts/kwok/templates/role_binding.yaml
   sync_object_to_chart kustomize/rbac/service_account.yaml charts/kwok/templates/service_account.yaml
+  sync_object_to_chart kustomize/rbac/flow_schema.yaml charts/kwok/templates/flow_schema.yaml
 
   sync_stage_to_chart kustomize/stage/pod/fast/pod-ready.yaml charts/stage-fast/templates/pod-ready.yaml
   sync_stage_to_chart kustomize/stage/pod/fast/pod-complete.yaml charts/stage-fast/templates/pod-complete.yaml
