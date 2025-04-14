@@ -197,26 +197,40 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 	}
 
 	if conf.DisableQPSLimits {
-		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
-			internalversion.ExtraArgs{
-				Key:   "max-requests-inflight",
-				Value: "0",
-			},
-			internalversion.ExtraArgs{
-				Key:   "max-mutating-requests-inflight",
-				Value: "0",
-			},
-		)
-
-		// FeatureGate APIPriorityAndFairness is not available before 1.17.0
-		if conf.KubeVersion.GE(version.NewVersion(1, 18, 0)) {
+		if !conf.KubeVersion.GE(version.NewVersion(1, 29, 0)) {
 			conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
 				internalversion.ExtraArgs{
-					Key:   "enable-priority-and-fairness",
-					Value: "false",
+					Key:   "max-requests-inflight",
+					Value: "0",
+				},
+				internalversion.ExtraArgs{
+					Key:   "max-mutating-requests-inflight",
+					Value: "0",
+				},
+			)
+
+			// FeatureGate APIPriorityAndFairness is not available before 1.17.0
+			if conf.KubeVersion.GE(version.NewVersion(1, 18, 0)) {
+				conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
+					internalversion.ExtraArgs{
+						Key:   "enable-priority-and-fairness",
+						Value: "false",
+					},
+				)
+			}
+		} else {
+			conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
+				internalversion.ExtraArgs{
+					Key:   "max-requests-inflight",
+					Value: format.String(consts.DefaultUnlimitedQPS),
+				},
+				internalversion.ExtraArgs{
+					Key:   "max-mutating-requests-inflight",
+					Value: format.String(consts.DefaultUnlimitedQPS),
 				},
 			)
 		}
+
 		conf.ControllerManagerExtraArgs = append(conf.ControllerManagerExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "kube-api-qps",

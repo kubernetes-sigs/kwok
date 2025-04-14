@@ -104,15 +104,22 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	if conf.DisableQPSLimits {
-		kubeApiserverArgs = append(kubeApiserverArgs,
-			"--max-requests-inflight=0",
-			"--max-mutating-requests-inflight=0",
-		)
-
-		// FeatureGate APIPriorityAndFairness is not available before 1.17.0
-		if conf.Version.GE(version.NewVersion(1, 18, 0)) {
+		if !conf.Version.GE(version.NewVersion(1, 29, 0)) {
 			kubeApiserverArgs = append(kubeApiserverArgs,
-				"--enable-priority-and-fairness=false",
+				"--max-requests-inflight=0",
+				"--max-mutating-requests-inflight=0",
+			)
+
+			// FeatureGate APIPriorityAndFairness is not available before 1.17.0
+			if conf.Version.GE(version.NewVersion(1, 18, 0)) {
+				kubeApiserverArgs = append(kubeApiserverArgs,
+					"--enable-priority-and-fairness=false",
+				)
+			}
+		} else {
+			kubeApiserverArgs = append(kubeApiserverArgs,
+				"--max-requests-inflight="+format.String(consts.DefaultUnlimitedQPS),
+				"--max-mutating-requests-inflight="+format.String(consts.DefaultUnlimitedQPS),
 			)
 		}
 	}
