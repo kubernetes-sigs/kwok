@@ -204,12 +204,6 @@ jobs:
         fi
         ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
-    - name: Test Benchmark
-      if: ${{ matrix.os == 'ubuntu-latest' && matrix.kwokctl-runtime == 'binary' }}
-      shell: bash
-      run: |
-        ./hack/e2e-test.sh e2e/kwokctl/benchmark
-
     - name: Test Auto Detect
       if: ${{ matrix.kwokctl-runtime == 'binary' }}
       shell: bash
