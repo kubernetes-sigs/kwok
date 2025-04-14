@@ -63,7 +63,7 @@ var (
 	MetricsServerBinaryPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 	MetricsServerImagePrefix  = "registry.k8s.io/metrics-server"
 
-	DefaultUnlimitedQPS   = 5000.0
+	DefaultUnlimitedQPS   = 10000
 	DefaultUnlimitedBurst = 10000
 )
 
