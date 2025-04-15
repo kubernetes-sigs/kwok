@@ -292,6 +292,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		NodeLeaseParallelism:                  flags.Options.NodeLeaseParallelism,
 		NodeLeaseDurationSeconds:              flags.Options.NodeLeaseDurationSeconds,
 		ID:                                    id,
+		PodsOnNodeSyncParallelism:             flags.Options.PodsOnNodeSyncParallelism,
 	})
 	if err != nil {
 		return err

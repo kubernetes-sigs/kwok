@@ -183,7 +183,7 @@ function main() {
   test_pod_running || failed+=("pod_running_again")
   test_check_pod_status || failed+=("check_pod_status_again")
 
-  sleep 40
+  sleep 45
 
   test_check_node_lease_transitions 1 || failed+=("check_node_lease_transitions_again")
 
