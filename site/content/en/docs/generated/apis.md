@@ -2647,6 +2647,17 @@ uint
 <p>NodeLeaseParallelism is the number of NodeLeases that are allowed to be processed in parallel.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>podsOnNodeSyncParallelism</code>
+<em>
+uint
+</em>
+</td>
+<td>
+<p>PodsOnNodeSyncParallelism is the number of workers to sync pods on nodes in parallel.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlConfigurationOptions">

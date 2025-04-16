@@ -67,6 +67,9 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 	if in.Options.NodeLeaseParallelism == 0 {
 		in.Options.NodeLeaseParallelism = 4
 	}
+	if in.Options.PodsOnNodeSyncParallelism == 0 {
+		in.Options.PodsOnNodeSyncParallelism = 1
+	}
 }
 
 func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {

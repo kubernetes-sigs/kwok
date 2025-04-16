@@ -102,6 +102,9 @@ type KwokConfigurationOptions struct {
 
 	// NodeLeaseParallelism is the number of NodeLeases that are allowed to be processed in parallel.
 	NodeLeaseParallelism uint
+
+	// PodsOnNodeSyncParallelism is the number of workers to sync pods on nodes in parallel.
+	PodsOnNodeSyncParallelism uint
 }
 
 // TracingConfiguration provides versioned configuration for OpenTelemetry tracing clients.

@@ -122,6 +122,7 @@ type Config struct {
 	NodePlayStageParallelism              uint
 	NodeLeaseDurationSeconds              uint
 	NodeLeaseParallelism                  uint
+	PodsOnNodeSyncParallelism             uint
 	ID                                    string
 	EnableMetrics                         bool
 	EnablePodCache                        bool
@@ -339,7 +340,9 @@ func (c *Controller) startStageController(ctx context.Context, ref internalversi
 			return fmt.Errorf("failed to init pod controller: %w", err)
 		}
 
-		go c.podsOnNodeSyncWorker(ctx)
+		for i := uint(0); i < c.conf.PodsOnNodeSyncParallelism; i++ {
+			go c.podsOnNodeSyncWorker(ctx)
+		}
 
 	case nodeRef:
 		err := c.initNodeLeaseController(ctx)
