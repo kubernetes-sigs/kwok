@@ -17,6 +17,8 @@ dependencies:
     match: "go: "
   - path: .github/workflows/releases.yaml
     match: "GO_VERSION: "
+  - path: .github/workflows/benchmark.yaml
+    match: "GO_VERSION: "
   - path: .github/workflows/test.yaml
     match: "GO_VERSION: "
   - path: hack/requirements.sh

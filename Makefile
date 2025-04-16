@@ -240,6 +240,7 @@ e2e-test:
 		--skip=nerdctl \
 		--skip=podman \
 		--skip=kind \
+		--skip=benchmark \
 		--skip=kwokctl_binary_port_forward
 
 ## release: Release kwok
