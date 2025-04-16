@@ -16,15 +16,15 @@ patches:
     kind: Deployment
     name: kwok-controller
   patch: |-
-    - op: add
-      path: /spec/template/spec/containers/0/args/-
-      value: --master=https://127.0.0.1:6443
     - op: replace
       path: /spec/template/spec/hostNetwork
       value: true
-    - op: replace
-      path: /spec/template/spec/containers/0/args/1
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --master=https://127.0.0.1:6443
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
       value: --manage-nodes-with-annotation-selector=
-    - op: replace
-      path: /spec/template/spec/containers/0/args/3
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
       value: --manage-single-node=node

@@ -9,6 +9,14 @@ resources:
 - service.yaml
 - deployment.yaml
 
+configMapGenerator:
+- name: kwok
+  namespace: kube-system
+  options:
+    disableNameSuffixHash: true
+  files:
+  - kwok.yaml
+
 labels:
 - includeSelectors: true
   pairs:

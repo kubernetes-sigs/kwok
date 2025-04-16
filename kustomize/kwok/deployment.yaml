@@ -11,26 +11,8 @@ spec:
         image: registry.k8s.io/kwok/kwok
         imagePullPolicy: IfNotPresent
         args:
-        - --manage-all-nodes=false
-        - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-        - --manage-nodes-with-label-selector=
-        - --manage-single-node=
+        - --config=/root/.kwok/kwok.yaml
         - --node-ip=$(POD_IP)
-        - --node-port=10247
-        - --cidr=10.0.0.1/24
-        - --node-lease-duration-seconds=40
-        - --enable-crds=Stage
-        - --enable-crds=Metric
-        - --enable-crds=Attach
-        - --enable-crds=ClusterAttach
-        - --enable-crds=Exec
-        - --enable-crds=ClusterExec
-        - --enable-crds=Logs
-        - --enable-crds=ClusterLogs
-        - --enable-crds=PortForward
-        - --enable-crds=ClusterPortForward
-        - --enable-crds=ResourceUsage
-        - --enable-crds=ClusterResourceUsage
         env:
         - name: POD_IP
           valueFrom:
@@ -67,5 +49,14 @@ spec:
           timeoutSeconds: 2
           periodSeconds: 20
           failureThreshold: 5
+        volumeMounts:
+        - name: kwok-config
+          subPath: kwok.yaml
+          mountPath: /root/.kwok/kwok.yaml
+          readOnly: true
+      volumes:
+      - name: kwok-config
+        configMap:
+          name: kwok
       serviceAccountName: kwok-controller
       restartPolicy: Always

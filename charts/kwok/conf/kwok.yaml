@@ -1,0 +1,28 @@
+apiVersion: config.kwok.x-k8s.io/v1alpha1
+kind: KwokConfiguration
+options:
+  enableProfilingHandler: false
+  enableContentionProfiling: false
+  nodeLeaseParallelism: 4
+  podPlayStageParallelism: 4
+  nodePlayStageParallelism: 4
+  nodePort: 10247
+  cidr: 10.0.0.1/24
+  manageAllNodes: false
+  manageNodesWithAnnotationSelector: 'kwok.x-k8s.io/node=fake'
+  manageNodesWithLabelSelector: ''
+  manageSingleNode: ''
+  nodeLeaseDurationSeconds: 40
+  enableCRDs:
+  - Stage
+  - Metric
+  - Attach
+  - ClusterAttach
+  - Exec
+  - ClusterExec
+  - Logs
+  - ClusterLogs
+  - PortForward
+  - ClusterPortForward
+  - ResourceUsage
+  - ClusterResourceUsage

@@ -62,6 +62,8 @@ function update_readme() {
 }
 
 function sync() {
+  sync_object_to_chart kustomize/kwok/kwok.yaml charts/kwok/conf/kwok.yaml
+
   sync_object_to_chart kustomize/rbac/role.yaml charts/kwok/templates/role.yaml
   sync_object_to_chart kustomize/rbac/role_binding.yaml charts/kwok/templates/role_binding.yaml
   sync_object_to_chart kustomize/rbac/service_account.yaml charts/kwok/templates/service_account.yaml
