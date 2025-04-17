@@ -298,6 +298,21 @@ func TestPodController(t *testing.T) {
 				if pods.need(&list.Items[index]) {
 					wantHostIP := wantHostIPFunc(*node)
 					wantPodCIRD := wantPodCIDRFunc(*node)
+/*add below some code for retry checking of hostIP*/
+					retryCount := 0
+					maxRetries := 5
+					for retryCount < maxRetries {
+						if pod.Status.HostIP != wantHostIP {
+							if retryCount == maxRetries-1 {
+								return false, fmt.Errorf("want pod %s hostIP=%s, got %s", pod.Name, wantHostIP, pod.Status.HostIP)
+							}
+							retryCount++
+							time.Sleep(100 * time.Millisecond)
+							continue
+						}
+						break
+					}
+/*add above some code for retry checking of hostIP*/					
 					if pod.Status.HostIP != wantHostIP {
 						return false, fmt.Errorf("want pod %s hostIP=%s, got %s", pod.Name, wantHostIP, pod.Status.HostIP)
 					}
@@ -317,7 +332,7 @@ func TestPodController(t *testing.T) {
 			}
 		}
 		return true, nil
-	}, wait.WithContinueOnError(5))
+	}, wait.WithTimeout(5*time.Second)) //update this functionality
 	if err != nil {
 		t.Fatal(err)
 	}
