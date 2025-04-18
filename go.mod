@@ -24,7 +24,7 @@ require (
 	github.com/wzshiming/easycel v0.6.0
 	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
 	github.com/wzshiming/httpseek v0.1.0
-	go.etcd.io/etcd/client/v3 v3.5.16
+	go.etcd.io/etcd/client/v3 v3.5.21
 	go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful v0.59.0
 	go.opentelemetry.io/otel v1.35.0
 	go.opentelemetry.io/otel/sdk v1.34.0
@@ -127,8 +127,8 @@ require (
 	github.com/wzshiming/winseq v0.0.0-20200720163736-7fa652d2b50e // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
-	go.etcd.io/etcd/api/v3 v3.5.16 // indirect
-	go.etcd.io/etcd/client/pkg/v3 v3.5.16 // indirect
+	go.etcd.io/etcd/api/v3 v3.5.21 // indirect
+	go.etcd.io/etcd/client/pkg/v3 v3.5.21 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.55.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.55.0 // indirect
