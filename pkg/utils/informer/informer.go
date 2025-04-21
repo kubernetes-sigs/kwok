@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"sync"
 
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -48,11 +49,8 @@ func (i *Informer[T, L]) Sync(ctx context.Context, opt Option, events chan<- Eve
 	if events == nil {
 		return fmt.Errorf("events channel is nil")
 	}
-	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
-		return i.ListFunc(ctx, opts)
-	})
 
-	err := listPager.EachListItem(ctx, opt.toListOptions(), func(obj runtime.Object) error {
+	fun := func(obj runtime.Object) error {
 		if ok, err := opt.filter(obj); err != nil {
 			return err
 		} else if !ok {
@@ -60,7 +58,20 @@ func (i *Informer[T, L]) Sync(ctx context.Context, opt Option, events chan<- Eve
 		}
 		events <- Event[T]{Type: Sync, Object: obj.(T)}
 		return nil
+	}
+	if !opt.EnableListPager {
+		list, err := i.ListFunc(ctx, opt.toListOptions())
+		if err != nil {
+			return err
+		}
+		return meta.EachListItem(list, fun)
+	}
+
+	listPager := pager.New(func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
+		return i.ListFunc(ctx, opts)
 	})
+
+	err := listPager.EachListItem(ctx, opt.toListOptions(), fun)
 	if err != nil {
 		return err
 	}

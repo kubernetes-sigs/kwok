@@ -123,6 +123,7 @@ type Config struct {
 	NodeLeaseDurationSeconds              uint
 	NodeLeaseParallelism                  uint
 	PodsOnNodeSyncParallelism             uint
+	EnablePodsOnNodeSyncListPager         bool
 	ID                                    string
 	EnableMetrics                         bool
 	EnablePodCache                        bool
@@ -566,9 +567,13 @@ func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 		if !ok {
 			return
 		}
-		err := c.podsInformer.Sync(ctx, informer.Option{
-			FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
-		}, c.podsChan)
+
+		opt := informer.Option{
+			FieldSelector:   fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
+			EnableListPager: c.conf.EnablePodsOnNodeSyncListPager,
+		}
+
+		err := c.podsInformer.Sync(ctx, opt, c.podsChan)
 		if err != nil {
 			logger.Error("failed to update pods on node", err, "node", nodeName)
 		}

@@ -227,6 +227,11 @@ func (in *KwokConfigurationOptions) DeepCopyInto(out *KwokConfigurationOptions) 
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnablePodsOnNodeSyncListPager != nil {
+		in, out := &in.EnablePodsOnNodeSyncListPager, &out.EnablePodsOnNodeSyncListPager
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

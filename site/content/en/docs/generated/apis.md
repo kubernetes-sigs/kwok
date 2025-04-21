@@ -2658,6 +2658,17 @@ uint
 <p>PodsOnNodeSyncParallelism is the number of workers to sync pods on nodes in parallel.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enablePodsOnNodeSyncListPager</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>EnablePodsOnNodeSyncListPager enables pager list for workers to sync pods on nodes.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlConfigurationOptions">
