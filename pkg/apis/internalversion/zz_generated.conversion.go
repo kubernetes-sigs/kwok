@@ -1534,6 +1534,9 @@ func autoConvert_internalversion_KwokConfigurationOptions_To_v1alpha1_KwokConfig
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.NodeLeaseParallelism = in.NodeLeaseParallelism
 	out.PodsOnNodeSyncParallelism = in.PodsOnNodeSyncParallelism
+	if err := v1.Convert_bool_To_Pointer_bool(&in.EnablePodsOnNodeSyncListPager, &out.EnablePodsOnNodeSyncListPager, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1576,6 +1579,9 @@ func autoConvert_v1alpha1_KwokConfigurationOptions_To_internalversion_KwokConfig
 	out.NodeLeaseDurationSeconds = in.NodeLeaseDurationSeconds
 	out.NodeLeaseParallelism = in.NodeLeaseParallelism
 	out.PodsOnNodeSyncParallelism = in.PodsOnNodeSyncParallelism
+	if err := v1.Convert_Pointer_bool_To_bool(&in.EnablePodsOnNodeSyncListPager, &out.EnablePodsOnNodeSyncListPager, s); err != nil {
+		return err
+	}
 	return nil
 }
 

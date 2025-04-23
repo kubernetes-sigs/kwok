@@ -153,6 +153,10 @@ type KwokConfigurationOptions struct {
 	// PodsOnNodeSyncParallelism is the number of workers to sync pods on nodes in parallel.
 	// +default=1
 	PodsOnNodeSyncParallelism uint `json:"podsOnNodeSyncParallelism,omitempty"`
+
+	// EnablePodsOnNodeSyncListPager enables pager list for workers to sync pods on nodes.
+	// +default=true
+	EnablePodsOnNodeSyncListPager *bool `json:"enablePodsOnNodeSyncListPager"`
 }
 
 // TracingConfiguration provides versioned configuration for OpenTelemetry tracing clients.

@@ -61,6 +61,7 @@ type Option struct {
 	LabelSelector      string
 	FieldSelector      string
 	AnnotationSelector string
+	EnableListPager    bool
 	annotationSelector labels.Selector
 }
 
@@ -70,6 +71,9 @@ func (o *Option) setup(opts *metav1.ListOptions) {
 	}
 	if o.FieldSelector != "" {
 		opts.FieldSelector = o.FieldSelector
+	}
+	if !o.EnableListPager {
+		opts.ResourceVersion = "0"
 	}
 }
 
