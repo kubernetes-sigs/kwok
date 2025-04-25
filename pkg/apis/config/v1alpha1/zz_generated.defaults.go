@@ -74,6 +74,10 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 		var ptrVar1 bool = true
 		in.Options.EnablePodsOnNodeSyncListPager = &ptrVar1
 	}
+	if in.Options.EnablePodsOnNodeSyncStreamWatch == nil {
+		var ptrVar1 bool = false
+		in.Options.EnablePodsOnNodeSyncStreamWatch = &ptrVar1
+	}
 }
 
 func SetObjectDefaults_KwokctlConfiguration(in *KwokctlConfiguration) {

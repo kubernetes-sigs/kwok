@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"sync"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -28,6 +29,9 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/pager"
+	"k8s.io/client-go/util/watchlist"
+
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // Informer is a wrapper around a Get/List/Watch function.
@@ -59,6 +63,19 @@ func (i *Informer[T, L]) Sync(ctx context.Context, opt Option, events chan<- Eve
 		events <- Event[T]{Type: Sync, Object: obj.(T)}
 		return nil
 	}
+
+	if opt.EnableStreamWatch {
+		if watchListOptions, hasWatchListOptionsPrepared, watchListOptionsErr := watchlist.PrepareWatchListOptionsFromListOptions(opt.toListOptions()); watchListOptionsErr != nil {
+			log.FromContext(ctx).Error("Failed preparing watchlist options, falling back to the standard LIST semantics", watchListOptionsErr)
+		} else if hasWatchListOptionsPrepared {
+			watcher, err := i.WatchFunc(ctx, watchListOptions)
+			if err != nil {
+				return err
+			}
+			return handleWatchList(ctx, watcher, fun)
+		}
+	}
+
 	if !opt.EnableListPager {
 		list, err := i.ListFunc(ctx, opt.toListOptions())
 		if err != nil {
@@ -333,5 +350,46 @@ func objType(expectedType runtime.Object) runtime.Object {
 	case *unstructured.Unstructured:
 		var obj unstructured.Unstructured
 		return &obj
+	}
+}
+
+// handleWatchList copy from watchListClient feature with some modifications to allow streaming handle.
+// Note that this function will close the passed watch.
+func handleWatchList(ctx context.Context, w watch.Interface, eventsFunc func(obj runtime.Object) error) error {
+	defer w.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case event, ok := <-w.ResultChan():
+			if !ok {
+				return fmt.Errorf("unexpected watch close")
+			}
+			if event.Type == watch.Error {
+				return apierrors.FromObject(event.Object)
+			}
+			meta, err := meta.Accessor(event.Object)
+			if err != nil {
+				return fmt.Errorf("failed to parse watch event: %#v", event)
+			}
+
+			switch event.Type {
+			case watch.Added:
+				if err = eventsFunc(event.Object); err != nil {
+					return err
+				}
+			case watch.Bookmark:
+				if meta.GetAnnotations()[metav1.InitialEventsAnnotationKey] == "true" {
+					base64EncodedInitialEventsListBlueprint := meta.GetAnnotations()[metav1.InitialEventsListBlueprintAnnotationKey]
+					if len(base64EncodedInitialEventsListBlueprint) == 0 {
+						return fmt.Errorf("%q annotation is missing content", metav1.InitialEventsListBlueprintAnnotationKey)
+					}
+					return nil
+				}
+			default:
+				return fmt.Errorf("unexpected watch event %#v, expected to only receive watch.Added and watch.Bookmark events", event)
+			}
+		}
 	}
 }

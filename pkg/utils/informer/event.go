@@ -62,6 +62,7 @@ type Option struct {
 	FieldSelector      string
 	AnnotationSelector string
 	EnableListPager    bool
+	EnableStreamWatch  bool
 	annotationSelector labels.Selector
 }
 
@@ -72,7 +73,7 @@ func (o *Option) setup(opts *metav1.ListOptions) {
 	if o.FieldSelector != "" {
 		opts.FieldSelector = o.FieldSelector
 	}
-	if !o.EnableListPager {
+	if !o.EnableListPager || o.EnableStreamWatch {
 		opts.ResourceVersion = "0"
 	}
 }

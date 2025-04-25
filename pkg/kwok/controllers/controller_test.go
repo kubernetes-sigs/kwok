@@ -197,6 +197,29 @@ func TestController(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "node controller test: manage all nodes by stream watch",
+			conf: Config{
+				TypedClient:    fake.NewSimpleClientset(nodes...),
+				ManageAllNodes: true,
+				LocalStages: map[internalversion.StageResourceRef][]*internalversion.Stage{
+					podRef:  podStages,
+					nodeRef: nodeStages,
+				},
+				CIDR:                            "10.0.0.1/24",
+				NodePlayStageParallelism:        1,
+				PodPlayStageParallelism:         1,
+				PodsOnNodeSyncParallelism:       1,
+				EnablePodsOnNodeSyncListPager:   false,
+				EnablePodsOnNodeSyncStreamWatch: true,
+			},
+			wantNodePhase: map[string]corev1.NodePhase{
+				"node-0": corev1.NodeRunning,
+				"node-1": corev1.NodeRunning,
+				"node-2": corev1.NodeRunning,
+			},
+			wantErr: false,
+		},
 	}
 
 	ctx := context.Background()

@@ -294,6 +294,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		ID:                                    id,
 		PodsOnNodeSyncParallelism:             flags.Options.PodsOnNodeSyncParallelism,
 		EnablePodsOnNodeSyncListPager:         flags.Options.EnablePodsOnNodeSyncListPager,
+		EnablePodsOnNodeSyncStreamWatch:       flags.Options.EnablePodsOnNodeSyncStreamWatch,
 	})
 	if err != nil {
 		return err

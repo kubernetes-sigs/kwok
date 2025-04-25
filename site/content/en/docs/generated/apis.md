@@ -2669,6 +2669,17 @@ bool
 <p>EnablePodsOnNodeSyncListPager enables pager list for workers to sync pods on nodes.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enablePodsOnNodeSyncStreamWatch</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>EnablePodsOnNodeSyncStreamWatch enables stream watch for workers to sync pods on nodes.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.KwokctlConfigurationOptions">
