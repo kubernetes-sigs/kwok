@@ -3,7 +3,7 @@ kind: KwokctlResource
 metadata:
   name: node
 parameters:
-  podCIDR: "10.0.0.1/24"
+  podCIDR: "10.0.0.0/24"
   allocatable:
     cpu: 32
     memory: 256Gi
