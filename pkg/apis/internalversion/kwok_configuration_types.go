@@ -108,6 +108,9 @@ type KwokConfigurationOptions struct {
 
 	// EnablePodsOnNodeSyncListPager enables pager list for workers to sync pods on nodes.
 	EnablePodsOnNodeSyncListPager bool
+
+	// EnablePodsOnNodeSyncStreamWatch enables stream watch for workers to sync pods on nodes.
+	EnablePodsOnNodeSyncStreamWatch bool
 }
 
 // TracingConfiguration provides versioned configuration for OpenTelemetry tracing clients.

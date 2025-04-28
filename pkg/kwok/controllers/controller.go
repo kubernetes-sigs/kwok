@@ -124,6 +124,7 @@ type Config struct {
 	NodeLeaseParallelism                  uint
 	PodsOnNodeSyncParallelism             uint
 	EnablePodsOnNodeSyncListPager         bool
+	EnablePodsOnNodeSyncStreamWatch       bool
 	ID                                    string
 	EnableMetrics                         bool
 	EnablePodCache                        bool
@@ -569,8 +570,9 @@ func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 		}
 
 		opt := informer.Option{
-			FieldSelector:   fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
-			EnableListPager: c.conf.EnablePodsOnNodeSyncListPager,
+			FieldSelector:     fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
+			EnableListPager:   c.conf.EnablePodsOnNodeSyncListPager,
+			EnableStreamWatch: c.conf.EnablePodsOnNodeSyncStreamWatch,
 		}
 
 		err := c.podsInformer.Sync(ctx, opt, c.podsChan)

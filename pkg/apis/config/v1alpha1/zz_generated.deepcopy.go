@@ -232,6 +232,11 @@ func (in *KwokConfigurationOptions) DeepCopyInto(out *KwokConfigurationOptions) 
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnablePodsOnNodeSyncStreamWatch != nil {
+		in, out := &in.EnablePodsOnNodeSyncStreamWatch, &out.EnablePodsOnNodeSyncStreamWatch
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 
