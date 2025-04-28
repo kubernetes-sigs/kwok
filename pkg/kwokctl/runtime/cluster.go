@@ -314,6 +314,9 @@ func (c *Cluster) getDefaultStages(updateFrequency int64, lease bool) ([]config.
 	return objs, nil
 }
 
+// KubectlPath returns the path to the kubectl binary. It first tries to find kubectl in the system PATH.
+// If not found, it will download and install the kubectl binary using the configured version.
+// Returns the path to the kubectl binary or an error if it cannot be found or installed.
 func (c *Cluster) KubectlPath(ctx context.Context) (string, error) {
 	config, err := c.Config(ctx)
 	if err != nil {

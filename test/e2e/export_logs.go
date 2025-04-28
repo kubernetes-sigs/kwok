@@ -25,6 +25,10 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/features"
 )
 
+// CaseDryRunExportLogs defines a feature test suite for verifying the dry-run functionality
+// of exporting logs from a KWOK cluster. It tests the output of the kwokctl export logs --dry-run
+// command against expected test data. The test ensures the dry-run output matches the expected
+// format and contents for the specified cluster runtime.
 func CaseDryRunExportLogs(kwokctlPath, clusterName, clusterRuntime string, rootDir string, updateTestdata bool) *features.FeatureBuilder {
 	return features.New("Dryrun Export Logs").
 		Assess("test dryrun export logs", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {

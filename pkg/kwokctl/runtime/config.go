@@ -149,19 +149,28 @@ type Runtime interface {
 	GetEtcdClient(ctx context.Context) (etcd.Client, func(), error)
 }
 
+// SnapshotSaveWithYAMLConfig contains configuration for saving a snapshot with YAML files
 type SnapshotSaveWithYAMLConfig struct {
+	// Filters specifies which resources to include in the snapshot
 	Filters []string
 }
 
+// SnapshotRestoreWithYAMLConfig contains configuration for restoring a snapshot with YAML files
 type SnapshotRestoreWithYAMLConfig struct {
+	// Filters specifies which resources to restore from the snapshot
 	Filters []string
 }
 
+// ComponentStatus represents the status of a cluster component
 type ComponentStatus uint64
 
 const (
+	// ComponentStatusUnknown indicates the component status is unknown
 	ComponentStatusUnknown ComponentStatus = iota
+	// ComponentStatusStopped indicates the component is stopped
 	ComponentStatusStopped
+	// ComponentStatusRunning indicates the component is running
 	ComponentStatusRunning
+	// ComponentStatusReady indicates the component is ready to serve requests
 	ComponentStatusReady
 )

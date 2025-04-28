@@ -35,7 +35,7 @@ import (
 
 // TestingStages tests the stages against the target object
 func TestingStages(ctx context.Context, target any, stages []*internalversion.Stage) (any, error) {
-	testTarget, ok := target.(Obj)
+	testTarget, ok := target.(obj)
 	if !ok {
 		return nil, fmt.Errorf("expected target to be an object, got %T", target)
 	}
@@ -86,7 +86,7 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 
 var now = time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC)
 
-func testingStage(ctx context.Context, testTarget Obj, stage *lifecycle.Stage) (any, error) {
+func testingStage(ctx context.Context, testTarget obj, stage *lifecycle.Stage) (any, error) {
 	meta := map[string]any{
 		"stage": stage.Name(),
 	}
@@ -211,7 +211,7 @@ func formatPatch(patch *lifecycle.Patch) any {
 	return out
 }
 
-type Obj interface {
+type obj interface {
 	metav1.Object
 	runtime.Object
 }

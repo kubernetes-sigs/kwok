@@ -213,6 +213,8 @@ func scaleCreateNodeWithHack(ctx context.Context, t *testing.T, kwokctlPath stri
 	return nil
 }
 
+// CaseBenchmarkWithHack defines a feature test suite for benchmarking the performance of a KWOK cluster
+// using the hack command for faster resource creation.
 func CaseBenchmarkWithHack(kwokctlPath, clusterName string) *features.FeatureBuilder {
 	return features.New("Benchmark Hack").
 		Assess("Create nodes", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {

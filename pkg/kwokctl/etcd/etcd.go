@@ -29,10 +29,14 @@ import (
 )
 
 const (
+	// StorageBinaryMediaType is the media type for Kubernetes storage binary format
 	StorageBinaryMediaType = "application/vnd.kubernetes.storagebinary"
-	ProtobufMediaType      = "application/vnd.kubernetes.protobuf"
-	YAMLMediaType          = "application/yaml"
-	JSONMediaType          = "application/json"
+	// ProtobufMediaType is the media type for Protocol Buffers format
+	ProtobufMediaType = "application/vnd.kubernetes.protobuf"
+	// YAMLMediaType is the media type for YAML format
+	YAMLMediaType = "application/yaml"
+	// JSONMediaType is the media type for JSON format
+	JSONMediaType = "application/json"
 )
 
 // Convert converts the given data from one media type to another.
@@ -197,9 +201,9 @@ func decodeUnknown(in []byte) (*runtime.Unknown, error) {
 	return unknown, nil
 }
 
-// SpecialDefaultResourcePrefixes are prefixes compiled into Kubernetes.
+// specialDefaultResourcePrefixes are prefixes compiled into Kubernetes.
 // see k8s.io/kubernetes/pkg/kubeapiserver/default_storage_factory_builder.go
-var SpecialDefaultResourcePrefixes = map[schema.GroupResource]string{
+var specialDefaultResourcePrefixes = map[schema.GroupResource]string{
 	{Group: "", Resource: "replicationcontrollers"}:     "controllers",
 	{Group: "", Resource: "endpoints"}:                  "services/endpoints",
 	{Group: "", Resource: "services"}:                   "services/specs",
@@ -208,23 +212,16 @@ var SpecialDefaultResourcePrefixes = map[schema.GroupResource]string{
 	{Group: "networking.k8s.io", Resource: "ingresses"}: "ingress",
 }
 
-var SpecialDefaultMediaTypes = map[string]struct{}{
+var specialDefaultMediaTypes = map[string]struct{}{
 	"apiextensions.k8s.io":   {},
 	"apiregistration.k8s.io": {},
-}
-
-var IgnoreKeys = map[string]struct{}{
-	"/ranges/serviceips":       {},
-	"/ranges/servicenodeports": {},
-	"/masterleases/":           {},
-	"/peerserverleases/":       {},
 }
 
 // PrefixFromGVR returns the prefix of the given GroupVersionResource.
 func PrefixFromGVR(gvr schema.GroupVersionResource) (prefix string, err error) {
 	groupPrefix := false
 
-	if _, ok := SpecialDefaultMediaTypes[gvr.Group]; ok {
+	if _, ok := specialDefaultMediaTypes[gvr.Group]; ok {
 		groupPrefix = true
 	} else if !strings.Contains(gvr.Group, ".") || strings.HasSuffix(gvr.Group, ".k8s.io") {
 		groupPrefix = false
@@ -232,7 +229,7 @@ func PrefixFromGVR(gvr schema.GroupVersionResource) (prefix string, err error) {
 		groupPrefix = true
 	}
 
-	if prefix, ok := SpecialDefaultResourcePrefixes[gvr.GroupResource()]; ok {
+	if prefix, ok := specialDefaultResourcePrefixes[gvr.GroupResource()]; ok {
 		return prefix, nil
 	}
 
@@ -247,7 +244,7 @@ func PrefixFromGVR(gvr schema.GroupVersionResource) (prefix string, err error) {
 func MediaTypeFromGVR(gvr schema.GroupVersionResource) (mediaType string, err error) {
 	mediaType = JSONMediaType
 
-	if _, ok := SpecialDefaultMediaTypes[gvr.Group]; ok {
+	if _, ok := specialDefaultMediaTypes[gvr.Group]; ok {
 		return mediaType, nil
 	}
 

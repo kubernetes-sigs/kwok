@@ -35,6 +35,10 @@ import (
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
+// CaseResourceUsage defines a feature test suite for verifying resource usage metrics in a KWOK cluster.
+// It creates nodes and pods, waits for them to be ready, and then tests the resource usage metrics
+// using kubectl top command. The test ensures that the metrics API is available and returns
+// expected resource usage values for the created pods.
 func CaseResourceUsage(kwokctlPath, clusterName string) *features.FeatureBuilder {
 	node0 := helper.NewNodeBuilder("node0").
 		Build()

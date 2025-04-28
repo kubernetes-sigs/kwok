@@ -80,6 +80,9 @@ func executeCommand(args []string, absPath string, clusterName string, kwokctlPa
 	return "", nil
 }
 
+// CaseDryrun defines a feature test suite for verifying the dry-run functionality of cluster creation.
+// It tests the output of kwokctl create cluster --dry-run command against expected test data.
+// The test ensures the dry-run output matches the expected format and contents.
 func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run")
 	f = f.Assess("test cluster dryrun", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
@@ -106,6 +109,10 @@ func CaseDryrun(clusterName string, kwokctlPath string, rootDir string, clusterR
 	return f
 }
 
+// CaseDryrunWithExtra defines a feature test suite for verifying the dry-run functionality of cluster creation
+// with additional configuration. It tests the output of kwokctl create cluster --dry-run --config <extra-config>
+// command against expected test data. The test ensures the dry-run output with extra configuration matches
+// the expected format and contents.
 func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run with extra")
 	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
@@ -133,6 +140,10 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 	return f
 }
 
+// CaseDryrunWithVerbosity defines a feature test suite for verifying the dry-run functionality of cluster creation
+// with verbose configuration options. It tests the output of kwokctl create cluster --dry-run command with various
+// verbose flags against expected test data. The test ensures the dry-run output with verbose configuration matches
+// the expected format and contents, including ports for monitoring components and custom configuration paths.
 func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir string, clusterRuntime string, updateTestdata bool) *features.FeatureBuilder {
 	f := features.New("Dry run with verbosity")
 	f = f.Assess("test cluster dryrun with verbosity", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {

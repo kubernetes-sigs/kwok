@@ -23,6 +23,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// DynamicClientImpersonator is an interface that provides functionality to impersonate
+// a Kubernetes user and obtain a dynamic client with the impersonated credentials.
+// This is useful for scenarios where you need to perform operations on behalf of
+// different users while maintaining a single client instance.
 type DynamicClientImpersonator interface {
 	Impersonate(impersonateConfig rest.ImpersonationConfig) (dynamic.Interface, error)
 }

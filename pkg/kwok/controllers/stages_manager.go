@@ -69,6 +69,7 @@ func (c *StagesManager) run(ctx context.Context) {
 	}
 }
 
+//nolint:govet
 func (c *StagesManager) manage(ctx context.Context) {
 	set := sets.NewSets[internalversion.StageResourceRef]()
 	for _, stage := range c.stageGetter.Get() {
@@ -78,7 +79,6 @@ func (c *StagesManager) manage(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
 	for ref := range set {
-		ref := ref
 		_, ok := c.cache[ref]
 		if ok {
 			continue

@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 // Package prometheus copy from https://github.com/prometheus/prometheus/blob/919648cafc2c07ed5c1d5dd657b8080bee331aaf/config/config.go#L243
+//
+//nolint:revive
 package prometheus
 
 type GlobalConfig struct {

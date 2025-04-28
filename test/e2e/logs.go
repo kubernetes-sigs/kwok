@@ -48,7 +48,6 @@ func CaseLogs(kwokctlPath, clusterName, nodeName, namespace, tmpDir string) *fea
 		Assess("test logs", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			t.Log("test logs")
 
-			//nolint:gosec
 			f, err := os.OpenFile(path.Join(tmpDir, "logs.log"), os.O_WRONLY|os.O_CREATE, 0644)
 			if err != nil {
 				t.Fatal(err)

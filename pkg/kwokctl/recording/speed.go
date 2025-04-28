@@ -28,6 +28,9 @@ const (
 	speedOffset = 100000
 )
 
+// Up increases the speed value in a logarithmic manner, ensuring it never goes below the base speed.
+// It scales the speed by speedOffset, calculates an appropriate step size based on the number of digits,
+// increments the value, and then scales back down to return the new speed.
 func (s Speed) Up() Speed {
 	if s < speedBase {
 		return speedBase
@@ -43,6 +46,10 @@ func (s Speed) Up() Speed {
 	return Speed(n)
 }
 
+// Down decreases the speed value in a logarithmic manner, ensuring it never goes below 0.
+// It scales the speed by speedOffset, calculates an appropriate step size based on the number of digits,
+// decrements the value, and then scales back down to return the new speed.
+// If the speed is already at or below the base speed, it returns 0.
 func (s Speed) Down() Speed {
 	if s <= speedBase {
 		return 0
