@@ -7,20 +7,12 @@ dependencies:
     match: sigs.k8s.io/zeitgeist@v
 
 - name: "golang"
-  version: 1.23.0
+  version: 1.24.0
   refPaths:
   - path: go.mod
     match: "go "
-  - path: .github/workflows/golangci-lint.yaml
-    match: "GO_VERSION: "
   - path: .golangci.yaml
     match: "go: "
-  - path: .github/workflows/releases.yaml
-    match: "GO_VERSION: "
-  - path: .github/workflows/benchmark.yaml
-    match: "GO_VERSION: "
-  - path: .github/workflows/test.yaml
-    match: "GO_VERSION: "
   - path: hack/requirements.sh
     match: "GO_VERSION="
 
