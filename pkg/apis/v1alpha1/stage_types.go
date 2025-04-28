@@ -222,45 +222,38 @@ type StageSelector struct {
 }
 
 // SelectorExpression is a resource selector expression is a set of requirements that must be true for a match.
-// +kubebuilder:validation:XValidation:rule="has(self.expression) != has(self.key)",message="expression and key are mutually exclusive"
-// +kubebuilder:validation:XValidation:rule="!has(self.expression) || (has(self.key) && has(self.operator))",message="key and operator must be set together"
 type SelectorExpression struct {
-	*ExpressionCEL `json:",inline"`
-	*SelectorJQ    `json:",inline"`
-}
+	// CEL is a Common Expression Language (CEL) based selector expression
+	CEL *ExpressionCEL `json:"cel,omitempty"`
+	// JQ is a JSON query (JQ) based selector expression
+	JQ *SelectorJQ `json:"jq,omitempty"`
 
-// SelectorJQ is a resource selector requirement is a selector that contains values, a key,
-// and an operator that relates the key and values.
-type SelectorJQ struct {
 	// Key represents the expression which will be evaluated by JQ.
+	// Deprecated: Use JQ instead.
+	//+k8s:conversion-gen=false
 	Key string `json:"key,omitempty"`
 	// Represents a scope's relationship to a set of values.
+	// Deprecated: Use JQ instead.
+	//+k8s:conversion-gen=false
 	Operator SelectorOperator `json:"operator,omitempty"`
 	// An array of string values.
 	// If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
 	// If the operator is Exists or DoesNotExist, the values array must be empty.
+	// Deprecated: Use JQ instead.
+	//+k8s:conversion-gen=false
 	Values []string `json:"values,omitempty"`
 }
 
-// SelectorOperator is a label selector operator is the set of operators that can be used in a selector requirement.
-// +enum
-type SelectorOperator string
-
-// The following are valid selector operators.
-const (
-	// SelectorOpIn is the set inclusion operator.
-	SelectorOpIn SelectorOperator = "In"
-	// SelectorOpNotIn is the negated set inclusion operator.
-	SelectorOpNotIn SelectorOperator = "NotIn"
-	// SelectorOpExists is the existence operator.
-	SelectorOpExists SelectorOperator = "Exists"
-	// SelectorOpDoesNotExist is the negated existence operator.
-	SelectorOpDoesNotExist SelectorOperator = "DoesNotExist"
-)
-
 // ExpressionFromSource represents a source for the value of a from.
 type ExpressionFromSource struct {
+	// JQ is a JSON query (JQ) based expression that will be evaluated to get the value.
+	JQ *ExpressionJQ `json:"jq,omitempty"`
+	// CEL is a Common Expression Language (CEL) based expression that will be evaluated to get the value.
+	CEL *ExpressionCEL `json:"cel,omitempty"`
+
 	// ExpressionFrom is the expression used to get the value.
+	// Deprecated: Use JQ instead.
+	//+k8s:conversion-gen=false
 	ExpressionFrom string `json:"expressionFrom,omitempty"`
 }
 

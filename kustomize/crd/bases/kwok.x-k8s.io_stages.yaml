@@ -48,10 +48,29 @@ spec:
                       If it is a time.Time type, getting the value will be minus time.Now() to get DurationMilliseconds
                       If it is a string type, the value get will be parsed by time.ParseDuration.
                     properties:
+                      cel:
+                        description: CEL is a Common Expression Language (CEL) based
+                          expression that will be evaluated to get the value.
+                        properties:
+                          expression:
+                            description: Expression represents the expression which
+                              will be evaluated by CEL.
+                            type: string
+                        type: object
                       expressionFrom:
-                        description: ExpressionFrom is the expression used to get
-                          the value.
+                        description: |-
+                          ExpressionFrom is the expression used to get the value.
+                          Deprecated: Use JQ instead.
                         type: string
+                      jq:
+                        description: JQ is a JSON query (JQ) based expression that
+                          will be evaluated to get the value.
+                        properties:
+                          expression:
+                            description: Expression represents the expression which
+                              will be evaluated by JQ.
+                            type: string
+                        type: object
                     type: object
                   durationMilliseconds:
                     description: |-
@@ -66,10 +85,29 @@ spec:
                       If it is a time.Time type, getting the value will be minus time.Now() to get JitterDurationMilliseconds
                       If it is a string type, the value get will be parsed by time.ParseDuration.
                     properties:
+                      cel:
+                        description: CEL is a Common Expression Language (CEL) based
+                          expression that will be evaluated to get the value.
+                        properties:
+                          expression:
+                            description: Expression represents the expression which
+                              will be evaluated by CEL.
+                            type: string
+                        type: object
                       expressionFrom:
-                        description: ExpressionFrom is the expression used to get
-                          the value.
+                        description: |-
+                          ExpressionFrom is the expression used to get the value.
+                          Deprecated: Use JQ instead.
                         type: string
+                      jq:
+                        description: JQ is a JSON query (JQ) based expression that
+                          will be evaluated to get the value.
+                        properties:
+                          expression:
+                            description: Expression represents the expression which
+                              will be evaluated by JQ.
+                            type: string
+                        type: object
                     type: object
                   jitterDurationMilliseconds:
                     description: |-
@@ -235,32 +273,55 @@ spec:
                       description: SelectorExpression is a resource selector expression
                         is a set of requirements that must be true for a match.
                       properties:
-                        expression:
-                          description: Expression represents the expression which
-                            will be evaluated by CEL.
-                          type: string
+                        cel:
+                          description: CEL is a Common Expression Language (CEL) based
+                            selector expression
+                          properties:
+                            expression:
+                              description: Expression represents the expression which
+                                will be evaluated by CEL.
+                              type: string
+                          type: object
+                        jq:
+                          description: JQ is a JSON query (JQ) based selector expression
+                          properties:
+                            key:
+                              description: Key represents the expression which will
+                                be evaluated by JQ.
+                              type: string
+                            operator:
+                              description: Represents a scope's relationship to a
+                                set of values.
+                              type: string
+                            values:
+                              description: |-
+                                An array of string values.
+                                If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
+                                If the operator is Exists or DoesNotExist, the values array must be empty.
+                              items:
+                                type: string
+                              type: array
+                          type: object
                         key:
-                          description: Key represents the expression which will be
-                            evaluated by JQ.
+                          description: |-
+                            Key represents the expression which will be evaluated by JQ.
+                            Deprecated: Use JQ instead.
                           type: string
                         operator:
-                          description: Represents a scope's relationship to a set
-                            of values.
+                          description: |-
+                            Represents a scope's relationship to a set of values.
+                            Deprecated: Use JQ instead.
                           type: string
                         values:
                           description: |-
                             An array of string values.
                             If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
                             If the operator is Exists or DoesNotExist, the values array must be empty.
+                            Deprecated: Use JQ instead.
                           items:
                             type: string
                           type: array
                       type: object
-                      x-kubernetes-validations:
-                      - message: expression and key are mutually exclusive
-                        rule: has(self.expression) != has(self.key)
-                      - message: key and operator must be set together
-                        rule: '!has(self.expression) || (has(self.key) && has(self.operator))'
                     type: array
                   matchLabels:
                     additionalProperties:
@@ -284,10 +345,29 @@ spec:
                   If it is a number type, convert to int.
                   If it is a string type, the value get will be parsed by strconv.ParseInt.
                 properties:
+                  cel:
+                    description: CEL is a Common Expression Language (CEL) based expression
+                      that will be evaluated to get the value.
+                    properties:
+                      expression:
+                        description: Expression represents the expression which will
+                          be evaluated by CEL.
+                        type: string
+                    type: object
                   expressionFrom:
-                    description: ExpressionFrom is the expression used to get the
-                      value.
+                    description: |-
+                      ExpressionFrom is the expression used to get the value.
+                      Deprecated: Use JQ instead.
                     type: string
+                  jq:
+                    description: JQ is a JSON query (JQ) based expression that will
+                      be evaluated to get the value.
+                    properties:
+                      expression:
+                        description: Expression represents the expression which will
+                          be evaluated by JQ.
+                        type: string
+                    type: object
                 type: object
             required:
             - next

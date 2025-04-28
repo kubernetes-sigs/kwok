@@ -36,7 +36,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
-	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
@@ -190,13 +189,14 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 		}
 	}
 
-	data, err := expression.ToJSONStandard(resource)
-	if err != nil {
-		return err
+	event := &lifecycle.Event{
+		Labels:      resource.GetLabels(),
+		Annotations: resource.GetAnnotations(),
+		Data:        resource,
 	}
 
 	lc := c.lifecycle.Get()
-	stage, err := lc.Match(ctx, resource.GetLabels(), resource.GetAnnotations(), resource, data)
+	stage, err := lc.Match(ctx, event)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}
@@ -208,7 +208,7 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 	}
 
 	now := c.clock.Now()
-	delay, _ := stage.Delay(ctx, data, now)
+	delay, _ := stage.Delay(ctx, event, now)
 
 	if delay != 0 {
 		stageName := stage.Name()

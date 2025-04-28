@@ -19,6 +19,7 @@ package cel
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
@@ -152,4 +153,43 @@ func AsBool(refVal ref.Val) (bool, error) {
 		return false, fmt.Errorf("unsupported type: %T", v)
 	}
 	return bool(v), nil
+}
+
+// AsDuration returns the time.Duration value of a ref.Val
+func AsDuration(refVal ref.Val) (time.Duration, error) {
+	switch v := refVal.(type) {
+	case types.String:
+		return time.ParseDuration(string(v))
+	case types.Duration:
+		return v.Duration, nil
+	case types.Int:
+		return time.Duration(v), nil
+	case types.Double:
+		return time.Duration(v), nil
+	case types.Uint:
+		return time.Duration(v), nil
+	default:
+		return 0, fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+// AsInt returns the int64 value of a ref.Val
+func AsInt(refVal ref.Val) (int64, error) {
+	switch v := refVal.(type) {
+	case types.Duration:
+		return int64(v.Duration), nil
+	case types.Int:
+		return int64(v), nil
+	case types.Double:
+		return int64(v), nil
+	case types.Uint:
+		return int64(v), nil
+	case types.Bool:
+		if v {
+			return 1, nil
+		}
+		return 0, nil
+	default:
+		return 0, fmt.Errorf("unsupported type: %T", v)
+	}
 }

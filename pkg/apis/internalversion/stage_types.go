@@ -168,40 +168,16 @@ type StageSelector struct {
 
 // SelectorExpression is a resource selector expression is a set of requirements that must be true for a match.
 type SelectorExpression struct {
-	*ExpressionCEL
-	*SelectorJQ
+	// CEL is a Common Expression Language (CEL) based selector expression
+	CEL *ExpressionCEL
+	// JQ is a JSON query (JQ) based selector expression
+	JQ *SelectorJQ
 }
-
-// SelectorJQ is a resource selector requirement is a selector that contains values, a key,
-// and an operator that relates the key and values.
-type SelectorJQ struct {
-	// Key represents the expression which will be evaluated by JQ.
-	Key string
-	// Represents a scope's relationship to a set of values.
-	Operator SelectorOperator
-	// An array of string values.
-	// If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
-	// If the operator is Exists or DoesNotExist, the values array must be empty.
-	Values []string
-}
-
-// SelectorOperator is a label selector operator is the set of operators that can be used in a selector requirement.
-type SelectorOperator string
-
-// The following are valid selector operators.
-const (
-	// SelectorOpIn is the set inclusion operator.
-	SelectorOpIn SelectorOperator = "In"
-	// SelectorOpNotIn is the negated set inclusion operator.
-	SelectorOpNotIn SelectorOperator = "NotIn"
-	// SelectorOpExists is the existence operator.
-	SelectorOpExists SelectorOperator = "Exists"
-	// SelectorOpDoesNotExist is the negated existence operator.
-	SelectorOpDoesNotExist SelectorOperator = "DoesNotExist"
-)
 
 // ExpressionFromSource represents a source for the value of a from.
 type ExpressionFromSource struct {
-	// ExpressionFrom is the expression used to get the value.
-	ExpressionFrom string
+	// JQ is a JSON query (JQ) based expression that will be evaluated to get the value.
+	JQ *ExpressionJQ
+	// CEL is a Common Expression Language (CEL) based expression that will be evaluated to get the value.
+	CEL *ExpressionCEL
 }

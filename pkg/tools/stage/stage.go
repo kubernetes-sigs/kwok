@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strings"
 	"time"
 
@@ -28,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/utils/expression"
+	"sigs.k8s.io/kwok/pkg/utils/cel"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
@@ -61,24 +62,41 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 		return stage.Spec.ResourceRef == want
 	})
 
-	lc, err := lifecycle.NewLifecycle(stages, nil)
+	types := slices.Clone(cel.DefaultTypes)
+	conversions := slices.Clone(cel.DefaultConversions)
+	funcs := maps.Clone(cel.DefaultFuncs)
+	methods := maps.Clone(cel.FuncsToMethods(cel.DefaultFuncs))
+	vars := map[string]any{
+		"self": map[any]any{},
+	}
+	env, err := cel.NewEnvironment(cel.EnvironmentConfig{
+		Types:       types,
+		Conversions: conversions,
+		Methods:     methods,
+		Funcs:       funcs,
+		Vars:        vars,
+	})
+	if err != nil {
+		return nil, err
+	}
+	lc, err := lifecycle.NewLifecycle(stages, env)
 	if err != nil {
 		return nil, err
 	}
 
-	jsonStandard, err := expression.ToJSONStandard(testTarget)
-	if err != nil {
-		return nil, err
+	event := &lifecycle.Event{
+		Labels:      testTarget.GetLabels(),
+		Annotations: testTarget.GetAnnotations(),
+		Data:        testTarget,
 	}
-
-	lcstages, err := lc.ListAllPossible(ctx, testTarget.GetLabels(), testTarget.GetAnnotations(), testTarget, jsonStandard)
+	lcstages, err := lc.ListAllPossible(ctx, event)
 	if err != nil {
 		return nil, err
 	}
 
 	out := []any{}
 	for _, stage := range lcstages {
-		o, err := testingStage(ctx, testTarget, stage)
+		o, err := testingStage(ctx, testTarget, event, stage)
 		if err != nil {
 			return nil, err
 		}
@@ -92,17 +110,17 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 
 var now = time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC)
 
-func testingStage(ctx context.Context, testTarget obj, stage *lifecycle.Stage) (any, error) {
+func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, stage *lifecycle.Stage) (any, error) {
 	meta := map[string]any{
 		"stage": stage.Name(),
 	}
 
-	delay, ok := stage.DelayRangePossible(ctx, testTarget, now)
+	delay, ok := stage.DelayRangePossible(ctx, event, now)
 	if ok {
 		meta["delay"] = delay
 	}
 
-	weight, ok := stage.Weight(ctx, testTarget)
+	weight, ok := stage.Weight(ctx, event)
 	if ok {
 		meta["weight"] = weight
 	}

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package expression
+package lifecycle
 
 import (
 	"context"
@@ -23,14 +23,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func TestNewIntFrom_Get(t *testing.T) {
 	type args struct {
 		value *int64
-		src   *string
-		v     interface{}
+		src   *internalversion.ExpressionFromSource
+		v     *Event
 	}
 	tests := []struct {
 		name    string
@@ -43,24 +44,34 @@ func TestNewIntFrom_Get(t *testing.T) {
 			args: args{
 				value: nil,
 				src:   nil,
-				v:     corev1.Pod{},
+				v: &Event{
+					Data: corev1.Pod{},
+				},
 			},
 		},
 		{
 			args: args{
 				value: format.Ptr[int64](0),
 				src:   nil,
-				v:     corev1.Pod{},
+				v: &Event{
+					Data: corev1.Pod{},
+				},
 			},
 			wantOk: true,
 		},
 		{
 			args: args{
 				value: format.Ptr[int64](0),
-				src:   format.Ptr(".metadata.deletionGracePeriodSeconds"),
-				v: corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						DeletionGracePeriodSeconds: format.Ptr[int64](1),
+				src: &internalversion.ExpressionFromSource{
+					JQ: &internalversion.ExpressionJQ{
+						Expression: ".metadata.deletionGracePeriodSeconds",
+					},
+				},
+				v: &Event{
+					Data: corev1.Pod{
+						ObjectMeta: metav1.ObjectMeta{
+							DeletionGracePeriodSeconds: format.Ptr[int64](1),
+						},
 					},
 				},
 			},
@@ -70,10 +81,16 @@ func TestNewIntFrom_Get(t *testing.T) {
 		{
 			args: args{
 				value: format.Ptr[int64](0),
-				src:   format.Ptr(".metadata.generation"),
-				v: corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Generation: 1,
+				src: &internalversion.ExpressionFromSource{
+					JQ: &internalversion.ExpressionJQ{
+						Expression: ".metadata.generation",
+					},
+				},
+				v: &Event{
+					Data: corev1.Pod{
+						ObjectMeta: metav1.ObjectMeta{
+							Generation: 1,
+						},
 					},
 				},
 			},
@@ -83,11 +100,17 @@ func TestNewIntFrom_Get(t *testing.T) {
 		{
 			args: args{
 				value: format.Ptr[int64](0),
-				src:   format.Ptr(".metadata.annotations.x"),
-				v: corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Annotations: map[string]string{
-							"x": "1",
+				src: &internalversion.ExpressionFromSource{
+					JQ: &internalversion.ExpressionJQ{
+						Expression: ".metadata.annotations.x",
+					},
+				},
+				v: &Event{
+					Data: corev1.Pod{
+						ObjectMeta: metav1.ObjectMeta{
+							Annotations: map[string]string{
+								"x": "1",
+							},
 						},
 					},
 				},
@@ -98,7 +121,7 @@ func TestNewIntFrom_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d, err := NewIntFrom(tt.args.value, tt.args.src)
+			d, err := NewIntFrom(tt.args.value, nil, tt.args.src)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewDurationFrom() error = %v, wantErr %v", err, tt.wantErr)
 				return

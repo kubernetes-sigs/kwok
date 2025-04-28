@@ -464,3 +464,26 @@ func Convert_internalversion_StageNext_To_v1alpha1_StageNext(in *StageNext, out 
 func Convert_internalversion_StagePatch_To_v1alpha1_StagePatch(in *StagePatch, out *v1alpha1.StagePatch, s conversion.Scope) error {
 	return autoConvert_internalversion_StagePatch_To_v1alpha1_StagePatch(in, out, s)
 }
+
+// Convert_v1alpha1_SelectorExpression_To_internalversion_SelectorExpression converts a v1alpha1.SelectorExpression to an internal version SelectorExpression.
+func Convert_v1alpha1_SelectorExpression_To_internalversion_SelectorExpression(in *v1alpha1.SelectorExpression, out *SelectorExpression, s conversion.Scope) error {
+	if in.JQ == nil && in.Key != "" {
+		in.JQ = &v1alpha1.SelectorJQ{
+			Key:      in.Key,
+			Operator: in.Operator,
+			Values:   in.Values,
+		}
+	}
+
+	return autoConvert_v1alpha1_SelectorExpression_To_internalversion_SelectorExpression(in, out, s)
+}
+
+// Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource converts a v1alpha1.ExpressionFromSource to an internal version ExpressionFromSource.
+func Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in *v1alpha1.ExpressionFromSource, out *ExpressionFromSource, s conversion.Scope) error {
+	if in.JQ == nil && in.ExpressionFrom != "" {
+		in.JQ = &v1alpha1.ExpressionJQ{
+			Expression: in.ExpressionFrom,
+		}
+	}
+	return autoConvert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in, out, s)
+}

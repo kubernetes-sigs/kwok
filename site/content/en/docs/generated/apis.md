@@ -4996,6 +4996,8 @@ ExpressionCEL
 </h3>
 <p>
 <em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExpressionFromSource">ExpressionFromSource</a>
+, 
 <a href="#kwok.x-k8s.io/v1alpha1.SelectorExpression">SelectorExpression</a>
 </p>
 <p>
@@ -5045,13 +5047,72 @@ ExpressionFromSource
 <tbody>
 <tr>
 <td>
+<code>jq</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExpressionJQ">
+ExpressionJQ
+</a>
+</em>
+</td>
+<td>
+<p>JQ is a JSON query (JQ) based expression that will be evaluated to get the value.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cel</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExpressionCEL">
+ExpressionCEL
+</a>
+</em>
+</td>
+<td>
+<p>CEL is a Common Expression Language (CEL) based expression that will be evaluated to get the value.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>expressionFrom</code>
 <em>
 string
 </em>
 </td>
 <td>
-<p>ExpressionFrom is the expression used to get the value.</p>
+<p>ExpressionFrom is the expression used to get the value.
+Deprecated: Use JQ instead.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExpressionJQ">
+ExpressionJQ
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExpressionJQ"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExpressionFromSource">ExpressionFromSource</a>
+</p>
+<p>
+<p>ExpressionJQ is the expression which will be evaluated by JQ.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>expression</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Expression represents the expression which will be evaluated by JQ.</p>
 </td>
 </tr>
 </tbody>
@@ -6023,7 +6084,7 @@ SelectorExpression
 <tbody>
 <tr>
 <td>
-<code>ExpressionCEL</code>
+<code>cel</code>
 <em>
 <a href="#kwok.x-k8s.io/v1alpha1.ExpressionCEL">
 ExpressionCEL
@@ -6031,14 +6092,12 @@ ExpressionCEL
 </em>
 </td>
 <td>
-<p>
-(Members of <code>ExpressionCEL</code> are embedded into this type.)
-</p>
+<p>CEL is a Common Expression Language (CEL) based selector expression</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>SelectorJQ</code>
+<code>jq</code>
 <em>
 <a href="#kwok.x-k8s.io/v1alpha1.SelectorJQ">
 SelectorJQ
@@ -6046,9 +6105,47 @@ SelectorJQ
 </em>
 </td>
 <td>
-<p>
-(Members of <code>SelectorJQ</code> are embedded into this type.)
-</p>
+<p>JQ is a JSON query (JQ) based selector expression</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key represents the expression which will be evaluated by JQ.
+Deprecated: Use JQ instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>operator</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.SelectorOperator">
+SelectorOperator
+</a>
+</em>
+</td>
+<td>
+<p>Represents a scope&rsquo;s relationship to a set of values.
+Deprecated: Use JQ instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>An array of string values.
+If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
+If the operator is Exists or DoesNotExist, the values array must be empty.
+Deprecated: Use JQ instead.</p>
 </td>
 </tr>
 </tbody>
@@ -6119,6 +6216,8 @@ SelectorOperator
 </h3>
 <p>
 <em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.SelectorExpression">SelectorExpression</a>
+, 
 <a href="#kwok.x-k8s.io/v1alpha1.SelectorJQ">SelectorJQ</a>
 </p>
 <p>
