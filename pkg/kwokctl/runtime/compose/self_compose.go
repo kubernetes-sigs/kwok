@@ -107,7 +107,6 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 
 func (c *Cluster) inspectNetwork(ctx context.Context, name string) (exist bool) {
 	err := c.Exec(ctx, c.runtime, "network", "inspect", name)
-	//nolint:gosimple
 	if err != nil {
 		// TODO: check if network exists or other error
 		return false

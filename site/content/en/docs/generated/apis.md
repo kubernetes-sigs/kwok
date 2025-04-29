@@ -1765,6 +1765,7 @@ PatchMethod
 <a href="#action.kwok.x-k8s.io/v1alpha1.ResourcePatch">ResourcePatch</a>
 </p>
 <p>
+<p>PatchMethod defines the method used to patch a resource.</p>
 </p>
 <table>
 <thead>

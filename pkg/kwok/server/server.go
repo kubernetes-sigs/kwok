@@ -443,6 +443,7 @@ func (s *Server) InstallCRD(ctx context.Context) error {
 	return nil
 }
 
+// InstallTracingFilter installs tracing filter
 func (s *Server) InstallTracingFilter(tp oteltrace.TracerProvider) {
 	s.restfulCont.Filter(otelrestful.OTelFilter("kwok-controller", otelrestful.WithTracerProvider(tp)))
 }

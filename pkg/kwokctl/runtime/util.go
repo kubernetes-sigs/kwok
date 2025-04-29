@@ -69,7 +69,6 @@ func (c *Cluster) ForeachComponents(ctx context.Context, reverse, order bool, fu
 			} else {
 				g, ctx := errgroup.WithContext(ctx)
 				for _, component := range group {
-					component := component
 					g.Go(func() error {
 						return fun(ctx, component)
 					})
@@ -83,7 +82,6 @@ func (c *Cluster) ForeachComponents(ctx context.Context, reverse, order bool, fu
 		g, ctx := errgroup.WithContext(ctx)
 		for _, group := range groups {
 			for _, component := range group {
-				component := component
 				g.Go(func() error {
 					return fun(ctx, component)
 				})

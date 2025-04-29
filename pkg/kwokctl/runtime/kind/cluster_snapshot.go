@@ -179,8 +179,7 @@ func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error
 		cli, err := etcd.NewClient(etcd.ClientConfig{
 			Endpoints: []string{"https://" + net.LocalAddress + ":" + format.String(unused)},
 			TLS: &tls.Config{
-				Certificates: []tls.Certificate{cert},
-				//nolint:gosec
+				Certificates:       []tls.Certificate{cert},
 				InsecureSkipVerify: true,
 			},
 		})
@@ -198,8 +197,7 @@ func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error
 	cli, err := etcd.NewClient(etcd.ClientConfig{
 		Endpoints: []string{"https://" + net.LocalAddress + ":" + format.String(conf.EtcdPort)},
 		TLS: &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			//nolint:gosec
+			Certificates:       []tls.Certificate{cert},
 			InsecureSkipVerify: true,
 		},
 	})

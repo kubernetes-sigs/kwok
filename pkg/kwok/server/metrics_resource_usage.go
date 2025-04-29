@@ -87,7 +87,6 @@ func (s *Server) nodeResourceCumulativeUsage(resourceName, nodeName string) floa
 		}
 		data.Pod = pod
 		for _, c := range pod.Spec.Containers {
-			c := c
 			data.Container = &c
 			sum += s.evaluateContainerResourceUsage(resourceName, data)
 		}
@@ -185,7 +184,6 @@ func (s *Server) podResourceUsage(resourceName, podNamespace, podName string) fl
 
 	sum := 0.0
 	for _, c := range pod.Spec.Containers {
-		c := c
 		data.Container = &c
 		sum += s.evaluateContainerResourceUsage(resourceName, data)
 	}
@@ -215,7 +213,6 @@ func (s *Server) nodeResourceUsage(resourceName, nodeName string) float64 {
 		}
 		data.Pod = pod
 		for _, c := range pod.Spec.Containers {
-			c := c
 			data.Container = &c
 			sum += s.evaluateContainerResourceUsage(resourceName, data)
 		}

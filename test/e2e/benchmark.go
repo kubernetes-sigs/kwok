@@ -50,6 +50,7 @@ func waitDeleteResource(ctx context.Context, t *testing.T, kwokctlPath, name, re
 	}
 }
 
+//nolint:govet
 func waitResource(ctx context.Context, t *testing.T, kwokctlPath, name, resource, reason string, want, gap, tolerance int, startFunc func() error) error {
 	watchCtx, cancel := context.WithCancel(ctx)
 	defer func() {
@@ -92,12 +93,12 @@ func waitResource(ctx context.Context, t *testing.T, kwokctlPath, name, resource
 
 			time.Sleep(1 * time.Second)
 
-			watchCtx, cancel = context.WithCancel(ctx) //nolint:govet
+			watchCtx, cancel = context.WithCancel(ctx)
 			cmd = exec.CommandContext(watchCtx, kwokctlPath, "--name", name, "kubectl", "get", "--no-headers", "--watch", resource)
 			cmd.Stderr = os.Stderr
 			pr, err = cmd.StdoutPipe()
 			if err != nil {
-				return err //nolint:govet
+				return err
 			}
 
 			err = cmd.Start()
@@ -155,7 +156,7 @@ func waitResource(ctx context.Context, t *testing.T, kwokctlPath, name, resource
 
 func scaleCreatePod(ctx context.Context, t *testing.T, kwokctlPath string, name string, size, gap, tolerance int) error {
 	nodeName := "fake-node-000000"
-	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "pod", "fake-pod", "--replicas", strconv.Itoa(size), "--param", fmt.Sprintf(".nodeName=%q", nodeName)) // #nosec G204
+	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "pod", "fake-pod", "--replicas", strconv.Itoa(size), "--param", fmt.Sprintf(".nodeName=%q", nodeName))
 	scaleCmd.Stdout = os.Stderr
 	scaleCmd.Stderr = os.Stderr
 
@@ -166,7 +167,7 @@ func scaleCreatePod(ctx context.Context, t *testing.T, kwokctlPath string, name 
 }
 
 func scaleDeletePod(ctx context.Context, t *testing.T, kwokctlPath string, name string, _ int) error {
-	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "pod", "fake-pod", "--replicas", strconv.Itoa(0)) // #nosec G204
+	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "pod", "fake-pod", "--replicas", strconv.Itoa(0))
 	scaleCmd.Stdout = os.Stderr
 	scaleCmd.Stderr = os.Stderr
 
@@ -182,7 +183,7 @@ func scaleDeletePod(ctx context.Context, t *testing.T, kwokctlPath string, name 
 }
 
 func scaleCreateNode(ctx context.Context, t *testing.T, kwokctlPath string, name string, size, gap, tolerance int) error {
-	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "node", "fake-node", "--replicas", strconv.Itoa(size)) // #nosec G204
+	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "scale", "node", "fake-node", "--replicas", strconv.Itoa(size))
 	scaleCmd.Stdout = os.Stderr
 	scaleCmd.Stderr = os.Stderr
 
@@ -192,6 +193,7 @@ func scaleCreateNode(ctx context.Context, t *testing.T, kwokctlPath string, name
 	return nil
 }
 
+// CaseBenchmark defines a feature test suite for benchmarking the performance of a KWOK cluster.
 func CaseBenchmark(kwokctlPath, clusterName string) *features.FeatureBuilder {
 	return features.New("Benchmark Hack").
 		Assess("Create nodes", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {

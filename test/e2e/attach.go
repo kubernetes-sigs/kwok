@@ -49,7 +49,6 @@ func CaseAttach(kwokctlPath, clusterName, nodeName, namespace, tmpDir string) *f
 		Assess("test attach", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			t.Log("test attach")
 
-			//nolint:gosec
 			f, err := os.OpenFile(path.Join(tmpDir, "attach.log"), os.O_WRONLY|os.O_CREATE, 0644)
 			if err != nil {
 				t.Fatal(err)

@@ -48,6 +48,7 @@ type ResourcePatch struct {
 	Template json.RawMessage `json:"template,omitempty"`
 }
 
+// PatchMethod defines the method used to patch a resource.
 type PatchMethod string
 
 const (

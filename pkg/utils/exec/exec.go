@@ -195,6 +195,7 @@ func Exec(ctx context.Context, name string, args ...string) error {
 	return err
 }
 
+// Cmd is a type alias for exec.Cmd, representing an external command being prepared or run.
 type Cmd = exec.Cmd
 
 // Command executes the given command and return the command.

@@ -37,6 +37,7 @@ const (
 )
 
 var (
+	// DefaultTypes defines the Kubernetes resource types that are available in CEL expressions
 	DefaultTypes = []any{
 		corev1.Node{},
 		corev1.NodeSpec{},
@@ -50,6 +51,8 @@ var (
 		Quantity{},
 		ResourceList{},
 	}
+
+	// DefaultConversions defines type conversions between Kubernetes types and CEL types
 	DefaultConversions = []any{
 		func(t metav1.Time) types.Timestamp {
 			return types.Timestamp{Time: t.Time}
@@ -74,6 +77,8 @@ var (
 		},
 		NewResourceList,
 	}
+
+	// DefaultFuncs defines built-in functions available in CEL expressions
 	DefaultFuncs = map[string][]any{
 		nowName:         {timeNow},
 		mathRandName:    {mathRand},

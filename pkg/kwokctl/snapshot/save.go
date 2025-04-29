@@ -294,6 +294,9 @@ func retriable(err error) bool {
 		net.IsConnectionRefused(err)
 }
 
+// TrackData holds tracking information for resources being recorded
+// Data contains a map of object references to their raw JSON representations
+// ResourceVersion tracks the last observed resource version for synchronization
 type TrackData struct {
 	Data            map[log.ObjectRef]json.RawMessage
 	ResourceVersion string

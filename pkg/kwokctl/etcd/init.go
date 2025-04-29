@@ -24,7 +24,9 @@ import (
 )
 
 var (
+	// Scheme is a runtime.Scheme that will be used to register API types
 	Scheme = runtime.NewScheme()
+	// Codecs is a serializer.CodecFactory that provides serializers for the Scheme
 	Codecs = serializer.NewCodecFactory(Scheme)
 )
 

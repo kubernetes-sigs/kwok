@@ -30,6 +30,10 @@ import (
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
+// CaseHack defines a feature test suite for verifying the hack command functionality in a KWOK cluster.
+// It tests the ability to get, delete, and put node resources using the hack command. The test ensures
+// that the hack command can successfully retrieve node data, delete a node, and restore the node with
+// the same data, maintaining data consistency throughout the operations.
 func CaseHack(kwokctlPath, clusterName, nodeName string) *features.FeatureBuilder {
 	node := helper.NewNodeBuilder(nodeName).
 		Build()

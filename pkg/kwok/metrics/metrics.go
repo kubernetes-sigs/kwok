@@ -239,7 +239,6 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 			}
 			data.Pod = pod
 			for _, container := range pod.Spec.Containers {
-				container := container
 				data.Container = &container
 				gauge, key, err := h.getOrRegisterGauge(ctx, metricConfig, data)
 				if err != nil {
@@ -333,7 +332,6 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 			}
 			data.Pod = pod
 			for _, container := range pod.Spec.Containers {
-				container := container
 				data.Container = &container
 				counter, key, err := h.getOrRegisterCounter(ctx, metricConfig, data)
 				if err != nil {
@@ -434,7 +432,6 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 			}
 			data.Pod = pod
 			for _, container := range pod.Spec.Containers {
-				container := container
 				data.Container = &container
 				histogram, key, err := h.getOrRegisterHistogram(ctx, metricConfig, data)
 				if err != nil {
@@ -528,7 +525,6 @@ func (h *UpdateHandler) Update(ctx context.Context, nodeName string, metrics []i
 	// Sync metrics
 	h.environment.ClearResultCache()
 	for _, metric := range metrics {
-		metric := metric
 		metricName := metric.Name
 		keys, err := h.updateMetric(ctx, &metric, nodeName)
 		if err != nil {

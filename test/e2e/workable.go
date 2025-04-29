@@ -87,7 +87,7 @@ func testGetKubeconfig(ctx context.Context, kwokctlPath, name string) error {
 	defer func() {
 		_ = os.Remove(kubeconfigPath)
 	}()
-	output, err = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfigPath, "get", "pod").Output() // #nosec G204
+	output, err = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfigPath, "get", "pod").Output()
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func testEtcdPort() error {
 }
 
 func testEtcdctlGet(ctx context.Context, kwokctlPath, name string) error {
-	output, err := exec.CommandContext(ctx, kwokctlPath, "--name="+name, "etcdctl", "get", "/registry/namespaces/default", "--keys-only").Output() // #nosec G204
+	output, err := exec.CommandContext(ctx, kwokctlPath, "--name="+name, "etcdctl", "get", "/registry/namespaces/default", "--keys-only").Output()
 	if err != nil {
 		return fmt.Errorf("failed to get namespace(default) by kwokctl etcdctl in cluster %s: %w", name, err)
 	}
@@ -242,11 +242,12 @@ func testKubeControllerManagerPort() error {
 	return nil
 }
 
+// CaseWorkable defines a feature test suite for verifying the basic functionality and workability of a KWOK cluster.
 func CaseWorkable(kwokctlPath, clusterName, clusterRuntime string) *features.FeatureBuilder {
 	f0 := features.New("Workable").
 		Assess("Test Workable", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
 			ctxName := "kwok-" + clusterName
-			err := exec.Command("kubectl", "config", "use-context", ctxName).Run() // #nosec G204
+			err := exec.Command("kubectl", "config", "use-context", ctxName).Run()
 			if err != nil {
 				t.Fatal(err)
 			}

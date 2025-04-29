@@ -4,11 +4,11 @@ linters:
   enable:
   - asciicheck
   - bodyclose
+  - copyloopvar
   - depguard
   - dogsled
   - errcheck
   - errorlint
-  - exportloopref
   - gci
   - goconst
   - gocritic
@@ -16,7 +16,6 @@ linters:
   - gofmt
   - goimports
   - goprintffuncname
-  - gosec
   - gosimple
   - govet
   - importas
@@ -59,8 +58,10 @@ linters-settings:
     - pkg: k8s.io/apimachinery/pkg/api/errors
       alias: apierrors
   stylecheck:
-    # STxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
-    checks: ["all", "-ST1000", "-ST1003"]
+    checks:
+    - "all"
+    - "-ST1000"
+    - "-ST1003"
   depguard:
     rules:
       main:
@@ -92,94 +93,16 @@ linters-settings:
           desc: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
   gocyclo:
     min-complexity: 50
-  gosec:
-    excludes:
-    - G110
-    - G304
-    config:
-      G301: "0750"
-      G302: "0640"
-      G306: "0640"
   goconst:
     min-len: 5
     min-occurrences: 10
     ignore-tests: true
     match-constant: false
   revive:
-    ignore-generated-header: true
-    severity: error
-    enable-all-rules: true
-    # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
     rules:
-    - name: add-constant
-      disabled: true
-    - name: argument-limit
-      disabled: true
-    - name: cognitive-complexity
-      disabled: true
-    - name: confusing-naming
-      disabled: true
-    - name: cyclomatic
-      disabled: true
-    - name: early-return
-      disabled: true
-    - name: enforce-map-style
-      disabled: true
     - name: exported
-      disabled: true
-    - name: file-header
-      disabled: true
-    - name: flag-parameter
-      disabled: true
-    - name: function-length
-      disabled: true
-    - name: get-return
-      disabled: true
-    - name: if-return
-      disabled: true
-    - name: import-shadowing
-      disabled: true
-    - name: line-length-limit
-      disabled: true
-    - name: modifies-parameter
-      disabled: true
-    - name: nested-structs
-      disabled: true
-    - name: optimize-operands-order
-      disabled: true
-    - name: unused-parameter
-      disabled: true
-    - name: unused-receiver
-      disabled: true
-    - name: use-any
-      disabled: true
-    - name: unchecked-type-assertion
-      disabled: true
-    - name: function-result-limit
-      disabled: true
-    - name: deep-exit
-      disabled: true
-    - name: superfluous-else
-      disabled: true
-    - name: confusing-results
-      disabled: true
-    - name: defer
-      disabled: true
-    - name: var-naming
-      disabled: true
-    - name: max-public-structs
-      disabled: true
-    - name: comment-spacings
-      disabled: true
-    - name: struct-tag
-      disabled: true
-    - name: unhandled-error
-      disabled: true
-    - name: error-strings
-      disabled: true
-    - name: max-control-nesting
       arguments:
-      - 6
+      - disableStutteringCheck
 issues:
   max-same-issues: 0
   max-issues-per-linter: 0
@@ -188,6 +111,17 @@ issues:
   exclude-use-default: false
   exclude-files:
   - ".*\\.zz_generated\\..*"
+
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+  # The Kubernetes naming convention for conversion functions uses underscores
+  # and intentionally deviates from normal Go conventions to make those function
+  # names more readable. Same for SetDefaults_*.
+  - linters:
+    - stylecheck
+    - revive
+    text: "(ST1003: should not use underscores in Go names; func (Convert_.*_To_.*|SetDefaults_)|exported: exported function (Convert|SetDefaults)_.* should be of the form)"
+
 run:
   concurrency: 1
   timeout: 10m
