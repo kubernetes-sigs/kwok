@@ -127,4 +127,4 @@ run:
   timeout: 10m
   allow-parallel-runners: false
   allow-serial-runners: true
-  go: "1.23.0"
+  go: "1.24.0"

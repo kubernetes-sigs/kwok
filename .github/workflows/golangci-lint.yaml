@@ -6,7 +6,6 @@ on:
     - main
 
 env:
-  GO_VERSION: "1.23.0"
   GOLANGCI_VERSION: "1.64.8"
 
 jobs:
@@ -21,10 +20,11 @@ jobs:
         - windows-latest
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/setup-go@v5
-      with:
-        go-version: ${{ env.GO_VERSION }}
     - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v6
       with:
