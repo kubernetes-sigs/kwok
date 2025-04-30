@@ -72,7 +72,7 @@ type StageSpec struct {
 	// WeightFrom means is the expression used to get the value.
 	// If it is a number type, convert to int.
 	// If it is a string type, the value get will be parsed by strconv.ParseInt.
-	WeightFrom *ExpressionFromSource `json:"weightFrom,omitempty"`
+	WeightFrom *ExpressionFrom `json:"weightFrom,omitempty"`
 	// Delay means there is a delay in this stage.
 	Delay *StageDelay `json:"delay,omitempty"`
 	// Next indicates that this stage will be moved to.
@@ -100,7 +100,7 @@ type StageDelay struct {
 	// DurationFrom is the expression used to get the value.
 	// If it is a time.Time type, getting the value will be minus time.Now() to get DurationMilliseconds
 	// If it is a string type, the value get will be parsed by time.ParseDuration.
-	DurationFrom *ExpressionFromSource `json:"durationFrom,omitempty"`
+	DurationFrom *ExpressionFrom `json:"durationFrom,omitempty"`
 
 	// JitterDurationMilliseconds is the duration plus an additional amount chosen uniformly
 	// at random from the interval between DurationMilliseconds and JitterDurationMilliseconds.
@@ -109,7 +109,7 @@ type StageDelay struct {
 	// JitterDurationFrom is the expression used to get the value.
 	// If it is a time.Time type, getting the value will be minus time.Now() to get JitterDurationMilliseconds
 	// If it is a string type, the value get will be parsed by time.ParseDuration.
-	JitterDurationFrom *ExpressionFromSource `json:"jitterDurationFrom,omitempty"`
+	JitterDurationFrom *ExpressionFrom `json:"jitterDurationFrom,omitempty"`
 }
 
 // StageNext describes a stage will be moved to.
@@ -217,42 +217,43 @@ type StageSelector struct {
 	// map is equivalent to an element of matchExpressions, whose key field is ".metadata.annotations[key]", the
 	// operator is "In", and the values array contains only "value". The requirements are ANDed.
 	MatchAnnotations map[string]string `json:"matchAnnotations,omitempty"`
-	// MatchExpressions is a list of label selector requirements. The requirements are ANDed.
-	MatchExpressions []SelectorRequirement `json:"matchExpressions,omitempty"`
+	// MatchExpressions is a list of label selector expressions. The requirements are ANDed.
+	MatchExpressions []MatchExpression `json:"matchExpressions,omitempty"`
 }
 
-// SelectorRequirement is a resource selector requirement is a selector that contains values, a key,
-// and an operator that relates the key and values.
-type SelectorRequirement struct {
-	// The name of the scope that the selector applies to.
-	Key string `json:"key"`
+// MatchExpression is a resource selector expression that must evaluate to true for a resource to be matched.
+type MatchExpression struct {
+	// CEL is a Common Expression Language based selector expression
+	CEL *ExpressionCEL `json:"cel,omitempty"`
+	// JQ is a JSON Query based selector expression
+	JQ *SelectorJQ `json:"jq,omitempty"`
+
+	// Key represents the expression which will be evaluated by JQ.
+	// Deprecated: Use JQ instead.
+	//+k8s:conversion-gen=false
+	Key string `json:"key,omitempty"`
 	// Represents a scope's relationship to a set of values.
-	Operator SelectorOperator `json:"operator"`
+	// Deprecated: Use JQ instead.
+	//+k8s:conversion-gen=false
+	Operator SelectorOperator `json:"operator,omitempty"`
 	// An array of string values.
 	// If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
 	// If the operator is Exists or DoesNotExist, the values array must be empty.
+	// Deprecated: Use JQ instead.
+	//+k8s:conversion-gen=false
 	Values []string `json:"values,omitempty"`
 }
 
-// SelectorOperator is a label selector operator is the set of operators that can be used in a selector requirement.
-// +enum
-type SelectorOperator string
+// ExpressionFrom represents a source for extracting values using expressions
+type ExpressionFrom struct {
+	// CEL is a Common Expression Language based expression for value extraction
+	CEL *ExpressionCEL `json:"cel,omitempty"`
+	// JQ is a JSON Query based expression for value extraction
+	JQ *ExpressionJQ `json:"jq,omitempty"`
 
-// The following are valid selector operators.
-const (
-	// SelectorOpIn is the set inclusion operator.
-	SelectorOpIn SelectorOperator = "In"
-	// SelectorOpNotIn is the negated set inclusion operator.
-	SelectorOpNotIn SelectorOperator = "NotIn"
-	// SelectorOpExists is the existence operator.
-	SelectorOpExists SelectorOperator = "Exists"
-	// SelectorOpDoesNotExist is the negated existence operator.
-	SelectorOpDoesNotExist SelectorOperator = "DoesNotExist"
-)
-
-// ExpressionFromSource represents a source for the value of a from.
-type ExpressionFromSource struct {
 	// ExpressionFrom is the expression used to get the value.
+	// Deprecated: Use JQ instead.
+	//+k8s:conversion-gen=false
 	ExpressionFrom string `json:"expressionFrom,omitempty"`
 }
 

@@ -65,14 +65,20 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 		return nil, err
 	}
 
-	lcstages, err := lc.ListAllPossible(ctx, testTarget.GetLabels(), testTarget.GetAnnotations(), testTarget)
+	event := &lifecycle.Event{
+		Labels:      testTarget.GetLabels(),
+		Annotations: testTarget.GetAnnotations(),
+		Data:        testTarget,
+	}
+
+	lcstages, err := lc.ListAllPossible(ctx, event)
 	if err != nil {
 		return nil, err
 	}
 
 	out := []any{}
 	for _, stage := range lcstages {
-		o, err := testingStage(ctx, testTarget, stage)
+		o, err := testingStage(ctx, testTarget, event, stage)
 		if err != nil {
 			return nil, err
 		}
@@ -86,17 +92,23 @@ func TestingStages(ctx context.Context, target any, stages []*internalversion.St
 
 var now = time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC)
 
-func testingStage(ctx context.Context, testTarget obj, stage *lifecycle.Stage) (any, error) {
+func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, stage *lifecycle.Stage) (any, error) {
 	meta := map[string]any{
 		"stage": stage.Name(),
 	}
 
-	delay, ok := stage.DelayRangePossible(ctx, testTarget, now)
+	delay, ok, err := stage.DelayRangePossible(ctx, event, now)
+	if err != nil {
+		return nil, err
+	}
 	if ok {
 		meta["delay"] = delay
 	}
 
-	weight, ok := stage.Weight(ctx, testTarget)
+	weight, ok, err := stage.Weight(ctx, event)
+	if err != nil {
+		return nil, err
+	}
 	if ok {
 		meta["weight"] = weight
 	}
