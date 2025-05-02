@@ -117,8 +117,20 @@ func computePatch(renderer gotpl.Renderer, resource any, patch internalversion.S
 		}
 		return patchData, types.MergePatchType, nil
 	case "":
-		switch resource.(type) {
-		case *corev1.Node, *corev1.Pod:
+		switch t := resource.(type) {
+		case *corev1.Node:
+			patchData, err := computeMergePatch(renderer, resource, patch.Root, patch.Template)
+			if err != nil {
+				return nil, "", err
+			}
+			if patch.Subresource == "status" {
+				patchData, err = fixupPatchForNodeStatusAddresses(patchData, t.Status.Addresses)
+				if err != nil {
+					return nil, "", err
+				}
+			}
+			return patchData, types.StrategicMergePatchType, nil
+		case *corev1.Pod:
 			patchData, err := computeMergePatch(renderer, resource, patch.Root, patch.Template)
 			if err != nil {
 				return nil, "", err
@@ -185,6 +197,56 @@ func wrapJSONPatchData(parent string, patchData []byte) ([]byte, error) {
 	}
 
 	return json.Marshal(data)
+}
+
+// fixupPatchForNodeStatusAddresses adds a replace-strategy patch for Status.Addresses to the existing patch
+func fixupPatchForNodeStatusAddresses(patchBytes []byte, addresses []corev1.NodeAddress) ([]byte, error) {
+	// Given patchBytes='{"status": {"conditions": [ ... ], "phase": ...}}' and
+	// addresses=[{"type": "InternalIP", "address": "10.0.0.1"}], we need to generate:
+	//
+	//   {
+	//     "status": {
+	//       "conditions": [ ... ],
+	//       "phase": ...,
+	//       "addresses": [
+	//         {
+	//           "type": "InternalIP",
+	//           "address": "10.0.0.1"
+	//         },
+	//         {
+	//           "$patch": "replace"
+	//         }
+	//       ]
+	//     }
+	//   }
+
+	var patchMap map[string]interface{}
+	if err := json.Unmarshal(patchBytes, &patchMap); err != nil {
+		return nil, err
+	}
+
+	addrBytes, err := json.Marshal(addresses)
+	if err != nil {
+		return nil, err
+	}
+	var addrArray []interface{}
+	if err := json.Unmarshal(addrBytes, &addrArray); err != nil {
+		return nil, err
+	}
+	addrArray = append(addrArray, map[string]interface{}{"$patch": "replace"})
+
+	status := patchMap["status"]
+	if status == nil {
+		status = map[string]interface{}{}
+		patchMap["status"] = status
+	}
+	statusMap, ok := status.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("unexpected data in patch")
+	}
+	statusMap["addresses"] = addrArray
+
+	return json.Marshal(patchMap)
 }
 
 type jsonpatchData struct {
