@@ -26,7 +26,7 @@ jobs:
       with:
         go-version-file: go.mod
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v6
+      uses: golangci/golangci-lint-action@v8
       with:
         version: v${{ env.GOLANGCI_VERSION }}
         args: --timeout=8m --config=.golangci.yaml --new --fix
