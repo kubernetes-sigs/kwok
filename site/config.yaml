@@ -264,6 +264,13 @@ menu:
     pageRef: "/docs/user/cel-expressions"
     parent: extensions
 
+  - identifier: known-issues
+    title: Known Issues
+    parent: user-guide
+  - identifier: known-issues-nodes-unexpectedly-deleted
+    pageRef: "/docs/user/known-issues/nodes-unexpectedly-deleted"
+    parent: known-issues
+
   # Design Children
   - identifier: introduction
     pageRef: "/docs/design/introduction"
