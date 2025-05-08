@@ -1,6 +1,6 @@
 ## kwokctl snapshot
 
-Snapshot [save, restore, record, replay, export] one of cluster
+[experimental] Snapshot [save, restore, record, replay, export] one of cluster
 
 ```
 kwokctl snapshot [command] [flags]
@@ -24,7 +24,7 @@ kwokctl snapshot [command] [flags]
 ### SEE ALSO
 
 * [kwokctl](kwokctl.md)	 - kwokctl is a tool to streamline the creation and management of clusters, with nodes simulated by kwok
-* [kwokctl snapshot export](kwokctl_snapshot_export.md)	 - [experimental] Export the snapshots of external clusters
+* [kwokctl snapshot export](kwokctl_snapshot_export.md)	 - Export the snapshots of external clusters
 * [kwokctl snapshot record](kwokctl_snapshot_record.md)	 - Record the recording from the cluster
 * [kwokctl snapshot replay](kwokctl_snapshot_replay.md)	 - Replay the recording to the cluster
 * [kwokctl snapshot restore](kwokctl_snapshot_restore.md)	 - Restore the snapshot of the cluster

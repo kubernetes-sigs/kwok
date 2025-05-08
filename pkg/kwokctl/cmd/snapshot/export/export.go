@@ -55,7 +55,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "export",
-		Short: "[experimental] Export the snapshots of external clusters",
+		Short: "Export the snapshots of external clusters",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context(), flags)
 		},

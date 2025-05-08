@@ -19,18 +19,16 @@ package del
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"sigs.k8s.io/kwok/pkg/config"
-	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
-	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
@@ -45,9 +43,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 
 	cmd := &cobra.Command{
-		Args:  cobra.RangeArgs(0, 2),
-		Use:   "delete [resource] [name]",
-		Short: "delete data in etcd",
+		Args:    cobra.RangeArgs(0, 2),
+		Use:     "delete [resource] [name]",
+		Aliases: []string{"del"},
+		Short:   "delete data in etcd",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			err := runE(cmd.Context(), flags, args)
@@ -73,118 +72,21 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			logger.Warn("Cluster does not exist")
+		}
 		return err
 	}
 
-	conf, err := rt.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	if rt.IsDryRun() {
-		switch len(args) {
-		case 1:
-			if flags.Namespace == "" {
-				dryrun.PrintMessage("kubectl delete %s --all -A", args[0])
-			} else {
-				dryrun.PrintMessage("kubectl delete %s --all -n %s", args[0], flags.Namespace)
-			}
-		case 2:
-			if flags.Namespace == "" {
-				dryrun.PrintMessage("kubectl delete %s %s", args[0], args[1])
-			} else {
-				dryrun.PrintMessage("kubectl delete %s %s -n %s", args[0], args[1], flags.Namespace)
-			}
-		default:
-			if flags.Namespace == "" {
-				dryrun.PrintMessage("kubectl delete all --all -A")
-			} else {
-				dryrun.PrintMessage("kubectl delete all -all -n %s", flags.Namespace)
-			}
-		}
-		return nil
-	}
-
-	etcdclient, cancel, err := rt.GetEtcdClient(ctx)
-	if err != nil {
-		return err
-	}
-	defer cancel()
-
-	var targetGvr schema.GroupVersionResource
-	var targetName string
-	var targetNamespace string
-	if len(args) != 0 {
-		kubeconfigPath := rt.GetWorkdirPath(runtime.InHostKubeconfigName)
-		clientset, err := client.NewClientset("", kubeconfigPath)
-		if err != nil {
-			return err
-		}
-
-		dc, err := clientset.ToDiscoveryClient()
-		if err != nil {
-			return err
-		}
-		rl, err := dc.ServerPreferredResources()
-		if err != nil {
-			return err
-		}
-
-		resourceName := args[0]
-
-		gvr, resource, err := client.MatchShortResourceName(rl, resourceName)
-		if err != nil {
-			return err
-		}
-
-		if resource.Namespaced {
-			if flags.Namespace == "" {
-				flags.Namespace = "default"
-			}
-		} else {
-			if flags.Namespace != "" {
-				return fmt.Errorf("resource %s is not namespaced", gvr)
-			}
-		}
-
-		targetGvr = gvr
-		targetNamespace = flags.Namespace
-		if len(args) >= 2 {
-			targetName = args[1]
-		}
-	}
-
-	var count int
-	var response func(kv *etcd.KeyValue) error
-	if flags.Output == "key" {
-		response = func(kv *etcd.KeyValue) error {
-			count++
-			_, _ = fmt.Fprintf(os.Stdout, "%s\n", kv.Key)
-			return nil
-		}
-	}
-
-	opOpts := []etcd.OpOption{
-		etcd.WithName(targetName, targetNamespace),
-		etcd.WithGVR(targetGvr),
-	}
-
-	if response != nil {
-		opOpts = append(opOpts,
-			etcd.WithKeysOnly(),
-			etcd.WithResponse(response),
-		)
-	}
-
-	err = etcdclient.Delete(ctx, conf.Options.EtcdPrefix,
-		opOpts...,
+	err = rt.KectlInCluster(exec.WithStdIO(ctx),
+		append([]string{"del",
+			"--output=" + flags.Output,
+			"--namespace=" + flags.Namespace,
+		}, args...)...,
 	)
+
 	if err != nil {
 		return err
-	}
-
-	if log.IsTerminal() && flags.Output == "key" {
-		fmt.Fprintf(os.Stderr, "delete %d keys\n", count)
 	}
 	return nil
 }

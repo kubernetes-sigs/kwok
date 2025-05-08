@@ -20,24 +20,19 @@ package replay
 import (
 	"context"
 	"errors"
-	"fmt"
-	"io"
 	"os"
-	"time"
 
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
-	"sigs.k8s.io/kwok/pkg/kwokctl/recording"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
-	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 type flagpole struct {
@@ -68,12 +63,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 func runE(ctx context.Context, flags *flagpole) error {
 	name := config.ClusterName(flags.Name)
 	workdir := path.Join(config.ClustersDir, flags.Name)
-	if flags.Path == "" {
-		return fmt.Errorf("path is required")
-	}
-	if !file.Exists(flags.Path) {
-		return fmt.Errorf("path %q does not exist", flags.Path)
-	}
 
 	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", flags.Name)
@@ -84,11 +73,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 		if errors.Is(err, os.ErrNotExist) {
 			logger.Warn("Cluster does not exist")
 		}
-		return err
-	}
-
-	conf, err := rt.Config(ctx)
-	if err != nil {
 		return err
 	}
 
@@ -121,76 +105,15 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}()
 
-	etcdclient, cancel, err := rt.GetEtcdClient(ctx)
+	err = rt.KectlInCluster(exec.WithStdIO(ctx),
+		"snapshot",
+		"replay",
+		"--path="+flags.Path,
+		"--snapshot="+format.String(flags.Snapshot),
+	)
+
 	if err != nil {
 		return err
 	}
-	defer cancel()
-
-	clientset, err := rt.GetClientset(ctx)
-	if err != nil {
-		return err
-	}
-
-	loader, err := etcd.NewLoader(etcd.LoadConfig{
-		Clientset: clientset,
-		Client:    etcdclient,
-		Prefix:    conf.Options.EtcdPrefix,
-	})
-	if err != nil {
-		return err
-	}
-
-	f, err := os.Open(flags.Path)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = f.Close()
-	}()
-
-	press, err := file.Decompress(flags.Path, f)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = press.Close()
-	}()
-
-	var reader io.Reader = press
-
-	startTime := time.Now()
-	reader = recording.NewReadHook(reader, func(bytes []byte) []byte {
-		return recording.RevertTimeFromRelative(startTime, bytes)
-	})
-
-	decoder := yaml.NewDecoder(reader)
-
-	if flags.Snapshot {
-		logger.Info("Restoring snapshot")
-	} else {
-		logger.Info("Restoring snapshot and replaying")
-	}
-
-	err = loader.Load(ctx, decoder)
-	if err != nil {
-		return err
-	}
-
-	if flags.Snapshot {
-		logger.Info("Restored snapshot")
-		return nil
-	}
-
-	logger.Info("Replaying")
-	if log.IsTerminal() {
-		cancel := loader.AllowHandle(ctx)
-		defer cancel()
-	}
-	err = loader.Replay(ctx, decoder)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }

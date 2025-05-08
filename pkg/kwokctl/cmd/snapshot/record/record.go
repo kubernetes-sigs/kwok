@@ -20,21 +20,16 @@ package record
 import (
 	"context"
 	"errors"
-	"fmt"
-	"io"
 	"os"
-	"time"
 
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/config"
-	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
-	"sigs.k8s.io/kwok/pkg/kwokctl/recording"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/file"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 type flagpole struct {
@@ -65,12 +60,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 func runE(ctx context.Context, flags *flagpole) error {
 	name := config.ClusterName(flags.Name)
 	workdir := path.Join(config.ClustersDir, flags.Name)
-	if flags.Path == "" {
-		return fmt.Errorf("path is required")
-	}
-	if file.Exists(flags.Path) {
-		return fmt.Errorf("file %q already exists", flags.Path)
-	}
 
 	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", flags.Name)
@@ -84,76 +73,15 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	conf, err := rt.Config(ctx)
+	err = rt.KectlInCluster(exec.WithStdIO(ctx),
+		"snapshot",
+		"record",
+		"--path="+flags.Path,
+		"--snapshot="+format.String(flags.Snapshot),
+	)
+
 	if err != nil {
 		return err
 	}
-
-	etcdclient, cancel, err := rt.GetEtcdClient(ctx)
-	if err != nil {
-		return err
-	}
-	defer cancel()
-
-	clientset, err := rt.GetClientset(ctx)
-	if err != nil {
-		return err
-	}
-
-	saver, err := etcd.NewSaver(etcd.SaveConfig{
-		Clientset: clientset,
-		Client:    etcdclient,
-		Prefix:    conf.Options.EtcdPrefix,
-	})
-	if err != nil {
-		return err
-	}
-
-	f, err := file.Open(flags.Path)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = f.Close()
-	}()
-
-	press := file.Compress(flags.Path, f)
-	defer func() {
-		_ = press.Close()
-	}()
-
-	var writer io.Writer = press
-
-	startTime := time.Now()
-	writer = recording.NewWriteHook(writer, func(bytes []byte) []byte {
-		return recording.ReplaceTimeToRelative(startTime, bytes)
-	})
-
-	encoder := yaml.NewEncoder(writer)
-
-	if flags.Snapshot {
-		logger.Info("Saving snapshot")
-	} else {
-		logger.Info("Saving snapshot and recording")
-	}
-
-	err = saver.Save(ctx, encoder)
-	if err != nil {
-		return err
-	}
-
-	if flags.Snapshot {
-		logger.Info("Saved snapshot")
-		return nil
-	}
-
-	logger.Info("Recording")
-	logger.Info("Press Ctrl+C to stop recording resources")
-
-	err = saver.Record(ctx, encoder)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }

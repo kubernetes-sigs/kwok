@@ -19,18 +19,17 @@ package get
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"sigs.k8s.io/kwok/pkg/config"
-	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
-	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 )
 
@@ -79,191 +78,24 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			logger.Warn("Cluster does not exist")
+		}
 		return err
 	}
 
-	conf, err := rt.Config(ctx)
+	err = rt.KectlInCluster(exec.WithStdIO(ctx),
+		append([]string{"get",
+			"--output=" + flags.Output,
+			"--namespace=" + flags.Namespace,
+			"--watch=" + strconv.FormatBool(flags.Watch),
+			"--watch-only=" + strconv.FormatBool(flags.WatchOnly),
+			"--chunk-size=" + strconv.FormatInt(flags.ChunkSize, 10),
+		}, args...)...,
+	)
+
 	if err != nil {
 		return err
-	}
-
-	if rt.IsDryRun() {
-		switch len(args) {
-		case 1:
-			if flags.Namespace == "" {
-				dryrun.PrintMessage("kubectl get %s --all -A", args[0])
-			} else {
-				dryrun.PrintMessage("kubectl get %s --all -n %s", args[0], flags.Namespace)
-			}
-		case 2:
-			if flags.Namespace == "" {
-				dryrun.PrintMessage("kubectl get %s %s", args[0], args[1])
-			} else {
-				dryrun.PrintMessage("kubectl get %s %s -n %s", args[0], args[1], flags.Namespace)
-			}
-		default:
-			if flags.Namespace == "" {
-				dryrun.PrintMessage("kubectl get all --all -A")
-			} else {
-				dryrun.PrintMessage("kubectl get all -all -n %s", flags.Namespace)
-			}
-		}
-		return nil
-	}
-
-	etcdclient, cancel, err := rt.GetEtcdClient(ctx)
-	if err != nil {
-		return err
-	}
-	defer cancel()
-
-	var targetGvr schema.GroupVersionResource
-	var targetName string
-	var targetNamespace string
-	if len(args) != 0 {
-		kubeconfigPath := rt.GetWorkdirPath(runtime.InHostKubeconfigName)
-		clientset, err := client.NewClientset("", kubeconfigPath)
-		if err != nil {
-			return err
-		}
-
-		dc, err := clientset.ToDiscoveryClient()
-		if err != nil {
-			return err
-		}
-		rl, err := dc.ServerPreferredResources()
-		if err != nil {
-			return err
-		}
-
-		resourceName := args[0]
-
-		gvr, resource, err := client.MatchShortResourceName(rl, resourceName)
-		if err != nil {
-			return err
-		}
-		if resource.Namespaced {
-			if flags.Namespace == "" {
-				flags.Namespace = "default"
-			}
-		} else {
-			if flags.Namespace != "" {
-				return fmt.Errorf("resource %s is not namespaced", gvr)
-			}
-		}
-
-		targetGvr = gvr
-		targetNamespace = flags.Namespace
-		if len(args) >= 2 {
-			targetName = args[1]
-		}
-	}
-
-	var count int
-	var response func(kv *etcd.KeyValue) error
-
-	switch flags.Output {
-	case "json":
-		outMediaType := etcd.JSONMediaType
-		response = func(kv *etcd.KeyValue) error {
-			count++
-			value := kv.Value
-			if value == nil {
-				value = kv.PrevValue
-			}
-			inMediaType, err := etcd.DetectMediaType(value)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
-				return nil
-			}
-			_, data, err := etcd.Convert(inMediaType, outMediaType, value)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
-			} else {
-				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | %s\n%s\n", kv.Key, inMediaType, data)
-			}
-			return nil
-		}
-	case "yaml":
-		outMediaType := etcd.YAMLMediaType
-		response = func(kv *etcd.KeyValue) error {
-			count++
-			value := kv.Value
-			if value == nil {
-				value = kv.PrevValue
-			}
-			inMediaType, err := etcd.DetectMediaType(value)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
-				return nil
-			}
-			_, data, err := etcd.Convert(inMediaType, outMediaType, value)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | raw | %v\n# %s\n", kv.Key, err, value)
-			} else {
-				_, _ = fmt.Fprintf(os.Stdout, "---\n# %s | %s\n%s\n", kv.Key, inMediaType, data)
-			}
-			return nil
-		}
-	case "raw":
-		response = func(kv *etcd.KeyValue) error {
-			count++
-			_, _ = fmt.Fprintf(os.Stdout, "%s\n%s\n", kv.Key, kv.Value)
-			return nil
-		}
-	case "key":
-		response = func(kv *etcd.KeyValue) error {
-			count++
-			_, _ = fmt.Fprintf(os.Stdout, "%s\n", kv.Key)
-			return nil
-		}
-	default:
-		return fmt.Errorf("unsupported output format: %s", flags.Output)
-	}
-
-	opOpts := []etcd.OpOption{
-		etcd.WithName(targetName, targetNamespace),
-		etcd.WithGVR(targetGvr),
-		etcd.WithPageLimit(flags.ChunkSize),
-		etcd.WithResponse(response),
-	}
-
-	if flags.Output == "key" {
-		opOpts = append(opOpts,
-			etcd.WithKeysOnly(),
-		)
-	}
-
-	if flags.Watch {
-		var rev int64
-		if !flags.WatchOnly {
-			rev, err = etcdclient.Get(ctx, conf.Options.EtcdPrefix,
-				opOpts...,
-			)
-			if err != nil {
-				return err
-			}
-		}
-
-		opOpts = append(opOpts, etcd.WithRevision(rev))
-
-		err = etcdclient.Watch(ctx, conf.Options.EtcdPrefix,
-			opOpts...,
-		)
-		if err != nil {
-			return err
-		}
-	} else {
-		_, err = etcdclient.Get(ctx, conf.Options.EtcdPrefix,
-			opOpts...,
-		)
-		if err != nil {
-			return err
-		}
-
-		if log.IsTerminal() && flags.Output == "key" {
-			fmt.Fprintf(os.Stderr, "get %d keys\n", count)
-		}
 	}
 	return nil
 }

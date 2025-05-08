@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -151,20 +150,14 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 	return nil
 }
 
-// GetEtcdClient returns the etcd client of cluster
-func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error) {
+// KectlInCluster command in cluster
+func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
 	config, err := c.Config(ctx)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 	conf := &config.Options
-
-	cli, err := etcd.NewClient(etcd.ClientConfig{
-		Endpoints: []string{"http://" + net.LocalAddress + ":" + format.String(conf.EtcdPort)},
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return cli, func() {}, nil
+	return c.Kectl(ctx, append([]string{
+		"--endpoints=http://" + net.LocalAddress + ":" + format.String(conf.EtcdPort),
+	}, args...)...)
 }
