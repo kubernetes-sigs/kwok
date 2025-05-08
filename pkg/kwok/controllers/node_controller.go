@@ -33,7 +33,6 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
@@ -278,13 +277,14 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		}
 	}
 
-	data, err := expression.ToJSONStandard(node)
-	if err != nil {
-		return err
-	}
-
 	lc := c.lifecycle.Get()
-	stage, err := lc.Match(ctx, node.Labels, node.Annotations, data)
+
+	event := &lifecycle.Event{
+		Labels:      node.Labels,
+		Annotations: node.Annotations,
+		Data:        node,
+	}
+	stage, err := lc.Match(ctx, event)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}
@@ -296,8 +296,13 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 	}
 
 	now := c.clock.Now()
-	delay, _ := stage.Delay(ctx, data, now)
-
+	delay, _, err := stage.Delay(ctx, event, now)
+	if err != nil {
+		logger.Warn("Failed to get delay",
+			"stage", stage.Name(),
+			"err", err,
+		)
+	}
 	if delay != 0 {
 		stageName := stage.Name()
 		logger.Debug("Delayed play stage",

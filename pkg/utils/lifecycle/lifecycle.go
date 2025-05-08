@@ -19,12 +19,17 @@ package lifecycle
 import (
 	"context"
 	"fmt"
+	"maps"
 	"math/rand"
+	"reflect"
+	"slices"
 	"time"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/cel"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 )
@@ -33,10 +38,7 @@ import (
 func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {
 	lcs := Lifecycle{}
 	for _, stage := range stages {
-		lc, err := NewStage(stage)
-		if err != nil {
-			return nil, fmt.Errorf("lifecycle stage: %w", err)
-		}
+		lc := NewStage(stage)
 		if lc == nil {
 			continue
 		}
@@ -48,10 +50,10 @@ func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {
 // Lifecycle is a list of lifecycle stage.
 type Lifecycle []*Stage
 
-func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*Stage, error) {
+func (s Lifecycle) match(ctx context.Context, event *Event) ([]*Stage, error) {
 	out := []*Stage{}
 	for _, stage := range s {
-		ok, err := stage.match(label, annotation, data)
+		ok, err := stage.match(ctx, event)
 		if err != nil {
 			return nil, err
 		}
@@ -63,12 +65,8 @@ func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*Sta
 }
 
 // ListAllPossible returns all possible stages.
-func (s Lifecycle) ListAllPossible(ctx context.Context, label, annotation labels.Set, data interface{}) ([]*Stage, error) {
-	data, err := expression.ToJSONStandard(data)
-	if err != nil {
-		return nil, err
-	}
-	stages, err := s.match(label, annotation, data)
+func (s Lifecycle) ListAllPossible(ctx context.Context, event *Event) ([]*Stage, error) {
+	stages, err := s.match(ctx, event)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +81,10 @@ func (s Lifecycle) ListAllPossible(ctx context.Context, label, annotation labels
 	var totalWeights int64
 	var countError int
 	for _, stage := range stages {
-		w, ok := stage.Weight(ctx, data)
+		w, ok, err := stage.Weight(ctx, event)
+		if err != nil {
+			return nil, err
+		}
 		if ok {
 			totalWeights += w
 			weights = append(weights, w)
@@ -122,12 +123,8 @@ func (s Lifecycle) ListAllPossible(ctx context.Context, label, annotation labels
 }
 
 // Match returns matched stage.
-func (s Lifecycle) Match(ctx context.Context, label, annotation labels.Set, data interface{}) (*Stage, error) {
-	data, err := expression.ToJSONStandard(data)
-	if err != nil {
-		return nil, err
-	}
-	stages, err := s.match(label, annotation, data)
+func (s Lifecycle) Match(ctx context.Context, event *Event) (*Stage, error) {
+	stages, err := s.match(ctx, event)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +139,10 @@ func (s Lifecycle) Match(ctx context.Context, label, annotation labels.Set, data
 	var totalWeights int64
 	var countError int
 	for _, stage := range stages {
-		w, ok := stage.Weight(ctx, data)
+		w, ok, err := stage.Weight(ctx, event)
+		if err != nil {
+			return nil, err
+		}
 		if ok {
 			totalWeights += w
 			weights = append(weights, w)
@@ -191,79 +191,117 @@ func (s Lifecycle) Match(ctx context.Context, label, annotation labels.Set, data
 }
 
 // NewStage returns a new Stage.
-func NewStage(s *internalversion.Stage) (*Stage, error) {
-	stage := &Stage{
-		name: s.Name,
-	}
-	selector := s.Spec.Selector
-	if selector == nil {
-		return nil, nil
+func NewStage(s *internalversion.Stage) *Stage {
+	if s.Spec.Selector == nil {
+		return nil
 	}
 
+	stage := &Stage{
+		name:   s.Name,
+		config: s,
+	}
+
+	return stage
+}
+
+func (s *Stage) init(event *Event) error {
+	if s.env != nil {
+		return nil
+	}
+	types := slices.Clone(cel.DefaultTypes)
+	conversions := slices.Clone(cel.DefaultConversions)
+	funcs := maps.Clone(cel.DefaultFuncs)
+	methods := maps.Clone(cel.FuncsToMethods(cel.DefaultFuncs))
+	env, err := cel.NewEnvironment(cel.EnvironmentConfig{
+		Types:       types,
+		Conversions: conversions,
+		Methods:     methods,
+		Funcs:       funcs,
+		Vars:        event.toCELStandardTypeOnly(),
+	})
+	if err != nil {
+		return err
+	}
+	s.env = env
+
+	selector := s.config.Spec.Selector
+	config := s.config
+
 	if selector.MatchLabels != nil {
-		stage.matchLabels = labels.SelectorFromSet(selector.MatchLabels)
+		s.matchLabels = labels.SelectorFromSet(selector.MatchLabels)
 	}
 	if selector.MatchAnnotations != nil {
-		stage.matchAnnotations = labels.SelectorFromSet(selector.MatchAnnotations)
+		s.matchAnnotations = labels.SelectorFromSet(selector.MatchAnnotations)
 	}
 	if selector.MatchExpressions != nil {
 		for _, express := range selector.MatchExpressions {
-			requirement, err := expression.NewRequirement(express.Key, express.Operator, express.Values)
-			if err != nil {
-				return nil, err
+			switch {
+			case express.JQ != nil:
+				requirement, err := expression.NewRequirement(express.JQ.Key, express.JQ.Operator, express.JQ.Values)
+				if err != nil {
+					return err
+				}
+				s.matchExpressions = append(s.matchExpressions, requirement)
+			case express.CEL != nil:
+				program, err := env.Compile(express.CEL.Expression)
+				if err != nil {
+					return err
+				}
+				s.matchConditions = append(s.matchConditions, program)
+			default:
+				return fmt.Errorf("invalid expression")
 			}
-			stage.matchExpressions = append(stage.matchExpressions, requirement)
 		}
 	}
 
-	stage.next = &s.Spec.Next
-	if delay := s.Spec.Delay; delay != nil {
-		var durationFrom *string
+	s.next = &config.Spec.Next
+	if delay := config.Spec.Delay; delay != nil {
+		var durationFrom *internalversion.ExpressionFrom
 		if delay.DurationFrom != nil {
-			durationFrom = &delay.DurationFrom.ExpressionFrom
+			durationFrom = delay.DurationFrom
 		}
 		var delayDuration time.Duration
 		if delay.DurationMilliseconds != nil {
 			delayDuration = time.Duration(*delay.DurationMilliseconds) * time.Millisecond
 		}
-		duration, err := expression.NewDurationFrom(&delayDuration, durationFrom)
+		duration, err := newDurationFrom(&delayDuration, env, durationFrom)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		stage.duration = duration
+		s.duration = duration
 
 		if delay.JitterDurationMilliseconds != nil || delay.JitterDurationFrom != nil {
-			var jitterDurationFrom *string
-			if delay.JitterDurationFrom != nil {
-				jitterDurationFrom = &delay.JitterDurationFrom.ExpressionFrom
+			var jitterDurationFrom *internalversion.ExpressionFrom
+			if delay.JitterDurationFrom != nil && delay.JitterDurationFrom.JQ != nil {
+				jitterDurationFrom = delay.JitterDurationFrom
 			}
 			var jitterDuration *time.Duration
 			if delay.JitterDurationMilliseconds != nil {
 				jitterDuration = format.Ptr(time.Duration(*delay.JitterDurationMilliseconds) * time.Millisecond)
 			}
-			jitterDurationGetter, err := expression.NewDurationFrom(jitterDuration, jitterDurationFrom)
+			jitterDurationGetter, err := newDurationFrom(jitterDuration, env, jitterDurationFrom)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			stage.jitterDuration = jitterDurationGetter
+			s.jitterDuration = jitterDurationGetter
 		}
 	}
 
-	var weightFrom *string
-	if wf := s.Spec.WeightFrom; wf != nil {
-		weightFrom = &wf.ExpressionFrom
+	var weightFrom *internalversion.ExpressionFrom
+	if config.Spec.WeightFrom != nil {
+		weightFrom = config.Spec.WeightFrom
 	}
 
-	weightGetter, err := expression.NewIntFrom(format.Ptr[int64](int64(s.Spec.Weight)), weightFrom)
+	weightGetter, err := newInt64From(format.Ptr[int64](int64(config.Spec.Weight)), env, weightFrom)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	stage.weight = weightGetter
+	s.weight = weightGetter
 
-	stage.immediateNextStage = s.Spec.ImmediateNextStage
+	s.immediateNextStage = config.Spec.ImmediateNextStage
 
-	return stage, nil
+	return nil
 }
 
 // Stage is a resource lifecycle stage manager
@@ -272,31 +310,86 @@ type Stage struct {
 	matchLabels      labels.Selector
 	matchAnnotations labels.Selector
 	matchExpressions []*expression.Requirement
+	matchConditions  []cel.Program
 
-	weight expression.IntGetter
+	weight int64Getter
 	next   *internalversion.StageNext
 
-	duration       expression.DurationGetter
-	jitterDuration expression.DurationGetter
+	duration       durationGetter
+	jitterDuration durationGetter
 
 	immediateNextStage bool
+
+	config *internalversion.Stage
+
+	env *cel.Environment
 }
 
-func (s *Stage) match(label, annotation labels.Set, jsonStandard interface{}) (bool, error) {
+// Event represents a lifecycle event that can be matched against stage conditions
+// It contains the resource's labels, annotations, raw data, and a cached JSON representation
+type Event struct {
+	Labels       labels.Set
+	Annotations  labels.Set
+	Data         any
+	jsonStandard any
+}
+
+func (m *Event) toJSONStandard() any {
+	if m.jsonStandard != nil {
+		return m.jsonStandard
+	}
+	j, err := expression.ToJSONStandard(m.Data)
+	if err != nil {
+		// This should never happen as all resources should be convertible to JSON
+		panic(fmt.Errorf("failed to convert data to JSON standard: %v, error: %w", m.Data, err))
+	}
+	m.jsonStandard = j
+	return j
+}
+
+func (m *Event) toCELStandard() map[string]any {
+	if v, ok := m.Data.(*unstructured.Unstructured); ok {
+		return map[string]any{
+			"self": v.Object,
+		}
+	}
+	return map[string]any{
+		"self": m.Data,
+	}
+}
+
+func (m *Event) toCELStandardTypeOnly() map[string]any {
+	if _, ok := m.Data.(*unstructured.Unstructured); ok {
+		return map[string]any{
+			"self": map[string]any{},
+		}
+	}
+
+	return map[string]any{
+		"self": reflect.Zero(reflect.TypeOf(m.Data)).Interface(),
+	}
+}
+
+func (s *Stage) match(ctx context.Context, event *Event) (bool, error) {
+	err := s.init(event)
+	if err != nil {
+		return false, err
+	}
 	if s.matchLabels != nil {
-		if !s.matchLabels.Matches(label) {
+		if !s.matchLabels.Matches(event.Labels) {
 			return false, nil
 		}
 	}
 	if s.matchAnnotations != nil {
-		if !s.matchAnnotations.Matches(annotation) {
+		if !s.matchAnnotations.Matches(event.Annotations) {
 			return false, nil
 		}
 	}
 
 	if s.matchExpressions != nil {
+		v := event.toJSONStandard()
 		for _, requirement := range s.matchExpressions {
-			ok, err := requirement.Matches(context.Background(), jsonStandard)
+			ok, err := requirement.Matches(ctx, v)
 			if err != nil {
 				return false, err
 			}
@@ -305,65 +398,95 @@ func (s *Stage) match(label, annotation labels.Set, jsonStandard interface{}) (b
 			}
 		}
 	}
+
+	if s.matchConditions != nil {
+		v := event.toCELStandard()
+		for _, program := range s.matchConditions {
+			val, _, err := program.ContextEval(ctx, v)
+			if err != nil {
+				return false, err
+			}
+			ok, err := cel.AsBool(val)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		}
+	}
+
 	return true, nil
 }
 
 // Delay returns the delay duration of the stage.
 // It's not a constant value, it can be a random value.
-func (s *Stage) Delay(ctx context.Context, v interface{}, now time.Time) (time.Duration, bool) {
+func (s *Stage) Delay(ctx context.Context, event *Event, now time.Time) (time.Duration, bool, error) {
 	if s.duration == nil {
-		return 0, false
+		return 0, false, nil
 	}
 
-	duration, ok := s.duration.Get(ctx, v, now)
+	duration, ok, err := s.duration.Get(ctx, event, now)
+	if err != nil {
+		return 0, false, err
+	}
 	if !ok {
-		return 0, false
+		return 0, false, nil
 	}
 
 	if s.jitterDuration == nil {
-		return duration, true
+		return duration, true, nil
 	}
 
-	jitterDuration, ok := s.jitterDuration.Get(ctx, v, now)
+	jitterDuration, ok, err := s.jitterDuration.Get(ctx, event, now)
+	if err != nil {
+		return 0, false, err
+	}
 	if !ok {
-		return duration, true
+		return duration, true, nil
 	}
 
 	if jitterDuration <= duration {
-		return jitterDuration, true
+		return jitterDuration, true, nil
 	}
 
 	//nolint:gosec
 	duration += time.Duration(rand.Int63n(int64(jitterDuration - duration)))
 
-	return duration, true
+	return duration, true, nil
 }
 
 // DelayRangePossible returns possible range of delay.
-func (s *Stage) DelayRangePossible(ctx context.Context, v interface{}, now time.Time) ([]time.Duration, bool) {
+func (s *Stage) DelayRangePossible(ctx context.Context, event *Event, now time.Time) ([]time.Duration, bool, error) {
 	if s.duration == nil {
-		return nil, false
+		return nil, false, nil
 	}
 
-	duration, ok := s.duration.Get(ctx, v, now)
+	duration, ok, err := s.duration.Get(ctx, event, now)
+	if err != nil {
+		return nil, false, err
+	}
 	if !ok {
-		return nil, false
+		return nil, false, nil
 	}
 
 	if s.jitterDuration == nil {
-		return []time.Duration{duration}, true
+		return []time.Duration{duration}, true, nil
 	}
 
-	jitterDuration, ok := s.jitterDuration.Get(ctx, v, now)
+	jitterDuration, ok, err := s.jitterDuration.Get(ctx, event, now)
+	if err != nil {
+		return nil, false, err
+	}
 	if !ok {
-		return []time.Duration{duration}, true
+		return []time.Duration{duration}, true, nil
 	}
 
 	if jitterDuration <= duration {
-		return []time.Duration{jitterDuration}, true
+		return []time.Duration{jitterDuration}, true, nil
 	}
 
-	return []time.Duration{duration, jitterDuration}, true
+	return []time.Duration{duration, jitterDuration}, true, nil
 }
 
 // Next returns the next of the stage.
@@ -382,6 +505,6 @@ func (s *Stage) ImmediateNextStage() bool {
 }
 
 // Weight returns the weight of the stage.
-func (s *Stage) Weight(ctx context.Context, v interface{}) (int64, bool) {
-	return s.weight.Get(ctx, v)
+func (s *Stage) Weight(ctx context.Context, event *Event) (int64, bool, error) {
+	return s.weight.Get(ctx, event)
 }

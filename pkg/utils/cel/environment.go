@@ -19,6 +19,7 @@ package cel
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
@@ -132,7 +133,7 @@ func AsFloat64(refVal ref.Val) (float64, error) {
 	case Quantity:
 		return v.Quantity.AsApproximateFloat64(), nil
 	default:
-		return 0, fmt.Errorf("unsupported type: %T", v)
+		return 0, fmt.Errorf("cel.AsFloat64 unsupported type: %T", refVal)
 	}
 }
 
@@ -140,7 +141,55 @@ func AsFloat64(refVal ref.Val) (float64, error) {
 func AsString(refVal ref.Val) (string, error) {
 	v, ok := refVal.(types.String)
 	if !ok {
-		return "", fmt.Errorf("unsupported type: %T", v)
+		return "", fmt.Errorf("cel.AsString unsupported type: %T", refVal)
 	}
 	return string(v), nil
+}
+
+// AsBool returns the bool value of a ref.Val
+func AsBool(refVal ref.Val) (bool, error) {
+	v, ok := refVal.(types.Bool)
+	if !ok {
+		return false, fmt.Errorf("cel.AsBool unsupported type: %T", refVal)
+	}
+	return bool(v), nil
+}
+
+// AsDuration returns the time.Duration value of a ref.Val
+func AsDuration(refVal ref.Val) (time.Duration, error) {
+	switch v := refVal.(type) {
+	case types.String:
+		return time.ParseDuration(string(v))
+	case types.Duration:
+		return v.Duration, nil
+	case types.Int:
+		return time.Duration(v), nil
+	case types.Double:
+		return time.Duration(v), nil
+	case types.Uint:
+		return time.Duration(v), nil
+	default:
+		return 0, fmt.Errorf("cel.AsDuration unsupported type: %T", refVal)
+	}
+}
+
+// AsInt64 returns the int64 value of a ref.Val
+func AsInt64(refVal ref.Val) (int64, error) {
+	switch v := refVal.(type) {
+	case types.Duration:
+		return int64(v.Duration), nil
+	case types.Int:
+		return int64(v), nil
+	case types.Double:
+		return int64(v), nil
+	case types.Uint:
+		return int64(v), nil
+	case types.Bool:
+		if v {
+			return 1, nil
+		}
+		return 0, nil
+	default:
+		return 0, fmt.Errorf("cel.AsInt64 unsupported type: %T", refVal)
+	}
 }

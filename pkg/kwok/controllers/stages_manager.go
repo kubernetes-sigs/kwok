@@ -90,12 +90,11 @@ func (c *StagesManager) manage(ctx context.Context) {
 					return nil, false
 				}
 
-				lifecycleStage, err := lifecycle.NewStage(stage)
-				if err != nil {
-					logger.Error("failed to create lifecycle stage", err, "ref", ref)
+				lc := lifecycle.NewStage(stage)
+				if lc == nil {
 					return nil, false
 				}
-				return lifecycleStage, true
+				return lc, true
 			})
 		})
 

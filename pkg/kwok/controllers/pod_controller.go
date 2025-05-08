@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
@@ -213,13 +212,14 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		}
 	}
 
-	data, err := expression.ToJSONStandard(pod)
-	if err != nil {
-		return err
+	event := &lifecycle.Event{
+		Labels:      pod.Labels,
+		Annotations: pod.Annotations,
+		Data:        pod,
 	}
 
 	lc := c.lifecycle.Get()
-	stage, err := lc.Match(ctx, pod.Labels, pod.Annotations, data)
+	stage, err := lc.Match(ctx, event)
 	if err != nil {
 		return fmt.Errorf("stage match: %w", err)
 	}
@@ -231,8 +231,13 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 	}
 
 	now := c.clock.Now()
-	delay, _ := stage.Delay(ctx, data, now)
-
+	delay, _, err := stage.Delay(ctx, event, now)
+	if err != nil {
+		logger.Warn("Failed to get delay",
+			"stage", stage.Name(),
+			"err", err,
+		)
+	}
 	if delay != 0 {
 		stageName := stage.Name()
 		logger.Debug("Delayed play stage",

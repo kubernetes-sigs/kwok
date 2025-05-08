@@ -260,13 +260,28 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*ExpressionFromSource)(nil), (*v1alpha1.ExpressionFromSource)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(a.(*ExpressionFromSource), b.(*v1alpha1.ExpressionFromSource), scope)
+	if err := s.AddGeneratedConversionFunc((*ExpressionCEL)(nil), (*v1alpha1.ExpressionCEL)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExpressionCEL_To_v1alpha1_ExpressionCEL(a.(*ExpressionCEL), b.(*v1alpha1.ExpressionCEL), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExpressionFromSource)(nil), (*ExpressionFromSource)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(a.(*v1alpha1.ExpressionFromSource), b.(*ExpressionFromSource), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExpressionCEL)(nil), (*ExpressionCEL)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExpressionCEL_To_internalversion_ExpressionCEL(a.(*v1alpha1.ExpressionCEL), b.(*ExpressionCEL), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExpressionFrom)(nil), (*v1alpha1.ExpressionFrom)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExpressionFrom_To_v1alpha1_ExpressionFrom(a.(*ExpressionFrom), b.(*v1alpha1.ExpressionFrom), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExpressionJQ)(nil), (*v1alpha1.ExpressionJQ)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExpressionJQ_To_v1alpha1_ExpressionJQ(a.(*ExpressionJQ), b.(*v1alpha1.ExpressionJQ), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExpressionJQ)(nil), (*ExpressionJQ)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExpressionJQ_To_internalversion_ExpressionJQ(a.(*v1alpha1.ExpressionJQ), b.(*ExpressionJQ), scope)
 	}); err != nil {
 		return err
 	}
@@ -410,6 +425,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*MatchExpression)(nil), (*v1alpha1.MatchExpression)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_MatchExpression_To_v1alpha1_MatchExpression(a.(*MatchExpression), b.(*v1alpha1.MatchExpression), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*Metric)(nil), (*v1alpha1.Metric)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_Metric_To_v1alpha1_Metric(a.(*Metric), b.(*v1alpha1.Metric), scope)
 	}); err != nil {
@@ -550,13 +570,13 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SelectorRequirement)(nil), (*v1alpha1.SelectorRequirement)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(a.(*SelectorRequirement), b.(*v1alpha1.SelectorRequirement), scope)
+	if err := s.AddGeneratedConversionFunc((*SelectorJQ)(nil), (*v1alpha1.SelectorJQ)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_SelectorJQ_To_v1alpha1_SelectorJQ(a.(*SelectorJQ), b.(*v1alpha1.SelectorJQ), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.SelectorRequirement)(nil), (*SelectorRequirement)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement(a.(*v1alpha1.SelectorRequirement), b.(*SelectorRequirement), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.SelectorJQ)(nil), (*SelectorJQ)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_SelectorJQ_To_internalversion_SelectorJQ(a.(*v1alpha1.SelectorJQ), b.(*SelectorJQ), scope)
 	}); err != nil {
 		return err
 	}
@@ -662,6 +682,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*StagePatch)(nil), (*v1alpha1.StagePatch)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_StagePatch_To_v1alpha1_StagePatch(a.(*StagePatch), b.(*v1alpha1.StagePatch), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha1.ExpressionFrom)(nil), (*ExpressionFrom)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExpressionFrom_To_internalversion_ExpressionFrom(a.(*v1alpha1.ExpressionFrom), b.(*ExpressionFrom), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha1.MatchExpression)(nil), (*MatchExpression)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_MatchExpression_To_internalversion_MatchExpression(a.(*v1alpha1.MatchExpression), b.(*MatchExpression), scope)
 	}); err != nil {
 		return err
 	}
@@ -1337,24 +1367,62 @@ func Convert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal(in *v1a
 	return autoConvert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal(in, out, s)
 }
 
-func autoConvert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(in *ExpressionFromSource, out *v1alpha1.ExpressionFromSource, s conversion.Scope) error {
-	out.ExpressionFrom = in.ExpressionFrom
+func autoConvert_internalversion_ExpressionCEL_To_v1alpha1_ExpressionCEL(in *ExpressionCEL, out *v1alpha1.ExpressionCEL, s conversion.Scope) error {
+	out.Expression = in.Expression
 	return nil
 }
 
-// Convert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource is an autogenerated conversion function.
-func Convert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(in *ExpressionFromSource, out *v1alpha1.ExpressionFromSource, s conversion.Scope) error {
-	return autoConvert_internalversion_ExpressionFromSource_To_v1alpha1_ExpressionFromSource(in, out, s)
+// Convert_internalversion_ExpressionCEL_To_v1alpha1_ExpressionCEL is an autogenerated conversion function.
+func Convert_internalversion_ExpressionCEL_To_v1alpha1_ExpressionCEL(in *ExpressionCEL, out *v1alpha1.ExpressionCEL, s conversion.Scope) error {
+	return autoConvert_internalversion_ExpressionCEL_To_v1alpha1_ExpressionCEL(in, out, s)
 }
 
-func autoConvert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in *v1alpha1.ExpressionFromSource, out *ExpressionFromSource, s conversion.Scope) error {
-	out.ExpressionFrom = in.ExpressionFrom
+func autoConvert_v1alpha1_ExpressionCEL_To_internalversion_ExpressionCEL(in *v1alpha1.ExpressionCEL, out *ExpressionCEL, s conversion.Scope) error {
+	out.Expression = in.Expression
 	return nil
 }
 
-// Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource is an autogenerated conversion function.
-func Convert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in *v1alpha1.ExpressionFromSource, out *ExpressionFromSource, s conversion.Scope) error {
-	return autoConvert_v1alpha1_ExpressionFromSource_To_internalversion_ExpressionFromSource(in, out, s)
+// Convert_v1alpha1_ExpressionCEL_To_internalversion_ExpressionCEL is an autogenerated conversion function.
+func Convert_v1alpha1_ExpressionCEL_To_internalversion_ExpressionCEL(in *v1alpha1.ExpressionCEL, out *ExpressionCEL, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExpressionCEL_To_internalversion_ExpressionCEL(in, out, s)
+}
+
+func autoConvert_internalversion_ExpressionFrom_To_v1alpha1_ExpressionFrom(in *ExpressionFrom, out *v1alpha1.ExpressionFrom, s conversion.Scope) error {
+	out.CEL = (*v1alpha1.ExpressionCEL)(unsafe.Pointer(in.CEL))
+	out.JQ = (*v1alpha1.ExpressionJQ)(unsafe.Pointer(in.JQ))
+	return nil
+}
+
+// Convert_internalversion_ExpressionFrom_To_v1alpha1_ExpressionFrom is an autogenerated conversion function.
+func Convert_internalversion_ExpressionFrom_To_v1alpha1_ExpressionFrom(in *ExpressionFrom, out *v1alpha1.ExpressionFrom, s conversion.Scope) error {
+	return autoConvert_internalversion_ExpressionFrom_To_v1alpha1_ExpressionFrom(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExpressionFrom_To_internalversion_ExpressionFrom(in *v1alpha1.ExpressionFrom, out *ExpressionFrom, s conversion.Scope) error {
+	out.CEL = (*ExpressionCEL)(unsafe.Pointer(in.CEL))
+	out.JQ = (*ExpressionJQ)(unsafe.Pointer(in.JQ))
+	// INFO: in.ExpressionFrom opted out of conversion generation
+	return nil
+}
+
+func autoConvert_internalversion_ExpressionJQ_To_v1alpha1_ExpressionJQ(in *ExpressionJQ, out *v1alpha1.ExpressionJQ, s conversion.Scope) error {
+	out.Expression = in.Expression
+	return nil
+}
+
+// Convert_internalversion_ExpressionJQ_To_v1alpha1_ExpressionJQ is an autogenerated conversion function.
+func Convert_internalversion_ExpressionJQ_To_v1alpha1_ExpressionJQ(in *ExpressionJQ, out *v1alpha1.ExpressionJQ, s conversion.Scope) error {
+	return autoConvert_internalversion_ExpressionJQ_To_v1alpha1_ExpressionJQ(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExpressionJQ_To_internalversion_ExpressionJQ(in *v1alpha1.ExpressionJQ, out *ExpressionJQ, s conversion.Scope) error {
+	out.Expression = in.Expression
+	return nil
+}
+
+// Convert_v1alpha1_ExpressionJQ_To_internalversion_ExpressionJQ is an autogenerated conversion function.
+func Convert_v1alpha1_ExpressionJQ_To_internalversion_ExpressionJQ(in *v1alpha1.ExpressionJQ, out *ExpressionJQ, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExpressionJQ_To_internalversion_ExpressionJQ(in, out, s)
 }
 
 func autoConvert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out *configv1alpha1.ExtraArgs, s conversion.Scope) error {
@@ -2048,6 +2116,26 @@ func Convert_v1alpha1_LogsSpec_To_internalversion_LogsSpec(in *v1alpha1.LogsSpec
 	return autoConvert_v1alpha1_LogsSpec_To_internalversion_LogsSpec(in, out, s)
 }
 
+func autoConvert_internalversion_MatchExpression_To_v1alpha1_MatchExpression(in *MatchExpression, out *v1alpha1.MatchExpression, s conversion.Scope) error {
+	out.CEL = (*v1alpha1.ExpressionCEL)(unsafe.Pointer(in.CEL))
+	out.JQ = (*v1alpha1.SelectorJQ)(unsafe.Pointer(in.JQ))
+	return nil
+}
+
+// Convert_internalversion_MatchExpression_To_v1alpha1_MatchExpression is an autogenerated conversion function.
+func Convert_internalversion_MatchExpression_To_v1alpha1_MatchExpression(in *MatchExpression, out *v1alpha1.MatchExpression, s conversion.Scope) error {
+	return autoConvert_internalversion_MatchExpression_To_v1alpha1_MatchExpression(in, out, s)
+}
+
+func autoConvert_v1alpha1_MatchExpression_To_internalversion_MatchExpression(in *v1alpha1.MatchExpression, out *MatchExpression, s conversion.Scope) error {
+	out.CEL = (*ExpressionCEL)(unsafe.Pointer(in.CEL))
+	out.JQ = (*SelectorJQ)(unsafe.Pointer(in.JQ))
+	// INFO: in.Key opted out of conversion generation
+	// INFO: in.Operator opted out of conversion generation
+	// INFO: in.Values opted out of conversion generation
+	return nil
+}
+
 func autoConvert_internalversion_Metric_To_v1alpha1_Metric(in *Metric, out *v1alpha1.Metric, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_internalversion_MetricSpec_To_v1alpha1_MetricSpec(&in.Spec, &out.Spec, s); err != nil {
@@ -2386,28 +2474,28 @@ func Convert_v1alpha1_SecurityContext_To_internalversion_SecurityContext(in *v1a
 	return autoConvert_v1alpha1_SecurityContext_To_internalversion_SecurityContext(in, out, s)
 }
 
-func autoConvert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(in *SelectorRequirement, out *v1alpha1.SelectorRequirement, s conversion.Scope) error {
+func autoConvert_internalversion_SelectorJQ_To_v1alpha1_SelectorJQ(in *SelectorJQ, out *v1alpha1.SelectorJQ, s conversion.Scope) error {
 	out.Key = in.Key
 	out.Operator = v1alpha1.SelectorOperator(in.Operator)
 	out.Values = *(*[]string)(unsafe.Pointer(&in.Values))
 	return nil
 }
 
-// Convert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement is an autogenerated conversion function.
-func Convert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(in *SelectorRequirement, out *v1alpha1.SelectorRequirement, s conversion.Scope) error {
-	return autoConvert_internalversion_SelectorRequirement_To_v1alpha1_SelectorRequirement(in, out, s)
+// Convert_internalversion_SelectorJQ_To_v1alpha1_SelectorJQ is an autogenerated conversion function.
+func Convert_internalversion_SelectorJQ_To_v1alpha1_SelectorJQ(in *SelectorJQ, out *v1alpha1.SelectorJQ, s conversion.Scope) error {
+	return autoConvert_internalversion_SelectorJQ_To_v1alpha1_SelectorJQ(in, out, s)
 }
 
-func autoConvert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement(in *v1alpha1.SelectorRequirement, out *SelectorRequirement, s conversion.Scope) error {
+func autoConvert_v1alpha1_SelectorJQ_To_internalversion_SelectorJQ(in *v1alpha1.SelectorJQ, out *SelectorJQ, s conversion.Scope) error {
 	out.Key = in.Key
 	out.Operator = SelectorOperator(in.Operator)
 	out.Values = *(*[]string)(unsafe.Pointer(&in.Values))
 	return nil
 }
 
-// Convert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement is an autogenerated conversion function.
-func Convert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement(in *v1alpha1.SelectorRequirement, out *SelectorRequirement, s conversion.Scope) error {
-	return autoConvert_v1alpha1_SelectorRequirement_To_internalversion_SelectorRequirement(in, out, s)
+// Convert_v1alpha1_SelectorJQ_To_internalversion_SelectorJQ is an autogenerated conversion function.
+func Convert_v1alpha1_SelectorJQ_To_internalversion_SelectorJQ(in *v1alpha1.SelectorJQ, out *SelectorJQ, s conversion.Scope) error {
+	return autoConvert_v1alpha1_SelectorJQ_To_internalversion_SelectorJQ(in, out, s)
 }
 
 func autoConvert_internalversion_Stage_To_v1alpha1_Stage(in *Stage, out *v1alpha1.Stage, s conversion.Scope) error {
@@ -2440,9 +2528,25 @@ func Convert_v1alpha1_Stage_To_internalversion_Stage(in *v1alpha1.Stage, out *St
 
 func autoConvert_internalversion_StageDelay_To_v1alpha1_StageDelay(in *StageDelay, out *v1alpha1.StageDelay, s conversion.Scope) error {
 	out.DurationMilliseconds = (*int64)(unsafe.Pointer(in.DurationMilliseconds))
-	out.DurationFrom = (*v1alpha1.ExpressionFromSource)(unsafe.Pointer(in.DurationFrom))
+	if in.DurationFrom != nil {
+		in, out := &in.DurationFrom, &out.DurationFrom
+		*out = new(v1alpha1.ExpressionFrom)
+		if err := Convert_internalversion_ExpressionFrom_To_v1alpha1_ExpressionFrom(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DurationFrom = nil
+	}
 	out.JitterDurationMilliseconds = (*int64)(unsafe.Pointer(in.JitterDurationMilliseconds))
-	out.JitterDurationFrom = (*v1alpha1.ExpressionFromSource)(unsafe.Pointer(in.JitterDurationFrom))
+	if in.JitterDurationFrom != nil {
+		in, out := &in.JitterDurationFrom, &out.JitterDurationFrom
+		*out = new(v1alpha1.ExpressionFrom)
+		if err := Convert_internalversion_ExpressionFrom_To_v1alpha1_ExpressionFrom(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.JitterDurationFrom = nil
+	}
 	return nil
 }
 
@@ -2453,9 +2557,25 @@ func Convert_internalversion_StageDelay_To_v1alpha1_StageDelay(in *StageDelay, o
 
 func autoConvert_v1alpha1_StageDelay_To_internalversion_StageDelay(in *v1alpha1.StageDelay, out *StageDelay, s conversion.Scope) error {
 	out.DurationMilliseconds = (*int64)(unsafe.Pointer(in.DurationMilliseconds))
-	out.DurationFrom = (*ExpressionFromSource)(unsafe.Pointer(in.DurationFrom))
+	if in.DurationFrom != nil {
+		in, out := &in.DurationFrom, &out.DurationFrom
+		*out = new(ExpressionFrom)
+		if err := Convert_v1alpha1_ExpressionFrom_To_internalversion_ExpressionFrom(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DurationFrom = nil
+	}
 	out.JitterDurationMilliseconds = (*int64)(unsafe.Pointer(in.JitterDurationMilliseconds))
-	out.JitterDurationFrom = (*ExpressionFromSource)(unsafe.Pointer(in.JitterDurationFrom))
+	if in.JitterDurationFrom != nil {
+		in, out := &in.JitterDurationFrom, &out.JitterDurationFrom
+		*out = new(ExpressionFrom)
+		if err := Convert_v1alpha1_ExpressionFrom_To_internalversion_ExpressionFrom(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.JitterDurationFrom = nil
+	}
 	return nil
 }
 
@@ -2599,7 +2719,17 @@ func Convert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef(in *v
 func autoConvert_internalversion_StageSelector_To_v1alpha1_StageSelector(in *StageSelector, out *v1alpha1.StageSelector, s conversion.Scope) error {
 	out.MatchLabels = *(*map[string]string)(unsafe.Pointer(&in.MatchLabels))
 	out.MatchAnnotations = *(*map[string]string)(unsafe.Pointer(&in.MatchAnnotations))
-	out.MatchExpressions = *(*[]v1alpha1.SelectorRequirement)(unsafe.Pointer(&in.MatchExpressions))
+	if in.MatchExpressions != nil {
+		in, out := &in.MatchExpressions, &out.MatchExpressions
+		*out = make([]v1alpha1.MatchExpression, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_MatchExpression_To_v1alpha1_MatchExpression(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.MatchExpressions = nil
+	}
 	return nil
 }
 
@@ -2611,7 +2741,17 @@ func Convert_internalversion_StageSelector_To_v1alpha1_StageSelector(in *StageSe
 func autoConvert_v1alpha1_StageSelector_To_internalversion_StageSelector(in *v1alpha1.StageSelector, out *StageSelector, s conversion.Scope) error {
 	out.MatchLabels = *(*map[string]string)(unsafe.Pointer(&in.MatchLabels))
 	out.MatchAnnotations = *(*map[string]string)(unsafe.Pointer(&in.MatchAnnotations))
-	out.MatchExpressions = *(*[]SelectorRequirement)(unsafe.Pointer(&in.MatchExpressions))
+	if in.MatchExpressions != nil {
+		in, out := &in.MatchExpressions, &out.MatchExpressions
+		*out = make([]MatchExpression, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_MatchExpression_To_internalversion_MatchExpression(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.MatchExpressions = nil
+	}
 	return nil
 }
 
@@ -2624,10 +2764,34 @@ func autoConvert_internalversion_StageSpec_To_v1alpha1_StageSpec(in *StageSpec, 
 	if err := Convert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef(&in.ResourceRef, &out.ResourceRef, s); err != nil {
 		return err
 	}
-	out.Selector = (*v1alpha1.StageSelector)(unsafe.Pointer(in.Selector))
+	if in.Selector != nil {
+		in, out := &in.Selector, &out.Selector
+		*out = new(v1alpha1.StageSelector)
+		if err := Convert_internalversion_StageSelector_To_v1alpha1_StageSelector(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Selector = nil
+	}
 	out.Weight = in.Weight
-	out.WeightFrom = (*v1alpha1.ExpressionFromSource)(unsafe.Pointer(in.WeightFrom))
-	out.Delay = (*v1alpha1.StageDelay)(unsafe.Pointer(in.Delay))
+	if in.WeightFrom != nil {
+		in, out := &in.WeightFrom, &out.WeightFrom
+		*out = new(v1alpha1.ExpressionFrom)
+		if err := Convert_internalversion_ExpressionFrom_To_v1alpha1_ExpressionFrom(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.WeightFrom = nil
+	}
+	if in.Delay != nil {
+		in, out := &in.Delay, &out.Delay
+		*out = new(v1alpha1.StageDelay)
+		if err := Convert_internalversion_StageDelay_To_v1alpha1_StageDelay(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Delay = nil
+	}
 	if err := Convert_internalversion_StageNext_To_v1alpha1_StageNext(&in.Next, &out.Next, s); err != nil {
 		return err
 	}
@@ -2646,10 +2810,34 @@ func autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.St
 	if err := Convert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef(&in.ResourceRef, &out.ResourceRef, s); err != nil {
 		return err
 	}
-	out.Selector = (*StageSelector)(unsafe.Pointer(in.Selector))
+	if in.Selector != nil {
+		in, out := &in.Selector, &out.Selector
+		*out = new(StageSelector)
+		if err := Convert_v1alpha1_StageSelector_To_internalversion_StageSelector(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Selector = nil
+	}
 	out.Weight = in.Weight
-	out.WeightFrom = (*ExpressionFromSource)(unsafe.Pointer(in.WeightFrom))
-	out.Delay = (*StageDelay)(unsafe.Pointer(in.Delay))
+	if in.WeightFrom != nil {
+		in, out := &in.WeightFrom, &out.WeightFrom
+		*out = new(ExpressionFrom)
+		if err := Convert_v1alpha1_ExpressionFrom_To_internalversion_ExpressionFrom(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.WeightFrom = nil
+	}
+	if in.Delay != nil {
+		in, out := &in.Delay, &out.Delay
+		*out = new(StageDelay)
+		if err := Convert_v1alpha1_StageDelay_To_internalversion_StageDelay(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Delay = nil
+	}
 	if err := Convert_v1alpha1_StageNext_To_internalversion_StageNext(&in.Next, &out.Next, s); err != nil {
 		return err
 	}
