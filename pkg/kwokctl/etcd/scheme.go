@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -68,6 +68,7 @@ import (
 	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	resourcev1alpha3 "k8s.io/api/resource/v1alpha3"
 	resourcev1beta1 "k8s.io/api/resource/v1beta1"
+	resourcev1beta2 "k8s.io/api/resource/v1beta2"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	schedulingv1alpha1 "k8s.io/api/scheduling/v1alpha1"
 	schedulingv1beta1 "k8s.io/api/scheduling/v1beta1"
@@ -130,6 +131,7 @@ func AddToScheme(scheme *runtime.Scheme) {
 	_ = rbacv1beta1.AddToScheme(scheme)
 	_ = resourcev1alpha3.AddToScheme(scheme)
 	_ = resourcev1beta1.AddToScheme(scheme)
+	_ = resourcev1beta2.AddToScheme(scheme)
 	_ = schedulingv1.AddToScheme(scheme)
 	_ = schedulingv1alpha1.AddToScheme(scheme)
 	_ = schedulingv1beta1.AddToScheme(scheme)
