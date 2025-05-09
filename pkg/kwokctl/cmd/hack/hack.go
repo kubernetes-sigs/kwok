@@ -30,9 +30,10 @@ import (
 // NewCommand returns a new cobra.Command for get
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "hack [command]",
-		Short: "[experimental] Hack [get, put, delete] resources in etcd without apiserver",
+		Args:       cobra.NoArgs,
+		Use:        "hack [command]",
+		Short:      "[experimental] Hack [get, put, delete] resources in etcd without apiserver",
+		Deprecated: "Use 'kectl' instead for direct etcd interaction.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
