@@ -18,10 +18,8 @@ package kind
 
 import (
 	"context"
-	"crypto/tls"
 
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -155,54 +153,42 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 	return nil
 }
 
-// GetEtcdClient returns the etcd client of cluster
-func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error) {
+// KectlInCluster command in cluster
+func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
+	cacertFile := c.GetWorkdirPath("pki/etcd/ca.crt")
 	certFile := c.GetWorkdirPath("pki/etcd/server.crt")
 	keyFile := c.GetWorkdirPath("pki/etcd/server.key")
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, nil, err
-	}
 
 	config, err := c.Config(ctx)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 	conf := &config.Options
 
-	if conf.EtcdPort == 0 {
-		unused, err := net.GetUnusedPort(ctx, nil)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		cli, err := etcd.NewClient(etcd.ClientConfig{
-			Endpoints: []string{"https://" + net.LocalAddress + ":" + format.String(unused)},
-			TLS: &tls.Config{
-				Certificates:       []tls.Certificate{cert},
-				InsecureSkipVerify: true,
-			},
-		})
-		if err != nil {
-			return nil, nil, err
-		}
-
-		cancel, err := c.PortForward(ctx, consts.ComponentEtcd, "2379", unused)
-		if err != nil {
-			return nil, nil, err
-		}
-		return cli, cancel, nil
+	if conf.EtcdPort != 0 {
+		return c.Kectl(ctx, append([]string{
+			"--endpoints=https://" + net.LocalAddress + ":" + format.String(conf.EtcdPort),
+			"--key=" + keyFile,
+			"--cert=" + certFile,
+			"--cacert=" + cacertFile,
+		}, args...)...)
 	}
 
-	cli, err := etcd.NewClient(etcd.ClientConfig{
-		Endpoints: []string{"https://" + net.LocalAddress + ":" + format.String(conf.EtcdPort)},
-		TLS: &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			InsecureSkipVerify: true,
-		},
-	})
+	unused, err := net.GetUnusedPort(ctx, nil)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
-	return cli, func() {}, nil
+
+	cancel, err := c.PortForward(ctx, consts.ComponentEtcd, "2379", unused)
+	if err != nil {
+		return err
+	}
+	defer cancel()
+
+	return c.Kectl(ctx, append([]string{
+		"--endpoints=https://" + net.LocalAddress + ":" + format.String(unused),
+		"--key=" + keyFile,
+		"--cert=" + certFile,
+		"--cacert=" + cacertFile,
+	}, args...)...)
 }

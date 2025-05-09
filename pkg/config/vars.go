@@ -247,7 +247,19 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setMetricsServerConfig(conf)
 
+	setKectlConfig(conf)
+
 	return config
+}
+
+func setKectlConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.KectlVersion == "" {
+		conf.KectlVersion = consts.KectlVersion
+	}
+
+	if conf.KectlBinary == "" {
+		conf.KectlBinary = consts.KectlBinaryPrefix + "/" + version.AddPrefixV(conf.KectlVersion) + "/kectl_" + GOOS + "_" + GOARCH + conf.BinSuffix
+	}
 }
 
 func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
