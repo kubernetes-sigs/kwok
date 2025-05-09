@@ -127,6 +127,9 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for env KWOK_ETCD_VERSION
 	EtcdVersion string `json:"etcdVersion,omitempty"`
 
+	// KectlVersion it the version of Kectl to use.
+	KectlVersion string `json:"kectlVersion,omitempty"`
+
 	// DashboardVersion is the version of Kubernetes dashboard to use.
 	DashboardVersion string `json:"dashboardVersion,omitempty"`
 
@@ -303,6 +306,9 @@ type KwokctlConfigurationOptions struct {
 
 	// EtcdctlBinary is the binary of etcdctl.
 	EtcdctlBinary string `json:"etcdctlBinary,omitempty"`
+
+	// KectlBinary is the binary of kectl [experimental].
+	KectlBinary string `json:"kectlBinary,omitempty"`
 
 	// EtcdBinary is the binary of etcd.
 	// is the default value for flag --etcd-binary and env KWOK_ETCD_BINARY

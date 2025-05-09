@@ -147,6 +147,12 @@ type Runtime interface {
 
 	// GetEtcdClient returns the etcd client of cluster
 	GetEtcdClient(ctx context.Context) (etcd.Client, func(), error)
+
+	// Kectl executes kectl commands on the cluster from the host
+	Kectl(ctx context.Context, args ...string) error
+
+	// KectlInCluster executes kectl commands from within the cluster
+	KectlInCluster(ctx context.Context, args ...string) error
 }
 
 // SnapshotSaveWithYAMLConfig contains configuration for saving a snapshot with YAML files

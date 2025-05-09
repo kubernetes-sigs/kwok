@@ -57,29 +57,10 @@ spec:
 `
 
 func scaleCreatePodWithHack(ctx context.Context, t *testing.T, kwokctlPath string, name string, size, gap, tolerance int) error {
-	startFunc := []func() error{}
-	concurrency := 10
-	chunkSize := size / concurrency
-	for i := 0; i != concurrency; i++ {
-		start := i * chunkSize
-		end := start + chunkSize
-		if i == concurrency-1 {
-			end = size
-		}
-		scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "hack", "put", "--path", "-")
-		scaleCmd.Stdin = readerPodYaml(start, end)
-		startFunc = append(startFunc, scaleCmd.Start)
-	}
+	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kectl", "put", "--path", "-")
+	scaleCmd.Stdin = readerPodYaml(0, size)
 
-	if err := waitResource(ctx, t, kwokctlPath, name, "Pod", "Running", size, gap, tolerance, func() error {
-		for _, f := range startFunc {
-			err := f()
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}); err != nil {
+	if err := waitResource(ctx, t, kwokctlPath, name, "Pod", "Running", size, gap, tolerance, scaleCmd.Start); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
 	return nil
@@ -116,26 +97,12 @@ spec:
 `
 
 func scaleDeletePodWithHack(ctx context.Context, t *testing.T, kwokctlPath string, name string, size int) error {
-	startFunc := []func() error{}
-	concurrency := 10
-	chunkSize := size / concurrency
-	for i := 0; i != concurrency; i++ {
-		start := i * chunkSize
-		end := start + chunkSize
-		if i == concurrency-1 {
-			end = size
-		}
-		scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "hack", "put", "--path", "-")
-		scaleCmd.Stdin = readerPodDeleteYaml(start, end)
-		startFunc = append(startFunc, scaleCmd.Start)
+	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kectl", "put", "--path", "-")
+	scaleCmd.Stdin = readerPodDeleteYaml(0, size)
+	err := scaleCmd.Start()
+	if err != nil {
+		return err
 	}
-	for _, f := range startFunc {
-		err := f()
-		if err != nil {
-			return err
-		}
-	}
-
 	if err := waitDeleteResource(ctx, t, kwokctlPath, name, "Pod"); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
@@ -185,29 +152,10 @@ status:
 `
 
 func scaleCreateNodeWithHack(ctx context.Context, t *testing.T, kwokctlPath string, name string, size, gap, tolerance int) error {
-	startFunc := []func() error{}
-	concurrency := 10
-	chunkSize := size / concurrency
-	for i := 0; i != concurrency; i++ {
-		start := i * chunkSize
-		end := start + chunkSize
-		if i == concurrency-1 {
-			end = size
-		}
-		scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "hack", "put", "--path", "-")
-		scaleCmd.Stdin = readerNodeYaml(start, end)
-		startFunc = append(startFunc, scaleCmd.Start)
-	}
+	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kectl", "put", "--path", "-")
+	scaleCmd.Stdin = readerNodeYaml(0, size)
 
-	if err := waitResource(ctx, t, kwokctlPath, name, "Node", "Ready", size, gap, tolerance, func() error {
-		for _, f := range startFunc {
-			err := f()
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}); err != nil {
+	if err := waitResource(ctx, t, kwokctlPath, name, "Node", "Ready", size, gap, tolerance, scaleCmd.Start); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
 	return nil

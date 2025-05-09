@@ -51,9 +51,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "replay",
-		Short: "Replay the recording to the cluster",
+		Args:       cobra.NoArgs,
+		Use:        "replay",
+		Short:      "Replay the recording to the cluster",
+		Deprecated: "Use 'kectl snapshot replay' instead",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)

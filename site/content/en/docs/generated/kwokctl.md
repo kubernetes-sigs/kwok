@@ -24,7 +24,7 @@ kwokctl [command] [flags]
 * [kwokctl etcdctl](kwokctl_etcdctl.md)	 - etcdctl in cluster
 * [kwokctl export](kwokctl_export.md)	 - Exports one of [logs]
 * [kwokctl get](kwokctl_get.md)	 - Gets one of [artifacts, clusters, components, kubeconfig]
-* [kwokctl hack](kwokctl_hack.md)	 - [experimental] Hack [get, put, delete] resources in etcd without apiserver
+* [kwokctl kectl](kwokctl_kectl.md)	 - [experimental] Directly interact with etcd resources using kubectl-like commands
 * [kwokctl kubectl](kwokctl_kubectl.md)	 - kubectl in cluster
 * [kwokctl logs](kwokctl_logs.md)	 - Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, metrics-server, prometheus, jaeger]
 * [kwokctl port-forward](kwokctl_port-forward.md)	 - Forward one local ports to a component

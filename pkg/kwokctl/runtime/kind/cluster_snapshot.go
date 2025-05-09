@@ -206,3 +206,43 @@ func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error
 	}
 	return cli, func() {}, nil
 }
+
+// KectlInCluster command in cluster
+func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
+	cacertFile := c.GetWorkdirPath("pki/etcd/ca.crt")
+	certFile := c.GetWorkdirPath("pki/etcd/server.crt")
+	keyFile := c.GetWorkdirPath("pki/etcd/server.key")
+
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+
+	if conf.EtcdPort != 0 {
+		return c.Kectl(ctx, append([]string{
+			"--endpoints=https://" + net.LocalAddress + ":" + format.String(conf.EtcdPort),
+			"--key=" + keyFile,
+			"--cert=" + certFile,
+			"--cacert=" + cacertFile,
+		}, args...)...)
+	}
+
+	unused, err := net.GetUnusedPort(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	cancel, err := c.PortForward(ctx, consts.ComponentEtcd, "2379", unused)
+	if err != nil {
+		return err
+	}
+	defer cancel()
+
+	return c.Kectl(ctx, append([]string{
+		"--endpoints=https://" + net.LocalAddress + ":" + format.String(unused),
+		"--key=" + keyFile,
+		"--cert=" + certFile,
+		"--cacert=" + cacertFile,
+	}, args...)...)
+}

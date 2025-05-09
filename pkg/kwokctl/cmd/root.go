@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/export"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/hack"
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/kectl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/kubectl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/logs"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/port_forward"
@@ -68,6 +69,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		stop.NewCommand(ctx),
 		kubectl.NewCommand(ctx),
 		etcdctl.NewCommand(ctx),
+		kectl.NewCommand(ctx),
 		logs.NewCommand(ctx),
 		scale.NewCommand(ctx),
 		snapshot.NewCommand(ctx),
