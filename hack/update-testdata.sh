@@ -22,7 +22,12 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 function update() {
-  go test -v ./test/e2e/kwokctl/dryrun -args --update-testdata
+  docker run \
+    --rm \
+    -v "${ROOT_DIR}:${ROOT_DIR}" \
+    -w "${ROOT_DIR}" \
+    golang:1.23 \
+    go test -v ./test/e2e/kwokctl/dryrun -args --update-testdata
 }
 
 cd "${ROOT_DIR}" && update
