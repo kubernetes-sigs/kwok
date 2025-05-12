@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 const (
@@ -474,6 +475,9 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 
 	errCh := make(chan error, 1)
 
+	var handler http.Handler = s.restfulCont
+	handler = httpSetHeader(handler, "Server", version.DefaultHTTPServer(), false)
+
 	if certFile != "" && privateKeyFile != "" {
 		go func() {
 			logger.Info("Starting HTTPS server",
@@ -487,7 +491,7 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 					return ctx
 				},
 				Addr:    address,
-				Handler: s.restfulCont,
+				Handler: handler,
 			}
 			err = svc.ServeTLS(tlsListener, certFile, privateKeyFile)
 			if err != nil {
@@ -506,7 +510,7 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 					return ctx
 				},
 				Addr:    address,
-				Handler: s.restfulCont,
+				Handler: handler,
 			},
 		}
 		svc.StartTLS()
@@ -522,7 +526,7 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 				return ctx
 			},
 			Addr:    address,
-			Handler: s.restfulCont,
+			Handler: handler,
 		}
 		err = svc.Serve(unmatchedListener)
 		if err != nil {
@@ -537,4 +541,14 @@ func (s *Server) Run(ctx context.Context, address string, certFile, privateKeyFi
 	}
 
 	return err
+}
+
+func httpSetHeader(next http.Handler, key, value string, ifNotPresent bool) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		header := w.Header()
+		if !ifNotPresent || header.Get(key) == "" {
+			header.Set(key, value)
+		}
+		next.ServeHTTP(w, r)
+	})
 }
