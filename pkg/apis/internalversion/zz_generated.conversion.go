@@ -1754,6 +1754,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KwokVersion = in.KwokVersion
 	out.KubeVersion = in.KubeVersion
 	out.EtcdVersion = in.EtcdVersion
+	out.KectlVersion = in.KectlVersion
 	out.DashboardVersion = in.DashboardVersion
 	out.DashboardMetricsScraperVersion = in.DashboardMetricsScraperVersion
 	out.PrometheusVersion = in.PrometheusVersion
@@ -1797,6 +1798,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeSchedulerBinary = in.KubeSchedulerBinary
 	out.KubectlBinary = in.KubectlBinary
 	out.EtcdctlBinary = in.EtcdctlBinary
+	out.KectlBinary = in.KectlBinary
 	out.EtcdBinary = in.EtcdBinary
 	out.EtcdBinaryTar = in.EtcdBinaryTar
 	out.EtcdPrefix = in.EtcdPrefix
@@ -1858,6 +1860,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KwokVersion = in.KwokVersion
 	out.KubeVersion = in.KubeVersion
 	out.EtcdVersion = in.EtcdVersion
+	out.KectlVersion = in.KectlVersion
 	out.DashboardVersion = in.DashboardVersion
 	out.DashboardMetricsScraperVersion = in.DashboardMetricsScraperVersion
 	out.PrometheusVersion = in.PrometheusVersion
@@ -1911,6 +1914,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubectlBinary = in.KubectlBinary
 	// INFO: in.EtcdBinaryPrefix opted out of conversion generation
 	out.EtcdctlBinary = in.EtcdctlBinary
+	out.KectlBinary = in.KectlBinary
 	out.EtcdBinary = in.EtcdBinary
 	// INFO: in.EtcdBinaryTar opted out of conversion generation
 	out.EtcdPrefix = in.EtcdPrefix
