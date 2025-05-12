@@ -51,6 +51,11 @@ func DefaultUserAgent() string {
 	return fmt.Sprintf("%s/%s (%s/%s)", adjustCommand(os.Args[0]), AddPrefixV(versionInfo(consts.Version, consts.PreRelease)), runtime.GOOS, runtime.GOARCH)
 }
 
+// DefaultHTTPServer is the version string for the the of the http response header
+func DefaultHTTPServer() string {
+	return fmt.Sprintf("%s/%s", adjustCommand(os.Args[0]), TrimPrefixV(versionInfo(consts.Version, consts.PreRelease)))
+}
+
 // adjustCommand returns the last component of the
 // OS-specific command path for use in User-Agent.
 func adjustCommand(p string) string {
