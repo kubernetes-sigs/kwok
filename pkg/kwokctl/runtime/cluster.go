@@ -28,6 +28,7 @@ import (
 	"github.com/nxadm/tail"
 
 	"sigs.k8s.io/kwok/kustomize/crd"
+	"sigs.k8s.io/kwok/kustomize/interaction"
 	"sigs.k8s.io/kwok/kustomize/metrics/resource"
 	"sigs.k8s.io/kwok/kustomize/metrics/usage"
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
@@ -265,7 +266,15 @@ func (c *Cluster) Save(ctx context.Context) error {
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterPortForwardKind) {
 		stages := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
-		objs = appendIntoInternalObjects(objs, stages...)
+		if len(stages) == 0 {
+			m, err := config.UnmarshalWithType[*internalversion.ClusterPortForward, string](interaction.DefaultClusterPortForward)
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, m)
+		} else {
+			objs = appendIntoInternalObjects(objs, stages...)
+		}
 	}
 
 	return config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)

@@ -5207,6 +5207,20 @@ ForwardTarget
 if set, Target will be ignored.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>httpRoutes</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.HTTPRoute">
+[]HTTPRoute
+</a>
+</em>
+</td>
+<td>
+<p>HTTPRoutes defines a list of predefined HTTP responses that can be returned
+for specific paths instead of forwarding the request.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ForwardTarget">
@@ -5248,6 +5262,116 @@ string
 </td>
 <td>
 <p>Address is the address to forward to.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.HTTPRoute">
+HTTPRoute
+<a href="#kwok.x-k8s.io%2fv1alpha1.HTTPRoute"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.Forward">Forward</a>
+</p>
+<p>
+<p>HTTPRoute defines a predefined HTTP response configuration for a specific path.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>location</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Location specifies the request path pattern to match for this response.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>code</code>
+<em>
+int
+</em>
+</td>
+<td>
+<p>Code is the HTTP status code to return for this response.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>headers</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.HTTPRouteHeader">
+[]HTTPRouteHeader
+</a>
+</em>
+</td>
+<td>
+<p>Headers contains additional HTTP headers to include in the response.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>body</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Body contains the response body content to return.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.HTTPRouteHeader">
+HTTPRouteHeader
+<a href="#kwok.x-k8s.io%2fv1alpha1.HTTPRouteHeader"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.HTTPRoute">HTTPRoute</a>
+</p>
+<p>
+<p>HTTPRouteHeader defines a single HTTP header key-value pair.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the HTTP header name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Value is the HTTP header value.</p>
 </td>
 </tr>
 </tbody>

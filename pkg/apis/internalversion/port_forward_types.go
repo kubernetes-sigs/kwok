@@ -45,6 +45,9 @@ type Forward struct {
 	// Command is the command to run to forward with stdin/stdout.
 	// if set, Target will be ignored.
 	Command []string
+	// HTTPRoutes defines a list of predefined HTTP responses that can be returned
+	// for specific paths instead of forwarding the request.
+	HTTPRoutes []HTTPRoute
 }
 
 // ForwardTarget holds information how to forward to a target.
@@ -53,4 +56,25 @@ type ForwardTarget struct {
 	Port int32
 	// Address is the address to forward to.
 	Address string
+}
+
+// HTTPRoute defines a predefined HTTP response configuration for a specific path.
+type HTTPRoute struct {
+	// Location specifies the request path pattern to match for this response.
+	Location string
+
+	// Code is the HTTP status code to return for this response.
+	Code int
+	// Headers contains additional HTTP headers to include in the response.
+	Headers []HTTPRouteHeader
+	// Body contains the response body content to return.
+	Body string
+}
+
+// HTTPRouteHeader defines a single HTTP header key-value pair.
+type HTTPRouteHeader struct {
+	// Name is the HTTP header name.
+	Name string
+	// Value is the HTTP header value.
+	Value string
 }

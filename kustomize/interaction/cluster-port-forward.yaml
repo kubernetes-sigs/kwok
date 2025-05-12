@@ -1,0 +1,30 @@
+kind: ClusterPortForward
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: default-http-routes
+spec:
+  forwards:
+  - httpRoutes:
+    - location: /
+      code: 200
+      body: |
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>Welcome to KWOK!</title>
+        <style>
+        html { color-scheme: light dark; }
+        body { width: 35em; margin: 0 auto; font-family: Tahoma, Verdana, Arial, sans-serif; }
+        </style>
+        </head>
+        <body>
+        <h1>Welcome to KWOK!</h1>
+        <p>If you see this page, the Kubernetes port forwarding is functioning correctly.</p>
+
+        <p>For documentation, examples, and guides, visit:
+        <a href="https://kwok.sigs.k8s.io/">kwok.sigs.k8s.io</a></p>
+        </body>
+        </html>
+    - location: /healthz
+      code: 200
+      body: "ok"

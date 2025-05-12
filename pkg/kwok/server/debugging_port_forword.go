@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // PortForward handles a port forwarding request.
@@ -78,7 +79,42 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 		return utilsnet.Tunnel(ctx, stream, dial, buf1, buf2)
 	}
 
+	if len(forward.HTTPRoutes) > 0 {
+		var handler http.Handler = httpRoutes{forward.HTTPRoutes}
+		handler = httpSetHeader(handler, "Server", version.DefaultHTTPServer(), true)
+		return httpPortForwardHTTPHandle(ctx, handler, stream)
+	}
+
 	return errors.New("no target or command")
+}
+
+type httpRoutes struct {
+	routes []internalversion.HTTPRoute
+}
+
+func (h httpRoutes) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	for _, route := range h.routes {
+		// TODO: Support route pettem matching
+		if route.Location == r.URL.Path {
+			httpRouteServeHTTP(w, r, &route)
+			return
+		}
+	}
+	http.NotFound(w, r)
+}
+
+func httpRouteServeHTTP(w http.ResponseWriter, _ *http.Request, route *internalversion.HTTPRoute) {
+	w.WriteHeader(route.Code)
+
+	header := w.Header()
+	for _, h := range route.Headers {
+		header.Set(h.Name, h.Value)
+	}
+
+	// TODO: Support rendering with templates
+	if route.Body != "" {
+		_, _ = io.WriteString(w, route.Body)
+	}
 }
 
 // getPortForward handles a new restful port forward request. It determines the
