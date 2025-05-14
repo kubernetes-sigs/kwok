@@ -426,6 +426,8 @@ func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controll
 			svc.InstallDebuggingDisabledHandlers()
 		}
 
+		svc.InstallPatchingPodHandler()
+
 		err = svc.InstallCRD(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to install crd: %w", err)
