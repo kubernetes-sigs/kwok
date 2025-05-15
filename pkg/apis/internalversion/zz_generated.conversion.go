@@ -1756,6 +1756,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.EtcdVersion = in.EtcdVersion
 	out.KectlVersion = in.KectlVersion
 	out.DashboardVersion = in.DashboardVersion
+	out.DashboardWebVersion = in.DashboardWebVersion
+	out.DashboardApiVersion = in.DashboardApiVersion
 	out.DashboardMetricsScraperVersion = in.DashboardMetricsScraperVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
@@ -1787,6 +1789,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubectlImage = in.KubectlImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.DashboardImage = in.DashboardImage
+	out.DashboardWebImage = in.DashboardWebImage
+	out.DashboardApiImage = in.DashboardApiImage
 	out.DashboardMetricsScraperImage = in.DashboardMetricsScraperImage
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
@@ -1862,6 +1866,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.EtcdVersion = in.EtcdVersion
 	out.KectlVersion = in.KectlVersion
 	out.DashboardVersion = in.DashboardVersion
+	out.DashboardWebVersion = in.DashboardWebVersion
+	out.DashboardApiVersion = in.DashboardApiVersion
 	out.DashboardMetricsScraperVersion = in.DashboardMetricsScraperVersion
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
@@ -1900,6 +1906,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubectlImage = in.KubectlImage
 	out.KwokControllerImage = in.KwokControllerImage
 	out.DashboardImage = in.DashboardImage
+	out.DashboardWebImage = in.DashboardWebImage
+	out.DashboardApiImage = in.DashboardApiImage
 	out.DashboardMetricsScraperImage = in.DashboardMetricsScraperImage
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage

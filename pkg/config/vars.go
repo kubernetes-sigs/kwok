@@ -456,30 +456,60 @@ func setKwokctlKindConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 }
 
 func setKwokctlDashboardConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
-	if conf.DashboardVersion == "" {
-		conf.DashboardVersion = consts.DashboardVersion
-	}
-	conf.DashboardVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DASHBOARD_VERSION", conf.DashboardVersion))
+	conf.DashboardVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DASHBOARD_VERSION", ""))
 
 	if conf.DashboardImagePrefix == "" {
 		conf.DashboardImagePrefix = consts.DashboardImagePrefix
 	}
 	conf.DashboardImagePrefix = envs.GetEnvWithPrefix("DASHBOARD_IMAGE_PREFIX", conf.DashboardImagePrefix)
 
-	if conf.DashboardImage == "" {
+	if conf.DashboardImage == "" && conf.DashboardVersion != "" {
 		conf.DashboardImage = joinImageURI(conf.DashboardImagePrefix, "dashboard", conf.DashboardVersion)
 	}
 	conf.DashboardImage = envs.GetEnvWithPrefix("DASHBOARD_IMAGE", conf.DashboardImage)
 
-	if conf.DashboardMetricsScraperVersion == "" {
-		conf.DashboardMetricsScraperVersion = consts.DashboardMetricsScraperVersion
-	}
-	conf.DashboardMetricsScraperVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_VERSION", conf.DashboardMetricsScraperVersion))
+	if conf.DashboardVersion != "" {
+		if conf.DashboardMetricsScraperVersion == "" {
+			conf.DashboardMetricsScraperVersion = consts.DashboardMetricsScraperVersion
+		}
+		conf.DashboardMetricsScraperVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_VERSION", conf.DashboardMetricsScraperVersion))
 
-	if conf.DashboardMetricsScraperImage == "" {
-		conf.DashboardMetricsScraperImage = joinImageURI(conf.DashboardImagePrefix, "metrics-scraper", conf.DashboardMetricsScraperVersion)
+		if conf.DashboardMetricsScraperImage == "" {
+			conf.DashboardMetricsScraperImage = joinImageURI(conf.DashboardImagePrefix, "metrics-scraper", conf.DashboardMetricsScraperVersion)
+		}
+		conf.DashboardMetricsScraperImage = envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_IMAGE", conf.DashboardMetricsScraperImage)
+
+	} else {
+		if conf.DashboardWebVersion == "" {
+			conf.DashboardWebVersion = consts.DashboardWebVersion
+		}
+		conf.DashboardWebVersion = version.TrimPrefixV(envs.GetEnvWithPrefix("DASHBOARD_WEB_VERSION", conf.DashboardWebVersion))
+
+		if conf.DashboardWebImage == "" {
+			conf.DashboardWebImage = joinImageURI(conf.DashboardImagePrefix, "dashboard-web", conf.DashboardWebVersion)
+		}
+		conf.DashboardWebImage = envs.GetEnvWithPrefix("DASHBOARD_WEB_IMAGE", conf.DashboardWebImage)
+
+		if conf.DashboardApiVersion == "" {
+			conf.DashboardApiVersion = consts.DashboardApiVersion
+		}
+		conf.DashboardApiVersion = version.TrimPrefixV(envs.GetEnvWithPrefix("DASHBOARD_API_VERSION", conf.DashboardApiVersion))
+
+		if conf.DashboardApiImage == "" {
+			conf.DashboardApiImage = joinImageURI(conf.DashboardImagePrefix, "dashboard-api", conf.DashboardApiVersion)
+		}
+		conf.DashboardApiImage = envs.GetEnvWithPrefix("DASHBOARD_API_IMAGE", conf.DashboardApiImage)
+
+		if conf.DashboardMetricsScraperVersion == "" {
+			conf.DashboardMetricsScraperVersion = consts.DashboardMetricsScraperVersion
+		}
+		conf.DashboardMetricsScraperVersion = version.TrimPrefixV(envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_VERSION", conf.DashboardMetricsScraperVersion))
+
+		if conf.DashboardMetricsScraperImage == "" {
+			conf.DashboardMetricsScraperImage = joinImageURI(conf.DashboardImagePrefix, "metrics-scraper", conf.DashboardMetricsScraperVersion)
+		}
+		conf.DashboardMetricsScraperImage = envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_IMAGE", conf.DashboardMetricsScraperImage)
 	}
-	conf.DashboardMetricsScraperImage = envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_IMAGE", conf.DashboardMetricsScraperImage)
 
 	// TODO: Add dashboard binary
 	// if conf.DashboardBinaryPrefix == "" {

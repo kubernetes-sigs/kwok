@@ -108,7 +108,15 @@ type KwokctlConfigurationOptions struct {
 	KectlVersion string
 
 	// DashboardVersion is the version of Kubernetes dashboard to use.
+	// The last available version is 2.7.0
+	// Deprecated: Use DashboardWebVersion and DashboardApiVersion instead
 	DashboardVersion string
+
+	// DashboardWebVersion is the version of Kubernetes dashboard web to use.
+	DashboardWebVersion string
+
+	// DashboardApiVersion is the version of Kubernetes dashboard api to use.
+	DashboardApiVersion string
 
 	// DashboardMetricsScraperVersion is the version of dashboard metrics scraper to use.
 	DashboardMetricsScraperVersion string
@@ -175,7 +183,14 @@ type KwokctlConfigurationOptions struct {
 	KwokControllerImage string
 
 	// DashboardImage is the image of dashboard.
+	// Deprecated: Use DashboardWebImage and DashboardApiImage instead
 	DashboardImage string
+
+	// DashboardWebImage is the image of dashboard web.
+	DashboardWebImage string
+
+	// DashboardApiImage is the image of dashboard api.
+	DashboardApiImage string
 
 	// DashboardMetricsScraperImage is the image of dashboard metrics scraper.
 	DashboardMetricsScraperImage string

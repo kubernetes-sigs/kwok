@@ -703,49 +703,50 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 	if !slices.Contains(env.components, consts.ComponentDashboard) {
 		return nil
 	}
+	enableMetricsServer := slices.Contains(env.components, consts.ComponentMetricsServer)
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
-	if err != nil {
-		return err
-	}
-	dashboardVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardImage, "")
-	if err != nil {
-		return err
-	}
+	if conf.DashboardImage != "" {
+		err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
+		if err != nil {
+			return err
+		}
+		dashboardVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardImage, "")
+		if err != nil {
+			return err
+		}
 
-	enableMetricsServer := slices.Contains(env.components, consts.ComponentMetricsServer)
+		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
+			Runtime:        conf.Runtime,
+			Workdir:        env.workdir,
+			Image:          conf.DashboardImage,
+			Version:        dashboardVersion,
+			BindAddress:    net.PublicAddress,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			Port:           8080,
+			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
+			EnableMetrics:  enableMetricsServer,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to build dashboard component: %w", err)
+		}
 
-	dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
-		Runtime:        conf.Runtime,
-		Workdir:        env.workdir,
-		Image:          conf.DashboardImage,
-		Version:        dashboardVersion,
-		BindAddress:    net.PublicAddress,
-		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
-		CaCertPath:     env.caCertPath,
-		AdminCertPath:  env.adminCertPath,
-		AdminKeyPath:   env.adminKeyPath,
-		Port:           8080,
-		Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
-		EnableMetrics:  enableMetricsServer,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to build dashboard component: %w", err)
-	}
+		runtime.ApplyComponentPatches(ctx, &dashboardComponent, env.kwokctlConfig.ComponentsPatches)
 
-	runtime.ApplyComponentPatches(ctx, &dashboardComponent, env.kwokctlConfig.ComponentsPatches)
-
-	dashboardPod, err := yaml.Marshal(components.ConvertToPod(dashboardComponent))
-	if err != nil {
-		return fmt.Errorf("failed to marshal dashboard pod: %w", err)
+		dashboardPod, err := yaml.Marshal(components.ConvertToPod(dashboardComponent))
+		if err != nil {
+			return fmt.Errorf("failed to marshal dashboard pod: %w", err)
+		}
+		err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentDashboard+".yaml"), dashboardPod)
+		if err != nil {
+			return fmt.Errorf("failed to write: %w", err)
+		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
 	}
-	err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentDashboard+".yaml"), dashboardPod)
-	if err != nil {
-		return fmt.Errorf("failed to write: %w", err)
-	}
-	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
 
 	if enableMetricsServer {
 		err = c.EnsureImage(ctx, c.runtime, conf.DashboardMetricsScraperImage)

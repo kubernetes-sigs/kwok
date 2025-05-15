@@ -742,38 +742,95 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 	if !slices.Contains(env.components, consts.ComponentDashboard) {
 		return nil
 	}
+	enableMetricsServer := slices.Contains(env.components, consts.ComponentMetricsServer)
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
-	if err != nil {
-		return err
-	}
-	dashboardVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardImage, "")
-	if err != nil {
-		return err
-	}
+	if conf.DashboardImage != "" {
+		err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
+		if err != nil {
+			return err
+		}
+		dashboardVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardImage, "")
+		if err != nil {
+			return err
+		}
 
-	enableMetricsServer := slices.Contains(env.components, consts.ComponentMetricsServer)
-	dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
-		Runtime:        conf.Runtime,
-		ProjectName:    c.Name(),
-		Workdir:        env.workdir,
-		Image:          conf.DashboardImage,
-		Version:        dashboardVersion,
-		BindAddress:    net.PublicAddress,
-		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
-		CaCertPath:     env.caCertPath,
-		AdminCertPath:  env.adminCertPath,
-		AdminKeyPath:   env.adminKeyPath,
-		Port:           conf.DashboardPort,
-		Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
-		EnableMetrics:  enableMetricsServer,
-	})
-	if err != nil {
-		return err
+		dashboardComponent, err := components.BuildDashboardComponent(components.BuildDashboardComponentConfig{
+			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
+			Workdir:        env.workdir,
+			Image:          conf.DashboardImage,
+			Version:        dashboardVersion,
+			BindAddress:    net.PublicAddress,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			Port:           conf.DashboardPort,
+			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
+			EnableMetrics:  enableMetricsServer,
+		})
+		if err != nil {
+			return err
+		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
+	} else {
+		err = c.EnsureImage(ctx, c.runtime, conf.DashboardWebImage)
+		if err != nil {
+			return err
+		}
+		dashboardWebVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardWebImage, "")
+		if err != nil {
+			return err
+		}
+
+		dashboardWebComponent, err := components.BuildDashboardWebComponent(components.BuildDashboardWebComponentConfig{
+			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
+			Workdir:        env.workdir,
+			Image:          conf.DashboardWebImage,
+			Version:        dashboardWebVersion,
+			BindAddress:    net.PublicAddress,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			Port:           conf.DashboardPort,
+			Banner:         fmt.Sprintf("Welcome to %s", c.Name()),
+		})
+		if err != nil {
+			return err
+		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardWebComponent)
+
+		err = c.EnsureImage(ctx, c.runtime, conf.DashboardApiImage)
+		if err != nil {
+			return err
+		}
+		dashboardApiVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DashboardApiImage, "")
+		if err != nil {
+			return err
+		}
+
+		dashboardApiComponent, err := components.BuildDashboardApiComponent(components.BuildDashboardApiComponentConfig{
+			Runtime:        conf.Runtime,
+			ProjectName:    c.Name(),
+			Workdir:        env.workdir,
+			Image:          conf.DashboardApiImage,
+			Version:        dashboardApiVersion,
+			BindAddress:    net.PublicAddress,
+			KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+			CaCertPath:     env.caCertPath,
+			AdminCertPath:  env.adminCertPath,
+			AdminKeyPath:   env.adminKeyPath,
+			EnableMetrics:  enableMetricsServer,
+		})
+		if err != nil {
+			return err
+		}
+		env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardApiComponent)
 	}
-	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
 
 	if enableMetricsServer {
 		err = c.EnsureImage(ctx, c.runtime, conf.DashboardMetricsScraperImage)
