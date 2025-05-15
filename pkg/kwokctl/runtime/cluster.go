@@ -33,6 +33,7 @@ import (
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
 	nodeheartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
 	nodeheartbeatwithlease "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat-with-lease"
+	podfast "sigs.k8s.io/kwok/kustomize/stage/pod/fast"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -181,17 +182,30 @@ func (c *Cluster) Save(ctx context.Context) error {
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.StageKind) {
 		stages := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
-		if len(stages) == 0 &&
-			conf.Options.Runtime != consts.RuntimeTypeKind &&
-			conf.Options.Runtime != consts.RuntimeTypeKindPodman &&
-			conf.Options.Runtime != consts.RuntimeTypeKindNerdctl &&
-			conf.Options.Runtime != consts.RuntimeTypeKindLima &&
-			conf.Options.Runtime != consts.RuntimeTypeKindFinch {
-			defaultStages, err := c.getDefaultStages(conf.Options.NodeStatusUpdateFrequencyMilliseconds, conf.Options.NodeLeaseDurationSeconds != 0)
+		if len(stages) == 0 {
+			var nodeStatusUpdateFrequencyMilliseconds = conf.Options.NodeStatusUpdateFrequencyMilliseconds
+			var nodeLeaseDurationSeconds = conf.Options.NodeLeaseDurationSeconds
+
+			if conf.Options.Runtime == consts.RuntimeTypeKind ||
+				conf.Options.Runtime == consts.RuntimeTypeKindPodman ||
+				conf.Options.Runtime == consts.RuntimeTypeKindNerdctl ||
+				conf.Options.Runtime == consts.RuntimeTypeKindLima ||
+				conf.Options.Runtime == consts.RuntimeTypeKindFinch {
+				nodeStatusUpdateFrequencyMilliseconds = 0
+				nodeLeaseDurationSeconds = 40
+			}
+
+			defaultNodeStages, err := getDefaultNodeStages(nodeStatusUpdateFrequencyMilliseconds, nodeLeaseDurationSeconds != 0)
 			if err != nil {
 				return err
 			}
-			objs = appendIntoInternalObjects(objs, defaultStages...)
+			objs = appendIntoInternalObjects(objs, defaultNodeStages...)
+
+			defaultPodStages, err := getDefaultPodStages()
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, defaultPodStages...)
 		} else {
 			objs = appendIntoInternalObjects(objs, stages...)
 		}
@@ -278,7 +292,7 @@ func appendIntoInternalObjects[T config.InternalObject](objs []config.InternalOb
 	return objs
 }
 
-func (c *Cluster) getDefaultStages(updateFrequency int64, lease bool) ([]config.InternalObject, error) {
+func getDefaultNodeStages(updateFrequency int64, lease bool) ([]config.InternalObject, error) {
 	objs := []config.InternalObject{}
 
 	nodeInitStage, err := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
@@ -312,6 +326,14 @@ func (c *Cluster) getDefaultStages(updateFrequency int64, lease bool) ([]config.
 
 	objs = append(objs, nodeHeartbeatStage)
 	return objs, nil
+}
+
+func getDefaultPodStages() ([]config.InternalObject, error) {
+	return slices.MapWithError([]string{
+		podfast.DefaultPodReady,
+		podfast.DefaultPodComplete,
+		podfast.DefaultPodDelete,
+	}, config.UnmarshalWithType[config.InternalObject, string])
 }
 
 // KubectlPath returns the path to the kubectl binary. It first tries to find kubectl in the system PATH.
