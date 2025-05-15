@@ -30,7 +30,7 @@ var (
 
 	// PreRelease is the pre-release version of the project.
 	// It will be overwritten during the `make build` process.
-	PreRelease = "alpha"
+	PreRelease = "GA"
 
 	// KubeVersion is the version of Kubernetes.
 	// It will be overwritten during the `make build` process.
