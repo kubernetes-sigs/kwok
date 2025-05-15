@@ -112,14 +112,14 @@ func (i *Informer[T, L]) WatchWithLazyCache(ctx context.Context, opt Option, eve
 
 	dummyCtx, dummyCancel := context.WithCancel(ctx)
 
-	dummyInformer := newDummyInformer(lw, opt, events)
+	dummyInformer := newDummyInformer(ctx, lw, opt, events)
 	go dummyInformer.Run(dummyCtx.Done())
 
 	l := &lazyGetter[T]{
 		initStore: func() cache.Store {
 			dummyCancel()
 
-			c, controller := newCacheInformer(lw, opt, events)
+			c, controller := newCacheInformer(ctx, lw, opt, events)
 			go controller.Run(ctx.Done())
 			return c
 		},
@@ -129,14 +129,14 @@ func (i *Informer[T, L]) WatchWithLazyCache(ctx context.Context, opt Option, eve
 
 // WatchWithCache starts a goroutine that watches the resource and sends events to the events channel.
 func (i *Informer[T, L]) WatchWithCache(ctx context.Context, opt Option, events chan<- Event[T]) (Getter[T], error) {
-	store, controller := newCacheInformer[T](i.listWatch(ctx), opt, events)
+	store, controller := newCacheInformer[T](ctx, i.listWatch(ctx), opt, events)
 	go controller.Run(ctx.Done())
 
 	g := &getter[T]{store: store}
 	return g, nil
 }
 
-func newCacheInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Option, events chan<- Event[T]) (cache.Store, cache.Controller) {
+func newCacheInformer[T runtime.Object](ctx context.Context, listWatch cache.ListerWatcherWithContext, opt Option, events chan<- Event[T]) (cache.Store, cache.Controller) {
 	var t T
 	eventHandler := cache.ResourceEventHandlerFuncs{}
 	if events != nil {
@@ -167,15 +167,16 @@ func newCacheInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Optio
 			},
 		}
 	}
+
 	store, controller := cache.NewInformerWithOptions(cache.InformerOptions{
 		ListerWatcher: &cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				opt.setup(&opts)
-				return listWatch.List(opts)
+				return listWatch.ListWithContext(ctx, opts)
 			},
 			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 				opt.setup(&opts)
-				return listWatch.Watch(opts)
+				return listWatch.WatchWithContext(ctx, opts)
 			},
 		},
 		ObjectType: objType(t),
@@ -191,23 +192,23 @@ func (i *Informer[T, L]) Watch(ctx context.Context, opt Option, events chan<- Ev
 		return fmt.Errorf("events channel is nil")
 	}
 
-	informer := newDummyInformer(i.listWatch(ctx), opt, events)
+	informer := newDummyInformer(ctx, i.listWatch(ctx), opt, events)
 	go informer.Run(ctx.Done())
 
 	return nil
 }
 
-func newDummyInformer[T runtime.Object](listWatch cache.ListerWatcher, opt Option, events chan<- Event[T]) *cache.Reflector {
+func newDummyInformer[T runtime.Object](ctx context.Context, listWatch cache.ListerWatcherWithContext, opt Option, events chan<- Event[T]) *cache.Reflector {
 	var t T
 	informer := cache.NewReflectorWithOptions(
 		&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				opt.setup(&opts)
-				return listWatch.List(opts)
+				return listWatch.ListWithContext(ctx, opts)
 			},
 			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 				opt.setup(&opts)
-				return listWatch.Watch(opts)
+				return listWatch.WatchWithContext(ctx, opts)
 			},
 		},
 		objType(t),
