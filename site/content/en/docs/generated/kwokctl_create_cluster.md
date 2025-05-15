@@ -35,7 +35,7 @@ kwokctl create cluster [flags]
                                                  (default "docker.io/jaegertracing/all-in-one:1.58.1")
       --jaeger-port uint32                      Port to expose Jaeger UI
       --kind-binary string                      Binary of kind, only for kind/kind-podman runtime
-                                                 (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.23.0/kind-linux-amd64")
+                                                 (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.27.0/kind-linux-amd64")
       --kind-node-image string                  Image of kind node, only for kind/kind-podman runtime
                                                 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
                                                  (default "docker.io/kindest/node:v1.33.0")

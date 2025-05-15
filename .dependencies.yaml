@@ -27,7 +27,7 @@ dependencies:
     match: "golangci-lint@v"
 
 - name: "kind"
-  version: 0.23.0
+  version: 0.27.0
   refPaths:
   - path: hack/requirements.sh
     match: "KIND_VERSION="

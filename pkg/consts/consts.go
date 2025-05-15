@@ -44,7 +44,7 @@ var (
 	KectlVersion      = "0.0.8"
 	KectlBinaryPrefix = "https://github.com/kwok-ci/kectl/releases/download"
 
-	KindVersion         = "0.23.0"
+	KindVersion         = "0.27.0"
 	KindBinaryPrefix    = "https://github.com/kubernetes-sigs/kind/releases/download"
 	KindNodeImagePrefix = "docker.io/kindest"
 
