@@ -21,20 +21,22 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
+KUBE_VERSION=v0.33.0
+
 function deepcopy-gen() {
-  go run k8s.io/code-generator/cmd/deepcopy-gen "$@"
+  go run k8s.io/code-generator/cmd/deepcopy-gen@${KUBE_VERSION} "$@"
 }
 
 function defaulter-gen() {
-  go run k8s.io/code-generator/cmd/defaulter-gen "$@"
+  go run k8s.io/code-generator/cmd/defaulter-gen@${KUBE_VERSION} "$@"
 }
 
 function conversion-gen() {
-  go run k8s.io/code-generator/cmd/conversion-gen "$@"
+  go run k8s.io/code-generator/cmd/conversion-gen@${KUBE_VERSION} "$@"
 }
 
 function client-gen() {
-  go run k8s.io/code-generator/cmd/client-gen "$@"
+  go run k8s.io/code-generator/cmd/client-gen@${KUBE_VERSION} "$@"
 }
 
 function gen() {

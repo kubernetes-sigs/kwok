@@ -43,3 +43,11 @@ dependencies:
     match: "KubeVersion"
   - path: hack/requirements.sh
     match: "KUBE_VERSION="
+
+- name: "kubernetes-library"
+  version: 0.33.0
+  refPaths:
+  - path: go.mod
+    match: k8s.io
+  - path: hack/update-codegen.sh
+    match: KUBE_VERSION
