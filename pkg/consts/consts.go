@@ -58,7 +58,7 @@ var (
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
 
-	JaegerVersion      = "1.58.1"
+	JaegerVersion      = "1.69.0"
 	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
 	JaegerImagePrefix  = "docker.io/jaegertracing"
 
