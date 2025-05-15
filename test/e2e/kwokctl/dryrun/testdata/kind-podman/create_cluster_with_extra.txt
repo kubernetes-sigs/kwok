@@ -166,7 +166,7 @@ spec:
     name: tmp-controller
 status: {}
 EOF
-podman pull docker.io/prom/prometheus:v2.53.0
+podman pull docker.io/prom/prometheus:v3.3.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
 apiVersion: v1
 kind: Pod
@@ -185,7 +185,7 @@ spec:
     env:
     - name: TEST_KEY
       value: TEST_VALUE
-    image: docker.io/prom/prometheus:v2.53.0
+    image: docker.io/prom/prometheus:v3.3.1
     imagePullPolicy: Never
     name: prometheus
     ports:
@@ -326,9 +326,9 @@ podman save registry.k8s.io/kwok/kwok:v0.7.0 -o <ROOT_DIR>/workdir/cache/image-a
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.7.0.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.7.0.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus
-podman save docker.io/prom/prometheus:v2.53.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.53.0.tar
-KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.53.0.tar --name kwok-<CLUSTER_NAME>
-rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.53.0.tar
+podman save docker.io/prom/prometheus:v3.3.1 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.3.1.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.3.1.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.3.1.tar
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF

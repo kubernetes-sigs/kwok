@@ -431,7 +431,7 @@ spec:
     name: volume-3
 status: {}
 EOF
-podman pull docker.io/prom/prometheus:v2.53.0
+podman pull docker.io/prom/prometheus:v3.3.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
 apiVersion: v1
 kind: Pod
@@ -446,7 +446,7 @@ spec:
     - --web.listen-address=0.0.0.0:9090
     command:
     - prometheus
-    image: docker.io/prom/prometheus:v2.53.0
+    image: docker.io/prom/prometheus:v3.3.1
     imagePullPolicy: Never
     name: prometheus
     ports:
@@ -644,9 +644,9 @@ podman save registry.k8s.io/metrics-server/metrics-server:v0.7.2 -o <ROOT_DIR>/w
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.2.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.2.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus
-podman save docker.io/prom/prometheus:v2.53.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.53.0.tar
-KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.53.0.tar --name kwok-<CLUSTER_NAME>
-rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.53.0.tar
+podman save docker.io/prom/prometheus:v3.3.1 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.3.1.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.3.1.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.3.1.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one
 podman save docker.io/jaegertracing/all-in-one:1.69.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.69.0.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.69.0.tar --name kwok-<CLUSTER_NAME>

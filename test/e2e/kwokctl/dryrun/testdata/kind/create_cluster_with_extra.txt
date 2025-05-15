@@ -166,7 +166,7 @@ spec:
     name: tmp-controller
 status: {}
 EOF
-docker pull docker.io/prom/prometheus:v2.53.0
+docker pull docker.io/prom/prometheus:v3.3.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
 apiVersion: v1
 kind: Pod
@@ -185,7 +185,7 @@ spec:
     env:
     - name: TEST_KEY
       value: TEST_VALUE
-    image: docker.io/prom/prometheus:v2.53.0
+    image: docker.io/prom/prometheus:v3.3.1
     imagePullPolicy: Never
     name: prometheus
     ports:
@@ -322,7 +322,7 @@ EOF
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.33.0 --wait 29m
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.7.0 --name kwok-<CLUSTER_NAME>
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v2.53.0 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v3.3.1 --name kwok-<CLUSTER_NAME>
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
