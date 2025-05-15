@@ -168,3 +168,15 @@ func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error
 
 	return cli, func() {}, nil
 }
+
+// KectlInCluster command in cluster
+func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+	return c.Kectl(ctx, append([]string{
+		"--endpoints=http://" + net.LocalAddress + ":" + format.String(conf.EtcdPort),
+	}, args...)...)
+}

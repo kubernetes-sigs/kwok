@@ -622,6 +622,29 @@ func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
 	return c.Exec(ctx, etcdctlPath, args...)
 }
 
+func (c *Cluster) kectlPath(ctx context.Context) (string, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return "", err
+	}
+	conf := &config.Options
+	kectlPath, err := c.EnsureBinary(ctx, "kectl", conf.KectlBinary)
+	if err != nil {
+		return "", err
+	}
+	return kectlPath, nil
+}
+
+// Kectl runs kectl.
+func (c *Cluster) Kectl(ctx context.Context, args ...string) error {
+	kectlPath, err := c.kectlPath(ctx)
+	if err != nil {
+		return err
+	}
+
+	return c.Exec(ctx, kectlPath, args...)
+}
+
 // GetClientset returns the clientset of the cluster.
 func (c *Cluster) GetClientset(ctx context.Context) (client.Clientset, error) {
 	if c.clientset != nil {

@@ -41,6 +41,9 @@ var (
 
 	EtcdBinaryPrefix = "https://github.com/etcd-io/etcd/releases/download"
 
+	KectlVersion      = "0.0.8"
+	KectlBinaryPrefix = "https://github.com/kwok-ci/kectl/releases/download"
+
 	KindVersion         = "0.23.0"
 	KindBinaryPrefix    = "https://github.com/kubernetes-sigs/kind/releases/download"
 	KindNodeImagePrefix = "docker.io/kindest"

@@ -34,7 +34,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "snapshot [command]",
-		Short: "Snapshot [save, restore, record, replay, export] one of cluster",
+		Short: "[experimental] Snapshot [save, restore, export] one of cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},

@@ -104,6 +104,9 @@ type KwokctlConfigurationOptions struct {
 	// EtcdVersion is the version of Etcd to use.
 	EtcdVersion string
 
+	// KectlVersion it the version of Kectl to use.
+	KectlVersion string
+
 	// DashboardVersion is the version of Kubernetes dashboard to use.
 	DashboardVersion string
 
@@ -207,6 +210,9 @@ type KwokctlConfigurationOptions struct {
 
 	// EtcdctlBinary is the binary of etcdctl.
 	EtcdctlBinary string
+
+	// KectlBinary is the binary of kubectl.
+	KectlBinary string
 
 	// EtcdBinary is the binary of etcd.
 	EtcdBinary string

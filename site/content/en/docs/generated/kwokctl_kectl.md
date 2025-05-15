@@ -1,17 +1,15 @@
-## kwokctl hack delete
+## kwokctl kectl
 
-delete data in etcd
+[experimental] Run kubectl-like commands directly against etcd
 
 ```
-kwokctl hack delete [resource] [name] [flags]
+kwokctl kectl [command] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help               help for delete
-  -n, --namespace string   namespace of resource
-  -o, --output string      output format. One of: (key, none). (default "key")
+  -h, --help   help for kectl
 ```
 
 ### Options inherited from parent commands
@@ -25,5 +23,5 @@ kwokctl hack delete [resource] [name] [flags]
 
 ### SEE ALSO
 
-* [kwokctl hack](kwokctl_hack.md)	 - [experimental] Hack [get, put, delete] resources in etcd without apiserver
+* [kwokctl](kwokctl.md)	 - kwokctl is a tool to streamline the creation and management of clusters, with nodes simulated by kwok
 

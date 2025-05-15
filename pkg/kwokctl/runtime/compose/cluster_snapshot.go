@@ -257,3 +257,33 @@ func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error
 
 	return cli, func() {}, nil
 }
+
+// KectlInCluster command in cluster
+func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+
+	if conf.EtcdPort != 0 {
+		return c.Kectl(ctx, append([]string{
+			"--endpoints=http://" + net.LocalAddress + ":" + format.String(conf.EtcdPort),
+		}, args...)...)
+	}
+
+	unused, err := net.GetUnusedPort(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	cancel, err := c.PortForward(ctx, consts.ComponentEtcd, "http", unused)
+	if err != nil {
+		return err
+	}
+	defer cancel()
+
+	return c.Kectl(ctx, append([]string{
+		"--endpoints=http://" + net.LocalAddress + ":" + format.String(unused),
+	}, args...)...)
+}

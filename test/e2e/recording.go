@@ -57,7 +57,7 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 		Setup(helper.CreateNode(node0)).
 		Setup(helper.CreatePod(pod0)).
 		Assess("test record", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			cmd, err := exec.Command(exec.WithFork(ctx, true), kwokctlPath, "snapshot", "record", "--name", clusterName, "--path", recordingPath)
+			cmd, err := exec.Command(exec.WithFork(ctx, true), kwokctlPath, "--name", clusterName, "kectl", "snapshot", "record", "--path", recordingPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -130,7 +130,7 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 		Assess("delete node0", helper.DeleteNode(node0)).
 		Assess("delete node1", helper.DeleteNode(node1)).
 		Assess("test replay", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := exec.Command(ctx, kwokctlPath, "snapshot", "replay", "--name", clusterName, "--path", recordingPath)
+			_, err := exec.Command(ctx, kwokctlPath, "--name", clusterName, "kectl", "snapshot", "replay", "--path", recordingPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -283,7 +283,7 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 		Assess("delete node0", helper.DeleteNode(node0)).
 		Assess("delete node1", helper.DeleteNode(node1)).
 		Assess("test replay", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := exec.Command(ctx, kwokctlPath, "snapshot", "replay", "--name", clusterName, "--path", recordingPath)
+			_, err := exec.Command(ctx, kwokctlPath, "--name", clusterName, "kectl", "snapshot", "replay", "--path", recordingPath)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -2848,6 +2848,17 @@ is the default value for env KWOK_ETCD_VERSION</p>
 </tr>
 <tr>
 <td>
+<code>kectlVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KectlVersion it the version of Kectl to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>dashboardVersion</code>
 <em>
 string
@@ -3351,6 +3362,17 @@ string
 </td>
 <td>
 <p>EtcdctlBinary is the binary of etcdctl.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kectlBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KectlBinary is the binary of kectl [experimental].</p>
 </td>
 </tr>
 <tr>
