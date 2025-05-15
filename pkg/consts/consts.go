@@ -62,7 +62,7 @@ var (
 	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
 	JaegerImagePrefix  = "docker.io/jaegertracing"
 
-	MetricsServerVersion      = "0.7.1"
+	MetricsServerVersion      = "0.7.2"
 	MetricsServerBinaryPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 	MetricsServerImagePrefix  = "registry.k8s.io/metrics-server"
 

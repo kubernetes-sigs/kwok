@@ -365,7 +365,7 @@ spec:
     name: volume-3
 status: {}
 EOF
-podman pull registry.k8s.io/metrics-server/metrics-server:v0.7.1
+podman pull registry.k8s.io/metrics-server/metrics-server:v0.7.2
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/metrics-server.yaml
 apiVersion: v1
 kind: Pod
@@ -389,7 +389,7 @@ spec:
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     command:
     - /metrics-server
-    image: registry.k8s.io/metrics-server/metrics-server:v0.7.1
+    image: registry.k8s.io/metrics-server/metrics-server:v0.7.2
     imagePullPolicy: Never
     name: metrics-server
     ports:
@@ -640,9 +640,9 @@ podman save docker.io/kubernetesui/metrics-scraper:v1.0.9 -o <ROOT_DIR>/workdir/
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/metrics-scraper/v1.0.9.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/metrics-scraper/v1.0.9.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server
-podman save registry.k8s.io/metrics-server/metrics-server:v0.7.1 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.1.tar
-KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.1.tar --name kwok-<CLUSTER_NAME>
-rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.1.tar
+podman save registry.k8s.io/metrics-server/metrics-server:v0.7.2 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.2.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.2.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.7.2.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus
 podman save docker.io/prom/prometheus:v2.53.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.53.0.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v2.53.0.tar --name kwok-<CLUSTER_NAME>
