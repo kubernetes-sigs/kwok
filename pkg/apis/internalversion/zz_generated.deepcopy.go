@@ -789,16 +789,6 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.Disable != nil {
-		in, out := &in.Disable, &out.Disable
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
-	if in.Enable != nil {
-		in, out := &in.Enable, &out.Enable
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.KubeApiserverCertSANs != nil {
 		in, out := &in.KubeApiserverCertSANs, &out.KubeApiserverCertSANs
 		*out = make([]string, len(*in))

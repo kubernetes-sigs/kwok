@@ -215,7 +215,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 		metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
 		if len(metrics) != 0 {
 			objs = appendIntoInternalObjects(objs, metrics...)
-		} else if c.conf.Options.EnableMetricsServer {
+		} else if slices.Contains(conf.Options.Components, consts.ComponentMetricsServer) {
 			m, err := config.UnmarshalWithType[*internalversion.Metric, string](resource.DefaultMetricsResource)
 			if err != nil {
 				return err
@@ -233,7 +233,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 		cru := config.FilterWithTypeFromContext[*internalversion.ClusterResourceUsage](ctx)
 		if len(cru) != 0 {
 			objs = appendIntoInternalObjects(objs, cru...)
-		} else if c.conf.Options.EnableMetricsServer {
+		} else if slices.Contains(conf.Options.Components, consts.ComponentMetricsServer) {
 			m, err := config.UnmarshalWithType[*internalversion.ClusterResourceUsage, string](usage.DefaultUsageFromAnnotation)
 			if err != nil {
 				return err
@@ -445,61 +445,7 @@ func (c *Cluster) Components(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	enable := conf.Options.Enable
-	disable := conf.Options.Disable
-
-	if conf.Options.DisableKubeControllerManager {
-		disable = append(disable, consts.ComponentKubeControllerManager)
-	}
-
-	if conf.Options.DisableKubeScheduler {
-		disable = append(disable, consts.ComponentKubeScheduler)
-	}
-
-	if conf.Options.EnableMetricsServer {
-		enable = append(enable, consts.ComponentMetricsServer)
-	}
-	if conf.Options.KubeApiserverInsecurePort != 0 {
-		enable = append(enable, consts.ComponentKubeApiserverInsecureProxy)
-	}
-	if conf.Options.DashboardPort != 0 {
-		enable = append(enable, consts.ComponentDashboard)
-	}
-	if conf.Options.PrometheusPort != 0 {
-		enable = append(enable, consts.ComponentPrometheus)
-	}
-	if conf.Options.JaegerPort != 0 {
-		enable = append(enable, consts.ComponentJaeger)
-	}
-
-	components := conf.Options.Components
-	if len(enable) != 0 {
-		components = append(components, enable...)
-	}
-
-	if len(disable) != 0 {
-		components = slices.Filter(components, func(s string) bool {
-			return !slices.Contains(disable, s)
-		})
-	}
-
-	components = slices.Unique(components)
-
-	_, hasEtcd := slices.Find(components, func(s string) bool {
-		return s == consts.ComponentEtcd
-	})
-	if !hasEtcd {
-		return nil, fmt.Errorf("etcd must be enabled")
-	}
-
-	_, hasApiserver := slices.Find(components, func(s string) bool {
-		return s == consts.ComponentKubeApiserver
-	})
-	if !hasApiserver {
-		return nil, fmt.Errorf("kube-apiserver must be enabled")
-	}
-
-	return components, nil
+	return conf.Options.Components, nil
 }
 
 // Kubectl runs kubectl.
