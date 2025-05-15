@@ -75,10 +75,10 @@ kwokctl create cluster [flags]
                                                 '${KWOK_METRICS_SERVER_IMAGE_PREFIX}/metrics-server:${KWOK_METRICS_SERVER_VERSION}'
                                                  (default "registry.k8s.io/metrics-server/metrics-server:v0.7.2")
       --node-lease-duration-seconds uint        Duration of node lease in seconds (default 40)
-      --prometheus-binary string                Binary of Prometheus, only for binary runtime (default "https://github.com/prometheus/prometheus/releases/download/v2.53.0/prometheus-2.53.0.linux-amd64.tar.gz#prometheus")
+      --prometheus-binary string                Binary of Prometheus, only for binary runtime (default "https://github.com/prometheus/prometheus/releases/download/v3.3.1/prometheus-3.3.1.linux-amd64.tar.gz#prometheus")
       --prometheus-image string                 Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'
-                                                 (default "docker.io/prom/prometheus:v2.53.0")
+                                                 (default "docker.io/prom/prometheus:v3.3.1")
       --prometheus-port uint32                  Port to expose Prometheus metrics
       --quiet-pull                              Pull without printing progress information
       --runtime string                          Runtime of the cluster (binary or docker or finch or kind or kind-finch or kind-lima or kind-nerdctl or kind-podman or lima or nerdctl or podman)
