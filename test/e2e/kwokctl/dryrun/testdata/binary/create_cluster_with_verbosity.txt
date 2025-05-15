@@ -23,7 +23,7 @@ clientConnection:
   kubeconfig: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig"
 EOF
 # Download https://github.com/kubernetes-sigs/kwok/releases/download/v0.7.0/kwok-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
-# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.1/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
+# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
 # Download https://github.com/prometheus/prometheus/releases/download/v2.53.0/prometheus-2.53.0.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
 # Download https://github.com/jaegertracing/jaeger/releases/download/v1.58.1/jaeger-1.58.1-<OS>-<ARCH>.<TAR> and extract jaeger-all-in-one to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
