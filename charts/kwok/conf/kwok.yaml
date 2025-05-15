@@ -3,6 +3,8 @@ kind: KwokConfiguration
 options:
   enableProfilingHandler: false
   enableContentionProfiling: false
+  enablePodsOnNodeSyncListPager: false
+  enablePodsOnNodeSyncStreamWatch: true
   nodeLeaseParallelism: 4
   podPlayStageParallelism: 4
   nodePlayStageParallelism: 4
