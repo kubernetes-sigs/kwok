@@ -170,6 +170,11 @@ func (c *Cluster) Save(ctx context.Context) error {
 		return nil
 	}
 
+	components, err := c.Components(ctx)
+	if err != nil {
+		return err
+	}
+
 	var objs []config.InternalObject
 	conf := c.conf.DeepCopy()
 	if conf.Status.Version == "" {
@@ -211,34 +216,36 @@ func (c *Cluster) Save(ctx context.Context) error {
 		}
 	}
 
-	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.MetricKind) {
-		metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
-		if len(metrics) != 0 {
-			objs = appendIntoInternalObjects(objs, metrics...)
-		} else if c.conf.Options.EnableMetricsServer {
-			m, err := config.UnmarshalWithType[*internalversion.Metric, string](resource.DefaultMetricsResource)
-			if err != nil {
-				return err
+	if slices.Contains(components, consts.ComponentMetricsServer) {
+		if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.MetricKind) {
+			metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+			if len(metrics) != 0 {
+				objs = appendIntoInternalObjects(objs, metrics...)
+			} else {
+				m, err := config.UnmarshalWithType[*internalversion.Metric, string](resource.DefaultMetricsResource)
+				if err != nil {
+					return err
+				}
+				objs = appendIntoInternalObjects(objs, m)
 			}
-			objs = appendIntoInternalObjects(objs, m)
 		}
-	}
 
-	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ResourceUsageKind) {
-		stages := config.FilterWithTypeFromContext[*internalversion.ResourceUsage](ctx)
-		objs = appendIntoInternalObjects(objs, stages...)
-	}
+		if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ResourceUsageKind) {
+			stages := config.FilterWithTypeFromContext[*internalversion.ResourceUsage](ctx)
+			objs = appendIntoInternalObjects(objs, stages...)
+		}
 
-	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterResourceUsageKind) {
-		cru := config.FilterWithTypeFromContext[*internalversion.ClusterResourceUsage](ctx)
-		if len(cru) != 0 {
-			objs = appendIntoInternalObjects(objs, cru...)
-		} else if c.conf.Options.EnableMetricsServer {
-			m, err := config.UnmarshalWithType[*internalversion.ClusterResourceUsage, string](usage.DefaultUsageFromAnnotation)
-			if err != nil {
-				return err
+		if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterResourceUsageKind) {
+			cru := config.FilterWithTypeFromContext[*internalversion.ClusterResourceUsage](ctx)
+			if len(cru) != 0 {
+				objs = appendIntoInternalObjects(objs, cru...)
+			} else {
+				m, err := config.UnmarshalWithType[*internalversion.ClusterResourceUsage, string](usage.DefaultUsageFromAnnotation)
+				if err != nil {
+					return err
+				}
+				objs = appendIntoInternalObjects(objs, m)
 			}
-			objs = appendIntoInternalObjects(objs, m)
 		}
 	}
 
