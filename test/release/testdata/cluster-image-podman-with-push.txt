@@ -1,6 +1,6 @@
-podman build --build-arg=kube_version=v1.33.0 --tag=image-prefix/cluster:<VERSION>-k8s.v1.33.0 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
-podman push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.33.0
-podman build --build-arg=kube_version=v1.32.3 --tag=image-prefix/cluster:<VERSION>-k8s.v1.32.3 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
-podman push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.32.3
-podman build --build-arg=kube_version=v1.31.6 --tag=image-prefix/cluster:<VERSION>-k8s.v1.31.6 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
-podman push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.31.6
+podman build --build-arg=kube_version=v1.33.1 --tag=image-prefix/cluster:<VERSION>-k8s.v1.33.1 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
+podman push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.33.1
+podman build --build-arg=kube_version=v1.32.5 --tag=image-prefix/cluster:<VERSION>-k8s.v1.32.5 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
+podman push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.32.5
+podman build --build-arg=kube_version=v1.31.9 --tag=image-prefix/cluster:<VERSION>-k8s.v1.31.9 --platform=linux/<ARCH> -f ./images/cluster/Dockerfile .
+podman push --platform=linux/<ARCH> image-prefix/cluster:<VERSION>-k8s.v1.31.9
