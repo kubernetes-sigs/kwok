@@ -173,7 +173,7 @@ spec:
     name: volume-3
 status: {}
 EOF
-docker pull registry.k8s.io/kwok/kwok:v0.7.0
+docker pull registry.k8s.io/kwok/kwok:v0.8.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml
 apiVersion: v1
 kind: Pod
@@ -204,7 +204,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: registry.k8s.io/kwok/kwok:v0.7.0
+    image: registry.k8s.io/kwok/kwok:v0.8.0
     imagePullPolicy: Never
     name: kwok-controller
     ports:
@@ -624,7 +624,7 @@ EOF
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.33.0 --wait 29m
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kubectl:v1.33.0 --name kwok-<CLUSTER_NAME>
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.7.0 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.8.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/dashboard:v2.7.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/metrics-scraper:v1.0.9 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/metrics-server/metrics-server:v0.7.2 --name kwok-<CLUSTER_NAME>

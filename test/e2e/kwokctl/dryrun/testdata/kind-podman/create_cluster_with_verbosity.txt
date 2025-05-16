@@ -173,7 +173,7 @@ spec:
     name: volume-3
 status: {}
 EOF
-podman pull registry.k8s.io/kwok/kwok:v0.7.0
+podman pull registry.k8s.io/kwok/kwok:v0.8.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.yaml
 apiVersion: v1
 kind: Pod
@@ -204,7 +204,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: registry.k8s.io/kwok/kwok:v0.7.0
+    image: registry.k8s.io/kwok/kwok:v0.8.0
     imagePullPolicy: Never
     name: kwok-controller
     ports:
@@ -628,9 +628,9 @@ podman save registry.k8s.io/kubectl:v1.33.0 -o <ROOT_DIR>/workdir/cache/image-ar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kubectl/v1.33.0.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kubectl/v1.33.0.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok
-podman save registry.k8s.io/kwok/kwok:v0.7.0 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.7.0.tar
-KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.7.0.tar --name kwok-<CLUSTER_NAME>
-rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.7.0.tar
+podman save registry.k8s.io/kwok/kwok:v0.8.0 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.8.0.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.8.0.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.8.0.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard
 podman save docker.io/kubernetesui/dashboard:v2.7.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard/v2.7.0.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/kubernetesui/dashboard/v2.7.0.tar --name kwok-<CLUSTER_NAME>
