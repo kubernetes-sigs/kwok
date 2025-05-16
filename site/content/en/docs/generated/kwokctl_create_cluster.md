@@ -66,10 +66,10 @@ kwokctl create cluster [flags]
       --kube-scheduler-port uint32              Port of kube-scheduler given to the host, only for binary and docker/podman/nerdctl runtime
       --kubeconfig string                       The path to the kubeconfig file will be added to the newly created cluster and set to current-context (default "~/.kube/config")
       --kwok-controller-binary string           Binary of kwok-controller, only for binary runtime
-                                                 (default "https://github.com/kubernetes-sigs/kwok/releases/download/v0.7.0/kwok-linux-amd64")
+                                                 (default "https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwok-linux-amd64")
       --kwok-controller-image string            Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
-                                                 (default "registry.k8s.io/kwok/kwok:v0.7.0")
+                                                 (default "registry.k8s.io/kwok/kwok:v0.8.0")
       --metrics-server-binary string            Binary of metrics-server, only for binary runtime (default "https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/metrics-server-linux-amd64")
       --metrics-server-image string             Image of metrics-server, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_METRICS_SERVER_IMAGE_PREFIX}/metrics-server:${KWOK_METRICS_SERVER_VERSION}'
