@@ -49,4 +49,8 @@ enableDeployment: true
 server:
   port: 10247
   enableTLS: true
-
+  managePodsWithSelector:
+    enabled: true
+    matchLabels:
+      app: fake-pod
+    excludedNamespaces: []

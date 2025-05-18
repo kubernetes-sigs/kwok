@@ -1,0 +1,39 @@
+{{ if .Values.server.managePodsWithSelector.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "kwok.fullname" . }}
+  labels:
+    {{- include "kwok.labels" . | nindent 4 }}
+webhooks:
+  - name: kwok.{{ .Release.Namespace }}.svc
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+    failurePolicy: Ignore
+    timeoutSeconds: 5
+    clientConfig:
+      service:
+        name: {{ include "kwok.fullname" . }}
+        namespace: {{ .Release.Namespace }}
+        path: "/patch/pod"
+        port: {{ .Values.server.port }}
+    rules:
+    - operations: ["CREATE"]
+      apiGroups: [""]
+      apiVersions: ["v1"]
+      resources: ["pods"]
+    objectSelector:
+      matchLabels:
+        {{- toYaml .Values.server.managePodsWithSelector.matchLabels | nindent 8 }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kube-system
+          {{- if .Values.server.managePodsWithSelector.excludedNamespaces }}
+            {{- range .Values.server.managePodsWithSelector.excludedNamespaces }}
+            - {{ . }}
+            {{- end }}
+          {{- end }}
+{{ end }}
