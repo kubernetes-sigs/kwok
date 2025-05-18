@@ -48,4 +48,5 @@ volumeMounts: []
 enableDeployment: true
 server:
   port: 10247
+  enableTLS: true
 
