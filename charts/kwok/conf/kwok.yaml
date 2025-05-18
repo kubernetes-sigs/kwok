@@ -8,7 +8,7 @@ options:
   nodeLeaseParallelism: 4
   podPlayStageParallelism: 4
   nodePlayStageParallelism: 4
-  nodePort: 10247
+  nodePort: {{ .Values.server.port }}
   cidr: 10.0.0.1/24
   manageAllNodes: false
   manageNodesWithAnnotationSelector: 'kwok.x-k8s.io/node=fake'

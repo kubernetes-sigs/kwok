@@ -7,9 +7,9 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 10247
+    port: {{ .Values.server.port }}
     protocol: TCP
-    targetPort: 10247
+    targetPort: {{ .Values.server.port }}
   selector:
     {{- include "kwok.selectorLabels" . | nindent 4 }}
   type: ClusterIP

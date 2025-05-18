@@ -46,3 +46,6 @@ env:
       fieldPath: status.hostIP
 volumeMounts: []
 enableDeployment: true
+server:
+  port: 10247
+

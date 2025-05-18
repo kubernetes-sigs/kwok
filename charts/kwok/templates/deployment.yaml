@@ -40,7 +40,7 @@ spec:
           failureThreshold: 10
           httpGet:
             path: /healthz
-            port: 10247
+            port: {{ .Values.server.port }}
             scheme: HTTP
           initialDelaySeconds: 30
           periodSeconds: 60
@@ -49,7 +49,7 @@ spec:
           failureThreshold: 5
           httpGet:
             path: /healthz
-            port: 10247
+            port: {{ .Values.server.port }}
             scheme: HTTP
           initialDelaySeconds: 2
           periodSeconds: 20
@@ -58,7 +58,7 @@ spec:
           failureThreshold: 3
           httpGet:
             path: /healthz
-            port: 10247
+            port: {{ .Values.server.port }}
             scheme: HTTP
           initialDelaySeconds: 2
           periodSeconds: 10
