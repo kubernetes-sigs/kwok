@@ -426,7 +426,9 @@ func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controll
 			svc.InstallDebuggingDisabledHandlers()
 		}
 
-		svc.InstallPatchingPodHandler()
+		if flags.Options.ManageNodesWithLabelSelector != "" {
+			svc.InstallPatchingPodHandler(flags.Options.ManageNodesWithLabelSelector)
+		}
 
 		err = svc.InstallCRD(ctx)
 		if err != nil {
