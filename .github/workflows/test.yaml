@@ -25,6 +25,7 @@ on:
 env:
   DOCKER_CLI_EXPERIMENTAL: "enabled"
   CGO_ENABLED: "0"
+  NERDCTL_VERSION: "2.1.2"
 
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#concurrency
 concurrency:
@@ -65,9 +66,7 @@ jobs:
       if: ${{ matrix.builder == 'nerdctl' }}
       shell: bash
       run: |
-        curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.7/nerdctl-full-1.7.7-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
-        sudo systemctl daemon-reload
-        sudo systemctl enable --now containerd
+        curl -sSL https://github.com/containerd/nerdctl/releases/download/v${{ env.NERDCTL_VERSION }}/nerdctl-full-${{ env.NERDCTL_VERSION }}-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
         containerd-rootless-setuptool.sh install
         containerd-rootless-setuptool.sh install-buildkit-containerd
 
@@ -173,9 +172,7 @@ jobs:
       if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
       shell: bash
       run: |
-        curl -sSL https://github.com/containerd/nerdctl/releases/download/v1.7.7/nerdctl-full-1.7.7-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
-        sudo systemctl daemon-reload
-        sudo systemctl enable --now containerd
+        curl -sSL https://github.com/containerd/nerdctl/releases/download/v${{ env.NERDCTL_VERSION }}/nerdctl-full-${{ env.NERDCTL_VERSION }}-linux-amd64.tar.gz -o - | sudo tar -xz -C /usr/local
         containerd-rootless-setuptool.sh install
         containerd-rootless-setuptool.sh install-buildkit-containerd
 
