@@ -40,7 +40,7 @@ spec:
           failureThreshold: 10
           httpGet:
             path: /healthz
-            port: 10247
+            port: {{ .Values.server.port }}
             scheme: HTTP
           initialDelaySeconds: 30
           periodSeconds: 60
@@ -49,7 +49,7 @@ spec:
           failureThreshold: 5
           httpGet:
             path: /healthz
-            port: 10247
+            port: {{ .Values.server.port }}
             scheme: HTTP
           initialDelaySeconds: 2
           periodSeconds: 20
@@ -58,7 +58,7 @@ spec:
           failureThreshold: 3
           httpGet:
             path: /healthz
-            port: 10247
+            port: {{ .Values.server.port }}
             scheme: HTTP
           initialDelaySeconds: 2
           periodSeconds: 10
@@ -68,6 +68,11 @@ spec:
           subPath: kwok.yaml
           mountPath: /root/.kwok/kwok.yaml
           readOnly: true
+        {{ if .Values.server.enableTLS }}
+        - name: kwok-certs
+          mountPath: /etc/certs
+          readOnly: true
+        {{- end}}
         {{- range .Values.volumeMounts }}
         - {{- . | toYaml | nindent 10 }}
         {{- end }}
@@ -90,6 +95,11 @@ spec:
       - name: kwok-config
         configMap:
           name: {{ include "kwok.fullname" . }}
+      {{ if .Values.server.enableTLS }}
+      - name: kwok-certs
+        secret:
+          secretName: {{ include "kwok.fullname" . }}
+      {{- end}}
       {{- range .Values.volumes }}
       - {{- . | toYaml | nindent 8 }}
       {{- end }}

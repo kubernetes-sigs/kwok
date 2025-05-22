@@ -86,6 +86,8 @@ type Server struct {
 	dataSource      DataSource
 	nodeCacheGetter informer.Getter[*corev1.Node]
 	podCacheGetter  informer.Getter[*corev1.Pod]
+
+	kwokNodeLabel string
 }
 
 // DataSource is the interface that provides data for the server handlers.

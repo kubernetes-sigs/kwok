@@ -7,4 +7,4 @@ metadata:
     {{- include "kwok.labels" . | nindent 4 }}
 data:
   kwok.yaml: |-
-    {{- $.Files.Get "conf/kwok.yaml" | nindent 4 }}
+    {{- tpl ($.Files.Get "conf/kwok.yaml") . | nindent 4 }}

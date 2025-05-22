@@ -19,6 +19,7 @@ require (
 	github.com/prometheus/client_model v0.6.2
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
+	github.com/stretchr/testify v1.10.0
 	github.com/wzshiming/cmux v0.4.2
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.6.0
@@ -105,6 +106,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
