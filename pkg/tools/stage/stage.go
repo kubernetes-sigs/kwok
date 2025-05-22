@@ -113,31 +113,7 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 		meta["weight"] = weight
 	}
 
-	next := stage.Next()
-
-	if next == nil {
-		meta["next"] = "nil"
-		return meta, nil
-	}
-
 	out := make([]any, 0)
-
-	patch, err := next.Finalizers(testTarget.GetFinalizers())
-	if err != nil {
-		return nil, err
-	}
-
-	if patch != nil {
-		out = append(out, formatPatch(patch))
-	}
-
-	if next.Delete() {
-		out = append(out, map[string]string{
-			"kind": "delete",
-		})
-		meta["next"] = out
-		return meta, nil
-	}
 
 	fm := gotpl.FuncMap{}
 	funcNames := []string{
@@ -164,13 +140,24 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 
 	renderer := gotpl.NewRenderer(fm)
 
-	patches, err := next.Patches(testTarget, renderer)
+	_, err = stage.DoSteps(0, testTarget.GetFinalizers(), testTarget, renderer,
+		func(event *internalversion.StageEvent) error {
+			out = append(out, formatEvent(event))
+			return nil
+		},
+		func() error {
+			out = append(out, map[string]string{
+				"kind": "delete",
+			})
+			return nil
+		},
+		func(patch *lifecycle.Patch) error {
+			out = append(out, formatPatch(patch))
+			return nil
+		},
+	)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, patch := range patches {
-		out = append(out, formatPatch(patch))
 	}
 
 	if stage.ImmediateNextStage() {
@@ -221,6 +208,17 @@ func formatPatch(patch *lifecycle.Patch) any {
 	}
 
 	return out
+}
+
+func formatEvent(event *internalversion.StageEvent) any {
+	out := map[string]any{
+		"kind":    "event",
+		"type":    event.Type,
+		"reason":  event.Reason,
+		"message": event.Message,
+	}
+	return out
+
 }
 
 type obj interface {
