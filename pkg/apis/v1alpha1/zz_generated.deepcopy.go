@@ -66,6 +66,11 @@ func (in *AttachConfig) DeepCopyInto(out *AttachConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.LogsContent != nil {
+		in, out := &in.LogsContent, &out.LogsContent
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -1062,6 +1067,16 @@ func (in *Log) DeepCopyInto(out *Log) {
 	}
 	if in.PreviousLogsFile != nil {
 		in, out := &in.PreviousLogsFile, &out.PreviousLogsFile
+		*out = new(string)
+		**out = **in
+	}
+	if in.LogsContent != nil {
+		in, out := &in.LogsContent, &out.LogsContent
+		*out = new(string)
+		**out = **in
+	}
+	if in.PreviousLogsContent != nil {
+		in, out := &in.PreviousLogsContent, &out.PreviousLogsContent
 		*out = new(string)
 		**out = **in
 	}

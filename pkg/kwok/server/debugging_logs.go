@@ -46,12 +46,17 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 		return err
 	}
 
-	opts := crilogs.NewLogOptions(logOptions, time.Now())
-	logsFile := log.LogsFile
 	if logOptions.Previous {
-		logsFile = log.PreviousLogsFile
+		if log.PreviousLogsFile == "" {
+			return readLogsContent(ctx, log.PreviousLogsContent, logOptions, stdout)
+		}
+		return readLogsFile(ctx, log.PreviousLogsFile, logOptions, stdout, stderr)
+	} else {
+		if log.LogsFile == "" {
+			return readLogsContent(ctx, log.LogsContent, logOptions, stdout)
+		}
+		return readLogsFile(ctx, log.LogsFile, logOptions, stdout, stderr)
 	}
-	return readLogs(ctx, logsFile, opts, stdout, stderr)
 }
 
 // getContainerLogs handles containerLogs request against the Kubelet
@@ -144,8 +149,16 @@ func findLogInLogs(containerName string, logs []internalversion.Log) (*internalv
 	return defaultLog, defaultLog != nil
 }
 
-func readLogs(ctx context.Context, logsFile string, opts *crilogs.LogOptions, stdout, stderr io.Writer) error {
-	return crilogs.ReadLogs(ctx, nil, logsFile, "", opts, runtimeServiceStub{}, stdout, stderr)
+func readLogsContent(ctx context.Context, logsContent string, opts *corev1.PodLogOptions, stdout io.Writer) error {
+	_, _ = io.WriteString(stdout, logsContent)
+	if opts.Follow {
+		<-ctx.Done()
+	}
+	return nil
+}
+
+func readLogsFile(ctx context.Context, logsFile string, opts *corev1.PodLogOptions, stdout, stderr io.Writer) error {
+	return crilogs.ReadLogs(ctx, nil, logsFile, "", crilogs.NewLogOptions(opts, time.Now()), runtimeServiceStub{}, stdout, stderr)
 }
 
 type runtimeServiceStub struct {

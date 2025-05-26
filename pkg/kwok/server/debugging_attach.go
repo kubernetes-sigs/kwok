@@ -22,18 +22,17 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/emicklei/go-restful/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 	remotecommandclient "k8s.io/client-go/tools/remotecommand"
-	crilogs "k8s.io/cri-client/pkg/logs"
 	remotecommandserver "k8s.io/kubelet/pkg/cri/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
@@ -50,12 +49,14 @@ func (s *Server) AttachContainer(ctx context.Context, name string, uid types.UID
 		return err
 	}
 
-	var tailLines int64
-	opts := crilogs.NewLogOptions(&corev1.PodLogOptions{
-		TailLines: &tailLines,
+	logOptions := &corev1.PodLogOptions{
+		TailLines: format.Ptr[int64](0),
 		Follow:    true,
-	}, time.Now())
-	return readLogs(ctx, attach.LogsFile, opts, out, errOut)
+	}
+	if attach.LogsFile == "" {
+		return readLogsContent(ctx, attach.LogsContent, logOptions, out)
+	}
+	return readLogsFile(ctx, attach.LogsFile, logOptions, out, errOut)
 }
 
 func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
