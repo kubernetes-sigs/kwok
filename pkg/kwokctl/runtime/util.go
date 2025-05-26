@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
@@ -164,30 +165,33 @@ func GetLogVolumes(ctx context.Context) []internalversion.Volume {
 	clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
 
 	// Mount log dirs
-	mountDirs := map[string]struct{}{}
+	mountDirs := sets.NewSets[string]()
 	for _, log := range logs {
 		for _, l := range log.Spec.Logs {
-			mountDirs[path.Dir(l.LogsFile)] = struct{}{}
+			mountDirs.Insert(path.Dir(l.LogsFile))
+			mountDirs.Insert(path.Dir(l.PreviousLogsFile))
 		}
 	}
 
 	for _, cl := range clusterLogs {
 		for _, l := range cl.Spec.Logs {
-			mountDirs[path.Dir(l.LogsFile)] = struct{}{}
+			mountDirs.Insert(path.Dir(l.LogsFile))
+			mountDirs.Insert(path.Dir(l.PreviousLogsFile))
 		}
 	}
 
 	for _, attach := range attaches {
 		for _, a := range attach.Spec.Attaches {
-			mountDirs[path.Dir(a.LogsFile)] = struct{}{}
+			mountDirs.Insert(path.Dir(a.LogsFile))
 		}
 	}
 
 	for _, ca := range clusterAttaches {
 		for _, a := range ca.Spec.Attaches {
-			mountDirs[path.Dir(a.LogsFile)] = struct{}{}
+			mountDirs.Insert(path.Dir(a.LogsFile))
 		}
 	}
+	mountDirs.Delete(".", "/")
 
 	logsDirs := maps.Keys(mountDirs)
 	sort.Strings(logsDirs)
