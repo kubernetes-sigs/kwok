@@ -22,9 +22,9 @@ import (
 )
 
 func init() {
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKind, NewDockerCluster)
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKindPodman, NewPodmanCluster)
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKindNerdctl, NewNerdctlCluster)
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKindLima, NewLimaCluster)
-	runtime.DefaultRegistry.Register(consts.RuntimeTypeKindFinch, NewFinchCluster)
+	runtime.DefaultRegistry.RegisterDeprecated(consts.RuntimeTypeKind, NewDockerCluster)
+	runtime.DefaultRegistry.RegisterDeprecated(consts.RuntimeTypeKindPodman, NewPodmanCluster)
+	runtime.DefaultRegistry.RegisterDeprecated(consts.RuntimeTypeKindNerdctl, NewNerdctlCluster)
+	runtime.DefaultRegistry.RegisterDeprecated(consts.RuntimeTypeKindLima, NewLimaCluster)
+	runtime.DefaultRegistry.RegisterDeprecated(consts.RuntimeTypeKindFinch, NewFinchCluster)
 }
