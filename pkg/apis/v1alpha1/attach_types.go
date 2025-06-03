@@ -67,6 +67,8 @@ type AttachConfig struct {
 	Containers []string `json:"containers,omitempty"`
 	// LogsFile is the file from which the attach starts
 	LogsFile *string `json:"logsFile,omitempty"`
+	// LogsContent is the default content to show when logs file is not specified
+	LogsContent *string `json:"logsContent,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
