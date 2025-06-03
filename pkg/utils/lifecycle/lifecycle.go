@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/cel"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 )
 
 // NewLifecycle returns a new Lifecycle.
@@ -254,7 +255,7 @@ func (s *Stage) init(event *Event) error {
 		}
 	}
 
-	s.next = &config.Spec.Next
+	s.nextSteps = config.Spec.Steps
 	if delay := config.Spec.Delay; delay != nil {
 		var durationFrom *internalversion.ExpressionFrom
 		if delay.DurationFrom != nil {
@@ -312,8 +313,8 @@ type Stage struct {
 	matchExpressions []*expression.Requirement
 	matchConditions  []cel.Program
 
-	weight int64Getter
-	next   *internalversion.StageNext
+	weight    int64Getter
+	nextSteps []internalversion.StageStep
 
 	duration       durationGetter
 	jitterDuration durationGetter
@@ -489,9 +490,21 @@ func (s *Stage) DelayRangePossible(ctx context.Context, event *Event, now time.T
 	return []time.Duration{duration, jitterDuration}, true, nil
 }
 
-// Next returns the next of the stage.
-func (s *Stage) Next() *Next {
-	return newNext(s.next)
+// DoSteps executes the steps of the stage starting from the given stepIndex.
+func (s *Stage) DoSteps(
+	stepIndex int,
+	metaFinalizers []string,
+	resource any,
+	renderer gotpl.Renderer,
+	sendEvent func(event *internalversion.StageEvent) error,
+	deleteResource func() error,
+	patchResource func(patch *Patch) error,
+) (int, error) {
+	remainStepIndex, err := doStageSteps(s.nextSteps[stepIndex:], metaFinalizers, resource, renderer, sendEvent, deleteResource, patchResource)
+	if remainStepIndex >= 0 {
+		remainStepIndex += stepIndex
+	}
+	return remainStepIndex, err
 }
 
 // Name returns the name of the stage
