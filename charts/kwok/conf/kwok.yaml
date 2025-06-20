@@ -8,7 +8,11 @@ options:
   nodeLeaseParallelism: 4
   podPlayStageParallelism: 4
   nodePlayStageParallelism: 4
-  nodePort: 10247
+  nodePort: {{ .Values.server.port }}
+  {{ if .Values.server.enableTLS }}
+  tlsCertFile: /etc/certs/tls.crt
+  tlsPrivateKeyFile: /etc/certs/tls.key
+  {{- end}}
   cidr: 10.0.0.1/24
   manageAllNodes: false
   manageNodesWithAnnotationSelector: 'kwok.x-k8s.io/node=fake'

@@ -29,6 +29,15 @@ Set up default metrics usage policy (optional)
 helm upgrade --install kwok kwok/metrics-usage
 ```
 
+Set up default mutating webhook to manage pods with selector (optional)
+
+```shell
+CA_BUNDLE=$(kubectl get secret -n kube-system kwok-controller -o jsonpath='{.data.ca\.crt}')
+kubectl patch mutatingwebhookconfiguration kwok-controller \
+  --type='json' \
+  -p="[{'op': 'replace', 'path': '/webhooks/0/clientConfig/caBundle', 'value':'${CA_BUNDLE}'}]"
+```
+
 ## Configuration
 
 The following table lists the configurable parameters of the kwok chart and their default values.
@@ -61,3 +70,7 @@ The following table lists the configurable parameters of the kwok chart and thei
 | tolerations[1].operator | string | `"Exists"` |  |
 | volumeMounts | list | `[]` |  |
 | volumes | list | `[]` |  |
+| server.port | int | 10247 |  |
+| server.enableTLS | bool | `true` |  |
+| server.managePodsWithSelector.matchLabels | object | `{app: fake-pod}` |  |
+| server.managePodsWithSelector.excludedNamespaces | list | `{}` |  |
