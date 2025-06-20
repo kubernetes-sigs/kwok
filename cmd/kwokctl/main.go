@@ -40,7 +40,14 @@ func main() {
 	ctx := signals.SetupSignalContext()
 	ctx, logger := log.InitFlags(ctx, flagset)
 
-	ctx, err := config.InitFlags(ctx, flagset)
+	err := config.FetchDefaultConfig(ctx)
+	if err != nil {
+		logger.Warn("Fetch default config",
+			"err", err,
+		)
+	}
+
+	ctx, err = config.InitFlags(ctx, flagset)
 	if err != nil {
 		_, _ = os.Stderr.Write([]byte(flagset.FlagUsages()))
 		logger.Error("Init config flags", err)
