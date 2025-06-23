@@ -31,6 +31,7 @@ var DefaultRegistry = NewRegistry()
 // Registry is a registry of runtime
 type Registry struct {
 	items map[string]BuildRuntime
+	list  []string
 }
 
 // NewRegistry create a new registry
@@ -42,6 +43,12 @@ func NewRegistry() *Registry {
 
 // Register a runtime
 func (r *Registry) Register(name string, buildRuntime BuildRuntime) {
+	r.items[name] = buildRuntime
+	r.list = append(r.list, name)
+}
+
+// RegisterDeprecated a deprecated runtime
+func (r *Registry) RegisterDeprecated(name string, buildRuntime BuildRuntime) {
 	r.items[name] = buildRuntime
 }
 
@@ -69,10 +76,6 @@ func (r *Registry) Load(ctx context.Context, name, workdir string) (Runtime, err
 
 // List all registered runtime
 func (r *Registry) List() []string {
-	items := make([]string, 0, len(r.items))
-	for name := range r.items {
-		items = append(items, name)
-	}
-	sort.Strings(items)
-	return items
+	sort.Strings(r.list)
+	return r.list
 }
