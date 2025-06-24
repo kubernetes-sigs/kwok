@@ -95,7 +95,3 @@ type PortForwardList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []PortForward `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&PortForward{}, &PortForwardList{})
-}
