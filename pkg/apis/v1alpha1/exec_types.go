@@ -107,7 +107,3 @@ type ExecList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Exec `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&Exec{}, &ExecList{})
-}
