@@ -17,7 +17,7 @@ The [Metrics] is a [`kwok` Configuration][configuration] that allows users to de
 The YAML below shows all the fields of a Metrics resource:
 
 ``` yaml
-kind: Metrics
+kind: Metric
 apiVersion: kwok.x-k8s.io/v1alpha1
 metadata:
   name: <string>
