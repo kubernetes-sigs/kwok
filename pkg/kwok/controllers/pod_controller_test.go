@@ -191,6 +191,22 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("failed to watch nodes: %w", err))
 	}
 
+	// Wait for node cache to sync
+	err = wait.Poll(ctx, func(ctx context.Context) (done bool, err error) {
+		_, ok := nodeCache.Get("node0")
+		if !ok {
+			return false, nil
+		}
+		_, ok = nodeCache.Get("node1")
+		if !ok {
+			return false, nil
+		}
+		return true, nil
+	}, wait.WithContinueOnError(5))
+	if err != nil {
+		t.Fatal(fmt.Errorf("failed to wait for node cache sync: %w", err))
+	}
+
 	lc, _ := lifecycle.NewLifecycle(podStages)
 	annotationSelector, _ := labels.Parse("fake=custom")
 	pods, err := NewPodController(PodControllerConfig{
