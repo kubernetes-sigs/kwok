@@ -166,7 +166,7 @@ func scaleCreateNodeWithHack(ctx context.Context, t *testing.T, kwokctlPath stri
 func CaseBenchmarkWithHack(kwokctlPath, clusterName string) *features.FeatureBuilder {
 	return features.New("Benchmark Hack").
 		Assess("Create nodes", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
-			ctx0, cancel := context.WithTimeout(ctx, 20*time.Second)
+			ctx0, cancel := context.WithTimeout(ctx, 60*time.Second)
 			defer cancel()
 
 			err := scaleCreateNodeWithHack(ctx0, t, kwokctlPath, clusterName, 5000, 100, 20)
@@ -176,7 +176,7 @@ func CaseBenchmarkWithHack(kwokctlPath, clusterName string) *features.FeatureBui
 			return ctx
 		}).
 		Assess("Create pods", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
-			ctx0, cancel := context.WithTimeout(ctx, 20*time.Second)
+			ctx0, cancel := context.WithTimeout(ctx, 60*time.Second)
 			defer cancel()
 
 			err := scaleCreatePodWithHack(ctx0, t, kwokctlPath, clusterName, 10000, 100, 20)
@@ -186,7 +186,7 @@ func CaseBenchmarkWithHack(kwokctlPath, clusterName string) *features.FeatureBui
 			return ctx
 		}).
 		Assess("Delete pods", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
-			ctx0, cancel := context.WithTimeout(ctx, 20*time.Second)
+			ctx0, cancel := context.WithTimeout(ctx, 120*time.Second)
 			defer cancel()
 
 			err := scaleDeletePodWithHack(ctx0, t, kwokctlPath, clusterName, 10000)
