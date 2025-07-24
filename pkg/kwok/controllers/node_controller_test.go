@@ -100,6 +100,7 @@ func TestNodeController(t *testing.T) {
 	nodeCh := make(chan informer.Event[*corev1.Node], 1)
 	nodesCli := clientset.CoreV1().Nodes()
 	nodesInformer := informer.NewInformer[*corev1.Node, *corev1.NodeList](nodesCli)
+
 	err = nodesInformer.Watch(ctx, informer.Option{
 		AnnotationSelector: "node=true",
 	}, nodeCh)
