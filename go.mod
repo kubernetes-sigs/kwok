@@ -38,7 +38,7 @@ require (
 	k8s.io/apiserver v0.33.0
 	k8s.io/client-go v0.33.0
 	k8s.io/component-base v0.33.0
-	k8s.io/cri-api v0.33.0
+	k8s.io/cri-api v0.33.3
 	k8s.io/cri-client v0.33.0
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff
 	k8s.io/kubelet v0.33.0
