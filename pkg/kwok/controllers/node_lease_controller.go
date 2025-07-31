@@ -187,15 +187,19 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first b
 		}
 		logger.Info("Syncing lease")
 		lease, transitions, err := c.renewLease(ctx, lease)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update lease using lease: %w", err)
+		if err == nil {
+			// it is first or it has been transitioned, and then manage the node.
+			if first || transitions {
+				c.onNodeManaged(nodeName)
+			}
+			return lease, nil
 		}
 
-		// it is first or it has been transitioned, and then manage the node.
-		if first || transitions {
-			c.onNodeManaged(nodeName)
+		if !apierrors.IsNotFound(err) {
+			return nil, fmt.Errorf("failed to update lease: %w", err)
 		}
-		return lease, nil
+
+		// Deleted but we haven't received the watch event yet
 	}
 
 	logger.Info("Creating lease")
