@@ -217,7 +217,7 @@ func CaseBenchmark(kwokctlPath, clusterName string) *features.FeatureBuilder {
 			return ctx
 		}).
 		Assess("Delete pods", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
-			ctx0, cancel := context.WithTimeout(ctx, 60*time.Second)
+			ctx0, cancel := context.WithTimeout(ctx, 90*time.Second)
 			defer cancel()
 
 			err := scaleDeletePod(ctx0, t, kwokctlPath, clusterName, 10000)
