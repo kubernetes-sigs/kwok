@@ -189,7 +189,7 @@ EOF
 
 ## Check Resource Claim
 
-To check the status of your ResourceClaim
+To check the status of the ResourceClaim
 ```bash
 kubectl get resourceclaim
 NAME                                   STATE                AGE
@@ -199,6 +199,7 @@ fake-pod-7589f9b49f-pcjtg-gpu0-qjzpj   allocated,reserved   61m
 
 ## Check Pod
 
+To check the status of the Pod
 ```bash
 kubectl get pod
 NAME                        READY   STATUS    RESTARTS   AGE
