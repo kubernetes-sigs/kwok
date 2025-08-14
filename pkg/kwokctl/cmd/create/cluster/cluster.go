@@ -80,7 +80,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&flags.Options.EtcdImage, "etcd-image", flags.Options.EtcdImage, `Image of etcd, only for docker/podman/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/etcd:${KWOK_ETCD_VERSION}'
 `)
-	cmd.Flags().Uint32Var(&flags.Options.EtcdPort, "etcd-port", flags.Options.EtcdPort, `Port of etcd given to the host. The behavior is unstable for kind/kind-podman runtime and may be modified in the future`)
+	cmd.Flags().Uint32Var(&flags.Options.EtcdPort, "etcd-port", flags.Options.EtcdPort, `Port of etcd given to the host`)
 	cmd.Flags().StringVar(&flags.Options.KubeApiserverImage, "kube-apiserver-image", flags.Options.KubeApiserverImage, `Image of kube-apiserver, only for docker/podman/nerdctl runtime
 '${KWOK_KUBE_IMAGE_PREFIX}/kube-apiserver:${KWOK_KUBE_VERSION}'
 `)
@@ -92,24 +92,26 @@ func NewCommand(ctx context.Context) *cobra.Command {
 '${KWOK_KUBE_IMAGE_PREFIX}/kube-scheduler:${KWOK_KUBE_VERSION}'
 `)
 	cmd.Flags().Uint32Var(&flags.Options.KubeSchedulerPort, "kube-scheduler-port", flags.Options.KubeSchedulerPort, `Port of kube-scheduler given to the host, only for binary and docker/podman/nerdctl runtime`)
-	cmd.Flags().StringVar(&flags.Options.KwokControllerImage, "kwok-controller-image", flags.Options.KwokControllerImage, `Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
+	cmd.Flags().StringVar(&flags.Options.KwokControllerImage, "kwok-controller-image", flags.Options.KwokControllerImage, `Image of kwok-controller, only for docker/podman/nerdctl runtime
 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
 `)
-	cmd.Flags().StringVar(&flags.Options.MetricsServerImage, "metrics-server-image", flags.Options.MetricsServerImage, `Image of metrics-server, only for docker/podman/nerdctl/kind/kind-podman runtime
+	cmd.Flags().StringVar(&flags.Options.MetricsServerImage, "metrics-server-image", flags.Options.MetricsServerImage, `Image of metrics-server, only for docker/podman/nerdctl runtime
 '${KWOK_METRICS_SERVER_IMAGE_PREFIX}/metrics-server:${KWOK_METRICS_SERVER_VERSION}'
 `)
-	cmd.Flags().StringVar(&flags.Options.PrometheusImage, "prometheus-image", flags.Options.PrometheusImage, `Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
+	cmd.Flags().StringVar(&flags.Options.PrometheusImage, "prometheus-image", flags.Options.PrometheusImage, `Image of Prometheus, only for docker/podman/nerdctl runtime
 '${KWOK_PROMETHEUS_IMAGE_PREFIX}/prometheus:${KWOK_PROMETHEUS_VERSION}'
 `)
-	cmd.Flags().StringVar(&flags.Options.JaegerImage, "jaeger-image", flags.Options.JaegerImage, `Image of Jaeger, only for docker/podman/nerdctl/kind/kind-podman runtime
+	cmd.Flags().StringVar(&flags.Options.JaegerImage, "jaeger-image", flags.Options.JaegerImage, `Image of Jaeger, only for docker/podman/nerdctl runtime
 '${KWOK_JAEGER_IMAGE_PREFIX}/all-in-one:${KWOK_JAEGER_VERSION}'
 `)
 	cmd.Flags().Uint32Var(&flags.Options.KwokControllerPort, "controller-port", flags.Options.KwokControllerPort, `Port of kwok-controller given to the host`)
 	cmd.Flags().StringVar(&flags.Options.KindNodeImage, "kind-node-image", flags.Options.KindNodeImage, `Image of kind node, only for kind/kind-podman runtime
 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
 `)
+	_ = cmd.Flags().MarkDeprecated("kind-node-image", "--kind-node-image will be removed in a future release")
+
 	cmd.Flags().Uint32Var(&flags.Options.DashboardPort, "dashboard-port", flags.Options.DashboardPort, `Port of dashboard given to the host`)
-	cmd.Flags().StringVar(&flags.Options.DashboardImage, "dashboard-image", flags.Options.DashboardImage, `Image of dashboard, only for docker/podman/nerdctl/kind/kind-podman runtime
+	cmd.Flags().StringVar(&flags.Options.DashboardImage, "dashboard-image", flags.Options.DashboardImage, `Image of dashboard, only for docker/podman/nerdctl runtime
 '${KWOK_DASHBOARD_IMAGE_PREFIX}/dashboard:${KWOK_DASHBOARD_VERSION}'
 `)
 	cmd.Flags().StringVar(&flags.Options.KubeApiserverBinary, "kube-apiserver-binary", flags.Options.KubeApiserverBinary, `Binary of kube-apiserver, only for binary runtime
@@ -136,11 +138,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	_ = cmd.Flags().MarkDeprecated("jaeger-binary-tar", "--jaeger-binary-tar will be removed in a future release, please use --jaeger-binary instead")
 	cmd.Flags().StringVar(&flags.Options.KindBinary, "kind-binary", flags.Options.KindBinary, `Binary of kind, only for kind/kind-podman runtime
 `)
+	_ = cmd.Flags().MarkDeprecated("kind-binary", "--kind-binary will be removed in a future release")
+
 	cmd.Flags().StringVar(&flags.Options.KubeFeatureGates, "kube-feature-gates", flags.Options.KubeFeatureGates, `A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes`)
 	cmd.Flags().StringVar(&flags.Options.KubeRuntimeConfig, "kube-runtime-config", flags.Options.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs`)
 	cmd.Flags().StringVar(&flags.Options.KubeAuditPolicy, "kube-audit-policy", flags.Options.KubeAuditPolicy, "Path to the file that defines the audit policy configuration")
-	cmd.Flags().BoolVar(&flags.Options.KubeAuthorization, "kube-authorization", flags.Options.KubeAuthorization, "Enable authorization for kube-apiserver, only for non kind/kind-podman runtime")
-	cmd.Flags().BoolVar(&flags.Options.KubeAdmission, "kube-admission", flags.Options.KubeAdmission, "Enable admission for kube-apiserver, only for non kind/kind-podman runtime")
+	cmd.Flags().BoolVar(&flags.Options.KubeAuthorization, "kube-authorization", flags.Options.KubeAuthorization, "Enable authorization for kube-apiserver")
+	cmd.Flags().BoolVar(&flags.Options.KubeAdmission, "kube-admission", flags.Options.KubeAdmission, "Enable admission for kube-apiserver")
 	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
 	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 0, "Timeout for waiting for the cluster to be created")
 	cmd.Flags().DurationVar(&flags.Wait, "wait", 0, "Wait for the cluster to be ready")
@@ -264,6 +268,15 @@ func runE(ctx context.Context, flags *flagpole) error {
 		if err != nil {
 			return fmt.Errorf("runtime %v not available: %w", flags.Options.Runtime, err)
 		}
+	}
+
+	if flags.Options.Runtime == consts.RuntimeTypeKind ||
+		flags.Options.Runtime == consts.RuntimeTypeKindPodman ||
+		flags.Options.Runtime == consts.RuntimeTypeKindNerdctl ||
+		flags.Options.Runtime == consts.RuntimeTypeKindLima ||
+		flags.Options.Runtime == consts.RuntimeTypeKindFinch {
+		logger.Warn("Runtime kind is deprecated")
+		logger.Warn("Please deploy kwok in a kind cluster instead")
 	}
 
 	// Set up the cluster

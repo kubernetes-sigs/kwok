@@ -149,6 +149,7 @@ type KwokctlConfigurationOptions struct {
 
 	// KindVersion is the version of kind to use.
 	// is the default value for env KWOK_KIND_VERSION
+	// Deprecated: Use Kind instead
 	KindVersion string `json:"kindVersion,omitempty"`
 
 	// SecurePort is the apiserver port on which to serve HTTPS with authentication and authorization.
@@ -268,10 +269,12 @@ type KwokctlConfigurationOptions struct {
 	// KindNodeImagePrefix is the prefix of the kind node image.
 	// is the default value for env KWOK_KIND_NODE_IMAGE_PREFIX
 	//+k8s:conversion-gen=false
+	// Deprecated: Use Kind instead
 	KindNodeImagePrefix string `json:"kindNodeImagePrefix,omitempty"`
 
 	// KindNodeImage is the image of kind node.
 	// is the default value for flag --kind-node-image and env KWOK_KIND_NODE_IMAGE
+	// Deprecated: Use Kind instead
 	KindNodeImage string `json:"kindNodeImage,omitempty"`
 
 	// BinSuffix is the suffix of the all binary.
@@ -381,10 +384,12 @@ type KwokctlConfigurationOptions struct {
 	// KindBinaryPrefix is the binary prefix of kind.
 	// is the default value for env KWOK_KIND_BINARY_PREFIX
 	//+k8s:conversion-gen=false
+	// Deprecated: Use Kind instead
 	KindBinaryPrefix string `json:"kindBinaryPrefix,omitempty"`
 
 	// KindBinary is the binary of kind.
 	// is the default value for flag --kind-binary and env KWOK_KIND_BINARY
+	// Deprecated: Use Kind instead
 	KindBinary string `json:"kindBinary,omitempty"`
 
 	// Mode is several default parameter templates for clusters

@@ -11,7 +11,7 @@ kwokctl get artifacts [flags]
 ```
       --filter string    Filter the list of (binary or image)
   -h, --help             help for artifacts
-      --runtime string   Runtime of the cluster (binary or docker or finch or kind or kind-finch or kind-lima or kind-nerdctl or kind-podman or lima or nerdctl or podman)
+      --runtime string   Runtime of the cluster (binary or docker or finch or lima or nerdctl or podman)
 ```
 
 ### Options inherited from parent commands
