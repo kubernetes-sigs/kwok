@@ -205,6 +205,9 @@ menu:
   - identifier: metrics
     pageRef: "/docs/examples/prometheus"
     parent: kwokctl-integration
+  - identifier: dra
+    pageRef: "/docs/examples/dra"
+    parent: kwokctl-integration
 
   - identifier: tools
     title: Tools
