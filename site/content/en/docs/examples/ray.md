@@ -30,13 +30,9 @@ kwok-node-0               Ready                      agent           3m11s   kwo
 
 ## Deploy Ray Operator
 
-Add the KubeRay Hel repository
+Add the KubeRay Helm repository and install the KubeRay operator using Helm
 ```bash
 helm repo add kuberay https://ray-project.github.io/kuberay-helm/
-```
-
-Install the KubeRay operator using Helm
-```bash
 helm install kuberay-operator kuberay/kuberay-operator --version 1.4.2
 ```
 
