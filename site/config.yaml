@@ -208,6 +208,9 @@ menu:
   - identifier: dra
     pageRef: "/docs/examples/dra"
     parent: kwokctl-integration
+  - identifier: ray
+    pageRef: "/docs/examples/ray"
+    parent: kwokctl-integration
 
   - identifier: tools
     title: Tools
