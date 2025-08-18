@@ -146,7 +146,7 @@ Apply the updated CoreDNS configuration
 kubectl apply -f coredns.yaml
 ```
 
-Patch the CoreDNS deployment to run on the control plane node
+Restart the CoreDNS deployment to run on the control plane node to reload the configuration
 ```bash
 kubectl patch deployment coredns -n kube-system --type=json -p='[{"op":"add","path":"/spec/template/spec/nodeName","value":"kwok-kwok-control-plane"}]'
 ```
