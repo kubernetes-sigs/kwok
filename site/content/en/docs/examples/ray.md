@@ -53,20 +53,32 @@ metadata:
   namespace: default
 data:
   server.py: |
-    from fastapi import FastAPI
-    import uvicorn
-
-    app = FastAPI()
-
-    @app.get("/api/jobs/{job_id}")
-    def get_job_info(job_id: str):
-        return {
-            "job_id": job_id,
-            "status": "SUCCEEDED",
-        }
-
+    import json
+    import http.server
+    
+    class MockRayHandler(http.server.BaseHTTPRequestHandler):
+        """
+        Handle GET /api/jobs/{job_id} requests for mock Ray head API
+        """
+        def do_GET(self):
+            path = self.path.strip('/').split('/')
+            
+            if len(path) >= 3 and path[0] == 'api' and path[1] == 'jobs':
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "job_id": path[2],
+                    "status": "SUCCEEDED"
+                }).encode())
+                return
+            
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b'Not Found')
+    
     if __name__ == "__main__":
-        uvicorn.run(app, host="0.0.0.0", port=8265)
+        http.server.HTTPServer(('', 8265), MockRayHandler).serve_forever()
 EOF
 ```
 
