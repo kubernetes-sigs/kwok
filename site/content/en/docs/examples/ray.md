@@ -111,9 +111,6 @@ spec:
           mountPath: /app
         command: ["python"]
         args: ["/app/server.py"]
-        env:
-        - name: PORT
-          value: "8265"
       volumes:
       - name: mock-head
         configMap:
