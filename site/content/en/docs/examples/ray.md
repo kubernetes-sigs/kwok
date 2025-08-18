@@ -103,7 +103,7 @@ spec:
       nodeName: kwok-kwok-control-plane
       containers:
       - name: server
-        image: tiangolo/uvicorn-gunicorn-fastapi:python3.11
+        image: docker.io/library/python:3.11-alpine
         ports:
         - containerPort: 8265
         volumeMounts:
