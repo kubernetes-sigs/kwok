@@ -736,6 +736,9 @@ func autoConvert_internalversion_AttachConfig_To_v1alpha1_AttachConfig(in *Attac
 	if err := v1.Convert_string_To_Pointer_string(&in.LogsFile, &out.LogsFile, s); err != nil {
 		return err
 	}
+	if err := v1.Convert_string_To_Pointer_string(&in.LogsContent, &out.LogsContent, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -747,6 +750,9 @@ func Convert_internalversion_AttachConfig_To_v1alpha1_AttachConfig(in *AttachCon
 func autoConvert_v1alpha1_AttachConfig_To_internalversion_AttachConfig(in *v1alpha1.AttachConfig, out *AttachConfig, s conversion.Scope) error {
 	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
 	if err := v1.Convert_Pointer_string_To_string(&in.LogsFile, &out.LogsFile, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_string_To_string(&in.LogsContent, &out.LogsContent, s); err != nil {
 		return err
 	}
 	return nil
@@ -2022,6 +2028,12 @@ func autoConvert_internalversion_Log_To_v1alpha1_Log(in *Log, out *v1alpha1.Log,
 	if err := v1.Convert_string_To_Pointer_string(&in.PreviousLogsFile, &out.PreviousLogsFile, s); err != nil {
 		return err
 	}
+	if err := v1.Convert_string_To_Pointer_string(&in.LogsContent, &out.LogsContent, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_string_To_Pointer_string(&in.PreviousLogsContent, &out.PreviousLogsContent, s); err != nil {
+		return err
+	}
 	if err := v1.Convert_bool_To_Pointer_bool(&in.Follow, &out.Follow, s); err != nil {
 		return err
 	}
@@ -2039,6 +2051,12 @@ func autoConvert_v1alpha1_Log_To_internalversion_Log(in *v1alpha1.Log, out *Log,
 		return err
 	}
 	if err := v1.Convert_Pointer_string_To_string(&in.PreviousLogsFile, &out.PreviousLogsFile, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_string_To_string(&in.LogsContent, &out.LogsContent, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_string_To_string(&in.PreviousLogsContent, &out.PreviousLogsContent, s); err != nil {
 		return err
 	}
 	if err := v1.Convert_Pointer_bool_To_bool(&in.Follow, &out.Follow, s); err != nil {
