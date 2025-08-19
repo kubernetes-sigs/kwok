@@ -34,7 +34,7 @@ require (
 	golang.org/x/term v0.32.0
 	google.golang.org/grpc v1.73.0
 	k8s.io/api v0.33.0
-	k8s.io/apimachinery v0.33.0
+	k8s.io/apimachinery v0.33.4
 	k8s.io/apiserver v0.33.0
 	k8s.io/client-go v0.33.0
 	k8s.io/component-base v0.33.0
