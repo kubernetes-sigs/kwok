@@ -18,21 +18,46 @@ package runtime
 
 import (
 	"fmt"
+	"os"
+
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // CopySchedulerConfig copies the scheduler configuration file to the given path.
 func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error {
-	err := c.CopyFile(oldpath, newpath)
+	data, err := os.ReadFile(oldpath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read file %s: %w", oldpath, err)
 	}
 
-	err = c.AppendToFile(newpath, []byte(fmt.Sprintf(`
-clientConnection:
-  kubeconfig: %q
-`, kubeconfig)))
+	var config map[string]interface{}
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal YAML from %s: %w", oldpath, err)
+	}
+
+	if config["clientConnection"] == nil {
+		config["clientConnection"] = make(map[string]interface{})
+	}
+
+	clientConnection, ok := config["clientConnection"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("clientConnection field is not a map in %s", oldpath)
+	}
+
+	// Only set kubeconfig if it doesn't already exist
+	if _, exists := clientConnection["kubeconfig"]; !exists {
+		clientConnection["kubeconfig"] = kubeconfig
+	}
+
+	updatedData, err := yaml.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("failed to marshal YAML: %w", err)
+	}
+
+	err = os.WriteFile(newpath, updatedData, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write file %s: %w", newpath, err)
 	}
 
 	return nil
