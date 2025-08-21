@@ -155,6 +155,16 @@ func (c *Cluster) MkdirAll(name string) error {
 	return file.MkdirAll(name)
 }
 
+// ReadFile reads content from a file.
+func (c *Cluster) ReadFile(name string) ([]byte, error) {
+	if c.IsDryRun() {
+		dryrun.PrintMessage("cat %s", name)
+		return nil, nil
+	}
+
+	return os.ReadFile(name)
+}
+
 // EnsureBinary ensures the binary exists.
 func (c *Cluster) EnsureBinary(ctx context.Context, name, binary string) (string, error) {
 	config, err := c.Config(ctx)

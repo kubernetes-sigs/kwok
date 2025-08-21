@@ -18,14 +18,13 @@ package runtime
 
 import (
 	"fmt"
-	"os"
 
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // CopySchedulerConfig copies the scheduler configuration file to the given path.
 func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error {
-	data, err := os.ReadFile(oldpath)
+	data, err := c.ReadFile(oldpath)
 	if err != nil {
 		return fmt.Errorf("failed to read file %s: %w", oldpath, err)
 	}
@@ -55,7 +54,7 @@ func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error
 		return fmt.Errorf("failed to marshal YAML: %w", err)
 	}
 
-	err = os.WriteFile(newpath, updatedData, 0644)
+	err = c.WriteFileWithMode(newpath, updatedData, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write file %s: %w", newpath, err)
 	}
