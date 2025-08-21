@@ -17,11 +17,12 @@ samplingRatePerMillion: 1000000
 EOF
 # Download https://dl.k8s.io/release/v1.33.0/bin/<OS>/<ARCH>/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
 # Download https://dl.k8s.io/release/v1.33.0/bin/<OS>/<ARCH>/kube-scheduler to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
-cp <ROOT_DIR>/test/kwokctl/scheduler-config.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
-cat <<EOF >><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+cat <ROOT_DIR>/test/kwokctl/scheduler-config.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 clientConnection:
-  kubeconfig: "<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig"
+  kubeconfig: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig
 EOF
+chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 # Download https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwok-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
 # Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
 # Download https://github.com/prometheus/prometheus/releases/download/v3.3.1/prometheus-3.3.1.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus

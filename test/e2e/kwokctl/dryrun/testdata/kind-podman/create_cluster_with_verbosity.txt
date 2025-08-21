@@ -12,7 +12,7 @@ cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTE
 cat <ROOT_DIR>/test/kwokctl/scheduler-config.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 clientConnection:
-  kubeconfig: "/etc/kubernetes/scheduler.conf"
+  kubeconfig: /etc/kubernetes/scheduler.conf
 EOF
 chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
