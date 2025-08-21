@@ -35,6 +35,10 @@ func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error
 		return fmt.Errorf("failed to unmarshal YAML from %s: %w", oldpath, err)
 	}
 
+	if config == nil {
+		config = make(map[string]interface{})
+	}
+
 	if config["clientConnection"] == nil {
 		config["clientConnection"] = make(map[string]interface{})
 	}
