@@ -58,7 +58,7 @@ func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error
 		return fmt.Errorf("failed to marshal YAML: %w", err)
 	}
 
-	err = c.WriteFileWithMode(newpath, updatedData, 0644)
+	err = c.WriteFile(newpath, updatedData)
 	if err != nil {
 		return fmt.Errorf("failed to write file %s: %w", newpath, err)
 	}
