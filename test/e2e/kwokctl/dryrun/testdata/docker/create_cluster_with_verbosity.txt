@@ -16,12 +16,10 @@ samplingRatePerMillion: 1000000
 EOF
 docker pull registry.k8s.io/kubectl:v1.33.0
 docker pull registry.k8s.io/kube-controller-manager:v1.33.0
-cat <ROOT_DIR>/test/kwokctl/scheduler-config.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 clientConnection:
   kubeconfig: ~/.kube/config
 EOF
-chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 docker pull registry.k8s.io/kube-scheduler:v1.33.0
 docker pull registry.k8s.io/kwok/kwok:v0.8.0
 docker pull registry.k8s.io/metrics-server/metrics-server:v0.7.2

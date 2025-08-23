@@ -18,6 +18,7 @@ package runtime
 
 import (
 	"fmt"
+	"os"
 
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
