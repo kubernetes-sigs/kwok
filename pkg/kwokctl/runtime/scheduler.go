@@ -24,7 +24,7 @@ import (
 
 // CopySchedulerConfig copies the scheduler configuration file to the given path.
 func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error {
-	data, err := c.ReadFile(oldpath)
+	data, err := os.ReadFile(oldpath)
 	if err != nil {
 		return fmt.Errorf("failed to read file %s: %w", oldpath, err)
 	}
