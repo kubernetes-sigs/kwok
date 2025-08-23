@@ -18,21 +18,38 @@ package runtime
 
 import (
 	"fmt"
+	"os"
+
+	v1 "k8s.io/kube-scheduler/config/v1"
+	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // CopySchedulerConfig copies the scheduler configuration file to the given path.
 func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error {
-	err := c.CopyFile(oldpath, newpath)
+	data, err := os.ReadFile(oldpath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read file %s: %w", oldpath, err)
 	}
 
-	err = c.AppendToFile(newpath, []byte(fmt.Sprintf(`
-clientConnection:
-  kubeconfig: %q
-`, kubeconfig)))
+	var config v1.KubeSchedulerConfiguration
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal YAML from %s: %w", oldpath, err)
+	}
+
+	if config.ClientConnection.Kubeconfig != "" {
+		return fmt.Errorf("kubeconfig already exists in scheduler configuration at %s", oldpath)
+	}
+	config.ClientConnection.Kubeconfig = kubeconfig
+
+	updatedData, err := yaml.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("failed to marshal YAML: %w", err)
+	}
+
+	err = c.WriteFile(newpath, updatedData)
+	if err != nil {
+		return fmt.Errorf("failed to write file %s: %w", newpath, err)
 	}
 
 	return nil
