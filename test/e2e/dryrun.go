@@ -149,6 +149,7 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 	f = f.Assess("test cluster dryrun with verbosity", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_verbosity.txt"
 		kubeAuditPath := path.Join(rootDir, "test/kwokctl/audit-policy.yaml")
+		schedulerConfigPath := path.Join(rootDir, "test/kwokctl/scheduler-config.yaml")
 		args := []string{
 			"create", "cluster", "--dry-run",
 			"--runtime", clusterRuntime,
@@ -163,6 +164,7 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 			"--kube-apiserver-insecure-port=6080",
 			"--enable-metrics-server",
 			"--kube-audit-policy", kubeAuditPath,
+			"--kube-scheduler-config", schedulerConfigPath,
 		}
 		diff, err := executeCommand(args, absPath, clusterName, kwokctlPath, rootDir, updateTestdata)
 		if err != nil {
