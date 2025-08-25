@@ -16,21 +16,21 @@ samplingRatePerMillion: 1000000
 EOF
 docker pull registry.k8s.io/kubectl:v1.33.0
 docker pull registry.k8s.io/kube-controller-manager:v1.33.0
-cat <<EOF >><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
-  clientConnection:
-    acceptContentTypes: ""
-    burst: 0
-    contentType: ""
-    kubeconfig: "/etc/kubernetes/scheduler.conf"
-    qps: 0
-  leaderElection:
-    leaderElect: null
-    leaseDuration: 0s
-    renewDeadline: 0s
-    resourceLock: ""
-    resourceName: ""
-    resourceNamespace: ""
-    retryPeriod: 0s
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+clientConnection:
+  acceptContentTypes: ""
+  burst: 0
+  contentType: ""
+  kubeconfig: ~/.kube/config
+  qps: 0
+leaderElection:
+  leaderElect: null
+  leaseDuration: 0s
+  renewDeadline: 0s
+  resourceLock: ""
+  resourceName: ""
+  resourceNamespace: ""
+  retryPeriod: 0s
 EOF
 docker pull registry.k8s.io/kube-scheduler:v1.33.0
 docker pull registry.k8s.io/kwok/kwok:v0.8.0

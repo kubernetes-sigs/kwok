@@ -9,21 +9,21 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
 touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
 cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
-cat <<EOF >><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
-  clientConnection:
-    acceptContentTypes: ""
-    burst: 0
-    contentType: ""
-    kubeconfig: "/etc/kubernetes/scheduler.conf"
-    qps: 0
-  leaderElection:
-    leaderElect: null
-    leaseDuration: 0s
-    renewDeadline: 0s
-    resourceLock: ""
-    resourceName: ""
-    resourceNamespace: ""
-    retryPeriod: 0s
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+clientConnection:
+  acceptContentTypes: ""
+  burst: 0
+  contentType: ""
+  kubeconfig: /etc/kubernetes/scheduler.conf
+  qps: 0
+leaderElection:
+  leaderElect: null
+  leaseDuration: 0s
+  renewDeadline: 0s
+  resourceLock: ""
+  resourceName: ""
+  resourceNamespace: ""
+  retryPeriod: 0s
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
