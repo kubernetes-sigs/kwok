@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
@@ -57,10 +58,10 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 		return exec.Exec(exec.WithReadWriter(ctx, stream), forward.Command[0], forward.Command[1:]...)
 	}
 
-	if forward.Target != nil {
-		target := forward.Target
-		addr := fmt.Sprintf("%s:%d", target.Address, target.Port)
-		dial, err := net.Dial("tcp", addr)
+	if target := forward.Target; target != nil {
+		addr := net.JoinHostPort(target.Address, strconv.FormatInt(int64(target.Port), 10))
+		var dialer net.Dialer
+		dial, err := dialer.DialContext(ctx, "tcp", addr)
 		if err != nil {
 			return fmt.Errorf("failed to dial %s: %w", addr, err)
 		}
@@ -68,7 +69,6 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 			_ = dial.Close()
 		}()
 
-		// TODO: remove this when upgrade to go 1.21 upgrade takes place
 		buf1 := s.bufPool.Get()
 		buf2 := s.bufPool.Get()
 		defer func() {
