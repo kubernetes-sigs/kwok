@@ -18,12 +18,14 @@ EOF
 # Download https://dl.k8s.io/release/v1.33.0/bin/<OS>/<ARCH>/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
 # Download https://dl.k8s.io/release/v1.33.0/bin/<OS>/<ARCH>/kube-scheduler to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
 clientConnection:
   acceptContentTypes: ""
   burst: 0
   contentType: ""
   kubeconfig: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig
   qps: 0
+kind: KubeSchedulerConfiguration
 leaderElection:
   leaderElect: null
   leaseDuration: 0s
