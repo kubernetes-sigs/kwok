@@ -28,20 +28,28 @@ import (
 func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error {
 	var config v1.KubeSchedulerConfiguration
 
-	if !c.dryRun {
-		data, err := os.ReadFile(oldpath)
-		if err != nil {
-			return fmt.Errorf("failed to read file %s: %w", oldpath, err)
-		}
+	data, err := os.ReadFile(oldpath)
+	if err != nil {
+		return fmt.Errorf("failed to read file %s: %w", oldpath, err)
+	}
 
-		err = yaml.Unmarshal(data, &config)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal YAML from %s: %w", oldpath, err)
-		}
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal YAML from %s: %w", oldpath, err)
+	}
 
-		if config.ClientConnection.Kubeconfig != "" {
-			return fmt.Errorf("kubeconfig already exists in scheduler configuration at %s", oldpath)
-		}
+	expectedAPIVersion := v1.SchemeGroupVersion.String()
+	if config.APIVersion != expectedAPIVersion {
+		return fmt.Errorf("invalid apiVersion in scheduler configuration at %s: expected %s, got %s", oldpath, expectedAPIVersion, config.APIVersion)
+	}
+
+	expectedKind := "KubeSchedulerConfiguration"
+	if config.Kind != expectedKind {
+		return fmt.Errorf("invalid kind in scheduler configuration at %s: expected %s, got %s", oldpath, expectedKind, config.Kind)
+	}
+
+	if config.ClientConnection.Kubeconfig != "" {
+		return fmt.Errorf("kubeconfig already exists in scheduler configuration at %s", oldpath)
 	}
 
 	config.ClientConnection.Kubeconfig = kubeconfig
