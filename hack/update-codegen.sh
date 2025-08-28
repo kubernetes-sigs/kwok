@@ -39,6 +39,10 @@ function client-gen() {
   go run k8s.io/code-generator/cmd/client-gen@${KUBE_VERSION} "$@"
 }
 
+function register-gen() {
+  go run k8s.io/code-generator/cmd/register-gen@${KUBE_VERSION} "$@"
+}
+
 function gen() {
   rm -rf \
     "${ROOT_DIR}/pkg/apis/internalversion"/zz_generated.*.go \
@@ -64,6 +68,13 @@ function gen() {
   conversion-gen \
     ./pkg/apis/internalversion/ \
     --output-file zz_generated.conversion.go \
+    --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
+  echo "Generating register"
+  register-gen \
+    ./pkg/apis/v1alpha1/ \
+    ./pkg/apis/config/v1alpha1/ \
+    ./pkg/apis/action/v1alpha1/ \
+    --output-file zz_generated.register.go \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
 
   rm -rf "${ROOT_DIR}/pkg/client"

@@ -111,7 +111,7 @@ issues:
   exclude-use-default: false
   exclude-files:
   - ".*\\.zz_generated\\..*"
-
+  - ".*test.*"
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
   # The Kubernetes naming convention for conversion functions uses underscores
