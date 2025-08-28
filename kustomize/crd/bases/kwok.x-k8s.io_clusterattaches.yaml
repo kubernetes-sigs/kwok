@@ -49,6 +49,10 @@ spec:
                       items:
                         type: string
                       type: array
+                    logsContent:
+                      description: LogsContent is the default content to show when
+                        logs file is not specified
+                      type: string
                     logsFile:
                       description: LogsFile is the file from which the attach starts
                       type: string
