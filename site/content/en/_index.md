@@ -65,11 +65,6 @@ Runtime indicates which medium `kwokctl` will use to start the cluster
 | [nerdctl][nerdctl-runtime]  |        🟢        |        🔵        |        🔴         |        🔴         |         🔴         |         🔴          |
 |   [lima][lima-runtime] ⚠️   |        🟣        |        🟣        |        🟣         |        🟣         |         🔴         |         🔴          |
 |  [finch][finch-runtime] ⚠️  |        🔴        |        🔴        |        🟣         |        🟣         |         🟣         |         🟣          |
-|    [kind][kind-runtime]     |        🟢        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
-|       **kind-podman**       |        🟢        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
-|     **kind-nerdctl** ⚠️     |        🟣        |        🟣        |        🔴         |        🔴         |         🔴         |         🔴          |
-|      **kind-lima** ⚠️       |        🟣        |        🟣        |        🟣         |        🟣         |         🔴         |         🔴          |
-|      **kind-finch** ⚠️      |        🔴        |        🔴        |        🟣         |        🟣         |         🟣         |         🟣          |
 
 - ⭐️ Recommended
 - ⚠️ Work in progress
@@ -114,4 +109,3 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 [nerdctl-runtime]: https://github.com/containerd/nerdctl/releases
 [lima-runtime]: https://lima-vm.io/docs/installation/
 [finch-runtime]: https://runfinch.com/docs/getting-started/installation/
-[kind-runtime]: https://kind.sigs.k8s.io/docs/user/quick-start/

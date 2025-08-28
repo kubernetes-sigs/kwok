@@ -2923,7 +2923,8 @@ string
 </td>
 <td>
 <p>KindVersion is the version of kind to use.
-is the default value for env KWOK_KIND_VERSION</p>
+is the default value for env KWOK_KIND_VERSION
+Deprecated: Use Kind instead</p>
 </td>
 </tr>
 <tr>
@@ -3254,7 +3255,8 @@ string
 </td>
 <td>
 <p>KindNodeImagePrefix is the prefix of the kind node image.
-is the default value for env KWOK_KIND_NODE_IMAGE_PREFIX</p>
+is the default value for env KWOK_KIND_NODE_IMAGE_PREFIX
+Deprecated: Use Kind instead</p>
 </td>
 </tr>
 <tr>
@@ -3266,7 +3268,8 @@ string
 </td>
 <td>
 <p>KindNodeImage is the image of kind node.
-is the default value for flag &ndash;kind-node-image and env KWOK_KIND_NODE_IMAGE</p>
+is the default value for flag &ndash;kind-node-image and env KWOK_KIND_NODE_IMAGE
+Deprecated: Use Kind instead</p>
 </td>
 </tr>
 <tr>
@@ -3540,7 +3543,8 @@ string
 </td>
 <td>
 <p>KindBinaryPrefix is the binary prefix of kind.
-is the default value for env KWOK_KIND_BINARY_PREFIX</p>
+is the default value for env KWOK_KIND_BINARY_PREFIX
+Deprecated: Use Kind instead</p>
 </td>
 </tr>
 <tr>
@@ -3552,7 +3556,8 @@ string
 </td>
 <td>
 <p>KindBinary is the binary of kind.
-is the default value for flag &ndash;kind-binary and env KWOK_KIND_BINARY</p>
+is the default value for flag &ndash;kind-binary and env KWOK_KIND_BINARY
+Deprecated: Use Kind instead</p>
 </td>
 </tr>
 <tr>
