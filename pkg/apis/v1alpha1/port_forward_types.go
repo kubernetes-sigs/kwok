@@ -71,6 +71,9 @@ type Forward struct {
 	// Command is the command to run to forward with stdin/stdout.
 	// if set, Target will be ignored.
 	Command []string `json:"command,omitempty"`
+	// HTTPRoutes defines a list of predefined HTTP responses that can be returned
+	// for specific paths instead of forwarding the request.
+	HTTPRoutes []HTTPRoute `json:"httpRoutes,omitempty"`
 }
 
 // ForwardTarget holds information how to forward to a target.
@@ -84,6 +87,32 @@ type ForwardTarget struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Address string `json:"address"`
+}
+
+// HTTPRoute defines a predefined HTTP response configuration for a specific path.
+type HTTPRoute struct {
+	// Location specifies the request path pattern to match for this response.
+	// +kubebuilder:validation:Required
+	Location string `json:"location,omitempty"`
+
+	// Code is the HTTP status code to return for this response.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=100
+	// +kubebuilder:validation:Maximum=599
+	Code int `json:"code,omitempty"`
+	// Headers contains additional HTTP headers to include in the response.
+	Headers []HTTPRouteHeader `json:"headers,omitempty"`
+	// Body contains the response body content to return.
+	Body string `json:"body,omitempty"`
+}
+
+// HTTPRouteHeader defines a single HTTP header key-value pair.
+type HTTPRouteHeader struct {
+	// Name is the HTTP header name.
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
+	// Value is the HTTP header value.
+	Value string `json:"value,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
