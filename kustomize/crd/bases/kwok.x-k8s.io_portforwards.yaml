@@ -52,6 +52,50 @@ spec:
                       items:
                         type: string
                       type: array
+                    httpRoutes:
+                      description: |-
+                        HTTPRoutes defines a list of predefined HTTP responses that can be returned
+                        for specific paths instead of forwarding the request.
+                      items:
+                        description: HTTPRoute defines a predefined HTTP response
+                          configuration for a specific path.
+                        properties:
+                          body:
+                            description: Body contains the response body content to
+                              return.
+                            type: string
+                          code:
+                            description: Code is the HTTP status code to return for
+                              this response.
+                            maximum: 599
+                            minimum: 100
+                            type: integer
+                          headers:
+                            description: Headers contains additional HTTP headers
+                              to include in the response.
+                            items:
+                              description: HTTPRouteHeader defines a single HTTP header
+                                key-value pair.
+                              properties:
+                                name:
+                                  description: Name is the HTTP header name.
+                                  type: string
+                                value:
+                                  description: Value is the HTTP header value.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                          location:
+                            description: Location specifies the request path pattern
+                              to match for this response.
+                            type: string
+                        required:
+                        - code
+                        - location
+                        type: object
+                      type: array
                     ports:
                       description: |-
                         Ports is a list of ports to forward.
