@@ -1,0 +1,18 @@
+# @Stage: ../pod-create.yaml
+# @Stage: ../pod-init-container-running.yaml
+# @Stage: ../pod-init-container-failed.yaml
+# @Stage: ../pod-init-container-restart.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-init-restart
+  annotations:
+    pod-init-container-failed.stage.kwok.x-k8s.io/name: init
+spec:
+  initContainers:
+  - name: init
+    image: init-image
+  containers:
+  - name: container
+    image: image
+  nodeName: node

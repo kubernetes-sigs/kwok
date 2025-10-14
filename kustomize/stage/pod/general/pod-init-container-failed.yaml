@@ -1,0 +1,109 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pod-init-container-failed
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  selector:
+    matchExpressions:
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - 'Pending'
+    - key: '.status.initContainerStatuses.[].state.running.startedAt'
+      operator: 'Exists'
+    - key: '.metadata.annotations["pod-init-container-failed.stage.kwok.x-k8s.io/name"]'
+      operator: 'Exists'
+  weight: 10
+  weightFrom:
+    expressionFrom: '.metadata.annotations["pod-init-container-failed.stage.kwok.x-k8s.io/weight"]'
+  delay:
+    durationMilliseconds: 2000
+    durationFrom:
+      expressionFrom: '.metadata.annotations["pod-init-container-failed.stage.kwok.x-k8s.io/delay"]'
+    jitterDurationMilliseconds: 1000
+    jitterDurationFrom:
+      expressionFrom: '.metadata.annotations["pod-init-container-failed.stage.kwok.x-k8s.io/jitter-delay"]'
+  next:
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $root := . }}
+      {{ $annotations := .metadata.annotations }}
+      {{ $failedContainerName := index $annotations "pod-init-container-failed.stage.kwok.x-k8s.io/name" }}
+      {{ $exitCode := or (index $annotations "pod-init-container-failed.stage.kwok.x-k8s.io/exit-code") "1" }}
+      {{ $reason := or (index $annotations "pod-init-container-failed.stage.kwok.x-k8s.io/reason") "Error" }}
+      {{ $message := or (index $annotations "pod-init-container-failed.stage.kwok.x-k8s.io/message") "Init container failed" }}
+      conditions:
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: {{ $message | Quote }}
+        reason: {{ $reason | Quote }}
+        status: "False"
+        type: Initialized
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: {{ $message | Quote }}
+        reason: {{ $reason | Quote }}
+        status: "False"
+        type: Ready
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: {{ $message | Quote }}
+        reason: {{ $reason | Quote }}
+        status: "False"
+        type: ContainersReady
+      initContainerStatuses:
+      {{ range $index, $item := .spec.initContainers }}
+      {{ $origin := index $root.status.initContainerStatuses $index }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        {{ if eq $item.name $failedContainerName }}
+        ready: false
+        restartCount: {{ $origin.restartCount }}
+        started: false
+        state:
+          terminated:
+            exitCode: {{ $exitCode }}
+            finishedAt: {{ $now | Quote }}
+            reason: {{ $reason | Quote }}
+            message: {{ $message | Quote }}
+            startedAt: {{ $now | Quote }}
+        {{ else }}
+        ready: {{ $origin.ready }}
+        restartCount: {{ $origin.restartCount }}
+        started: {{ $origin.started }}
+        state:
+          {{ if $origin.state.running }}
+          running:
+            startedAt: {{ $origin.state.running.startedAt | Quote }}
+          {{ else if $origin.state.terminated }}
+          terminated:
+            exitCode: {{ or $origin.state.terminated.exitCode 0 }}
+            finishedAt: {{ or $origin.state.terminated.finishedAt $now | Quote }}
+            reason: {{ or $origin.state.terminated.reason "Completed" | Quote }}
+            startedAt: {{ or $origin.state.terminated.startedAt $now | Quote }}
+          {{ else }}
+          waiting:
+            reason: {{ or $origin.state.waiting.reason "PodInitializing" | Quote }}
+          {{ end }}
+        {{ end }}
+      {{ end }}
+      containerStatuses:
+      {{ range .spec.containers }}
+      - image: {{ .image | Quote }}
+        name: {{ .name | Quote }}
+        ready: false
+        restartCount: 0
+        started: false
+        state:
+          waiting:
+            reason: PodInitializing
+      {{ end }}
+      hostIP: {{ NodeIPWith .spec.nodeName | Quote }}
+      podIP: {{ PodIPWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) | Quote }}
+      phase: Pending
+      startTime: {{ $now | Quote }}

@@ -1,0 +1,85 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pod-container-restart
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Pod
+  selector:
+    matchExpressions:
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - 'Running'
+    - key: '.status.containerStatuses.[].state.terminated'
+      operator: 'Exists'
+    - key: '.status.containerStatuses.[].state.terminated.exitCode'
+      operator: 'NotIn'
+      values:
+      - '0'
+  weight: 1
+  weightFrom:
+    expressionFrom: '.metadata.annotations["pod-container-restart.stage.kwok.x-k8s.io/weight"]'
+  delay:
+    durationMilliseconds: 1000
+    durationFrom:
+      expressionFrom: '.metadata.annotations["pod-container-restart.stage.kwok.x-k8s.io/delay"]'
+    jitterDurationMilliseconds: 1000
+    jitterDurationFrom:
+      expressionFrom: '.metadata.annotations["pod-container-restart.stage.kwok.x-k8s.io/jitter-delay"]'
+  next:
+    event:
+      type: Warning
+      reason: BackOff
+      message: Back-off restarting failed container
+    statusTemplate: |
+      {{ $now := Now }}
+      {{ $root := . }}
+      conditions:
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: "Containers are restarting"
+        reason: ContainersNotReady
+        status: "False"
+        type: Ready
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        message: "Containers are restarting"
+        reason: ContainersNotReady
+        status: "False"
+        type: ContainersReady
+      containerStatuses:
+      {{ range $index, $item := .spec.containers }}
+      {{ $origin := index $root.status.containerStatuses $index }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        {{ if and $origin.state.terminated (ne (toString $origin.state.terminated.exitCode) "0") }}
+        ready: false
+        restartCount: {{ add1 $origin.restartCount }}
+        started: true
+        state:
+          running:
+            startedAt: {{ $now | Quote }}
+        {{ else }}
+        ready: {{ $origin.ready }}
+        restartCount: {{ $origin.restartCount }}
+        started: {{ $origin.started }}
+        state:
+          {{ if $origin.state.running }}
+          running:
+            startedAt: {{ $origin.state.running.startedAt | Quote }}
+          {{ else if $origin.state.terminated }}
+          terminated:
+            exitCode: {{ or $origin.state.terminated.exitCode 0 }}
+            finishedAt: {{ or $origin.state.terminated.finishedAt $now | Quote }}
+            reason: {{ or $origin.state.terminated.reason "Completed" | Quote }}
+            startedAt: {{ or $origin.state.terminated.startedAt $now | Quote }}
+          {{ else }}
+          waiting:
+            reason: ContainerCreating
+          {{ end }}
+        {{ end }}
+      {{ end }}

@@ -1,0 +1,19 @@
+# @Stage: ../pod-create.yaml
+# @Stage: ../pod-init-container-running.yaml
+# @Stage: ../pod-init-container-completed.yaml
+# @Stage: ../pod-ready.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-sidecar
+spec:
+  initContainers:
+  - name: init
+    image: init-image
+  - name: sidecar
+    image: sidecar-image
+    restartPolicy: Always
+  containers:
+  - name: container
+    image: image
+  nodeName: node
