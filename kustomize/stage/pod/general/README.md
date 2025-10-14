@@ -68,6 +68,63 @@ Deletes pods that have a deletion timestamp set.
 - ✅ Pod deletion
 - ✅ Pod failures (result of container failures)
 
+## Stage Flow Diagrams
+
+### Basic Pod Lifecycle (No Init Containers)
+```
+Pod Created → pod-create → Pending
+                ↓
+            pod-ready → Running
+                ↓
+         (if Job) pod-complete → Succeeded
+                ↓
+         (when deleted) pod-delete → Deleted
+```
+
+### Pod with Init Containers
+```
+Pod Created → pod-create → Pending (init waiting)
+                ↓
+        pod-init-container-running → Pending (init running)
+                ↓
+        pod-init-container-completed → Pending (init completed, Initialized=True)
+                ↓
+            pod-ready → Running
+```
+
+### Pod with Sidecar Init Container
+```
+Pod Created → pod-create → Pending (init waiting)
+                ↓
+        pod-init-container-running → Pending (init running)
+                ↓
+        pod-init-container-completed → Pending (regular init completed, sidecar still running, Initialized=True)
+                ↓
+            pod-ready → Running (sidecar continues running)
+```
+
+### Init Container Failure and Retry
+```
+Pod Created → pod-create → Pending (init waiting)
+                ↓
+        pod-init-container-running → Pending (init running)
+                ↓
+        pod-init-container-failed → Pending (init failed, exitCode!=0)
+                ↓
+        pod-init-container-restart → Pending (init restarted, restartCount++)
+                ↓
+        [back to pod-init-container-completed or pod-init-container-failed based on success/failure]
+```
+
+### Container Failure and Retry
+```
+Pod Running → pod-container-failed → Running (container terminated, exitCode!=0)
+                ↓
+        pod-container-restart → Running (container restarted, restartCount++)
+                ↓
+        [container becomes running again or fails again]
+```
+
 ## Usage Examples
 
 ### Basic Pod
