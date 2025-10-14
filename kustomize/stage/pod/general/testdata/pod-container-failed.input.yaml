@@ -1,6 +1,6 @@
-# @Stage: pod-create.yaml
-# @Stage: pod-ready.yaml
-# @Stage: pod-container-failed.yaml
+# @Stage: ../pod-create.yaml
+# @Stage: ../pod-ready.yaml
+# @Stage: ../pod-container-failed.yaml
 apiVersion: v1
 kind: Pod
 metadata:

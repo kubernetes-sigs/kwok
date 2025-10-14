@@ -1,4 +1,4 @@
-# @Stage: pod-delete.yaml
+# @Stage: ../pod-delete.yaml
 apiVersion: v1
 kind: Pod
 metadata:

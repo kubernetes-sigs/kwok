@@ -1,7 +1,7 @@
-# @Stage: pod-create.yaml
-# @Stage: pod-init-container-running.yaml
-# @Stage: pod-init-container-failed.yaml
-# @Stage: pod-init-container-restart.yaml
+# @Stage: ../pod-create.yaml
+# @Stage: ../pod-init-container-running.yaml
+# @Stage: ../pod-init-container-failed.yaml
+# @Stage: ../pod-init-container-restart.yaml
 apiVersion: v1
 kind: Pod
 metadata:
