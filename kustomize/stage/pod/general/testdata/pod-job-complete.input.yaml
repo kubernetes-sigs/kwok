@@ -1,0 +1,17 @@
+# @Stage: ../pod-create.yaml
+# @Stage: ../pod-ready.yaml
+# @Stage: ../pod-complete.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-job-complete
+  ownerReferences:
+  - apiVersion: batch/v1
+    kind: Job
+    name: test-job
+    uid: test-job-uid
+spec:
+  containers:
+  - name: container
+    image: image
+  nodeName: node

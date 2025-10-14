@@ -44,6 +44,29 @@ spec:
         reason: ''
         status: "True"
         type: ContainersReady
+      {{ if .spec.initContainers }}
+      initContainerStatuses:
+      {{ range $index, $item := .spec.initContainers }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        ready: true
+        restartCount: 0
+        {{ if eq $item.restartPolicy "Always" }}
+        started: true
+        state:
+          running:
+            startedAt: {{ $now | Quote }}
+        {{ else }}
+        started: false
+        state:
+          terminated:
+            exitCode: 0
+            finishedAt: {{ $now | Quote }}
+            reason: Completed
+            startedAt: {{ $now | Quote }}
+        {{ end }}
+      {{ end }}
+      {{ end }}
       containerStatuses:
       {{ range $index, $item := .spec.containers }}
       {{ $origin := index $root.status.containerStatuses $index }}

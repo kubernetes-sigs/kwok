@@ -1,0 +1,10 @@
+# @Stage: ../pod-create.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pending
+spec:
+  containers:
+  - name: container
+    image: image
+  nodeName: node

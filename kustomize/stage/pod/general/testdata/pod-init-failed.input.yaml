@@ -1,0 +1,20 @@
+# @Stage: ../pod-create.yaml
+# @Stage: ../pod-init-container-running.yaml
+# @Stage: ../pod-init-container-failed.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-init-failed
+  annotations:
+    pod-init-container-failed.stage.kwok.x-k8s.io/name: init
+    pod-init-container-failed.stage.kwok.x-k8s.io/exit-code: "1"
+    pod-init-container-failed.stage.kwok.x-k8s.io/reason: Error
+    pod-init-container-failed.stage.kwok.x-k8s.io/message: Init failed
+spec:
+  initContainers:
+  - name: init
+    image: init-image
+  containers:
+  - name: container
+    image: image
+  nodeName: node

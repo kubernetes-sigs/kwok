@@ -1,0 +1,17 @@
+# @Stage: ../pod-create.yaml
+# @Stage: ../pod-ready.yaml
+# @Stage: ../pod-container-failed.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-container-failed
+  annotations:
+    pod-container-failed.stage.kwok.x-k8s.io/name: container
+    pod-container-failed.stage.kwok.x-k8s.io/exit-code: "137"
+    pod-container-failed.stage.kwok.x-k8s.io/reason: OOMKilled
+    pod-container-failed.stage.kwok.x-k8s.io/message: Container killed due to OOM
+spec:
+  containers:
+  - name: container
+    image: image
+  nodeName: node

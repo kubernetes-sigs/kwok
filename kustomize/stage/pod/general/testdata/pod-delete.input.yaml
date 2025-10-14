@@ -1,0 +1,13 @@
+# @Stage: ../pod-delete.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-deleting
+  deletionTimestamp: "2024-01-01T00:00:00Z"
+spec:
+  containers:
+  - name: container
+    image: image
+  nodeName: node
+status:
+  phase: Running
