@@ -1,0 +1,11 @@
+apiGroup: v1
+kind: Pod
+name: pod-deleting
+stages:
+- delay:
+  - 1000000000
+  - 567852955000000000
+  next:
+  - kind: delete
+  stage: pod-delete
+  weight: 1

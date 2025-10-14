@@ -1,0 +1,44 @@
+apiGroup: v1
+kind: Pod
+name: pod-pending
+stages:
+- delay:
+  - 1000000000
+  - 5000000000
+  next:
+  - data:
+      status:
+        conditions:
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          status: "True"
+          type: Initialized
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: 'containers with unready status: [ container ]'
+          reason: ContainersNotReady
+          status: "False"
+          type: Ready
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: 'containers with unready status: [ container ]'
+          reason: ContainersNotReady
+          status: "False"
+          type: ContainersReady
+        containerStatuses:
+        - image: image
+          name: container
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            waiting:
+              reason: ContainerCreating
+        hostIP: <NodeIPWith("node")>
+        phase: Pending
+        podIP: <PodIPWith("node", false, "", "pod-pending", "")>
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-create
+  weight: 1

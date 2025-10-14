@@ -1,4 +1,4 @@
-# @Stage: ../pod-create.yaml
+# @Stage: pod-create.yaml
 apiVersion: v1
 kind: Pod
 metadata:
