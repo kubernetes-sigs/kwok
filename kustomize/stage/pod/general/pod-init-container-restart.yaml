@@ -43,7 +43,7 @@ spec:
       {{ $origin := index $root.status.initContainerStatuses $index }}
       - image: {{ $item.image | Quote }}
         name: {{ $item.name | Quote }}
-        {{ if and $origin.state.terminated (ne (toString $origin.state.terminated.exitCode) "0") }}
+        {{ if and $origin.state.terminated (ne (printf "%v" $origin.state.terminated.exitCode) "0") }}
         ready: false
         restartCount: {{ add1 $origin.restartCount }}
         started: true
