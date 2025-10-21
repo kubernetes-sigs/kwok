@@ -21,6 +21,7 @@ import (
 	"os"
 
 	v1 "k8s.io/kube-scheduler/config/v1"
+
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
