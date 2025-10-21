@@ -22,7 +22,7 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 function controller-gen() {
-  go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.16.1 "$@"
+  go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 "$@"
 }
 
 function gen() {
