@@ -20,6 +20,6 @@ status:
     restartCount: 0
     state:
       running:
-        startedAt: <Now>
+        startedAt: "2006-01-02T15:04:05Z"
   podIP: 10.0.0.1
   phase: Running

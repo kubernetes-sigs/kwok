@@ -21,7 +21,61 @@ spec:
   next:
     statusTemplate: |
       {{ $now := Now }}
+      {{ $creationTimestamp := .metadata.creationTimestamp }}
       {{ $root := . }}
+
+      {{ with .status.conditions }}
+      conditions:
+      {{ range $index, $condition := . }}
+      {{ if eq $condition.type "Initialized" }}
+      - type: {{ $condition.type | Quote }}
+        status: {{ $condition.status | Quote }}
+        {{ with $condition.lastProbeTime }}
+        lastProbeTime: {{ $condition.lastProbeTime | Quote }}
+        {{ end }}
+        lastTransitionTime: {{ now | Quote }}
+        reason: PodCompleted
+      {{ end }}
+      {{ if or (eq $condition.type "Ready") (eq $condition.type "ContainersReady") }}
+      - type: {{ $condition.type | Quote }}
+        status: "False"
+        {{ with $condition.lastProbeTime }}
+        lastProbeTime: {{ $condition.lastProbeTime | Quote }}
+        {{ end }}
+        lastTransitionTime: {{ now | Quote }}
+        reason: PodCompleted
+      {{ end }}
+      {{ end }}
+      {{ end }}
+
+      {{ with .spec.initContainers}}
+      initContainerStatuses:
+      {{ range $index, $item := . }}
+      {{ $origin := index $root.status.initContainerStatuses $index }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        restartCount: 0
+        started: false
+        {{ if eq $item.restartPolicy "Always" }}
+        ready: False
+        state:
+          terminated:
+            exitCode: 0
+            finishedAt: {{ $now | Quote }}
+            reason: Completed
+            startedAt: {{ ( or $origin.state.terminated.startedAt $origin.state.running.startedAt $creationTimestamp ) | Quote }}
+        {{ else }}
+        ready: {{ $origin.ready }}
+        state:
+          terminated:
+            exitCode: 0
+            finishedAt: {{ ( or $origin.state.terminated.finishedAt $now ) | Quote }}
+            reason: Completed
+            startedAt: {{ ( or $origin.state.terminated.startedAt $origin.state.running.startedAt $creationTimestamp ) | Quote }}
+        {{ end }}
+      {{ end }}
+      {{ end }}
+
       containerStatuses:
       {{ range $index, $item := .spec.containers }}
       {{ $origin := index $root.status.containerStatuses $index }}
@@ -35,6 +89,6 @@ spec:
             exitCode: 0
             finishedAt: {{ $now | Quote }}
             reason: Completed
-            startedAt: {{ $now | Quote }}
+            startedAt: {{ ( or $origin.state.terminated.startedAt $origin.state.running.startedAt $creationTimestamp ) | Quote }}
       {{ end }}
       phase: Succeeded
