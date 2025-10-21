@@ -8,6 +8,7 @@ metadata:
     name: job
     uid: uid
 spec:
+  restartPolicy: Never
   containers:
   - name: container
     image: image
