@@ -22,6 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/diff"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/export"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/record"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/snapshot/replay"
@@ -44,5 +45,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.AddCommand(export.NewCommand(ctx))
 	cmd.AddCommand(replay.NewCommand(ctx))
 	cmd.AddCommand(record.NewCommand(ctx))
+	cmd.AddCommand(diff.NewCommand(ctx))
 	return cmd
 }
