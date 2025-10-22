@@ -4,6 +4,10 @@ resources:
 - pod-create.yaml
 - pod-init-container-running.yaml
 - pod-init-container-completed.yaml
+- pod-init-container-failed.yaml
+- pod-init-container-restart.yaml
 - pod-ready.yaml
+- pod-container-failed.yaml
+- pod-container-restart.yaml
 - pod-complete.yaml
 - pod-delete.yaml
