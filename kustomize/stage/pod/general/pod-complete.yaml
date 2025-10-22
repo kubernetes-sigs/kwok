@@ -22,6 +22,11 @@ spec:
       operator: 'In'
       values:
       - 'Job'
+    - key: '.spec.restartPolicy'
+      operator: 'In'
+      values:
+      - 'Never'
+      - 'OnFailure'
   weight: 1
   weightFrom:
     expressionFrom: '.metadata.annotations["pod-complete.stage.kwok.x-k8s.io/weight"]'
@@ -37,19 +42,60 @@ spec:
     statusTemplate: |
       {{ $now := Now }}
       {{ $root := . }}
+
+      conditions:
+      - lastTransitionTime: {{ $now | Quote }}
+        reason: PodCompleted
+        status: "True"
+        type: Initialized
+      - lastTransitionTime: {{ $now | Quote }}
+        reason: PodCompleted
+        status: "False"
+        type: Ready
+      - lastTransitionTime: {{ $now | Quote }}
+        reason: PodCompleted
+        status: "False"
+        type: ContainersReady
+
+      initContainerStatuses:
+      {{ range $index, $item := .spec.initContainers }}
+      {{ $origin := index $root.status.initContainerStatuses $index }}
+      - image: {{ $item.image | Quote }}
+        name: {{ $item.name | Quote }}
+        restartCount: {{ $origin.restartCount }}
+        started: false
+        {{ if eq $item.restartPolicy "Always" }}
+        ready: false
+        state:
+          terminated:
+            exitCode: 0
+            finishedAt: {{ $now | Quote }}
+            reason: Completed
+            startedAt: {{ ( or $origin.state.terminated.startedAt $origin.state.running.startedAt $now ) | Quote }}
+        {{ else }}
+        ready: {{ $origin.ready }}
+        state:
+          terminated:
+            exitCode: 0
+            finishedAt: {{ ( or $origin.state.terminated.finishedAt $now ) | Quote }}
+            reason: Completed
+            startedAt: {{ ( or $origin.state.terminated.startedAt $origin.state.running.startedAt $now ) | Quote }}
+        {{ end }}
+      {{ end }}
+
       containerStatuses:
       {{ range $index, $item := .spec.containers }}
       {{ $origin := index $root.status.containerStatuses $index }}
       - image: {{ $item.image | Quote }}
         name: {{ $item.name | Quote }}
-        ready: true
-        restartCount: 0
+        ready: {{ $origin.ready }}
+        restartCount: {{ $origin.restartCount }}
         started: false
         state:
           terminated:
             exitCode: 0
             finishedAt: {{ $now | Quote }}
             reason: Completed
-            startedAt: {{ $now | Quote }}
+            startedAt: {{ ( or $origin.state.terminated.startedAt $origin.state.running.startedAt $now ) | Quote }}
       {{ end }}
       phase: Succeeded

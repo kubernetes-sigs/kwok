@@ -14,8 +14,12 @@ spec:
       operator: 'In'
       values:
       - 'Pending'
+    - key: '.status.initContainerStatuses.[].state.waiting.reason'
+      operator: 'DoesNotExist'
     - key: '.status.initContainerStatuses.[].state.running.startedAt'
       operator: 'Exists'
+    - key: '.status.initContainerStatuses.[].state.terminated.startedAt'
+      operator: 'DoesNotExist'
   weight: 1
   weightFrom:
     expressionFrom: '.metadata.annotations["pod-init-container-completed.stage.kwok.x-k8s.io/weight"]'
@@ -41,15 +45,22 @@ spec:
       {{ $origin := index $root.status.initContainerStatuses $index }}
       - image: {{ $item.image | Quote }}
         name: {{ $item.name | Quote }}
-        ready: true
-        restartCount: 0
+        ready: {{ $origin.ready }}
+        restartCount: {{ $origin.restartCount }}
+        {{ if eq .restartPolicy "Always" }}
+        started: {{ $origin.started }}
+        state:
+          running:
+            startedAt: {{ $origin.state.running.startedAt | Quote }}
+        {{ else }}
         started: false
         state:
           terminated:
             exitCode: 0
             finishedAt: {{ $now | Quote }}
             reason: Completed
-            startedAt: {{ $now | Quote }}
+            startedAt: {{ ( or $origin.state.terminated.startedAt $origin.state.running.startedAt $now ) | Quote }}
+        {{ end }}
       {{ end }}
       containerStatuses:
       {{ range .spec.containers }}
