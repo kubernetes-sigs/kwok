@@ -22,9 +22,7 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 function check() {
-  rm -rf "${ROOT_DIR}"/kustomize/stage/**/testdata/*.output.yaml
-  "${ROOT_DIR}"/hack/update-stages.sh
-  git --no-pager diff --exit-code
+  go test -v ./kustomize/stage
 }
 
 cd "${ROOT_DIR}" && check
