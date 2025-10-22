@@ -74,7 +74,3 @@ type ClusterPortForwardList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ClusterPortForward `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&ClusterPortForward{}, &ClusterPortForwardList{})
-}
