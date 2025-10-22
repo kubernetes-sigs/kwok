@@ -22,35 +22,7 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(realpath "${DIR}/..")"
 
 function update() {
-  mapfile -t files < <(
-    find . \
-      -iname "*.input.yaml"
-  )
-
-  for file in "${files[@]}"; do
-    update_stage "${file}"
-  done
-}
-
-function update_stage() {
-  local file="${1}"
-  local stages=()
-  local rel_path
-  local base_dir
-  local from
-  base_dir="$(dirname "${file}")"
-
-  from="$(grep '# @Stage: ' "${file}" | awk '{print $3}')"
-  for line in ${from}; do
-    rel_path="${line}"
-    stages+=("${base_dir}/${rel_path}")
-  done
-
-  if [[ ${#stages[@]} -eq 0 ]]; then
-    return
-  fi
-
-  go run ./hack/test_stage "${file}" "${stages[@]}" >"${file%.input.yaml}.output.yaml"
+  go test -v ./kustomize/stage -args --update-testdata
 }
 
 cd "${ROOT_DIR}" && update

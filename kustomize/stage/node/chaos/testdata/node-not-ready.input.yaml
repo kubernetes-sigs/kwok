@@ -1,4 +1,3 @@
-# @Stage: ../node-not-ready.yaml
 apiVersion: v1
 kind: Node
 metadata:
