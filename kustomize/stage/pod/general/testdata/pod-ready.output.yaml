@@ -1,0 +1,39 @@
+apiGroup: v1
+kind: Pod
+name: pod-ready
+stages:
+- delay:
+  - 1000000000
+  - 5000000000
+  next:
+  - data:
+      status:
+        conditions:
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: ""
+          reason: ""
+          status: "True"
+          type: Ready
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: ""
+          reason: ""
+          status: "True"
+          type: ContainersReady
+        containerStatuses:
+        - image: image
+          name: container
+          ready: true
+          restartCount: 0
+          started: true
+          state:
+            running:
+              startedAt: <Now>
+        phase: Running
+        startTime: <Now>
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-ready
+  weight: 1

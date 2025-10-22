@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-create-with-init
+spec:
+  initContainers:
+  - name: init-container
+    image: init-image
+  containers:
+  - name: container
+    image: image
+  nodeName: node

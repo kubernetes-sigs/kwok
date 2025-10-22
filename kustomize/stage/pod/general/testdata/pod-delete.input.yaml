@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-delete
+  deletionTimestamp: "2006-01-02T15:04:05Z"
+spec:
+  containers:
+  - name: container
+    image: image
+  nodeName: node
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2006-01-02T15:04:05Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2006-01-02T15:04:05Z"
+    message: ''
+    reason: ''
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2006-01-02T15:04:05Z"
+    message: ''
+    reason: ''
+    status: "True"
+    type: ContainersReady
+  containerStatuses:
+  - image: image
+    name: container
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2006-01-02T15:04:05Z"
+  hostIP: 10.0.0.1
+  podIP: 10.0.0.2
+  phase: Running
+  startTime: "2006-01-02T15:04:05Z"

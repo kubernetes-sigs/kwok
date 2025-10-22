@@ -1,0 +1,28 @@
+apiGroup: v1
+kind: Pod
+name: pod-complete
+stages:
+- delay:
+  - 1000000000
+  - 5000000000
+  next:
+  - data:
+      status:
+        containerStatuses:
+        - image: image
+          name: container
+          ready: true
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: <Now>
+              reason: Completed
+              startedAt: <Now>
+        phase: Succeeded
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-complete
+  weight: 1

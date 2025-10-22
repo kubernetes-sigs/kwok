@@ -1,0 +1,42 @@
+apiGroup: v1
+kind: Pod
+name: pod-init-container-completed
+stages:
+- delay:
+  - 1000000000
+  - 5000000000
+  next:
+  - data:
+      status:
+        conditions:
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          reason: ""
+          status: "True"
+          type: Initialized
+        containerStatuses:
+        - image: image
+          name: container
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            waiting:
+              reason: ContainerCreating
+        initContainerStatuses:
+        - image: init-image
+          name: init-container
+          ready: true
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: <Now>
+              reason: Completed
+              startedAt: <Now>
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-init-container-completed
+  weight: 1

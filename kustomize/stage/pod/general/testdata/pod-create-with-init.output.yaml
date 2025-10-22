@@ -1,0 +1,55 @@
+apiGroup: v1
+kind: Pod
+name: pod-create-with-init
+stages:
+- delay:
+  - 1000000000
+  - 5000000000
+  next:
+  - data:
+      status:
+        conditions:
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: 'containers with incomplete status: [ init-container ]'
+          reason: ContainersNotInitialized
+          status: "False"
+          type: Initialized
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: 'containers with unready status: [ container ]'
+          reason: ContainersNotReady
+          status: "False"
+          type: Ready
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          message: 'containers with unready status: [ container ]'
+          reason: ContainersNotReady
+          status: "False"
+          type: ContainersReady
+        containerStatuses:
+        - image: image
+          name: container
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            waiting:
+              reason: PodInitializing
+        hostIP: <NodeIPWith("node")>
+        initContainerStatuses:
+        - image: init-image
+          name: init-container
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            waiting:
+              reason: PodInitializing
+        phase: Pending
+        podIP: <PodIPWith("node", false, "", "pod-create-with-init", "")>
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-create
+  weight: 1
