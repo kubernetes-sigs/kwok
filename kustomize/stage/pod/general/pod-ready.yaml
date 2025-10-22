@@ -14,8 +14,10 @@ spec:
       operator: 'In'
       values:
       - 'True'
-    - key: '.status.containerStatuses.[].state.running.startedAt'
+    - key: '.status.initContainerStatuses.[].state.waiting.reason'
       operator: 'DoesNotExist'
+    - key: '.status.containerStatuses.[].state.waiting.reason'
+      operator: 'Exists'
   weight: 1
   weightFrom:
     expressionFrom: '.metadata.annotations["pod-ready.stage.kwok.x-k8s.io/weight"]'
