@@ -22,6 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/config/convert"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/config/reset"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/config/tidy"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/config/view"
@@ -41,5 +42,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.AddCommand(reset.NewCommand(ctx))
 	cmd.AddCommand(tidy.NewCommand(ctx))
 	cmd.AddCommand(view.NewCommand(ctx))
+	cmd.AddCommand(convert.NewCommand(ctx))
 	return cmd
 }
