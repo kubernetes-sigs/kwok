@@ -6,6 +6,10 @@ stages:
   - 1000000000
   - 5000000000
   next:
+  - kind: event
+    message: Created container
+    reason: Created
+    type: Normal
   - data:
       status:
         conditions:

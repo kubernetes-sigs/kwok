@@ -122,7 +122,9 @@ spec:
                   is performed immediately, without waiting for the Apiserver to push.
                 type: boolean
               next:
-                description: Next indicates that this stage will be moved to.
+                description: |-
+                  Next indicates that this stage will be moved to.
+                  Deprecated: Use Steps instead.
                 properties:
                   delete:
                     description: Delete means that the resource will be deleted if
@@ -332,6 +334,102 @@ spec:
                       operator is "In", and the values array contains only "value". The requirements are ANDed.
                     type: object
                 type: object
+              steps:
+                description: |-
+                  Steps means that the stage will be moved to.
+                  Each step can define an event, patch, finalizer modification, or deletion action.
+                  Steps are executed in order when the stage is applied.
+                items:
+                  description: StageStep describes the next step of the stage.
+                  properties:
+                    delete:
+                      description: Delete means that the resource will be deleted
+                        if true.
+                      type: boolean
+                    event:
+                      description: Event means that an event will be sent.
+                      properties:
+                        message:
+                          description: Message is a human-readable description of
+                            the status of this operation.
+                          type: string
+                        reason:
+                          description: Reason is why the action was taken. It is human-readable.
+                          type: string
+                        type:
+                          description: Type is the type of this event (Normal, Warning),
+                            It is machine-readable.
+                          type: string
+                      type: object
+                    finalizers:
+                      description: Finalizers means that finalizers will be modified.
+                      properties:
+                        add:
+                          description: Add means that the Finalizers will be added
+                            to the resource.
+                          items:
+                            description: FinalizerItem  describes the one of the finalizers.
+                            properties:
+                              value:
+                                description: Value is the value of the finalizer.
+                                type: string
+                            type: object
+                          type: array
+                        empty:
+                          description: Empty means that the Finalizers for that resource
+                            will be emptied.
+                          type: boolean
+                        remove:
+                          description: Remove means that the Finalizers will be removed
+                            from the resource.
+                          items:
+                            description: FinalizerItem  describes the one of the finalizers.
+                            properties:
+                              value:
+                                description: Value is the value of the finalizer.
+                                type: string
+                            type: object
+                          type: array
+                      type: object
+                    patch:
+                      description: Patch means that the resource will be patched.
+                      properties:
+                        impersonation:
+                          description: |-
+                            Impersonation indicates the impersonating configuration for client when patching status.
+                            In most cases this will be empty, in which case the default client service account will be used.
+                            When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
+                            The support for this field is not available in Pod and Node resources.
+                          properties:
+                            username:
+                              description: Username the target username for the client
+                                to impersonate
+                              type: string
+                          required:
+                          - username
+                          type: object
+                        root:
+                          description: Root indicates the root of the template calculated
+                            by the patch.
+                          type: string
+                        subresource:
+                          description: Subresource indicates the name of the subresource
+                            that will be patched.
+                          type: string
+                        template:
+                          description: Template indicates the template for modifying
+                            the resource in the next.
+                          type: string
+                        type:
+                          description: Type indicates the type of the patch.
+                          enum:
+                          - json
+                          - merge
+                          - strategic
+                          type: string
+                      type: object
+                  type: object
+                type: array
               weight:
                 default: 0
                 description: |-
@@ -369,7 +467,6 @@ spec:
                     type: object
                 type: object
             required:
-            - next
             - resourceRef
             type: object
           status:
