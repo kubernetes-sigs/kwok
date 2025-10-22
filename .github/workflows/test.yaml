@@ -138,6 +138,9 @@ jobs:
         # MacOS arm64
         - os: macos-14
           kwokctl-runtime: binary
+        # MacOS container
+        - os: macos-26-xlarge
+          kwokctl-runtime: container
 
         # Linux
         - os: ubuntu-latest
@@ -167,6 +170,14 @@ jobs:
       shell: bash
       run: |
         brew install coreutils bash
+
+    - name: Install Apple Container
+      if: ${{ startsWith(matrix.os, 'macos-') && matrix.kwokctl-runtime == 'container' }}
+      shell: bash
+      run: |
+        curl -sSL https://github.com/apple/container/releases/download/0.4.1/container-0.4.1-installer-signed.pkg -o container-installer.pkg
+        sudo installer -pkg container-installer.pkg -target /
+        container system start
 
     - name: Install Nerdctl and Start Containerd
       if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}
