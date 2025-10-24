@@ -120,18 +120,10 @@ menu:
   - identifier: contributing
     pageRef: "/docs/contributing"
     weight: 30
-  # Technical Outcomes
-  - identifier: technical-outcomes
-    title: Technical Outcomes
-  - identifier: technical-outcomes-scheduling
-    pageRef: "/docs/technical-outcomes/scheduling"
-    parent: technical-outcomes
-  - identifier: technical-outcomes-scalability
-    pageRef: "/docs/technical-outcomes/scalability"
-    parent: technical-outcomes
-  - identifier: technical-outcomes-performance
-    pageRef: "/docs/technical-outcomes/performance"
-    parent: technical-outcomes
+  # Examples
+  - identifier: examples
+    title: Examples
+    weight: 40
 
   # User Guide Children
   - identifier: all-in-one-image
@@ -162,55 +154,6 @@ menu:
     pageRef: "/docs/user/kwok-manage-nodes-and-pods"
     weight: 1060
     parent: user-guide
-
-  - identifier: examples
-    title: Examples
-    parent: user-guide
-  - identifier: kwokctl-advanced
-    title: "`kwokctl` Advanced"
-    weight: 200010
-    parent: examples
-  - identifier: snapshots
-    pageRef: "/docs/user/kwokctl-snapshot"
-    parent: kwokctl-advanced
-  - identifier: auditing
-    pageRef: "/docs/user/kwokctl-auditing"
-    parent: kwokctl-advanced
-  - identifier: authorization
-    pageRef: "/docs/user/kwokctl-authorization"
-    parent: kwokctl-advanced
-  - identifier: admission
-    pageRef: "/docs/user/kwokctl-admission"
-    parent: kwokctl-advanced
-  - identifier: platform-specific-binaries
-    pageRef: "/docs/user/kwokctl-platform-specific-binaries"
-    parent: kwokctl-advanced
-
-  - identifier: kwokctl-integration
-    title: "`kwokctl` Integration"
-    weight: 200020
-    parent: examples
-  - identifier: argo
-    pageRef: "/docs/examples/argo"
-    parent: kwokctl-integration
-  - identifier: linkerd
-    pageRef: "/docs/examples/linkerd"
-    parent: kwokctl-integration
-  - identifier: istio
-    pageRef: "/docs/examples/istio"
-    parent: kwokctl-integration
-  - identifier: metrics-server
-    pageRef: "/docs/examples/metrics-server"
-    parent: kwokctl-integration
-  - identifier: metrics
-    pageRef: "/docs/examples/prometheus"
-    parent: kwokctl-integration
-  - identifier: dra
-    pageRef: "/docs/examples/dra"
-    parent: kwokctl-integration
-  - identifier: ray
-    pageRef: "/docs/examples/ray"
-    parent: kwokctl-integration
 
   - identifier: tools
     title: Tools
@@ -295,67 +238,109 @@ menu:
     pageRef: "/docs/contributing/development"
     parent: contributing
 
+  - identifier: examples-scheduling
+    pageRef: "/docs/examples/scheduling"
+    parent: examples
+  - identifier: examples-scalability
+    pageRef: "/docs/examples/scalability"
+    parent: examples
+  - identifier: examples-performance
+    pageRef: "/docs/examples/performance"
+    parent: examples
+  - identifier: examples-simulation
+    title: Simulation
+    parent: examples
+
+  - identifier: kwokctl-integration
+    title: "`kwokctl` Integration"
+    parent: examples
+  - identifier: argo
+    pageRef: "/docs/examples/argo"
+    parent: kwokctl-integration
+  - identifier: linkerd
+    pageRef: "/docs/examples/linkerd"
+    parent: kwokctl-integration
+  - identifier: istio
+    pageRef: "/docs/examples/istio"
+    parent: kwokctl-integration
+  - identifier: metrics-server
+    pageRef: "/docs/examples/metrics-server"
+    parent: kwokctl-integration
+  - identifier: metrics
+    pageRef: "/docs/examples/prometheus"
+    parent: kwokctl-integration
+  - identifier: dra
+    pageRef: "/docs/examples/dra"
+    parent: kwokctl-integration
+  - identifier: ray
+    pageRef: "/docs/examples/ray"
+    parent: kwokctl-integration
+
   # Technical Outcome Scheduling Children
-  - identifier: technical-outcomes-scheduling-requests-and-limits
+  - identifier: examples-scheduling-requests-and-limits
     title: "Requests and Limits"
-    pageRef: "/docs/technical-outcomes/scheduling/requests-and-limits"
-    parent: technical-outcomes-scheduling
-  - identifier: technical-outcomes-scheduling-node-affinity
+    pageRef: "/docs/examples/scheduling/requests-and-limits"
+    parent: examples-scheduling
+  - identifier: examples-scheduling-node-affinity
     title: "Node Affinity"
-    pageRef: "/docs/technical-outcomes/scheduling/node-affinity"
-    parent: technical-outcomes-scheduling
-  - identifier: technical-outcomes-scheduling-taints-and-tolerations
+    pageRef: "/docs/examples/scheduling/node-affinity"
+    parent: examples-scheduling
+  - identifier: examples-scheduling-taints-and-tolerations
     title: "Taints and Tolerations"
-    pageRef: "/docs/technical-outcomes/scheduling/taints-and-tolerations"
-    parent: technical-outcomes-scheduling
-  - identifier: technical-outcomes-scheduling-limit-range
+    pageRef: "/docs/examples/scheduling/taints-and-tolerations"
+    parent: examples-scheduling
+  - identifier: examples-scheduling-limit-range
     title: "Limit Range"
-    pageRef: "/docs/technical-outcomes/scheduling/limit-range"
-    parent: technical-outcomes-scheduling
-  - identifier: technical-outcomes-scheduling-pod-priority-and-preemption
+    pageRef: "/docs/examples/scheduling/limit-range"
+    parent: examples-scheduling
+  - identifier: examples-scheduling-pod-priority-and-preemption
     title: "Pod Priority and Preemption"
-    pageRef: "/docs/technical-outcomes/scheduling/pod-priority-and-preemption"
-    parent: technical-outcomes-scheduling
-  - identifier: technical-outcomes-scheduling-pod-topology-spread-constraint
+    pageRef: "/docs/examples/scheduling/pod-priority-and-preemption"
+    parent: examples-scheduling
+  - identifier: examples-scheduling-pod-topology-spread-constraint
     title: "Pod Topology Spread Constraint"
-    pageRef: "/docs/technical-outcomes/scheduling/pod-topology-spread-constraint"
-    parent: technical-outcomes-scheduling
+    pageRef: "/docs/examples/scheduling/pod-topology-spread-constraint"
+    parent: examples-scheduling
 
   # Technical Outcome Scalability Children
-  - identifier: technical-outcomes-scalability-scale-using-hpa
+  - identifier: examples-scalability-scale-using-hpa
     title: "Horizontal Pod Autoscaling"
-    pageRef: "/docs/technical-outcomes/scalability/scale-using-hpa"
-    parent: technical-outcomes-scalability
-  - identifier: technical-outcomes-scalability-scale-using-vpa
+    pageRef: "/docs/examples/scalability/scale-using-hpa"
+    parent: examples-scalability
+  - identifier: examples-scalability-scale-using-vpa
     title: "Vertical Pod Autoscaling"
-    pageRef: "/docs/technical-outcomes/scalability/scale-using-vpa"
-    parent: technical-outcomes-scalability
-  - identifier: technical-outcomes-scalability-scale-using-ca
+    pageRef: "/docs/examples/scalability/scale-using-vpa"
+    parent: examples-scalability
+  - identifier: examples-scalability-scale-using-ca
     title: "Cluster Autoscaling"
-    pageRef: "/docs/technical-outcomes/scalability/scale-using-ca"
-    parent: technical-outcomes-scalability
-  - identifier: technical-outcomes-scalability-scale-using-karpenter
+    pageRef: "/docs/examples/scalability/scale-using-ca"
+    parent: examples-scalability
+  - identifier: examples-scalability-scale-using-karpenter
     title: "Karpenter Autoscaling"
-    pageRef: "/docs/technical-outcomes/scalability/scale-using-karpenter"
-    parent: technical-outcomes-scalability
+    pageRef: "/docs/examples/scalability/scale-using-karpenter"
+    parent: examples-scalability
 
   # Technical Outcome Performance Children
-  - identifier: technical-outcomes-performance-etcd
+  - identifier: examples-performance-etcd
     title: "Optimizing etcd Performance"
-    pageRef: "/docs/technical-outcomes/performance/etcd"
-    parent: technical-outcomes-performance
-  - identifier: technical-outcomes-performance-control-plane
+    pageRef: "/docs/examples/performance/etcd"
+    parent: examples-performance
+  - identifier: examples-performance-control-plane
     title: "Control Plane Performance Evaluation"
-    pageRef: "/docs/technical-outcomes/performance/control-plane"
-    parent: technical-outcomes-performance
-  - identifier: technical-outcomes-performance-control-plane-single-cluster
+    pageRef: "/docs/examples/performance/control-plane"
+    parent: examples-performance
+  - identifier: examples-performance-control-plane-single-cluster
     title: "Single Cluster"
-    pageRef: "/docs/technical-outcomes/performance/control-plane/single-cluster"
-    parent: technical-outcomes-performance-control-plane
-  - identifier: technical-outcomes-performance-control-plane-multi-cluster
+    pageRef: "/docs/examples/performance/control-plane/single-cluster"
+    parent: examples-performance-control-plane
+  - identifier: examples-performance-control-plane-multi-cluster
     title: "Multi-Cluster"
-    pageRef: "/docs/technical-outcomes/performance/control-plane/multi-cluster"
-    parent: technical-outcomes-performance-control-plane
+    pageRef: "/docs/examples/performance/control-plane/multi-cluster"
+    parent: examples-performance-control-plane
+
+  - identifier: injectfailure
+    pageRef: "/docs/examples/injectfailure"
+    parent: examples-simulation
 
   after:
   - identifier: blog
