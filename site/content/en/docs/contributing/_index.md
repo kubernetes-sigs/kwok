@@ -1,7 +1,7 @@
 ---
 title: Contributing
 aliases:
-  - /docs/contributing/getting-started
+- /docs/contributing/getting-started
 ---
 
 # Getting Started

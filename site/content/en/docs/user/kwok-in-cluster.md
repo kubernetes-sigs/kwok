@@ -1,7 +1,7 @@
 ---
 title: "`kwok` in Cluster"
 aliases:
-  - /docs/user/kwok-in-cluster-old
+- /docs/user/kwok-in-cluster-old
 ---
 
 # Deploy `kwok` in a Cluster
