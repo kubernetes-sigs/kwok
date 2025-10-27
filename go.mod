@@ -17,8 +17,8 @@ require (
 	github.com/nxadm/tail v1.4.11
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/client_model v0.6.2
-	github.com/spf13/cobra v1.9.1
-	github.com/spf13/pflag v1.0.6
+	github.com/spf13/cobra v1.10.1
+	github.com/spf13/pflag v1.0.9
 	github.com/wzshiming/cmux v0.4.2
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.6.0
