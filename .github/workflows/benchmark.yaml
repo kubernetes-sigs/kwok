@@ -46,7 +46,7 @@ jobs:
         ./hack/e2e-test.sh e2e/kwokctl/benchmark-hack
 
     - name: Upload logs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: failure()
       with:
         name: kwok-logs-benchmark
