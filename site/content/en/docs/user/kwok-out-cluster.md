@@ -1,7 +1,7 @@
 ---
 title: "`kwok` out of Cluster"
 aliases:
-  - /docs/user/kwok-in-local/
+- /docs/user/kwok-in-local/
 ---
 
 # Running `kwok` out of cluster

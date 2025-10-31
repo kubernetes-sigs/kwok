@@ -6,7 +6,7 @@ summary: |
   Welcome to the new KWOK website.
   Follow this website to learn about the KWOK of Kubernetes subproject.
 aliases:
-  - /posts/the-website-is-available/
+- /posts/the-website-is-available/
 ---
 
 Welcome to the new KWOK website. Follow this website to learn about the KWOK of Kubernetes subproject.

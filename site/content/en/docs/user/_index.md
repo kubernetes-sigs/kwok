@@ -1,7 +1,7 @@
 ---
 title: User Guide
 aliases:
-  - /docs/user/getting-started
+- /docs/user/getting-started
 ---
 
 # Getting Started

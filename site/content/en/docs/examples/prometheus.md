@@ -1,7 +1,7 @@
 ---
 title: "Prometheus"
 aliases:
-  - /docs/user/kwokctl-metrics
+- /docs/user/kwokctl-metrics
 ---
 
 # Prometheus

@@ -1,7 +1,7 @@
 ---
 title: Installation
 aliases:
-  - /docs/user/install/
+- /docs/user/install/
 ---
 
 # Installation
