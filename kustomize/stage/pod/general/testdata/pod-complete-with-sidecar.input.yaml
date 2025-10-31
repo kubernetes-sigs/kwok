@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: pod-complete
+  name: pod-complete-with-sidecar
   ownerReferences:
   - apiVersion: batch/v1
     kind: Job
@@ -9,6 +9,12 @@ metadata:
     uid: uid
 spec:
   restartPolicy: Never
+  initContainers:
+  - name: init-container
+    image: init-image
+  - name: sidecar-container
+    image: sidecar-image
+    restartPolicy: Always
   containers:
   - name: container
     image: image
@@ -31,6 +37,26 @@ status:
     reason: ''
     status: "True"
     type: ContainersReady
+  initContainerStatuses:
+  - image: init-image
+    name: init-container
+    ready: true
+    restartCount: 0
+    started: false
+    state:
+      terminated:
+        exitCode: 0
+        finishedAt: "2016-01-01T00:00:00Z"
+        reason: Completed
+        startedAt: "2006-01-02T15:04:05Z"
+  - image: sidecar-image
+    name: sidecar-container
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2006-01-02T15:04:05Z"
   containerStatuses:
   - image: image
     name: container
