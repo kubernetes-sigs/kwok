@@ -24,6 +24,10 @@ Firstly, you need to have a Kubernetes cluster, and the `kwok` command-line tool
 
 Next, you can run `kwok` out of cluster by using the `--kubeconfig` flag.
 
+The default simulation behavior is defined in [fast stage for pod][fast-stage-pod] and [fast stage for node][fast-stage-node].
+They are suitable for scenarios such as scheduling and autoscaling.
+You can customize the simulation behavior with `--config` flag to point to your own configuration file.
+
 ```bash
 kwok \
   --kubeconfig=~/.kube/config \
@@ -44,3 +48,5 @@ Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
 
 [manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
 [install]: {{< relref "/docs/user/installation" >}}
+[fast-stage-pod]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/fast
+[fast-stage-node]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/node/fast

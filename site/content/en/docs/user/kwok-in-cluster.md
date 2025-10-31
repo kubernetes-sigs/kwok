@@ -12,11 +12,16 @@ This document walks you through how to deploy `kwok` in a Kubernetes cluster.
 
 {{< /hint >}}
 
-{{< tabs "install-in-cluster" >}}
 
-{{< tab "YAML" >}}
+## Helm Chart Installation
 
-## Variables preparation
+The kwok helm chart is listed on the [artifact hub](https://artifacthub.io/packages/helm/kwok/kwok).
+
+## YAML Installation
+
+You can also install `kwok` using the provided YAML manifests.
+
+### Variables preparation
 
 ``` bash
 # KWOK repository
@@ -25,23 +30,29 @@ KWOK_REPO=kubernetes-sigs/kwok
 KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
 ```
 
-## Deploy kwok and set up custom resource definitions (CRDs)
+### Deploy kwok and set up custom resource definitions (CRDs)
 
 ``` bash
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/kwok.yaml"
 ```
 
-## Set up default custom resources (CRs) of stages (required)
+### Set up default custom resources (CRs) of stages (required)
 
 {{< hint "warning" >}}
-NOTE: This configures the pod/node emulation behavior, if not it will do nothing.
+
+NOTE: This step is required to configure the pod/node simulation behavior.
+
 {{< /hint >}}
+
+The default simulation behavior is defined in [fast stage for pod][fast-stage-pod] and [fast stage for node][fast-stage-node].
+They are suitable for scenarios such as scheduling and autoscaling.
+You can customize the simulation behavior with your own configuration file.
 
 ``` bash 
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/stage-fast.yaml"
 ```
 
-## Set up default custom resources (CRs) of resource usage (optional)
+### Set up default custom resources (CRs) of resource usage (optional)
 
 This allows to simulate the resource usage of nodes, pods and containers.
 
@@ -53,77 +64,15 @@ The above configuration sets the CPU and memory usage of all the containers mana
 To override the defaults, you can add annotation `"kwok.x-k8s.io/usage-cpu"` (for cpu usage) and
 `"kwok.x-k8s.io/usage-memory"` (for memory usage) with any quantity value you want to the fake pods.
 
-The resource usage simulation used above is annotation-based and the configuration is available at [here](https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/metrics/usage).
-For the explanation of how it works and more complex resource usage simulation methods, please refer to [ResourceUsage configuration]({{< relref "/docs/user/resource-usage-configuration" >}}).
-
-{{< /tab >}}
-
-{{< tab "Helm Chart" >}}
-
-The kwok helm chart is listed on the [artifact hub](https://artifacthub.io/packages/helm/kwok/kwok).
-
-{{< /tab >}}
-
-{{< tab "Kustomize (<v0.4)" >}}
-
-## Variables preparation
-
-``` bash
-# Temporary directory
-KWOK_WORK_DIR=$(mktemp -d)
-# KWOK repository
-KWOK_REPO=kubernetes-sigs/kwok
-# Get latest
-KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
-```
-
-## Render kustomization yaml
-
-Firstly, generate a kustomization template yaml to the previously-defined temporary directory.
-
-``` bash
-cat <<EOF > "${KWOK_WORK_DIR}/kustomization.yaml"
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: registry.k8s.io/kwok/kwok
-  newTag: "${KWOK_LATEST_RELEASE}"
-resources:
-- "https://github.com/${KWOK_REPO}/kustomize/kwok?ref=${KWOK_LATEST_RELEASE}"
-EOF
-```
-
-Next, render it with the prepared variables.
-
-``` bash
-kubectl kustomize "${KWOK_WORK_DIR}" > "${KWOK_WORK_DIR}/kwok.yaml"
-```
-
-## `kwok` deployment
-
-Finally, we're able to deploy `kwok`:
-
-``` bash
-kubectl apply -f "${KWOK_WORK_DIR}/kwok.yaml"
-```
-
-## Apply the default custom resources (CRs) of stages (required)
-
-{{< hint "warning" >}}
-NOTE: This configures the pod/node emulation behavior, if not it will do nothing.
-When running versions <0.4 this step isn't required.
-{{< /hint >}}
-
-``` bash 
-kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/stage-fast.yaml"
-```
-
-{{< /tab >}}
-
-{{< /tabs>}}
+The resource usage simulation used above is annotation-based and the configuration is available at [here]([metrics-usage]).
+For the explanation of how it works and more complex resource usage simulation methods, please refer to [ResourceUsage configuration].
 
 ## Next steps
 
 Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
 
 [manage nodes and pods]: {{< relref "/docs/user/kwok-manage-nodes-and-pods" >}}
+[fast-stage-pod]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/pod/fast
+[fast-stage-node]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/node/fast
+[metrics-usage]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/metrics/usage
+[ResourceUsage configuration]: {{< relref "/docs/user/resource-usage-configuration" >}}
