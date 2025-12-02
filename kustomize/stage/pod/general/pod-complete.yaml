@@ -3,53 +3,64 @@ kind: Stage
 metadata:
   name: pod-complete
 spec:
+  delay:
+    durationFrom:
+      jq:
+        expression: .metadata.annotations["pod-complete.stage.kwok.x-k8s.io/delay"]
+    durationMilliseconds: 1000
+    jitterDurationFrom:
+      jq:
+        expression: .metadata.annotations["pod-complete.stage.kwok.x-k8s.io/jitter-delay"]
+    jitterDurationMilliseconds: 5000
+  immediateNextStage: false
   resourceRef:
     apiGroup: v1
     kind: Pod
   selector:
     matchExpressions:
-    - key: '.metadata.deletionTimestamp'
-      operator: 'DoesNotExist'
-    - key: '.status.phase'
-      operator: 'In'
-      values:
-      - 'Running'
-    - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
-      operator: 'In'
-      values:
-      - 'True'
-    - key: '.metadata.ownerReferences.[].kind'
-      operator: 'In'
-      values:
-      - 'Job'
+    - jq:
+        key: .metadata.deletionTimestamp
+        operator: DoesNotExist
+    - jq:
+        key: .status.phase
+        operator: In
+        values:
+        - Running
+    - jq:
+        key: .status.conditions.[] | select( .type == "Ready" ) | .status
+        operator: In
+        values:
+        - "True"
+    - jq:
+        key: .metadata.ownerReferences.[].kind
+        operator: In
+        values:
+        - Job
+  steps:
+  - patch:
+      root: status
+      subresource: status
+      template: |
+        {{ $now := Now }}
+        {{ $root := . }}
+        containerStatuses:
+        {{ range $index, $item := .spec.containers }}
+        {{ $origin := index $root.status.containerStatuses $index }}
+        - image: {{ $item.image | Quote }}
+          name: {{ $item.name | Quote }}
+          ready: true
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: {{ $now | Quote }}
+              reason: Completed
+              startedAt: {{ $now | Quote }}
+        {{ end }}
+        phase: Succeeded
   weight: 1
   weightFrom:
-    expressionFrom: '.metadata.annotations["pod-complete.stage.kwok.x-k8s.io/weight"]'
-  delay:
-    durationMilliseconds: 1000
-    durationFrom:
-      expressionFrom: '.metadata.annotations["pod-complete.stage.kwok.x-k8s.io/delay"]'
-    jitterDurationMilliseconds: 5000
-    jitterDurationFrom:
-      expressionFrom: '.metadata.annotations["pod-complete.stage.kwok.x-k8s.io/jitter-delay"]'
-  next:
-    delete: false
-    statusTemplate: |
-      {{ $now := Now }}
-      {{ $root := . }}
-      containerStatuses:
-      {{ range $index, $item := .spec.containers }}
-      {{ $origin := index $root.status.containerStatuses $index }}
-      - image: {{ $item.image | Quote }}
-        name: {{ $item.name | Quote }}
-        ready: true
-        restartCount: 0
-        started: false
-        state:
-          terminated:
-            exitCode: 0
-            finishedAt: {{ $now | Quote }}
-            reason: Completed
-            startedAt: {{ $now | Quote }}
-      {{ end }}
-      phase: Succeeded
+    jq:
+      expression: .metadata.annotations["pod-complete.stage.kwok.x-k8s.io/weight"]
+status: {}

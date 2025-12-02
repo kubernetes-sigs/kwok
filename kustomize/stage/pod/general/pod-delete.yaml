@@ -3,23 +3,29 @@ kind: Stage
 metadata:
   name: pod-delete
 spec:
+  delay:
+    durationFrom:
+      jq:
+        expression: .metadata.annotations["pod-delete.stage.kwok.x-k8s.io/delay"]
+    durationMilliseconds: 1000
+    jitterDurationFrom:
+      jq:
+        expression: .metadata.deletionTimestamp
+  immediateNextStage: false
   resourceRef:
     apiGroup: v1
     kind: Pod
   selector:
     matchExpressions:
-    - key: '.metadata.deletionTimestamp'
-      operator: 'Exists'
-    - key: '.metadata.finalizers'
-      operator: 'DoesNotExist'
+    - jq:
+        key: .metadata.deletionTimestamp
+        operator: Exists
+    - jq:
+        key: .metadata.finalizers
+        operator: DoesNotExist
+  steps:
+  - delete: true
   weight: 1
   weightFrom:
-    expressionFrom: '.metadata.annotations["pod-delete.stage.kwok.x-k8s.io/weight"]'
-  delay:
-    durationMilliseconds: 1000
-    durationFrom:
-      expressionFrom: '.metadata.annotations["pod-delete.stage.kwok.x-k8s.io/delay"]'
-    jitterDurationFrom:
-      expressionFrom: '.metadata.deletionTimestamp'
-  next:
-    delete: true
+    jq:
+      expression: .metadata.annotations["pod-delete.stage.kwok.x-k8s.io/weight"]
