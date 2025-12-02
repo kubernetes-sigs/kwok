@@ -3,58 +3,67 @@ kind: Stage
 metadata:
   name: pod-ready
 spec:
+  delay:
+    durationFrom:
+      jq:
+        expression: .metadata.annotations["pod-ready.stage.kwok.x-k8s.io/delay"]
+    durationMilliseconds: 1000
+    jitterDurationFrom:
+      jq:
+        expression: .metadata.annotations["pod-ready.stage.kwok.x-k8s.io/jitter-delay"]
+    jitterDurationMilliseconds: 5000
+  immediateNextStage: false
   resourceRef:
     apiGroup: v1
     kind: Pod
   selector:
     matchExpressions:
-    - key: '.metadata.deletionTimestamp'
-      operator: 'DoesNotExist'
-    - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
-      operator: 'In'
-      values:
-      - 'True'
-    - key: '.status.containerStatuses.[].state.running.startedAt'
-      operator: 'DoesNotExist'
+    - jq:
+        key: .metadata.deletionTimestamp
+        operator: DoesNotExist
+    - jq:
+        key: .status.conditions.[] | select( .type == "Initialized" ) | .status
+        operator: In
+        values:
+        - "True"
+    - jq:
+        key: .status.containerStatuses.[].state.running.startedAt
+        operator: DoesNotExist
+  steps:
+  - patch:
+      root: status
+      subresource: status
+      template: |
+        {{ $now := Now }}
+        {{ $root := . }}
+        conditions:
+        - lastProbeTime: null
+          lastTransitionTime: {{ $now | Quote }}
+          message: ''
+          reason: ''
+          status: "True"
+          type: Ready
+        - lastProbeTime: null
+          lastTransitionTime: {{ $now | Quote }}
+          message: ''
+          reason: ''
+          status: "True"
+          type: ContainersReady
+        containerStatuses:
+        {{ range $index, $item := .spec.containers }}
+        {{ $origin := index $root.status.containerStatuses $index }}
+        - image: {{ $item.image | Quote }}
+          name: {{ $item.name | Quote }}
+          ready: true
+          restartCount: 0
+          started: true
+          state:
+            running:
+              startedAt: {{ $now | Quote }}
+        {{ end }}
+        phase: Running
+        startTime: {{ $now | Quote }}
   weight: 1
   weightFrom:
-    expressionFrom: '.metadata.annotations["pod-ready.stage.kwok.x-k8s.io/weight"]'
-  delay:
-    durationMilliseconds: 1000
-    durationFrom:
-      expressionFrom: '.metadata.annotations["pod-ready.stage.kwok.x-k8s.io/delay"]'
-    jitterDurationMilliseconds: 5000
-    jitterDurationFrom:
-      expressionFrom: '.metadata.annotations["pod-ready.stage.kwok.x-k8s.io/jitter-delay"]'
-  next:
-    delete: false
-    statusTemplate: |
-      {{ $now := Now }}
-      {{ $root := . }}
-      conditions:
-      - lastProbeTime: null
-        lastTransitionTime: {{ $now | Quote }}
-        message: ''
-        reason: ''
-        status: "True"
-        type: Ready
-      - lastProbeTime: null
-        lastTransitionTime: {{ $now | Quote }}
-        message: ''
-        reason: ''
-        status: "True"
-        type: ContainersReady
-      containerStatuses:
-      {{ range $index, $item := .spec.containers }}
-      {{ $origin := index $root.status.containerStatuses $index }}
-      - image: {{ $item.image | Quote }}
-        name: {{ $item.name | Quote }}
-        ready: true
-        restartCount: 0
-        started: true
-        state:
-          running:
-            startedAt: {{ $now | Quote }}
-      {{ end }}
-      phase: Running
-      startTime: {{ $now | Quote }}
+    jq:
+      expression: .metadata.annotations["pod-ready.stage.kwok.x-k8s.io/weight"]
