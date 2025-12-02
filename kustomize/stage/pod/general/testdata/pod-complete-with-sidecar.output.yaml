@@ -1,6 +1,6 @@
 apiGroup: v1
 kind: Pod
-name: pod-complete
+name: pod-complete-with-sidecar
 stages:
 - delay:
   - 1000000000
@@ -33,7 +33,29 @@ stages:
               finishedAt: <Now>
               reason: Completed
               startedAt: "2006-01-02T15:04:05Z"
-        initContainerStatuses: null
+        initContainerStatuses:
+        - image: init-image
+          name: init-container
+          ready: true
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: "2016-01-01T00:00:00Z"
+              reason: Completed
+              startedAt: "2006-01-02T15:04:05Z"
+        - image: sidecar-image
+          name: sidecar-container
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: <Now>
+              reason: Completed
+              startedAt: "2006-01-02T15:04:05Z"
         phase: Succeeded
     kind: patch
     subresource: status
