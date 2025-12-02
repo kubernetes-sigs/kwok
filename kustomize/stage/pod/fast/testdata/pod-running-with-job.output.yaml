@@ -16,7 +16,7 @@ stages:
               exitCode: 0
               finishedAt: <Now>
               reason: Completed
-              startedAt: <Now>
+              startedAt: "2006-01-02T15:04:05Z"
         phase: Succeeded
     kind: patch
     subresource: status
