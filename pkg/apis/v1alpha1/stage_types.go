@@ -76,9 +76,15 @@ type StageSpec struct {
 	// Delay means there is a delay in this stage.
 	Delay *StageDelay `json:"delay,omitempty"`
 	// Next indicates that this stage will be moved to.
-	Next StageNext `json:"next"`
+	// Deprecated: Use Steps instead.
+	//+k8s:conversion-gen=false
+	Next *StageNext `json:"next,omitempty"`
 	// ImmediateNextStage means that the next stage of matching is performed immediately, without waiting for the Apiserver to push.
 	ImmediateNextStage *bool `json:"immediateNextStage,omitempty"`
+	// Steps means that the stage will be moved to.
+	// Each step can define an event, patch, finalizer modification, or deletion action.
+	// Steps are executed in order when the stage is applied.
+	Steps []StageStep `json:"steps,omitempty"`
 }
 
 // StageResourceRef specifies the kind and version of the resource.
@@ -141,6 +147,18 @@ type StageNext struct {
 	// Deprecated: Use Patches instead.
 	//+k8s:conversion-gen=false
 	StatusPatchAs *ImpersonationConfig `json:"statusPatchAs,omitempty"`
+}
+
+// StageStep describes the next step of the stage.
+type StageStep struct {
+	// Patch means that the resource will be patched.
+	Patch *StagePatch `json:"patch,omitempty"`
+	// Event means that an event will be sent.
+	Event *StageEvent `json:"event,omitempty"`
+	// Finalizers means that finalizers will be modified.
+	Finalizers *StageFinalizers `json:"finalizers,omitempty"`
+	// Delete means that the resource will be deleted if true.
+	Delete bool `json:"delete,omitempty"`
 }
 
 // StagePatch describes the patch for the resource.

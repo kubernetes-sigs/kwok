@@ -33,6 +33,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
@@ -228,6 +229,7 @@ func (c *StageController) preprocess(ctx context.Context, resource *unstructured
 		Stage:      stage,
 		Key:        key,
 		RetryCount: new(uint64),
+		StepIndex:  new(uint64),
 	}
 
 	// we add a normal(fresh) stage job with weight 0,
@@ -246,14 +248,16 @@ func (c *StageController) playStageWorker(ctx context.Context) {
 			return
 		}
 		c.delayQueueMapping.Delete(resource.Key)
-		needRetry, err := c.playStage(ctx, resource.Resource, resource.Stage)
+		remainIndex, err := c.playStage(ctx, resource.Resource, resource.Stage, int(*resource.StepIndex))
 		if err != nil {
 			logger.Error("failed to apply stage", err,
 				"resource", resource.Key,
 				"stage", resource.Stage.Name(),
 			)
 		}
-		if needRetry {
+		if remainIndex >= 0 {
+			atomic.StoreUint64(resource.StepIndex, uint64(remainIndex))
+
 			retryCount := atomic.AddUint64(resource.RetryCount, 1) - 1
 			logger.Info("retrying for failed job",
 				"resource", resource.Key,
@@ -270,8 +274,7 @@ func (c *StageController) playStageWorker(ctx context.Context) {
 
 // playStage plays the stage.
 // The returned boolean indicates whether the applying action needs to be retried.
-func (c *StageController) playStage(ctx context.Context, resource *unstructured.Unstructured, stage *lifecycle.Stage) (bool, error) {
-	next := stage.Next()
+func (c *StageController) playStage(ctx context.Context, resource *unstructured.Unstructured, stage *lifecycle.Stage, stepIndex int) (int, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"resource", log.KObj(resource),
@@ -280,45 +283,34 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 
 	var (
 		result *unstructured.Unstructured
-		err    error
 	)
 
-	if event := next.Event(); event != nil && c.recorder != nil {
-		c.recorder.Event(&corev1.ObjectReference{
-			APIVersion: resource.GetAPIVersion(),
-			Kind:       resource.GetKind(),
-			UID:        resource.GetUID(),
-			Name:       resource.GetName(),
-			Namespace:  resource.GetNamespace(),
-		}, event.Type, event.Reason, event.Message)
-	}
-
-	patch, err := next.Finalizers(resource.GetFinalizers())
-	if err != nil {
-		return false, fmt.Errorf("failed to get finalizers for resource %s: %w", resource.GetName(), err)
-	}
-	if patch != nil {
-		result, err = c.patchResource(ctx, resource, patch)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of resource %s: %w", resource.GetName(), err)
-		}
-	}
-
-	if next.Delete() {
-		err = c.deleteResource(ctx, resource)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to delete resource %s: %w", resource.GetName(), err)
-		}
-		result = nil
-	} else {
-		patches, err := next.Patches(resource.Object, c.renderer)
-		if err != nil {
-			return false, fmt.Errorf("failed to get patches for resource %s: %w", resource.GetName(), err)
-		}
-		for _, patch := range patches {
-			changed, err := checkNeedPatch(resource.Object, patch.Data, patch.Type, c.schema)
+	remainIndex, err := stage.DoSteps(
+		stepIndex, resource.GetFinalizers(), resource.Object, c.renderer,
+		func(event *internalversion.StageEvent) error {
+			if c.recorder != nil {
+				c.recorder.Event(&corev1.ObjectReference{
+					APIVersion: resource.GetAPIVersion(),
+					Kind:       resource.GetKind(),
+					UID:        resource.GetUID(),
+					Name:       resource.GetName(),
+					Namespace:  resource.GetNamespace(),
+				}, event.Type, event.Reason, event.Message)
+			}
+			return nil
+		},
+		func() error {
+			err := c.deleteResource(ctx, resource)
 			if err != nil {
-				return false, fmt.Errorf("failed to check need patch for resource %s: %w", resource.GetName(), err)
+				return fmt.Errorf("failed to delete resource %s: %w", resource.GetName(), err)
+			}
+			result = nil
+			return nil
+		},
+		func(patch *lifecycle.Patch) error {
+			changed, err := checkNeedPatch(resource, patch.Data, patch.Type, c.schema)
+			if err != nil {
+				return fmt.Errorf("failed to check need patch for resource %s: %w", resource.GetName(), err)
 			}
 
 			if !changed {
@@ -328,10 +320,17 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 			} else {
 				result, err = c.patchResource(ctx, resource, patch)
 				if err != nil {
-					return shouldRetry(err), fmt.Errorf("failed to patch resource %s: %w", resource.GetName(), err)
+					return fmt.Errorf("failed to patch resource %s: %w", resource.GetName(), err)
 				}
 			}
+			return nil
+		},
+	)
+	if err != nil {
+		if shouldRetry(err) {
+			return remainIndex, err
 		}
+		return -1, err
 	}
 
 	if result != nil && stage.ImmediateNextStage() {
@@ -339,7 +338,7 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 			"reason", "immediateNextStage is true")
 		c.preprocessChan <- result
 	}
-	return false, nil
+	return -1, nil
 }
 
 // patchResource patches the resource
