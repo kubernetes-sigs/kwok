@@ -1665,7 +1665,8 @@ StageNext
 </em>
 </td>
 <td>
-<p>Next indicates that this stage will be moved to.</p>
+<p>Next indicates that this stage will be moved to.
+Deprecated: Use Steps instead.</p>
 </td>
 </tr>
 <tr>
@@ -1677,6 +1678,21 @@ bool
 </td>
 <td>
 <p>ImmediateNextStage means that the next stage of matching is performed immediately, without waiting for the Apiserver to push.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>steps</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageStep">
+[]StageStep
+</a>
+</em>
+</td>
+<td>
+<p>Steps means that the stage will be moved to.
+Each step can define an event, patch, finalizer modification, or deletion action.
+Steps are executed in order when the stage is applied.</p>
 </td>
 </tr>
 </table>
@@ -6357,6 +6373,8 @@ StageEvent
 <p>
 <em>Appears on: </em>
 <a href="#kwok.x-k8s.io/v1alpha1.StageNext">StageNext</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.StageStep">StageStep</a>
 </p>
 <p>
 <p>StageEvent describes one event in the Kubernetes.</p>
@@ -6411,6 +6429,8 @@ StageFinalizers
 <p>
 <em>Appears on: </em>
 <a href="#kwok.x-k8s.io/v1alpha1.StageNext">StageNext</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.StageStep">StageStep</a>
 </p>
 <p>
 <p>StageFinalizers describes the modifications in the finalizers of a resource.</p>
@@ -6582,6 +6602,8 @@ StagePatch
 <p>
 <em>Appears on: </em>
 <a href="#kwok.x-k8s.io/v1alpha1.StageNext">StageNext</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.StageStep">StageStep</a>
 </p>
 <p>
 <p>StagePatch describes the patch for the resource.</p>
@@ -6895,7 +6917,8 @@ StageNext
 </em>
 </td>
 <td>
-<p>Next indicates that this stage will be moved to.</p>
+<p>Next indicates that this stage will be moved to.
+Deprecated: Use Steps instead.</p>
 </td>
 </tr>
 <tr>
@@ -6907,6 +6930,21 @@ bool
 </td>
 <td>
 <p>ImmediateNextStage means that the next stage of matching is performed immediately, without waiting for the Apiserver to push.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>steps</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageStep">
+[]StageStep
+</a>
+</em>
+</td>
+<td>
+<p>Steps means that the stage will be moved to.
+Each step can define an event, patch, finalizer modification, or deletion action.
+Steps are executed in order when the stage is applied.</p>
 </td>
 </tr>
 </tbody>
@@ -6941,6 +6979,77 @@ StageStatus
 </td>
 <td>
 <p>Conditions holds conditions for the Stage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.StageStep">
+StageStep
+<a href="#kwok.x-k8s.io%2fv1alpha1.StageStep"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageSpec">StageSpec</a>
+</p>
+<p>
+<p>StageStep describes the next step of the stage.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>patch</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StagePatch">
+StagePatch
+</a>
+</em>
+</td>
+<td>
+<p>Patch means that the resource will be patched.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>event</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageEvent">
+StageEvent
+</a>
+</em>
+</td>
+<td>
+<p>Event means that an event will be sent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>finalizers</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageFinalizers">
+StageFinalizers
+</a>
+</em>
+</td>
+<td>
+<p>Finalizers means that finalizers will be modified.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>delete</code>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Delete means that the resource will be deleted if true.</p>
 </td>
 </tr>
 </tbody>

@@ -28,64 +28,77 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 )
 
-// Next represents the next step in the lifecycle
-type Next struct {
-	next *internalversion.StageNext
-}
-
-// newNext creates a new Next from the stage
-func newNext(next *internalversion.StageNext) *Next {
-	return &Next{
-		next: next,
-	}
-}
-
-// Finalizers returns the finalizers patch
-func (n *Next) Finalizers(metaFinalizers []string) (*Patch, error) {
-	if n.next.Finalizers == nil {
-		return nil, nil
-	}
-	ops := finalizersModify(metaFinalizers, n.next.Finalizers)
-	if len(ops) == 0 {
-		return nil, nil
-	}
-	data, err := json.Marshal(ops)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Patch{
-		Data: data,
-		Type: types.JSONPatchType,
-	}, nil
-}
-
-// Event returns the event for the resource
-func (n *Next) Event() *internalversion.StageEvent {
-	return n.next.Event
-}
-
-// Delete returns whether the resource should be deleted
-func (n *Next) Delete() bool {
-	return n.next.Delete
-}
-
-// Patches returns the patches for the resource
-func (n *Next) Patches(resource any, renderer gotpl.Renderer) ([]*Patch, error) {
-	patches := make([]*Patch, 0, len(n.next.Patches))
-	for _, patch := range n.next.Patches {
-		patchData, patchType, err := computePatch(renderer, resource, patch)
-		if err != nil {
-			return nil, err
+// doStageSteps executes the steps in the lifecycle.
+func doStageSteps(
+	nextSteps []internalversion.StageStep,
+	metaFinalizers []string,
+	resource any,
+	renderer gotpl.Renderer,
+	sendEvent func(event *internalversion.StageEvent) error,
+	deleteResource func() error,
+	patchResource func(patch *Patch) error,
+) (int, error) {
+	var deleted bool
+	for i, step := range nextSteps {
+		if step.Event != nil {
+			err := sendEvent(step.Event)
+			if err != nil {
+				return i, fmt.Errorf("failed to send event for step %d: %w", i, err)
+			}
 		}
-		patches = append(patches, &Patch{
-			Data:          patchData,
-			Type:          patchType,
-			Subresource:   patch.Subresource,
-			Impersonation: patch.Impersonation,
-		})
+
+		if deleted {
+			continue
+		}
+
+		if step.Finalizers != nil {
+			ops := finalizersModify(metaFinalizers, step.Finalizers)
+			if len(ops) != 0 {
+				data, err := json.Marshal(ops)
+				if err != nil {
+					return -1, fmt.Errorf("failed to marshal finalizers for step %d: %w", i, err)
+				}
+				patch := Patch{
+					Data: data,
+					Type: types.JSONPatchType,
+				}
+
+				err = patchResource(&patch)
+				if err != nil {
+					return i, fmt.Errorf("failed to patch finalizers for step %d: %w", i, err)
+				}
+			}
+		}
+
+		if step.Delete {
+			deleted = true
+			err := deleteResource()
+			if err != nil {
+				return i, fmt.Errorf("failed to delete resource for step %d: %w", i, err)
+			}
+			continue
+		}
+
+		if step.Patch != nil {
+			patchData, patchType, err := computePatch(renderer, resource, step.Patch)
+			if err != nil {
+				return i, fmt.Errorf("failed to compute patch %w", err)
+			}
+
+			patch := Patch{
+				Data:          patchData,
+				Type:          patchType,
+				Subresource:   step.Patch.Subresource,
+				Impersonation: step.Patch.Impersonation,
+			}
+
+			err = patchResource(&patch)
+			if err != nil {
+				return i, fmt.Errorf("failed to patch resource for step %w", err)
+			}
+		}
 	}
-	return patches, nil
+	return -1, nil
 }
 
 // Patch represents a patch for the resource
@@ -96,7 +109,7 @@ type Patch struct {
 	Impersonation *internalversion.ImpersonationConfig
 }
 
-func computePatch(renderer gotpl.Renderer, resource any, patch internalversion.StagePatch) ([]byte, types.PatchType, error) {
+func computePatch(renderer gotpl.Renderer, resource any, patch *internalversion.StagePatch) ([]byte, types.PatchType, error) {
 	switch format.ElemOrDefault(patch.Type) {
 	case internalversion.StagePatchTypeJSONPatch:
 		patchData, err := computeJSONPatch(renderer, resource, patch.Root, patch.Template)
