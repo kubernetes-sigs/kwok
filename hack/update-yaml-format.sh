@@ -35,7 +35,7 @@ function format() {
     -o -path ./kustomize/rbac/\* \
     -o -path ./charts/kwok/templates/\* \
     \))
-  go run github.com/google/yamlfmt/cmd/yamlfmt@v0.11.0 -conf .yamlfmt.yaml "${findfiles[@]}"
+  go run github.com/google/yamlfmt/cmd/yamlfmt@v0.20.0 -conf .yamlfmt.yaml "${findfiles[@]}"
 }
 
 cd "${ROOT_DIR}" && format
