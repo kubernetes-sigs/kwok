@@ -56,9 +56,11 @@ func SetObjectDefaults_Stage(in *Stage) {
 	if in.Spec.ResourceRef.APIGroup == "" {
 		in.Spec.ResourceRef.APIGroup = "v1"
 	}
-	if in.Spec.Next.StatusSubresource == nil {
-		var ptrVar1 string = "status"
-		in.Spec.Next.StatusSubresource = &ptrVar1
+	if in.Spec.Next != nil {
+		if in.Spec.Next.StatusSubresource == nil {
+			var ptrVar1 string = "status"
+			in.Spec.Next.StatusSubresource = &ptrVar1
+		}
 	}
 }
 

@@ -620,6 +620,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*StagePatch)(nil), (*v1alpha1.StagePatch)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StagePatch_To_v1alpha1_StagePatch(a.(*StagePatch), b.(*v1alpha1.StagePatch), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.StagePatch)(nil), (*StagePatch)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_StagePatch_To_internalversion_StagePatch(a.(*v1alpha1.StagePatch), b.(*StagePatch), scope)
 	}); err != nil {
@@ -650,8 +655,13 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageSpec)(nil), (*StageSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(a.(*v1alpha1.StageSpec), b.(*StageSpec), scope)
+	if err := s.AddGeneratedConversionFunc((*StageStep)(nil), (*v1alpha1.StageStep)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_StageStep_To_v1alpha1_StageStep(a.(*StageStep), b.(*v1alpha1.StageStep), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.StageStep)(nil), (*StageStep)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageStep_To_internalversion_StageStep(a.(*v1alpha1.StageStep), b.(*StageStep), scope)
 	}); err != nil {
 		return err
 	}
@@ -675,16 +685,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*StageNext)(nil), (*v1alpha1.StageNext)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_StageNext_To_v1alpha1_StageNext(a.(*StageNext), b.(*v1alpha1.StageNext), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*StagePatch)(nil), (*v1alpha1.StagePatch)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_internalversion_StagePatch_To_v1alpha1_StagePatch(a.(*StagePatch), b.(*v1alpha1.StagePatch), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddConversionFunc((*v1alpha1.ExpressionFrom)(nil), (*ExpressionFrom)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_ExpressionFrom_To_internalversion_ExpressionFrom(a.(*v1alpha1.ExpressionFrom), b.(*ExpressionFrom), scope)
 	}); err != nil {
@@ -695,8 +695,8 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha1.StageNext)(nil), (*StageNext)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_StageNext_To_internalversion_StageNext(a.(*v1alpha1.StageNext), b.(*StageNext), scope)
+	if err := s.AddConversionFunc((*v1alpha1.StageSpec)(nil), (*StageSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(a.(*v1alpha1.StageSpec), b.(*StageSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -2636,45 +2636,6 @@ func Convert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers(in *v1a
 	return autoConvert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers(in, out, s)
 }
 
-func autoConvert_internalversion_StageNext_To_v1alpha1_StageNext(in *StageNext, out *v1alpha1.StageNext, s conversion.Scope) error {
-	out.Event = (*v1alpha1.StageEvent)(unsafe.Pointer(in.Event))
-	out.Finalizers = (*v1alpha1.StageFinalizers)(unsafe.Pointer(in.Finalizers))
-	out.Delete = in.Delete
-	if in.Patches != nil {
-		in, out := &in.Patches, &out.Patches
-		*out = make([]v1alpha1.StagePatch, len(*in))
-		for i := range *in {
-			if err := Convert_internalversion_StagePatch_To_v1alpha1_StagePatch(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.Patches = nil
-	}
-	return nil
-}
-
-func autoConvert_v1alpha1_StageNext_To_internalversion_StageNext(in *v1alpha1.StageNext, out *StageNext, s conversion.Scope) error {
-	out.Event = (*StageEvent)(unsafe.Pointer(in.Event))
-	out.Finalizers = (*StageFinalizers)(unsafe.Pointer(in.Finalizers))
-	out.Delete = in.Delete
-	if in.Patches != nil {
-		in, out := &in.Patches, &out.Patches
-		*out = make([]StagePatch, len(*in))
-		for i := range *in {
-			if err := Convert_v1alpha1_StagePatch_To_internalversion_StagePatch(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.Patches = nil
-	}
-	// INFO: in.StatusTemplate opted out of conversion generation
-	// INFO: in.StatusSubresource opted out of conversion generation
-	// INFO: in.StatusPatchAs opted out of conversion generation
-	return nil
-}
-
 func autoConvert_internalversion_StagePatch_To_v1alpha1_StagePatch(in *StagePatch, out *v1alpha1.StagePatch, s conversion.Scope) error {
 	out.Subresource = in.Subresource
 	out.Root = in.Root
@@ -2682,6 +2643,11 @@ func autoConvert_internalversion_StagePatch_To_v1alpha1_StagePatch(in *StagePatc
 	out.Type = (*v1alpha1.StagePatchType)(unsafe.Pointer(in.Type))
 	out.Impersonation = (*v1alpha1.ImpersonationConfig)(unsafe.Pointer(in.Impersonation))
 	return nil
+}
+
+// Convert_internalversion_StagePatch_To_v1alpha1_StagePatch is an autogenerated conversion function.
+func Convert_internalversion_StagePatch_To_v1alpha1_StagePatch(in *StagePatch, out *v1alpha1.StagePatch, s conversion.Scope) error {
+	return autoConvert_internalversion_StagePatch_To_v1alpha1_StagePatch(in, out, s)
 }
 
 func autoConvert_v1alpha1_StagePatch_To_internalversion_StagePatch(in *v1alpha1.StagePatch, out *StagePatch, s conversion.Scope) error {
@@ -2796,12 +2762,10 @@ func autoConvert_internalversion_StageSpec_To_v1alpha1_StageSpec(in *StageSpec, 
 	} else {
 		out.Delay = nil
 	}
-	if err := Convert_internalversion_StageNext_To_v1alpha1_StageNext(&in.Next, &out.Next, s); err != nil {
-		return err
-	}
 	if err := v1.Convert_bool_To_Pointer_bool(&in.ImmediateNextStage, &out.ImmediateNextStage, s); err != nil {
 		return err
 	}
+	out.Steps = *(*[]v1alpha1.StageStep)(unsafe.Pointer(&in.Steps))
 	return nil
 }
 
@@ -2842,18 +2806,38 @@ func autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.St
 	} else {
 		out.Delay = nil
 	}
-	if err := Convert_v1alpha1_StageNext_To_internalversion_StageNext(&in.Next, &out.Next, s); err != nil {
-		return err
-	}
+	// INFO: in.Next opted out of conversion generation
 	if err := v1.Convert_Pointer_bool_To_bool(&in.ImmediateNextStage, &out.ImmediateNextStage, s); err != nil {
 		return err
 	}
+	out.Steps = *(*[]StageStep)(unsafe.Pointer(&in.Steps))
 	return nil
 }
 
-// Convert_v1alpha1_StageSpec_To_internalversion_StageSpec is an autogenerated conversion function.
-func Convert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.StageSpec, out *StageSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in, out, s)
+func autoConvert_internalversion_StageStep_To_v1alpha1_StageStep(in *StageStep, out *v1alpha1.StageStep, s conversion.Scope) error {
+	out.Patch = (*v1alpha1.StagePatch)(unsafe.Pointer(in.Patch))
+	out.Event = (*v1alpha1.StageEvent)(unsafe.Pointer(in.Event))
+	out.Finalizers = (*v1alpha1.StageFinalizers)(unsafe.Pointer(in.Finalizers))
+	out.Delete = in.Delete
+	return nil
+}
+
+// Convert_internalversion_StageStep_To_v1alpha1_StageStep is an autogenerated conversion function.
+func Convert_internalversion_StageStep_To_v1alpha1_StageStep(in *StageStep, out *v1alpha1.StageStep, s conversion.Scope) error {
+	return autoConvert_internalversion_StageStep_To_v1alpha1_StageStep(in, out, s)
+}
+
+func autoConvert_v1alpha1_StageStep_To_internalversion_StageStep(in *v1alpha1.StageStep, out *StageStep, s conversion.Scope) error {
+	out.Patch = (*StagePatch)(unsafe.Pointer(in.Patch))
+	out.Event = (*StageEvent)(unsafe.Pointer(in.Event))
+	out.Finalizers = (*StageFinalizers)(unsafe.Pointer(in.Finalizers))
+	out.Delete = in.Delete
+	return nil
+}
+
+// Convert_v1alpha1_StageStep_To_internalversion_StageStep is an autogenerated conversion function.
+func Convert_v1alpha1_StageStep_To_internalversion_StageStep(in *v1alpha1.StageStep, out *StageStep, s conversion.Scope) error {
+	return autoConvert_v1alpha1_StageStep_To_internalversion_StageStep(in, out, s)
 }
 
 func autoConvert_internalversion_TracingConfiguration_To_v1alpha1_TracingConfiguration(in *TracingConfiguration, out *configv1alpha1.TracingConfiguration, s conversion.Scope) error {
