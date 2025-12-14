@@ -23,6 +23,7 @@ kubectl apply -f https://kwok.sigs.k8s.io/examples/node.yaml
 Verify that the nodes have the correct label using a label selector
 ```bash
 kubectl get nodes -l type=kwok
+kwok-node-0   Ready    agent   4s    kwok-v0.7.0
 ```
 
 ## Deploy Kueue
@@ -73,7 +74,7 @@ kubectl apply -f - <<EOF
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: ResourceFlavor
 metadata:
-  name: kwok-resource-flavor-a-east-r1
+  name: kwok-resource-flavor
 spec:
   nodeLabels:
     type: kwok
@@ -105,7 +106,7 @@ spec:
     - cpu
     - memory
     flavors:
-    - name: kwok-resource-flavor-a-east-r1
+    - name: kwok-resource-flavor
       resources:
       - borrowingLimit: "390144"
         name: cpu
@@ -133,6 +134,20 @@ EOF
 Verify the Kueue resources are created
 ```bash
 kubectl get clusterqueues,localqueues,resourceflavors,cohorts,topologies
+NAME                                             COHORT        PENDING WORKLOADS
+clusterqueue.kueue.x-k8s.io/kwok-cluster-queue   kwok-cohort   0
+
+NAME                                         CLUSTERQUEUE         PENDING WORKLOADS   ADMITTED WORKLOADS
+localqueue.kueue.x-k8s.io/kwok-local-queue   kwok-cluster-queue   0                   0
+
+NAME                                                 AGE
+resourceflavor.kueue.x-k8s.io/kwok-resource-flavor   27s
+
+NAME                                AGE
+cohort.kueue.x-k8s.io/kwok-cohort   45s
+
+NAME                                    AGE
+topology.kueue.x-k8s.io/kwok-topology   39s
 ```
 
 ## Test with a Sample Job
@@ -169,12 +184,17 @@ EOF
 
 Check the workload status
 ```bash
-kubectl get workloads -n default
+kubectl get workloads
+NAME                   QUEUE              RESERVED IN          ADMITTED   FINISHED   AGE
+job-sample-job-a3b23   kwok-local-queue   kwok-cluster-queue   True       True       4s
+
+kubectl describe workload job-sample-job-a3b23
+...
 ```
 
 Verify the job is admitted and running
 ```bash
 kubectl get jobs
-# Describe the workload (use the workload name from the get workloads output)
-kubectl describe workload -n default
+NAME         STATUS     COMPLETIONS   DURATION   AGE
+sample-job   Complete   1/1           2s         37s
 ```
