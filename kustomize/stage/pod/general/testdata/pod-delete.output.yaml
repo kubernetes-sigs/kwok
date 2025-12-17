@@ -5,6 +5,10 @@ stages:
 - delay:
   - 0
   next:
+  - kind: event
+    message: 'Stop container: container'
+    reason: Killing
+    type: Normal
   - kind: delete
   stage: pod-delete
   weight: 1

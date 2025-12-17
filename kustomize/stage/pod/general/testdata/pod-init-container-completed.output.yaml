@@ -8,14 +8,23 @@ stages:
   next:
   - data:
       status:
+        $setElementOrder/conditions:
+        - type: PodReadyToStartContainers
+        - type: Initialized
+        - type: Ready
+        - type: ContainersReady
+        - type: PodScheduled
         conditions:
-        - lastProbeTime: null
-          lastTransitionTime: <Now>
-          reason: ""
+        - lastTransitionTime: <Now>
+          message: null
+          observedGeneration: 0
+          reason: null
           status: "True"
           type: Initialized
         containerStatuses:
         - image: image
+          imageID: kwok://image/image
+          lastState: {}
           name: container
           ready: false
           restartCount: 0
@@ -24,19 +33,24 @@ stages:
             waiting:
               reason: ContainerCreating
         initContainerStatuses:
-        - image: init-image
+        - containerID: kwok://container/init-container
+          image: init-image
+          imageID: kwok://image/init-image
+          lastState: {}
           name: init-container
           ready: true
+          resources: {}
           restartCount: 0
           started: false
           state:
             terminated:
+              containerID: kwok://container/init-container
               exitCode: 0
               finishedAt: <Now>
               reason: Completed
-              startedAt: <Now>
+              startedAt: "2006-01-02T15:04:05Z"
     kind: patch
     subresource: status
-    type: application/merge-patch+json
+    type: application/strategic-merge-patch+json
   stage: pod-init-container-completed
   weight: 1

@@ -32,6 +32,11 @@ spec:
         values:
         - "True"
     - jq:
+        key: .spec.restartPolicy
+        operator: NotIn
+        values:
+        - Always
+    - jq:
         key: .metadata.ownerReferences.[].kind
         operator: In
         values:
@@ -40,27 +45,53 @@ spec:
   - patch:
       root: status
       subresource: status
+      type: strategic
       template: |
-        {{ $now := Now }}
-        {{ $root := . }}
-        containerStatuses:
-        {{ range $index, $item := .spec.containers }}
-        {{ $origin := index $root.status.containerStatuses $index }}
-        - image: {{ $item.image | Quote }}
-          name: {{ $item.name | Quote }}
+        {{ define "containerEnding" }}
+        {{ $status := .status }}
+        {{ with .container }}
+          containerID: kwok://container/{{ .name }}
+          image: {{ .image | Quote }}
+          imageID: kwok://image/{{ .image }}
+          lastState: {}
+          name: {{ .name | Quote }}
           ready: true
+          resources: {}
           restartCount: 0
           started: false
           state:
             terminated:
+              containerID: kwok://container/{{ .name }}
               exitCode: 0
-              finishedAt: {{ $now | Quote }}
+              finishedAt: {{ Now | Quote }}
               reason: Completed
-              startedAt: {{ $now | Quote }}
+              startedAt: {{ or $status.state.running.startedAt $status.state.terminated.startedAt }}
         {{ end }}
+        {{ end }}
+
+        {{ with .spec.initContainers }}
+        initContainerStatuses:
+        {{ range $index, $item := . }}
+        {{ $status := index $.status.initContainerStatuses $index }}
+        {{ if eq $item.restartPolicy "Always" }}
+        -
+        {{ template "containerEnding" dict "container" $item "status" $status }}
+        {{ else }}
+        -
+        {{ YAML $status 1 }}
+        {{ end }}
+        {{ end }}
+        {{ end }}
+
+        containerStatuses:
+        {{ range $index, $item := .spec.containers }}
+        {{ $status := index $.status.containerStatuses $index }}
+        -
+        {{ template "containerEnding" dict "container" $item "status" $status }}
+        {{ end }}
+
         phase: Succeeded
   weight: 1
   weightFrom:
     jq:
       expression: .metadata.annotations["pod-complete.stage.kwok.x-k8s.io/weight"]
-status: {}
