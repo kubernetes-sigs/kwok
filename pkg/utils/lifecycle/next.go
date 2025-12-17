@@ -41,7 +41,15 @@ func doStageSteps(
 	var deleted bool
 	for i, step := range nextSteps {
 		if step.Event != nil {
-			err := sendEvent(step.Event)
+			event := *step.Event
+
+			message, err := renderer.ToText(event.Message, resource)
+			if err != nil {
+				return i, fmt.Errorf("failed to render event message for step %d: %w", i, err)
+			}
+			event.Message = message
+
+			err = sendEvent(&event)
 			if err != nil {
 				return i, fmt.Errorf("failed to send event for step %d: %w", i, err)
 			}
