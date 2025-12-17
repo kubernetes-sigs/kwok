@@ -24,6 +24,10 @@ spec:
         key: .metadata.finalizers
         operator: DoesNotExist
   steps:
+  - event:
+      message: 'Stopping container: {{ ( index .spec.containers 0 ).name }}'
+      reason: Killing
+      type: Normal
   - delete: true
   weight: 1
   weightFrom:

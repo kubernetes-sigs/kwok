@@ -22,91 +22,136 @@ spec:
         key: .metadata.deletionTimestamp
         operator: DoesNotExist
     - jq:
-        key: .status.podIP
+        key: .status.startTime
+        operator: DoesNotExist
+    - jq:
+        key: .status.containerStatuses
         operator: DoesNotExist
   steps:
   - event:
-      message: Created container
+      message: 'Created container'
       reason: Created
       type: Normal
   - patch:
       root: status
       subresource: status
+      type: strategic
       template: |
-        {{ $now := Now }}
+        {{ $observedGeneration := add1 ( or .status.observedGeneration 0 ) }}
+        {{ $hasPodScheduled := 0 }}
+        {{ range .status.conditions }}
+          {{ if eq .Type "PodScheduled" }}
+            {{ $hasPodScheduled = 1 }}
+            {{ break }}
+          {{ end }}
+        {{ end }}
+        {{ $nodeIP := NodeIPWith .spec.nodeName | Quote }}
+        {{ $podIP := PodIPWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) | Quote }}
+
+        {{ define "containerCreating" }}
+        {{ $root := .root }}
+        {{ with .container }}
+          image: {{ .image | Quote }}
+          imageID: kwok://image/{{ .image }}
+          lastState: {}
+          name: {{ .name | Quote }}
+          ready: false
+          {{ with .resources }}
+          resources:
+          {{ YAML . 1 }}
+          {{ with .requests }}
+          allocatedResources:
+          {{ YAML . 1 }}
+          {{ end }}
+          {{ end }}
+          restartCount: 0
+          started: false
+          state:
+            waiting:
+          {{ if $root.spec.initContainers }}
+              reason: PodInitializing
+          {{ else }}
+              reason: ContainerCreating
+          {{ end }}
+          {{ with .volumeMounts }}
+          volumeMounts:
+          {{ YAML . 1 }}
+          {{ end }}
+        {{ end }}
+        {{ end }}
+
+        $setElementOrder/conditions:
+        - type: PodReadyToStartContainers
+        - type: Initialized
+        - type: Ready
+        - type: ContainersReady
+        - type: PodScheduled
 
         conditions:
+        - lastProbeTime: null
+          lastTransitionTime: {{ Now | Quote }}
+          observedGeneration: {{ $observedGeneration }}
+          status: "True"
+          type: PodReadyToStartContainers
         {{ if .spec.initContainers }}
         - lastProbeTime: null
-          lastTransitionTime: {{ $now | Quote }}
+          lastTransitionTime: {{ Now | Quote }}
           message: 'containers with incomplete status: [{{ range .spec.initContainers }} {{ .name }} {{ end }}]'
+          observedGeneration: {{ $observedGeneration }}
           reason: ContainersNotInitialized
           status: "False"
           type: Initialized
         {{ else }}
         - lastProbeTime: null
-          lastTransitionTime: {{ $now | Quote }}
+          lastTransitionTime: {{ Now | Quote }}
+          observedGeneration: {{ $observedGeneration }}
           status: "True"
           type: Initialized
         {{ end }}
         - lastProbeTime: null
-          lastTransitionTime: {{ $now | Quote }}
+          lastTransitionTime: {{ Now | Quote }}
           message: 'containers with unready status: [{{ range .spec.containers }} {{ .name }} {{ end }}]'
+          observedGeneration: {{ $observedGeneration }}
           reason: ContainersNotReady
           status: "False"
           type: Ready
         - lastProbeTime: null
-          lastTransitionTime: {{ $now | Quote }}
+          lastTransitionTime: {{ Now | Quote }}
           message: 'containers with unready status: [{{ range .spec.containers }} {{ .name }} {{ end }}]'
+          observedGeneration: {{ $observedGeneration }}
           reason: ContainersNotReady
           status: "False"
           type: ContainersReady
-        {{ range .spec.readinessGates }}
-        - lastTransitionTime: {{ $now | Quote }}
-          status: "True"
-          type: {{ .conditionType | Quote }}
-        {{ end }}
-
-        {{ if .spec.initContainers }}
-        initContainerStatuses:
-        {{ range .spec.initContainers }}
-        - image: {{ .image | Quote }}
-          name: {{ .name | Quote }}
-          ready: false
-          restartCount: 0
-          started: false
-          state:
-            waiting:
-              reason: PodInitializing
-        {{ end }}
-        containerStatuses:
-        {{ range .spec.containers }}
-        - image: {{ .image | Quote }}
-          name: {{ .name | Quote }}
-          ready: false
-          restartCount: 0
-          started: false
-          state:
-            waiting:
-              reason: PodInitializing
-        {{ end }}
+        {{ if $hasPodScheduled }}
+        - observedGeneration: {{ $observedGeneration }}
+          type: PodScheduled
         {{ else }}
-        containerStatuses:
-        {{ range .spec.containers }}
-        - image: {{ .image | Quote }}
-          name: {{ .name | Quote }}
-          ready: false
-          restartCount: 0
-          started: false
-          state:
-            waiting:
-              reason: ContainerCreating
+        - lastProbeTime: null
+          lastTransitionTime: {{ Now | Quote }}
+          observedGeneration: {{ $observedGeneration }}
+          status: "True"
+          type: PodScheduled
+        {{ end }}
+
+        {{ with .spec.initContainers }}
+        initContainerStatuses:
+        {{ range . }}
+        -
+        {{ template "containerCreating" dict "container" . "root" $ }}
         {{ end }}
         {{ end }}
 
-        hostIP: {{ NodeIPWith .spec.nodeName | Quote }}
-        podIP: {{ PodIPWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) | Quote }}
-        phase: Pending
+        containerStatuses:
+        {{ range .spec.containers }}
+        -
+        {{ template "containerCreating" dict "container" . "root" $ }}
+        {{ end }}
+
+        hostIP: {{ $nodeIP }}
+        podIP: {{ $podIP }}
+
+        observedGeneration: {{ $observedGeneration }}
+        startTime: {{ Now | Quote }}
   weight: 1
   weightFrom:
     jq:

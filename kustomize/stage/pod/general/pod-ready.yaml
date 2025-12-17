@@ -27,42 +27,71 @@ spec:
         values:
         - "True"
     - jq:
-        key: .status.containerStatuses.[].state.running.startedAt
-        operator: DoesNotExist
+        key: .status.containerStatuses.[].state.waiting.reason
+        operator: Exists
   steps:
+  - event:
+      message: 'Started container: {{ ( index .spec.containers 0 ).name }}'
+      reason: Started
+      type: Normal
   - patch:
       root: status
       subresource: status
+      type: strategic
       template: |
-        {{ $now := Now }}
-        {{ $root := . }}
-        conditions:
-        - lastProbeTime: null
-          lastTransitionTime: {{ $now | Quote }}
-          message: ''
-          reason: ''
-          status: "True"
-          type: Ready
-        - lastProbeTime: null
-          lastTransitionTime: {{ $now | Quote }}
-          message: ''
-          reason: ''
-          status: "True"
-          type: ContainersReady
-        containerStatuses:
-        {{ range $index, $item := .spec.containers }}
-        {{ $origin := index $root.status.containerStatuses $index }}
-        - image: {{ $item.image | Quote }}
-          name: {{ $item.name | Quote }}
+        {{ $observedGeneration := or .status.observedGeneration 0 }}
+        {{ define "containerStarting" }}
+        {{ with .container }}
+          containerID: kwok://container/{{ .name }}
+          image: {{ .image | Quote }}
+          imageID: kwok://image/{{ .image }}
+          lastState: {}
+          name: {{ .name | Quote }}
           ready: true
+          {{ with .resources }}
+          resources:
+          {{ YAML . 1 }}
+          {{ end }}
           restartCount: 0
           started: true
           state:
             running:
-              startedAt: {{ $now | Quote }}
+              startedAt: {{ Now | Quote }}
+          {{ with .volumeMounts }}
+          volumeMounts:
+          {{ YAML . 1 }}
+          {{ end }}
         {{ end }}
+        {{ end }}
+
+        $setElementOrder/conditions:
+        - type: PodReadyToStartContainers
+        - type: Initialized
+        - type: Ready
+        - type: ContainersReady
+        - type: PodScheduled
+
+        conditions:
+        - lastTransitionTime: {{ Now | Quote }}
+          message: null
+          reason: null
+          observedGeneration: {{ $observedGeneration }}
+          status: "True"
+          type: Ready
+        - lastTransitionTime: {{ Now | Quote }}
+          message: null
+          reason: null
+          observedGeneration: {{ $observedGeneration }}
+          status: "True"
+          type: ContainersReady
+
+        containerStatuses:
+        {{ range $index, $item := .spec.containers }}
+        -
+        {{ template "containerStarting" dict "container" . }}
+        {{ end }}
+
         phase: Running
-        startTime: {{ $now | Quote }}
   weight: 1
   weightFrom:
     jq:
