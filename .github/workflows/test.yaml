@@ -207,7 +207,7 @@ jobs:
         ./hack/e2e-test.sh kwokctl/kwokctl_auto_detect
 
     - name: Upload logs
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: kwok-logs-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.kwokctl-runtime }}
