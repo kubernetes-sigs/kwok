@@ -133,10 +133,10 @@ jobs:
           kwokctl-runtime: binary
 
         # MacOS amd64
-        - os: macos-13
+        - os: macos-15-intel
           kwokctl-runtime: binary
         # MacOS arm64
-        - os: macos-14
+        - os: macos-15
           kwokctl-runtime: binary
 
         # Linux
