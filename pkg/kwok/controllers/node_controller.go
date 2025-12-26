@@ -31,6 +31,7 @@ import (
 	"k8s.io/utils/clock"
 	netutils "k8s.io/utils/net"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
@@ -316,6 +317,7 @@ func (c *NodeController) preprocess(ctx context.Context, node *corev1.Node) erro
 		Stage:      stage,
 		Key:        key,
 		RetryCount: new(uint64),
+		StepIndex:  new(uint64),
 	}
 	// we add a normal(fresh) stage job with weight 0,
 	// resulting in that it will always be processed with high priority compared to those retry ones
@@ -333,14 +335,16 @@ func (c *NodeController) playStageWorker(ctx context.Context) {
 			return
 		}
 		c.delayQueueMapping.Delete(node.Key)
-		needRetry, err := c.playStage(ctx, node.Resource, node.Stage)
+		remainIndex, err := c.playStage(ctx, node.Resource, node.Stage, int(*node.StepIndex))
 		if err != nil {
 			logger.Error("failed to apply stage", err,
 				"node", node.Key,
 				"stage", node.Stage.Name(),
 			)
 		}
-		if needRetry {
+		if remainIndex >= 0 {
+			atomic.StoreUint64(node.StepIndex, uint64(remainIndex))
+
 			retryCount := atomic.AddUint64(node.RetryCount, 1) - 1
 			logger.Info("retrying for failed job",
 				"node", node.Key,
@@ -357,8 +361,7 @@ func (c *NodeController) playStageWorker(ctx context.Context) {
 
 // playStage plays the stage.
 // The returned boolean indicates whether the applying action needs to be retried.
-func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *lifecycle.Stage) (bool, error) {
-	next := stage.Next()
+func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage *lifecycle.Stage, stepIndex int) (int, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"node", node.Name,
@@ -367,45 +370,33 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 
 	var (
 		result *corev1.Node
-		err    error
 	)
 
-	if event := next.Event(); event != nil && c.recorder != nil {
-		c.recorder.Event(&corev1.ObjectReference{
-			Kind:      "Node",
-			UID:       node.UID,
-			Name:      node.Name,
-			Namespace: "",
-		}, event.Type, event.Reason, event.Message)
-	}
-
-	patch, err := next.Finalizers(node.Finalizers)
-	if err != nil {
-		return false, fmt.Errorf("failed to get finalizers for node %s: %w", node.Name, err)
-	}
-	if patch != nil {
-		result, err = c.patchResource(ctx, node, patch)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of node %s: %w", node.Name, err)
-		}
-	}
-
-	if next.Delete() {
-		err = c.deleteResource(ctx, node)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to delete node %s: %w", node.Name, err)
-		}
-		result = nil
-	} else {
-		patches, err := next.Patches(node, c.renderer)
-		if err != nil {
-			return false, fmt.Errorf("failed to get patches for node %s: %w", node.Name, err)
-		}
-
-		for _, patch := range patches {
+	remainIndex, err := stage.DoSteps(
+		stepIndex, node.Finalizers, node, c.renderer,
+		func(event *internalversion.StageEvent) error {
+			if c.recorder != nil {
+				c.recorder.Event(&corev1.ObjectReference{
+					Kind:      "Node",
+					UID:       node.UID,
+					Name:      node.Name,
+					Namespace: "",
+				}, event.Type, event.Reason, event.Message)
+			}
+			return nil
+		},
+		func() error {
+			err := c.deleteResource(ctx, node)
+			if err != nil {
+				return fmt.Errorf("failed to delete node %s: %w", node.Name, err)
+			}
+			result = nil
+			return nil
+		},
+		func(patch *lifecycle.Patch) error {
 			changed, err := checkNeedPatchWithTyped(node, patch.Data, patch.Type)
 			if err != nil {
-				return false, fmt.Errorf("failed to check need patch for node %s: %w", node.Name, err)
+				return fmt.Errorf("failed to check need patch for node %s: %w", node.Name, err)
 			}
 			if !changed {
 				logger.Debug("Skip node",
@@ -414,10 +405,17 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 			} else {
 				result, err = c.patchResource(ctx, node, patch)
 				if err != nil {
-					return shouldRetry(err), fmt.Errorf("failed to patch node %s: %w", node.Name, err)
+					return fmt.Errorf("failed to patch node %s: %w", node.Name, err)
 				}
 			}
+			return nil
+		},
+	)
+	if err != nil {
+		if shouldRetry(err) {
+			return remainIndex, err
 		}
+		return -1, err
 	}
 
 	if result != nil && stage.ImmediateNextStage() {
@@ -425,7 +423,7 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 			"reason", "immediateNextStage is true")
 		c.preprocessChan <- result
 	}
-	return false, nil
+	return -1, nil
 }
 
 func (c *NodeController) readOnly(nodeName string) bool {

@@ -32,6 +32,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
@@ -146,7 +147,7 @@ func BenchmarkStageCRs(b *testing.B) {
 func Testing(ctx context.Context, resourceFile string, stageFile []string) (any, error) {
 	rio, err := config.LoadUnstructured(resourceFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load resource file %s: %w", resourceFile, err)
 	}
 	if len(rio) != 1 {
 		return nil, fmt.Errorf("expected exactly one resource in %s, got %d", resourceFile, len(rio))
@@ -154,7 +155,7 @@ func Testing(ctx context.Context, resourceFile string, stageFile []string) (any,
 
 	sio, err := config.Load(ctx, stageFile...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load stage files %v: %w", stageFile, err)
 	}
 
 	ue := config.FilterWithoutType[*internalversion.Stage](sio)
@@ -194,7 +195,7 @@ func Testing(ctx context.Context, resourceFile string, stageFile []string) (any,
 
 	lc, err := lifecycle.NewLifecycle(stages)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create lifecycle: %w", err)
 	}
 
 	event := &lifecycle.Event{
@@ -205,14 +206,14 @@ func Testing(ctx context.Context, resourceFile string, stageFile []string) (any,
 
 	lcstages, err := lc.ListAllPossible(ctx, event)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list all possible stages: %w", err)
 	}
 
 	out := []any{}
 	for _, stage := range lcstages {
 		o, err := testingStage(ctx, testTarget, event, stage)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to test stage %s: %w", stage.Name(), err)
 		}
 		out = append(out, o)
 	}
@@ -289,7 +290,7 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 
 	delay, ok, err := stage.DelayRangePossible(ctx, event, now)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get delay for stage %s: %w", stage.Name(), err)
 	}
 	if ok {
 		meta["delay"] = delay
@@ -297,37 +298,13 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 
 	weight, ok, err := stage.Weight(ctx, event)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get weight for stage %s: %w", stage.Name(), err)
 	}
 	if ok {
 		meta["weight"] = weight
 	}
 
-	next := stage.Next()
-
-	if next == nil {
-		meta["next"] = "nil"
-		return meta, nil
-	}
-
 	out := make([]any, 0)
-
-	patch, err := next.Finalizers(testTarget.GetFinalizers())
-	if err != nil {
-		return nil, err
-	}
-
-	if patch != nil {
-		out = append(out, formatPatch(patch))
-	}
-
-	if next.Delete() {
-		out = append(out, map[string]string{
-			"kind": "delete",
-		})
-		meta["next"] = out
-		return meta, nil
-	}
 
 	fm := gotpl.FuncMap{}
 	funcNames := []string{
@@ -354,13 +331,24 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 
 	renderer := gotpl.NewRenderer(fm)
 
-	patches, err := next.Patches(testTarget, renderer)
+	_, err = stage.DoSteps(0, testTarget.GetFinalizers(), testTarget, renderer,
+		func(event *internalversion.StageEvent) error {
+			out = append(out, formatEvent(event))
+			return nil
+		},
+		func() error {
+			out = append(out, map[string]string{
+				"kind": "delete",
+			})
+			return nil
+		},
+		func(patch *lifecycle.Patch) error {
+			out = append(out, formatPatch(patch))
+			return nil
+		},
+	)
 	if err != nil {
-		return nil, err
-	}
-
-	for _, patch := range patches {
-		out = append(out, formatPatch(patch))
+		return nil, fmt.Errorf("failed to do steps for stage %s: %w", stage.Name(), err)
 	}
 
 	if stage.ImmediateNextStage() {
@@ -410,6 +398,16 @@ func formatPatch(patch *lifecycle.Patch) any {
 		out["impersonation"] = patch.Impersonation.Username
 	}
 
+	return out
+}
+
+func formatEvent(event *internalversion.StageEvent) any {
+	out := map[string]any{
+		"kind":    "event",
+		"type":    event.Type,
+		"reason":  event.Reason,
+		"message": event.Message,
+	}
 	return out
 }
 

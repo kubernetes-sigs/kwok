@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 
+	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -251,6 +252,7 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		Stage:      stage,
 		Key:        key,
 		RetryCount: new(uint64),
+		StepIndex:  new(uint64),
 	}
 	// we add a normal(fresh) stage job with weight 0,
 	// resulting in that it will always be processed with high priority compared to those retry ones
@@ -268,14 +270,16 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 			return
 		}
 		c.delayQueueMapping.Delete(pod.Key)
-		needRetry, err := c.playStage(ctx, pod.Resource, pod.Stage)
+		remainIndex, err := c.playStage(ctx, pod.Resource, pod.Stage, int(*pod.StepIndex))
 		if err != nil {
 			logger.Error("failed to apply stage", err,
 				"pod", pod.Key,
 				"stage", pod.Stage.Name(),
 			)
 		}
-		if needRetry {
+		if remainIndex >= 0 {
+			atomic.StoreUint64(pod.StepIndex, uint64(remainIndex))
+
 			retryCount := atomic.AddUint64(pod.RetryCount, 1) - 1
 			logger.Info("retrying for failed job",
 				"pod", pod.Key,
@@ -292,8 +296,7 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 
 // playStage plays the stage.
 // The returned boolean indicates whether the applying action needs to be retried.
-func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *lifecycle.Stage) (bool, error) {
-	next := stage.Next()
+func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *lifecycle.Stage, stepIndex int) (int, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
@@ -303,45 +306,34 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *l
 
 	var (
 		result *corev1.Pod
-		err    error
 	)
 
-	if event := next.Event(); event != nil && c.recorder != nil {
-		c.recorder.Event(&corev1.ObjectReference{
-			Kind:      "Pod",
-			UID:       pod.UID,
-			Name:      pod.Name,
-			Namespace: pod.Namespace,
-		}, event.Type, event.Reason, event.Message)
-	}
-
-	patch, err := next.Finalizers(pod.Finalizers)
-	if err != nil {
-		return false, fmt.Errorf("failed to get finalizers for pod %s: %w", pod.Name, err)
-	}
-	if patch != nil {
-		result, err = c.patchResource(ctx, pod, patch)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to patch the finalizer of pod %s: %w", pod.Name, err)
-		}
-	}
-
-	if next.Delete() {
-		err = c.deleteResource(ctx, pod)
-		if err != nil {
-			return shouldRetry(err), fmt.Errorf("failed to delete pod %s: %w", pod.Name, err)
-		}
-		result = nil
-	} else {
-		c.markPodIP(pod)
-		patches, err := next.Patches(pod, c.renderer)
-		if err != nil {
-			return false, fmt.Errorf("failed to get patches for pod %s: %w", pod.Name, err)
-		}
-		for _, patch := range patches {
+	remainIndex, err := stage.DoSteps(
+		stepIndex, pod.Finalizers, pod, c.renderer,
+		func(event *internalversion.StageEvent) error {
+			if c.recorder != nil {
+				c.recorder.Event(&corev1.ObjectReference{
+					Kind:      "Pod",
+					UID:       pod.UID,
+					Name:      pod.Name,
+					Namespace: pod.Namespace,
+				}, event.Type, event.Reason, event.Message)
+			}
+			return nil
+		},
+		func() error {
+			err := c.deleteResource(ctx, pod)
+			if err != nil {
+				return fmt.Errorf("failed to delete pod %s: %w", pod.Name, err)
+			}
+			result = nil
+			return nil
+		},
+		func(patch *lifecycle.Patch) error {
+			c.markPodIP(pod)
 			changed, err := checkNeedPatchWithTyped(pod, patch.Data, patch.Type)
 			if err != nil {
-				return false, fmt.Errorf("failed to check need patch for pod %s: %w", pod.Name, err)
+				return fmt.Errorf("failed to check need patch for pod %s: %w", pod.Name, err)
 			}
 			if !changed {
 				logger.Debug("Skip pod",
@@ -350,10 +342,17 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *l
 			} else {
 				result, err = c.patchResource(ctx, pod, patch)
 				if err != nil {
-					return shouldRetry(err), fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
+					return fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
 				}
 			}
+			return nil
+		},
+	)
+	if err != nil {
+		if shouldRetry(err) {
+			return remainIndex, err
 		}
+		return -1, err
 	}
 
 	if result != nil && stage.ImmediateNextStage() {
@@ -361,7 +360,7 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *l
 			"reason", "immediateNextStage is true")
 		c.preprocessChan <- result
 	}
-	return false, nil
+	return -1, nil
 }
 
 func (c *PodController) readOnly(nodeName string) bool {

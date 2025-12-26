@@ -127,6 +127,9 @@ type resourceStageJob[T any] struct {
 	// RetryCount is used for tracking the retry times of a job.
 	// Must be initialized to 0.
 	RetryCount *uint64
+	// StepIndex is used to record what has been executed.
+	// Must be initialized to 0.
+	StepIndex *uint64
 }
 
 // defaultBackoff provides a backoff setting for kwok controllers to apply failed jobs

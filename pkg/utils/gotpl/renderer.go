@@ -67,7 +67,7 @@ func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) 
 			Funcs(r.funcMap).
 			Parse(text)
 		if err != nil {
-			return err
+			return fmt.Errorf("build template: %w", err)
 		}
 		r.cache.Store(text, temp)
 	}
@@ -75,7 +75,7 @@ func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) 
 	buf.Reset()
 	err := json.NewEncoder(buf).Encode(original)
 	if err != nil {
-		return err
+		return fmt.Errorf("json encoding: %w", err)
 	}
 
 	var data interface{}
@@ -83,13 +83,13 @@ func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) 
 	decoder.UseNumber()
 	err = decoder.Decode(&data)
 	if err != nil {
-		return err
+		return fmt.Errorf("json decoding: %w", err)
 	}
 
 	buf.Reset()
 	err = temp.Execute(buf, data)
 	if err != nil {
-		return err
+		return fmt.Errorf("gotpl execute: %w", err)
 	}
 	return nil
 }
