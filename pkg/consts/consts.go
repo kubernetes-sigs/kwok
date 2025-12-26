@@ -41,7 +41,7 @@ var (
 
 	EtcdBinaryPrefix = "https://github.com/etcd-io/etcd/releases/download"
 
-	KectlVersion      = "0.0.8"
+	KectlVersion      = "0.0.9"
 	KectlBinaryPrefix = "https://github.com/kwok-ci/kectl/releases/download"
 
 	KindVersion         = "0.27.0"
