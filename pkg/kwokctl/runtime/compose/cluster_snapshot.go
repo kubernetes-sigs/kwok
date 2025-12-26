@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -218,44 +217,6 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 		return err
 	}
 	return nil
-}
-
-// GetEtcdClient returns the etcd client of cluster
-func (c *Cluster) GetEtcdClient(ctx context.Context) (etcd.Client, func(), error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	conf := &config.Options
-
-	if conf.EtcdPort == 0 {
-		unused, err := net.GetUnusedPort(ctx, nil)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		cli, err := etcd.NewClient(etcd.ClientConfig{
-			Endpoints: []string{"http://" + net.LocalAddress + ":" + format.String(unused)},
-		})
-		if err != nil {
-			return nil, nil, err
-		}
-
-		cancel, err := c.PortForward(ctx, consts.ComponentEtcd, "http", unused)
-		if err != nil {
-			return nil, nil, err
-		}
-		return cli, cancel, nil
-	}
-
-	cli, err := etcd.NewClient(etcd.ClientConfig{
-		Endpoints: []string{"http://" + net.LocalAddress + ":" + format.String(conf.EtcdPort)},
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return cli, func() {}, nil
 }
 
 // KectlInCluster command in cluster
