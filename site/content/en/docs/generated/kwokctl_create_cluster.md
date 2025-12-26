@@ -70,10 +70,10 @@ kwokctl create cluster [flags]
       --kwok-controller-image string            Image of kwok-controller, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_IMAGE_PREFIX}/kwok:${KWOK_VERSION}'
                                                  (default "registry.k8s.io/kwok/kwok:v0.8.0")
-      --metrics-server-binary string            Binary of metrics-server, only for binary runtime (default "https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/metrics-server-linux-amd64")
+      --metrics-server-binary string            Binary of metrics-server, only for binary runtime (default "https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/metrics-server-linux-amd64")
       --metrics-server-image string             Image of metrics-server, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_METRICS_SERVER_IMAGE_PREFIX}/metrics-server:${KWOK_METRICS_SERVER_VERSION}'
-                                                 (default "registry.k8s.io/metrics-server/metrics-server:v0.7.2")
+                                                 (default "registry.k8s.io/metrics-server/metrics-server:v0.8.0")
       --node-lease-duration-seconds uint        Duration of node lease in seconds (default 40)
       --prometheus-binary string                Binary of Prometheus, only for binary runtime (default "https://github.com/prometheus/prometheus/releases/download/v3.3.1/prometheus-3.3.1.linux-amd64.tar.gz#prometheus")
       --prometheus-image string                 Image of Prometheus, only for docker/podman/nerdctl/kind/kind-podman runtime
