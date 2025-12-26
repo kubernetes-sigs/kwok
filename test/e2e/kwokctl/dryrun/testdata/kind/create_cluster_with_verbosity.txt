@@ -507,7 +507,7 @@ spec:
     name: volume-4
 status: {}
 EOF
-docker pull docker.io/jaegertracing/all-in-one:1.69.0
+docker pull docker.io/jaegertracing/all-in-one:1.76.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/jaeger.yaml
 apiVersion: v1
 kind: Pod
@@ -521,7 +521,7 @@ spec:
     - --collector.otlp.enabled=true
     - --query.http-server.host-port=0.0.0.0:16686
     - --collector.otlp.grpc.host-port=0.0.0.0:4317
-    image: docker.io/jaegertracing/all-in-one:1.69.0
+    image: docker.io/jaegertracing/all-in-one:1.76.0
     imagePullPolicy: Never
     name: jaeger
     ports:
@@ -642,7 +642,7 @@ KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/metrics-scraper:v1.0.9 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/metrics-server/metrics-server:v0.8.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v3.3.1 --name kwok-<CLUSTER_NAME>
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/jaegertracing/all-in-one:1.69.0 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/jaegertracing/all-in-one:1.76.0 --name kwok-<CLUSTER_NAME>
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF

@@ -507,7 +507,7 @@ spec:
     name: volume-4
 status: {}
 EOF
-podman pull docker.io/jaegertracing/all-in-one:1.69.0
+podman pull docker.io/jaegertracing/all-in-one:1.76.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/jaeger.yaml
 apiVersion: v1
 kind: Pod
@@ -521,7 +521,7 @@ spec:
     - --collector.otlp.enabled=true
     - --query.http-server.host-port=0.0.0.0:16686
     - --collector.otlp.grpc.host-port=0.0.0.0:4317
-    image: docker.io/jaegertracing/all-in-one:1.69.0
+    image: docker.io/jaegertracing/all-in-one:1.76.0
     imagePullPolicy: Never
     name: jaeger
     ports:
@@ -661,9 +661,9 @@ podman save docker.io/prom/prometheus:v3.3.1 -o <ROOT_DIR>/workdir/cache/image-a
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.3.1.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.3.1.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one
-podman save docker.io/jaegertracing/all-in-one:1.69.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.69.0.tar
-KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.69.0.tar --name kwok-<CLUSTER_NAME>
-rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.69.0.tar
+podman save docker.io/jaegertracing/all-in-one:1.76.0 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.76.0.tar
+KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.76.0.tar --name kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.76.0.tar
 kubectl config view --minify=true --raw=true
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
