@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+	"text/template/parse"
 
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
@@ -35,7 +35,7 @@ type FuncMap = template.FuncMap
 // Renderer is a template Renderer interface.
 // It can render a template with the given text and original object.
 type Renderer interface {
-	ToText(text string, original interface{}) ([]byte, error)
+	ToText(text string, original interface{}) (string, error)
 	ToJSON(text string, original interface{}) ([]byte, error)
 }
 
@@ -56,6 +56,30 @@ func NewRenderer(funcMap FuncMap) Renderer {
 	}
 }
 
+func isTemplate(temp *template.Template) bool {
+	if temp == nil {
+		return false
+	}
+
+	if temp.Root == nil {
+		return false
+	}
+
+	if temp.Root.Type() != parse.NodeList {
+		return true
+	}
+
+	if len(temp.Root.Nodes) != 1 {
+		return true
+	}
+
+	if temp.Root.Nodes[0].Type() != parse.NodeText {
+		return true
+	}
+
+	return false
+}
+
 func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) error {
 	text = strings.TrimSpace(text)
 	temp, ok := r.cache.Load(text)
@@ -69,7 +93,19 @@ func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) 
 		if err != nil {
 			return fmt.Errorf("build template: %w", err)
 		}
-		r.cache.Store(text, temp)
+		if isTemplate(temp) {
+			r.cache.Store(text, temp)
+		} else {
+			r.cache.Store(text, nil)
+		}
+	}
+
+	if temp == nil {
+		_, err := buf.WriteString(text)
+		if err != nil {
+			return fmt.Errorf("write string: %w", err)
+		}
+		return nil
 	}
 
 	buf.Reset()
@@ -95,15 +131,15 @@ func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) 
 }
 
 // ToText renders the template with the given text and original object.
-func (r *renderer) ToText(text string, original interface{}) ([]byte, error) {
+func (r *renderer) ToText(text string, original interface{}) (string, error) {
 	buf := r.bufferPool.Get()
 	defer r.bufferPool.Put(buf)
 
 	err := r.render(buf, text, original)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", err, buf.String())
+		return "", fmt.Errorf("%w: %s", err, buf.String())
 	}
-	return slices.Clone(buf.Bytes()), nil
+	return buf.String(), nil
 }
 
 // ToJSON renders the template with the given text and original object and converts the result to JSON.
