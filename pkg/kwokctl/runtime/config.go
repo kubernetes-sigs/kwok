@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwokctl/etcd"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 )
 
@@ -144,9 +143,6 @@ type Runtime interface {
 
 	// GetClientset returns the clientset of cluster
 	GetClientset(ctx context.Context) (client.Clientset, error)
-
-	// GetEtcdClient returns the etcd client of cluster
-	GetEtcdClient(ctx context.Context) (etcd.Client, func(), error)
 
 	// Kectl executes kectl commands on the cluster from the host
 	Kectl(ctx context.Context, args ...string) error

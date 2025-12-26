@@ -42,7 +42,7 @@ func CaseHack(kwokctlPath, clusterName, nodeName string) *features.FeatureBuilde
 		Teardown(helper.DeleteNode(node)).
 		Assess("Hack Data", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			buf0 := &bytes.Buffer{}
-			_, err := exec.Command(exec.WithWriteTo(ctx, buf0), kwokctlPath, "--name", clusterName, "hack", "get", "no", nodeName)
+			_, err := exec.Command(exec.WithWriteTo(ctx, buf0), kwokctlPath, "--name", clusterName, "kectl", "get", "no", nodeName, "-o", "yaml")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -51,7 +51,7 @@ func CaseHack(kwokctlPath, clusterName, nodeName string) *features.FeatureBuilde
 			}
 
 			buf1 := &bytes.Buffer{}
-			_, err = exec.Command(exec.WithWriteTo(ctx, buf1), kwokctlPath, "--name", clusterName, "hack", "delete", "no", nodeName)
+			_, err = exec.Command(exec.WithWriteTo(ctx, buf1), kwokctlPath, "--name", clusterName, "kectl", "delete", "no", nodeName)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -59,13 +59,13 @@ func CaseHack(kwokctlPath, clusterName, nodeName string) *features.FeatureBuilde
 				t.Fatalf("failed hack delete node %q", buf1.String())
 			}
 
-			_, err = exec.Command(exec.WithReadFrom(ctx, bytes.NewBuffer(buf0.Bytes())), kwokctlPath, "--name", clusterName, "hack", "put", "no", nodeName, "--path", "-")
+			_, err = exec.Command(exec.WithReadFrom(ctx, bytes.NewBuffer(buf0.Bytes())), kwokctlPath, "--name", clusterName, "kectl", "put", "no", nodeName, "--path", "-")
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			buf2 := &bytes.Buffer{}
-			_, err = exec.Command(exec.WithWriteTo(ctx, buf2), kwokctlPath, "--name", clusterName, "hack", "get", "no", nodeName)
+			_, err = exec.Command(exec.WithWriteTo(ctx, buf2), kwokctlPath, "--name", clusterName, "kectl", "get", "no", nodeName, "-o", "yaml")
 			if err != nil {
 				t.Fatal(err)
 			}
