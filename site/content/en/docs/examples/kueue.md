@@ -186,13 +186,108 @@ Check the workload status
 ```bash
 kubectl get workloads
 NAME                   QUEUE              RESERVED IN          ADMITTED   FINISHED   AGE
-job-sample-job-a3b23   kwok-local-queue   kwok-cluster-queue   True       True       4s
+job-sample-job-d7b38   kwok-local-queue   kwok-cluster-queue   True       True       5s
+```
 
-kubectl describe workload job-sample-job-a3b23
+```bash
+kubectl describe workload job-sample-job-d7b38
+Name:         job-sample-job-d7b38
+Namespace:    default
+Labels:       kueue.x-k8s.io/job-uid=22cd157f-9ddd-43bb-9e88-223ff22c146c
+Annotations:  <none>
+API Version:  kueue.x-k8s.io/v1beta1
+Kind:         Workload
+Metadata:
+  Creation Timestamp:  2025-12-29T19:24:23Z
+  Generation:          1
+  Owner References:
+    API Version:           batch/v1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  Job
+    Name:                  sample-job
+    UID:                   22cd157f-9ddd-43bb-9e88-223ff22c146c
+  Resource Version:        906
+  UID:                     2d40bf89-86a4-4790-ba30-939385be714b
+Spec:
+  Active:  true
+  Pod Sets:
+    Count:  1
+    Name:   main
+    Template:
+      Metadata:
+      Spec:
+        Containers:
+          Args:
+            30s
+          Image:              gcr.io/k8s-staging-perf-tests/sleep:v0.1.0
+          Image Pull Policy:  IfNotPresent
+          Name:               dummy-job
+          Resources:
+            Requests:
+              Cpu:                     1
+              Memory:                  200Mi
+          Termination Message Path:    /dev/termination-log
+          Termination Message Policy:  File
+        Dns Policy:                    ClusterFirst
+        Node Selector:
+          Type:          kwok
+        Restart Policy:  Never
+        Scheduler Name:  default-scheduler
+        Security Context:
+        Termination Grace Period Seconds:  30
+    Topology Request:
+      Pod Index Label:    batch.kubernetes.io/job-completion-index
+  Priority:               0
+  Priority Class Source:  
+  Queue Name:             kwok-local-queue
+Status:
+  Admission:
+    Cluster Queue:  kwok-cluster-queue
+    Pod Set Assignments:
+      Count:  1
+      Flavors:
+        Cpu:     kwok-resource-flavor
+        Memory:  kwok-resource-flavor
+      Name:      main
+      Resource Usage:
+        Cpu:     1
+        Memory:  200Mi
+      Topology Assignment:
+        Domains:
+          Count:  1
+          Values:
+            kwok
+        Levels:
+          type
+  Conditions:
+    Last Transition Time:  2025-12-29T19:24:23Z
+    Message:               Quota reserved in ClusterQueue kwok-cluster-queue
+    Observed Generation:   1
+    Reason:                QuotaReserved
+    Status:                True
+    Type:                  QuotaReserved
+    Last Transition Time:  2025-12-29T19:24:23Z
+    Message:               The workload is admitted
+    Observed Generation:   1
+    Reason:                Admitted
+    Status:                True
+    Type:                  Admitted
+    Last Transition Time:  2025-12-29T19:24:25Z
+    Message:               Reached expected number of succeeded pods
+    Observed Generation:   1
+    Reason:                Succeeded
+    Status:                True
+    Type:                  Finished
+Events:
+  Type    Reason         Age   From             Message
+  ----    ------         ----  ----             -------
+  Normal  QuotaReserved  15s   kueue-admission  Quota reserved in ClusterQueue kwok-cluster-queue, wait time since queued was 1s
+  Normal  Admitted       15s   kueue-admission  Admitted by ClusterQueue kwok-cluster-queue, wait time since reservation was 0s
 ...
 ```
 
-Verify the job is admitted and running
+Verify the job is admitted, executed and completed
 ```bash
 kubectl get jobs
 NAME         STATUS     COMPLETIONS   DURATION   AGE
