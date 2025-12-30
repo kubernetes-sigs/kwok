@@ -12,25 +12,46 @@ stages:
     type: Normal
   - data:
       status:
+        $setElementOrder/conditions:
+        - type: PodReadyToStartContainers
+        - type: Initialized
+        - type: Ready
+        - type: ContainersReady
+        - type: PodScheduled
         conditions:
         - lastProbeTime: null
           lastTransitionTime: <Now>
+          observedGeneration: 1
+          status: "True"
+          type: PodReadyToStartContainers
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          observedGeneration: 1
           status: "True"
           type: Initialized
         - lastProbeTime: null
           lastTransitionTime: <Now>
           message: 'containers with unready status: [ container ]'
+          observedGeneration: 1
           reason: ContainersNotReady
           status: "False"
           type: Ready
         - lastProbeTime: null
           lastTransitionTime: <Now>
           message: 'containers with unready status: [ container ]'
+          observedGeneration: 1
           reason: ContainersNotReady
           status: "False"
           type: ContainersReady
+        - lastProbeTime: null
+          lastTransitionTime: <Now>
+          observedGeneration: 1
+          status: "True"
+          type: PodScheduled
         containerStatuses:
         - image: image
+          imageID: kwok://image/image
+          lastState: {}
           name: container
           ready: false
           restartCount: 0
@@ -39,10 +60,11 @@ stages:
             waiting:
               reason: ContainerCreating
         hostIP: <NodeIPWith("node")>
-        phase: Pending
+        observedGeneration: 1
         podIP: <PodIPWith("node", false, "", "pod-create", "")>
+        startTime: <Now>
     kind: patch
     subresource: status
-    type: application/merge-patch+json
+    type: application/strategic-merge-patch+json
   stage: pod-create
   weight: 1
