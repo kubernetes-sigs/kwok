@@ -275,6 +275,9 @@ menu:
   - identifier: ray
     pageRef: "/docs/examples/ray"
     parent: kwokctl-integration
+  - identifier: kueue
+    pageRef: "/docs/examples/kueue"
+    parent: kwokctl-integration
 
   # Technical Outcome Scheduling Children
   - identifier: examples-scheduling-requests-and-limits
