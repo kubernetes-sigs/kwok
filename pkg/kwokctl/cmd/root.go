@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/etcdctl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/export"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/get"
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/hack"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/kectl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/kubectl"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/logs"
@@ -74,7 +73,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		scale.NewCommand(ctx),
 		snapshot.NewCommand(ctx),
 		export.NewCommand(ctx),
-		hack.NewCommand(ctx),
 		port_forward.NewCommand(ctx),
 	)
 	return cmd
