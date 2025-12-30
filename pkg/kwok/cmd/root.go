@@ -33,10 +33,6 @@ import (
 	tracingapi "k8s.io/component-base/tracing/api/v1"
 	"k8s.io/utils/clock"
 
-	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
-	nodeheartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
-	nodeheartbeatwithlease "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat-with-lease"
-	podfast "sigs.k8s.io/kwok/kustomize/stage/pod/fast"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
@@ -167,18 +163,15 @@ func runE(ctx context.Context, flags *flagpole) error {
 		podRef := internalversion.StageResourceRef{APIGroup: "v1", Kind: "Pod"}
 
 		if len(groupStages[nodeRef]) == 0 {
-			logger.Warn("No node stages found, using default node stages")
-			groupStages[nodeRef], err = getDefaultNodeStages(flags.Options.NodeLeaseDurationSeconds == 0)
-			if err != nil {
-				return err
-			}
+			logger.Warn("No node stages found")
 		}
 
 		if len(groupStages[podRef]) == 0 {
-			groupStages[podRef], err = getDefaultPodStages()
-			if err != nil {
-				return err
-			}
+			logger.Warn("No pod stages found")
+		}
+
+		if len(groupStages) == 0 {
+			return fmt.Errorf("no stages found")
 		}
 	}
 
@@ -491,33 +484,4 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 		return err
 	}
 	return nil
-}
-
-func getDefaultNodeStages(lease bool) ([]*internalversion.Stage, error) {
-	nodeStages := []*internalversion.Stage{}
-	nodeInitStage, err := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
-	if err != nil {
-		return nil, err
-	}
-	nodeStages = append(nodeStages, nodeInitStage)
-
-	rawHeartbeat := nodeheartbeat.DefaultNodeHeartbeat
-	if lease {
-		rawHeartbeat = nodeheartbeatwithlease.DefaultNodeHeartbeatWithLease
-	}
-
-	nodeHeartbeatStage, err := config.UnmarshalWithType[*internalversion.Stage](rawHeartbeat)
-	if err != nil {
-		return nil, err
-	}
-	nodeStages = append(nodeStages, nodeHeartbeatStage)
-	return nodeStages, nil
-}
-
-func getDefaultPodStages() ([]*internalversion.Stage, error) {
-	return slices.MapWithError([]string{
-		podfast.DefaultPodReady,
-		podfast.DefaultPodComplete,
-		podfast.DefaultPodDelete,
-	}, config.UnmarshalWithType[*internalversion.Stage, string])
 }
