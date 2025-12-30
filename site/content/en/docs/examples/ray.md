@@ -23,7 +23,7 @@ kubectl apply -f https://kwok.sigs.k8s.io/examples/node.yaml
 Verify that the nodes are created and running
 ```bash
 kubectl get node
-kNAME                      STATUS                     ROLES           AGE     VERSION
+NAME                      STATUS                     ROLES           AGE     VERSION
 kwok-kwok-control-plane   Ready,SchedulingDisabled   control-plane   3m33s   v1.33.0
 kwok-node-0               Ready                      agent           3m11s   kwok-v0.7.0
 ```
