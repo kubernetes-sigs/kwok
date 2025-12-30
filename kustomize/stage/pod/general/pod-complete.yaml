@@ -22,6 +22,11 @@ spec:
       operator: 'In'
       values:
       - 'Job'
+    - key: '.spec.restartPolicy'
+      operator: 'In'
+      values:
+      - 'Never'
+      - 'OnFailure'
   weight: 1
   weightFrom:
     expressionFrom: '.metadata.annotations["pod-complete.stage.kwok.x-k8s.io/weight"]'
