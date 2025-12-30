@@ -29,10 +29,10 @@ kwokctl create cluster [flags]
       --extra-args component=key=value          Pass a single extra arg key-value pair to the component in the format component=key=value
       --heartbeat-factor float                  Scale factor for all about heartbeat (default 5)
   -h, --help                                    help for cluster
-      --jaeger-binary string                    Binary of Jaeger, only for binary runtime (default "https://github.com/jaegertracing/jaeger/releases/download/v1.69.0/jaeger-1.69.0-linux-amd64.tar.gz#jaeger-all-in-one")
+      --jaeger-binary string                    Binary of Jaeger, only for binary runtime (default "https://github.com/jaegertracing/jaeger/releases/download/v1.76.0/jaeger-1.76.0-linux-amd64.tar.gz#jaeger-all-in-one")
       --jaeger-image string                     Image of Jaeger, only for docker/podman/nerdctl/kind/kind-podman runtime
                                                 '${KWOK_JAEGER_IMAGE_PREFIX}/all-in-one:${KWOK_JAEGER_VERSION}'
-                                                 (default "docker.io/jaegertracing/all-in-one:1.69.0")
+                                                 (default "docker.io/jaegertracing/all-in-one:1.76.0")
       --jaeger-port uint32                      Port to expose Jaeger UI
       --kind-binary string                      Binary of kind, only for kind/kind-podman runtime
                                                  (default "https://github.com/kubernetes-sigs/kind/releases/download/v0.31.0/kind-linux-amd64")
