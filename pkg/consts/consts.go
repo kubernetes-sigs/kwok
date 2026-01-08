@@ -87,6 +87,8 @@ const (
 	RuntimeTypeLima = "lima"
 	// RuntimeTypeFinch is the finch runtime.
 	RuntimeTypeFinch = "finch"
+	// RuntimeTypeAppleContainer is the apple container runtime.
+	RuntimeTypeAppleContainer = "container"
 
 	// Cluster runtime type, creates a cluster and deploys the components in the cluster.
 

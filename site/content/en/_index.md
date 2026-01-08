@@ -57,19 +57,20 @@ and [contribution to KWOK][contributor guide].
 
 Runtime indicates which medium `kwokctl` will use to start the cluster
 
-|              \              | linux/<br/>amd64 | linux/<br/>arm64 | darwin/<br/>amd64 | darwin/<br/>arm64 | windows/<br/>amd64 | windows/<br/>arm64  |
-|:---------------------------:|:----------------:|:----------------:|:-----------------:|:-----------------:|:------------------:|:-------------------:|
-| [binary][binary-runtime] ⭐️ |        🟢        |        🔵        |        🟢         |        🟢         |         🟢         |         🟣          |
-| [docker][docker-runtime] ⭐️ |        🟢        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
-| [podman][podman-runtime] ⭐️ |        🟢        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
-| [nerdctl][nerdctl-runtime]  |        🟢        |        🔵        |        🔴         |        🔴         |         🔴         |         🔴          |
-|   [lima][lima-runtime] ⚠️   |        🟣        |        🟣        |        🟣         |        🟣         |         🔴         |         🔴          |
-|  [finch][finch-runtime] ⚠️  |        🔴        |        🔴        |        🟣         |        🟣         |         🟣         |         🟣          |
-|    [kind][kind-runtime]     |        🟢        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
-|       **kind-podman**       |        🟢        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
-|     **kind-nerdctl** ⚠️     |        🟣        |        🟣        |        🔴         |        🔴         |         🔴         |         🔴          |
-|      **kind-lima** ⚠️       |        🟣        |        🟣        |        🟣         |        🟣         |         🔴         |         🔴          |
-|      **kind-finch** ⚠️      |        🔴        |        🔴        |        🟣         |        🟣         |         🟣         |         🟣          |
+|                       \                       | linux/<br/>amd64 | linux/<br/>arm64 | darwin/<br/>amd64 | darwin/<br/>arm64 | windows/<br/>amd64 | windows/<br/>arm64 |
+| :-------------------------------------------: | :--------------: | :--------------: | :---------------: | :---------------: | :----------------: | :----------------: |
+|          [binary][binary-runtime] ⭐️           |        🟢         |        🔵         |         🟢         |         🟢         |         🟢          |         🟣          |
+|          [docker][docker-runtime] ⭐️           |        🟢         |        🔵         |         🔵         |         🔵         |         🟣          |         🟣          |
+|          [podman][podman-runtime] ⭐️           |        🟢         |        🔵         |         🔵         |         🔵         |         🟣          |         🟣          |
+| apple [container][apple-container-runtime] ⚠️ |        🔴         |        🔴         |         🟣         |         🟣         |         🔴          |         🔴          |
+|          [nerdctl][nerdctl-runtime]           |        🟢         |        🔵         |         🔴         |         🔴         |         🔴          |         🔴          |
+|            [lima][lima-runtime] ⚠️             |        🟣         |        🟣         |         🟣         |         🟣         |         🔴          |         🔴          |
+|           [finch][finch-runtime] ⚠️            |        🔴         |        🔴         |         🟣         |         🟣         |         🟣          |         🟣          |
+|             [kind][kind-runtime]              |        🟢         |        🔵         |         🔵         |         🔵         |         🟣          |         🟣          |
+|                **kind-podman**                |        🟢         |        🔵         |         🔵         |         🔵         |         🟣          |         🟣          |
+|              **kind-nerdctl** ⚠️               |        🟣         |        🟣         |         🔴         |         🔴         |         🔴          |         🔴          |
+|                **kind-lima** ⚠️                |        🟣         |        🟣         |         🟣         |         🟣         |         🔴          |         🔴          |
+|               **kind-finch** ⚠️                |        🔴         |        🔴         |         🟣         |         🟣         |         🟣          |         🟣          |
 
 - ⭐️ Recommended
 - ⚠️ Work in progress
@@ -112,6 +113,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 [docker-runtime]: https://docs.docker.com/get-docker/
 [podman-runtime]: https://podman.io/docs/installation
 [nerdctl-runtime]: https://github.com/containerd/nerdctl/releases
+[apple-container-runtime]: https://github.com/apple/container
 [lima-runtime]: https://lima-vm.io/docs/installation/
 [finch-runtime]: https://runfinch.com/docs/getting-started/installation/
 [kind-runtime]: https://kind.sigs.k8s.io/docs/user/quick-start/
