@@ -1,0 +1,482 @@
+kind: Metric
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: metrics-stats-summary
+spec:
+  path: "/metrics/nodes/{nodeName}/stats/summary"
+  metrics:
+  # Node-level stats (OTel semantic conventions: k8s.node.*)
+  - name: k8s.node.cpu.time
+    dimension: node
+    help: |
+      Total cumulative CPU time (in seconds) used by the node
+    kind: counter
+    value: 'node.CumulativeUsage("cpu")'
+  - name: k8s.node.cpu.usage
+    dimension: node
+    help: |
+      Node's CPU usage (as a fraction of available CPU resources)
+    kind: gauge
+    value: 'node.Usage("cpu")'
+  - name: k8s.node.memory.available
+    dimension: node
+    help: |
+      Node memory available in bytes
+    kind: gauge
+    value: 'Quantity(node.status.allocatable["memory"]).AsApproximateFloat64() - node.Usage("memory")'
+  - name: k8s.node.memory.usage
+    dimension: node
+    help: |
+      Node memory usage in bytes
+    kind: gauge
+    value: 'node.Usage("memory")'
+  - name: k8s.node.memory.rss
+    dimension: node
+    help: |
+      Node memory RSS in bytes
+    kind: gauge
+    value: 'node.Usage("memory") * 0.8'
+  - name: k8s.node.memory.working_set
+    dimension: node
+    help: |
+      Node memory working set in bytes
+    kind: gauge
+    value: 'node.Usage("memory")'
+  - name: k8s.node.network.io
+    dimension: node
+    help: |
+      Node network bytes transferred
+    kind: counter
+    labels:
+    - name: direction
+      value: '"receive"'
+    value: '0'
+  - name: k8s.node.network.io
+    dimension: node
+    help: |
+      Node network bytes transferred
+    kind: counter
+    labels:
+    - name: direction
+      value: '"transmit"'
+    value: '0'
+  - name: k8s.node.filesystem.available
+    dimension: node
+    help: |
+      Node filesystem available in bytes
+    kind: gauge
+    value: 'Quantity("100Gi").AsApproximateFloat64()'
+  - name: k8s.node.filesystem.capacity
+    dimension: node
+    help: |
+      Node filesystem capacity in bytes
+    kind: gauge
+    value: 'Quantity("200Gi").AsApproximateFloat64()'
+  - name: k8s.node.filesystem.usage
+    dimension: node
+    help: |
+      Node filesystem usage in bytes
+    kind: gauge
+    value: 'Quantity("100Gi").AsApproximateFloat64()'
+  - name: k8s.node.uptime
+    dimension: node
+    help: |
+      The time since the node started in seconds
+    kind: gauge
+    value: 'node.SinceSecond()'
+
+  - name: k8s.pod.cpu.time
+    dimension: pod
+    help: |
+      Total cumulative CPU time (in seconds) used by the pod
+    kind: counter
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.CumulativeUsage("cpu")'
+  - name: k8s.pod.cpu.usage
+    dimension: pod
+    help: |
+      Pod's CPU usage (as a fraction of node CPU resources)
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Usage("cpu")'
+  - name: k8s.pod.memory.available
+    dimension: pod
+    help: |
+      Pod memory available in bytes
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'Quantity("1Gi").AsApproximateFloat64()'
+  - name: k8s.pod.memory.usage
+    dimension: pod
+    help: |
+      Pod memory usage in bytes
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Usage("memory")'
+  - name: k8s.pod.memory.rss
+    dimension: pod
+    help: |
+      Pod memory RSS in bytes
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Usage("memory") * 0.8'
+  - name: k8s.pod.memory.working_set
+    dimension: pod
+    help: |
+      Pod memory working set in bytes
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Usage("memory")'
+  - name: k8s.pod.network.io
+    dimension: pod
+    help: |
+      Pod network bytes transferred
+    kind: counter
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    - name: direction
+      value: '"receive"'
+    value: '0'
+  - name: k8s.pod.network.io
+    dimension: pod
+    help: |
+      Pod network bytes transferred
+    kind: counter
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    - name: direction
+      value: '"transmit"'
+    value: '0'
+  - name: k8s.pod.uptime
+    dimension: pod
+    help: |
+      The time since the pod started in seconds
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.SinceSecond()'
+  - name: k8s.pod.filesystem.available
+    dimension: pod
+    help: |
+      Pod filesystem available in bytes
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'Quantity("10Gi").AsApproximateFloat64()'
+  - name: k8s.pod.filesystem.capacity
+    dimension: pod
+    help: |
+      Pod filesystem capacity in bytes
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'Quantity("20Gi").AsApproximateFloat64()'
+  - name: k8s.pod.filesystem.usage
+    dimension: pod
+    help: |
+      Pod filesystem usage in bytes
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'Quantity("5Gi").AsApproximateFloat64()'
+  - name: k8s.pod.memory.major_page_faults
+    dimension: pod
+    help: |
+      Pod memory major page faults ratio
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: '0.0'
+  - name: k8s.pod.network.errors
+    dimension: pod
+    help: |
+      Pod network errors total
+    kind: counter
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    - name: direction
+      value: '"receive"'
+    value: '0'
+  - name: k8s.pod.network.errors
+    dimension: pod
+    help: |
+      Pod network errors total
+    kind: counter
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    - name: direction
+      value: '"transmit"'
+    value: '0'
+  - name: k8s.pod.phase
+    dimension: pod
+    help: |
+      Current phase of the pod (1=Pending, 2=Running, 3=Succeeded, 4=Failed, 5=Unknown)
+    kind: gauge
+    labels:
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    - name: phase
+      value: 'pod.status.phase'
+    value: 'pod.status.phase == "Pending" ? 1.0 : pod.status.phase == "Running" ? 2.0 : pod.status.phase == "Succeeded" ? 3.0 : pod.status.phase == "Failed" ? 4.0 : 5.0'
+
+  - name: k8s.container.cpu.time
+    dimension: container
+    help: |
+      Total cumulative CPU time (in seconds) used by the container
+    kind: counter
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.CumulativeUsage("cpu", container.name)'
+  - name: k8s.container.cpu.usage
+    dimension: container
+    help: |
+      Container's CPU usage (as a fraction of node CPU resources)
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Usage("cpu", container.name)'
+  - name: k8s.container.memory.available
+    dimension: container
+    help: |
+      Container memory available in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'Quantity("512Mi").AsApproximateFloat64()'
+  - name: k8s.container.memory.usage
+    dimension: container
+    help: |
+      Container memory usage in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Usage("memory", container.name)'
+  - name: k8s.container.memory.rss
+    dimension: container
+    help: |
+      Container memory RSS in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Usage("memory", container.name) * 0.8'
+  - name: k8s.container.memory.working_set
+    dimension: container
+    help: |
+      Container memory working set in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Usage("memory", container.name)'
+  - name: k8s.container.filesystem.available
+    dimension: container
+    help: |
+      Container filesystem available in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'Quantity("10Gi").AsApproximateFloat64()'
+  - name: k8s.container.filesystem.capacity
+    dimension: container
+    help: |
+      Container filesystem capacity in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'Quantity("20Gi").AsApproximateFloat64()'
+  - name: k8s.container.filesystem.usage
+    dimension: container
+    help: |
+      Container filesystem usage in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'Quantity("5Gi").AsApproximateFloat64()'
+  - name: k8s.container.uptime
+    dimension: container
+    help: |
+      The time since the container started in seconds
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.SinceSecond()'
+  - name: k8s.container.cpu.limit
+    dimension: container
+    help: |
+      Container CPU limit in cores
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: '"cpu" in container.resources.limits ? Quantity(container.resources.limits["cpu"]).AsApproximateFloat64() : 0.0'
+  - name: k8s.container.cpu.request
+    dimension: container
+    help: |
+      Container CPU request in cores
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: '"cpu" in container.resources.requests ? Quantity(container.resources.requests["cpu"]).AsApproximateFloat64() : 0.0'
+  - name: k8s.container.memory.limit
+    dimension: container
+    help: |
+      Container memory limit in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: '"memory" in container.resources.limits ? Quantity(container.resources.limits["memory"]).AsApproximateFloat64() : 0.0'
+  - name: k8s.container.memory.request
+    dimension: container
+    help: |
+      Container memory request in bytes
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: '"memory" in container.resources.requests ? Quantity(container.resources.requests["memory"]).AsApproximateFloat64() : 0.0'
+  - name: k8s.container.ready
+    dimension: container
+    help: |
+      Whether the container is ready (1 for ready, 0 for not ready)
+    kind: gauge
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.Ready(container.name) ? 1.0 : 0.0'
+  - name: k8s.container.restarts
+    dimension: container
+    help: |
+      Number of times the container has been restarted
+    kind: counter
+    labels:
+    - name: k8s.container.name
+      value: 'container.name'
+    - name: k8s.namespace.name
+      value: 'pod.metadata.namespace'
+    - name: k8s.pod.name
+      value: 'pod.metadata.name'
+    value: 'pod.RestartCount(container.name)'
