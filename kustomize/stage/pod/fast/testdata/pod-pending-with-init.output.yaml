@@ -24,6 +24,25 @@ stages:
             running:
               startedAt: <Now>
         hostIP: <NodeIPWith("node")>
+        initContainerStatuses:
+        - image: image
+          name: init
+          ready: true
+          restartCount: 0
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: <Now>
+              reason: Completed
+              startedAt: <Now>
+        - image: image
+          name: sidecar
+          ready: true
+          restartCount: 0
+          started: true
+          state:
+            running:
+              startedAt: <Now>
         phase: Running
         podIP: <PodIPWith("node", false, "", "pod-pending", "")>
         startTime: <Now>
