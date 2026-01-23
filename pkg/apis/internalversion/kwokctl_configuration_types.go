@@ -361,6 +361,9 @@ type Component struct {
 	// MetricsDiscovery is the metrics discovery of the component.
 	MetricsDiscovery *ComponentMetric
 
+	// InCluster indicates if the component runs in the cluster.
+	InCluster bool
+
 	// Version is the version of the component.
 	Version string
 }

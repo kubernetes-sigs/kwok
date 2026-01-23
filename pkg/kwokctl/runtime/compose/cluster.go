@@ -186,6 +186,7 @@ type env struct {
 	caCertPath                    string
 	adminKeyPath                  string
 	adminCertPath                 string
+	inClusterTokenPath            string
 	inClusterPkiPath              string
 	inClusterCaCertPath           string
 	inClusterAdminKeyPath         string
@@ -224,6 +225,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	adminKeyPath := path.Join(pkiPath, "admin.key")
 	adminCertPath := path.Join(pkiPath, "admin.crt")
 	inClusterPkiPath := "/etc/kubernetes/pki/"
+	inClusterTokenPath := path.Join(inClusterPkiPath, "token")
 	inClusterCaCertPath := path.Join(inClusterPkiPath, "ca.crt")
 	inClusterAdminKeyPath := path.Join(inClusterPkiPath, "admin.key")
 	inClusterAdminCertPath := path.Join(inClusterPkiPath, "admin.crt")
@@ -260,6 +262,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 		inClusterCaCertPath:           inClusterCaCertPath,
 		inClusterAdminKeyPath:         inClusterAdminKeyPath,
 		inClusterAdminCertPath:        inClusterAdminCertPath,
+		inClusterTokenPath:            inClusterTokenPath,
 		inClusterPort:                 inClusterPort,
 		scheme:                        scheme,
 		usedPorts:                     usedPorts,
@@ -850,8 +853,23 @@ func (c *Cluster) preInstall(_ context.Context, env *env) error {
 func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 	conf := &env.kwokctlConfig.Options
 
+	var inCluster *inClusterConfig
 	for i := range env.kwokctlConfig.Components {
-		runtime.ApplyComponentPatches(ctx, &env.kwokctlConfig.Components[i], env.kwokctlConfig.ComponentsPatches)
+		component := &env.kwokctlConfig.Components[i]
+		runtime.ApplyComponentPatches(ctx, component, env.kwokctlConfig.ComponentsPatches)
+
+		if component.InCluster {
+			if inCluster == nil {
+				inCluster = &inClusterConfig{
+					Host:           c.Name() + "-kube-apiserver:",
+					Port:           env.inClusterPort,
+					TokenHostPath:  env.inClusterTokenPath,
+					CACertHostPath: env.inClusterCaCertPath,
+				}
+			}
+
+			inCluster.ApplyTo(component)
+		}
 	}
 
 	// Setup kubeconfig

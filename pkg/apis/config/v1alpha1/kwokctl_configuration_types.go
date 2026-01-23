@@ -529,6 +529,10 @@ type Component struct {
 	// MetricsDiscovery is the metrics discovery of the component.
 	MetricsDiscovery *ComponentMetric `json:"metricsDiscovery,omitempty"`
 
+	// InCluster indicates if the component runs in the cluster.
+	// +optional
+	InCluster bool `json:"inCluster"`
+
 	// Version is the version of the component.
 	// +optional
 	Version string `json:"version,omitempty"`
