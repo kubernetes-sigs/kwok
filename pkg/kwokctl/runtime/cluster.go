@@ -60,6 +60,7 @@ var (
 	PkiName                 = "pki"
 	ManifestsName           = "manifests"
 	Prometheus              = "prometheus.yaml"
+	Kueue                   = "kueue.yaml"
 	KindName                = "kind.yaml"
 	AuditPolicyName         = "audit.yaml"
 	AuditLogName            = "audit.log"

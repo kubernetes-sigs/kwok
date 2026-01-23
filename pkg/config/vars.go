@@ -220,6 +220,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setMetricsServerConfig(conf)
 
+	setKueueConfig(conf)
+
 	setKectlConfig(conf)
 
 	return config
@@ -572,6 +574,23 @@ func setMetricsServerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.MetricsServerBinary = conf.MetricsServerBinaryPrefix + "/metrics-server-" + GOOS + "-" + GOARCH + conf.BinSuffix
 	}
 	conf.MetricsServerBinary = envs.GetEnvWithPrefix("METRICS_SERVER_BINARY", conf.MetricsServerBinary)
+}
+
+func setKueueConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.KueueVersion == "" {
+		conf.KueueVersion = consts.KueueVersion
+	}
+	conf.KueueVersion = version.AddPrefixV(envs.GetEnvWithPrefix("KUEUE_VERSION", conf.KueueVersion))
+
+	if conf.KueueImagePrefix == "" {
+		conf.KueueImagePrefix = consts.KueueImagePrefix
+	}
+	conf.KueueImagePrefix = envs.GetEnvWithPrefix("KUEUE_IMAGE_PREFIX", conf.KueueImagePrefix)
+
+	if conf.KueueImage == "" {
+		conf.KueueImage = joinImageURI(conf.KueueImagePrefix, "kueue", conf.KueueVersion)
+	}
+	conf.KueueImage = envs.GetEnvWithPrefix("KUEUE_IMAGE", conf.KueueImage)
 }
 
 // joinImageURI joins the image URI.

@@ -66,6 +66,10 @@ var (
 	MetricsServerBinaryPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 	MetricsServerImagePrefix  = "registry.k8s.io/metrics-server"
 
+	KueueVersion      = "0.16.0"
+	KueueBinaryPrefix = ""
+	KueueImagePrefix  = "registry.k8s.io/kueue"
+
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000
 )
@@ -115,4 +119,5 @@ const (
 	ComponentPrometheus                 = "prometheus"
 	ComponentJaeger                     = "jaeger"
 	ComponentMetricsServer              = "metrics-server"
+	ComponentKueue                      = "kueue"
 )

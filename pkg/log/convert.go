@@ -45,3 +45,15 @@ func ToLogSeverityLevel(level Level) string {
 		return ErrorLevelSecurity
 	}
 }
+
+// ToZapLevel maps the current logging level to a Zap level string
+func ToZapLevel(level Level) string {
+	switch {
+	case level < LevelInfo:
+		return DebugLevelSecurity
+	case level < LevelWarn:
+		return InfoLevelSecurity
+	default:
+		return ErrorLevelSecurity
+	}
+}

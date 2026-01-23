@@ -1,0 +1,42 @@
+apiVersion: config.kueue.x-k8s.io/v1beta2
+kind: Configuration
+health:
+  healthProbeBindAddress: :8081
+metrics:
+  bindAddress: :8443
+webhook:
+  port: 9443
+leaderElection:
+  leaderElect: false
+controller:
+  groupKindConcurrency:
+    Job.batch: 5
+    Pod: 5
+    Workload.kueue.x-k8s.io: 5
+    LocalQueue.kueue.x-k8s.io: 1
+    Cohort.kueue.x-k8s.io: 1
+    ClusterQueue.kueue.x-k8s.io: 1
+    ResourceFlavor.kueue.x-k8s.io: 1
+clientConnection:
+  qps: 50
+  burst: 100
+internalCertManagement:
+  enable: false
+integrations:
+  frameworks:
+  - "batch/job"
+  - "kubeflow.org/mpijob"
+  - "ray.io/rayjob"
+  - "ray.io/raycluster"
+  - "jobset.x-k8s.io/jobset"
+  - "kubeflow.org/paddlejob"
+  - "kubeflow.org/pytorchjob"
+  - "kubeflow.org/tfjob"
+  - "kubeflow.org/xgboostjob"
+  - "kubeflow.org/jaxjob"
+  - "workload.codeflare.dev/appwrapper"
+  - "trainer.kubeflow.org/trainjob"
+  - "pod"
+  - "deployment"
+  - "statefulset"
+  - "leaderworkerset.x-k8s.io/leaderworkerset"

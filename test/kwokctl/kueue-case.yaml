@@ -1,0 +1,85 @@
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: Cohort
+metadata:
+  name: kwok-cohort
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: Topology
+metadata:
+  name: kwok-topology
+spec:
+  levels:
+  - nodeLabel: type
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: kwok-resource-flavor
+spec:
+  nodeLabels:
+    type: kwok
+  topologyName: kwok-topology
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: kwok-cluster-queue
+spec:
+  cohort: kwok-cohort
+  flavorFungibility:
+    whenCanBorrow: Borrow
+    whenCanPreempt: TryNextFlavor
+  namespaceSelector: {}
+  preemption:
+    borrowWithinCohort:
+      policy: LowerPriority
+    reclaimWithinCohort: Any
+    withinClusterQueue: LowerPriority
+  queueingStrategy: BestEffortFIFO
+  resourceGroups:
+  - coveredResources:
+    - cpu
+    - memory
+    flavors:
+    - name: kwok-resource-flavor
+      resources:
+      - borrowingLimit: "390144"
+        name: cpu
+        nominalQuota: "1000"
+      - borrowingLimit: 2568Ti
+        name: memory
+        nominalQuota: 1Ti
+  stopPolicy: None
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  name: kwok-local-queue
+  namespace: default
+spec:
+  clusterQueue: kwok-cluster-queue
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sample-job
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: kwok-local-queue
+spec:
+  parallelism: 1
+  completions: 1
+  suspend: true
+  template:
+    spec:
+      containers:
+      - name: dummy-job
+        image: gcr.io/k8s-staging-perf-tests/sleep:v0.1.0
+        args: ["30s"]
+        resources:
+          requests:
+            cpu: "1"
+            memory: "200Mi"
+      restartPolicy: Never
+      nodeSelector:
+        type: kwok
