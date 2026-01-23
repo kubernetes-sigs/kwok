@@ -48,6 +48,8 @@ type BuildKubeControllerManagerComponentConfig struct {
 	NodeMonitorGracePeriodMilliseconds int64
 	Verbosity                          log.Level
 	DisableQPSLimits                   bool
+	// InCluster holds configuration for in-cluster Kubernetes client configuration.
+	InCluster *InClusterConfig
 }
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
@@ -237,6 +239,11 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	envs := []internalversion.Env{}
+
+	if conf.InCluster != nil {
+		volumes = append(volumes, InClusterVolumes(*conf.InCluster)...)
+		envs = append(envs, InClusterEnvs(*conf.InCluster)...)
+	}
 
 	return internalversion.Component{
 		Name:    consts.ComponentKubeControllerManager,

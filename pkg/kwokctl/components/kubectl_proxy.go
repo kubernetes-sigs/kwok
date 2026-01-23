@@ -38,6 +38,8 @@ type BuildKubectlProxyComponentConfig struct {
 	ConfigPath     string
 	KubeconfigPath string
 	Verbosity      log.Level
+	// InCluster holds configuration for in-cluster Kubernetes client configuration.
+	InCluster *InClusterConfig
 }
 
 // BuildKubectlProxyComponent builds a kubectl proxy component.
@@ -110,6 +112,11 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 	}
 
 	envs := []internalversion.Env{}
+
+	if conf.InCluster != nil {
+		volumes = append(volumes, InClusterVolumes(*conf.InCluster)...)
+		envs = append(envs, InClusterEnvs(*conf.InCluster)...)
+	}
 
 	return internalversion.Component{
 		Name: consts.ComponentKubeApiserverInsecureProxy,

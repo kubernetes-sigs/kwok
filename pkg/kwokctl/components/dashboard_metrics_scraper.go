@@ -34,6 +34,8 @@ type BuildDashboardMetricsScraperComponentConfig struct {
 	AdminCertPath  string
 	AdminKeyPath   string
 	KubeconfigPath string
+	// InCluster holds configuration for in-cluster Kubernetes client configuration.
+	InCluster *InClusterConfig
 }
 
 // BuildDashboardMetricsScraperComponent builds the dashboard component.
@@ -78,6 +80,12 @@ func BuildDashboardMetricsScraperComponent(conf BuildDashboardMetricsScraperComp
 		)
 	}
 
+	var envs []internalversion.Env
+	if conf.InCluster != nil {
+		volumes = append(volumes, InClusterVolumes(*conf.InCluster)...)
+		envs = append(envs, InClusterEnvs(*conf.InCluster)...)
+	}
+
 	component = internalversion.Component{
 		Name:  consts.ComponentDashboardMetricsScraper,
 		Image: conf.Image,
@@ -89,6 +97,7 @@ func BuildDashboardMetricsScraperComponent(conf BuildDashboardMetricsScraperComp
 		Volumes: volumes,
 		Args:    dashboardArgs,
 		User:    user,
+		Envs:    envs,
 	}
 	return component, nil
 }

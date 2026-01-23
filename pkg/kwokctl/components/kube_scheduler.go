@@ -44,6 +44,8 @@ type BuildKubeSchedulerComponentConfig struct {
 	KubeFeatureGates string
 	Verbosity        log.Level
 	DisableQPSLimits bool
+	// InCluster holds configuration for in-cluster Kubernetes client configuration.
+	InCluster *InClusterConfig
 }
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
@@ -227,6 +229,11 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	envs := []internalversion.Env{}
+
+	if conf.InCluster != nil {
+		volumes = append(volumes, InClusterVolumes(*conf.InCluster)...)
+		envs = append(envs, InClusterEnvs(*conf.InCluster)...)
+	}
 
 	return internalversion.Component{
 		Name:    consts.ComponentKubeScheduler,
