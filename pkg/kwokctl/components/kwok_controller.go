@@ -49,8 +49,6 @@ type BuildKwokControllerComponentConfig struct {
 	NodeLeaseDurationSeconds          uint
 	EnableCRDs                        []string
 	OtlpGrpcAddress                   string
-	// InCluster holds configuration for in-cluster Kubernetes client configuration.
-	InCluster *InClusterConfig
 }
 
 // BuildKwokControllerComponent builds a kwok controller component.
@@ -184,11 +182,6 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	}
 
 	envs := []internalversion.Env{}
-
-	if conf.InCluster != nil {
-		volumes = append(volumes, InClusterVolumes(*conf.InCluster)...)
-		envs = append(envs, InClusterEnvs(*conf.InCluster)...)
-	}
 
 	return internalversion.Component{
 		Name:    consts.ComponentKwokController,

@@ -42,8 +42,6 @@ type BuildDashboardComponentConfig struct {
 	AdminCertPath  string
 	AdminKeyPath   string
 	KubeconfigPath string
-	// InCluster holds configuration for in-cluster Kubernetes client configuration.
-	InCluster *InClusterConfig
 }
 
 // BuildDashboardComponent builds the dashboard component.
@@ -124,12 +122,6 @@ func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component inte
 		)
 	}
 
-	var envs []internalversion.Env
-	if conf.InCluster != nil {
-		volumes = append(volumes, InClusterVolumes(*conf.InCluster)...)
-		envs = append(envs, InClusterEnvs(*conf.InCluster)...)
-	}
-
 	component = internalversion.Component{
 		Name:  consts.ComponentDashboard,
 		Image: conf.Image,
@@ -141,7 +133,6 @@ func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component inte
 		Volumes: volumes,
 		Args:    dashboardArgs,
 		User:    user,
-		Envs:    envs,
 	}
 	return component, nil
 }

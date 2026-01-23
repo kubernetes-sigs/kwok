@@ -40,8 +40,6 @@ type BuildMetricsServerComponentConfig struct {
 	AdminKeyPath   string
 	KubeconfigPath string
 	Verbosity      log.Level
-	// InCluster holds configuration for in-cluster Kubernetes client configuration.
-	InCluster *InClusterConfig
 }
 
 // BuildMetricsServerComponent builds a metrics server component.
@@ -153,11 +151,6 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 	}
 
 	envs := []internalversion.Env{}
-
-	if conf.InCluster != nil {
-		volumes = append(volumes, InClusterVolumes(*conf.InCluster)...)
-		envs = append(envs, InClusterEnvs(*conf.InCluster)...)
-	}
 
 	return internalversion.Component{
 		Name:    consts.ComponentMetricsServer,
