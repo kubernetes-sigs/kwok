@@ -24,7 +24,6 @@ import (
 
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -113,7 +112,9 @@ func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfig
 		logger.Debug("No configuration",
 			"kind", configv1alpha1.KwokConfigurationKind,
 		)
-		conf, err := internalversion.ConvertToInternalKwokConfiguration(setKwokConfigurationDefaults(&configv1alpha1.KwokConfiguration{}))
+		verConfig := &configv1alpha1.KwokConfiguration{}
+		configv1alpha1.SetObjectDefaults_KwokConfiguration(verConfig)
+		conf, err := internalversion.ConvertToInternalKwokConfiguration(verConfig)
 		if err != nil {
 			logger.Error("Get kwok configuration failed", err)
 			return &internalversion.KwokConfiguration{}
@@ -122,34 +123,6 @@ func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfig
 		return conf
 	}
 	return conf
-}
-
-func convertToInternalStage(config *v1alpha1.Stage) (*internalversion.Stage, error) {
-	obj := setStageDefaults(config)
-	return internalversion.ConvertToInternalStage(obj)
-}
-
-func setStageDefaults(config *v1alpha1.Stage) *v1alpha1.Stage {
-	if config == nil {
-		config = &v1alpha1.Stage{}
-	}
-	v1alpha1.SetObjectDefaults_Stage(config)
-	return config
-}
-
-func convertToInternalKwokConfiguration(config *configv1alpha1.KwokConfiguration) (*internalversion.KwokConfiguration, error) {
-	obj := setKwokConfigurationDefaults(config)
-	return internalversion.ConvertToInternalKwokConfiguration(obj)
-}
-
-func setKwokConfigurationDefaults(config *configv1alpha1.KwokConfiguration) *configv1alpha1.KwokConfiguration {
-	if config == nil {
-		config = &configv1alpha1.KwokConfiguration{}
-	}
-
-	configv1alpha1.SetObjectDefaults_KwokConfiguration(config)
-
-	return config
 }
 
 func convertToInternalKwokctlConfiguration(config *configv1alpha1.KwokctlConfiguration) (*internalversion.KwokctlConfiguration, error) {
