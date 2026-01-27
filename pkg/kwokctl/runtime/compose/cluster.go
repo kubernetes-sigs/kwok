@@ -19,6 +19,7 @@ package compose
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -342,6 +343,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 	}
 
 	err = c.addDashboard(ctx, env)
+	if err != nil {
+		return err
+	}
+
+	err = c.addKueue(ctx, env)
 	if err != nil {
 		return err
 	}
@@ -832,6 +838,56 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 	return nil
 }
 
+func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentKueue) {
+		return nil
+	}
+
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the kueue
+	err = c.EnsureImage(ctx, c.runtime, conf.KueueImage)
+	if err != nil {
+		return err
+	}
+
+	kueueVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KueueImage, "")
+	if err != nil {
+		return err
+	}
+
+	// Configure the kueue
+	kueueConfigData := components.BuildKueueConfig()
+	kueueConfigPath := c.GetWorkdirPath(runtime.Kueue)
+
+	err = c.WriteFile(kueueConfigPath, []byte(kueueConfigData))
+	if err != nil {
+		return fmt.Errorf("failed to write kueue yaml: %w", err)
+	}
+
+	kueueComponent, err := components.BuildKueueComponent(components.BuildKueueComponentConfig{
+		Runtime:           conf.Runtime,
+		ProjectName:       c.Name(),
+		Workdir:           env.workdir,
+		Image:             conf.KueueImage,
+		Version:           kueueVersion,
+		BindAddress:       net.PublicAddress,
+		Port:              conf.MetricsServerPort,
+		CaCertPath:        env.caCertPath,
+		AdminCertPath:     env.adminCertPath,
+		AdminKeyPath:      env.adminKeyPath,
+		KubeconfigPath:    env.inClusterOnHostKubeconfigPath,
+		ConfigPath:        kueueConfigPath,
+		Verbosity:         env.verbosity,
+		KubeApiserverPort: conf.KubeApiserverPort,
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kueueComponent)
+	return nil
+}
+
 func (c *Cluster) preInstall(_ context.Context, env *env) error {
 	for i, patch := range env.kwokctlConfig.ComponentsPatches {
 		if len(patch.ExtraVolumes) == 0 {
@@ -1279,9 +1335,18 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 	_, enableMetricsServer := slices.Find(config.Components, func(c internalversion.Component) bool {
 		return c.Name == consts.ComponentMetricsServer
 	})
+
+	_, enableKueue := slices.Find(config.Components, func(c internalversion.Component) bool {
+		return c.Name == consts.ComponentKueue
+	})
+
 	if c.IsDryRun() {
 		if enableMetricsServer {
 			dryrun.PrintMessage("# Set up apiservice for metrics server")
+		}
+
+		if enableKueue {
+			dryrun.PrintMessage("# Set up manifest for kueue")
 		}
 
 		return nil
@@ -1291,12 +1356,32 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 	if enableMetricsServer {
 		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{
 			Port:         4443,
-			ExternalName: c.Name() + "-metrics-server",
+			ExternalName: c.Name() + "-" + consts.ComponentMetricsServer,
 		})
 		if err != nil {
 			return err
 		}
 		_, _ = buf.WriteString(apiservice)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if enableKueue {
+		caCrt := c.GetWorkdirPath("pki/ca.crt")
+		data, err := os.ReadFile(caCrt)
+		if err != nil {
+			return err
+		}
+		manifest, err := components.BuildKueueManifest(components.BuildManifestConfig{
+			Port:           9443,
+			VisibilityPort: 8082,
+			ExternalName:   c.Name() + "-" + consts.ComponentKueue,
+			CABundle:       base64.StdEncoding.EncodeToString(data),
+		})
+		if err != nil {
+			return err
+		}
+
+		_, _ = buf.WriteString(manifest)
 		_, _ = buf.WriteString("---\n")
 	}
 

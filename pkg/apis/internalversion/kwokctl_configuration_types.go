@@ -122,6 +122,9 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerVersion is the version of metrics-server to use.
 	MetricsServerVersion string
 
+	// KueueVersion is the version of kueue to use.
+	KueueVersion string
+
 	// KindVersion is the version of kind to use.
 	KindVersion string
 
@@ -189,6 +192,9 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerImage is the image of metrics-server.
 	MetricsServerImage string
 
+	// KueueImage is the image of kueue.
+	KueueImage string
+
 	// KindNodeImage is the image of kind node.
 	KindNodeImage string
 
@@ -247,6 +253,9 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerBinary is the binary of metrics-server.
 	MetricsServerBinary string
+
+	// KueueBinary is the binary of kueue.
+	KueueBinary string
 
 	// KindBinary is the binary of kind.
 	KindBinary string

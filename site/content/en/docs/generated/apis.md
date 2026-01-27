@@ -2932,6 +2932,17 @@ string
 </tr>
 <tr>
 <td>
+<code>kueueVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KueueVersion is the version of kueue to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kindVersion</code>
 <em>
 string
@@ -3134,6 +3145,18 @@ string
 </tr>
 <tr>
 <td>
+<code>kueueImagePrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KueueImagePrefix is the prefix of the kueue image.
+is the default value for env KWOK_KUEUE_IMAGE_PREFIX</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>etcdImage</code>
 <em>
 string
@@ -3259,6 +3282,17 @@ string
 </td>
 <td>
 <p>MetricsServerImage is the image of metrics-server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kueueImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KueueImage is the image of kueue.</p>
 </td>
 </tr>
 <tr>
@@ -3545,6 +3579,29 @@ string
 </td>
 <td>
 <p>MetricsServerBinary is the binary of metrics-server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kueueBinaryPrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KueueBinaryPrefix is the prefix of the kueue binary.
+is the default value for env KWOK_KUEUE_BINARY_PREFIX</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kueueBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KueueBinary is the binary of kueue.</p>
 </td>
 </tr>
 <tr>

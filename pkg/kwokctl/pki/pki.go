@@ -39,6 +39,7 @@ var (
 		"kubernetes.default",
 		"kubernetes.default.svc",
 		"kubernetes.default.svc.cluster.local",
+		"kueue-webhook-service.kueue-system.svc",
 		"localhost",
 		"127.0.0.1",
 		"::1",

@@ -39,6 +39,7 @@ function update() {
     -o -path ./vendor/\* \
     -o -path ./demo/node_modules/\* \
     -o -path ./site/themes/\* \
+    -o -path ./pkg/kwokctl/components/kueue_manifest.yaml.tpl \
     \))
   go run github.com/client9/misspell/cmd/misspell@v0.3.4 \
     -locale US -w -i "${ignore}" "${files[@]}"

@@ -147,6 +147,9 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerVersion is the version of metrics-server to use.
 	MetricsServerVersion string `json:"metricsServerVersion,omitempty"`
 
+	// KueueVersion is the version of kueue to use.
+	KueueVersion string `json:"kueueVersion,omitempty"`
+
 	// KindVersion is the version of kind to use.
 	// is the default value for env KWOK_KIND_VERSION
 	KindVersion string `json:"kindVersion,omitempty"`
@@ -224,6 +227,11 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	MetricsServerImagePrefix string `json:"metricsServerImagePrefix,omitempty"`
 
+	// KueueImagePrefix is the prefix of the kueue image.
+	// is the default value for env KWOK_KUEUE_IMAGE_PREFIX
+	//+k8s:conversion-gen=false
+	KueueImagePrefix string `json:"kueueImagePrefix,omitempty"`
+
 	// EtcdImage is the image of etcd.
 	// is the default value for flag --etcd-image and env KWOK_ETCD_IMAGE
 	EtcdImage string `json:"etcdImage,omitempty"`
@@ -264,6 +272,9 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerImage is the image of metrics-server.
 	MetricsServerImage string `json:"metricsServerImage,omitempty"`
+
+	// KueueImage is the image of kueue.
+	KueueImage string `json:"kueueImage,omitempty"`
 
 	// KindNodeImagePrefix is the prefix of the kind node image.
 	// is the default value for env KWOK_KIND_NODE_IMAGE_PREFIX
@@ -377,6 +388,14 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerBinary is the binary of metrics-server.
 	MetricsServerBinary string `json:"metricsServerBinary,omitempty"`
+
+	// KueueBinaryPrefix is the prefix of the kueue binary.
+	// is the default value for env KWOK_KUEUE_BINARY_PREFIX
+	//+k8s:conversion-gen=false
+	KueueBinaryPrefix string `json:"kueueBinaryPrefix,omitempty"`
+
+	// KueueBinary is the binary of kueue.
+	KueueBinary string `json:"kueueBinary,omitempty"`
 
 	// KindBinaryPrefix is the binary prefix of kind.
 	// is the default value for env KWOK_KIND_BINARY_PREFIX
