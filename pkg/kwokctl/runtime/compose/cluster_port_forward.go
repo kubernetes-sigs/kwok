@@ -62,11 +62,18 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		"run",
 		"--rm",
 		"-i",
-		"--pull=never",
-		"--network=" + c.networkName(),
-		"--name=" + tempContainerName,
-		"--entrypoint=/bin/sh",
 	}
+
+	if !c.isAppleContainer {
+		args = append(args, "--pull=never")
+	}
+
+	args = append(args,
+		"--network="+c.networkName(),
+		"--name="+tempContainerName,
+		"--entrypoint=/bin/sh",
+	)
+
 	args = append(args, c.labelArgs()...)
 	args = append(args, kwokController.Image)
 
