@@ -276,6 +276,12 @@ type KwokctlConfigurationOptions struct {
 	// KueueImage is the image of kueue.
 	KueueImage string `json:"kueueImage,omitempty"`
 
+	// KueuevizFrontendImage is the image of kueueviz frontend.
+	KueuevizFrontendImage string `json:"kueuevizFrontendImage,omitempty"`
+
+	// KueuevizBackendImage is the image of kueueviz backend.
+	KueuevizBackendImage string `json:"kueuevizBackendImage,omitempty"`
+
 	// KindNodeImagePrefix is the prefix of the kind node image.
 	// is the default value for env KWOK_KIND_NODE_IMAGE_PREFIX
 	//+k8s:conversion-gen=false
@@ -448,6 +454,9 @@ type KwokctlConfigurationOptions struct {
 
 	// DashboardPort is dashboard port in the binary runtime
 	DashboardPort uint32 `json:"dashboardPort,omitempty"`
+
+	// KueuevizPort is kueueviz port that is exposed to the host.
+	KueuevizPort uint32 `json:"kueuevizPort,omitempty"`
 
 	// KwokControllerPort is kwok-controller port that is exposed to the host.
 	// is the default value for flag --controller-port and env KWOK_CONTROLLER_PORT

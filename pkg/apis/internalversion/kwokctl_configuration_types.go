@@ -195,6 +195,12 @@ type KwokctlConfigurationOptions struct {
 	// KueueImage is the image of kueue.
 	KueueImage string
 
+	// KueuevizFrontendImage is the image of kueueviz frontend.
+	KueuevizFrontendImage string
+
+	// KueuevizBackendImage is the image of kueueviz backend.
+	KueuevizBackendImage string
+
 	// KindNodeImage is the image of kind node.
 	KindNodeImage string
 
@@ -289,6 +295,9 @@ type KwokctlConfigurationOptions struct {
 
 	// DashboardPort is dashboard port that is exposed to the host.
 	DashboardPort uint32
+
+	// KueuevizPort is kueueviz port that is exposed to the host.
+	KueuevizPort uint32
 
 	// KwokControllerPort is kwok-controller port that is exposed to the host.
 	KwokControllerPort uint32

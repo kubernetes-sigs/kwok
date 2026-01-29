@@ -479,6 +479,9 @@ func (c *Cluster) Components(ctx context.Context) ([]string, error) {
 	if conf.Options.JaegerPort != 0 {
 		enable = append(enable, consts.ComponentJaeger)
 	}
+	if conf.Options.KueuevizPort != 0 {
+		enable = append(enable, consts.ComponentKueue, consts.ComponentKueueviz)
+	}
 
 	components := conf.Options.Components
 	if len(enable) != 0 {

@@ -1793,6 +1793,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
 	out.KueueImage = in.KueueImage
+	out.KueuevizFrontendImage = in.KueuevizFrontendImage
+	out.KueuevizBackendImage = in.KueuevizBackendImage
 	out.KindNodeImage = in.KindNodeImage
 	out.BinSuffix = in.BinSuffix
 	out.KubeApiserverBinary = in.KubeApiserverBinary
@@ -1826,6 +1828,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KubeControllerManagerPort = in.KubeControllerManagerPort
 	out.KubeSchedulerPort = in.KubeSchedulerPort
 	out.DashboardPort = in.DashboardPort
+	out.KueuevizPort = in.KueuevizPort
 	out.KwokControllerPort = in.KwokControllerPort
 	out.MetricsServerPort = in.MetricsServerPort
 	out.CacheDir = in.CacheDir
@@ -1910,6 +1913,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
 	out.KueueImage = in.KueueImage
+	out.KueuevizFrontendImage = in.KueuevizFrontendImage
+	out.KueuevizBackendImage = in.KueuevizBackendImage
 	// INFO: in.KindNodeImagePrefix opted out of conversion generation
 	out.KindNodeImage = in.KindNodeImage
 	out.BinSuffix = in.BinSuffix
@@ -1953,6 +1958,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KubeControllerManagerPort = in.KubeControllerManagerPort
 	out.KubeSchedulerPort = in.KubeSchedulerPort
 	out.DashboardPort = in.DashboardPort
+	out.KueuevizPort = in.KueuevizPort
 	out.KwokControllerPort = in.KwokControllerPort
 	out.MetricsServerPort = in.MetricsServerPort
 	out.CacheDir = in.CacheDir

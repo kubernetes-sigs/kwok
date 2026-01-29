@@ -136,6 +136,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	_ = cmd.Flags().MarkDeprecated("jaeger-binary-tar", "--jaeger-binary-tar will be removed in a future release, please use --jaeger-binary instead")
 	cmd.Flags().StringVar(&flags.Options.KindBinary, "kind-binary", flags.Options.KindBinary, `Binary of kind, only for kind/kind-podman runtime
 `)
+	cmd.Flags().Uint32Var(&flags.Options.KueuevizPort, "kueueviz-port", flags.Options.KueuevizPort, `Port of kueueviz given to the host`)
 	cmd.Flags().StringVar(&flags.Options.KubeFeatureGates, "kube-feature-gates", flags.Options.KubeFeatureGates, `A set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes`)
 	cmd.Flags().StringVar(&flags.Options.KubeRuntimeConfig, "kube-runtime-config", flags.Options.KubeRuntimeConfig, `A set of key=value pairs that enable or disable built-in APIs`)
 	cmd.Flags().StringVar(&flags.Options.KubeAuditPolicy, "kube-audit-policy", flags.Options.KubeAuditPolicy, "Path to the file that defines the audit policy configuration")

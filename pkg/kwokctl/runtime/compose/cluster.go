@@ -352,6 +352,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addKueueviz(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.setupPrometheusConfig(ctx, env)
 	if err != nil {
 		return err
@@ -886,6 +891,65 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 	}
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kueueComponent)
 	return nil
+}
+
+func (c *Cluster) addKueueviz(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentKueueviz) {
+		return nil
+	}
+
+	conf := &env.kwokctlConfig.Options
+	// Configure the kueueviz backend
+	err = c.EnsureImage(ctx, c.runtime, conf.KueuevizBackendImage)
+	if err != nil {
+		return err
+	}
+
+	err = c.EnsureImage(ctx, c.runtime, conf.KueuevizFrontendImage)
+	if err != nil {
+		return err
+	}
+
+	var kueuevizBackendPort uint32
+	err = c.setupPorts(ctx,
+		env.usedPorts,
+		&kueuevizBackendPort,
+	)
+	if err != nil {
+		return err
+	}
+
+	kueuevizBackendComponent, err := components.BuildKueuevizBackendComponent(components.BuildKueuevizBackendComponentConfig{
+		Runtime:        conf.Runtime,
+		ProjectName:    c.Name(),
+		Image:          conf.KueuevizBackendImage,
+		Port:           kueuevizBackendPort,
+		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+		CaCertPath:     env.caCertPath,
+		AdminCertPath:  env.adminCertPath,
+		AdminKeyPath:   env.adminKeyPath,
+	})
+	if err != nil {
+		return err
+	}
+
+	kueuevizFrontendComponent, err := components.BuildKueuevizFrontendComponent(components.BuildKueuevizFrontendComponentConfig{
+		Runtime:     conf.Runtime,
+		ProjectName: c.Name(),
+		Image:       conf.KueuevizFrontendImage,
+		Port:        conf.KueuevizPort,
+		BackendPort: kueuevizBackendPort,
+	})
+	if err != nil {
+		return err
+	}
+
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components,
+		kueuevizBackendComponent,
+		kueuevizFrontendComponent,
+	)
+	return nil
+
 }
 
 func (c *Cluster) preInstall(_ context.Context, env *env) error {

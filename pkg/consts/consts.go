@@ -120,4 +120,5 @@ const (
 	ComponentJaeger                     = "jaeger"
 	ComponentMetricsServer              = "metrics-server"
 	ComponentKueue                      = "kueue"
+	ComponentKueueviz                   = "kueueviz"
 )
