@@ -3297,6 +3297,28 @@ string
 </tr>
 <tr>
 <td>
+<code>kueuevizFrontendImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KueuevizFrontendImage is the image of kueueviz frontend.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kueuevizBackendImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KueuevizBackendImage is the image of kueueviz backend.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kindNodeImagePrefix</code>
 <em>
 string
@@ -3756,6 +3778,17 @@ uint32
 </td>
 <td>
 <p>DashboardPort is dashboard port in the binary runtime</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kueuevizPort</code>
+<em>
+uint32
+</em>
+</td>
+<td>
+<p>KueuevizPort is kueueviz port that is exposed to the host.</p>
 </td>
 </tr>
 <tr>

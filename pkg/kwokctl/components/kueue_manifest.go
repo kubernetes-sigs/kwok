@@ -34,12 +34,12 @@ func BuildKueueManifest(conf BuildManifestConfig) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	err := kueueManifestYamlTemplate.Execute(buf, conf)
 	if err != nil {
-		return "", fmt.Errorf("failed to execute kueue webhook yaml template: %w", err)
+		return "", fmt.Errorf("failed to execute kueue manifest yaml template: %w", err)
 	}
 	return buf.String(), nil
 }
 
-// BuildManifestConfig is the config for BuildKueueWebhook.
+// BuildManifestConfig is the config for BuildKueueManifest.
 type BuildManifestConfig struct {
 	Port           uint32
 	ExternalName   string
