@@ -591,6 +591,16 @@ func setKueueConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.KueueImage = joinImageURI(conf.KueueImagePrefix, "kueue", conf.KueueVersion)
 	}
 	conf.KueueImage = envs.GetEnvWithPrefix("KUEUE_IMAGE", conf.KueueImage)
+
+	if conf.KueuevizBackendImage == "" {
+		conf.KueuevizBackendImage = joinImageURI(conf.KueueImagePrefix, "kueueviz-backend", conf.KueueVersion)
+	}
+	conf.KueuevizBackendImage = envs.GetEnvWithPrefix("KUEUEVIZ_BACKEND_IMAGE", conf.KueuevizBackendImage)
+
+	if conf.KueuevizFrontendImage == "" {
+		conf.KueuevizFrontendImage = joinImageURI(conf.KueueImagePrefix, "kueueviz-frontend", conf.KueueVersion)
+	}
+	conf.KueuevizFrontendImage = envs.GetEnvWithPrefix("KUEUEVIZ_FRONTEND_IMAGE", conf.KueuevizFrontendImage)
 }
 
 // joinImageURI joins the image URI.
