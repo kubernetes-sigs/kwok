@@ -53,6 +53,8 @@ type Cluster struct {
 
 	isNerdctl               bool
 	canNerdctlUnlessStopped *bool
+
+	isAppleContainer bool
 }
 
 // NewDockerCluster creates a new Runtime for docker.
@@ -98,10 +100,22 @@ func NewFinchCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
+// NewAppleContainerCluster creates a new Runtime for Apple container.
+func NewAppleContainerCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster:          runtime.NewCluster(name, workdir),
+		runtime:          "container",
+		isAppleContainer: true,
+	}, nil
+}
+
 // Available  checks whether the runtime is available.
 func (c *Cluster) Available(ctx context.Context) error {
 	if c.IsDryRun() {
 		return nil
+	}
+	if c.isAppleContainer {
+		return c.Exec(ctx, c.runtime, "system", "status")
 	}
 	return c.Exec(ctx, c.runtime, "version")
 }
@@ -374,7 +388,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the etcd
-	err = c.EnsureImage(ctx, c.runtime, conf.EtcdImage)
+	err = c.ensureImage(ctx, conf.EtcdImage)
 	if err != nil {
 		return err
 	}
@@ -412,7 +426,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-apiserver
-	err = c.EnsureImage(ctx, c.runtime, conf.KubeApiserverImage)
+	err = c.ensureImage(ctx, conf.KubeApiserverImage)
 	if err != nil {
 		return err
 	}
@@ -477,7 +491,7 @@ func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kubectl
-	err = c.EnsureImage(ctx, c.runtime, conf.KubectlImage)
+	err = c.ensureImage(ctx, conf.KubectlImage)
 	if err != nil {
 		return err
 	}
@@ -510,7 +524,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-controller-manager
-	err = c.EnsureImage(ctx, c.runtime, conf.KubeControllerManagerImage)
+	err = c.ensureImage(ctx, conf.KubeControllerManagerImage)
 	if err != nil {
 		return err
 	}
@@ -563,7 +577,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		}
 	}
 
-	err = c.EnsureImage(ctx, c.runtime, conf.KubeSchedulerImage)
+	err = c.ensureImage(ctx, conf.KubeSchedulerImage)
 	if err != nil {
 		return err
 	}
@@ -605,7 +619,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kwok-controller
-	err = c.EnsureImage(ctx, c.runtime, conf.KwokControllerImage)
+	err = c.ensureImage(ctx, conf.KwokControllerImage)
 	if err != nil {
 		return err
 	}
@@ -654,7 +668,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.MetricsServerImage)
+	err = c.ensureImage(ctx, conf.MetricsServerImage)
 	if err != nil {
 		return err
 	}
@@ -716,7 +730,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the prometheus
-	err = c.EnsureImage(ctx, c.runtime, conf.PrometheusImage)
+	err = c.ensureImage(ctx, conf.PrometheusImage)
 	if err != nil {
 		return err
 	}
@@ -756,7 +770,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
+	err = c.ensureImage(ctx, conf.DashboardImage)
 	if err != nil {
 		return err
 	}
@@ -787,7 +801,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
 
 	if enableMetricsServer {
-		err = c.EnsureImage(ctx, c.runtime, conf.DashboardMetricsScraperImage)
+		err = c.ensureImage(ctx, conf.DashboardMetricsScraperImage)
 		if err != nil {
 			return err
 		}
@@ -816,7 +830,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the jaeger
-	err = c.EnsureImage(ctx, c.runtime, conf.JaegerImage)
+	err = c.ensureImage(ctx, conf.JaegerImage)
 	if err != nil {
 		return err
 	}
@@ -851,7 +865,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kueue
-	err = c.EnsureImage(ctx, c.runtime, conf.KueueImage)
+	err = c.ensureImage(ctx, conf.KueueImage)
 	if err != nil {
 		return err
 	}
@@ -1469,4 +1483,11 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 	decoder := yaml.NewDecoder(buf)
 
 	return loader.Load(ctx, decoder)
+}
+
+func (c *Cluster) ensureImage(ctx context.Context, image string) error {
+	if c.isAppleContainer {
+		return c.Cluster.EnsureImage(ctx, []string{c.runtime, "image"}, image)
+	}
+	return c.Cluster.EnsureImage(ctx, []string{c.runtime}, image)
 }
