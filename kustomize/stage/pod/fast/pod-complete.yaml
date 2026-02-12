@@ -18,6 +18,11 @@ spec:
       operator: 'In'
       values:
       - 'Job'
+    - key: '.spec.restartPolicy'
+      operator: 'In'
+      values:
+      - 'Never'
+      - 'OnFailure'
   next:
     statusTemplate: |
       {{ $now := Now }}
