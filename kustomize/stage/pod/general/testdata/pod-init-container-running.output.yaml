@@ -6,12 +6,19 @@ stages:
   - 1000000000
   - 5000000000
   next:
+  - kind: event
+    message: 'Created container: container'
+    reason: Created
+    type: Normal
   - data:
       status:
         initContainerStatuses:
-        - image: init-image
+        - containerID: kwok://container/init-container
+          image: init-image
+          imageID: kwok://image/init-image
+          lastState: {}
           name: init-container
-          ready: true
+          ready: false
           restartCount: 0
           started: true
           state:
@@ -19,6 +26,6 @@ stages:
               startedAt: <Now>
     kind: patch
     subresource: status
-    type: application/merge-patch+json
+    type: application/strategic-merge-patch+json
   stage: pod-init-container-running
   weight: 1

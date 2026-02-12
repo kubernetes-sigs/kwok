@@ -3,62 +3,145 @@ kind: Stage
 metadata:
   name: pod-init-container-completed
 spec:
+  delay:
+    durationFrom:
+      jq:
+        expression: .metadata.annotations["pod-init-container-completed.stage.kwok.x-k8s.io/delay"]
+    durationMilliseconds: 1000
+    jitterDurationFrom:
+      jq:
+        expression: .metadata.annotations["pod-init-container-completed.stage.kwok.x-k8s.io/jitter-delay"]
+    jitterDurationMilliseconds: 5000
+  immediateNextStage: false
   resourceRef:
     apiGroup: v1
     kind: Pod
   selector:
     matchExpressions:
-    - key: '.metadata.deletionTimestamp'
-      operator: 'DoesNotExist'
-    - key: '.status.phase'
-      operator: 'In'
-      values:
-      - 'Pending'
-    - key: '.status.initContainerStatuses.[].state.running.startedAt'
-      operator: 'Exists'
+    - jq:
+        key: .metadata.deletionTimestamp
+        operator: DoesNotExist
+    - jq:
+        key: .status.conditions.[] | select( .type == "Initialized" ) | .status
+        operator: NotIn
+        values:
+        - "True"
+    - jq:
+        key: .status.initContainerStatuses.[].state.running.startedAt
+        operator: Exists
+  steps:
+  - patch:
+      root: status
+      subresource: status
+      type: strategic
+      template: |
+        {{ $observedGeneration := or .status.observedGeneration 0 }}
+        {{ define "containerStarting" }}
+        {{ with .container }}
+          containerID: kwok://container/{{ .name }}
+          image: {{ .image | Quote }}
+          imageID: kwok://image/{{ .image }}
+          lastState: {}
+          name: {{ .name | Quote }}
+          ready: true
+          {{ with .resources }}
+          resources:
+          {{ YAML . 1 }}
+          {{ end }}
+          restartCount: 0
+          started: true
+          state:
+            running:
+              startedAt: {{ Now | Quote }}
+          {{ with .volumeMounts }}
+          volumeMounts:
+          {{ YAML . 1 }}
+          {{ end }}
+        {{ end }}
+        {{ end }}
+
+        {{ define "containerEnding" }}
+        {{ $status := .status }}
+        {{ with .container }}
+          containerID: kwok://container/{{ .name }}
+          image: {{ .image | Quote }}
+          imageID: kwok://image/{{ .image }}
+          lastState: {}
+          name: {{ .name | Quote }}
+          ready: true
+          resources: {}
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              containerID: kwok://container/{{ .name }}
+              exitCode: 0
+              finishedAt: {{ Now | Quote }}
+              reason: Completed
+              startedAt: {{ or $status.state.running.startedAt $status.state.terminated.startedAt }}
+        {{ end }}
+        {{ end }}
+
+        {{ define "containerCreating" }}
+        {{ with .container }}
+          image: {{ .image | Quote }}
+          imageID: kwok://image/{{ .image }}
+          lastState: {}
+          name: {{ .name | Quote }}
+          ready: false
+          {{ with .resources }}
+          resources:
+          {{ YAML . 1 }}
+          {{ with .requests }}
+          allocatedResources:
+          {{ YAML . 1 }}
+          {{ end }}
+          {{ end }}
+          restartCount: 0
+          started: false
+          state:
+            waiting:
+              reason: ContainerCreating
+          {{ with .volumeMounts }}
+          volumeMounts:
+          {{ YAML . 1 }}
+          {{ end }}
+        {{ end }}
+        {{ end }}
+
+        $setElementOrder/conditions:
+        - type: PodReadyToStartContainers
+        - type: Initialized
+        - type: Ready
+        - type: ContainersReady
+        - type: PodScheduled
+
+        conditions:
+        - lastTransitionTime: {{ Now | Quote }}
+          message: null
+          reason: null
+          observedGeneration: {{ $observedGeneration }}
+          status: "True"
+          type: Initialized
+
+        initContainerStatuses:
+        {{ range $index, $item := .spec.initContainers }}
+        {{ if eq $item.restartPolicy "Always" }}
+        -
+        {{ template "containerStarting" dict "container" . }}
+        {{ else }}
+        {{ $status := index $.status.initContainerStatuses $index }}
+        -
+        {{ template "containerEnding" dict "container" . "status" $status }}
+        {{ end }}
+        {{ end }}
+
+        containerStatuses:
+        {{ range .spec.containers }}
+        -
+        {{ template "containerCreating" dict "container" . }}
+        {{ end }}
   weight: 1
   weightFrom:
-    expressionFrom: '.metadata.annotations["pod-init-container-completed.stage.kwok.x-k8s.io/weight"]'
-  delay:
-    durationMilliseconds: 1000
-    durationFrom:
-      expressionFrom: '.metadata.annotations["pod-init-container-completed.stage.kwok.x-k8s.io/delay"]'
-    jitterDurationMilliseconds: 5000
-    jitterDurationFrom:
-      expressionFrom: '.metadata.annotations["pod-init-container-completed.stage.kwok.x-k8s.io/jitter-delay"]'
-  next:
-    statusTemplate: |
-      {{ $now := Now }}
-      {{ $root := . }}
-      conditions:
-      - lastProbeTime: null
-        lastTransitionTime: {{ $now | Quote }}
-        status: "True"
-        reason: ""
-        type: Initialized
-      initContainerStatuses:
-      {{ range $index, $item := .spec.initContainers }}
-      {{ $origin := index $root.status.initContainerStatuses $index }}
-      - image: {{ $item.image | Quote }}
-        name: {{ $item.name | Quote }}
-        ready: true
-        restartCount: 0
-        started: false
-        state:
-          terminated:
-            exitCode: 0
-            finishedAt: {{ $now | Quote }}
-            reason: Completed
-            startedAt: {{ $now | Quote }}
-      {{ end }}
-      containerStatuses:
-      {{ range .spec.containers }}
-      - image: {{ .image | Quote }}
-        name: {{ .name | Quote }}
-        ready: false
-        restartCount: 0
-        started: false
-        state:
-          waiting:
-            reason: ContainerCreating
-      {{ end }}
+    jq:
+      expression: .metadata.annotations["pod-init-container-completed.stage.kwok.x-k8s.io/weight"]
