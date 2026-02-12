@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-running-with-job
+  ownerReferences:
+  - apiVersion: batch/v1
+    kind: Job
+    name: job
+    uid: uid
+spec:
+  initContainers:
+  - name: init
+    image: image
+  - name: sidecar
+    image: image
+    restartPolicy: Always
+  containers:
+  - name: container
+    image: image
+  nodeName: node
+status:
+  conditions:
+  - lastTransitionTime: <Now>
+    status: "True"
+    type: Initialized
+  - lastTransitionTime: <Now>
+    status: "True"
+    type: Ready
+  - lastTransitionTime: <Now>
+    status: "True"
+    type: ContainersReady
+  containerStatuses:
+  - name: container
+    ready: true
+    restartCount: 0
+    state:
+      running:
+        startedAt: "2006-01-02T15:04:05Z"
+  initContainerStatuses:
+  - image: image
+    name: init
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        exitCode: 0
+        finishedAt: "2006-01-02T15:04:05Z"
+        reason: Completed
+        startedAt: "2006-01-02T15:04:05Z"
+  - image: image
+    name: sidecar
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2006-01-02T15:04:05Z"
+  podIP: 10.0.0.1
+  phase: Running

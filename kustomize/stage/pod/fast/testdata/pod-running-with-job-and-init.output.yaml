@@ -1,0 +1,61 @@
+apiGroup: v1
+kind: Pod
+name: pod-running-with-job
+stages:
+- next:
+  - data:
+      status:
+        conditions:
+        - lastTransitionTime: <now>
+          reason: PodCompleted
+          status: "True"
+          type: Initialized
+        - lastTransitionTime: <now>
+          reason: PodCompleted
+          status: "False"
+          type: Ready
+        - lastTransitionTime: <now>
+          reason: PodCompleted
+          status: "False"
+          type: ContainersReady
+        containerStatuses:
+        - image: image
+          name: container
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: <Now>
+              reason: Completed
+              startedAt: "2006-01-02T15:04:05Z"
+        initContainerStatuses:
+        - image: image
+          name: init
+          ready: true
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: "2006-01-02T15:04:05Z"
+              reason: Completed
+              startedAt: "2006-01-02T15:04:05Z"
+        - image: image
+          name: sidecar
+          ready: false
+          restartCount: 0
+          started: false
+          state:
+            terminated:
+              exitCode: 0
+              finishedAt: <Now>
+              reason: Completed
+              startedAt: "2006-01-02T15:04:05Z"
+        phase: Succeeded
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pod-complete
+  weight: 0
