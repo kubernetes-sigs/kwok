@@ -1,5 +1,5 @@
 name: OpenTelemetry Collector
-description: The OpenTelemetry Collector project from uses KWOK to test the performance of its kubernetes related components at scale.
+description: The OpenTelemetry Collector project uses KWOK to test the performance of its kubernetes related components at scale.
 contacts:
 - ChrsMark
 links:
