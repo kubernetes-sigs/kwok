@@ -1,0 +1,7 @@
+name: OpenTelemetry Collector
+description: The OpenTelemetry Collector project from uses KWOK to test the performance of its kubernetes related components at scale.
+contacts:
+- ChrsMark
+links:
+- name: OpenTelemetry Collector K8s Benchmarks
+  url: https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/k8sattributesprocessor/README.md#available-benchmarks
