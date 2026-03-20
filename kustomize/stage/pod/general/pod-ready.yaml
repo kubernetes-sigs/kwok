@@ -10,6 +10,10 @@ spec:
     matchExpressions:
     - key: '.metadata.deletionTimestamp'
       operator: 'DoesNotExist'
+    - key: '.status.phase'
+      operator: 'In'
+      values:
+      - 'Pending'
     - key: '.status.conditions.[] | select( .type == "Initialized" ) | .status'
       operator: 'In'
       values:
