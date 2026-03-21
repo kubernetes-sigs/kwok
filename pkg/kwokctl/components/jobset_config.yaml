@@ -1,0 +1,12 @@
+apiVersion: config.jobset.x-k8s.io/v1alpha1
+kind: Configuration
+health:
+  healthProbeBindAddress: :8081
+metrics:
+  bindAddress: :8443
+webhook:
+  port: 9443
+leaderElection:
+  leaderElect: false
+internalCertManagement:
+  enable: false

@@ -150,6 +150,9 @@ type KwokctlConfigurationOptions struct {
 	// KueueVersion is the version of kueue to use.
 	KueueVersion string `json:"kueueVersion,omitempty"`
 
+	// JobSetVersion is the version of jobset to use.
+	JobSetVersion string `json:"jobsetVersion,omitempty"`
+
 	// KindVersion is the version of kind to use.
 	// is the default value for env KWOK_KIND_VERSION
 	KindVersion string `json:"kindVersion,omitempty"`
@@ -232,6 +235,10 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	KueueImagePrefix string `json:"kueueImagePrefix,omitempty"`
 
+	// JobSetImagePrefix is the prefix of the jobset image.
+	//+k8s:conversion-gen=false
+	JobSetImagePrefix string `json:"jobsetImagePrefix,omitempty"`
+
 	// EtcdImage is the image of etcd.
 	// is the default value for flag --etcd-image and env KWOK_ETCD_IMAGE
 	EtcdImage string `json:"etcdImage,omitempty"`
@@ -275,6 +282,9 @@ type KwokctlConfigurationOptions struct {
 
 	// KueueImage is the image of kueue.
 	KueueImage string `json:"kueueImage,omitempty"`
+
+	// JobSetImage is the image of jobset.
+	JobSetImage string `json:"jobsetImage,omitempty"`
 
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string `json:"kueuevizFrontendImage,omitempty"`
@@ -402,6 +412,13 @@ type KwokctlConfigurationOptions struct {
 
 	// KueueBinary is the binary of kueue.
 	KueueBinary string `json:"kueueBinary,omitempty"`
+
+	// JobSetBinaryPrefix is the prefix of the jobset binary.
+	//+k8s:conversion-gen=false
+	JobSetBinaryPrefix string `json:"jobsetBinaryPrefix,omitempty"`
+
+	// JobSetBinary is the binary of jobset.
+	JobSetBinary string `json:"jobsetBinary,omitempty"`
 
 	// KindBinaryPrefix is the binary prefix of kind.
 	// is the default value for env KWOK_KIND_BINARY_PREFIX

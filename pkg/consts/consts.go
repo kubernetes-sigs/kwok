@@ -70,6 +70,10 @@ var (
 	KueueBinaryPrefix = ""
 	KueueImagePrefix  = "registry.k8s.io/kueue"
 
+	JobSetVersion      = "0.11.1"
+	JobSetBinaryPrefix = ""
+	JobSetImagePrefix  = "registry.k8s.io/jobset"
+
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000
 )
@@ -121,4 +125,5 @@ const (
 	ComponentMetricsServer              = "metrics-server"
 	ComponentKueue                      = "kueue"
 	ComponentKueueviz                   = "kueueviz"
+	ComponentJobSet                     = "jobset"
 )

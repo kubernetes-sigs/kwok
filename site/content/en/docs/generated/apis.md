@@ -2943,6 +2943,17 @@ string
 </tr>
 <tr>
 <td>
+<code>jobsetVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JobSetVersion is the version of jobset to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kindVersion</code>
 <em>
 string
@@ -3157,6 +3168,17 @@ is the default value for env KWOK_KUEUE_IMAGE_PREFIX</p>
 </tr>
 <tr>
 <td>
+<code>jobsetImagePrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JobSetImagePrefix is the prefix of the jobset image.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>etcdImage</code>
 <em>
 string
@@ -3293,6 +3315,17 @@ string
 </td>
 <td>
 <p>KueueImage is the image of kueue.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jobsetImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JobSetImage is the image of jobset.</p>
 </td>
 </tr>
 <tr>
@@ -3624,6 +3657,28 @@ string
 </td>
 <td>
 <p>KueueBinary is the binary of kueue.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jobsetBinaryPrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JobSetBinaryPrefix is the prefix of the jobset binary.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jobsetBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JobSetBinary is the binary of jobset.</p>
 </td>
 </tr>
 <tr>
