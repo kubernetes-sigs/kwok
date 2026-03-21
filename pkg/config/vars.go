@@ -222,6 +222,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setKueueConfig(conf)
 
+	setJobSetConfig(conf)
+
 	setKectlConfig(conf)
 
 	return config
@@ -574,6 +576,23 @@ func setMetricsServerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.MetricsServerBinary = conf.MetricsServerBinaryPrefix + "/metrics-server-" + GOOS + "-" + GOARCH + conf.BinSuffix
 	}
 	conf.MetricsServerBinary = envs.GetEnvWithPrefix("METRICS_SERVER_BINARY", conf.MetricsServerBinary)
+}
+
+func setJobSetConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.JobSetVersion == "" {
+		conf.JobSetVersion = consts.JobSetVersion
+	}
+	conf.JobSetVersion = version.AddPrefixV(envs.GetEnvWithPrefix("JOBSET_VERSION", conf.JobSetVersion))
+
+	if conf.JobSetImagePrefix == "" {
+		conf.JobSetImagePrefix = consts.JobSetImagePrefix
+	}
+	conf.JobSetImagePrefix = envs.GetEnvWithPrefix("JOBSET_IMAGE_PREFIX", conf.JobSetImagePrefix)
+
+	if conf.JobSetImage == "" {
+		conf.JobSetImage = joinImageURI(conf.JobSetImagePrefix, "jobset", conf.JobSetVersion)
+	}
+	conf.JobSetImage = envs.GetEnvWithPrefix("JOBSET_IMAGE", conf.JobSetImage)
 }
 
 func setKueueConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {

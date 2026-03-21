@@ -357,6 +357,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addJobSet(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.setupPrometheusConfig(ctx, env)
 	if err != nil {
 		return err
@@ -952,6 +957,54 @@ func (c *Cluster) addKueueviz(ctx context.Context, env *env) (err error) {
 
 }
 
+func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentJobSet) {
+		return nil
+	}
+
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the jobset
+	err = c.EnsureImage(ctx, c.runtime, conf.JobSetImage)
+	if err != nil {
+		return err
+	}
+
+	jobsetVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.JobSetImage, "")
+	if err != nil {
+		return err
+	}
+
+	// Configure the jobset
+	jobsetConfigData := components.BuildJobSetConfig()
+	jobsetConfigPath := c.GetWorkdirPath(runtime.JobSet)
+
+	err = c.WriteFile(jobsetConfigPath, []byte(jobsetConfigData))
+	if err != nil {
+		return fmt.Errorf("failed to write jobset yaml: %w", err)
+	}
+
+	jobsetComponent, err := components.BuildJobSetComponent(components.BuildJobSetComponentConfig{
+		Runtime:        conf.Runtime,
+		ProjectName:    c.Name(),
+		Workdir:        env.workdir,
+		Image:          conf.JobSetImage,
+		Version:        jobsetVersion,
+		BindAddress:    net.PublicAddress,
+		CaCertPath:     env.caCertPath,
+		AdminCertPath:  env.adminCertPath,
+		AdminKeyPath:   env.adminKeyPath,
+		ConfigPath:     jobsetConfigPath,
+		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+		Verbosity:      env.verbosity,
+	})
+	if err != nil {
+		return err
+	}
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, jobsetComponent)
+	return nil
+}
+
 func (c *Cluster) preInstall(_ context.Context, env *env) error {
 	for i, patch := range env.kwokctlConfig.ComponentsPatches {
 		if len(patch.ExtraVolumes) == 0 {
@@ -1404,6 +1457,10 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 		return c.Name == consts.ComponentKueue
 	})
 
+	_, enableJobSet := slices.Find(config.Components, func(c internalversion.Component) bool {
+		return c.Name == consts.ComponentJobSet
+	})
+
 	if c.IsDryRun() {
 		if enableMetricsServer {
 			dryrun.PrintMessage("# Set up apiservice for metrics server")
@@ -1411,6 +1468,10 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 
 		if enableKueue {
 			dryrun.PrintMessage("# Set up manifest for kueue")
+		}
+
+		if enableJobSet {
+			dryrun.PrintMessage("# Set up manifest for jobset")
 		}
 
 		return nil
@@ -1440,6 +1501,25 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 			VisibilityPort: 8082,
 			ExternalName:   c.Name() + "-" + consts.ComponentKueue,
 			CABundle:       base64.StdEncoding.EncodeToString(data),
+		})
+		if err != nil {
+			return err
+		}
+
+		_, _ = buf.WriteString(manifest)
+		_, _ = buf.WriteString("---\n")
+	}
+
+	if enableJobSet {
+		caCrt := c.GetWorkdirPath("pki/ca.crt")
+		data, err := os.ReadFile(caCrt)
+		if err != nil {
+			return err
+		}
+		manifest, err := components.BuildJobSetManifest(components.BuildJobSetManifestConfig{
+			Port:         9443,
+			ExternalName: c.Name() + "-" + consts.ComponentJobSet,
+			CABundle:     base64.StdEncoding.EncodeToString(data),
 		})
 		if err != nil {
 			return err

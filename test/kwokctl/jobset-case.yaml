@@ -1,0 +1,26 @@
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: sample-jobset
+  namespace: default
+spec:
+  replicatedJobs:
+  - name: workers
+    replicas: 1
+    template:
+      spec:
+        parallelism: 1
+        completions: 1
+        template:
+          spec:
+            containers:
+            - name: dummy-job
+              image: gcr.io/k8s-staging-perf-tests/sleep:v0.1.0
+              args: ["10s"]
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: "200Mi"
+            restartPolicy: Never
+            nodeSelector:
+              type: kwok
