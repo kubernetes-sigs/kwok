@@ -14,11 +14,6 @@ The `kwokctl scale` command supports scaling custom resource types beyond the bu
 types. Any resource can be scaled by defining a `KwokctlResource` configuration that provides a name,
 default parameters, and a Go template for the resource manifest.
 
-## Prerequisites
-
-- [kwokctl] is installed
-- [kubectl] is installed
-
 ## Create a Cluster
 
 ``` bash
