@@ -278,6 +278,9 @@ menu:
   - identifier: kueue
     pageRef: "/docs/examples/kueue"
     parent: kwokctl-integration
+  - identifier: scale-with-custom-resource
+    pageRef: "/docs/examples/scale-with-custom-resource"
+    parent: kwokctl-integration
 
   # Technical Outcome Scheduling Children
   - identifier: examples-scheduling-requests-and-limits
