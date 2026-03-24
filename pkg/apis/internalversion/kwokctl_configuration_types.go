@@ -125,6 +125,9 @@ type KwokctlConfigurationOptions struct {
 	// KueueVersion is the version of kueue to use.
 	KueueVersion string
 
+	// JobSetVersion is the version of jobset to use.
+	JobSetVersion string
+
 	// KindVersion is the version of kind to use.
 	KindVersion string
 
@@ -195,6 +198,9 @@ type KwokctlConfigurationOptions struct {
 	// KueueImage is the image of kueue.
 	KueueImage string
 
+	// JobSetImage is the image of jobset.
+	JobSetImage string
+
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string
 
@@ -262,6 +268,9 @@ type KwokctlConfigurationOptions struct {
 
 	// KueueBinary is the binary of kueue.
 	KueueBinary string
+
+	// JobSetBinary is the binary of jobset.
+	JobSetBinary string
 
 	// KindBinary is the binary of kind.
 	KindBinary string
