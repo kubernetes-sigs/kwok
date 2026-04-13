@@ -1114,7 +1114,7 @@ func (c *Cluster) loadDockerImages(ctx context.Context, command string, kindClus
 	return nil
 }
 
-// loadArchiveImages loads docker images into the cluster.
+// loadArchiveImages loads images into the cluster using OCI archive format.
 // `kind load image-archive`
 func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindCluster string, images []string, runtime string, tmpDir string) error {
 	logger := log.FromContext(ctx)
@@ -1125,7 +1125,7 @@ func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindClu
 			return err
 		}
 
-		err = c.Exec(ctx, runtime, "save", image, "-o", archive)
+		err = c.Exec(ctx, runtime, "save", "--format", "oci-archive", image, "-o", archive)
 		if err != nil {
 			return err
 		}

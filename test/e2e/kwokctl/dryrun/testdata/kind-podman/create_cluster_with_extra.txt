@@ -322,11 +322,11 @@ EOF
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
 KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.33.0 --wait 29m
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok
-podman save registry.k8s.io/kwok/kwok:v0.8.0 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.8.0.tar
+podman save --format oci-archive registry.k8s.io/kwok/kwok:v0.8.0 -o <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.8.0.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.8.0.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.8.0.tar
 mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus
-podman save docker.io/prom/prometheus:v3.8.1 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.8.1.tar
+podman save --format oci-archive docker.io/prom/prometheus:v3.8.1 -o <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.8.1.tar
 KIND_EXPERIMENTAL_PROVIDER=podman kind load image-archive <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.8.1.tar --name kwok-<CLUSTER_NAME>
 rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.8.1.tar
 kubectl config view --minify=true --raw=true

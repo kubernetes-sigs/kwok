@@ -17,10 +17,14 @@ limitations under the License.
 package image
 
 import (
+	"archive/tar"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -28,6 +32,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	containerregistryv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/cache"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
+	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/wzshiming/httpseek"
 
@@ -92,10 +98,92 @@ func Pull(ctx context.Context, cacheDir, src, dest string, quiet bool) error {
 		img = cache.Image(img, cache.NewFilesystemCache(cacheDir))
 	}
 
-	err = crane.Save(img, src, dest)
+	err = saveOCIArchive(img, src, dest)
 	if err != nil {
-		return fmt.Errorf("saving tarball %s: %w", dest, err)
+		return fmt.Errorf("saving OCI archive %s: %w", dest, err)
 	}
 
 	return nil
+}
+
+// saveOCIArchive saves an image as an OCI archive (tarball of OCI Image Layout).
+func saveOCIArchive(img containerregistryv1.Image, ref, dest string) error {
+	tmpDir, err := os.MkdirTemp("", "oci-layout-*")
+	if err != nil {
+		return fmt.Errorf("creating temp dir: %w", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	p, err := layout.Write(tmpDir, empty.Index)
+	if err != nil {
+		return fmt.Errorf("writing OCI layout: %w", err)
+	}
+
+	err = p.AppendImage(img, layout.WithAnnotations(map[string]string{
+		"org.opencontainers.image.ref.name": ref,
+	}))
+	if err != nil {
+		return fmt.Errorf("appending image to layout: %w", err)
+	}
+
+	return tarDir(tmpDir, dest)
+}
+
+// tarDir creates a tar archive from a directory.
+func tarDir(srcDir, dest string) error {
+	f, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("creating file %s: %w", dest, err)
+	}
+
+	tw := tar.NewWriter(f)
+
+	walkErr := filepath.Walk(srcDir, func(file string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		relPath, err := filepath.Rel(srcDir, file)
+		if err != nil {
+			return err
+		}
+		if relPath == "." {
+			return nil
+		}
+
+		header, err := tar.FileInfoHeader(info, "")
+		if err != nil {
+			return err
+		}
+		header.Name = filepath.ToSlash(relPath)
+
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		data, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = data.Close() }()
+
+		_, err = io.Copy(tw, data)
+		return err
+	})
+	if walkErr != nil {
+		_ = tw.Close()
+		_ = f.Close()
+		return walkErr
+	}
+
+	if err := tw.Close(); err != nil {
+		_ = f.Close()
+		return err
+	}
+
+	return f.Close()
 }
