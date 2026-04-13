@@ -220,18 +220,23 @@ spec:
   volumes:
   - hostPath:
       path: /var/components/prometheus/etc/prometheus/prometheus.yaml
+      type: File
     name: volume-0
   - hostPath:
       path: /etc/kubernetes/pki/admin.crt
+      type: File
     name: volume-1
   - hostPath:
       path: /etc/kubernetes/pki/admin.key
+      type: File
     name: volume-2
   - hostPath:
       path: /etc/kubernetes/pki/apiserver-etcd-client.crt
+      type: File
     name: volume-3
   - hostPath:
       path: /etc/kubernetes/pki/apiserver-etcd-client.key
+      type: File
     name: volume-4
   - hostPath:
       path: <ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/prometheus

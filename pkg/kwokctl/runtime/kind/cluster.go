@@ -884,11 +884,13 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 			HostPath:  "/etc/kubernetes/pki/apiserver-etcd-client.crt",
 			MountPath: "/etc/kubernetes/pki/apiserver-etcd-client.crt",
 			ReadOnly:  true,
+			PathType:  internalversion.HostPathFile,
 		},
 		internalversion.Volume{
 			HostPath:  "/etc/kubernetes/pki/apiserver-etcd-client.key",
 			MountPath: "/etc/kubernetes/pki/apiserver-etcd-client.key",
 			ReadOnly:  true,
+			PathType:  internalversion.HostPathFile,
 		},
 	)
 

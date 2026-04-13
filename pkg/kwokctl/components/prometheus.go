@@ -56,16 +56,19 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 				HostPath:  conf.ConfigPath,
 				MountPath: "/etc/prometheus/prometheus.yaml",
 				ReadOnly:  true,
+				PathType:  internalversion.HostPathFile,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminCertPath,
 				MountPath: "/etc/kubernetes/pki/admin.crt",
 				ReadOnly:  true,
+				PathType:  internalversion.HostPathFile,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminKeyPath,
 				MountPath: "/etc/kubernetes/pki/admin.key",
 				ReadOnly:  true,
+				PathType:  internalversion.HostPathFile,
 			},
 		)
 		ports = append(
