@@ -165,14 +165,7 @@ func tarDir(srcDir, dest string) error {
 			return nil
 		}
 
-		data, err := os.Open(file)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = data.Close() }()
-
-		_, err = io.Copy(tw, data)
-		return err
+		return copyFileToTar(tw, file)
 	})
 	if walkErr != nil {
 		_ = tw.Close()
@@ -186,4 +179,16 @@ func tarDir(srcDir, dest string) error {
 	}
 
 	return f.Close()
+}
+
+// copyFileToTar copies the contents of a file into a tar writer.
+func copyFileToTar(tw *tar.Writer, file string) error {
+	data, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = data.Close() }()
+
+	_, err = io.Copy(tw, data)
+	return err
 }
