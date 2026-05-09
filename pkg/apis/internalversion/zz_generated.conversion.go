@@ -1111,6 +1111,7 @@ func autoConvert_internalversion_Component_To_v1alpha1_Component(in *Component, 
 	}
 	out.Metric = (*configv1alpha1.ComponentMetric)(unsafe.Pointer(in.Metric))
 	out.MetricsDiscovery = (*configv1alpha1.ComponentMetric)(unsafe.Pointer(in.MetricsDiscovery))
+	out.ManifestContents = *(*[]string)(unsafe.Pointer(&in.ManifestContents))
 	out.Version = in.Version
 	return nil
 }
@@ -1144,6 +1145,7 @@ func autoConvert_v1alpha1_Component_To_internalversion_Component(in *configv1alp
 	}
 	out.Metric = (*ComponentMetric)(unsafe.Pointer(in.Metric))
 	out.MetricsDiscovery = (*ComponentMetric)(unsafe.Pointer(in.MetricsDiscovery))
+	out.ManifestContents = *(*[]string)(unsafe.Pointer(&in.ManifestContents))
 	out.Version = in.Version
 	return nil
 }
@@ -1793,8 +1795,11 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
+	out.MetricsServerManifest = in.MetricsServerManifest
 	out.KueueImage = in.KueueImage
+	out.KueueManifest = in.KueueManifest
 	out.JobSetImage = in.JobSetImage
+	out.JobSetManifest = in.JobSetManifest
 	out.KueuevizFrontendImage = in.KueuevizFrontendImage
 	out.KueuevizBackendImage = in.KueuevizBackendImage
 	out.KindNodeImage = in.KindNodeImage
@@ -1917,8 +1922,11 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
+	out.MetricsServerManifest = in.MetricsServerManifest
 	out.KueueImage = in.KueueImage
+	out.KueueManifest = in.KueueManifest
 	out.JobSetImage = in.JobSetImage
+	out.JobSetManifest = in.JobSetManifest
 	out.KueuevizFrontendImage = in.KueuevizFrontendImage
 	out.KueuevizBackendImage = in.KueuevizBackendImage
 	// INFO: in.KindNodeImagePrefix opted out of conversion generation

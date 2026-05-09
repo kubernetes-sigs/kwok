@@ -17,7 +17,6 @@ limitations under the License.
 package binary
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -35,7 +34,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
-	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -46,7 +44,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // Cluster is an implementation of Runtime for binary
@@ -648,12 +645,17 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
+	rawManifest, err := c.EnsureManifest(ctx, conf.MetricsServerManifest)
+	if err != nil {
+		return err
+	}
 
 	metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
 		Runtime:        conf.Runtime,
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Binary:         metricsServerPath,
+		RawManifest:    string(rawManifest),
 		Version:        metricsServerVersion,
 		BindAddress:    conf.BindAddress,
 		Port:           conf.MetricsServerPort,
@@ -666,6 +668,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
+
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, metricsServerComponent)
 
 	return nil
@@ -1255,58 +1258,4 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		return waitErr
 	}
 	return nil
-}
-
-// InitCRs initializes the CRs.
-func (c *Cluster) InitCRs(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := config.Options
-
-	_, enableMetricsServer := slices.Find(config.Components, func(c internalversion.Component) bool {
-		return c.Name == consts.ComponentMetricsServer
-	})
-	if c.IsDryRun() {
-		if enableMetricsServer {
-			dryrun.PrintMessagef("# Set up apiservice for metrics server")
-		}
-
-		return nil
-	}
-
-	buf := bytes.NewBuffer(nil)
-	if enableMetricsServer {
-		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{
-			Port:         conf.MetricsServerPort,
-			ExternalName: "localhost",
-		})
-		if err != nil {
-			return err
-		}
-		_, _ = buf.WriteString(apiservice)
-		_, _ = buf.WriteString("---\n")
-	}
-
-	if buf.Len() == 0 {
-		return nil
-	}
-
-	clientset, err := c.GetClientset(ctx)
-	if err != nil {
-		return err
-	}
-
-	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
-		Clientset: clientset,
-		NoFilers:  true,
-	})
-	if err != nil {
-		return err
-	}
-
-	decoder := yaml.NewDecoder(buf)
-
-	return loader.Load(ctx, decoder)
 }

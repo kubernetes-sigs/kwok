@@ -17,7 +17,9 @@ limitations under the License.
 package components
 
 import (
+	"encoding/base64"
 	"fmt"
+	"os"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -31,6 +33,7 @@ type BuildKueueComponentConfig struct {
 	ProjectName       string
 	Binary            string
 	Image             string
+	RawManifest       string
 	Version           version.Version
 	Workdir           string
 	KubeApiserverPort uint32
@@ -156,7 +159,7 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		kueueArgs = append(kueueArgs, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
 	}
 
-	return internalversion.Component{
+	component = internalversion.Component{
 		Name:    consts.ComponentKueue,
 		Version: conf.Version.String(),
 		Links: []string{
@@ -171,5 +174,26 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		WorkDir: conf.Workdir,
 		Envs:    envs,
 		User:    user,
-	}, nil
+	}
+
+	if conf.RawManifest != "" {
+		caData, readErr := os.ReadFile(conf.CaCertPath)
+		if readErr != nil {
+			return internalversion.Component{}, readErr
+		}
+
+		component.ManifestContents, err = BuildKueueManifest(BuildManifestConfig{
+			Port:           9443,
+			ExternalName:   conf.ProjectName + "-" + consts.ComponentKueue,
+			VisibilityPort: 8082,
+			CABundle:       base64.StdEncoding.EncodeToString(caData),
+			RawManifest:    conf.RawManifest,
+		})
+		if err != nil {
+			return internalversion.Component{}, err
+		}
+	} else {
+		component.ManifestContents = []string{}
+	}
+	return component, nil
 }

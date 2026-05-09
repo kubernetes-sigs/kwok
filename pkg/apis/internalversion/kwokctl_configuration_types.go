@@ -198,11 +198,20 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerImage is the image of metrics-server.
 	MetricsServerImage string
 
+	// MetricsServerManifest is the full URL of the metrics-server manifest.
+	MetricsServerManifest string
+
 	// KueueImage is the image of kueue.
 	KueueImage string
 
+	// KueueManifest is the full URL of the kueue manifest.
+	KueueManifest string
+
 	// JobSetImage is the image of jobset.
 	JobSetImage string
+
+	// JobSetManifest is the full URL of the jobset manifest.
+	JobSetManifest string
 
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string
@@ -393,6 +402,9 @@ type Component struct {
 
 	// MetricsDiscovery is the metrics discovery of the component.
 	MetricsDiscovery *ComponentMetric
+
+	// ManifestContents is the rendered manifest that should be applied for the component.
+	ManifestContents []string
 
 	// Version is the version of the component.
 	Version string

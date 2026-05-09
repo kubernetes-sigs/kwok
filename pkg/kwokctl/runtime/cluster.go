@@ -743,3 +743,56 @@ var crdDefines = map[string][]byte{
 	v1alpha1.ClusterResourceUsageKind: crd.ClusterResourceUsage,
 	v1alpha1.MetricKind:               crd.Metric,
 }
+
+// InitCRs initializes the CRs.
+func (c *Cluster) InitCRs(ctx context.Context) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	if c.IsDryRun() {
+		for _, component := range config.Components {
+			if component.ManifestContents == nil {
+				continue
+			}
+
+			dryrun.PrintMessagef("# Set up manifest for %s", component.Name)
+		}
+		return nil
+	}
+
+	var buf strings.Builder
+	for _, component := range config.Components {
+		if component.ManifestContents == nil {
+			continue
+		}
+
+		for _, v := range component.ManifestContents {
+			_, _ = buf.WriteString("---\n")
+			_, _ = buf.WriteString(v)
+			_, _ = buf.WriteString("\n")
+		}
+	}
+
+	if buf.Len() == 0 {
+		return nil
+	}
+
+	clientset, err := c.GetClientset(ctx)
+	if err != nil {
+		return err
+	}
+
+	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
+		Clientset: clientset,
+		NoFilers:  true,
+	})
+	if err != nil {
+		return err
+	}
+
+	decoder := yaml.NewDecoder(strings.NewReader(buf.String()))
+
+	return loader.Load(ctx, decoder)
+}

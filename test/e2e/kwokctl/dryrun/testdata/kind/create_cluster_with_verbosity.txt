@@ -396,6 +396,7 @@ spec:
 status: {}
 EOF
 docker pull registry.k8s.io/metrics-server/metrics-server:v0.8.0
+# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/components.yaml to <ROOT_DIR>/workdir/cache/manifest/f3daa12b5f6d54a577801f047e143b947ad75baf9146f8799dd953a01c3e6bd3.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/metrics-server.yaml
 apiVersion: v1
 kind: Pod
@@ -674,5 +675,5 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 EOF
 kubectl cordon kwok-<CLUSTER_NAME>-control-plane
 docker exec kwok-<CLUSTER_NAME>-control-plane chmod -R +r /etc/kubernetes/pki
-# Set up apiservice for metrics server
+# Set up manifest for metrics-server
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config

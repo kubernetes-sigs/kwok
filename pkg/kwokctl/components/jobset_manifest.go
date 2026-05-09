@@ -17,31 +17,69 @@ limitations under the License.
 package components
 
 import (
-	"bytes"
 	"fmt"
-	"text/template"
 
-	_ "embed"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
-
-//go:embed jobset_manifest.yaml.tpl
-var jobsetManifestYamlTpl string
-
-var jobsetManifestYamlTemplate = template.Must(template.New("jobset_manifest").Parse(jobsetManifestYamlTpl))
 
 // BuildJobSetManifestConfig is the config for BuildJobSetManifest.
 type BuildJobSetManifestConfig struct {
 	Port         uint32
 	ExternalName string
 	CABundle     string
+	RawManifest  string
 }
 
-// BuildJobSetManifest builds the jobset manifest yaml content.
-func BuildJobSetManifest(conf BuildJobSetManifestConfig) (string, error) {
-	buf := bytes.NewBuffer(nil)
-	err := jobsetManifestYamlTemplate.Execute(buf, conf)
-	if err != nil {
-		return "", fmt.Errorf("failed to execute jobset manifest yaml template: %w", err)
+// BuildJobSetManifest transforms raw jobset manifest data with the provided
+// configuration values.
+func BuildJobSetManifest(conf BuildJobSetManifestConfig) ([]string, error) {
+	if len(conf.RawManifest) == 0 {
+		return nil, fmt.Errorf("raw jobset manifest is empty")
 	}
-	return buf.String(), nil
+
+	transformers := []resourceTransformer{
+		{
+			Kind:       "CustomResourceDefinition",
+			APIVersion: "apiextensions.k8s.io/v1",
+			Match: func(obj *unstructured.Unstructured) bool {
+				strategy, _, _ := unstructured.NestedString(obj.Object, "spec", "conversion", "strategy")
+				return strategy == "Webhook"
+			},
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformCRDConversionWebhook(obj.Object, int64(conf.Port), conf.CABundle)
+			},
+		},
+		{
+			Kind:       "Service",
+			APIVersion: "v1",
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformServiceToExternalName(obj.Object, conf.ExternalName)
+			},
+		},
+		{
+			Kind:       "MutatingWebhookConfiguration",
+			APIVersion: "admissionregistration.k8s.io/v1",
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformWebhookClientConfigs(obj.Object, int64(conf.Port), conf.CABundle)
+			},
+		},
+		{
+			Kind:       "ValidatingWebhookConfiguration",
+			APIVersion: "admissionregistration.k8s.io/v1",
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformWebhookClientConfigs(obj.Object, int64(conf.Port), conf.CABundle)
+			},
+		},
+		{
+			Kind:       "Deployment",
+			APIVersion: "apps/v1",
+			Delete:     true,
+		},
+	}
+
+	result, err := rewriteManifest(conf.RawManifest, transformers)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform jobset manifest: %w", err)
+	}
+	return result, nil
 }
