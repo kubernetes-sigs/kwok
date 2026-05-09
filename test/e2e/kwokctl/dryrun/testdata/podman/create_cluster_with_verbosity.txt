@@ -102,7 +102,7 @@ scrape_configs:
   scheme: https
   static_configs:
   - targets:
-    - kwok-<CLUSTER_NAME>-kwok-controller:4443
+    - kwok-<CLUSTER_NAME>-metrics-server:4443
   tls_config:
     cert_file: /etc/kubernetes/pki/admin.crt
     insecure_skip_verify: true
