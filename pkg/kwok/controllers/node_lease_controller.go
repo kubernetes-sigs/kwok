@@ -35,6 +35,15 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
+const (
+	// leaseWaitTimeout is the maximum time to wait for a newly created or
+	// updated lease to be reflected in the local informer cache.
+	leaseWaitTimeout = 2 * time.Second
+	// leaseWaitPollInterval is how often the cache is polled while waiting
+	// for the lease to appear.
+	leaseWaitPollInterval = 10 * time.Millisecond
+)
+
 // NodeLeaseController is responsible for creating and renewing a lease object
 type NodeLeaseController struct {
 	typedClient          clientset.Interface
@@ -233,9 +242,9 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first b
 // where onNodeManaged triggers pod sync before readOnly() sees the lease.
 // It gives up after a short deadline to avoid blocking indefinitely.
 func (c *NodeLeaseController) waitForLeaseInCache(ctx context.Context, nodeName string) {
-	deadline := c.clock.Now().Add(2 * time.Second)
+	deadline := c.clock.Now().Add(leaseWaitTimeout)
 	for ctx.Err() == nil && !c.Held(nodeName) && c.clock.Now().Before(deadline) {
-		c.clock.Sleep(10 * time.Millisecond)
+		c.clock.Sleep(leaseWaitPollInterval)
 	}
 }
 
