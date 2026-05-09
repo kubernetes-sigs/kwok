@@ -1220,7 +1220,24 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 		}
 	}
 
-	return c.Cluster.Ready(ctx)
+	ok, err := c.Cluster.Ready(ctx)
+	if !ok || err != nil {
+		return ok, err
+	}
+
+	// If the metrics server is enabled, verify its API is accessible through
+	// the kube-apiserver before declaring the cluster ready. On some platforms
+	// (e.g. Windows) the metrics server process may start but take additional
+	// time before the aggregated API is available, causing flaky tests.
+	if _, found := slices.Find(config.Components, func(comp internalversion.Component) bool {
+		return comp.Name == consts.ComponentMetricsServer
+	}); found {
+		if err := c.KubectlInCluster(exec.WithAllWriteTo(ctx, io.Discard), "get", "--raw", "/apis/metrics.k8s.io/v1beta1"); err != nil {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 // WaitReady waits for the cluster to be ready.

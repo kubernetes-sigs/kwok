@@ -193,6 +193,10 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first b
 
 		// it is first or it has been transitioned, and then manage the node.
 		if first || transitions {
+			// Wait for the lease update to be reflected in the informer cache before
+			// notifying. This avoids a race where pod syncing is triggered before
+			// readOnly() returns false.
+			c.waitForLeaseInCache(ctx, nodeName)
 			c.onNodeManaged(nodeName)
 		}
 		return lease, nil
@@ -216,8 +220,23 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first b
 		}
 	}
 
+	// Wait for the new lease to be reflected in the informer cache before
+	// notifying. This avoids a race where pod syncing is triggered before
+	// readOnly() returns false.
+	c.waitForLeaseInCache(ctx, nodeName)
 	c.onNodeManaged(nodeName)
 	return lease, nil
+}
+
+// waitForLeaseInCache waits until the lease held by this controller is
+// reflected in the local informer cache. This prevents a race condition
+// where onNodeManaged triggers pod sync before readOnly() sees the lease.
+// It gives up after a short deadline to avoid blocking indefinitely.
+func (c *NodeLeaseController) waitForLeaseInCache(ctx context.Context, nodeName string) {
+	deadline := c.clock.Now().Add(2 * time.Second)
+	for ctx.Err() == nil && !c.Held(nodeName) && c.clock.Now().Before(deadline) {
+		c.clock.Sleep(10 * time.Millisecond)
+	}
 }
 
 func (c *NodeLeaseController) onNodeManaged(nodeName string) {
