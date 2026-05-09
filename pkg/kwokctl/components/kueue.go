@@ -53,7 +53,6 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 	var kueueArgs []string
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
-	var metric *internalversion.ComponentMetric
 
 	kueueArgs = append(kueueArgs,
 		// Remove this after https://github.com/kubernetes-sigs/kueue/issues/8606 is fixed
@@ -153,12 +152,6 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 	)
 	user := "root"
 
-	metric = &internalversion.ComponentMetric{
-		Scheme: "https",
-		Host:   conf.ProjectName + "-" + consts.ComponentKueue + ":8443",
-		Path:   "/metrics",
-	}
-
 	if conf.Verbosity != log.LevelInfo {
 		kueueArgs = append(kueueArgs, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
 	}
@@ -176,7 +169,6 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		Image:   conf.Image,
 		Ports:   ports,
 		WorkDir: conf.Workdir,
-		Metric:  metric,
 		Envs:    envs,
 		User:    user,
 	}, nil

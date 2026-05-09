@@ -77,6 +77,11 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
+		metric = &internalversion.ComponentMetric{
+			Scheme: "http",
+			Host:   net.LocalAddress + ":9090",
+			Path:   "/metrics",
+		}
 		prometheusArgs = append(prometheusArgs,
 			"--config.file=/etc/prometheus/prometheus.yaml",
 			"--web.listen-address="+conf.BindAddress+":9090",
@@ -91,16 +96,15 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
+		metric = &internalversion.ComponentMetric{
+			Scheme: "http",
+			Host:   net.LocalAddress + ":" + format.String(conf.Port),
+			Path:   "/metrics",
+		}
 		prometheusArgs = append(prometheusArgs,
 			"--config.file="+conf.ConfigPath,
 			"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),
 		)
-	}
-
-	metric = &internalversion.ComponentMetric{
-		Scheme: "http",
-		Host:   net.LocalAddress + ":" + format.String(conf.Port),
-		Path:   "/metrics",
 	}
 
 	if conf.Verbosity != log.LevelInfo {
