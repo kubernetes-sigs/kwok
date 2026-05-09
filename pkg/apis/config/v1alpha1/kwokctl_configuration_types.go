@@ -26,6 +26,7 @@ const (
 
 	// ModeStableFeatureGateAndAPI is intended to reduce cluster configuration requirements
 	// Disables all Alpha feature by default, as well as Beta feature that are not eventually GA
+	//
 	// Deprecated: This mode will be removed in a future release
 	ModeStableFeatureGateAndAPI = "StableFeatureGateAndAPI"
 )
@@ -183,17 +184,20 @@ type KwokctlConfigurationOptions struct {
 	// DisableKubeScheduler is the flag to disable kube-scheduler.
 	// is the default value for flag --disable-kube-scheduler and env KWOK_DISABLE_KUBE_SCHEDULER
 	// +default=false
+	//
 	// Deprecated: Use Disable instead
 	DisableKubeScheduler *bool `json:"disableKubeScheduler,omitempty"`
 
 	// DisableKubeControllerManager is the flag to disable kube-controller-manager.
 	// is the default value for flag --disable-kube-controller-manager and env KWOK_DISABLE_KUBE_CONTROLLER_MANAGER
 	// +default=false
+	//
 	// Deprecated: Use Disable instead
 	DisableKubeControllerManager *bool `json:"disableKubeControllerManager,omitempty"`
 
 	// EnableMetricsServer is the flag to enable metrics-server.
 	// +default=false
+	//
 	// Deprecated: Use Enable instead
 	EnableMetricsServer *bool `json:"enableMetricsServer,omitempty"`
 
@@ -343,6 +347,7 @@ type KwokctlConfigurationOptions struct {
 
 	// EtcdBinaryTar is the tar of the binary of etcd.
 	// is the default value for env KWOK_ETCD_BINARY_TAR
+	//
 	// Deprecated: Use EtcdBinary or EtcdctlBinary instead
 	//+k8s:conversion-gen=false
 	EtcdBinaryTar string `json:"etcdBinaryTar,omitempty"`
@@ -379,6 +384,7 @@ type KwokctlConfigurationOptions struct {
 
 	// PrometheusBinaryTar is the tar of binary of Prometheus.
 	// is the default value for env KWOK_PROMETHEUS_BINARY_TAR
+	//
 	// Deprecated: Use PrometheusBinary instead
 	//+k8s:conversion-gen=false
 	PrometheusBinaryTar string `json:"prometheusBinaryTar,omitempty"`
@@ -394,6 +400,7 @@ type KwokctlConfigurationOptions struct {
 
 	// JaegerBinaryTar is the tar of binary of Jaeger.
 	// is the default value for env KWOK_JAEGER_TAR
+	//
 	// Deprecated: Use JaegerBinary instead
 	//+k8s:conversion-gen=false
 	JaegerBinaryTar string `json:"jaegerBinaryTar,omitempty"`
@@ -433,6 +440,7 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for env KWOK_MODE
 	// k8s 1.29, different components use different FeatureGate,
 	// which makes it impossible to create clusters properly using this feature.
+	//
 	// Deprecated: This mode will be removed in a future release
 	//+k8s:conversion-gen=false
 	Mode string `json:"mode,omitempty"`

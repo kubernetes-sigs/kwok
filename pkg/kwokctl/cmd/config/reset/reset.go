@@ -45,7 +45,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 func runE(_ context.Context) error {
 	p := path.Join(config.WorkDir, consts.ConfigName)
 	if dryrun.DryRun {
-		dryrun.PrintMessage("# Removing config file %s", p)
+		dryrun.PrintMessagef("# Removing config file %s", p)
 		return nil
 	}
 	err := file.Remove(p)

@@ -1665,8 +1665,8 @@ StageNext
 </em>
 </td>
 <td>
-<p>Next indicates that this stage will be moved to.
-Deprecated: Use Steps instead.</p>
+<p>Next indicates that this stage will be moved to.</p>
+<p>Deprecated: Use Steps instead.</p>
 </td>
 </tr>
 <tr>
@@ -2544,8 +2544,8 @@ string
 </td>
 <td>
 <p>If a Node/Pod is on a managed Node and has this annotation status will not be modified
-is the default value for flag &ndash;disregard-status-with-annotation-selector
-Deprecated: use Stage API instead</p>
+is the default value for flag &ndash;disregard-status-with-annotation-selector</p>
+<p>Deprecated: use Stage API instead</p>
 </td>
 </tr>
 <tr>
@@ -2557,8 +2557,8 @@ string
 </td>
 <td>
 <p>If a Node/Pod is on a managed Node and has this label status will not be modified
-is the default value for flag &ndash;disregard-status-with-label-selector
-Deprecated: use Stage API instead</p>
+is the default value for flag &ndash;disregard-status-with-label-selector</p>
+<p>Deprecated: use Stage API instead</p>
 </td>
 </tr>
 <tr>
@@ -2582,8 +2582,8 @@ bool
 </td>
 <td>
 <p>Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux.
-is the default value for flag &ndash;experimental-enable-cni
-Deprecated: It will be removed and will be supported in the form of plugins</p>
+is the default value for flag &ndash;experimental-enable-cni</p>
+<p>Deprecated: It will be removed and will be supported in the form of plugins</p>
 </td>
 </tr>
 <tr>
@@ -3043,8 +3043,8 @@ bool
 </td>
 <td>
 <p>DisableKubeScheduler is the flag to disable kube-scheduler.
-is the default value for flag &ndash;disable-kube-scheduler and env KWOK_DISABLE_KUBE_SCHEDULER
-Deprecated: Use Disable instead</p>
+is the default value for flag &ndash;disable-kube-scheduler and env KWOK_DISABLE_KUBE_SCHEDULER</p>
+<p>Deprecated: Use Disable instead</p>
 </td>
 </tr>
 <tr>
@@ -3056,8 +3056,8 @@ bool
 </td>
 <td>
 <p>DisableKubeControllerManager is the flag to disable kube-controller-manager.
-is the default value for flag &ndash;disable-kube-controller-manager and env KWOK_DISABLE_KUBE_CONTROLLER_MANAGER
-Deprecated: Use Disable instead</p>
+is the default value for flag &ndash;disable-kube-controller-manager and env KWOK_DISABLE_KUBE_CONTROLLER_MANAGER</p>
+<p>Deprecated: Use Disable instead</p>
 </td>
 </tr>
 <tr>
@@ -3068,8 +3068,8 @@ bool
 </em>
 </td>
 <td>
-<p>EnableMetricsServer is the flag to enable metrics-server.
-Deprecated: Use Enable instead</p>
+<p>EnableMetricsServer is the flag to enable metrics-server.</p>
+<p>Deprecated: Use Enable instead</p>
 </td>
 </tr>
 <tr>
@@ -3501,8 +3501,8 @@ string
 </td>
 <td>
 <p>EtcdBinaryTar is the tar of the binary of etcd.
-is the default value for env KWOK_ETCD_BINARY_TAR
-Deprecated: Use EtcdBinary or EtcdctlBinary instead</p>
+is the default value for env KWOK_ETCD_BINARY_TAR</p>
+<p>Deprecated: Use EtcdBinary or EtcdctlBinary instead</p>
 </td>
 </tr>
 <tr>
@@ -3573,8 +3573,8 @@ string
 </td>
 <td>
 <p>PrometheusBinaryTar is the tar of binary of Prometheus.
-is the default value for env KWOK_PROMETHEUS_BINARY_TAR
-Deprecated: Use PrometheusBinary instead</p>
+is the default value for env KWOK_PROMETHEUS_BINARY_TAR</p>
+<p>Deprecated: Use PrometheusBinary instead</p>
 </td>
 </tr>
 <tr>
@@ -3610,8 +3610,8 @@ string
 </td>
 <td>
 <p>JaegerBinaryTar is the tar of binary of Jaeger.
-is the default value for env KWOK_JAEGER_TAR
-Deprecated: Use JaegerBinary instead</p>
+is the default value for env KWOK_JAEGER_TAR</p>
+<p>Deprecated: Use JaegerBinary instead</p>
 </td>
 </tr>
 <tr>
@@ -3716,8 +3716,8 @@ string
 <p>Mode is several default parameter templates for clusters
 is the default value for env KWOK_MODE
 k8s 1.29, different components use different FeatureGate,
-which makes it impossible to create clusters properly using this feature.
-Deprecated: This mode will be removed in a future release</p>
+which makes it impossible to create clusters properly using this feature.</p>
+<p>Deprecated: This mode will be removed in a future release</p>
 </td>
 </tr>
 <tr>
@@ -5262,8 +5262,8 @@ string
 </em>
 </td>
 <td>
-<p>ExpressionFrom is the expression used to get the value.
-Deprecated: Use JQ instead.</p>
+<p>ExpressionFrom is the expression used to get the value.</p>
+<p>Deprecated: Use JQ instead.</p>
 </td>
 </tr>
 </tbody>
@@ -5694,8 +5694,8 @@ string
 </em>
 </td>
 <td>
-<p>Key represents the expression which will be evaluated by JQ.
-Deprecated: Use JQ instead.</p>
+<p>Key represents the expression which will be evaluated by JQ.</p>
+<p>Deprecated: Use JQ instead.</p>
 </td>
 </tr>
 <tr>
@@ -5708,8 +5708,8 @@ SelectorOperator
 </em>
 </td>
 <td>
-<p>Represents a scope&rsquo;s relationship to a set of values.
-Deprecated: Use JQ instead.</p>
+<p>Represents a scope&rsquo;s relationship to a set of values.</p>
+<p>Deprecated: Use JQ instead.</p>
 </td>
 </tr>
 <tr>
@@ -5722,8 +5722,8 @@ Deprecated: Use JQ instead.</p>
 <td>
 <p>An array of string values.
 If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
-If the operator is Exists or DoesNotExist, the values array must be empty.
-Deprecated: Use JQ instead.</p>
+If the operator is Exists or DoesNotExist, the values array must be empty.</p>
+<p>Deprecated: Use JQ instead.</p>
 </td>
 </tr>
 </tbody>
@@ -6704,8 +6704,8 @@ string
 </em>
 </td>
 <td>
-<p>StatusTemplate indicates the template for modifying the status of the resource in the next.
-Deprecated: Use Patches instead.</p>
+<p>StatusTemplate indicates the template for modifying the status of the resource in the next.</p>
+<p>Deprecated: Use Patches instead.</p>
 </td>
 </tr>
 <tr>
@@ -6717,8 +6717,8 @@ string
 </td>
 <td>
 <p>StatusSubresource indicates the name of the subresource that will be patched. The support for
-this field is not available in Pod and Node resources.
-Deprecated: Use Patches instead.</p>
+this field is not available in Pod and Node resources.</p>
+<p>Deprecated: Use Patches instead.</p>
 </td>
 </tr>
 <tr>
@@ -6734,8 +6734,8 @@ ImpersonationConfig
 <p>StatusPatchAs indicates the impersonating configuration for client when patching status.
 In most cases this will be empty, in which case the default client service account will be used.
 When this is not empty, a corresponding rbac change is required to grant <code>impersonate</code> privilege.
-The support for this field is not available in Pod and Node resources.
-Deprecated: Use Patches instead.</p>
+The support for this field is not available in Pod and Node resources.</p>
+<p>Deprecated: Use Patches instead.</p>
 </td>
 </tr>
 </tbody>
@@ -7062,8 +7062,8 @@ StageNext
 </em>
 </td>
 <td>
-<p>Next indicates that this stage will be moved to.
-Deprecated: Use Steps instead.</p>
+<p>Next indicates that this stage will be moved to.</p>
+<p>Deprecated: Use Steps instead.</p>
 </td>
 </tr>
 <tr>

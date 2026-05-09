@@ -59,12 +59,12 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminCertPath,
-				MountPath: "/etc/kubernetes/pki/admin.crt",
+				MountPath: pkiAdminCertPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminKeyPath,
-				MountPath: "/etc/kubernetes/pki/admin.key",
+				MountPath: pkiAdminKeyPath,
 				ReadOnly:  true,
 			},
 		)
@@ -80,7 +80,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
 			Host:   net.LocalAddress + ":9090",
-			Path:   "/metrics",
+			Path:   metricsPath,
 		}
 		prometheusArgs = append(prometheusArgs,
 			"--config.file=/etc/prometheus/prometheus.yaml",
@@ -99,7 +99,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
 			Host:   net.LocalAddress + ":" + format.String(conf.Port),
-			Path:   "/metrics",
+			Path:   metricsPath,
 		}
 		prometheusArgs = append(prometheusArgs,
 			"--config.file="+conf.ConfigPath,

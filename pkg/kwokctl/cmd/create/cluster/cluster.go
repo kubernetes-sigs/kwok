@@ -197,7 +197,7 @@ func mutationComponentPatches(flags *flagpole) {
 		})
 		componentNames[splitedArgs[0]] = i
 	}
-	flags.KwokctlConfiguration.ComponentsPatches = append(flags.KwokctlConfiguration.ComponentsPatches, componentPatches...)
+	flags.ComponentsPatches = append(flags.ComponentsPatches, componentPatches...)
 }
 
 func runE(ctx context.Context, flags *flagpole) error {

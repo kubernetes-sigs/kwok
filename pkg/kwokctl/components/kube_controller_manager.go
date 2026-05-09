@@ -85,17 +85,17 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			},
 			internalversion.Volume{
 				HostPath:  conf.CaCertPath,
-				MountPath: "/etc/kubernetes/pki/ca.crt",
+				MountPath: pkiCACertPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminCertPath,
-				MountPath: "/etc/kubernetes/pki/admin.crt",
+				MountPath: pkiAdminCertPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminKeyPath,
-				MountPath: "/etc/kubernetes/pki/admin.key",
+				MountPath: pkiAdminKeyPath,
 				ReadOnly:  true,
 			},
 		)
@@ -123,18 +123,18 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			ports = append(
 				ports,
 				internalversion.Port{
-					Name:     "https",
+					Name:     schemeHTTPS,
 					HostPort: conf.Port,
 					Port:     10257,
 					Protocol: internalversion.ProtocolTCP,
 				},
 			)
 			metric = &internalversion.ComponentMetric{
-				Scheme:             "https",
+				Scheme:             schemeHTTPS,
 				Host:               conf.ProjectName + "-" + consts.ComponentKubeControllerManager + ":10257",
-				Path:               "/metrics",
-				CertPath:           "/etc/kubernetes/pki/admin.crt",
-				KeyPath:            "/etc/kubernetes/pki/admin.key",
+				Path:               metricsPath,
+				CertPath:           pkiAdminCertPath,
+				KeyPath:            pkiAdminKeyPath,
 				InsecureSkipVerify: true,
 			}
 		} else {
@@ -145,16 +145,16 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			ports = append(
 				ports,
 				internalversion.Port{
-					Name:     "https",
+					Name:     schemeHTTPS,
 					HostPort: 0,
 					Port:     conf.Port,
 					Protocol: internalversion.ProtocolTCP,
 				},
 			)
 			metric = &internalversion.ComponentMetric{
-				Scheme:             "https",
+				Scheme:             schemeHTTPS,
 				Host:               net.LocalAddress + ":" + format.String(conf.Port),
-				Path:               "/metrics",
+				Path:               metricsPath,
 				CertPath:           conf.AdminCertPath,
 				KeyPath:            conf.AdminKeyPath,
 				InsecureSkipVerify: true,
@@ -183,7 +183,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",
 				Host:   conf.ProjectName + "-" + consts.ComponentKubeControllerManager + ":10252",
-				Path:   "/metrics",
+				Path:   metricsPath,
 			}
 		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
@@ -202,7 +202,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",
 				Host:   net.LocalAddress + ":" + format.String(conf.Port),
-				Path:   "/metrics",
+				Path:   metricsPath,
 			}
 		}
 

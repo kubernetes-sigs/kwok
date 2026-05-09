@@ -1431,7 +1431,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	args = append(args, componentName)
 	if c.IsDryRun() && !follow {
 		if file, ok := dryrun.IsCatToFileWriter(out); ok {
-			dryrun.PrintMessage("%s >%s", runtime.FormatExec(ctx, name, args...), file)
+			dryrun.PrintMessagef("%s >%s", runtime.FormatExec(ctx, name, args...), file)
 			return nil
 		}
 	}
@@ -1619,7 +1619,7 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 	})
 	if c.IsDryRun() {
 		if enableMetricsServer {
-			dryrun.PrintMessage("# Set up apiservice for metrics server")
+			dryrun.PrintMessagef("# Set up apiservice for metrics server")
 		}
 
 		return nil

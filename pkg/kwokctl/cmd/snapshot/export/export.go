@@ -80,7 +80,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	if dryrun.DryRun {
-		dryrun.PrintMessage("kubectl --kubeconfig %s get %s -o yaml >%s", flags.Kubeconfig, strings.Join(flags.Filters, ","), flags.Path)
+		dryrun.PrintMessagef("kubectl --kubeconfig %s get %s -o yaml >%s", flags.Kubeconfig, strings.Join(flags.Filters, ","), flags.Path)
 		return nil
 	}
 

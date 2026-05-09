@@ -1029,9 +1029,9 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	logs := c.GetLogPath(name + ".log")
 	if c.IsDryRun() {
 		if file, ok := dryrun.IsCatToFileWriter(out); ok {
-			dryrun.PrintMessage("cp %s %s", logs, file)
+			dryrun.PrintMessagef("cp %s %s", logs, file)
 		} else {
-			dryrun.PrintMessage("cat %s", logs)
+			dryrun.PrintMessagef("cat %s", logs)
 		}
 		return nil
 	}
@@ -1065,7 +1065,7 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 
 	logs := c.GetLogPath(name + ".log")
 	if c.IsDryRun() {
-		dryrun.PrintMessage("tail -f %s", logs)
+		dryrun.PrintMessagef("tail -f %s", logs)
 		return nil
 	}
 
@@ -1127,7 +1127,7 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
-	_, err = f.Write([]byte(fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH)))
+	_, err = fmt.Fprintf(f, "%s/%s", rt.GOOS, rt.GOARCH)
 	if err != nil {
 		return err
 	}
@@ -1270,7 +1270,7 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 	})
 	if c.IsDryRun() {
 		if enableMetricsServer {
-			dryrun.PrintMessage("# Set up apiservice for metrics server")
+			dryrun.PrintMessagef("# Set up apiservice for metrics server")
 		}
 
 		return nil

@@ -151,14 +151,17 @@ type KwokctlConfigurationOptions struct {
 	Enable []string
 
 	// DisableKubeScheduler is the flag to disable kube-scheduler.
+	//
 	// Deprecated: Use Disable instead
 	DisableKubeScheduler bool
 
 	// DisableKubeControllerManager is the flag to disable kube-controller-manager.
+	//
 	// Deprecated: Use Disable instead
 	DisableKubeControllerManager bool
 
 	// EnableMetricsServer is the flag to enable metrics-server.
+	//
 	// Deprecated: Use Enable instead
 	EnableMetricsServer bool
 
@@ -236,6 +239,7 @@ type KwokctlConfigurationOptions struct {
 	EtcdBinary string
 
 	// EtcdBinaryTar is the tar of the binary of etcd.
+	//
 	// Deprecated: Use EtcdBinary instead
 	EtcdBinaryTar string
 
@@ -253,6 +257,7 @@ type KwokctlConfigurationOptions struct {
 	PrometheusBinary string
 
 	// PrometheusBinaryTar is the tar of binary of Prometheus.
+	//
 	// Deprecated: Use PrometheusBinary instead
 	PrometheusBinaryTar string
 
@@ -260,6 +265,7 @@ type KwokctlConfigurationOptions struct {
 	JaegerBinary string
 
 	// JaegerBinaryTar is the tar of binary of Jaeger.
+	//
 	// Deprecated: Use JaegerBinary instead
 	JaegerBinaryTar string
 

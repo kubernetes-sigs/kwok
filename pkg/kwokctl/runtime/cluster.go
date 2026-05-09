@@ -168,7 +168,7 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	if c.IsDryRun() {
-		dryrun.PrintMessage("# Save cluster config to %s", c.GetWorkdirPath(ConfigName))
+		dryrun.PrintMessagef("# Save cluster config to %s", c.GetWorkdirPath(ConfigName))
 		return nil
 	}
 
@@ -539,9 +539,9 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 	logs := c.GetLogPath(AuditLogName)
 	if c.IsDryRun() {
 		if file, ok := dryrun.IsCatToFileWriter(out); ok {
-			dryrun.PrintMessage("cp %s %s", logs, file)
+			dryrun.PrintMessagef("cp %s %s", logs, file)
 		} else {
-			dryrun.PrintMessage("cat %s", logs)
+			dryrun.PrintMessagef("cat %s", logs)
 		}
 		return nil
 	}
@@ -566,7 +566,7 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 	logs := c.GetLogPath(AuditLogName)
 	if c.IsDryRun() {
-		dryrun.PrintMessage("tail -f %s", logs)
+		dryrun.PrintMessagef("tail -f %s", logs)
 		return nil
 	}
 
@@ -690,7 +690,7 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 	}
 
 	if c.IsDryRun() {
-		dryrun.PrintMessage("# Init CRDs %s", strings.Join(crds, ","))
+		dryrun.PrintMessagef("# Init CRDs %s", strings.Join(crds, ","))
 		return nil
 	}
 

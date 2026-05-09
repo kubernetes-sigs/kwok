@@ -65,8 +65,8 @@ func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ..
 	})
 
 	if c.IsDryRun() {
-		dryrun.PrintMessage("%s", FormatExec(ctx, name, args...))
-		dryrun.PrintMessage("echo $! >%s", pidPath)
+		dryrun.PrintMessagef("%s", FormatExec(ctx, name, args...))
+		dryrun.PrintMessagef("echo $! >%s", pidPath)
 		return nil
 	}
 	cmd, err := exec.Command(ctx, name, args...)
@@ -94,7 +94,7 @@ func (c *Cluster) ForkExecKill(ctx context.Context, dir string, name string) err
 	}
 
 	if c.IsDryRun() {
-		dryrun.PrintMessage("kill $(cat %s)", pidPath)
+		dryrun.PrintMessagef("kill $(cat %s)", pidPath)
 	} else {
 		raw, err := os.ReadFile(pidPath)
 		if err != nil {
@@ -144,7 +144,7 @@ func (c *Cluster) ForkExecIsRunning(ctx context.Context, dir string, name string
 // EnsureImage ensures the image exists.
 func (c *Cluster) EnsureImage(ctx context.Context, command string, image string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("%s pull %s", command, image)
+		dryrun.PrintMessagef("%s pull %s", command, image)
 		return nil
 	}
 
@@ -224,7 +224,7 @@ func (c *Cluster) ensureImageWithRuntime(ctx context.Context, command string, im
 // Exec executes the given command and returns the output.
 func (c *Cluster) Exec(ctx context.Context, name string, args ...string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("%s", FormatExec(ctx, name, args...))
+		dryrun.PrintMessagef("%s", FormatExec(ctx, name, args...))
 		return nil
 	}
 
@@ -252,7 +252,7 @@ func (c *Cluster) ParseVersionFromImage(ctx context.Context, runtime string, ima
 // WriteToPath writes the output of a command to a specified file
 func (c *Cluster) WriteToPath(ctx context.Context, path string, commands []string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("%s >%s", strings.Join(commands, " "), path)
+		dryrun.PrintMessagef("%s >%s", strings.Join(commands, " "), path)
 		return nil
 	}
 

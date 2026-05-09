@@ -142,7 +142,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			ports = append(
 				ports,
 				internalversion.Port{
-					Name:     "https",
+					Name:     schemeHTTPS,
 					HostPort: conf.Port,
 					Port:     6443,
 					Protocol: internalversion.ProtocolTCP,
@@ -151,17 +151,17 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			volumes = append(volumes,
 				internalversion.Volume{
 					HostPath:  conf.CaCertPath,
-					MountPath: "/etc/kubernetes/pki/ca.crt",
+					MountPath: pkiCACertPath,
 					ReadOnly:  true,
 				},
 				internalversion.Volume{
 					HostPath:  conf.AdminCertPath,
-					MountPath: "/etc/kubernetes/pki/admin.crt",
+					MountPath: pkiAdminCertPath,
 					ReadOnly:  true,
 				},
 				internalversion.Volume{
 					HostPath:  conf.AdminKeyPath,
-					MountPath: "/etc/kubernetes/pki/admin.key",
+					MountPath: pkiAdminKeyPath,
 					ReadOnly:  true,
 				},
 			)
@@ -178,18 +178,18 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--proxy-client-cert-file=/etc/kubernetes/pki/admin.crt",
 			)
 			metric = &internalversion.ComponentMetric{
-				Scheme:             "https",
+				Scheme:             schemeHTTPS,
 				Host:               conf.ProjectName + "-" + consts.ComponentKubeApiserver + ":6443",
-				Path:               "/metrics",
-				CertPath:           "/etc/kubernetes/pki/admin.crt",
-				KeyPath:            "/etc/kubernetes/pki/admin.key",
+				Path:               metricsPath,
+				CertPath:           pkiAdminCertPath,
+				KeyPath:            pkiAdminKeyPath,
 				InsecureSkipVerify: true,
 			}
 		} else {
 			ports = append(
 				ports,
 				internalversion.Port{
-					Name:     "https",
+					Name:     schemeHTTPS,
 					HostPort: 0,
 					Port:     conf.Port,
 					Protocol: internalversion.ProtocolTCP,
@@ -208,9 +208,9 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--proxy-client-cert-file="+conf.AdminCertPath,
 			)
 			metric = &internalversion.ComponentMetric{
-				Scheme:             "https",
+				Scheme:             schemeHTTPS,
 				Host:               net.LocalAddress + ":" + format.String(conf.Port),
-				Path:               "/metrics",
+				Path:               metricsPath,
 				CertPath:           conf.AdminCertPath,
 				KeyPath:            conf.AdminKeyPath,
 				InsecureSkipVerify: true,
@@ -235,7 +235,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",
 				Host:   conf.ProjectName + "-" + consts.ComponentKubeApiserver + ":8080",
-				Path:   "/metrics",
+				Path:   metricsPath,
 			}
 		} else {
 			ports = append(
@@ -254,7 +254,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",
 				Host:   net.LocalAddress + ":" + format.String(conf.Port),
-				Path:   "/metrics",
+				Path:   metricsPath,
 			}
 		}
 	}

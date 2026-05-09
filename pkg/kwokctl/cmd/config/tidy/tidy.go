@@ -45,7 +45,7 @@ func runE(ctx context.Context) error {
 	list := config.GetFromContext(ctx)
 	p := path.Join(config.WorkDir, consts.ConfigName)
 	if dryrun.DryRun {
-		dryrun.PrintMessage("# Tidy the config file")
+		dryrun.PrintMessagef("# Tidy the config file")
 		return nil
 	}
 	err := config.Save(ctx, p, list)

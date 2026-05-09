@@ -74,6 +74,14 @@ const (
 	RuntimeModeCluster   = "cluster"
 )
 
+const (
+	pkiCACertPath    = "/etc/kubernetes/pki/ca.crt"
+	pkiAdminCertPath = "/etc/kubernetes/pki/admin.crt"
+	pkiAdminKeyPath  = "/etc/kubernetes/pki/admin.key"
+	metricsPath      = "/metrics"
+	schemeHTTPS      = "https"
+)
+
 var (
 	runtimeTypeMap = map[string]string{
 		consts.RuntimeTypeBinary:      RuntimeModeNative,

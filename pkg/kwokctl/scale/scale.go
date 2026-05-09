@@ -81,8 +81,8 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	}
 
 	if conf.DryRun {
-		dryrun.PrintMessage("# Scale resource %s to %d replicas", conf.Name, conf.Replicas)
-		dryrun.PrintMessage("# Resource example: %s", string(data))
+		dryrun.PrintMessagef("# Scale resource %s to %d replicas", conf.Name, conf.Replicas)
+		dryrun.PrintMessagef("# Resource example: %s", string(data))
 		return nil
 	}
 
@@ -309,7 +309,7 @@ type softInfo struct {
 }
 
 func (s softInfo) Less(creationTimestamp metav1.Time, name string) bool {
-	cmp := s.CreationTimestamp.Time.Compare(creationTimestamp.Time)
+	cmp := s.CreationTimestamp.Compare(creationTimestamp.Time)
 	if cmp == 0 {
 		return s.Name < name
 	}

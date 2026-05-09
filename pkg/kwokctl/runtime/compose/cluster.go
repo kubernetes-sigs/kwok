@@ -954,7 +954,6 @@ func (c *Cluster) addKueueviz(ctx context.Context, env *env) (err error) {
 		kueuevizFrontendComponent,
 	)
 	return nil
-
 }
 
 func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
@@ -1234,7 +1233,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	args = append(args, c.Name()+"-"+name)
 	if c.IsDryRun() && !follow {
 		if file, ok := dryrun.IsCatToFileWriter(out); ok {
-			dryrun.PrintMessage("%s >%s", runtime.FormatExec(ctx, name, args...), file)
+			dryrun.PrintMessagef("%s >%s", runtime.FormatExec(ctx, name, args...), file)
 			return nil
 		}
 	}
@@ -1463,15 +1462,15 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 
 	if c.IsDryRun() {
 		if enableMetricsServer {
-			dryrun.PrintMessage("# Set up apiservice for metrics server")
+			dryrun.PrintMessagef("# Set up apiservice for metrics server")
 		}
 
 		if enableKueue {
-			dryrun.PrintMessage("# Set up manifest for kueue")
+			dryrun.PrintMessagef("# Set up manifest for kueue")
 		}
 
 		if enableJobSet {
-			dryrun.PrintMessage("# Set up manifest for jobset")
+			dryrun.PrintMessagef("# Set up manifest for jobset")
 		}
 
 		return nil

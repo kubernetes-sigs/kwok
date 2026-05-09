@@ -386,20 +386,28 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 		})
 	}
 
-	extraMounts := []kindv1alpha4.Mount{
-		{
+	extraMounts := make([]kindv1alpha4.Mount, 0, 3+
+		len(conf.EtcdExtraVolumes)+
+		len(conf.ApiserverExtraVolumes)+
+		len(conf.ControllerManagerExtraVolumes)+
+		len(conf.SchedulerExtraVolumes)+
+		len(conf.KwokControllerExtraVolumes)+
+		len(conf.PrometheusExtraVolumes),
+	)
+	extraMounts = append(extraMounts,
+		kindv1alpha4.Mount{
 			HostPath:      conf.Workdir,
 			ContainerPath: "/etc/kwok/",
 		},
-		{
+		kindv1alpha4.Mount{
 			HostPath:      fmt.Sprintf("%s/manifests", conf.Workdir),
 			ContainerPath: "/etc/kubernetes/manifests",
 		},
-		{
+		kindv1alpha4.Mount{
 			HostPath:      fmt.Sprintf("%s/pki", conf.Workdir),
 			ContainerPath: "/etc/kubernetes/pki",
 		},
-	}
+	)
 
 	for _, vol := range conf.EtcdExtraVolumes {
 		extraMounts = append(extraMounts, kindv1alpha4.Mount{

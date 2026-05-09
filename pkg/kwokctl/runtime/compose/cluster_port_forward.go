@@ -57,17 +57,19 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 	logger := log.FromContext(ctx)
 
 	tempContainerName := "temp-port-forward-proxy-" + format.String(time.Now().Unix())
-
-	args := []string{
+	labelArgs := c.labelArgs()
+	args := make([]string, 0, 7+len(labelArgs)+1)
+	args = append(args,
 		"run",
 		"--rm",
 		"-i",
 		"--pull=never",
-		"--network=" + c.networkName(),
-		"--name=" + tempContainerName,
+		"--network="+c.networkName(),
+		"--name="+tempContainerName,
 		"--entrypoint=/bin/sh",
-	}
-	args = append(args, c.labelArgs()...)
+	)
+
+	args = append(args, labelArgs...)
 	args = append(args, kwokController.Image)
 
 	r, w := io.Pipe()

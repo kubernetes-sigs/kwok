@@ -42,8 +42,8 @@ func BuildKueuevizBackendComponent(conf BuildKueuevizBackendComponentConfig) (co
 		return internalversion.Component{}, fmt.Errorf("kueue only supports container runtime for now")
 	}
 
-	var volumes []internalversion.Volume
-	var ports []internalversion.Port
+	volumes := make([]internalversion.Volume, 0, 4)
+	ports := make([]internalversion.Port, 0, 1)
 
 	volumes = append(volumes,
 		internalversion.Volume{
@@ -53,17 +53,17 @@ func BuildKueuevizBackendComponent(conf BuildKueuevizBackendComponentConfig) (co
 		},
 		internalversion.Volume{
 			HostPath:  conf.CaCertPath,
-			MountPath: "/etc/kubernetes/pki/ca.crt",
+			MountPath: pkiCACertPath,
 			ReadOnly:  true,
 		},
 		internalversion.Volume{
 			HostPath:  conf.AdminCertPath,
-			MountPath: "/etc/kubernetes/pki/admin.crt",
+			MountPath: pkiAdminCertPath,
 			ReadOnly:  true,
 		},
 		internalversion.Volume{
 			HostPath:  conf.AdminKeyPath,
-			MountPath: "/etc/kubernetes/pki/admin.key",
+			MountPath: pkiAdminKeyPath,
 			ReadOnly:  true,
 		},
 	)

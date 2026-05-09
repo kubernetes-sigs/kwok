@@ -76,6 +76,7 @@ type StageSpec struct {
 	// Delay means there is a delay in this stage.
 	Delay *StageDelay `json:"delay,omitempty"`
 	// Next indicates that this stage will be moved to.
+	//
 	// Deprecated: Use Steps instead.
 	//+k8s:conversion-gen=false
 	Next *StageNext `json:"next,omitempty"`
@@ -130,6 +131,7 @@ type StageNext struct {
 	Patches []StagePatch `json:"patches,omitempty"`
 
 	// StatusTemplate indicates the template for modifying the status of the resource in the next.
+	//
 	// Deprecated: Use Patches instead.
 	//+k8s:conversion-gen=false
 	StatusTemplate string `json:"statusTemplate,omitempty"`
@@ -137,6 +139,7 @@ type StageNext struct {
 	// this field is not available in Pod and Node resources.
 	// +default="status"
 	// +kubebuilder:default=status
+	//
 	// Deprecated: Use Patches instead.
 	//+k8s:conversion-gen=false
 	StatusSubresource *string `json:"statusSubresource,omitempty"`
@@ -144,6 +147,7 @@ type StageNext struct {
 	// In most cases this will be empty, in which case the default client service account will be used.
 	// When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
 	// The support for this field is not available in Pod and Node resources.
+	//
 	// Deprecated: Use Patches instead.
 	//+k8s:conversion-gen=false
 	StatusPatchAs *ImpersonationConfig `json:"statusPatchAs,omitempty"`
@@ -247,16 +251,19 @@ type MatchExpression struct {
 	JQ *SelectorJQ `json:"jq,omitempty"`
 
 	// Key represents the expression which will be evaluated by JQ.
+	//
 	// Deprecated: Use JQ instead.
 	//+k8s:conversion-gen=false
 	Key string `json:"key,omitempty"`
 	// Represents a scope's relationship to a set of values.
+	//
 	// Deprecated: Use JQ instead.
 	//+k8s:conversion-gen=false
 	Operator SelectorOperator `json:"operator,omitempty"`
 	// An array of string values.
 	// If the operator is In, NotIn, Intersection or NotIntersection, the values array must be non-empty.
 	// If the operator is Exists or DoesNotExist, the values array must be empty.
+	//
 	// Deprecated: Use JQ instead.
 	//+k8s:conversion-gen=false
 	Values []string `json:"values,omitempty"`
@@ -270,6 +277,7 @@ type ExpressionFrom struct {
 	JQ *ExpressionJQ `json:"jq,omitempty"`
 
 	// ExpressionFrom is the expression used to get the value.
+	//
 	// Deprecated: Use JQ instead.
 	//+k8s:conversion-gen=false
 	ExpressionFrom string `json:"expressionFrom,omitempty"`

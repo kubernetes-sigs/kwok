@@ -75,17 +75,17 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 			},
 			internalversion.Volume{
 				HostPath:  conf.CaCertPath,
-				MountPath: "/etc/kubernetes/pki/ca.crt",
+				MountPath: pkiCACertPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminCertPath,
-				MountPath: "/etc/kubernetes/pki/admin.crt",
+				MountPath: pkiAdminCertPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminKeyPath,
-				MountPath: "/etc/kubernetes/pki/admin.key",
+				MountPath: pkiAdminKeyPath,
 				ReadOnly:  true,
 			},
 		)
@@ -102,18 +102,18 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		ports = append(
 			ports,
 			internalversion.Port{
-				Name:     "https",
+				Name:     schemeHTTPS,
 				HostPort: conf.Port,
 				Port:     4443,
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
 		metric = &internalversion.ComponentMetric{
-			Scheme:             "https",
+			Scheme:             schemeHTTPS,
 			Host:               metricsHost,
-			Path:               "/metrics",
-			CertPath:           "/etc/kubernetes/pki/admin.crt",
-			KeyPath:            "/etc/kubernetes/pki/admin.key",
+			Path:               metricsPath,
+			CertPath:           pkiAdminCertPath,
+			KeyPath:            pkiAdminKeyPath,
 			InsecureSkipVerify: true,
 		}
 		user = "root"
@@ -130,16 +130,16 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		ports = append(
 			ports,
 			internalversion.Port{
-				Name:     "https",
+				Name:     schemeHTTPS,
 				HostPort: 0,
 				Port:     conf.Port,
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
 		metric = &internalversion.ComponentMetric{
-			Scheme:             "https",
+			Scheme:             schemeHTTPS,
 			Host:               metricsHost,
-			Path:               "/metrics",
+			Path:               metricsPath,
 			CertPath:           conf.AdminCertPath,
 			KeyPath:            conf.AdminKeyPath,
 			InsecureSkipVerify: true,

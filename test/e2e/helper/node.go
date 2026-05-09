@@ -55,10 +55,10 @@ func (b NodeBuilder) WithPodCIDR(podCIDR string) *NodeBuilder {
 
 // WithAnnotation will set annotation for node.
 func (b NodeBuilder) WithAnnotation(key, value string) *NodeBuilder {
-	if b.node.ObjectMeta.Annotations == nil {
-		b.node.ObjectMeta.Annotations = map[string]string{}
+	if b.node.Annotations == nil {
+		b.node.Annotations = map[string]string{}
 	}
-	b.node.ObjectMeta.Annotations[key] = value
+	b.node.Annotations[key] = value
 	return &b
 }
 

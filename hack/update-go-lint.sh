@@ -21,6 +21,6 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
-COMMAND=(go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8)
+COMMAND=(go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2)
 
 cd "${ROOT_DIR}" && "${COMMAND[@]}" run -c "${ROOT_DIR}/.golangci.yaml" --fix
