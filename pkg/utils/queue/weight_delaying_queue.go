@@ -72,7 +72,7 @@ func (q *weightDelayingQueue[T]) AddAfter(item T, duration time.Duration) {
 
 func (q *weightDelayingQueue[T]) AddWeightAfter(item T, weight int, duration time.Duration) {
 	if duration <= 0 {
-		q.WeightQueue.AddWeight(item, weight)
+		q.AddWeight(item, weight)
 		return
 	}
 	k := q.clock.Now().Add(duration).UnixNano()
@@ -98,7 +98,7 @@ func (q *weightDelayingQueue[T]) loopWorker() {
 	for {
 		t, weight, ok, next := q.next()
 		if ok {
-			q.WeightQueue.AddWeight(t, weight)
+			q.AddWeight(t, weight)
 			continue
 		}
 

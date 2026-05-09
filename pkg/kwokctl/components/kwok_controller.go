@@ -77,17 +77,17 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			},
 			internalversion.Volume{
 				HostPath:  conf.CaCertPath,
-				MountPath: "/etc/kubernetes/pki/ca.crt",
+				MountPath: pkiCACertPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminCertPath,
-				MountPath: "/etc/kubernetes/pki/admin.crt",
+				MountPath: pkiAdminCertPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
 				HostPath:  conf.AdminKeyPath,
-				MountPath: "/etc/kubernetes/pki/admin.key",
+				MountPath: pkiAdminKeyPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
@@ -157,7 +157,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
 			Host:   metricsHost,
-			Path:   "/metrics",
+			Path:   metricsPath,
 		}
 		metricsDiscovery = &internalversion.ComponentMetric{
 			Scheme: "http",

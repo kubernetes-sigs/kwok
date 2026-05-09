@@ -32,7 +32,7 @@ import (
 // SnapshotSaveWithYAML save the snapshot of cluster
 func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, conf SnapshotSaveWithYAMLConfig) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("kubectl get %s -o yaml >%s", strings.Join(conf.Filters, ","), path)
+		dryrun.PrintMessagef("kubectl get %s -o yaml >%s", strings.Join(conf.Filters, ","), path)
 		return nil
 	}
 
@@ -84,7 +84,7 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, conf Sn
 // SnapshotRestoreWithYAML restore the snapshot of cluster
 func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf SnapshotRestoreWithYAMLConfig) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("kubectl create -f %s", path)
+		dryrun.PrintMessagef("kubectl create -f %s", path)
 		return nil
 	}
 

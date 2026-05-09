@@ -48,10 +48,13 @@ func (c *Cluster) createNetwork(ctx context.Context) error {
 			return nil
 		}
 	}
-	args := []string{
+
+	labelArgs := c.labelArgs()
+	args := make([]string, 0, 3+len(labelArgs))
+	args = append(args,
 		"network", "create", network,
-	}
-	args = append(args, c.labelArgs()...)
+	)
+	args = append(args, labelArgs...)
 	logger.Debug("Creating network")
 	return c.Exec(ctx, c.runtime, args...)
 }
@@ -367,7 +370,8 @@ func checkInspect(raw []byte) (bool, error) {
 
 func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (running bool, exist bool) {
 	buf := bytes.NewBuffer(nil)
-	args := []string{"inspect", c.Name() + "-" + componentName}
+	args := make([]string, 0, 3)
+	args = append(args, "inspect", c.Name()+"-"+componentName)
 
 	args = append(args, "--format={{ json . }}")
 

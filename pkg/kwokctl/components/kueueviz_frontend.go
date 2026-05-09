@@ -41,7 +41,7 @@ func BuildKueuevizFrontendComponent(conf BuildKueuevizFrontendComponentConfig) (
 		return internalversion.Component{}, fmt.Errorf("kueue only supports container runtime for now")
 	}
 
-	var ports []internalversion.Port
+	ports := make([]internalversion.Port, 0, 1)
 	var metric *internalversion.ComponentMetric
 
 	envs := []internalversion.Env{

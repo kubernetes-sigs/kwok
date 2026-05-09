@@ -464,7 +464,7 @@ func Unmarshal[D string | []byte](d D) (InternalObject, error) {
 // Marshal marshals the given internal object into a raw message.
 func Marshal(obj InternalObject) ([]byte, error) {
 	typ := reflect.TypeOf(obj)
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 	}
 	kind := typ.Name()

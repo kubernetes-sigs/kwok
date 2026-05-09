@@ -104,11 +104,13 @@ type KwokConfigurationOptions struct {
 
 	// If a Node/Pod is on a managed Node and has this annotation status will not be modified
 	// is the default value for flag --disregard-status-with-annotation-selector
+	//
 	// Deprecated: use Stage API instead
 	DisregardStatusWithAnnotationSelector string `json:"disregardStatusWithAnnotationSelector,omitempty"`
 
 	// If a Node/Pod is on a managed Node and has this label status will not be modified
 	// is the default value for flag --disregard-status-with-label-selector
+	//
 	// Deprecated: use Stage API instead
 	DisregardStatusWithLabelSelector string `json:"disregardStatusWithLabelSelector,omitempty"`
 
@@ -119,6 +121,7 @@ type KwokConfigurationOptions struct {
 	// Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux.
 	// is the default value for flag --experimental-enable-cni
 	// +default=false
+	//
 	// Deprecated: It will be removed and will be supported in the form of plugins
 	EnableCNI *bool `json:"experimentalEnableCNI,omitempty"`
 

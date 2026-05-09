@@ -69,7 +69,7 @@ func NewDelayingQueue[T comparable](clock Clock) DelayingQueue[T] {
 
 func (q *delayingQueue[T]) AddAfter(item T, duration time.Duration) {
 	if duration <= 0 {
-		q.Queue.Add(item)
+		q.Add(item)
 		return
 	}
 
@@ -89,7 +89,7 @@ func (q *delayingQueue[T]) loopWorker() {
 	for {
 		t, ok, next := q.next()
 		if ok {
-			q.Queue.Add(t)
+			q.Add(t)
 			continue
 		}
 

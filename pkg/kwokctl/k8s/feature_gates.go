@@ -33,12 +33,13 @@ func GetFeatureGates(version int) string {
 	// Enable only the beta feature of the final GA
 	isGA := map[string]bool{}
 	for _, raw := range rawData {
-		if raw.Stage == GA {
+		switch raw.Stage {
+		case GA:
 			_, ok := isGA[raw.Name]
 			if !ok {
 				isGA[raw.Name] = true
 			}
-		} else if raw.Stage == Deprecated {
+		case Deprecated:
 			isGA[raw.Name] = false
 		}
 	}

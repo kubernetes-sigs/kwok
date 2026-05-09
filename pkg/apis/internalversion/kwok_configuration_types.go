@@ -67,10 +67,12 @@ type KwokConfigurationOptions struct {
 	ManageNodesWithLabelSelector string
 
 	// If a Node/Pod is on a managed Node and has this annotation status will not be modified
+	//
 	// Deprecated: use Stage API instead
 	DisregardStatusWithAnnotationSelector string
 
 	// If a Node/Pod is on a managed Node and has this label status will not be modified
+	//
 	// Deprecated: use Stage API instead
 	DisregardStatusWithLabelSelector string
 
@@ -78,6 +80,7 @@ type KwokConfigurationOptions struct {
 	ServerAddress string
 
 	// Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux.
+	//
 	// Deprecated: It will be removed and will be supported in the form of plugins
 	EnableCNI bool
 

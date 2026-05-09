@@ -45,7 +45,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 func runE(ctx context.Context) error {
 	p := path.Join(config.WorkDir, consts.ConfigName)
 	if dryrun.DryRun {
-		dryrun.PrintMessage("# Displaying config file %s", p)
+		dryrun.PrintMessagef("# Displaying config file %s", p)
 		return nil
 	}
 	list := config.GetFromContext(ctx)

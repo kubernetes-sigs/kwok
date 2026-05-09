@@ -67,7 +67,7 @@ func (b PodBuilder) WithHostNetwork(hostNetwork bool) *PodBuilder {
 
 // WithNamespace will set namespace for pod.
 func (b PodBuilder) WithNamespace(namespace string) *PodBuilder {
-	b.pod.ObjectMeta.Namespace = namespace
+	b.pod.Namespace = namespace
 	return &b
 }
 
@@ -79,10 +79,10 @@ func (b PodBuilder) WithNodeName(nodeName string) *PodBuilder {
 
 // WithAnnotation will set annotation for pod.
 func (b PodBuilder) WithAnnotation(key, value string) *PodBuilder {
-	if b.pod.ObjectMeta.Annotations == nil {
-		b.pod.ObjectMeta.Annotations = map[string]string{}
+	if b.pod.Annotations == nil {
+		b.pod.Annotations = map[string]string{}
 	}
-	b.pod.ObjectMeta.Annotations[key] = value
+	b.pod.Annotations[key] = value
 	return &b
 }
 

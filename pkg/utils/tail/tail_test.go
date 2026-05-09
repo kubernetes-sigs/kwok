@@ -27,9 +27,9 @@ func TestFindTailLineStartIndex(t *testing.T) {
 	builder := strings.Builder{}
 	for i := 0; i < 10; i++ {
 		if i == 9 {
-			builder.WriteString(fmt.Sprintf("%d", i))
+			fmt.Fprintf(&builder, "%d", i)
 		} else {
-			builder.WriteString(fmt.Sprintf("%d\n", i))
+			fmt.Fprintf(&builder, "%d\n", i)
 		}
 	}
 	strLastLineNoEol := builder.String()

@@ -29,7 +29,7 @@ import (
 
 // ConvertToPod converts a component to a pod.
 func ConvertToPod(component internalversion.Component) corev1.Pod {
-	env := []corev1.EnvVar{}
+	env := make([]corev1.EnvVar, 0, len(component.Envs))
 	for _, e := range component.Envs {
 		env = append(env, corev1.EnvVar{
 			Name:  e.Name,
@@ -37,7 +37,7 @@ func ConvertToPod(component internalversion.Component) corev1.Pod {
 		})
 	}
 
-	ports := []corev1.ContainerPort{}
+	ports := make([]corev1.ContainerPort, 0, len(component.Ports))
 	for _, p := range component.Ports {
 		ports = append(ports, corev1.ContainerPort{
 			Name:          p.Name,
@@ -47,8 +47,8 @@ func ConvertToPod(component internalversion.Component) corev1.Pod {
 		})
 	}
 
-	volumes := []corev1.Volume{}
-	volumeMounts := []corev1.VolumeMount{}
+	volumes := make([]corev1.Volume, 0, len(component.Volumes))
+	volumeMounts := make([]corev1.VolumeMount, 0, len(component.Volumes))
 	for i, v := range component.Volumes {
 		name := v.Name
 		if name == "" {

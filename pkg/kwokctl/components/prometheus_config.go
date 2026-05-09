@@ -72,7 +72,7 @@ func convertToScrapeConfigs(components []internalversion.Component) []*prometheu
 			scrapeConfig.EnableHttp2 = true
 			scrapeConfig.FollowRedirects = true
 
-			if scrapeConfig.Scheme == "https" {
+			if scrapeConfig.Scheme == schemeHTTPS {
 				scrapeConfig.TLSConfig = &prometheus.TLSConfig{}
 				scrapeConfig.TLSConfig.CertFile = m.CertPath
 				scrapeConfig.TLSConfig.KeyFile = m.KeyPath

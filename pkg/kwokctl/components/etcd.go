@@ -109,7 +109,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
 			Host:   conf.ProjectName + "-" + consts.ComponentEtcd + ":2379",
-			Path:   "/metrics",
+			Path:   metricsPath,
 		}
 	} else {
 		etcdPeerPortStr := format.String(conf.PeerPort)
@@ -143,7 +143,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
 			Host:   net.LocalAddress + ":" + etcdClientPortStr,
-			Path:   "/metrics",
+			Path:   metricsPath,
 		}
 	}
 

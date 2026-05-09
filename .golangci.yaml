@@ -1,6 +1,12 @@
-# https://golangci-lint.run/usage/linters
+# https://golangci-lint.run/docs/linters/configuration/
+version: "2"
+run:
+  concurrency: 1
+  go: 1.24.0
+  allow-parallel-runners: false
+  allow-serial-runners: true
 linters:
-  disable-all: true
+  default: none
   enable:
   - asciicheck
   - bodyclose
@@ -9,14 +15,10 @@ linters:
   - dogsled
   - errcheck
   - errorlint
-  - gci
   - goconst
   - gocritic
   - gocyclo
-  - gofmt
-  - goimports
   - goprintffuncname
-  - gosimple
   - govet
   - importas
   - ineffassign
@@ -27,104 +29,103 @@ linters:
   - prealloc
   - revive
   - staticcheck
-  - stylecheck
-  - typecheck
   - unconvert
   - unparam
   - unused
   - usestdlibvars
   - whitespace
-
-linters-settings:
-  gci:
-    sections:
-    - standard
-    - default
-    - prefix(sigs.k8s.io/kwok)
-    - blank
-    - dot
-    skip-generated: true
-    custom-order: true
-  importas:
-    no-unaliased: true
-    alias:
-    # Kubernetes
-    - pkg: k8s.io/api/core/v1
-      alias: corev1
-    - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
-      alias: apiextensionsv1
-    - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
-      alias: metav1
-    - pkg: k8s.io/apimachinery/pkg/api/errors
-      alias: apierrors
-  stylecheck:
-    checks:
-    - "all"
-    - "-ST1000"
-    - "-ST1003"
-  depguard:
+  settings:
+    depguard:
+      rules:
+        main:
+          deny:
+          - pkg: io/ioutil
+            desc: please see https://go.dev/doc/go1.16#ioutil
+          - pkg: k8s.io/klog/v2
+            desc: please use `sigs.k8s.io/kwok/pkg/log` instead
+          - pkg: k8s.io/klog
+            desc: please use `sigs.k8s.io/kwok/pkg/log` instead
+          - pkg: golang.org/x/exp/slog
+            desc: please use `sigs.k8s.io/kwok/pkg/log` instead
+          - pkg: log/slog
+            desc: please use `sigs.k8s.io/kwok/pkg/log` instead
+          - pkg: log
+            desc: please use `sigs.k8s.io/kwok/pkg/log` instead
+          - pkg: k8s.io/apimachinery/pkg/util/yaml
+            desc: please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead
+          - pkg: sigs.k8s.io/yaml
+            desc: please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead
+          - pkg: k8s.io/apimachinery/pkg/util/wait
+            desc: please use `sigs.k8s.io/kwok/pkg/utils/wait` instead
+          - pkg: k8s.io/utils/strings/slices
+            desc: please use `sigs.k8s.io/kwok/pkg/utils/slices` instead
+    goconst:
+      match-constant: false
+      min-len: 5
+      min-occurrences: 10
+    gocyclo:
+      min-complexity: 50
+    importas:
+      alias:
+      - pkg: k8s.io/api/core/v1
+        alias: corev1
+      - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
+        alias: apiextensionsv1
+      - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+        alias: metav1
+      - pkg: k8s.io/apimachinery/pkg/api/errors
+        alias: apierrors
+      no-unaliased: true
+    revive:
+      rules:
+      - name: exported
+        arguments:
+        - disableStutteringCheck
+    staticcheck:
+      checks:
+      - all
+      - -ST1000
+      - -ST1003
+  exclusions:
+    generated: lax
     rules:
-      main:
-        deny:
-        # https://go.dev/doc/go1.16#ioutil
-        - pkg: "io/ioutil"
-          desc: "please see https://go.dev/doc/go1.16#ioutil"
-        # Use sigs.k8s.io/kwok/pkg/log, which is a wrapper around slog
-        - pkg: "k8s.io/klog/v2"
-          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-        - pkg: "k8s.io/klog"
-          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-        - pkg: "golang.org/x/exp/slog"
-          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-        - pkg: "log/slog"
-          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-        - pkg: "log"
-          desc: "please use `sigs.k8s.io/kwok/pkg/log` instead"
-        # Use sigs.k8s.io/kwok/pkg/utils/yaml, which is a wrapper around yaml
-        - pkg: "k8s.io/apimachinery/pkg/util/yaml"
-          desc: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
-        - pkg: "sigs.k8s.io/yaml"
-          desc: "please use `sigs.k8s.io/kwok/pkg/utils/yaml` instead"
-        # Use sigs.k8s.io/kwok/pkg/utils/wait, which is a wrapper around wait
-        - pkg: "k8s.io/apimachinery/pkg/util/wait"
-          desc: "please use `sigs.k8s.io/kwok/pkg/utils/wait` instead"
-        # Use sigs.k8s.io/kwok/pkg/utils/slices, which is a wrapper around slices
-        - pkg: "k8s.io/utils/strings/slices"
-          desc: "please use `sigs.k8s.io/kwok/pkg/utils/slices` instead"
-  gocyclo:
-    min-complexity: 50
-  goconst:
-    min-len: 5
-    min-occurrences: 10
-    ignore-tests: true
-    match-constant: false
-  revive:
-    rules:
-    - name: exported
-      arguments:
-      - disableStutteringCheck
+    - linters:
+      - revive
+      - staticcheck
+      text: '(ST1003: should not use underscores in Go names; func (Convert_.*_To_.*|SetDefaults_)|exported: exported function (Convert|SetDefaults)_.* should be of the form)'
+    - linters:
+      - goconst
+      path: (.+)_test\.go
+    - linters:
+      - staticcheck
+      path: (pkg/apis/internalversion/conversion\.go|pkg/config/vars\.go|pkg/kwok/cmd/root\.go|pkg/kwokctl/cmd/create/cluster/cluster\.go|pkg/kwokctl/runtime/cluster\.go)
+      text: 'SA1019: '
+    paths:
+    - .*\.zz_generated\..*
+    - third_party$
+    - builtin$
+    - examples$
 issues:
-  max-same-issues: 0
   max-issues-per-linter: 0
-  # We are disabling default golangci exclusions because we want to help reviewers to focus on reviewing the most relevant
-  # changes in PRs and avoid nitpicking.
-  exclude-use-default: false
-  exclude-files:
-  - ".*\\.zz_generated\\..*"
-
-  # Excluding configuration per-path, per-linter, per-text and per-source
-  exclude-rules:
-  # The Kubernetes naming convention for conversion functions uses underscores
-  # and intentionally deviates from normal Go conventions to make those function
-  # names more readable. Same for SetDefaults_*.
-  - linters:
-    - stylecheck
-    - revive
-    text: "(ST1003: should not use underscores in Go names; func (Convert_.*_To_.*|SetDefaults_)|exported: exported function (Convert|SetDefaults)_.* should be of the form)"
-
-run:
-  concurrency: 1
-  timeout: 10m
-  allow-parallel-runners: false
-  allow-serial-runners: true
-  go: "1.24.0"
+  max-same-issues: 0
+formatters:
+  enable:
+  - gci
+  - gofmt
+  - goimports
+  settings:
+    gci:
+      sections:
+      - standard
+      - default
+      - prefix(sigs.k8s.io/kwok)
+      - blank
+      - dot
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+    - .*\.zz_generated\..*
+    - third_party$
+    - builtin$
+    - examples$

@@ -32,14 +32,14 @@ import (
 func (c *Cluster) DownloadWithCache(ctx context.Context, cacheDir, src, dest string, mode fs.FileMode, quiet bool) error {
 	if s := strings.SplitN(src, "#", 2); len(s) == 2 {
 		if c.IsDryRun() {
-			dryrun.PrintMessage("# Download %s and extract %s to %s", s[0], s[1], dest)
+			dryrun.PrintMessagef("# Download %s and extract %s to %s", s[0], s[1], dest)
 			return nil
 		}
 		return file.DownloadWithCacheAndExtract(ctx, cacheDir, s[0], dest, s[1], mode, quiet, true)
 	}
 
 	if c.IsDryRun() {
-		dryrun.PrintMessage("# Download %s to %s", src, dest)
+		dryrun.PrintMessagef("# Download %s to %s", src, dest)
 		return nil
 	}
 	return file.DownloadWithCache(ctx, cacheDir, src, dest, mode, quiet)
@@ -48,7 +48,7 @@ func (c *Cluster) DownloadWithCache(ctx context.Context, cacheDir, src, dest str
 // GeneratePki generates the pki for kwokctl
 func (c *Cluster) GeneratePki(pkiPath string, sans ...string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("# Generate PKI to %s", pkiPath)
+		dryrun.PrintMessagef("# Generate PKI to %s", pkiPath)
 		return nil
 	}
 
@@ -58,7 +58,7 @@ func (c *Cluster) GeneratePki(pkiPath string, sans ...string) error {
 // CreateFile creates a file.
 func (c *Cluster) CreateFile(name string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("touch %s", name)
+		dryrun.PrintMessagef("touch %s", name)
 		return nil
 	}
 
@@ -68,7 +68,7 @@ func (c *Cluster) CreateFile(name string) error {
 // CopyFile copies a file from src to dst.
 func (c *Cluster) CopyFile(oldpath, newpath string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("cp %s %s", oldpath, newpath)
+		dryrun.PrintMessagef("cp %s %s", oldpath, newpath)
 		return nil
 	}
 
@@ -78,7 +78,7 @@ func (c *Cluster) CopyFile(oldpath, newpath string) error {
 // RenameFile renames a file.
 func (c *Cluster) RenameFile(oldpath, newpath string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("mv %s %s", oldpath, newpath)
+		dryrun.PrintMessagef("mv %s %s", oldpath, newpath)
 		return nil
 	}
 
@@ -88,7 +88,7 @@ func (c *Cluster) RenameFile(oldpath, newpath string) error {
 // AppendToFile appends content to a file.
 func (c *Cluster) AppendToFile(name string, content []byte) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("cat <<EOF >>%s\n%s\nEOF", name, string(content))
+		dryrun.PrintMessagef("cat <<EOF >>%s\n%s\nEOF", name, string(content))
 		return nil
 	}
 
@@ -98,7 +98,7 @@ func (c *Cluster) AppendToFile(name string, content []byte) error {
 // Remove removes a file.
 func (c *Cluster) Remove(name string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("rm %s", name)
+		dryrun.PrintMessagef("rm %s", name)
 		return nil
 	}
 
@@ -108,7 +108,7 @@ func (c *Cluster) Remove(name string) error {
 // RemoveAll removes a directory and all its contents.
 func (c *Cluster) RemoveAll(name string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("rm -rf %s", name)
+		dryrun.PrintMessagef("rm -rf %s", name)
 		return nil
 	}
 
@@ -127,7 +127,7 @@ func (c *Cluster) OpenFile(name string) (io.WriteCloser, error) {
 // WriteFile writes content to a file.
 func (c *Cluster) WriteFile(name string, content []byte) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("cat <<EOF >%s\n%s\nEOF", name, string(content))
+		dryrun.PrintMessagef("cat <<EOF >%s\n%s\nEOF", name, string(content))
 		return nil
 	}
 
@@ -137,8 +137,8 @@ func (c *Cluster) WriteFile(name string, content []byte) error {
 // WriteFileWithMode writes content to a file with the given mode.
 func (c *Cluster) WriteFileWithMode(name string, content []byte, mode os.FileMode) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("cat <<EOF >%s\n%s\nEOF", name, string(content))
-		dryrun.PrintMessage("chmod 0%o %s", mode, name)
+		dryrun.PrintMessagef("cat <<EOF >%s\n%s\nEOF", name, string(content))
+		dryrun.PrintMessagef("chmod 0%o %s", mode, name)
 		return nil
 	}
 
@@ -148,7 +148,7 @@ func (c *Cluster) WriteFileWithMode(name string, content []byte, mode os.FileMod
 // MkdirAll creates a directory.
 func (c *Cluster) MkdirAll(name string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessage("mkdir -p %s", name)
+		dryrun.PrintMessagef("mkdir -p %s", name)
 		return nil
 	}
 

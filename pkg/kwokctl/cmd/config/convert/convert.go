@@ -53,9 +53,9 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	for _, f := range args {
 		if dryrun.DryRun {
 			if flags.Write {
-				dryrun.PrintMessage("# Converting and writing back config file %s", f)
+				dryrun.PrintMessagef("# Converting and writing back config file %s", f)
 			} else {
-				dryrun.PrintMessage("# Converting config file %s and outputting to stdout", f)
+				dryrun.PrintMessagef("# Converting config file %s and outputting to stdout", f)
 			}
 			continue
 		}
