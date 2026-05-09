@@ -56,7 +56,7 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 	case RuntimeModeNative:
 		metricsHost = net.LocalAddress + ":" + format.String(conf.Port)
 	case RuntimeModeContainer:
-		metricsHost = conf.ProjectName + "-" + consts.ComponentKwokController + ":4443"
+		metricsHost = conf.ProjectName + "-" + consts.ComponentMetricsServer + ":4443"
 	case RuntimeModeCluster:
 		metricsHost = net.LocalAddress + ":4443"
 	}
