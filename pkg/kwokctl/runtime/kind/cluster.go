@@ -36,7 +36,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
-	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -792,12 +791,17 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
+	rawManifest, err := c.EnsureManifest(ctx, conf.MetricsServerManifest)
+	if err != nil {
+		return err
+	}
 
 	metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
 		Runtime:        conf.Runtime,
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.MetricsServerImage,
+		RawManifest:    string(rawManifest),
 		Version:        metricsServerVersion,
 		BindAddress:    net.PublicAddress,
 		Port:           443,
@@ -1605,57 +1609,4 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	}
 
 	return "kind", nil
-}
-
-// InitCRs initializes the CRs.
-func (c *Cluster) InitCRs(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, enableMetricsServer := slices.Find(config.Components, func(c internalversion.Component) bool {
-		return c.Name == consts.ComponentMetricsServer
-	})
-	if c.IsDryRun() {
-		if enableMetricsServer {
-			dryrun.PrintMessagef("# Set up apiservice for metrics server")
-		}
-
-		return nil
-	}
-
-	buf := bytes.NewBuffer(nil)
-	if enableMetricsServer {
-		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{
-			Port:         4443,
-			ExternalName: "localhost",
-		})
-		if err != nil {
-			return err
-		}
-		_, _ = buf.WriteString(apiservice)
-		_, _ = buf.WriteString("---\n")
-	}
-
-	if buf.Len() == 0 {
-		return nil
-	}
-
-	clientset, err := c.GetClientset(ctx)
-	if err != nil {
-		return err
-	}
-
-	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
-		Clientset: clientset,
-		NoFilers:  true,
-	})
-	if err != nil {
-		return err
-	}
-
-	decoder := yaml.NewDecoder(buf)
-
-	return loader.Load(ctx, decoder)
 }

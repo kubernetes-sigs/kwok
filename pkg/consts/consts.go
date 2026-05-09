@@ -62,17 +62,20 @@ var (
 	JaegerBinaryPrefix = "https://github.com/jaegertracing/jaeger/releases/download"
 	JaegerImagePrefix  = "docker.io/jaegertracing"
 
-	MetricsServerVersion      = "0.8.0"
-	MetricsServerBinaryPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
-	MetricsServerImagePrefix  = "registry.k8s.io/metrics-server"
+	MetricsServerVersion        = "0.8.0"
+	MetricsServerBinaryPrefix   = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
+	MetricsServerImagePrefix    = "registry.k8s.io/metrics-server"
+	MetricsServerManifestPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 
-	KueueVersion      = "0.16.0"
-	KueueBinaryPrefix = ""
-	KueueImagePrefix  = "registry.k8s.io/kueue"
+	KueueVersion        = "0.16.0"
+	KueueBinaryPrefix   = ""
+	KueueImagePrefix    = "registry.k8s.io/kueue"
+	KueueManifestPrefix = "https://github.com/kubernetes-sigs/kueue/releases/download"
 
-	JobSetVersion      = "0.11.1"
-	JobSetBinaryPrefix = ""
-	JobSetImagePrefix  = "registry.k8s.io/jobset"
+	JobSetVersion        = "0.11.1"
+	JobSetBinaryPrefix   = ""
+	JobSetImagePrefix    = "registry.k8s.io/jobset"
+	JobSetManifestPrefix = "https://github.com/kubernetes-sigs/jobset/releases/download"
 
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000

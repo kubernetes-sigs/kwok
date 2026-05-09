@@ -72,6 +72,11 @@ func (in *Component) DeepCopyInto(out *Component) {
 		*out = new(ComponentMetric)
 		**out = **in
 	}
+	if in.ManifestContents != nil {
+		in, out := &in.ManifestContents, &out.ManifestContents
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

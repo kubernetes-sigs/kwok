@@ -17,11 +17,13 @@ limitations under the License.
 package components
 
 import (
+	"net"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -31,6 +33,7 @@ type BuildMetricsServerComponentConfig struct {
 	ProjectName    string
 	Binary         string
 	Image          string
+	RawManifest    string
 	Version        version.Version
 	Workdir        string
 	BindAddress    string
@@ -52,14 +55,20 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 	}
 
 	var metricsHost string
+	var metricsPort uint32
 	switch GetRuntimeMode(conf.Runtime) {
 	case RuntimeModeNative:
-		metricsHost = net.LocalAddress + ":" + format.String(conf.Port)
+		metricsHost = utilsnet.LocalAddress
+		metricsPort = conf.Port
 	case RuntimeModeContainer:
-		metricsHost = conf.ProjectName + "-" + consts.ComponentMetricsServer + ":4443"
+		metricsHost = conf.ProjectName + "-" + consts.ComponentMetricsServer
+		metricsPort = 4443
 	case RuntimeModeCluster:
-		metricsHost = net.LocalAddress + ":4443"
+		metricsHost = utilsnet.LocalAddress
+		metricsPort = 4443
 	}
+
+	metricsAddress := net.JoinHostPort(metricsHost, format.String(metricsPort))
 
 	var metric *internalversion.ComponentMetric
 
@@ -110,7 +119,7 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		)
 		metric = &internalversion.ComponentMetric{
 			Scheme:             schemeHTTPS,
-			Host:               metricsHost,
+			Host:               metricsAddress,
 			Path:               metricsPath,
 			CertPath:           pkiAdminCertPath,
 			KeyPath:            pkiAdminKeyPath,
@@ -138,7 +147,7 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		)
 		metric = &internalversion.ComponentMetric{
 			Scheme:             schemeHTTPS,
-			Host:               metricsHost,
+			Host:               metricsAddress,
 			Path:               metricsPath,
 			CertPath:           conf.AdminCertPath,
 			KeyPath:            conf.AdminKeyPath,
@@ -152,7 +161,7 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 
 	envs := []internalversion.Env{}
 
-	return internalversion.Component{
+	component = internalversion.Component{
 		Name:    consts.ComponentMetricsServer,
 		Version: conf.Version.String(),
 		Links: []string{
@@ -168,5 +177,19 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		Metric:  metric,
 		WorkDir: conf.Workdir,
 		Envs:    envs,
-	}, nil
+	}
+
+	if conf.RawManifest != "" {
+		component.ManifestContents, err = BuildMetricsServerManifest(BuildMetricsServerManifestConfig{
+			Port:         metricsPort,
+			ExternalName: metricsHost,
+			RawManifest:  conf.RawManifest,
+		})
+		if err != nil {
+			return internalversion.Component{}, err
+		}
+	} else {
+		component.ManifestContents = []string{}
+	}
+	return component, nil
 }

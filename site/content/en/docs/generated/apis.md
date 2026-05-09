@@ -2037,6 +2037,18 @@ ComponentMetric
 </tr>
 <tr>
 <td>
+<code>manifestContents</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ManifestContents is the rendered manifest that should be applied for the component.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>version</code>
 <em>
 string
@@ -3308,6 +3320,17 @@ string
 </tr>
 <tr>
 <td>
+<code>metricsServerManifest</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>MetricsServerManifest is the full URL of the metrics-server manifest.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kueueImage</code>
 <em>
 string
@@ -3319,6 +3342,17 @@ string
 </tr>
 <tr>
 <td>
+<code>kueueManifest</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>KueueManifest is the full URL of the kueue manifest.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>jobsetImage</code>
 <em>
 string
@@ -3326,6 +3360,17 @@ string
 </td>
 <td>
 <p>JobSetImage is the image of jobset.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jobsetManifest</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>JobSetManifest is the full URL of the jobset manifest.</p>
 </td>
 </tr>
 <tr>

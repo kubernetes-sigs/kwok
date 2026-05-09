@@ -565,6 +565,11 @@ func setMetricsServerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	}
 	conf.MetricsServerImage = envs.GetEnvWithPrefix("METRICS_SERVER_IMAGE", conf.MetricsServerImage)
 
+	if conf.MetricsServerManifest == "" {
+		conf.MetricsServerManifest = consts.MetricsServerManifestPrefix + "/" + conf.MetricsServerVersion + "/components.yaml"
+	}
+	conf.MetricsServerManifest = envs.GetEnvWithPrefix("METRICS_SERVER_MANIFEST", conf.MetricsServerManifest)
+
 	if conf.MetricsServerBinaryPrefix == "" {
 		conf.MetricsServerBinaryPrefix = consts.MetricsServerBinaryPrefix + "/" + conf.MetricsServerVersion
 	}
@@ -592,6 +597,11 @@ func setJobSetConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.JobSetImage = joinImageURI(conf.JobSetImagePrefix, "jobset", conf.JobSetVersion)
 	}
 	conf.JobSetImage = envs.GetEnvWithPrefix("JOBSET_IMAGE", conf.JobSetImage)
+
+	if conf.JobSetManifest == "" {
+		conf.JobSetManifest = consts.JobSetManifestPrefix + "/" + conf.JobSetVersion + "/manifests.yaml"
+	}
+	conf.JobSetManifest = envs.GetEnvWithPrefix("JOBSET_MANIFEST", conf.JobSetManifest)
 }
 
 func setKueueConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
@@ -609,6 +619,11 @@ func setKueueConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.KueueImage = joinImageURI(conf.KueueImagePrefix, "kueue", conf.KueueVersion)
 	}
 	conf.KueueImage = envs.GetEnvWithPrefix("KUEUE_IMAGE", conf.KueueImage)
+
+	if conf.KueueManifest == "" {
+		conf.KueueManifest = consts.KueueManifestPrefix + "/" + conf.KueueVersion + "/manifests.yaml"
+	}
+	conf.KueueManifest = envs.GetEnvWithPrefix("KUEUE_MANIFEST", conf.KueueManifest)
 
 	if conf.KueuevizBackendImage == "" {
 		conf.KueuevizBackendImage = joinImageURI(conf.KueueImagePrefix, "kueueviz-backend", conf.KueueVersion)

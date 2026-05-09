@@ -17,7 +17,9 @@ limitations under the License.
 package components
 
 import (
+	"encoding/base64"
 	"fmt"
+	"os"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -31,6 +33,7 @@ type BuildJobSetComponentConfig struct {
 	ProjectName    string
 	Binary         string
 	Image          string
+	RawManifest    string
 	Version        version.Version
 	Workdir        string
 	BindAddress    string
@@ -111,7 +114,7 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		jobsetArgs = append(jobsetArgs, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
 	}
 
-	return internalversion.Component{
+	component = internalversion.Component{
 		Name:    consts.ComponentJobSet,
 		Version: conf.Version.String(),
 		Links: []string{
@@ -124,5 +127,25 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
 		User:    user,
-	}, nil
+	}
+
+	if conf.RawManifest != "" {
+		caData, readErr := os.ReadFile(conf.CaCertPath)
+		if readErr != nil {
+			return internalversion.Component{}, readErr
+		}
+
+		component.ManifestContents, err = BuildJobSetManifest(BuildJobSetManifestConfig{
+			Port:         9443,
+			ExternalName: conf.ProjectName + "-" + consts.ComponentJobSet,
+			CABundle:     base64.StdEncoding.EncodeToString(caData),
+			RawManifest:  conf.RawManifest,
+		})
+		if err != nil {
+			return internalversion.Component{}, err
+		}
+	} else {
+		component.ManifestContents = []string{}
+	}
+	return component, nil
 }

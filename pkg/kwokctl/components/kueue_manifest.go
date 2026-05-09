@@ -17,27 +17,10 @@ limitations under the License.
 package components
 
 import (
-	"bytes"
 	"fmt"
-	"text/template"
 
-	_ "embed"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
-
-//go:embed kueue_manifest.yaml.tpl
-var kueueManifestYamlTpl string
-
-var kueueManifestYamlTemplate = template.Must(template.New("kueue_manifest").Parse(kueueManifestYamlTpl))
-
-// BuildKueueManifest builds the kueue webhook yaml content.
-func BuildKueueManifest(conf BuildManifestConfig) (string, error) {
-	buf := bytes.NewBuffer(nil)
-	err := kueueManifestYamlTemplate.Execute(buf, conf)
-	if err != nil {
-		return "", fmt.Errorf("failed to execute kueue manifest yaml template: %w", err)
-	}
-	return buf.String(), nil
-}
 
 // BuildManifestConfig is the config for BuildKueueManifest.
 type BuildManifestConfig struct {
@@ -45,4 +28,77 @@ type BuildManifestConfig struct {
 	ExternalName   string
 	VisibilityPort uint32
 	CABundle       string
+	RawManifest    string
+}
+
+// BuildKueueManifest transforms raw kueue manifest data with the provided
+// configuration values.
+func BuildKueueManifest(conf BuildManifestConfig) ([]string, error) {
+	if len(conf.RawManifest) == 0 {
+		return nil, fmt.Errorf("raw kueue manifest is empty")
+	}
+
+	transformers := []resourceTransformer{
+		{
+			Kind:       "CustomResourceDefinition",
+			APIVersion: "apiextensions.k8s.io/v1",
+			Match: func(obj *unstructured.Unstructured) bool {
+				strategy, _, _ := unstructured.NestedString(obj.Object, "spec", "conversion", "strategy")
+				return strategy == "Webhook"
+			},
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformCRDConversionWebhook(obj.Object, int64(conf.Port), conf.CABundle)
+			},
+		},
+		{
+			Kind:       "Service",
+			APIVersion: "v1",
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformServiceToExternalName(obj.Object, conf.ExternalName)
+			},
+		},
+		{
+			Kind:       "APIService",
+			APIVersion: "apiregistration.k8s.io/v1",
+			Match: func(obj *unstructured.Unstructured) bool {
+				group, _, _ := unstructured.NestedString(obj.Object, "spec", "group")
+				return group == "visibility.kueue.x-k8s.io"
+			},
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformAPIService(obj.Object, int64(conf.VisibilityPort))
+			},
+		},
+		{
+			Kind:       "APIService",
+			APIVersion: "apiregistration.k8s.io/v1",
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformAPIService(obj.Object, int64(conf.Port))
+			},
+		},
+		{
+			Kind:       "MutatingWebhookConfiguration",
+			APIVersion: "admissionregistration.k8s.io/v1",
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformWebhookClientConfigs(obj.Object, int64(conf.Port), conf.CABundle)
+			},
+		},
+		{
+			Kind:       "ValidatingWebhookConfiguration",
+			APIVersion: "admissionregistration.k8s.io/v1",
+			Transform: func(obj *unstructured.Unstructured) error {
+				return transformWebhookClientConfigs(obj.Object, int64(conf.Port), conf.CABundle)
+			},
+		},
+		{
+			Kind:       "Deployment",
+			APIVersion: "apps/v1",
+			Delete:     true,
+		},
+	}
+
+	result, err := rewriteManifest(conf.RawManifest, transformers)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform kueue manifest: %w", err)
+	}
+	return result, nil
 }

@@ -37,6 +37,7 @@ EOF
 nerdctl pull registry.k8s.io/kube-scheduler:v1.33.0
 nerdctl pull registry.k8s.io/kwok/kwok:v0.8.0
 nerdctl pull registry.k8s.io/metrics-server/metrics-server:v0.8.0
+# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/components.yaml to <ROOT_DIR>/workdir/cache/manifest/f3daa12b5f6d54a577801f047e143b947ad75baf9146f8799dd953a01c3e6bd3.yaml
 nerdctl pull docker.io/prom/prometheus:v3.8.1
 nerdctl pull docker.io/jaegertracing/all-in-one:1.76.0
 nerdctl pull docker.io/kubernetesui/dashboard:v2.7.0
@@ -86,6 +87,7 @@ integrations:
   - "statefulset"
   - "leaderworkerset.x-k8s.io/leaderworkerset"
 EOF
+# Download https://github.com/kubernetes-sigs/kueue/releases/download/v0.16.0/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/1964449430af8a3059c44c26bae6879d70f750ddb860c3f9f2c73f73abec6c05.yaml
 nerdctl pull registry.k8s.io/kueue/kueueviz-backend:v0.16.0
 nerdctl pull registry.k8s.io/kueue/kueueviz-frontend:v0.16.0
 nerdctl pull registry.k8s.io/jobset/jobset:v0.11.1
@@ -103,6 +105,7 @@ leaderElection:
 internalCertManagement:
   enable: false
 EOF
+# Download https://github.com/kubernetes-sigs/jobset/releases/download/v0.11.1/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/97d48666754f45684b96ac8ac034fd0a2a644967c964e6c22b61195158504cba.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 global:
   evaluation_interval: 15s
@@ -268,6 +271,6 @@ nerdctl start kwok-<CLUSTER_NAME>-prometheus
 nerdctl start kwok-<CLUSTER_NAME>-kueueviz-backend
 nerdctl start kwok-<CLUSTER_NAME>-dashboard-metrics-scraper
 nerdctl start kwok-<CLUSTER_NAME>-kueueviz-frontend
-# Set up apiservice for metrics server
+# Set up manifest for metrics-server
 # Set up manifest for kueue
 # Set up manifest for jobset

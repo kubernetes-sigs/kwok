@@ -17,9 +17,7 @@ limitations under the License.
 package compose
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -31,7 +29,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
-	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
@@ -42,7 +39,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/sets"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // Cluster is an implementation of Runtime for docker.
@@ -668,12 +664,17 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
+	rawManifest, err := c.EnsureManifest(ctx, conf.MetricsServerManifest)
+	if err != nil {
+		return err
+	}
 
 	metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
 		Runtime:        conf.Runtime,
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.MetricsServerImage,
+		RawManifest:    string(rawManifest),
 		Version:        metricsServerVersion,
 		BindAddress:    conf.BindAddress,
 		Port:           conf.MetricsServerPort,
@@ -686,6 +687,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
+
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, metricsServerComponent)
 	return nil
 }
@@ -875,11 +877,17 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 		return fmt.Errorf("failed to write kueue yaml: %w", err)
 	}
 
+	rawManifest, err := c.EnsureManifest(ctx, conf.KueueManifest)
+	if err != nil {
+		return err
+	}
+
 	kueueComponent, err := components.BuildKueueComponent(components.BuildKueueComponentConfig{
 		Runtime:           conf.Runtime,
 		ProjectName:       c.Name(),
 		Workdir:           env.workdir,
 		Image:             conf.KueueImage,
+		RawManifest:       string(rawManifest),
 		Version:           kueueVersion,
 		BindAddress:       net.PublicAddress,
 		Port:              conf.MetricsServerPort,
@@ -894,6 +902,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
+
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kueueComponent)
 	return nil
 }
@@ -983,11 +992,17 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 		return fmt.Errorf("failed to write jobset yaml: %w", err)
 	}
 
+	rawManifest, err := c.EnsureManifest(ctx, conf.JobSetManifest)
+	if err != nil {
+		return err
+	}
+
 	jobsetComponent, err := components.BuildJobSetComponent(components.BuildJobSetComponentConfig{
 		Runtime:        conf.Runtime,
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.JobSetImage,
+		RawManifest:    string(rawManifest),
 		Version:        jobsetVersion,
 		BindAddress:    net.PublicAddress,
 		CaCertPath:     env.caCertPath,
@@ -1000,6 +1015,7 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
+
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, jobsetComponent)
 	return nil
 }
@@ -1439,113 +1455,4 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 		return waitErr
 	}
 	return nil
-}
-
-// InitCRs initializes the CRs.
-func (c *Cluster) InitCRs(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, enableMetricsServer := slices.Find(config.Components, func(c internalversion.Component) bool {
-		return c.Name == consts.ComponentMetricsServer
-	})
-
-	_, enableKueue := slices.Find(config.Components, func(c internalversion.Component) bool {
-		return c.Name == consts.ComponentKueue
-	})
-
-	_, enableJobSet := slices.Find(config.Components, func(c internalversion.Component) bool {
-		return c.Name == consts.ComponentJobSet
-	})
-
-	if c.IsDryRun() {
-		if enableMetricsServer {
-			dryrun.PrintMessagef("# Set up apiservice for metrics server")
-		}
-
-		if enableKueue {
-			dryrun.PrintMessagef("# Set up manifest for kueue")
-		}
-
-		if enableJobSet {
-			dryrun.PrintMessagef("# Set up manifest for jobset")
-		}
-
-		return nil
-	}
-
-	buf := bytes.NewBuffer(nil)
-	if enableMetricsServer {
-		apiservice, err := components.BuildMetricsServerAPIService(components.BuildMetricsServerAPIServiceConfig{
-			Port:         4443,
-			ExternalName: c.Name() + "-" + consts.ComponentMetricsServer,
-		})
-		if err != nil {
-			return err
-		}
-		_, _ = buf.WriteString(apiservice)
-		_, _ = buf.WriteString("---\n")
-	}
-
-	if enableKueue {
-		caCrt := c.GetWorkdirPath("pki/ca.crt")
-		data, err := os.ReadFile(caCrt)
-		if err != nil {
-			return err
-		}
-		manifest, err := components.BuildKueueManifest(components.BuildManifestConfig{
-			Port:           9443,
-			VisibilityPort: 8082,
-			ExternalName:   c.Name() + "-" + consts.ComponentKueue,
-			CABundle:       base64.StdEncoding.EncodeToString(data),
-		})
-		if err != nil {
-			return err
-		}
-
-		_, _ = buf.WriteString(manifest)
-		_, _ = buf.WriteString("---\n")
-	}
-
-	if enableJobSet {
-		caCrt := c.GetWorkdirPath("pki/ca.crt")
-		data, err := os.ReadFile(caCrt)
-		if err != nil {
-			return err
-		}
-		manifest, err := components.BuildJobSetManifest(components.BuildJobSetManifestConfig{
-			Port:         9443,
-			ExternalName: c.Name() + "-" + consts.ComponentJobSet,
-			CABundle:     base64.StdEncoding.EncodeToString(data),
-		})
-		if err != nil {
-			return err
-		}
-
-		_, _ = buf.WriteString(manifest)
-		_, _ = buf.WriteString("---\n")
-	}
-
-	if buf.Len() == 0 {
-		return nil
-	}
-
-	clientset, err := c.GetClientset(ctx)
-	if err != nil {
-		return err
-	}
-
-	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
-		Clientset: clientset,
-		NoFilers:  true,
-	})
-	if err != nil {
-		return err
-	}
-
-	decoder := yaml.NewDecoder(buf)
-
-	return loader.Load(ctx, decoder)
 }
