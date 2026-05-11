@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -151,9 +150,9 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	if conf.SecurePort == nil {
 		minor := parseRelease(conf.KubeVersion)
-		conf.SecurePort = format.Ptr(minor > 12 || minor == -1)
+		conf.SecurePort = new(minor > 12 || minor == -1)
 	}
-	conf.SecurePort = format.Ptr(envs.GetEnvWithPrefix("SECURE_PORT", *conf.SecurePort))
+	conf.SecurePort = new(envs.GetEnvWithPrefix("SECURE_PORT", *conf.SecurePort))
 
 	if conf.KubeAuthorization == nil {
 		conf.KubeAuthorization = conf.SecurePort
@@ -163,7 +162,7 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 		conf.KubeAdmission = conf.KubeAuthorization
 	}
 
-	conf.QuietPull = format.Ptr(envs.GetEnvWithPrefix("QUIET_PULL", *conf.QuietPull))
+	conf.QuietPull = new(envs.GetEnvWithPrefix("QUIET_PULL", *conf.QuietPull))
 
 	conf.Runtime = envs.GetEnvWithPrefix("RUNTIME", conf.Runtime)
 	if conf.Runtime == "" && len(conf.Runtimes) == 0 {
@@ -240,8 +239,8 @@ func setKectlConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 }
 
 func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
-	conf.DisableKubeScheduler = format.Ptr(envs.GetEnvWithPrefix("DISABLE_KUBE_SCHEDULER", *conf.DisableKubeScheduler))
-	conf.DisableKubeControllerManager = format.Ptr(envs.GetEnvWithPrefix("DISABLE_KUBE_CONTROLLER_MANAGER", *conf.DisableKubeControllerManager))
+	conf.DisableKubeScheduler = new(envs.GetEnvWithPrefix("DISABLE_KUBE_SCHEDULER", *conf.DisableKubeScheduler))
+	conf.DisableKubeControllerManager = new(envs.GetEnvWithPrefix("DISABLE_KUBE_CONTROLLER_MANAGER", *conf.DisableKubeControllerManager))
 	if len(conf.Components) == 0 {
 		conf.Components = []string{
 			consts.ComponentEtcd,
@@ -252,7 +251,7 @@ func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 		}
 	}
 
-	conf.KubeAuthorization = format.Ptr(envs.GetEnvWithPrefix("KUBE_AUTHORIZATION", *conf.KubeAuthorization))
+	conf.KubeAuthorization = new(envs.GetEnvWithPrefix("KUBE_AUTHORIZATION", *conf.KubeAuthorization))
 	conf.KubeAdmission = envs.GetEnvWithPrefix("KUBE_ADMISSION", conf.KubeAdmission)
 
 	conf.KubeApiserverPort = envs.GetEnvWithPrefix("KUBE_APISERVER_PORT", conf.KubeApiserverPort)

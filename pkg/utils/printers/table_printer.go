@@ -94,7 +94,7 @@ func (p *TablePrinter) write(records []string) error {
 }
 
 func writeSpaces(w io.Writer, n int) error {
-	for i := 0; i < n; i++ {
+	for range n {
 		if _, err := w.Write([]byte{' '}); err != nil {
 			return err
 		}

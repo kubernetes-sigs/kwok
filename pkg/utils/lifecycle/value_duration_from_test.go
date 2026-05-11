@@ -27,7 +27,6 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/cel"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func Test_newDurationFrom_Get(t *testing.T) {
@@ -57,7 +56,7 @@ func Test_newDurationFrom_Get(t *testing.T) {
 		},
 		{
 			args: args{
-				value: format.Ptr(time.Duration(0)),
+				value: new(time.Duration(0)),
 				src:   nil,
 				event: &Event{
 					Data: &corev1.Pod{},
@@ -68,7 +67,7 @@ func Test_newDurationFrom_Get(t *testing.T) {
 		},
 		{
 			args: args{
-				value: format.Ptr(time.Duration(1)),
+				value: new(time.Duration(1)),
 				src: &internalversion.ExpressionFrom{
 					JQ: &internalversion.ExpressionJQ{
 						Expression: ".metadata.deletionTimestamp",

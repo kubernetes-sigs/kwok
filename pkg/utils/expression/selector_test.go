@@ -32,7 +32,7 @@ func TestRequirement_Matches(t *testing.T) {
 		vals []string
 	}
 	type args struct {
-		matchData interface{}
+		matchData any
 	}
 	tests := []struct {
 		name    string

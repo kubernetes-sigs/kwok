@@ -32,7 +32,7 @@ import (
 func CaseMultiCluster(kwokctlPath, logsDir string, replicas int, args ...string) *features.FeatureBuilder {
 	f := features.New("Multi Cluster")
 	name := envconf.RandomName("test", 16)
-	for i := 0; i < replicas; i++ {
+	for i := range replicas {
 		n := fmt.Sprintf("%s-%d", name, i)
 		k := kwok.NewCluster(n).
 			WithPath(kwokctlPath)

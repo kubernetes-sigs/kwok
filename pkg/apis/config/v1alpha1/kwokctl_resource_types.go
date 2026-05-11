@@ -35,7 +35,7 @@ type KwokctlResource struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata"`
 	// Parameters is the parameters for the kwokctl resource configuration.
 	Parameters json.RawMessage `json:"parameters,omitempty"`
 	// Template is the template for the kwokctl resource configuration.

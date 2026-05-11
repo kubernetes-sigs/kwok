@@ -23,15 +23,8 @@ ROOT_DIR="$(realpath "${DIR}/..")"
 
 function format() {
   echo "Update go format"
-  mapfile -t findfiles < <(find . \( \
-    -iname "*.go" \
-    \) \
-    -not \( \
-    -path ./vendor/\* \
-    -o -path ./demo/node_modules/\* \
-    -o -path ./site/themes/\* \
-    \))
-  gofmt -s -w "${findfiles[@]}"
+  go fmt ./...
+  go fix ./...
 }
 
 cd "${ROOT_DIR}" && format

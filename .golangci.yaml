@@ -2,7 +2,7 @@
 version: "2"
 run:
   concurrency: 1
-  go: 1.24.0
+  go: 1.26.0
   allow-parallel-runners: false
   allow-serial-runners: true
 linters:

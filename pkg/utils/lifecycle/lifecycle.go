@@ -31,7 +31,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/cel"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 )
 
@@ -278,7 +277,7 @@ func (s *Stage) init(event *Event) error {
 			}
 			var jitterDuration *time.Duration
 			if delay.JitterDurationMilliseconds != nil {
-				jitterDuration = format.Ptr(time.Duration(*delay.JitterDurationMilliseconds) * time.Millisecond)
+				jitterDuration = new(time.Duration(*delay.JitterDurationMilliseconds) * time.Millisecond)
 			}
 			jitterDurationGetter, err := newDurationFrom(jitterDuration, env, jitterDurationFrom)
 			if err != nil {
@@ -293,7 +292,7 @@ func (s *Stage) init(event *Event) error {
 		weightFrom = config.Spec.WeightFrom
 	}
 
-	weightGetter, err := newInt64From(format.Ptr[int64](int64(config.Spec.Weight)), env, weightFrom)
+	weightGetter, err := newInt64From(new(int64(config.Spec.Weight)), env, weightFrom)
 	if err != nil {
 		return err
 	}

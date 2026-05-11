@@ -94,7 +94,7 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 	}
 
 	if _, ok := response.ResponseWriter.(http.Flusher); !ok {
-		_ = response.WriteError(http.StatusInternalServerError, fmt.Errorf("unable to convert %v into http.Flusher, cannot show logs", reflect.TypeOf(response)))
+		_ = response.WriteError(http.StatusInternalServerError, fmt.Errorf("unable to convert %v into http.Flusher, cannot show logs", reflect.TypeFor[*restful.Response]()))
 		return
 	}
 	fw := flushwriter.Wrap(response.ResponseWriter)

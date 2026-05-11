@@ -79,13 +79,13 @@ func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
 		},
 		ObjectType: t,
 		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
+			AddFunc: func(obj any) {
 				c.sync()
 			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
+			UpdateFunc: func(oldObj, newObj any) {
 				c.sync()
 			},
-			DeleteFunc: func(obj interface{}) {
+			DeleteFunc: func(obj any) {
 				c.sync()
 			},
 		},

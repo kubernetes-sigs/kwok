@@ -39,15 +39,15 @@ type KwokctlConfiguration struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata"`
 	// Options holds information about the default value.
-	Options KwokctlConfigurationOptions `json:"options,omitempty"`
+	Options KwokctlConfigurationOptions `json:"options"`
 	// Components holds information about the components.
 	Components []Component `json:"components,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 	// ComponentsPatches holds information about the components patches.
 	ComponentsPatches []ComponentPatches `json:"componentsPatches,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 	// Status holds information about the status.
-	Status KwokctlConfigurationStatus `json:"status,omitempty"`
+	Status KwokctlConfigurationStatus `json:"status"`
 }
 
 // KwokctlConfigurationStatus holds information about the status.

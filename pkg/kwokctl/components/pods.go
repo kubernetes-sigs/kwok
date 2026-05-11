@@ -61,7 +61,7 @@ func ConvertToPod(component internalversion.Component) corev1.Pod {
 			t := corev1.HostPathType(v.PathType)
 			s.Type = &t
 		} else {
-			s.Type = format.Ptr(corev1.HostPathFile)
+			s.Type = new(corev1.HostPathFile)
 		}
 		volumes = append(volumes, corev1.Volume{
 			Name: name,
@@ -100,8 +100,8 @@ func ConvertToPod(component internalversion.Component) corev1.Pod {
 			},
 			Volumes: volumes,
 			SecurityContext: &corev1.PodSecurityContext{
-				RunAsGroup: format.Ptr[int64](0),
-				RunAsUser:  format.Ptr[int64](0),
+				RunAsGroup: new(int64),
+				RunAsUser:  new(int64),
 			},
 			RestartPolicy: corev1.RestartPolicyAlways,
 			HostNetwork:   true,

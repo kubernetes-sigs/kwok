@@ -59,7 +59,7 @@ var (
 		"StartTime": func() string {
 			return startTime
 		},
-		"YAML": func(s interface{}, indent ...int) (string, error) {
+		"YAML": func(s any, indent ...int) (string, error) {
 			d, err := yaml.Marshal(s)
 			if err != nil {
 				return "", err
@@ -76,7 +76,7 @@ var (
 			return consts.Version
 		},
 
-		"NodeConditions": func() interface{} {
+		"NodeConditions": func() any {
 			return nodeConditionsData
 		},
 	}

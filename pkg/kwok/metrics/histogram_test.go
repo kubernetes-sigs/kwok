@@ -22,8 +22,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dto "github.com/prometheus/client_model/go"
-
-	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func TestHistogramObserve(t *testing.T) {
@@ -60,32 +58,32 @@ func TestHistogramObserve(t *testing.T) {
 	}
 
 	want := &dto.Histogram{
-		SampleCount: format.Ptr(sampleCount),
-		SampleSum:   format.Ptr(sampleSum),
+		SampleCount: new(sampleCount),
+		SampleSum:   new(sampleSum),
 		Bucket: []*dto.Bucket{
 			{
-				CumulativeCount: format.Ptr[uint64](0b_00_00_00),
-				UpperBound:      format.Ptr(0.5),
+				CumulativeCount: new(uint64(0b_00_00_00)),
+				UpperBound:      new(0.5),
 			},
 			{
-				CumulativeCount: format.Ptr[uint64](0b_00_00_11),
-				UpperBound:      format.Ptr(1.0),
+				CumulativeCount: new(uint64(0b_00_00_11)),
+				UpperBound:      new(1.0),
 			},
 			{
-				CumulativeCount: format.Ptr[uint64](0b_00_11_11),
-				UpperBound:      format.Ptr(2.5),
+				CumulativeCount: new(uint64(0b_00_11_11)),
+				UpperBound:      new(2.5),
 			},
 			{
-				CumulativeCount: format.Ptr[uint64](0b_00_11_11),
-				UpperBound:      format.Ptr(5.0),
+				CumulativeCount: new(uint64(0b_00_11_11)),
+				UpperBound:      new(5.0),
 			},
 			{
-				CumulativeCount: format.Ptr[uint64](0b_01_11_11),
-				UpperBound:      format.Ptr(10.0),
+				CumulativeCount: new(uint64(0b_01_11_11)),
+				UpperBound:      new(10.0),
 			},
 			{
-				CumulativeCount: format.Ptr[uint64](0b_11_11_11),
-				UpperBound:      format.Ptr(inf),
+				CumulativeCount: new(uint64(0b_11_11_11)),
+				UpperBound:      new(inf),
 			},
 		},
 	}

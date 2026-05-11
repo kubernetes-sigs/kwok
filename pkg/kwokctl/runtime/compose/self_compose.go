@@ -138,7 +138,7 @@ func (c *Cluster) isCanNerdctlUnlessStopped(ctx context.Context) (bool, error) {
 	if err != nil {
 		logger.Warn("Failed to parse nerdctl version", "err", err)
 	} else if nerdctlVersion.LE(version.NewVersion(1, 3, 0)) {
-		canNerdctlUnlessStopped = format.Ptr(false)
+		canNerdctlUnlessStopped = new(false)
 		logger = logger.With("nerdctlCheck", nerdctlVersion)
 	}
 
@@ -149,7 +149,7 @@ func (c *Cluster) isCanNerdctlUnlessStopped(ctx context.Context) (bool, error) {
 			return false, fmt.Errorf("canNerdctlUnlessStopped failed: %w", err)
 		}
 		logger = logger.With("containerdCheck", "not support unless-stopped")
-		canNerdctlUnlessStopped = format.Ptr(strings.Contains(buf.String(), "unless-stopped"))
+		canNerdctlUnlessStopped = new(strings.Contains(buf.String(), "unless-stopped"))
 	}
 
 	if !*canNerdctlUnlessStopped {

@@ -26,7 +26,6 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/cel"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func Test_newInt64From_Get(t *testing.T) {
@@ -53,7 +52,7 @@ func Test_newInt64From_Get(t *testing.T) {
 		},
 		{
 			args: args{
-				value: format.Ptr[int64](0),
+				value: new(int64),
 				src:   nil,
 				event: &Event{
 					Data: &corev1.Pod{},
@@ -63,7 +62,7 @@ func Test_newInt64From_Get(t *testing.T) {
 		},
 		{
 			args: args{
-				value: format.Ptr[int64](0),
+				value: new(int64),
 				src: &internalversion.ExpressionFrom{
 					JQ: &internalversion.ExpressionJQ{
 						Expression: ".metadata.deletionGracePeriodSeconds",
@@ -72,7 +71,7 @@ func Test_newInt64From_Get(t *testing.T) {
 				event: &Event{
 					Data: &corev1.Pod{
 						ObjectMeta: metav1.ObjectMeta{
-							DeletionGracePeriodSeconds: format.Ptr[int64](1),
+							DeletionGracePeriodSeconds: new(int64(1)),
 						},
 					},
 				},
@@ -82,7 +81,7 @@ func Test_newInt64From_Get(t *testing.T) {
 		},
 		{
 			args: args{
-				value: format.Ptr[int64](0),
+				value: new(int64),
 				src: &internalversion.ExpressionFrom{
 					JQ: &internalversion.ExpressionJQ{
 						Expression: ".metadata.generation",
@@ -101,7 +100,7 @@ func Test_newInt64From_Get(t *testing.T) {
 		},
 		{
 			args: args{
-				value: format.Ptr[int64](0),
+				value: new(int64),
 				src: &internalversion.ExpressionFrom{
 					JQ: &internalversion.ExpressionJQ{
 						Expression: ".metadata.annotations.x",
@@ -122,7 +121,7 @@ func Test_newInt64From_Get(t *testing.T) {
 		},
 		{
 			args: args{
-				value: format.Ptr[int64](0),
+				value: new(int64),
 				src: &internalversion.ExpressionFrom{
 					CEL: &internalversion.ExpressionCEL{
 						Expression: "self.spec.terminationGracePeriodSeconds",
@@ -131,7 +130,7 @@ func Test_newInt64From_Get(t *testing.T) {
 				event: &Event{
 					Data: &corev1.Pod{
 						Spec: corev1.PodSpec{
-							TerminationGracePeriodSeconds: format.Ptr[int64](1),
+							TerminationGracePeriodSeconds: new(int64(1)),
 						},
 					},
 				},
@@ -141,7 +140,7 @@ func Test_newInt64From_Get(t *testing.T) {
 		},
 		{
 			args: args{
-				value: format.Ptr[int64](0),
+				value: new(int64),
 				src: &internalversion.ExpressionFrom{
 					CEL: &internalversion.ExpressionCEL{
 						Expression: "self.spec.number",
