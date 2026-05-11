@@ -26,5 +26,3 @@ replicas:
 
 resources:
 - ../../kustomize/kwok
-- fake-deployment.yaml
-- fake-node.yaml

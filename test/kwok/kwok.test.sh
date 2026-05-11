@@ -37,6 +37,9 @@ function start_cluster() {
 
   kubectl kustomize "${DIR}" | kubectl apply -f -
   kubectl kustomize "${ROOT_DIR}/kustomize/stage/fast" | kubectl apply -f -
+  kubectl wait --for=condition=available deployment/kwok-controller -n kube-system --timeout=60s
+  kubectl apply -f "${DIR}/fake-node.yaml"
+  kubectl apply -f "${DIR}/fake-deployment.yaml"
 }
 
 # Check for normal heartbeat
