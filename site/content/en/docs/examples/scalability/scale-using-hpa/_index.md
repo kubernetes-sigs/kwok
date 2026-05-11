@@ -41,11 +41,11 @@ kwokctl scale node --replicas 1
 
 ## Create the pod
 
-{{< expand "deployment.yaml" >}}
+{{< details "deployment.yaml" >}}
 
 {{< code-sample file="deployment.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f deployment.yaml
@@ -83,11 +83,11 @@ fake-app-bdccf9b7f-phwtl   201m         1Mi
 
 ## Deploy HPA
 
-{{< expand "hpa.yaml" >}}
+{{< details "hpa.yaml" >}}
 
 {{< code-sample file="hpa.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f hpa.yaml

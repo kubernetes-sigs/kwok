@@ -43,11 +43,11 @@ kwokctl scale node --replicas 1 --param '.allocatable.cpu="4000m"'
 
 ## Create deployment
 
-{{< expand "deployment.yaml" >}}
+{{< details "deployment.yaml" >}}
 
 {{< code-sample file="deployment.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f deployment.yaml
@@ -105,11 +105,11 @@ I0724 18:13:32.613517   15836 fetcher.go:99] Initial sync of StatefulSet complet
 
 ## Create the VPA
 
-{{< expand "vpa.yaml" >}}
+{{< details "vpa.yaml" >}}
 
 {{< code-sample file="vpa.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f vpa.yaml

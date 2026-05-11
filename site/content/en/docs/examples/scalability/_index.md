@@ -15,7 +15,7 @@ This document walks you through the technical outcome of using KWOK for scalabil
 KWOK can be used to simulate auto-scaling scenarios.
 The scenarios below can be used to describe this:
 
-- [Horizontal pod autoscaling](/docs/technical-outcomes/scalability/scale-using-hpa/)
-- [Vertical pod autoscaling](/docs/technical-outcomes/scalability/scale-using-vpa/)
-- [Cluster autoscaling](/docs/technical-outcomes/scalability/scale-using-ca/)
-- [Karpenter autoscaling](/docs/technical-outcomes/scalability/scale-using-karpenter/)
+- [Horizontal pod autoscaling](/docs/examples/scalability/scale-using-hpa/)
+- [Vertical pod autoscaling](/docs/examples/scalability/scale-using-vpa/)
+- [Cluster autoscaling](/docs/examples/scalability/scale-using-ca/)
+- [Karpenter autoscaling](/docs/examples/scalability/scale-using-karpenter/)

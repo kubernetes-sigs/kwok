@@ -330,7 +330,6 @@ menu:
     parent: examples-performance
   - identifier: examples-performance-control-plane
     title: "Control Plane Performance Evaluation"
-    pageRef: "/docs/examples/performance/control-plane"
     parent: examples-performance
   - identifier: examples-performance-control-plane-single-cluster
     title: "Single Cluster"

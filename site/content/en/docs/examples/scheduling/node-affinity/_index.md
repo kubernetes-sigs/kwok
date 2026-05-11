@@ -47,11 +47,11 @@ kubectl label node node-000000 region=us-west-2
 ### Step 1: Deploy pod
 
 The pod has a node affinity configured with a key value of `region=eu-west-2`. This matches the label on node-000000.
-{{< expand "pod.yaml" >}}
+{{< details "pod.yaml" >}}
 
 {{< code-sample file="pod.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f pod.yaml

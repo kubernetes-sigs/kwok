@@ -68,11 +68,11 @@ kubectl label nodes node-000003 topology.kubernetes.io/region=us-west-2
 
 ## Create deployment
 
-{{< expand "deployment.yaml" >}}
+{{< details "deployment.yaml" >}}
 
 {{< code-sample file="deployment.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f deployment.yaml

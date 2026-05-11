@@ -51,11 +51,11 @@ kubectl taint nodes node-000000 kwok.x-k8s.io/node=fake:NoSchedule
 
 ## Deploy a pod without toleration and observe
 
-{{< expand "no-toleration-pod.yaml" >}}
+{{< details "no-toleration-pod.yaml" >}}
 
 {{< code-sample file="no-toleration-pod.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f no-toleration-pod.yaml
@@ -69,11 +69,11 @@ The pod is stuck in a pending state.
 
 ## Deploy a pod with toleration and observe
 
-{{< expand "with-toleration-pod.yaml" >}}
+{{< details "with-toleration-pod.yaml" >}}
 
 {{< code-sample file="with-toleration-pod.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f with-toleration-pod.yaml
