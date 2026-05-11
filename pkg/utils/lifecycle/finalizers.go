@@ -24,9 +24,9 @@ import (
 )
 
 type jsonpathOperation struct {
-	Op    string      `json:"op,omitempty"`
-	Path  string      `json:"path,omitempty"`
-	Value interface{} `json:"value,omitempty"`
+	Op    string `json:"op,omitempty"`
+	Path  string `json:"path,omitempty"`
+	Value any    `json:"value,omitempty"`
 }
 
 func finalizersAdd(metaFinalizers []string, finalizers []internalversion.FinalizerItem) []jsonpathOperation {

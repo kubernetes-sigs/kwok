@@ -23,7 +23,6 @@ import (
 	"github.com/wzshiming/getch"
 
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 // Handle is a struct that represents a handle with pause and Speed properties.
@@ -40,7 +39,7 @@ func NewHandle() *Handle {
 		pause: atomic.Bool{},
 		speed: atomic.Pointer[Speed]{},
 	}
-	h.speed.Store(format.Ptr(Speed(1)))
+	h.speed.Store(new(Speed(1)))
 	return h
 }
 

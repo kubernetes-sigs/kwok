@@ -34,11 +34,11 @@ type KwokConfiguration struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata"`
 	// Options holds information about the default value.
-	Options KwokConfigurationOptions `json:"options,omitempty"`
+	Options KwokConfigurationOptions `json:"options"`
 	// Tracing holds tracing configuration.
-	Tracing TracingConfiguration `json:"tracing,omitempty"`
+	Tracing TracingConfiguration `json:"tracing"`
 }
 
 // KwokConfigurationOptions holds information about the options.

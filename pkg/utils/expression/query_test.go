@@ -28,12 +28,12 @@ import (
 func TestQuery_Execute(t *testing.T) {
 	type args struct {
 		src string
-		v   interface{}
+		v   any
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    []interface{}
+		want    []any
 		wantErr bool
 	}{
 		{
@@ -41,21 +41,21 @@ func TestQuery_Execute(t *testing.T) {
 				src: ".status.podIP",
 				v:   &corev1.Pod{},
 			},
-			want: []interface{}{},
+			want: []any{},
 		},
 		{
 			args: args{
 				src: ".status.nothing",
 				v:   &corev1.Pod{},
 			},
-			want: []interface{}{},
+			want: []any{},
 		},
 		{
 			args: args{
 				src: ".metadata.annotations[\"x\"]",
 				v:   &corev1.Pod{},
 			},
-			want: []interface{}{},
+			want: []any{},
 		},
 		{
 			args: args{
@@ -68,7 +68,7 @@ func TestQuery_Execute(t *testing.T) {
 					},
 				},
 			},
-			want: []interface{}{""},
+			want: []any{""},
 		},
 		{
 			args: args{
@@ -94,7 +94,7 @@ func TestQuery_Execute(t *testing.T) {
 					},
 				},
 			},
-			want: []interface{}{
+			want: []any{
 				"ContainerCreating",
 				"Failed",
 			},
@@ -113,7 +113,7 @@ func TestQuery_Execute(t *testing.T) {
 					},
 				},
 			},
-			want: []interface{}{
+			want: []any{
 				"True",
 			},
 		},
@@ -128,7 +128,7 @@ func TestQuery_Execute(t *testing.T) {
 					},
 				},
 			},
-			want: []interface{}{
+			want: []any{
 				"test",
 			},
 		},
@@ -139,7 +139,7 @@ func TestQuery_Execute(t *testing.T) {
 					"a": 2,
 				},
 			},
-			want: []interface{}{
+			want: []any{
 				map[string]any{
 					"a": 1,
 				},
@@ -156,7 +156,7 @@ func TestQuery_Execute(t *testing.T) {
 					},
 				},
 			},
-			want: []interface{}{
+			want: []any{
 				map[string]any{
 					"a": []any{
 						map[string]any{

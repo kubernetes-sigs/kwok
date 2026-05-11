@@ -47,7 +47,7 @@ func (m *SyncMap[K, V]) Delete(key K) {
 
 // Range calls f sequentially for each key and value present in the map.
 func (m *SyncMap[K, V]) Range(f func(key K, value V) bool) {
-	m.m.Range(func(key, value interface{}) bool {
+	m.m.Range(func(key, value any) bool {
 		return f(key.(K), value.(V))
 	})
 }
@@ -82,7 +82,7 @@ func (m *SyncMap[K, V]) Swap(key K, value V) (V, bool) {
 // Size returns the number of items in the map.
 func (m *SyncMap[K, V]) Size() int {
 	size := 0
-	m.m.Range(func(key, value interface{}) bool {
+	m.m.Range(func(key, value any) bool {
 		size++
 		return true
 	})
@@ -92,7 +92,7 @@ func (m *SyncMap[K, V]) Size() int {
 // Keys returns all the keys in the map.
 func (m *SyncMap[K, V]) Keys() []K {
 	keys := []K{}
-	m.m.Range(func(key, value interface{}) bool {
+	m.m.Range(func(key, value any) bool {
 		keys = append(keys, key.(K))
 		return true
 	})
@@ -102,7 +102,7 @@ func (m *SyncMap[K, V]) Keys() []K {
 // Values returns all the values in the map.
 func (m *SyncMap[K, V]) Values() []V {
 	values := []V{}
-	m.m.Range(func(key, value interface{}) bool {
+	m.m.Range(func(key, value any) bool {
 		values = append(values, value.(V))
 		return true
 	})
@@ -112,7 +112,7 @@ func (m *SyncMap[K, V]) Values() []V {
 // IsEmpty returns true if the map is empty.
 func (m *SyncMap[K, V]) IsEmpty() bool {
 	empty := true
-	m.m.Range(func(key, value interface{}) bool {
+	m.m.Range(func(key, value any) bool {
 		empty = false
 		return false
 	})

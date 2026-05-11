@@ -245,7 +245,7 @@ func (p *patchMeta) Name() string {
 	return p.name
 }
 
-func parsePatchMetadata(extensions map[string]interface{}) (strategicpatch.PatchMeta, error) {
+func parsePatchMetadata(extensions map[string]any) (strategicpatch.PatchMeta, error) {
 	ps, foundPS := extensions[patchStrategyOpenapiextensionKey]
 	var patchStrategies []string
 	var mergeKey, patchStrategy string

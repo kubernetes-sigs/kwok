@@ -24,7 +24,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func TestConvertToPod(t *testing.T) {
@@ -77,14 +76,14 @@ func TestConvertToPod(t *testing.T) {
 							VolumeSource: corev1.VolumeSource{
 								HostPath: &corev1.HostPathVolumeSource{
 									Path: "/tmp",
-									Type: format.Ptr(corev1.HostPathFile),
+									Type: new(corev1.HostPathFile),
 								},
 							},
 						},
 					},
 					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser:  format.Ptr[int64](0),
-						RunAsGroup: format.Ptr[int64](0),
+						RunAsUser:  new(int64),
+						RunAsGroup: new(int64),
 					},
 					Containers: []corev1.Container{
 						{
@@ -138,8 +137,8 @@ func TestConvertFromPod(t *testing.T) {
 							{Name: "v1", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/tmp"}}},
 						},
 						SecurityContext: &corev1.PodSecurityContext{
-							RunAsUser:  format.Ptr[int64](0),
-							RunAsGroup: format.Ptr[int64](0),
+							RunAsUser:  new(int64),
+							RunAsGroup: new(int64),
 						},
 						Containers: []corev1.Container{
 							{

@@ -45,12 +45,12 @@ func NewQuery(src string) (*Query, error) {
 }
 
 // Execute executes the query with the given value.
-func (q *Query) Execute(ctx context.Context, v interface{}) ([]interface{}, error) {
+func (q *Query) Execute(ctx context.Context, v any) ([]any, error) {
 	v, err := ToJSONStandard(v)
 	if err != nil {
 		return nil, err
 	}
-	out := []interface{}{}
+	out := []any{}
 	iter := q.code.RunWithContext(ctx, v)
 	for {
 		v, ok := iter.Next()
@@ -69,16 +69,16 @@ func (q *Query) Execute(ctx context.Context, v interface{}) ([]interface{}, erro
 }
 
 // ToJSONStandard converts the given value to a value that used by gojq.
-func ToJSONStandard(v interface{}) (interface{}, error) {
+func ToJSONStandard(v any) (any, error) {
 	switch v.(type) {
-	case nil, bool, int, float64, *big.Int, string, []interface{}, map[string]interface{}:
+	case nil, bool, int, float64, *big.Int, string, []any, map[string]any:
 		return v, nil
 	default:
 		data, err := json.Marshal(v)
 		if err != nil {
 			return nil, err
 		}
-		var out interface{}
+		var out any
 		err = json.Unmarshal(data, &out)
 		if err != nil {
 			return nil, err

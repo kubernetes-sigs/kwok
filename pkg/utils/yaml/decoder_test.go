@@ -57,28 +57,28 @@ spec:
 `,
 			want: []runtime.Object{
 				&unstructured.Unstructured{
-					Object: map[string]interface{}{
+					Object: map[string]any{
 						"apiVersion": "v1",
 						"kind":       "Pod",
-						"metadata": map[string]interface{}{
+						"metadata": map[string]any{
 							"name":      "test",
 							"namespace": "test",
 						},
-						"spec": map[string]interface{}{
-							"containers": []interface{}{},
+						"spec": map[string]any{
+							"containers": []any{},
 						},
 					},
 				},
 				&unstructured.Unstructured{
-					Object: map[string]interface{}{
+					Object: map[string]any{
 						"apiVersion": "v1",
 						"kind":       "Pod",
-						"metadata": map[string]interface{}{
+						"metadata": map[string]any{
 							"name":      "test-2",
 							"namespace": "test",
 						},
-						"spec": map[string]interface{}{
-							"containers": []interface{}{},
+						"spec": map[string]any{
+							"containers": []any{},
 						},
 					},
 				},

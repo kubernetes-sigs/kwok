@@ -23,7 +23,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 
-	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
@@ -107,13 +106,13 @@ var inf = math.Inf(1)
 func (h *histogram) Write(out *dto.Metric) error {
 	buckets := slices.Map(h.buckets, func(le float64) *dto.Bucket {
 		return &dto.Bucket{
-			CumulativeCount: format.Ptr[uint64](0),
-			UpperBound:      format.Ptr(le),
+			CumulativeCount: new(uint64),
+			UpperBound:      new(le),
 		}
 	})
 	buckets = append(buckets, &dto.Bucket{
-		CumulativeCount: format.Ptr[uint64](0),
-		UpperBound:      format.Ptr(inf),
+		CumulativeCount: new(uint64),
+		UpperBound:      new(inf),
 	})
 
 	bucketsIndex := 0
@@ -127,12 +126,12 @@ func (h *histogram) Write(out *dto.Metric) error {
 		// cumulative count of previous buckets
 		for bucketsIndex < len(buckets) && le > *buckets[bucketsIndex].UpperBound {
 			bucketsIndex++
-			buckets[bucketsIndex].CumulativeCount = format.Ptr(*buckets[bucketsIndex].CumulativeCount + count)
+			buckets[bucketsIndex].CumulativeCount = new(*buckets[bucketsIndex].CumulativeCount + count)
 		}
 
 		val, _ := h.stored.Load(le)
 		// cumulative count of current bucket
-		buckets[bucketsIndex].CumulativeCount = format.Ptr(*buckets[bucketsIndex].CumulativeCount + val)
+		buckets[bucketsIndex].CumulativeCount = new(*buckets[bucketsIndex].CumulativeCount + val)
 
 		// cumulative count and sum
 		count += val
@@ -141,8 +140,8 @@ func (h *histogram) Write(out *dto.Metric) error {
 
 	his := &dto.Histogram{
 		Bucket:      buckets,
-		SampleCount: format.Ptr(count),
-		SampleSum:   format.Ptr(sum),
+		SampleCount: new(count),
+		SampleSum:   new(sum),
 	}
 
 	out.Histogram = his

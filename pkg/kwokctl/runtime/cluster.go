@@ -329,8 +329,8 @@ func getDefaultNodeStages(updateFrequency int64, lease bool) ([]config.InternalO
 		if jitterUpdateFrequency := updateFrequency + updateFrequency/10; jitterUpdateFrequency > jitterDurationMilliseconds {
 			jitterDurationMilliseconds = jitterUpdateFrequency
 		}
-		nodeHeartbeatStage.Spec.Delay.DurationMilliseconds = format.Ptr(durationMilliseconds)
-		nodeHeartbeatStage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(jitterDurationMilliseconds)
+		nodeHeartbeatStage.Spec.Delay.DurationMilliseconds = new(durationMilliseconds)
+		nodeHeartbeatStage.Spec.Delay.JitterDurationMilliseconds = new(jitterDurationMilliseconds)
 	}
 
 	objs = append(objs, nodeHeartbeatStage)

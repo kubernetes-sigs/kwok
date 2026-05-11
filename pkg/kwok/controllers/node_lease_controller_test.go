@@ -30,7 +30,6 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 )
 
@@ -43,9 +42,9 @@ func TestNodeLeaseController(t *testing.T) {
 				Namespace: corev1.NamespaceNodeLease,
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity:       format.Ptr("lease1"),
-				RenewTime:            format.Ptr(metav1.NewMicroTime(now.Add(-61 * time.Second))),
-				LeaseDurationSeconds: format.Ptr(int32(60)),
+				HolderIdentity:       new("lease1"),
+				RenewTime:            new(metav1.NewMicroTime(now.Add(-61 * time.Second))),
+				LeaseDurationSeconds: new(int32(60)),
 			},
 		},
 		&coordinationv1.Lease{
@@ -54,9 +53,9 @@ func TestNodeLeaseController(t *testing.T) {
 				Namespace: corev1.NamespaceNodeLease,
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity:       format.Ptr("lease2"),
-				RenewTime:            format.Ptr(metav1.NewMicroTime(now)),
-				LeaseDurationSeconds: format.Ptr(int32(60)),
+				HolderIdentity:       new("lease2"),
+				RenewTime:            new(metav1.NewMicroTime(now)),
+				LeaseDurationSeconds: new(int32(60)),
 			},
 		},
 		&coordinationv1.Lease{
@@ -65,9 +64,9 @@ func TestNodeLeaseController(t *testing.T) {
 				Namespace: corev1.NamespaceNodeLease,
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity:       format.Ptr("lease3"),
-				RenewTime:            format.Ptr(metav1.NewMicroTime(now.Add(-61 * time.Second))),
-				LeaseDurationSeconds: format.Ptr(int32(60)),
+				HolderIdentity:       new("lease3"),
+				RenewTime:            new(metav1.NewMicroTime(now.Add(-61 * time.Second))),
+				LeaseDurationSeconds: new(int32(60)),
 			},
 		},
 	)
@@ -172,7 +171,7 @@ func Test_tryAcquireOrRenew(t *testing.T) {
 			args: args{
 				lease: &coordinationv1.Lease{
 					Spec: coordinationv1.LeaseSpec{
-						HolderIdentity: format.Ptr("test"),
+						HolderIdentity: new("test"),
 					},
 				},
 				holderIdentity: "test",
@@ -185,9 +184,9 @@ func Test_tryAcquireOrRenew(t *testing.T) {
 			args: args{
 				lease: &coordinationv1.Lease{
 					Spec: coordinationv1.LeaseSpec{
-						HolderIdentity:       format.Ptr("test"),
-						LeaseDurationSeconds: format.Ptr(int32(10)),
-						RenewTime:            format.Ptr(metav1.NewMicroTime(now.Add(-5 * time.Second))),
+						HolderIdentity:       new("test"),
+						LeaseDurationSeconds: new(int32(10)),
+						RenewTime:            new(metav1.NewMicroTime(now.Add(-5 * time.Second))),
 					},
 				},
 				holderIdentity: "test-new",
@@ -200,9 +199,9 @@ func Test_tryAcquireOrRenew(t *testing.T) {
 			args: args{
 				lease: &coordinationv1.Lease{
 					Spec: coordinationv1.LeaseSpec{
-						HolderIdentity:       format.Ptr("test"),
-						LeaseDurationSeconds: format.Ptr(int32(10)),
-						RenewTime:            format.Ptr(metav1.NewMicroTime(now.Add(-11 * time.Second))),
+						HolderIdentity:       new("test"),
+						LeaseDurationSeconds: new(int32(10)),
+						RenewTime:            new(metav1.NewMicroTime(now.Add(-11 * time.Second))),
 					},
 				},
 				holderIdentity: "test-new",
@@ -293,9 +292,9 @@ func TestExpireTime(t *testing.T) {
 			name: "Lease with all fields",
 			lease: &coordinationv1.Lease{
 				Spec: coordinationv1.LeaseSpec{
-					HolderIdentity:       format.Ptr("test"),
-					LeaseDurationSeconds: format.Ptr(int32(10)),
-					RenewTime:            format.Ptr(metav1.NewMicroTime(now)),
+					HolderIdentity:       new("test"),
+					LeaseDurationSeconds: new(int32(10)),
+					RenewTime:            new(metav1.NewMicroTime(now)),
 				},
 			},
 			wantTime: now.Add(10 * time.Second),

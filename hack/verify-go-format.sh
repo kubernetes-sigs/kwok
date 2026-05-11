@@ -23,20 +23,8 @@ ROOT_DIR="$(realpath "${DIR}/..")"
 
 function check() {
   echo "Verify go format"
-  mapfile -t findfiles < <(find . \( \
-    -iname "*.go" \
-    \) \
-    -not \( \
-    -path ./vendor/\* \
-    -o -path ./demo/node_modules/\* \
-    -o -path ./site/themes/\* \
-    \))
-  out="$(gofmt -s -w "${findfiles[@]}")"
-
-  if [[ -n "${out}" ]]; then
-    echo "${out}"
-    return 1
-  fi
+  "${ROOT_DIR}"/hack/update-go-format.sh
+  git --no-pager diff --exit-code
 }
 
 cd "${ROOT_DIR}" && check

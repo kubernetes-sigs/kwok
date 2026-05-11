@@ -35,8 +35,8 @@ type FuncMap = template.FuncMap
 // Renderer is a template Renderer interface.
 // It can render a template with the given text and original object.
 type Renderer interface {
-	ToText(text string, original interface{}) ([]byte, error)
-	ToJSON(text string, original interface{}) ([]byte, error)
+	ToText(text string, original any) ([]byte, error)
+	ToJSON(text string, original any) ([]byte, error)
 }
 
 // renderer is a template renderer.
@@ -56,7 +56,7 @@ func NewRenderer(funcMap FuncMap) Renderer {
 	}
 }
 
-func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) error {
+func (r *renderer) render(buf *bytes.Buffer, text string, original any) error {
 	text = strings.TrimSpace(text)
 	temp, ok := r.cache.Load(text)
 	if !ok {
@@ -78,7 +78,7 @@ func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) 
 		return fmt.Errorf("json encoding: %w", err)
 	}
 
-	var data interface{}
+	var data any
 	decoder := json.NewDecoder(buf)
 	decoder.UseNumber()
 	err = decoder.Decode(&data)
@@ -95,7 +95,7 @@ func (r *renderer) render(buf *bytes.Buffer, text string, original interface{}) 
 }
 
 // ToText renders the template with the given text and original object.
-func (r *renderer) ToText(text string, original interface{}) ([]byte, error) {
+func (r *renderer) ToText(text string, original any) ([]byte, error) {
 	buf := r.bufferPool.Get()
 	defer r.bufferPool.Put(buf)
 
@@ -107,7 +107,7 @@ func (r *renderer) ToText(text string, original interface{}) ([]byte, error) {
 }
 
 // ToJSON renders the template with the given text and original object and converts the result to JSON.
-func (r *renderer) ToJSON(text string, original interface{}) ([]byte, error) {
+func (r *renderer) ToJSON(text string, original any) ([]byte, error) {
 	buf := r.bufferPool.Get()
 	defer r.bufferPool.Put(buf)
 

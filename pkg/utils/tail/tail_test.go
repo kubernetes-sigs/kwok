@@ -25,7 +25,7 @@ import (
 
 func TestFindTailLineStartIndex(t *testing.T) {
 	builder := strings.Builder{}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		if i == 9 {
 			fmt.Fprintf(&builder, "%d", i)
 		} else {

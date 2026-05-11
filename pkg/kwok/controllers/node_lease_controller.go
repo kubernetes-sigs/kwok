@@ -237,8 +237,8 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 		},
 		Spec: coordinationv1.LeaseSpec{
 			HolderIdentity:       &c.holderIdentity,
-			LeaseDurationSeconds: format.Ptr(int32(c.leaseDurationSeconds)),
-			RenewTime:            format.Ptr(metav1.NewMicroTime(c.clock.Now())),
+			LeaseDurationSeconds: new(int32(c.leaseDurationSeconds)),
+			RenewTime:            new(metav1.NewMicroTime(c.clock.Now())),
 		},
 	}
 	if c.mutateLeaseFunc != nil {
@@ -262,10 +262,10 @@ func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordination
 	transitions := format.ElemOrDefault(lease.Spec.HolderIdentity) != c.holderIdentity
 	if transitions {
 		lease.Spec.HolderIdentity = &c.holderIdentity
-		lease.Spec.LeaseDurationSeconds = format.Ptr(int32(c.leaseDurationSeconds))
-		lease.Spec.LeaseTransitions = format.Ptr(format.ElemOrDefault(lease.Spec.LeaseTransitions) + 1)
+		lease.Spec.LeaseDurationSeconds = new(int32(c.leaseDurationSeconds))
+		lease.Spec.LeaseTransitions = new(format.ElemOrDefault(lease.Spec.LeaseTransitions) + 1)
 	}
-	lease.Spec.RenewTime = format.Ptr(metav1.NewMicroTime(c.clock.Now()))
+	lease.Spec.RenewTime = new(metav1.NewMicroTime(c.clock.Now()))
 
 	if c.mutateLeaseFunc != nil {
 		err := c.mutateLeaseFunc(lease)

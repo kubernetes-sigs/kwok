@@ -17,15 +17,12 @@ limitations under the License.
 package informer
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	coordinationv1 "k8s.io/api/coordination/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-
-	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 func TestInformerSync(t *testing.T) {
@@ -38,8 +35,8 @@ func TestInformerSync(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease0"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now)),
+				HolderIdentity: new("lease0"),
+				RenewTime:      new(metav1.NewMicroTime(now)),
 			},
 		},
 		&coordinationv1.Lease{
@@ -48,16 +45,15 @@ func TestInformerSync(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease1"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now)),
+				HolderIdentity: new("lease1"),
+				RenewTime:      new(metav1.NewMicroTime(now)),
 			},
 		},
 	)
 	cli := fakeClient.CoordinationV1().Leases("default")
 	informer := NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](cli)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	events := make(chan Event[*coordinationv1.Lease], 100)
 	_ = informer.Sync(ctx, Option{}, events)
@@ -99,16 +95,15 @@ func TestInformerWatch(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease0"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now)),
+				HolderIdentity: new("lease0"),
+				RenewTime:      new(metav1.NewMicroTime(now)),
 			},
 		},
 	)
 	cli := fakeClient.CoordinationV1().Leases("default")
 	informer := NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](cli)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	events := make(chan Event[*coordinationv1.Lease], 100)
 	_ = informer.Watch(ctx, Option{}, events)
@@ -121,8 +116,8 @@ func TestInformerWatch(t *testing.T) {
 				Name: "lease1",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease1"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now)),
+				HolderIdentity: new("lease1"),
+				RenewTime:      new(metav1.NewMicroTime(now)),
 			},
 		},
 		metav1.CreateOptions{},
@@ -136,8 +131,8 @@ func TestInformerWatch(t *testing.T) {
 				Name: "lease1",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease1"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now.Add(1 * time.Second))),
+				HolderIdentity: new("lease1"),
+				RenewTime:      new(metav1.NewMicroTime(now.Add(1 * time.Second))),
 			},
 		},
 		metav1.UpdateOptions{},
@@ -221,16 +216,15 @@ func TestInformerWatchWithCache(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease0"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now)),
+				HolderIdentity: new("lease0"),
+				RenewTime:      new(metav1.NewMicroTime(now)),
 			},
 		},
 	)
 	cli := fakeClient.CoordinationV1().Leases("default")
 	informer := NewInformer[*coordinationv1.Lease, *coordinationv1.LeaseList](cli)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	events := make(chan Event[*coordinationv1.Lease], 100)
 	getter, _ := informer.WatchWithCache(ctx, Option{}, events)
@@ -243,8 +237,8 @@ func TestInformerWatchWithCache(t *testing.T) {
 				Name: "lease1",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease1"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now)),
+				HolderIdentity: new("lease1"),
+				RenewTime:      new(metav1.NewMicroTime(now)),
 			},
 		},
 		metav1.CreateOptions{},
@@ -264,8 +258,8 @@ func TestInformerWatchWithCache(t *testing.T) {
 				Name: "lease1",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease1"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now.Add(1 * time.Second))),
+				HolderIdentity: new("lease1"),
+				RenewTime:      new(metav1.NewMicroTime(now.Add(1 * time.Second))),
 			},
 		},
 		metav1.UpdateOptions{},
@@ -285,8 +279,8 @@ func TestInformerWatchWithCache(t *testing.T) {
 				Name: "lease1",
 			},
 			Spec: coordinationv1.LeaseSpec{
-				HolderIdentity: format.Ptr("lease1"),
-				RenewTime:      format.Ptr(metav1.NewMicroTime(now.Add(2 * time.Second))),
+				HolderIdentity: new("lease1"),
+				RenewTime:      new(metav1.NewMicroTime(now.Add(2 * time.Second))),
 			},
 		},
 		metav1.UpdateOptions{},

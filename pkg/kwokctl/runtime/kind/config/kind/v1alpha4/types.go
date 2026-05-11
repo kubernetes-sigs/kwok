@@ -38,7 +38,7 @@ type Cluster struct {
 	/* Advanced fields */
 
 	// Networking contains cluster wide network settings
-	Networking Networking `yaml:"networking,omitempty" json:"networking,omitempty"`
+	Networking Networking `yaml:"networking,omitempty" json:"networking"`
 
 	// FeatureGates contains a map of Kubernetes feature gates to whether they
 	// are enabled. The feature gates specified here are passed to all Kubernetes components as flags or in config.

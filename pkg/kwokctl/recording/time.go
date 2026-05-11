@@ -46,7 +46,7 @@ func ReplaceTimeToRelative(baseTime time.Time, data []byte) []byte {
 		}
 
 		sub := t.Sub(baseTime)
-		return []byte(fmt.Sprintf("$(time-offset-nanosecond %d)", int64(sub)))
+		return fmt.Appendf(nil, "$(time-offset-nanosecond %d)", int64(sub))
 	})
 }
 

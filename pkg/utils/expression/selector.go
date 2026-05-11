@@ -19,10 +19,10 @@ package expression
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // Requirement contains values, a key, and an operator that relates the key and values.
@@ -62,7 +62,7 @@ func NewRequirement(key string, op internalversion.SelectorOperator, vals []stri
 // - the operator is 'NotIn' and the value is not in the set of values
 // - the operator is 'Exists' and the key is defined and has a non-empty value
 // - the operator is 'DoesNotExist' and the key is either not defined or has an empty value
-func (r *Requirement) Matches(ctx context.Context, matchData interface{}) (bool, error) {
+func (r *Requirement) Matches(ctx context.Context, matchData any) (bool, error) {
 	data, err := r.query.Execute(ctx, matchData)
 	if err != nil {
 		return false, err
@@ -89,7 +89,7 @@ func (r *Requirement) Matches(ctx context.Context, matchData interface{}) (bool,
 	return false, nil
 }
 
-func hasValues(v []interface{}, vs []string) bool {
+func hasValues(v []any, vs []string) bool {
 	for _, d := range v {
 		if hasValue(d, vs) {
 			return true
@@ -98,7 +98,7 @@ func hasValues(v []interface{}, vs []string) bool {
 	return false
 }
 
-func hasValue(d interface{}, vs []string) bool {
+func hasValue(d any, vs []string) bool {
 	switch t := d.(type) {
 	case string:
 		return slices.Contains(vs, t)
@@ -110,7 +110,7 @@ func hasValue(d interface{}, vs []string) bool {
 	return false
 }
 
-func existsValue(vs []interface{}) bool {
+func existsValue(vs []any) bool {
 	for _, d := range vs {
 		if d != nil {
 			return true

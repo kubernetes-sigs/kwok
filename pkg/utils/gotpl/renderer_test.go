@@ -26,20 +26,20 @@ func TestRenderToJSON(t *testing.T) {
 		name      string
 		funcMap   template.FuncMap
 		templText string
-		original  interface{}
+		original  any
 		expected  string
 	}{
 		{
 			name:      "basic",
 			funcMap:   template.FuncMap{},
-			original:  map[string]interface{}{"k": "v1"},
+			original:  map[string]any{"k": "v1"},
 			templText: `{"k":{{ .k }}}`,
 			expected:  `{"k":"v1"}`,
 		},
 		{
 			name:      "basic with yaml format",
 			funcMap:   template.FuncMap{},
-			original:  map[string]interface{}{"k": "v1"},
+			original:  map[string]any{"k": "v1"},
 			templText: `k: {{ .k }}`,
 			expected:  `{"k":"v1"}`,
 		},
@@ -50,7 +50,7 @@ func TestRenderToJSON(t *testing.T) {
 					return "foo"
 				},
 			},
-			original:  map[string]interface{}{"k": "v1"},
+			original:  map[string]any{"k": "v1"},
 			templText: `{"foo":{{ Foo }},"k":{{ .k }}}`,
 			expected:  `{"foo":"foo","k":"v1"}`,
 		},
@@ -61,7 +61,7 @@ func TestRenderToJSON(t *testing.T) {
 					return "foo"
 				},
 			},
-			original:  map[string]interface{}{"k": "v1"},
+			original:  map[string]any{"k": "v1"},
 			templText: `        {"foo":{{ Foo }},"k":{{ .k }}}       `,
 			expected:  `{"foo":"foo","k":"v1"}`,
 		},
@@ -72,7 +72,7 @@ func TestRenderToJSON(t *testing.T) {
 					return "bar"
 				},
 			},
-			original:  map[string]interface{}{"k": "v1"},
+			original:  map[string]any{"k": "v1"},
 			templText: `{"foo":{{ list Foo .k | join "-" }}}`,
 			expected:  `{"foo":"bar-v1"}`,
 		},
