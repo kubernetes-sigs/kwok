@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -508,6 +509,9 @@ func filterDuplicatedExtraArgs(ctx context.Context, extraArgs, passedExtraArgs [
 	for _, args := range extraArgsMap {
 		result = append(result, args)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Key < result[j].Key
+	})
 	return result
 }
 
