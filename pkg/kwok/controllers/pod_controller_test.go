@@ -43,10 +43,10 @@ import (
 
 const (
 	defaultNodeIP  = "10.0.0.1"
-	defaultPodCIDR = "10.100.0.1/24"
+	defaultPodCIDR = "10.100.0.0/24"
 
 	secondNodeIP  = "172.0.0.1"
-	secondPodCIDR = "172.100.0.1/24"
+	secondPodCIDR = "172.100.0.0/24"
 )
 
 func TestPodController(t *testing.T) {

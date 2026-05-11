@@ -9,7 +9,7 @@ kwok [flags]
 ### Options
 
 ```
-      --cidr string                                    CIDR of the pod ip (default "10.0.0.1/24")
+      --cidr string                                    CIDR of the pod ip (default "10.0.0.0/24")
   -c, --config strings                                 config path (default [~/.kwok/kwok.yaml])
       --enable-crds strings                            List of CRDs to enable
   -h, --help                                           help for kwok

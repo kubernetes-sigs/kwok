@@ -36,7 +36,7 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 
 func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 	if in.Options.CIDR == "" {
-		in.Options.CIDR = "10.0.0.1/24"
+		in.Options.CIDR = "10.0.0.0/24"
 	}
 	if in.Options.ManageAllNodes == nil {
 		var ptrVar1 bool = false

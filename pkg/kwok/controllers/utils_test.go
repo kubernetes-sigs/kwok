@@ -108,7 +108,7 @@ func Test_addIP(t *testing.T) {
 }
 
 func Test_ipPool_new(t *testing.T) {
-	testCIDR := "172.30.40.1/24"
+	testCIDR := "172.30.40.0/24"
 	netCIDR, _ := parseCIDR(testCIDR)
 	type fields struct {
 		cidr  *net.IPNet

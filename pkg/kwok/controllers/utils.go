@@ -63,8 +63,8 @@ func newIPPool(cidr *net.IPNet) *ipPool {
 
 func (i *ipPool) new() string {
 	for {
-		ip := addIP(i.cidr.IP, i.index).String()
 		i.index++
+		ip := addIP(i.cidr.IP, i.index).String()
 
 		if _, ok := i.used[ip]; ok {
 			continue
