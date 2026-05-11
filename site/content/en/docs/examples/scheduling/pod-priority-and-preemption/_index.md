@@ -42,11 +42,11 @@ kwokctl scale node --replicas 1 --param '.allocatable.cpu="4000m"'
 
 ## Create priority classes (low and high)
 
-{{< expand "priority-classes.yaml" >}}
+{{< details "priority-classes.yaml" >}}
 
 {{< code-sample file="priority-classes.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f priority-classes.yaml
@@ -56,11 +56,11 @@ kubectl apply -f priority-classes.yaml
 
 This allows any pod that matches this priority class to consume **3 CPUs** off the node.
 
-{{< expand "low-priority-pod.yaml" >}}
+{{< details "low-priority-pod.yaml" >}}
 
 {{< code-sample file="low-priority-pod.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f low-priority-pod.yaml
@@ -72,11 +72,11 @@ This allows any pod that matches this priority class to consume **3 CPUs** off t
 Since the node has a maximum of **4 CPUs**, pods 
 with a low-priority class that consumes over **1 CPU** will be preempted.
 
-{{< expand "high-priority-pod.yaml" >}}
+{{< details "high-priority-pod.yaml" >}}
 
 {{< code-sample file="high-priority-pod.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f high-priority-pod.yaml

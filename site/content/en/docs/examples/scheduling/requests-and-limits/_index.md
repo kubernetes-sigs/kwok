@@ -53,17 +53,17 @@ kwokctl scale node node-2 --replicas 1 --param '.allocatable.cpu="2000m"'
 
 ### Step 1: Deploy Pod 1 and 2
 
-{{< expand "pod-1.yaml" >}}
+{{< details "pod-1.yaml" >}}
 
 {{< code-sample file="pod-1.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
-{{< expand "pod-2.yaml" >}}
+{{< details "pod-2.yaml" >}}
 
 {{< code-sample file="pod-2.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f pod-1.yaml

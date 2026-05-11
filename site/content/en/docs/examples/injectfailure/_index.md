@@ -14,20 +14,20 @@ This is a demo that introduces how to inject fault to initContainer in an existi
 
 <img width="700px" src="init-container-error-injection.svg">
 
-{{< expand "Demo Detail Steps" >}}
+{{< details "Demo Detail Steps" >}}
 
 {{< code-sample file="init-container-error-injection.demo" language="bash" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
-{{< expand "virtual-gpu-node.yaml" >}}
+{{< details "virtual-gpu-node.yaml" >}}
 
 {{< code-sample file="virtual-gpu-node.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
-{{< expand "failed-pod.yaml" >}}
+{{< details "failed-pod.yaml" >}}
 
 {{< code-sample file="failed-pod.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}

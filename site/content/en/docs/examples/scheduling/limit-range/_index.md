@@ -37,11 +37,11 @@ kwokctl scale node --replicas 1
 
 ## Create a resource limit
 
-{{< expand "limit-range.yaml" >}}
+{{< details "limit-range.yaml" >}}
 
 {{< code-sample file="limit-range.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f limit-range.yaml
@@ -64,11 +64,11 @@ Container   cpu       100m  1    500m             500m           -
 - Pod specification:
   - CPU Request: 700m
 
-{{< expand "pod-beyond-limit.yaml" >}}
+{{< details "pod-beyond-limit.yaml" >}}
 
 {{< code-sample file="pod-beyond-limit.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl create -f pod-beyond-limit.yaml
@@ -81,11 +81,11 @@ Notice the error `Invalid value: "700m": must be less than or equal to cpu limit
 - Pod specification:
   - CPU Request: 400m
 
-{{< expand "pod-within-limit.yaml" >}}
+{{< details "pod-within-limit.yaml" >}}
 
 {{< code-sample file="pod-within-limit.yaml" >}}
 
-{{< /expand >}}
+{{< /details >}}
 
 ```bash
 kubectl apply -f pod-within-limit.yaml
