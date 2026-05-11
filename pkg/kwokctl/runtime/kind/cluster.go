@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -495,23 +494,26 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 
 func filterDuplicatedExtraArgs(ctx context.Context, extraArgs, passedExtraArgs []internalversion.ExtraArgs) []internalversion.ExtraArgs {
 	logger := log.FromContext(ctx)
-	extraArgsMap := make(map[string]internalversion.ExtraArgs)
+	extraArgsMap := make(map[string]struct{})
+	result := make([]internalversion.ExtraArgs, 0, len(extraArgsMap)+len(passedExtraArgs))
 	for _, args := range extraArgs {
-		extraArgsMap[args.Key] = args
-	}
-	for _, args := range passedExtraArgs {
 		if _, ok := extraArgsMap[args.Key]; ok {
 			logger.Warn("duplicated extraArgs and will be overwritten", "key", args.Key, "value", args.Value)
+		} else {
+			result = append(result, args)
+			extraArgsMap[args.Key] = struct{}{}
 		}
-		extraArgsMap[args.Key] = args
 	}
-	result := make([]internalversion.ExtraArgs, 0, len(extraArgsMap))
-	for _, args := range extraArgsMap {
-		result = append(result, args)
+
+	for _, args := range passedExtraArgs {
+		if _, ok := extraArgsMap[args.Key]; ok {
+			logger.Warn("duplicated passedExtraArgs and will be overwritten", "key", args.Key, "value", args.Value)
+		} else {
+			result = append(result, args)
+			extraArgsMap[args.Key] = struct{}{}
+		}
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Key < result[j].Key
-	})
+
 	return result
 }
 
