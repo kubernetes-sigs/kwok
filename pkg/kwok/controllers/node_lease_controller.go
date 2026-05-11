@@ -119,7 +119,7 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 
 		dur := c.interval()
 
-		lease, err := c.sync(ctx, nodeName, first)
+		lease, shouldManage, err := c.sync(ctx, nodeName, first)
 		if err != nil {
 			logger.Error("Failed to sync lease", err,
 				"node", nodeName,
@@ -136,6 +136,14 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 
 		if first {
 			c.holdLeaseSet.Store(nodeName, false)
+		}
+
+		if shouldManage {
+			// Wait until the informer cache reflects our ownership before
+			// notifying consumers. This ensures that Held() returns true
+			// when the downstream pod-sync logic calls it, even if the
+			// watch event from the API server hasn't been processed yet.
+			c.waitAndManageNode(ctx, nodeName)
 		}
 
 		now := c.clock.Now()
@@ -174,8 +182,30 @@ func (c *NodeLeaseController) Held(name string) bool {
 	return *lease.Spec.HolderIdentity == c.holderIdentity
 }
 
-// sync syncs a lease for a node
-func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first bool) (lease *coordinationv1.Lease, err error) {
+// waitAndManageNode waits until the informer cache confirms that we hold the
+// lease for nodeName, then calls onNodeManaged. The wait is bounded by a
+// short timeout so that progress is never blocked indefinitely.
+func (c *NodeLeaseController) waitAndManageNode(ctx context.Context, nodeName string) {
+	deadline := c.clock.Now().Add(5 * time.Second)
+	for c.clock.Now().Before(deadline) {
+		if cachedLease, ok := c.getLease(nodeName); ok &&
+			cachedLease.Spec.HolderIdentity != nil &&
+			*cachedLease.Spec.HolderIdentity == c.holderIdentity {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-c.clock.After(10 * time.Millisecond):
+		}
+	}
+	c.onNodeManaged(nodeName)
+}
+
+// sync syncs a lease for a node.
+// The returned boolean indicates whether onNodeManaged should be called for
+// this node after the cache has been confirmed to reflect the new ownership.
+func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first bool) (lease *coordinationv1.Lease, shouldManage bool, err error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With("node", nodeName)
 
@@ -183,26 +213,23 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first b
 	if lease != nil {
 		if !tryAcquireOrRenew(lease, c.holderIdentity, c.clock.Now()) {
 			logger.Debug("Lease already acquired by another holder")
-			return nil, nil
+			return nil, false, nil
 		}
 		logger.Info("Syncing lease")
 		lease, transitions, err := c.renewLease(ctx, lease)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update lease using lease: %w", err)
+			return nil, false, fmt.Errorf("failed to update lease using lease: %w", err)
 		}
 
 		// it is first or it has been transitioned, and then manage the node.
-		if first || transitions {
-			c.onNodeManaged(nodeName)
-		}
-		return lease, nil
+		return lease, first || transitions, nil
 	}
 
 	logger.Info("Creating lease")
 	lease, err = c.ensureLease(ctx, nodeName)
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
-			return nil, fmt.Errorf("failed to create lease, lease already exists: %w", err)
+			return nil, false, fmt.Errorf("failed to create lease, lease already exists: %w", err)
 		}
 
 		// kube-apiserver will not have finished initializing the resources when the cluster has just been created.
@@ -212,12 +239,11 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first b
 			lease, err = c.ensureLease(ctx, nodeName)
 		}
 		if err != nil {
-			return lease, fmt.Errorf("failed to create lease after retrying: %w", err)
+			return lease, false, fmt.Errorf("failed to create lease after retrying: %w", err)
 		}
 	}
 
-	c.onNodeManaged(nodeName)
-	return lease, nil
+	return lease, true, nil
 }
 
 func (c *NodeLeaseController) onNodeManaged(nodeName string) {
