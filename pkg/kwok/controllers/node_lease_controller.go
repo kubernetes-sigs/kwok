@@ -185,21 +185,29 @@ func (c *NodeLeaseController) Held(name string) bool {
 // waitAndManageNode waits until the informer cache confirms that we hold the
 // lease for nodeName, then calls onNodeManaged. The wait is bounded by a
 // short timeout so that progress is never blocked indefinitely.
+// If the cache does not confirm ownership within the timeout, onNodeManaged
+// is not called and the next sync cycle will retry.
 func (c *NodeLeaseController) waitAndManageNode(ctx context.Context, nodeName string) {
-	deadline := c.clock.Now().Add(5 * time.Second)
-	for c.clock.Now().Before(deadline) {
+	logger := log.FromContext(ctx)
+	timeout := c.clock.After(5 * time.Second)
+	for {
 		if cachedLease, ok := c.getLease(nodeName); ok &&
 			cachedLease.Spec.HolderIdentity != nil &&
 			*cachedLease.Spec.HolderIdentity == c.holderIdentity {
-			break
+			c.onNodeManaged(nodeName)
+			return
 		}
 		select {
 		case <-ctx.Done():
 			return
+		case <-timeout:
+			logger.Warn("Timed out waiting for lease cache to confirm ownership, will retry on next sync",
+				"node", nodeName,
+			)
+			return
 		case <-c.clock.After(10 * time.Millisecond):
 		}
 	}
-	c.onNodeManaged(nodeName)
 }
 
 // sync syncs a lease for a node.
