@@ -35,7 +35,7 @@ kwok \
   --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake \
   --manage-nodes-with-label-selector= \
   --manage-single-node= \
-  --cidr=10.0.0.1/24 \
+  --cidr=10.0.0.0/24 \
   --node-ip=10.0.0.1 \
   --node-lease-duration-seconds=40
 ```

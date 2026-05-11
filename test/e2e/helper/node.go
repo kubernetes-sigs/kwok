@@ -41,7 +41,7 @@ func NewNodeBuilder(name string) *NodeBuilder {
 				},
 			},
 			Spec: corev1.NodeSpec{
-				PodCIDR: "10.10.0.1/24",
+				PodCIDR: "10.10.0.0/24",
 			},
 		},
 	}

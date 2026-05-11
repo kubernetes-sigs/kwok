@@ -49,7 +49,7 @@ type KwokConfigurationOptions struct {
 
 	// The default IP assigned to the Pod on maintained Nodes.
 	// is the default value for flag --cidr
-	// +default="10.0.0.1/24"
+	// +default="10.0.0.0/24"
 	CIDR string `json:"cidr,omitempty"`
 
 	// The ip of all nodes maintained by the Kwok
