@@ -35,6 +35,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
+// cacheSyncRetryDelay is the interval between polls of the informer cache
+// while waiting for a newly acquired/transitioned lease to be reflected.
+const cacheSyncRetryDelay = 50 * time.Millisecond
+
 // NodeLeaseController is responsible for creating and renewing a lease object
 type NodeLeaseController struct {
 	typedClient          clientset.Interface
@@ -51,6 +55,11 @@ type NodeLeaseController struct {
 
 	delayQueue   queue.WeightDelayingQueue[string]
 	holdLeaseSet maps.SyncMap[string, bool]
+	// pendingManageSet tracks nodes whose lease has been successfully acquired
+	// or transitioned but whose ownership has not yet been confirmed by the
+	// informer cache. The delay queue is reused to re-check the cache with a
+	// short delay, avoiding a blocking spin-loop in syncWorker.
+	pendingManageSet maps.SyncMap[string, struct{}]
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)
@@ -117,6 +126,35 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 			continue
 		}
 
+		// If we previously acquired the lease but the informer cache hadn't
+		// yet reflected our ownership, check again now before doing a full
+		// sync (which would prematurely renew the lease).
+		if _, pending := c.pendingManageSet.Load(nodeName); pending {
+			if c.Held(nodeName) {
+				// Cache now confirms our ownership; notify consumers and
+				// schedule the next regular renewal from the cached lease.
+				c.pendingManageSet.Delete(nodeName)
+				c.onNodeManaged(nodeName)
+				if cachedLease, ok := c.getLease(nodeName); ok {
+					if expTime, ok := expireTime(cachedLease); ok {
+						dur := c.interval()
+						now := c.clock.Now()
+						expireDuration := expTime.Sub(now)
+						nextTry := nextTryDuration(dur, expireDuration, true)
+						c.delayQueue.AddWeightAfter(nodeName, 2, nextTry)
+						continue
+					}
+				}
+				// Cache entry is gone or has no expire time; fall through
+				// to a full sync so the lease gets re-created/renewed.
+			} else {
+				// Cache hasn't caught up yet; re-check after a short delay
+				// without renewing the lease.
+				c.delayQueue.AddWeightAfter(nodeName, 2, cacheSyncRetryDelay)
+				continue
+			}
+		}
+
 		dur := c.interval()
 
 		lease, shouldManage, err := c.sync(ctx, nodeName, first)
@@ -139,18 +177,19 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 		}
 
 		if shouldManage {
-			// Wait until the informer cache reflects our ownership before
-			// notifying consumers. This ensures that Held() returns true
-			// when the downstream pod-sync logic calls it, even if the
-			// watch event from the API server hasn't been processed yet.
-			c.waitAndManageNode(ctx, nodeName)
+			// The lease was acquired or transitioned. Defer the onNodeManaged
+			// notification until the informer cache confirms our ownership so
+			// that Held() returns true when downstream code checks it.
+			// Re-queue with a short delay to avoid a blocking spin-loop.
+			c.pendingManageSet.Store(nodeName, struct{}{})
+			c.delayQueue.AddWeightAfter(nodeName, 2, cacheSyncRetryDelay)
+		} else {
+			now := c.clock.Now()
+			expireDuration := expireTime.Sub(now)
+			hold := tryAcquireOrRenew(lease, c.holderIdentity, now)
+			nextTry := nextTryDuration(dur, expireDuration, hold)
+			c.delayQueue.AddWeightAfter(nodeName, 2, nextTry)
 		}
-
-		now := c.clock.Now()
-		expireDuration := expireTime.Sub(now)
-		hold := tryAcquireOrRenew(lease, c.holderIdentity, now)
-		nextTry := nextTryDuration(dur, expireDuration, hold)
-		c.delayQueue.AddWeightAfter(nodeName, 2, nextTry)
 	}
 }
 
@@ -170,6 +209,7 @@ func (c *NodeLeaseController) TryHold(name string) {
 func (c *NodeLeaseController) ReleaseHold(name string) {
 	_ = c.delayQueue.Cancel(name)
 	c.holdLeaseSet.Delete(name)
+	c.pendingManageSet.Delete(name)
 }
 
 // Held returns true if the NodeLeaseController holds the lease
@@ -180,34 +220,6 @@ func (c *NodeLeaseController) Held(name string) bool {
 	}
 
 	return *lease.Spec.HolderIdentity == c.holderIdentity
-}
-
-// waitAndManageNode waits until the informer cache confirms that we hold the
-// lease for nodeName, then calls onNodeManaged. The wait is bounded by a
-// short timeout so that progress is never blocked indefinitely.
-// If the cache does not confirm ownership within the timeout, onNodeManaged
-// is not called and the next sync cycle will retry.
-func (c *NodeLeaseController) waitAndManageNode(ctx context.Context, nodeName string) {
-	logger := log.FromContext(ctx)
-	timeout := c.clock.After(5 * time.Second)
-	for {
-		if cachedLease, ok := c.getLease(nodeName); ok &&
-			cachedLease.Spec.HolderIdentity != nil &&
-			*cachedLease.Spec.HolderIdentity == c.holderIdentity {
-			c.onNodeManaged(nodeName)
-			return
-		}
-		select {
-		case <-ctx.Done():
-			return
-		case <-timeout:
-			logger.Warn("Timed out waiting for lease cache to confirm ownership, will retry on next sync",
-				"node", nodeName,
-			)
-			return
-		case <-c.clock.After(10 * time.Millisecond):
-		}
-	}
 }
 
 // sync syncs a lease for a node.
