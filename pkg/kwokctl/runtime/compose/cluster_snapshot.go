@@ -61,7 +61,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	logger := log.FromContext(ctx)
 	// Restore snapshot to host temporary directory
 	etcdDataTmp := c.GetWorkdirPath("etcd-data")
-	err = c.Etcdctl(ctx, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
+	err = c.Snapshot(ctx, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err
 	}

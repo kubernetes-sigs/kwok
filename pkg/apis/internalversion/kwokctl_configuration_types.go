@@ -241,6 +241,9 @@ type KwokctlConfigurationOptions struct {
 	// EtcdctlBinary is the binary of etcdctl.
 	EtcdctlBinary string
 
+	// EtcdutlBinary is the binary of etcdutl.
+	EtcdutlBinary string
+
 	// KectlBinary is the binary of kubectl.
 	KectlBinary string
 

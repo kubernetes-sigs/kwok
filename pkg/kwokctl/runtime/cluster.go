@@ -622,6 +622,43 @@ func (c *Cluster) etcdctlPath(ctx context.Context) (string, error) {
 	return etcdctlPath, nil
 }
 
+func (c *Cluster) etcdutlPath(ctx context.Context) (string, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return "", err
+	}
+	conf := &config.Options
+
+	etcdutlPath, err := c.EnsureBinary(ctx, "etcdutl", conf.EtcdutlBinary)
+	if err != nil {
+		return "", err
+	}
+	return etcdutlPath, nil
+}
+
+// Snapshot takes a snapshot of the cluster with the given arguments.
+// The arguments are passed to etcdctl or etcdutl, which depends on the etcd version.
+func (c *Cluster) Snapshot(ctx context.Context, args ...string) error {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+	conf := &config.Options
+
+	etcdVersion, err := version.ParseVersion(conf.EtcdVersion)
+	if err != nil {
+		return err
+	}
+
+	// etcdctl is remove snapshot restore in v3.6,
+	// so use etcdutl for v3.6 and later, and use etcdctl for earlier versions.
+	if etcdVersion.LT(version.NewVersion(3, 6, 0)) {
+		return c.Etcdctl(ctx, args...)
+	}
+
+	return c.Etcdutl(ctx, args...)
+}
+
 // Etcdctl runs etcdctl.
 func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
 	etcdctlPath, err := c.etcdctlPath(ctx)
@@ -632,6 +669,16 @@ func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
 	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
 	ctx = exec.WithEnv(ctx, []string{"ETCDCTL_API=3"})
 	return c.Exec(ctx, etcdctlPath, args...)
+}
+
+// Etcdutl runs etcdutl.
+func (c *Cluster) Etcdutl(ctx context.Context, args ...string) error {
+	etcdutlPath, err := c.etcdutlPath(ctx)
+	if err != nil {
+		return err
+	}
+
+	return c.Exec(ctx, etcdutlPath, args...)
 }
 
 func (c *Cluster) kectlPath(ctx context.Context) (string, error) {

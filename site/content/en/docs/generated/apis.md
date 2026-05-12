@@ -3516,6 +3516,17 @@ string
 </tr>
 <tr>
 <td>
+<code>etcdutlBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>EtcdutlBinary is the binary of etcdutl.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kectlBinary</code>
 <em>
 string

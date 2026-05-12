@@ -83,7 +83,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		return err
 	}
 
-	err = c.EtcdctlInCluster(ctx, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
+	err = c.Snapshot(ctx, "snapshot", "restore", path, "--data-dir", etcdDataTmp)
 	if err != nil {
 		return err
 	}

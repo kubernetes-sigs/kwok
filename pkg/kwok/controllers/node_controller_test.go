@@ -39,7 +39,7 @@ import (
 )
 
 func TestNodeController(t *testing.T) {
-	clientset := fake.NewSimpleClientset(
+	clientset := fake.NewClientset(
 		&corev1.Node{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "node0",

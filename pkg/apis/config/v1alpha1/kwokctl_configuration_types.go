@@ -347,6 +347,9 @@ type KwokctlConfigurationOptions struct {
 	// EtcdctlBinary is the binary of etcdctl.
 	EtcdctlBinary string `json:"etcdctlBinary,omitempty"`
 
+	// EtcdutlBinary is the binary of etcdutl.
+	EtcdutlBinary string `json:"etcdutlBinary,omitempty"`
+
 	// KectlBinary is the binary of kectl [experimental].
 	KectlBinary string `json:"kectlBinary,omitempty"`
 

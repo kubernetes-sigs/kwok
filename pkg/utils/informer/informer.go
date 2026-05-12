@@ -382,10 +382,6 @@ func handleWatchList(ctx context.Context, w watch.Interface, eventsFunc func(obj
 				}
 			case watch.Bookmark:
 				if meta.GetAnnotations()[metav1.InitialEventsAnnotationKey] == "true" {
-					base64EncodedInitialEventsListBlueprint := meta.GetAnnotations()[metav1.InitialEventsListBlueprintAnnotationKey]
-					if len(base64EncodedInitialEventsListBlueprint) == 0 {
-						return fmt.Errorf("%q annotation is missing content", metav1.InitialEventsListBlueprintAnnotationKey)
-					}
 					return nil
 				}
 			default:
