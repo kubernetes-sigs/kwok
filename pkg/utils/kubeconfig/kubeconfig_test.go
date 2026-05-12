@@ -44,7 +44,6 @@ contexts:
   name: test-cluster
 current-context: test-cluster
 kind: Config
-preferences: {}
 users: null
 `
 
@@ -92,7 +91,6 @@ clusters: null
 contexts: null
 current-context: ""
 kind: Config
-preferences: {}
 users: null
 `
 	got, err := os.ReadFile(kubeconfigPath)

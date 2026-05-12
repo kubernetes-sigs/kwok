@@ -3,7 +3,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/etcd
-docker pull docker.io/kindest/node:v1.33.0
+docker pull docker.io/kindest/node:v1.34.3
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
@@ -126,12 +126,11 @@ nodes:
     protocol: TCP
   role: control-plane
 EOF
-docker pull registry.k8s.io/kubectl:v1.33.0
+docker pull registry.k8s.io/kubectl:v1.34.3
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kube-apiserver-insecure-proxy.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   name: kube-apiserver-insecure-proxy
   namespace: kube-system
 spec:
@@ -144,7 +143,7 @@ spec:
     - --port=8001
     command:
     - kubectl
-    image: registry.k8s.io/kubectl:v1.33.0
+    image: registry.k8s.io/kubectl:v1.34.3
     imagePullPolicy: Never
     name: kube-apiserver-insecure-proxy
     ports:
@@ -195,7 +194,6 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/kwok-controller.
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   name: kwok-controller
   namespace: kube-system
 spec:
@@ -279,7 +277,6 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/dashboard.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   name: dashboard
   namespace: kube-system
 spec:
@@ -346,7 +343,6 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/dashboard-metric
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   name: dashboard-metrics-scraper
   namespace: kube-system
 spec:
@@ -401,7 +397,6 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/metrics-server.y
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   name: metrics-server
   namespace: kube-system
 spec:
@@ -471,7 +466,6 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/prometheus.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   name: prometheus
   namespace: kube-system
 spec:
@@ -539,7 +533,6 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/jaeger.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   name: jaeger
   namespace: kube-system
 spec:
@@ -662,8 +655,8 @@ scrape_configs:
     - 127.0.0.1:9090
 EOF
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.33.0 --wait 29m
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kubectl:v1.33.0 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.34.3 --wait 29m
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kubectl:v1.34.3 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.8.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/dashboard:v2.7.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/metrics-scraper:v1.0.9 --name kwok-<CLUSTER_NAME>

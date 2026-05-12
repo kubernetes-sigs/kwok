@@ -35,7 +35,7 @@ import (
 
 func TestNodeLeaseController(t *testing.T) {
 	now := time.Now()
-	clientset := fake.NewSimpleClientset(
+	clientset := fake.NewClientset(
 		&coordinationv1.Lease{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "lease1",

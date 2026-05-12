@@ -94,7 +94,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage all nodes",
 			conf: Config{
-				TypedClient:    fake.NewSimpleClientset(nodes...),
+				TypedClient:    fake.NewClientset(nodes...),
 				ManageAllNodes: true,
 				LocalStages: map[internalversion.StageResourceRef][]*internalversion.Stage{
 					podRef:  podStages,
@@ -115,7 +115,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage nodes with label selector `manage-by-kwok=true`",
 			conf: Config{
-				TypedClient:                  fake.NewSimpleClientset(nodes...),
+				TypedClient:                  fake.NewClientset(nodes...),
 				ManageNodesWithLabelSelector: "manage-by-kwok",
 				LocalStages: map[internalversion.StageResourceRef][]*internalversion.Stage{
 					podRef:  podStages,
@@ -136,7 +136,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage nodes with annotation selector `manage-by-kwok=true`",
 			conf: Config{
-				TypedClient:                       fake.NewSimpleClientset(nodes...),
+				TypedClient:                       fake.NewClientset(nodes...),
 				ManageNodesWithAnnotationSelector: "manage-by-kwok=true",
 				LocalStages: map[internalversion.StageResourceRef][]*internalversion.Stage{
 					podRef:  podStages,
@@ -157,7 +157,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage all nodes in parallel",
 			conf: Config{
-				TypedClient:    fake.NewSimpleClientset(nodes...),
+				TypedClient:    fake.NewClientset(nodes...),
 				ManageAllNodes: true,
 				LocalStages: map[internalversion.StageResourceRef][]*internalversion.Stage{
 					podRef:  podStages,
@@ -178,7 +178,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage all nodes by watch list",
 			conf: Config{
-				TypedClient:    fake.NewSimpleClientset(nodes...),
+				TypedClient:    fake.NewClientset(nodes...),
 				ManageAllNodes: true,
 				LocalStages: map[internalversion.StageResourceRef][]*internalversion.Stage{
 					podRef:  podStages,
@@ -200,7 +200,7 @@ func TestController(t *testing.T) {
 		{
 			name: "node controller test: manage all nodes by stream watch",
 			conf: Config{
-				TypedClient:    fake.NewSimpleClientset(nodes...),
+				TypedClient:    fake.NewClientset(nodes...),
 				ManageAllNodes: true,
 				LocalStages: map[internalversion.StageResourceRef][]*internalversion.Stage{
 					podRef:  podStages,

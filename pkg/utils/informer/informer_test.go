@@ -28,7 +28,7 @@ import (
 func TestInformerSync(t *testing.T) {
 	now := time.Unix(0, 0)
 
-	fakeClient := fake.NewSimpleClientset(
+	fakeClient := fake.NewClientset(
 		&coordinationv1.Lease{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "lease0",
@@ -88,7 +88,7 @@ func TestInformerSync(t *testing.T) {
 func TestInformerWatch(t *testing.T) {
 	now := time.Unix(1, 0)
 
-	fakeClient := fake.NewSimpleClientset(
+	fakeClient := fake.NewClientset(
 		&coordinationv1.Lease{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "lease0",
@@ -209,7 +209,7 @@ func TestInformerWatch(t *testing.T) {
 func TestInformerWatchWithCache(t *testing.T) {
 	now := time.Unix(1, 0)
 
-	fakeClient := fake.NewSimpleClientset(
+	fakeClient := fake.NewClientset(
 		&coordinationv1.Lease{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "lease0",

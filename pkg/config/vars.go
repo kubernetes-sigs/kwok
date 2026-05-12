@@ -402,6 +402,10 @@ func setKwokctlEtcdConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.EtcdctlBinary == "" {
 		conf.EtcdctlBinary = conf.EtcdBinaryTar + "#etcdctl" + conf.BinSuffix
 	}
+
+	if conf.EtcdutlBinary == "" {
+		conf.EtcdutlBinary = conf.EtcdBinaryTar + "#etcdutl" + conf.BinSuffix
+	}
 }
 
 func setKwokctlKindConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
