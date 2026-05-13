@@ -8,7 +8,7 @@ require (
 	github.com/containerd/go-cni v1.1.10
 	github.com/containernetworking/plugins v1.4.0
 	github.com/creack/pty v1.1.24
-	github.com/emicklei/go-restful/v3 v3.12.2
+	github.com/emicklei/go-restful/v3 v3.13.0
 	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/google/cel-go v0.24.1
 	github.com/google/go-cmp v0.7.0
@@ -24,7 +24,7 @@ require (
 	github.com/wzshiming/easycel v0.6.0
 	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
 	github.com/wzshiming/httpseek v0.5.0
-	go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful v0.61.0
+	go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful v0.68.0
 	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/sdk v1.43.0
 	go.opentelemetry.io/otel/trace v1.43.0
