@@ -25,6 +25,9 @@ on:
 env:
   CGO_ENABLED: "0"
 
+permissions:
+  contents: read
+
 jobs:
   benchmark:
     runs-on: ubuntu-latest
