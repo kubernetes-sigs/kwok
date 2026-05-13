@@ -19,29 +19,9 @@ ROOT_DIR="$(realpath "${DIR}/..")"
 
 record="${ROOT_DIR}/supported_releases.txt"
 
-# For compatibility with the Kind runtime, get the labels from Kind's node images
+# Get latest releases from GitHub
 function latest_releases() {
-  local ref_image=kindest/node
-  local auth_data
-  local token
-  local list_data
-  local tags
-  auth_data="$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${ref_image}:pull")"
-  token="$(echo "${auth_data}" | jq -r '.token')"
-  if [[ "${token}" == "" ]]; then
-    echo "Failed get token" >&2
-    echo "${auth_data}" >&2
-    return 1
-  fi
-
-  list_data="$(curl -s "https://registry-1.docker.io/v2/${ref_image}/tags/list" -H "Authorization: Bearer ${token}")"
-  tags="$(echo "${list_data}" | jq -r '.tags | .[]' | grep -e '^v[0-9]\+\.[0-9]\+\.[0-9]\+$' | sed 's/v//g')"
-  if [[ "${tags}" == "" ]]; then
-    echo "Failed get list" >&2
-    echo "${list_data}" >&2
-    return 1
-  fi
-  echo "${tags}"
+  gh release -R kubernetes/kubernetes list --exclude-drafts --exclude-pre-releases --json=tagName --jq '.[].tagName' --limit 100
 }
 
 # Get historical supported releases
