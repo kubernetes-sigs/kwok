@@ -9,7 +9,7 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 # Generate admin token to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/token.csv
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/serviceaccount
 # Copy token and CA cert to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/serviceaccount
-# Try to copy token and CA cert to /var/run/secrets/kubernetes.io/serviceaccount
+# Attempt to copy token and CA cert to /var/run/secrets/kubernetes.io/serviceaccount (may fail without root)
 nerdctl pull registry.k8s.io/etcd:3.5.21-0
 nerdctl pull registry.k8s.io/kube-apiserver:v1.33.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml

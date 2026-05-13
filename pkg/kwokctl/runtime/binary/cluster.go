@@ -120,9 +120,8 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 // setupInCluster sets up the static token auth file for the apiserver and writes
 // the InCluster service account token and CA cert files.
 func (c *Cluster) setupInCluster(ctx context.Context, env *env) error {
-	_ = ctx
 	saPath := c.GetWorkdirPath(runtime.ServiceAccountName)
-	return c.SetupTokenAuth(env.tokenAuthFilePath, saPath, env.caCertPath)
+	return c.SetupTokenAuth(ctx, env.tokenAuthFilePath, saPath, env.caCertPath)
 }
 
 func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {

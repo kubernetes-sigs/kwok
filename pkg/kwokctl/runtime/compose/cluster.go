@@ -160,9 +160,9 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 }
 
 // setupTokenAuth generates the static token auth file for the apiserver.
-func (c *Cluster) setupTokenAuth(_ context.Context, env *env) error {
+func (c *Cluster) setupTokenAuth(ctx context.Context, env *env) error {
 	saPath := c.GetWorkdirPath(runtime.ServiceAccountName)
-	return c.SetupTokenAuth(env.tokenAuthFilePath, saPath, env.caCertPath)
+	return c.SetupTokenAuth(ctx, env.tokenAuthFilePath, saPath, env.caCertPath)
 }
 
 func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
