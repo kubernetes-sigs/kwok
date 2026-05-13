@@ -30,30 +30,31 @@ import (
 
 // BuildKubeApiserverComponentConfig is the configuration for building a kube-apiserver component.
 type BuildKubeApiserverComponentConfig struct {
-	Runtime           string
-	ProjectName       string
-	Binary            string
-	Image             string
-	Version           version.Version
-	Workdir           string
-	BindAddress       string
-	Port              uint32
-	EtcdAddress       string
-	EtcdPort          uint32
-	KubeRuntimeConfig string
-	KubeFeatureGates  string
-	SecurePort        bool
-	KubeAuthorization bool
-	KubeAdmission     bool
-	AuditPolicyPath   string
-	AuditLogPath      string
-	CaCertPath        string
-	AdminCertPath     string
-	AdminKeyPath      string
-	Verbosity         log.Level
-	DisableQPSLimits  bool
-	TracingConfigPath string
-	EtcdPrefix        string
+	Runtime            string
+	ProjectName        string
+	Binary             string
+	Image              string
+	Version            version.Version
+	Workdir            string
+	BindAddress        string
+	Port               uint32
+	EtcdAddress        string
+	EtcdPort           uint32
+	KubeRuntimeConfig  string
+	KubeFeatureGates   string
+	SecurePort         bool
+	KubeAuthorization  bool
+	KubeAdmission      bool
+	AuditPolicyPath    string
+	AuditLogPath       string
+	CaCertPath         string
+	AdminCertPath      string
+	AdminKeyPath       string
+	Verbosity          log.Level
+	DisableQPSLimits   bool
+	TracingConfigPath  string
+	EtcdPrefix         string
+	TokenAuthFilePath  string
 }
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
@@ -300,6 +301,25 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		} else {
 			kubeApiserverArgs = append(kubeApiserverArgs,
 				"--tracing-config-file="+conf.TracingConfigPath,
+			)
+		}
+	}
+
+	if conf.TokenAuthFilePath != "" {
+		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+			volumes = append(volumes,
+				internalversion.Volume{
+					HostPath:  conf.TokenAuthFilePath,
+					MountPath: "/etc/kubernetes/token.csv",
+					ReadOnly:  true,
+				},
+			)
+			kubeApiserverArgs = append(kubeApiserverArgs,
+				"--token-auth-file=/etc/kubernetes/token.csv",
+			)
+		} else {
+			kubeApiserverArgs = append(kubeApiserverArgs,
+				"--token-auth-file="+conf.TokenAuthFilePath,
 			)
 		}
 	}
