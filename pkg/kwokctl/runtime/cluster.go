@@ -67,6 +67,14 @@ var (
 	AuditLogName            = "audit.log"
 	SchedulerConfigName     = "scheduler.yaml"
 	ApiserverTracingConfig  = "apiserver-tracing-config.yaml"
+	TokenAuthName           = "token.csv"
+	ServiceAccountName      = "serviceaccount"
+)
+
+// InCluster service account file paths (standard Kubernetes InCluster paths)
+const (
+	InClusterTokenPath  = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	InClusterCACertPath = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 )
 
 // Cluster is the cluster

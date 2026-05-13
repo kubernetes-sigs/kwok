@@ -18,13 +18,18 @@ package runtime
 
 import (
 	"context"
+	cryptorand "crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
+	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 )
 
@@ -170,4 +175,94 @@ func (c *Cluster) EnsureBinary(ctx context.Context, name, binary string) (string
 	}
 
 	return binaryPath, nil
+}
+
+// SetupTokenAuth generates an admin token, writes it to the token auth CSV file
+// for the apiserver, and creates the InCluster service account files.
+// In dry-run mode it prints informational comments without performing actual file I/O.
+func (c *Cluster) SetupTokenAuth(ctx context.Context, tokenAuthFilePath, saPath, caCertPath string) error {
+	if c.IsDryRun() {
+		dryrun.PrintMessagef("# Generate admin token to %s", tokenAuthFilePath)
+		dryrun.PrintMessagef("mkdir -p %s", saPath)
+		dryrun.PrintMessagef("# Copy token and CA cert to %s", saPath)
+		dryrun.PrintMessagef("# Attempt to copy token and CA cert to /var/run/secrets/kubernetes.io/serviceaccount (may fail without root)")
+		return nil
+	}
+
+	logger := log.FromContext(ctx)
+
+	var token string
+	if !file.Exists(tokenAuthFilePath) {
+		// 16 bytes (128 bits) provides sufficient entropy for a static bearer token,
+		// consistent with common token generation practices.
+		b := make([]byte, 16)
+		if _, err := cryptorand.Read(b); err != nil {
+			return fmt.Errorf("failed to generate admin token: %w", err)
+		}
+		token = hex.EncodeToString(b)
+		// Write token auth CSV file: token,username,uid,"groups"
+		// The admin user is granted system:masters group for full cluster-admin access.
+		if err := file.Write(tokenAuthFilePath, []byte(token+",admin,admin,system:masters\n")); err != nil {
+			return fmt.Errorf("failed to write token auth file: %w", err)
+		}
+	} else {
+		// Read the existing token auth file to get the token
+		data, err := os.ReadFile(tokenAuthFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to read token auth file: %w", err)
+		}
+		for _, line := range strings.Split(string(data), "\n") {
+			if line == "" {
+				continue
+			}
+			parts := strings.SplitN(line, ",", 2)
+			if parts[0] != "" {
+				token = parts[0]
+				break
+			}
+		}
+		if token == "" {
+			return fmt.Errorf("failed to parse token from token auth file")
+		}
+	}
+
+	// Write service account files to the workdir
+	if err := file.MkdirAll(saPath); err != nil {
+		return fmt.Errorf("failed to create serviceaccount dir: %w", err)
+	}
+	if err := file.Write(filepath.Join(saPath, "token"), []byte(token)); err != nil {
+		return fmt.Errorf("failed to write serviceaccount token: %w", err)
+	}
+	if file.Exists(caCertPath) {
+		if err := file.Copy(caCertPath, filepath.Join(saPath, "ca.crt")); err != nil {
+			return fmt.Errorf("failed to copy CA cert to serviceaccount dir: %w", err)
+		}
+	}
+
+	// Attempt to create the standard InCluster service account files.
+	// This is best-effort and may fail without root permissions.
+	inClusterSADir := filepath.Dir(InClusterTokenPath)
+	if mkdirErr := file.MkdirAll(inClusterSADir); mkdirErr != nil {
+		logger.Debug("Could not create InCluster serviceaccount directory, skipping",
+			"path", inClusterSADir,
+			"err", mkdirErr,
+		)
+	} else {
+		if writeErr := file.Write(InClusterTokenPath, []byte(token)); writeErr != nil {
+			logger.Debug("Could not write InCluster token file, skipping",
+				"path", InClusterTokenPath,
+				"err", writeErr,
+			)
+		}
+		if file.Exists(caCertPath) {
+			if copyErr := file.Copy(caCertPath, InClusterCACertPath); copyErr != nil {
+				logger.Debug("Could not copy InCluster CA cert file, skipping",
+					"path", InClusterCACertPath,
+					"err", copyErr,
+				)
+			}
+		}
+	}
+
+	return nil
 }

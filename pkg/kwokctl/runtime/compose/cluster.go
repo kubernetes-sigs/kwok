@@ -151,7 +151,18 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
 
+	err = c.setupTokenAuth(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+// setupTokenAuth generates the static token auth file for the apiserver.
+func (c *Cluster) setupTokenAuth(ctx context.Context, env *env) error {
+	saPath := c.GetWorkdirPath(runtime.ServiceAccountName)
+	return c.SetupTokenAuth(ctx, env.tokenAuthFilePath, saPath, env.caCertPath)
 }
 
 func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
@@ -187,6 +198,7 @@ type env struct {
 	inClusterCaCertPath           string
 	inClusterAdminKeyPath         string
 	inClusterAdminCertPath        string
+	tokenAuthFilePath             string
 	inClusterPort                 uint32
 	scheme                        string
 	usedPorts                     sets.Sets[uint32]
@@ -224,6 +236,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	inClusterCaCertPath := path.Join(inClusterPkiPath, "ca.crt")
 	inClusterAdminKeyPath := path.Join(inClusterPkiPath, "admin.key")
 	inClusterAdminCertPath := path.Join(inClusterPkiPath, "admin.crt")
+	tokenAuthFilePath := c.GetWorkdirPath(runtime.TokenAuthName)
 
 	inClusterPort := uint32(8080)
 	scheme := "http"
@@ -257,6 +270,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 		inClusterCaCertPath:           inClusterCaCertPath,
 		inClusterAdminKeyPath:         inClusterAdminKeyPath,
 		inClusterAdminCertPath:        inClusterAdminCertPath,
+		tokenAuthFilePath:             tokenAuthFilePath,
 		inClusterPort:                 inClusterPort,
 		scheme:                        scheme,
 		usedPorts:                     usedPorts,
@@ -462,6 +476,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		TracingConfigPath: kubeApiserverTracingConfigPath,
 		EtcdPrefix:        conf.EtcdPrefix,
+		TokenAuthFilePath: env.tokenAuthFilePath,
 	})
 	if err != nil {
 		return err

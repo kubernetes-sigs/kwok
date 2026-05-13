@@ -109,7 +109,19 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 		return fmt.Errorf("failed to mkdir etcd data path: %w", err)
 	}
 
+	err = c.setupInCluster(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+// setupInCluster sets up the static token auth file for the apiserver and writes
+// the InCluster service account token and CA cert files.
+func (c *Cluster) setupInCluster(ctx context.Context, env *env) error {
+	saPath := c.GetWorkdirPath(runtime.ServiceAccountName)
+	return c.SetupTokenAuth(ctx, env.tokenAuthFilePath, saPath, env.caCertPath)
 }
 
 func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
@@ -140,6 +152,7 @@ type env struct {
 	caCertPath              string
 	adminKeyPath            string
 	adminCertPath           string
+	tokenAuthFilePath       string
 	scheme                  string
 	usedPorts               sets.Sets[uint32]
 }
@@ -174,6 +187,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	caCertPath := path.Join(pkiPath, "ca.crt")
 	adminKeyPath := path.Join(pkiPath, "admin.key")
 	adminCertPath := path.Join(pkiPath, "admin.crt")
+	tokenAuthFilePath := c.GetWorkdirPath(runtime.TokenAuthName)
 	auditLogPath := ""
 	auditPolicyPath := ""
 
@@ -202,6 +216,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 		caCertPath:              caCertPath,
 		adminKeyPath:            adminKeyPath,
 		adminCertPath:           adminCertPath,
+		tokenAuthFilePath:       tokenAuthFilePath,
 		scheme:                  scheme,
 		usedPorts:               usedPorts,
 	}, nil
@@ -421,6 +436,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		DisableQPSLimits:  conf.DisableQPSLimits,
 		TracingConfigPath: kubeApiserverTracingConfigPath,
 		EtcdPrefix:        conf.EtcdPrefix,
+		TokenAuthFilePath: env.tokenAuthFilePath,
 	})
 	if err != nil {
 		return err
@@ -919,7 +935,21 @@ func (c *Cluster) Stop(ctx context.Context) error {
 }
 
 func (c *Cluster) start(ctx context.Context) error {
-	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Set KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT for InCluster config
+	// so that components started by kwokctl can use InCluster authentication.
+	kubeServiceHost := net.LocalAddress
+	kubeServicePort := format.String(conf.Options.KubeApiserverPort)
+	ctx = exec.WithEnv(ctx, []string{
+		"KUBERNETES_SERVICE_HOST=" + kubeServiceHost,
+		"KUBERNETES_SERVICE_PORT=" + kubeServicePort,
+	})
+
+	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
 		err := c.startComponents(ctx)
 		return err == nil, err
 	},
