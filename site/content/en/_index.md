@@ -66,7 +66,7 @@ Runtime indicates which medium `kwokctl` will use to start the cluster
 |   [lima][lima-runtime] ⚠️   |        🟣        |        🟣        |        🟣         |        🟣         |         🔴         |         🔴          |
 |  [finch][finch-runtime] ⚠️  |        🔴        |        🔴        |        🟣         |        🟣         |         🟣         |         🟣          |
 |    [kind][kind-runtime]     |        🟢        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
-|       **kind-podman**       |        🟢        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
+|       **kind-podman**       |        🟣        |        🔵        |        🔵         |        🔵         |         🟣         |         🟣          |
 |     **kind-nerdctl** ⚠️     |        🟣        |        🟣        |        🔴         |        🔴         |         🔴         |         🔴          |
 |      **kind-lima** ⚠️       |        🟣        |        🟣        |        🟣         |        🟣         |         🔴         |         🔴          |
 |      **kind-finch** ⚠️      |        🔴        |        🔴        |        🟣         |        🟣         |         🟣         |         🟣          |
