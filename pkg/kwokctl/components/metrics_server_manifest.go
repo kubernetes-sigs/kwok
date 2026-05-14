@@ -37,7 +37,7 @@ func BuildMetricsServerManifest(conf BuildMetricsServerManifestConfig) ([]string
 		return nil, fmt.Errorf("raw metrics-server manifest is empty")
 	}
 
-	transformers := []resourceTransformer{
+	transformers := append([]resourceTransformer{
 		{
 			Kind:       "APIService",
 			APIVersion: "apiregistration.k8s.io/v1",
@@ -52,12 +52,7 @@ func BuildMetricsServerManifest(conf BuildMetricsServerManifestConfig) ([]string
 				return transformServiceToExternalName(obj.Object, conf.ExternalName)
 			},
 		},
-		{
-			Kind:       "Deployment",
-			APIVersion: "apps/v1",
-			Delete:     true,
-		},
-	}
+	}, defaultTransformers...)
 
 	result, err := rewriteManifest(conf.RawManifest, transformers)
 	if err != nil {
