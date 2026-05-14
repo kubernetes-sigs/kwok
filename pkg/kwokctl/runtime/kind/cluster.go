@@ -19,6 +19,7 @@ package kind
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -332,7 +333,16 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 
 	err = c.EnsureImage(ctx, c.runtime, conf.KindNodeImage)
 	if err != nil {
-		return err
+		logger.Warn("Failed to ensure kind node image, attempting to build locally",
+			"image", conf.KindNodeImage,
+			"kubeVersion", conf.KubeVersion,
+			"err", err,
+		)
+
+		buildErr := c.buildKindNodeImage(ctx, conf.KindNodeImage, conf.KubeVersion)
+		if buildErr != nil {
+			return fmt.Errorf("failed to ensure and build kind node image %q: %w", conf.KindNodeImage, errors.Join(err, buildErr))
+		}
 	}
 
 	var featureGates []string
@@ -489,6 +499,19 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	}
 
 	return nil
+}
+
+func (c *Cluster) buildKindNodeImage(ctx context.Context, image, kubeVersion string) error {
+	kindPath, err := c.preDownloadKind(ctx)
+	if err != nil {
+		return err
+	}
+
+	return c.Exec(exec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath,
+		"build", "node-image",
+		"--image", image,
+		kubeVersion,
+	)
 }
 
 func filterDuplicatedExtraArgs(ctx context.Context, extraArgs, passedExtraArgs []internalversion.ExtraArgs) []internalversion.ExtraArgs {
