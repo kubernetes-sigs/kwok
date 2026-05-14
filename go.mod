@@ -32,16 +32,16 @@ require (
 	golang.org/x/sys v0.42.0
 	golang.org/x/term v0.38.0
 	google.golang.org/grpc v1.79.3
-	k8s.io/api v0.34.3
-	k8s.io/apimachinery v0.34.3
-	k8s.io/apiserver v0.34.3
-	k8s.io/client-go v0.34.3
-	k8s.io/component-base v0.34.3
-	k8s.io/cri-api v0.34.3
-	k8s.io/cri-client v0.34.3
+	k8s.io/api v0.34.8
+	k8s.io/apimachinery v0.34.8
+	k8s.io/apiserver v0.34.8
+	k8s.io/client-go v0.34.8
+	k8s.io/component-base v0.34.8
+	k8s.io/cri-api v0.34.8
+	k8s.io/cri-client v0.34.8
 	k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b
-	k8s.io/kube-scheduler v0.34.3
-	k8s.io/kubelet v0.34.3
+	k8s.io/kube-scheduler v0.34.8
+	k8s.io/kubelet v0.34.8
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/e2e-framework v0.5.0
