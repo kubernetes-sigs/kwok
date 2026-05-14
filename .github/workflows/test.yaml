@@ -151,8 +151,6 @@ jobs:
           kwokctl-runtime: podman
         - os: ubuntu-latest
           kwokctl-runtime: kind
-        - os: ubuntu-latest
-          kwokctl-runtime: kind-podman
         - os: ubuntu-22.04
           kwokctl-runtime: nerdctl
 
