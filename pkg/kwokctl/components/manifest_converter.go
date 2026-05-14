@@ -62,64 +62,51 @@ func rewriteManifest(rawManifest string, transformers []resourceTransformer) ([]
 			return nil, fmt.Errorf("failed to read yaml document: %w", err)
 		}
 
-		converted, err := applyTransformers(obj, transformers)
-		if err != nil {
-			return nil, err
+		matchedIndex := matchTransformer(obj, transformers)
+		if matchedIndex == -1 {
+			return nil, fmt.Errorf("no transformer found for resource %s", obj.GroupVersionKind())
 		}
 
-		if converted != nil {
-			doc, err := utilyaml.Marshal(converted)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal yaml document: %w", err)
-			}
-			result = append(result, string(doc))
+		matched := transformers[matchedIndex]
+		if matched.Delete {
+			continue
 		}
+
+		if matched.Transform != nil {
+			if err := matched.Transform(obj); err != nil {
+				return nil, fmt.Errorf("%s transform: %w", obj.GroupVersionKind(), err)
+			}
+		}
+
+		doc, err := utilyaml.Marshal(obj)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal yaml document: %w", err)
+		}
+		result = append(result, string(doc))
 	}
 
 	return result, nil
 }
 
-// applyTransformers finds the first matching transformer for the document,
-// applies it, re-serializes to YAML, and strips yaml.Marshal quoting from
-// any Go template expressions. Returns nil if the document should be deleted.
-func applyTransformers(obj *unstructured.Unstructured, transformers []resourceTransformer) (*unstructured.Unstructured, error) {
+func matchTransformer(obj *unstructured.Unstructured, transformers []resourceTransformer) int {
 	kind := obj.GetKind()
 	apiVersion := obj.GetAPIVersion()
 
-	var matched *resourceTransformer
-	for i := range transformers {
-		t := &transformers[i]
+	for i, t := range transformers {
 		if t.Kind != kind {
 			continue
 		}
 
-		if t.APIVersion != "" && t.APIVersion != apiVersion {
+		if t.APIVersion != apiVersion {
 			continue
 		}
 
-		if t.Match == nil {
-			matched = t
-			break
-		}
-		if t.Match(obj) {
-			matched = t
-			break
+		if t.Match == nil || t.Match(obj) {
+			return i
 		}
 	}
 
-	if matched == nil {
-		return obj, nil
-	}
-
-	if matched.Delete {
-		return nil, nil
-	}
-
-	if err := matched.Transform(obj); err != nil {
-		return nil, fmt.Errorf("%s transform: %w", kind, err)
-	}
-
-	return obj, nil
+	return -1
 }
 
 // transformCRDConversionWebhook sets port and caBundle on the conversion webhook
@@ -206,4 +193,51 @@ func transformAPIService(obj map[string]any, port int64) error {
 		return fmt.Errorf("spec.service.port: %w", err)
 	}
 	return nil
+}
+
+var defaultTransformers = []resourceTransformer{
+	{
+		Kind:       "Namespace",
+		APIVersion: "v1",
+	},
+	{
+		Kind:       "Deployment",
+		APIVersion: "apps/v1",
+		Delete:     true,
+	},
+	{
+		Kind:       "ConfigMap",
+		APIVersion: "v1",
+		Delete:     true,
+	},
+	{
+		Kind:       "Secret",
+		APIVersion: "v1",
+		Delete:     true,
+	},
+	{
+		Kind:       "ServiceAccount",
+		APIVersion: "v1",
+		Delete:     true,
+	},
+	{
+		Kind:       "Role",
+		APIVersion: "rbac.authorization.k8s.io/v1",
+		Delete:     true,
+	},
+	{
+		Kind:       "ClusterRole",
+		APIVersion: "rbac.authorization.k8s.io/v1",
+		Delete:     true,
+	},
+	{
+		Kind:       "RoleBinding",
+		APIVersion: "rbac.authorization.k8s.io/v1",
+		Delete:     true,
+	},
+	{
+		Kind:       "ClusterRoleBinding",
+		APIVersion: "rbac.authorization.k8s.io/v1",
+		Delete:     true,
+	},
 }

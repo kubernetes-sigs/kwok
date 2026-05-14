@@ -38,7 +38,7 @@ func BuildKueueManifest(conf BuildManifestConfig) ([]string, error) {
 		return nil, fmt.Errorf("raw kueue manifest is empty")
 	}
 
-	transformers := []resourceTransformer{
+	transformers := append([]resourceTransformer{
 		{
 			Kind:       "CustomResourceDefinition",
 			APIVersion: "apiextensions.k8s.io/v1",
@@ -49,6 +49,10 @@ func BuildKueueManifest(conf BuildManifestConfig) ([]string, error) {
 			Transform: func(obj *unstructured.Unstructured) error {
 				return transformCRDConversionWebhook(obj.Object, int64(conf.Port), conf.CABundle)
 			},
+		},
+		{
+			Kind:       "CustomResourceDefinition",
+			APIVersion: "apiextensions.k8s.io/v1",
 		},
 		{
 			Kind:       "Service",
@@ -89,12 +93,7 @@ func BuildKueueManifest(conf BuildManifestConfig) ([]string, error) {
 				return transformWebhookClientConfigs(obj.Object, int64(conf.Port), conf.CABundle)
 			},
 		},
-		{
-			Kind:       "Deployment",
-			APIVersion: "apps/v1",
-			Delete:     true,
-		},
-	}
+	}, defaultTransformers...)
 
 	result, err := rewriteManifest(conf.RawManifest, transformers)
 	if err != nil {

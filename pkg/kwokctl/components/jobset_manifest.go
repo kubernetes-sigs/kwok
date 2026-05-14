@@ -37,7 +37,7 @@ func BuildJobSetManifest(conf BuildJobSetManifestConfig) ([]string, error) {
 		return nil, fmt.Errorf("raw jobset manifest is empty")
 	}
 
-	transformers := []resourceTransformer{
+	transformers := append([]resourceTransformer{
 		{
 			Kind:       "CustomResourceDefinition",
 			APIVersion: "apiextensions.k8s.io/v1",
@@ -70,12 +70,7 @@ func BuildJobSetManifest(conf BuildJobSetManifestConfig) ([]string, error) {
 				return transformWebhookClientConfigs(obj.Object, int64(conf.Port), conf.CABundle)
 			},
 		},
-		{
-			Kind:       "Deployment",
-			APIVersion: "apps/v1",
-			Delete:     true,
-		},
-	}
+	}, defaultTransformers...)
 
 	result, err := rewriteManifest(conf.RawManifest, transformers)
 	if err != nil {
