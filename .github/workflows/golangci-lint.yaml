@@ -8,6 +8,9 @@ on:
 env:
   GOLANGCI_VERSION: "2.12.2"
 
+permissions:
+  contents: read
+
 jobs:
   golangci:
     name: lint

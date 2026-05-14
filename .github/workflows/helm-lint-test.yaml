@@ -12,6 +12,9 @@ on:
     - .ct.yaml
     - .github/workflows/helm-lint-test.yaml
 
+permissions:
+  contents: read
+
 jobs:
   lint-test:
     runs-on: ubuntu-latest
