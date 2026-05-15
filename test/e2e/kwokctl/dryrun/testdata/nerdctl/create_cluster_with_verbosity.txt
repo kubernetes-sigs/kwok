@@ -43,68 +43,10 @@ nerdctl pull docker.io/jaegertracing/all-in-one:1.76.0
 nerdctl pull docker.io/kubernetesui/dashboard:v2.7.0
 nerdctl pull docker.io/kubernetesui/metrics-scraper:v1.0.9
 nerdctl pull registry.k8s.io/kueue/kueue:v0.16.0
-cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kueue.yaml
-apiVersion: config.kueue.x-k8s.io/v1beta2
-kind: Configuration
-health:
-  healthProbeBindAddress: :8081
-metrics:
-  bindAddress: :8443
-webhook:
-  port: 9443
-leaderElection:
-  leaderElect: false
-controller:
-  groupKindConcurrency:
-    Job.batch: 5
-    Pod: 5
-    Workload.kueue.x-k8s.io: 5
-    LocalQueue.kueue.x-k8s.io: 1
-    Cohort.kueue.x-k8s.io: 1
-    ClusterQueue.kueue.x-k8s.io: 1
-    ResourceFlavor.kueue.x-k8s.io: 1
-clientConnection:
-  qps: 50
-  burst: 100
-internalCertManagement:
-  enable: false
-integrations:
-  frameworks:
-  - "batch/job"
-  - "kubeflow.org/mpijob"
-  - "ray.io/rayjob"
-  - "ray.io/raycluster"
-  - "jobset.x-k8s.io/jobset"
-  - "kubeflow.org/paddlejob"
-  - "kubeflow.org/pytorchjob"
-  - "kubeflow.org/tfjob"
-  - "kubeflow.org/xgboostjob"
-  - "kubeflow.org/jaxjob"
-  - "workload.codeflare.dev/appwrapper"
-  - "trainer.kubeflow.org/trainjob"
-  - "pod"
-  - "deployment"
-  - "statefulset"
-  - "leaderworkerset.x-k8s.io/leaderworkerset"
-EOF
 # Download https://github.com/kubernetes-sigs/kueue/releases/download/v0.16.0/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/1964449430af8a3059c44c26bae6879d70f750ddb860c3f9f2c73f73abec6c05.yaml
 nerdctl pull registry.k8s.io/kueue/kueueviz-backend:v0.16.0
 nerdctl pull registry.k8s.io/kueue/kueueviz-frontend:v0.16.0
 nerdctl pull registry.k8s.io/jobset/jobset:v0.11.1
-cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/jobset.yaml
-apiVersion: config.jobset.x-k8s.io/v1alpha1
-kind: Configuration
-health:
-  healthProbeBindAddress: :8081
-metrics:
-  bindAddress: :8443
-webhook:
-  port: 9443
-leaderElection:
-  leaderElect: false
-internalCertManagement:
-  enable: false
-EOF
 # Download https://github.com/kubernetes-sigs/jobset/releases/download/v0.11.1/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/97d48666754f45684b96ac8ac034fd0a2a644967c964e6c22b61195158504cba.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 global:
