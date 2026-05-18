@@ -13,9 +13,9 @@
 # limitations under the License.
 
 HUGO_VERSION = $(shell grep -E '^[[:space:]]*HUGO_VERSION' ../netlify.toml | cut -d '=' -f 2 | tr -d '[:space:]' | tr -d '"')
-HUGO_IMAGE   = docker.io/floryn90/hugo:$(HUGO_VERSION)-ext
+HUGO_IMAGE   = ghcr.io/gohugoio/hugo:v$(HUGO_VERSION)
 HUGO_BINARY  = $(shell which hugo)
-HUGO_DOCKER  = docker run --rm -it --volume $(realpath $(CURDIR)/..):/src -p 1313:1313 --workdir /src/site --entrypoint=hugo $(HUGO_IMAGE)
+HUGO_DOCKER  = docker run --rm -i --volume $(realpath $(CURDIR)/..):/src -p 1313:1313 --workdir /src/site --entrypoint=hugo $(HUGO_IMAGE)
 HUGO		 = $(if $(HUGO_BINARY),$(HUGO_BINARY),$(HUGO_DOCKER))
 
 .PHONY: serve
@@ -28,20 +28,6 @@ serve:
 .PHONY: build
 build:
 	$(HUGO) --enableGitInfo --buildFuture --minify
-
-.PHONY: check
-check: check-version
-
-.PHONY: check-version
-check-version: check-binary-version check-image-version
-
-.PHONY: check-image-version
-check-image-version:
-	skopeo --override-os linux inspect docker://$(HUGO_IMAGE)
-
-.PHONY: check-binary-version
-check-binary-version:
-	curl -sfL https://api.github.com/repos/gohugoio/hugo/releases/tags/v$(HUGO_VERSION)
 
 .PHONY: links
 links:
