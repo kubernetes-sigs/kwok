@@ -5,22 +5,9 @@ publish = "public/"
 command = "make build"
 
 [build.environment]
-HUGO_VERSION = "0.131.0"
+HUGO_VERSION = "0.136.5"
 
 [context.production.environment]
 # this controls our robots.txt
 HUGO_ENV = "production"
 HUGO_BASEURL = "https://kwok.sigs.k8s.io/"
-
-# Standard Netlify redirects
-[[redirects]]
-    from = "https://k8s-kwok.netlify.com/*"
-    to = "https://kwok.sigs.k8s.io/:splat"
-    status = 301
-    force = true
-
-[[redirects]]
-    from = "https://kwok-demo.netlify.com/*"
-    to = "https://kwok.sigs.k8s.io/:splat"
-    status = 301
-    force = true
