@@ -17,13 +17,36 @@ limitations under the License.
 package components
 
 import (
-	_ "embed"
+	"fmt"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-//go:embed kueue_config.yaml
-var kueueConfigYaml string
+const kueueConfigMapName = "kueue-manager-config"
 
-// BuildKueueConfig builds the kueue configuration.
-func BuildKueueConfig() string {
-	return kueueConfigYaml
+// BuildKueueConfig builds the kueue configuration from the upstream manifest.
+func BuildKueueConfig(rawManifest string) (string, error) {
+	if rawManifest == "" {
+		return "", fmt.Errorf("raw kueue manifest is empty")
+	}
+
+	rawConfig, err := getConfigFromManifest(rawManifest, kueueConfigMapName, controllerManagerConfigKey)
+	if err != nil {
+		return "", fmt.Errorf("get config from manifest: %w", err)
+	}
+
+	config, err := rewriteConfig(rawConfig, func(config map[string]any) error {
+		if err := unstructured.SetNestedField(config, false, "leaderElection", "leaderElect"); err != nil {
+			return fmt.Errorf("set leaderElection.leaderElect: %w", err)
+		}
+		if err := unstructured.SetNestedField(config, false, "internalCertManagement", "enable"); err != nil {
+			return fmt.Errorf("set internalCertManagement.enable: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("rewrite config: %w", err)
+	}
+
+	return config, nil
 }

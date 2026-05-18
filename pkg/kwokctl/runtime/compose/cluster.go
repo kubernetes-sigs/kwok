@@ -868,18 +868,22 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	// Configure the kueue
-	kueueConfigData := components.BuildKueueConfig()
-	kueueConfigPath := c.GetWorkdirPath(runtime.Kueue)
-
-	err = c.WriteFile(kueueConfigPath, []byte(kueueConfigData))
-	if err != nil {
-		return fmt.Errorf("failed to write kueue yaml: %w", err)
-	}
-
 	rawManifest, err := c.EnsureManifest(ctx, conf.KueueManifest)
 	if err != nil {
 		return err
+	}
+
+	kueueConfigPath := c.GetWorkdirPath(runtime.Kueue)
+
+	if !c.IsDryRun() {
+		kueueConfigData, err := components.BuildKueueConfig(string(rawManifest))
+		if err != nil {
+			return err
+		}
+		err = c.WriteFile(kueueConfigPath, []byte(kueueConfigData))
+		if err != nil {
+			return fmt.Errorf("failed to write kueue yaml: %w", err)
+		}
 	}
 
 	kueueComponent, err := components.BuildKueueComponent(components.BuildKueueComponentConfig{
@@ -983,18 +987,23 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	// Configure the jobset
-	jobsetConfigData := components.BuildJobSetConfig()
-	jobsetConfigPath := c.GetWorkdirPath(runtime.JobSet)
-
-	err = c.WriteFile(jobsetConfigPath, []byte(jobsetConfigData))
-	if err != nil {
-		return fmt.Errorf("failed to write jobset yaml: %w", err)
-	}
-
 	rawManifest, err := c.EnsureManifest(ctx, conf.JobSetManifest)
 	if err != nil {
 		return err
+	}
+
+	jobsetConfigPath := c.GetWorkdirPath(runtime.JobSet)
+
+	if !c.IsDryRun() {
+		jobsetConfigData, err := components.BuildJobSetConfig(string(rawManifest))
+		if err != nil {
+			return err
+		}
+
+		err = c.WriteFile(jobsetConfigPath, []byte(jobsetConfigData))
+		if err != nil {
+			return fmt.Errorf("failed to write jobset yaml: %w", err)
+		}
 	}
 
 	jobsetComponent, err := components.BuildJobSetComponent(components.BuildJobSetComponentConfig{
