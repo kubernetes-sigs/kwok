@@ -168,19 +168,21 @@ func newCacheInformer[T runtime.Object](ctx context.Context, listWatch cache.Lis
 		}
 	}
 
-	store, controller := cache.NewInformerWithOptions(cache.InformerOptions{
-		ListerWatcher: &cache.ListWatch{
-			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
-				opt.setup(&opts)
-				return listWatch.ListWithContext(ctx, opts)
-			},
-			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
-				opt.setup(&opts)
-				return listWatch.WatchWithContext(ctx, opts)
-			},
+	listWatcher := &cache.ListWatch{
+		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
+			opt.setup(&opts)
+			return listWatch.ListWithContext(ctx, opts)
 		},
-		ObjectType: objType(t),
-		Handler:    eventHandler,
+		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
+			opt.setup(&opts)
+			return listWatch.WatchWithContext(ctx, opts)
+		},
+	}
+
+	store, controller := cache.NewInformerWithOptions(cache.InformerOptions{
+		ListerWatcher: &listWatchWithDisabledWatchListSemantics{ListWatch: listWatcher},
+		ObjectType:    objType(t),
+		Handler:       eventHandler,
 	})
 
 	return store, controller
@@ -200,17 +202,19 @@ func (i *Informer[T, L]) Watch(ctx context.Context, opt Option, events chan<- Ev
 
 func newDummyInformer[T runtime.Object](ctx context.Context, listWatch cache.ListerWatcherWithContext, opt Option, events chan<- Event[T]) *cache.Reflector {
 	var t T
-	informer := cache.NewReflectorWithOptions(
-		&cache.ListWatch{
-			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
-				opt.setup(&opts)
-				return listWatch.ListWithContext(ctx, opts)
-			},
-			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
-				opt.setup(&opts)
-				return listWatch.WatchWithContext(ctx, opts)
-			},
+	listWatcher := &cache.ListWatch{
+		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
+			opt.setup(&opts)
+			return listWatch.ListWithContext(ctx, opts)
 		},
+		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
+			opt.setup(&opts)
+			return listWatch.WatchWithContext(ctx, opts)
+		},
+	}
+
+	informer := cache.NewReflectorWithOptions(
+		&listWatchWithDisabledWatchListSemantics{ListWatch: listWatcher},
 		objType(t),
 		dummyCache(events, opt),
 		cache.ReflectorOptions{},
@@ -218,7 +222,15 @@ func newDummyInformer[T runtime.Object](ctx context.Context, listWatch cache.Lis
 	return informer
 }
 
-func dummyCache[T runtime.Object](ch chan<- Event[T], opt Option) cache.Store {
+type listWatchWithDisabledWatchListSemantics struct {
+	*cache.ListWatch
+}
+
+func (l *listWatchWithDisabledWatchListSemantics) IsWatchListSemanticsUnSupported() bool {
+	return true
+}
+
+func dummyCache[T runtime.Object](ch chan<- Event[T], opt Option) cache.ReflectorStore {
 	return &cache.FakeCustomStore{
 		AddFunc: func(obj any) error {
 			if ok, err := opt.filter(obj); err != nil {

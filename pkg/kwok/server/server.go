@@ -31,7 +31,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful"
 	oteltrace "go.opentelemetry.io/otel/trace"
 	corev1 "k8s.io/api/core/v1"
-	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
+	"k8s.io/cri-streaming/pkg/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
@@ -126,7 +126,7 @@ func NewServer(conf Config) (*Server, error) {
 		enableCRDs:            conf.EnableCRDs,
 		restfulCont:           container,
 		idleTimeout:           1 * time.Hour,
-		streamCreationTimeout: remotecommandconsts.DefaultStreamCreationTimeout,
+		streamCreationTimeout: remotecommand.DefaultStreamCreationTimeout,
 
 		clusterPortForwards:   resources.NewStaticGetter(conf.ClusterPortForwards),
 		portForwards:          resources.NewStaticGetter(conf.PortForwards),

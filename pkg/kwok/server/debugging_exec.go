@@ -25,10 +25,7 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
-	"k8s.io/apimachinery/pkg/types"
-	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
-	remotecommandclient "k8s.io/client-go/tools/remotecommand"
-	remotecommandserver "k8s.io/kubelet/pkg/cri/streaming/remotecommand"
+	"k8s.io/cri-streaming/pkg/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -37,7 +34,7 @@ import (
 )
 
 // ExecInContainer executes a command in a container.
-func (s *Server) ExecInContainer(ctx context.Context, name string, uid types.UID, container string, cmd []string, in io.Reader, out, errOut io.WriteCloser, tty bool, resize <-chan remotecommandclient.TerminalSize, timeout time.Duration) error {
+func (s *Server) ExecInContainer(ctx context.Context, name string, uid string, container string, cmd []string, in io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize, timeout time.Duration) error {
 	pod := strings.Split(name, "/")
 	if len(pod) != 2 {
 		return fmt.Errorf("invalid pod name %q", name)
@@ -76,10 +73,10 @@ func (s *Server) ExecInContainer(ctx context.Context, name string, uid types.UID
 	defer cancel()
 
 	if tty {
-		return s.execInContainerWithTTY(ctx, cmd, in, out, resize)
+		return s.execInContainerWithTTY(ctx, cmd, in, stdout, resize)
 	}
 
-	return s.execInContainer(ctx, cmd, in, out, errOut)
+	return s.execInContainer(ctx, cmd, in, stdout, stderr)
 }
 
 func (s *Server) execInContainer(ctx context.Context, cmd []string, in io.Reader, out, errOut io.WriteCloser) error {
@@ -145,13 +142,13 @@ func findContainerInExecs(containerName string, execs []internalversion.ExecTarg
 func (s *Server) getExec(req *restful.Request, resp *restful.Response) {
 	params := getExecRequestParams(req)
 
-	streamOpts, err := remotecommandserver.NewOptions(req.Request)
+	streamOpts, err := remotecommand.NewOptions(req.Request)
 	if err != nil {
 		http.Error(resp, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	remotecommandserver.ServeExec(
+	remotecommand.ServeExec(
 		resp.ResponseWriter,
 		req.Request,
 		s,
@@ -162,6 +159,6 @@ func (s *Server) getExec(req *restful.Request, resp *restful.Response) {
 		streamOpts,
 		s.idleTimeout,
 		s.streamCreationTimeout,
-		remotecommandconsts.SupportedStreamingProtocols,
+		remotecommand.SupportedStreamingProtocols,
 	)
 }
