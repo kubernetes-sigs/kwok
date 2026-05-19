@@ -183,8 +183,6 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 		conf.Runtime = conf.Runtimes[0]
 	}
 
-	conf.Mode = envs.GetEnvWithPrefix("MODE", conf.Mode)
-
 	if conf.CacheDir == "" {
 		conf.CacheDir = path.Join(WorkDir, "cache")
 	}
@@ -257,18 +255,8 @@ func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 	conf.KubeApiserverPort = envs.GetEnvWithPrefix("KUBE_APISERVER_PORT", conf.KubeApiserverPort)
 	conf.KubeApiserverInsecurePort = envs.GetEnvWithPrefix("KUBE_APISERVER_INSECURE_PORT", conf.KubeApiserverInsecurePort)
 
-	if conf.KubeFeatureGates == "" {
-		if conf.Mode == configv1alpha1.ModeStableFeatureGateAndAPI {
-			conf.KubeFeatureGates = k8s.GetFeatureGates(parseRelease(conf.KubeVersion))
-		}
-	}
 	conf.KubeFeatureGates = envs.GetEnvWithPrefix("KUBE_FEATURE_GATES", conf.KubeFeatureGates)
 
-	if conf.KubeRuntimeConfig == "" {
-		if conf.Mode == configv1alpha1.ModeStableFeatureGateAndAPI {
-			conf.KubeRuntimeConfig = k8s.GetRuntimeConfig(parseRelease(conf.KubeVersion))
-		}
-	}
 	conf.KubeRuntimeConfig = envs.GetEnvWithPrefix("KUBE_RUNTIME_CONFIG", conf.KubeRuntimeConfig)
 
 	conf.KubeAuditPolicy = envs.GetEnvWithPrefix("KUBE_AUDIT_POLICY", conf.KubeAuditPolicy)
