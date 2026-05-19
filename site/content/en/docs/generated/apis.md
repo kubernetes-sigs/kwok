@@ -2587,19 +2587,6 @@ is the default value for flag &ndash;server-address</p>
 </tr>
 <tr>
 <td>
-<code>experimentalEnableCNI</code>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux.
-is the default value for flag &ndash;experimental-enable-cni</p>
-<p>Deprecated: It will be removed and will be supported in the form of plugins</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>enableDebuggingHandlers</code>
 <em>
 bool

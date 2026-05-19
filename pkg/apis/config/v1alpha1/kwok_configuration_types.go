@@ -118,13 +118,6 @@ type KwokConfigurationOptions struct {
 	// is the default value for flag --server-address
 	ServerAddress string `json:"serverAddress,omitempty"`
 
-	// Experimental support for getting pod ip from CNI, for CNI-related components, Only works with Linux.
-	// is the default value for flag --experimental-enable-cni
-	// +default=false
-	//
-	// Deprecated: It will be removed and will be supported in the form of plugins
-	EnableCNI *bool `json:"experimentalEnableCNI,omitempty"`
-
 	// enableDebuggingHandlers enables server endpoints for log collection
 	// and local running of containers and commands
 	// +default=true
