@@ -46,11 +46,24 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 		return err
 	}
 
-	opts := crilogs.NewLogOptions(logOptions, time.Now())
+	opts := &crilogs.LogOptions{
+		TailLines:  logOptions.TailLines,
+		LimitBytes: logOptions.LimitBytes,
+		Follow:     logOptions.Follow,
+		Timestamp:  logOptions.Timestamps,
+	}
+	if logOptions.SinceSeconds != nil {
+		opts.Since = time.Now().Add(-time.Duration(*logOptions.SinceSeconds) * time.Second)
+	}
+	if logOptions.SinceTime != nil && logOptions.SinceTime.After(opts.Since) {
+		opts.Since = logOptions.SinceTime.Time
+	}
+
 	logsFile := log.LogsFile
 	if logOptions.Previous {
 		logsFile = log.PreviousLogsFile
 	}
+
 	return readLogs(ctx, logsFile, opts, stdout, stderr)
 }
 
@@ -145,7 +158,7 @@ func findLogInLogs(containerName string, logs []internalversion.Log) (*internalv
 }
 
 func readLogs(ctx context.Context, logsFile string, opts *crilogs.LogOptions, stdout, stderr io.Writer) error {
-	return crilogs.ReadLogs(ctx, nil, logsFile, "", opts, runtimeServiceStub{}, stdout, stderr)
+	return crilogs.ReadLogs(ctx, logsFile, "", opts, runtimeServiceStub{}, stdout, stderr)
 }
 
 type runtimeServiceStub struct {

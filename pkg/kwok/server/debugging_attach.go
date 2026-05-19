@@ -22,15 +22,10 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/emicklei/go-restful/v3"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
-	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
-	remotecommandclient "k8s.io/client-go/tools/remotecommand"
 	crilogs "k8s.io/cri-client/pkg/logs"
-	remotecommandserver "k8s.io/kubelet/pkg/cri/streaming/remotecommand"
+	"k8s.io/cri-streaming/pkg/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -39,7 +34,7 @@ import (
 
 // AttachContainer attaches to a container in a pod,
 // copying data between in/out/err and the container's stdin/stdout/stderr.
-func (s *Server) AttachContainer(ctx context.Context, name string, uid types.UID, containerName string, in io.Reader, out, errOut io.WriteCloser, tty bool, resize <-chan remotecommandclient.TerminalSize) error {
+func (s *Server) AttachContainer(ctx context.Context, name string, uid string, containerName string, in io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error {
 	pod := strings.Split(name, "/")
 	if len(pod) != 2 {
 		return fmt.Errorf("invalid pod name %q", name)
@@ -50,24 +45,25 @@ func (s *Server) AttachContainer(ctx context.Context, name string, uid types.UID
 		return err
 	}
 
-	var tailLines int64
-	opts := crilogs.NewLogOptions(&corev1.PodLogOptions{
-		TailLines: &tailLines,
+	opts := &crilogs.LogOptions{
+		TailLines: new(int64),
 		Follow:    true,
-	}, time.Now())
-	return readLogs(ctx, attach.LogsFile, opts, out, errOut)
+	}
+
+	logsFile := attach.LogsFile
+	return readLogs(ctx, logsFile, opts, stdout, stderr)
 }
 
 func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
 	params := getExecRequestParams(req)
 
-	streamOpts, err := remotecommandserver.NewOptions(req.Request)
+	streamOpts, err := remotecommand.NewOptions(req.Request)
 	if err != nil {
 		http.Error(resp, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	remotecommandserver.ServeAttach(
+	remotecommand.ServeAttach(
 		resp.ResponseWriter,
 		req.Request,
 		s,
@@ -77,7 +73,7 @@ func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
 		streamOpts,
 		s.idleTimeout,
 		s.streamCreationTimeout,
-		remotecommandconsts.SupportedStreamingProtocols,
+		remotecommand.SupportedStreamingProtocols,
 	)
 }
 

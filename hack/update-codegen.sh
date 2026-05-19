@@ -21,7 +21,7 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
-KUBE_VERSION=v0.34.8
+KUBE_VERSION=v0.36.1
 
 function deepcopy-gen() {
   go run k8s.io/code-generator/cmd/deepcopy-gen@${KUBE_VERSION} "$@"

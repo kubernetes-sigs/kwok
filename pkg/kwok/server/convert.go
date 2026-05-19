@@ -24,27 +24,26 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 type portForwardRequestParams struct {
 	podNamespace string
 	podName      string
-	podUID       types.UID
+	podUID       string
 }
 
 func getPortForwardRequestParams(req *restful.Request) portForwardRequestParams {
 	return portForwardRequestParams{
 		podNamespace: req.PathParameter("podNamespace"),
 		podName:      req.PathParameter("podID"),
-		podUID:       types.UID(req.PathParameter("uid")),
+		podUID:       req.PathParameter("uid"),
 	}
 }
 
 type execRequestParams struct {
 	podNamespace  string
 	podName       string
-	podUID        types.UID
+	podUID        string
 	containerName string
 	cmd           []string
 }
@@ -53,7 +52,7 @@ func getExecRequestParams(req *restful.Request) execRequestParams {
 	return execRequestParams{
 		podNamespace:  req.PathParameter("podNamespace"),
 		podName:       req.PathParameter("podID"),
-		podUID:        types.UID(req.PathParameter("uid")),
+		podUID:        req.PathParameter("uid"),
 		containerName: req.PathParameter("containerName"),
 		cmd:           req.Request.URL.Query()["command"],
 	}
