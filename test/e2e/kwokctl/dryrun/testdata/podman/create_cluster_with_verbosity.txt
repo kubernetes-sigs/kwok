@@ -10,8 +10,8 @@ podman pull registry.k8s.io/etcd:3.6.10-0
 podman pull registry.k8s.io/kube-apiserver:v1.36.1
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
-kind: TracingConfiguration
 endpoint: kwok-<CLUSTER_NAME>-jaeger:4317
+kind: TracingConfiguration
 samplingRatePerMillion: 1000000
 EOF
 podman pull registry.k8s.io/kubectl:v1.36.1

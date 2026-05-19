@@ -11,8 +11,8 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 # Download https://dl.k8s.io/release/v1.36.1/bin/<OS>/<ARCH>/kube-apiserver to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-apiserver
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
-kind: TracingConfiguration
 endpoint: 127.0.0.1:32762
+kind: TracingConfiguration
 samplingRatePerMillion: 1000000
 EOF
 # Download https://dl.k8s.io/release/v1.36.1/bin/<OS>/<ARCH>/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager

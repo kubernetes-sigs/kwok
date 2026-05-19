@@ -25,7 +25,7 @@ import (
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
+	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/path"
@@ -350,7 +350,7 @@ func setKwokctlKwokConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 
 func setKwokctlEtcdConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.EtcdVersion == "" {
-		conf.EtcdVersion = k8s.GetEtcdVersion(parseRelease(conf.KubeVersion))
+		conf.EtcdVersion = components.GetEtcdVersion(parseRelease(conf.KubeVersion))
 	}
 	conf.EtcdVersion = version.TrimPrefixV(envs.GetEnvWithPrefix("ETCD_VERSION", conf.EtcdVersion))
 
