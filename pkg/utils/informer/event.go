@@ -63,6 +63,7 @@ type Option struct {
 	AnnotationSelector string
 	EnableListPager    bool
 	EnableStreamWatch  bool
+	labelSelector      labels.Selector
 	annotationSelector labels.Selector
 }
 
@@ -85,27 +86,38 @@ func (o *Option) toListOptions() metav1.ListOptions {
 }
 
 func (o *Option) filter(obj any) (bool, error) {
-	if o.AnnotationSelector == "" {
-		return true, nil
-	}
-
-	if o.annotationSelector == nil {
-		var err error
-		o.annotationSelector, err = labels.Parse(o.AnnotationSelector)
-		if err != nil {
-			return false, err
-		}
-	}
-
 	accessor, err := meta.Accessor(obj)
 	if err != nil {
 		return false, err
 	}
 
-	annotations := accessor.GetAnnotations()
-	if len(annotations) == 0 {
-		return false, nil
+	if o.LabelSelector != "" {
+		if o.labelSelector == nil {
+			o.labelSelector, err = labels.Parse(o.LabelSelector)
+			if err != nil {
+				return false, err
+			}
+		}
+
+		resourceLabels := accessor.GetLabels()
+		if len(resourceLabels) == 0 || !o.labelSelector.Matches(labels.Set(resourceLabels)) {
+			return false, nil
+		}
 	}
 
-	return o.annotationSelector.Matches(labels.Set(annotations)), nil
+	if o.AnnotationSelector != "" {
+		if o.annotationSelector == nil {
+			o.annotationSelector, err = labels.Parse(o.AnnotationSelector)
+			if err != nil {
+				return false, err
+			}
+		}
+
+		annotations := accessor.GetAnnotations()
+		if len(annotations) == 0 || !o.annotationSelector.Matches(labels.Set(annotations)) {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }

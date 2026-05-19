@@ -27,8 +27,7 @@ import (
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/kubelet/pkg/cri/streaming/portforward"
+	"k8s.io/cri-streaming/pkg/streaming/portforward"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -38,7 +37,7 @@ import (
 )
 
 // PortForward handles a port forwarding request.
-func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, port int32, stream io.ReadWriteCloser) error {
+func (s *Server) PortForward(ctx context.Context, name string, uid string, port int32, stream io.ReadWriteCloser) error {
 	defer func() {
 		_ = stream.Close()
 	}()

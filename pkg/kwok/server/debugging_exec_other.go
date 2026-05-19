@@ -23,14 +23,14 @@ import (
 	"io"
 
 	cpty "github.com/creack/pty"
-	clientremotecommand "k8s.io/client-go/tools/remotecommand"
+	"k8s.io/cri-streaming/pkg/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 )
 
-func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io.Reader, out io.WriteCloser, resize <-chan clientremotecommand.TerminalSize) error {
+func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io.Reader, out io.WriteCloser, resize <-chan remotecommand.TerminalSize) error {
 	logger := log.FromContext(ctx)
 
 	// Create a pty.

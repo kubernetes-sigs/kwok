@@ -22,12 +22,12 @@ import (
 	"context"
 	"io"
 
-	clientremotecommand "k8s.io/client-go/tools/remotecommand"
+	"k8s.io/cri-streaming/pkg/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/log"
 )
 
-func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io.Reader, out io.WriteCloser, resize <-chan clientremotecommand.TerminalSize) error {
+func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io.Reader, out io.WriteCloser, resize <-chan remotecommand.TerminalSize) error {
 	logger := log.FromContext(ctx)
 	logger.Warn("execInContainerWithTTY is not supported on windows, fallback to execInContainer")
 	return s.execInContainer(ctx, cmd, in, out, out)
