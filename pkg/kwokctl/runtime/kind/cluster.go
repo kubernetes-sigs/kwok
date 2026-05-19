@@ -1152,7 +1152,7 @@ func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindClu
 			return err
 		}
 
-		err = c.Exec(ctx, runtime, "save", image, "-o", archive)
+		err = c.Exec(ctx, runtime, imageSaveArchiveArgs(image, archive)...)
 		if err != nil {
 			return err
 		}
@@ -1171,6 +1171,10 @@ func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindClu
 		}
 	}
 	return nil
+}
+
+func imageSaveArchiveArgs(image, archive string) []string {
+	return []string{"save", "--format", "oci-archive", image, "-o", archive}
 }
 
 func (c *Cluster) loadImages(ctx context.Context, kindPath string, images []string, cacheDir string) error {
