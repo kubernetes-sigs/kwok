@@ -29,8 +29,8 @@ leaderElection:
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
-kind: TracingConfiguration
 endpoint: 0.0.0.0:4317
+kind: TracingConfiguration
 samplingRatePerMillion: 1000000
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml

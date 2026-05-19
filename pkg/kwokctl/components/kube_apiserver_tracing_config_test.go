@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package k8s
+package components
 
 import (
 	"reflect"
@@ -24,13 +24,13 @@ import (
 func TestBuildKubeApiserverTracingConfig(t *testing.T) {
 	tests := []struct {
 		name          string
-		conf          BuildKubeApiserverTracingConfigParam
+		conf          BuildKubeApiserverTracingConfig
 		expected      string
 		expectedError bool
 	}{
 		{
 			name: "Valid endpoint",
-			conf: BuildKubeApiserverTracingConfigParam{
+			conf: BuildKubeApiserverTracingConfig{
 				Endpoint: "http://example.com/tracing",
 			},
 			expected: `apiVersion: apiserver.config.k8s.io/v1alpha1
@@ -41,7 +41,7 @@ samplingRatePerMillion: 1000000`,
 		},
 		{
 			name: "Empty endpoint",
-			conf: BuildKubeApiserverTracingConfigParam{
+			conf: BuildKubeApiserverTracingConfig{
 				Endpoint: "",
 			},
 			expected: `apiVersion: apiserver.config.k8s.io/v1alpha1
@@ -54,7 +54,7 @@ samplingRatePerMillion: 1000000`,
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := BuildKubeApiserverTracingConfig(tt.conf)
+			result, err := BuildKubeApiserverTracing(tt.conf)
 
 			if tt.expectedError && err == nil {
 				t.Errorf("expected an error, but got nil")

@@ -35,7 +35,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
-	"sigs.k8s.io/kwok/pkg/kwokctl/k8s"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/exec"
@@ -394,7 +393,7 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 
 	kubeApiserverTracingConfigPath := ""
 	if conf.JaegerPort != 0 {
-		kubeApiserverTracingConfigData, err := k8s.BuildKubeApiserverTracingConfig(k8s.BuildKubeApiserverTracingConfigParam{
+		kubeApiserverTracingConfigData, err := components.BuildKubeApiserverTracing(components.BuildKubeApiserverTracingConfig{
 			Endpoint: conf.BindAddress + ":4317",
 		})
 		if err != nil {
