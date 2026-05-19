@@ -23,12 +23,6 @@ import (
 const (
 	// KwokctlConfigurationKind is the kind of the kwokctl configuration.
 	KwokctlConfigurationKind = "KwokctlConfiguration"
-
-	// ModeStableFeatureGateAndAPI is intended to reduce cluster configuration requirements
-	// Disables all Alpha feature by default, as well as Beta feature that are not eventually GA
-	//
-	// Deprecated: This mode will be removed in a future release
-	ModeStableFeatureGateAndAPI = "StableFeatureGateAndAPI"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -447,15 +441,6 @@ type KwokctlConfigurationOptions struct {
 	// KindBinary is the binary of kind.
 	// is the default value for flag --kind-binary and env KWOK_KIND_BINARY
 	KindBinary string `json:"kindBinary,omitempty"`
-
-	// Mode is several default parameter templates for clusters
-	// is the default value for env KWOK_MODE
-	// k8s 1.29, different components use different FeatureGate,
-	// which makes it impossible to create clusters properly using this feature.
-	//
-	// Deprecated: This mode will be removed in a future release
-	//+k8s:conversion-gen=false
-	Mode string `json:"mode,omitempty"`
 
 	// KubeFeatureGates is a set of key=value pairs that describe feature gates for alpha/experimental features of Kubernetes.
 	// is the default value for flag --kube-feature-gates and env KWOK_KUBE_FEATURE_DATES
