@@ -20,12 +20,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"text/template"
 
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
@@ -41,7 +41,7 @@ type Renderer interface {
 
 // renderer is a template renderer.
 type renderer struct {
-	cache      maps.SyncMap[string, *template.Template]
+	cache      utilsmaps.SyncMap[string, *template.Template]
 	bufferPool *pools.Pool[*bytes.Buffer]
 	funcMap    template.FuncMap
 }

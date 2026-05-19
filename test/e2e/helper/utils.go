@@ -37,7 +37,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // nodeIsReady returns a function that checks if a node is ready
@@ -47,7 +47,7 @@ func nodeIsReady(name string) func(obj k8s.Object) bool {
 		if node.Name != name {
 			return false
 		}
-		cond, ok := slices.Find(node.Status.Conditions, func(cond corev1.NodeCondition) bool {
+		cond, ok := utilsslices.Find(node.Status.Conditions, func(cond corev1.NodeCondition) bool {
 			return cond.Type == corev1.NodeReady
 		})
 		if ok && cond.Status == corev1.ConditionTrue {
@@ -145,7 +145,7 @@ func CreatePod(pod *corev1.Pod) features.Func {
 			t.Fatal("pod node name is empty", log.KObj(pod))
 		}
 
-		_, hasPodScheduled := slices.Find(pod.Status.Conditions, func(cond corev1.PodCondition) bool {
+		_, hasPodScheduled := utilsslices.Find(pod.Status.Conditions, func(cond corev1.PodCondition) bool {
 			return cond.Type == corev1.PodScheduled && cond.Status == corev1.ConditionTrue
 		})
 		if shouldHasPodScheduled {
@@ -250,7 +250,7 @@ func WaitForAllNodesReady() env.Func {
 				notReady := []string{}
 				for _, obj := range metaList {
 					node := obj.(*corev1.Node)
-					cond, ok := slices.Find(node.Status.Conditions, func(cond corev1.NodeCondition) bool {
+					cond, ok := utilsslices.Find(node.Status.Conditions, func(cond corev1.NodeCondition) bool {
 						return cond.Type == corev1.NodeReady
 					})
 					if !ok || cond.Status != corev1.ConditionTrue {

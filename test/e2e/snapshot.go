@@ -27,8 +27,8 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -40,7 +40,7 @@ func CaseSnapshot(kwokctlPath, clusterName string, clusterRuntime string, rootDi
 		WithNodeName(node.Name).
 		Build()
 
-	dbPath := path.Join(tmpDir, "snapshot.db")
+	dbPath := utilspath.Join(tmpDir, "snapshot.db")
 
 	return features.New("Snapshot").
 		Setup(helper.CreateNode(node)).
@@ -61,7 +61,7 @@ func CaseSnapshot(kwokctlPath, clusterName string, clusterRuntime string, rootDi
 			return ctx
 		}).
 		Assess("test snapshot", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := exec.Command(ctx, kwokctlPath, "snapshot", "save", "--name", clusterName, "--path", dbPath)
+			_, err := utilsexec.Command(ctx, kwokctlPath, "snapshot", "save", "--name", clusterName, "--path", dbPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -86,7 +86,7 @@ func CaseSnapshot(kwokctlPath, clusterName string, clusterRuntime string, rootDi
 			return ctx
 		}).
 		Assess("test restore", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := exec.Command(ctx, kwokctlPath, "snapshot", "restore", "--name", clusterName, "--path", dbPath)
+			_, err := utilsexec.Command(ctx, kwokctlPath, "snapshot", "restore", "--name", clusterName, "--path", dbPath)
 			if err != nil {
 				t.Fatal(err)
 			}

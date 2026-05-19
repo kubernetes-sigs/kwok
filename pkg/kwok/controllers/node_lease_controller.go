@@ -30,7 +30,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -50,7 +50,7 @@ type NodeLeaseController struct {
 	mutateLeaseFunc func(*coordinationv1.Lease) error
 
 	delayQueue   queue.WeightDelayingQueue[string]
-	holdLeaseSet maps.SyncMap[string, bool]
+	holdLeaseSet utilsmaps.SyncMap[string, bool]
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)

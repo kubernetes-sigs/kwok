@@ -23,7 +23,7 @@ import (
 	"net"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 var (
@@ -94,7 +94,7 @@ func GenerateSignCert(cn string, caCert *x509.Certificate, caKey crypto.Signer, 
 	alt := AltNames{}
 
 	if len(sans) != 0 {
-		sans = slices.Unique(sans)
+		sans = utilsslices.Unique(sans)
 		for _, name := range sans {
 			ip := net.ParseIP(name)
 			if ip != nil {

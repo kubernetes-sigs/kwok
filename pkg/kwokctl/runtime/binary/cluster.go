@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/user"
 	rt "runtime"
+	"slices"
 	"strconv"
 	"time"
 
@@ -34,14 +35,14 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
-	"sigs.k8s.io/kwok/pkg/utils/net"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -68,7 +69,7 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	if !file.Exists(pkiPath) {
 		sans := []string{}
-		ips, err := net.GetAllIPs()
+		ips, err := utilsnet.GetAllIPs()
 		if err != nil {
 			logger := log.FromContext(ctx)
 			logger.Warn("failed to get all ips", "err", err)
@@ -114,7 +115,7 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
 	for _, port := range ports {
 		if port != nil && *port == 0 {
-			p, err := net.GetUnusedPort(ctx, used)
+			p, err := utilsnet.GetUnusedPort(ctx, used)
 			if err != nil {
 				return err
 			}
@@ -170,9 +171,9 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	kwokConfigPath := c.GetWorkdirPath(runtime.ConfigName)
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
-	caCertPath := path.Join(pkiPath, "ca.crt")
-	adminKeyPath := path.Join(pkiPath, "admin.key")
-	adminCertPath := path.Join(pkiPath, "admin.crt")
+	caCertPath := utilspath.Join(pkiPath, "ca.crt")
+	adminKeyPath := utilspath.Join(pkiPath, "admin.key")
+	adminCertPath := utilspath.Join(pkiPath, "admin.crt")
 	auditLogPath := ""
 	auditPolicyPath := ""
 
@@ -342,7 +343,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 
 	otlpGrpcAddress := ""
 	if conf.JaegerOtlpGrpcPort != 0 {
-		otlpGrpcAddress = net.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort)
+		otlpGrpcAddress = utilsnet.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort)
 	}
 
 	etcdComponent, err := components.BuildEtcdComponent(components.BuildEtcdComponentConfig{
@@ -383,7 +384,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	kubeApiserverTracingConfigPath := ""
 	if conf.JaegerOtlpGrpcPort != 0 {
 		kubeApiserverTracingConfigData, err := components.BuildKubeApiserverTracing(components.BuildKubeApiserverTracingConfig{
-			Endpoint: net.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort),
+			Endpoint: utilsnet.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort),
 		})
 		if err != nil {
 			return fmt.Errorf("failed to generate kubeApiserverTracingConfig yaml: %w", err)
@@ -404,7 +405,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		Version:           kubeApiserverVersion,
 		BindAddress:       conf.BindAddress,
 		Port:              conf.KubeApiserverPort,
-		EtcdAddress:       net.LocalAddress,
+		EtcdAddress:       utilsnet.LocalAddress,
 		EtcdPort:          conf.EtcdPort,
 		KubeRuntimeConfig: conf.KubeRuntimeConfig,
 		KubeFeatureGates:  conf.KubeFeatureGates,
@@ -594,7 +595,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 
 	otlpGrpcAddress := ""
 	if conf.JaegerOtlpGrpcPort != 0 {
-		otlpGrpcAddress = net.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort)
+		otlpGrpcAddress = utilsnet.LocalAddress + ":" + format.String(conf.JaegerOtlpGrpcPort)
 	}
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
@@ -778,7 +779,7 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 	inClusterKubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
-		Address:      env.scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
+		Address:      env.scheme + "://" + utilsnet.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
 		CACrtPath:    env.caCertPath,
 		AdminCrtPath: env.adminCertPath,
 		AdminKeyPath: env.adminKeyPath,
@@ -795,7 +796,7 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 		kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 			ProjectName: c.Name(),
 			SecurePort:  false,
-			Address:     "http://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverInsecurePort),
+			Address:     "http://" + utilsnet.LocalAddress + ":" + format.String(conf.KubeApiserverInsecurePort),
 		}))
 		if err != nil {
 			return err
@@ -841,7 +842,7 @@ func (c *Cluster) startComponent(ctx context.Context, component internalversion.
 	}
 
 	if len(component.Envs) > 0 {
-		ctx = exec.WithEnv(ctx, slices.Map(component.Envs, func(c internalversion.Env) string {
+		ctx = utilsexec.WithEnv(ctx, utilsslices.Map(component.Envs, func(c internalversion.Env) string {
 			return fmt.Sprintf("%s=%s", c.Name, c.Value)
 		}))
 	}
@@ -859,7 +860,7 @@ func (c *Cluster) startComponent(ctx context.Context, component internalversion.
 		if err != nil {
 			return err
 		}
-		ctx = exec.WithUser(ctx, &uid, &gid)
+		ctx = utilsexec.WithUser(ctx, &uid, &gid)
 	}
 
 	logger.Debug("Starting component")
@@ -1098,7 +1099,7 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	logger := log.FromContext(ctx)
 
-	kwokConfigPath := path.Join(dir, "kwok.yaml")
+	kwokConfigPath := utilspath.Join(dir, "kwok.yaml")
 	if file.Exists(kwokConfigPath) {
 		return fmt.Errorf("%s already exists", kwokConfigPath)
 	}
@@ -1118,13 +1119,13 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		return err
 	}
 
-	componentsDir := path.Join(dir, "components")
+	componentsDir := utilspath.Join(dir, "components")
 	err = c.MkdirAll(componentsDir)
 	if err != nil {
 		return err
 	}
 
-	infoPath := path.Join(dir, consts.RuntimeTypeBinary+"-info.txt")
+	infoPath := utilspath.Join(dir, consts.RuntimeTypeBinary+"-info.txt")
 	f, err := c.OpenFile(infoPath)
 	if err != nil {
 		return err
@@ -1139,14 +1140,14 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 
 	for _, component := range conf.Components {
 		src := c.GetLogPath(component.Name + ".log")
-		dest := path.Join(componentsDir, component.Name+".log")
+		dest := utilspath.Join(componentsDir, component.Name+".log")
 		if err = c.CopyFile(src, dest); err != nil {
 			logger.Error("Failed to copy file", err)
 		}
 	}
 	if conf.Options.KubeAuditPolicy != "" {
 		src := c.GetLogPath(runtime.AuditLogName)
-		dest := path.Join(componentsDir, runtime.AuditLogName)
+		dest := utilspath.Join(componentsDir, runtime.AuditLogName)
 		if err = c.CopyFile(src, dest); err != nil {
 			logger.Error("Failed to copy file", err)
 		}
@@ -1187,7 +1188,7 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 		return err
 	}
 	conf := &config.Options
-	return c.Etcdctl(ctx, append([]string{"--endpoints", net.LocalAddress + ":" + format.String(conf.EtcdPort)}, args...)...)
+	return c.Etcdctl(ctx, append([]string{"--endpoints", utilsnet.LocalAddress + ":" + format.String(conf.EtcdPort)}, args...)...)
 }
 
 // InspectComponent returns the status of the component

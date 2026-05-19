@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -76,7 +76,7 @@ func CaseResourceUsage(kwokctlPath, clusterName string) *features.FeatureBuilder
 			err := wait.For(
 				func(ctx context.Context) (done bool, err error) {
 					out := bytes.NewBuffer(nil)
-					_, err = exec.Command(exec.WithAllWriteTo(ctx, out), kwokctlPath, "--name", clusterName, "kubectl", "top", "pod")
+					_, err = utilsexec.Command(utilsexec.WithAllWriteTo(ctx, out), kwokctlPath, "--name", clusterName, "kubectl", "top", "pod")
 					if err != nil {
 						logger.Error("kubectl top pod", err)
 						return false, nil
@@ -126,7 +126,7 @@ func CaseResourceUsage(kwokctlPath, clusterName string) *features.FeatureBuilder
 			err = wait.For(
 				func(ctx context.Context) (done bool, err error) {
 					out := bytes.NewBuffer(nil)
-					_, err = exec.Command(exec.WithAllWriteTo(ctx, out), kwokctlPath, "--name", clusterName, "kubectl", "top", "pod")
+					_, err = utilsexec.Command(utilsexec.WithAllWriteTo(ctx, out), kwokctlPath, "--name", clusterName, "kubectl", "top", "pod")
 					if err != nil {
 						logger.Error("kubectl top pod", err)
 						return false, nil

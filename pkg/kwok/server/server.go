@@ -40,9 +40,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/metrics"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/pools"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -76,7 +76,7 @@ type Server struct {
 	resourceUsages        resources.Getter[[]*internalversion.ResourceUsage]
 	metrics               resources.Getter[[]*internalversion.Metric]
 
-	metricsUpdateHandler maps.SyncMap[string, *metrics.UpdateHandler]
+	metricsUpdateHandler utilsmaps.SyncMap[string, *metrics.UpdateHandler]
 
 	cumulatives    map[string]cumulative
 	cumulativesMut sync.Mutex
@@ -174,7 +174,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().ClusterPortForwards(),
 				func(objs []*v1alpha1.ClusterPortForward) []*internalversion.ClusterPortForward {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.ClusterPortForward) (*internalversion.ClusterPortForward, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterPortForward) (*internalversion.ClusterPortForward, bool) {
 						r, err := internalversion.ConvertToInternalClusterPortForward(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal cluster port forward", err, "obj", obj)
@@ -197,7 +197,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().PortForwards(""),
 				func(objs []*v1alpha1.PortForward) []*internalversion.PortForward {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.PortForward) (*internalversion.PortForward, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.PortForward) (*internalversion.PortForward, bool) {
 						r, err := internalversion.ConvertToInternalPortForward(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal port forward", err, "obj", obj)
@@ -220,7 +220,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().ClusterExecs(),
 				func(objs []*v1alpha1.ClusterExec) []*internalversion.ClusterExec {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.ClusterExec) (*internalversion.ClusterExec, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterExec) (*internalversion.ClusterExec, bool) {
 						r, err := internalversion.ConvertToInternalClusterExec(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal cluster exec", err, "obj", obj)
@@ -243,7 +243,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().Execs(""),
 				func(objs []*v1alpha1.Exec) []*internalversion.Exec {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.Exec) (*internalversion.Exec, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Exec) (*internalversion.Exec, bool) {
 						r, err := internalversion.ConvertToInternalExec(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal exec", err, "obj", obj)
@@ -266,7 +266,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().ClusterLogs(),
 				func(objs []*v1alpha1.ClusterLogs) []*internalversion.ClusterLogs {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.ClusterLogs) (*internalversion.ClusterLogs, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterLogs) (*internalversion.ClusterLogs, bool) {
 						r, err := internalversion.ConvertToInternalClusterLogs(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal cluster logs", err, "obj", obj)
@@ -289,7 +289,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().Logs(""),
 				func(objs []*v1alpha1.Logs) []*internalversion.Logs {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.Logs) (*internalversion.Logs, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Logs) (*internalversion.Logs, bool) {
 						r, err := internalversion.ConvertToInternalLogs(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal logs", err, "obj", obj)
@@ -312,7 +312,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().ClusterAttaches(),
 				func(objs []*v1alpha1.ClusterAttach) []*internalversion.ClusterAttach {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.ClusterAttach) (*internalversion.ClusterAttach, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterAttach) (*internalversion.ClusterAttach, bool) {
 						r, err := internalversion.ConvertToInternalClusterAttach(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal cluster attach", err, "obj", obj)
@@ -335,7 +335,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().Attaches(""),
 				func(objs []*v1alpha1.Attach) []*internalversion.Attach {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.Attach) (*internalversion.Attach, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Attach) (*internalversion.Attach, bool) {
 						r, err := internalversion.ConvertToInternalAttach(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal attach", err, "obj", obj)
@@ -358,7 +358,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().ClusterResourceUsages(),
 				func(objs []*v1alpha1.ClusterResourceUsage) []*internalversion.ClusterResourceUsage {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.ClusterResourceUsage) (*internalversion.ClusterResourceUsage, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterResourceUsage) (*internalversion.ClusterResourceUsage, bool) {
 						r, err := internalversion.ConvertToInternalClusterResourceUsage(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal cluster resource usage", err, "obj", obj)
@@ -381,7 +381,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().ResourceUsages(""),
 				func(objs []*v1alpha1.ResourceUsage) []*internalversion.ResourceUsage {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.ResourceUsage) (*internalversion.ResourceUsage, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ResourceUsage) (*internalversion.ResourceUsage, bool) {
 						r, err := internalversion.ConvertToInternalResourceUsage(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal resource usage", err, "obj", obj)
@@ -404,7 +404,7 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 			](
 				cli.KwokV1alpha1().Metrics(),
 				func(objs []*v1alpha1.Metric) []*internalversion.Metric {
-					return slices.FilterAndMap(objs, func(obj *v1alpha1.Metric) (*internalversion.Metric, bool) {
+					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Metric) (*internalversion.Metric, bool) {
 						r, err := internalversion.ConvertToInternalMetric(obj)
 						if err != nil {
 							logger.Error("failed to convert to internal metric", err, "obj", obj)

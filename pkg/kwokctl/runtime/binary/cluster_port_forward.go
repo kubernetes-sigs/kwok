@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // PortForward expose the port of the component
@@ -36,7 +36,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		if err != nil {
 			return nil, err
 		}
-		port, ok := slices.Find(component.Ports, func(port internalversion.Port) bool {
+		port, ok := utilsslices.Find(component.Ports, func(port internalversion.Port) bool {
 			return port.Name == portOrName && port.Protocol == internalversion.ProtocolTCP
 		})
 		if !ok {

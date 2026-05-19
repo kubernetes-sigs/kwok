@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -47,7 +47,7 @@ func CasePortForward(kwokctlPath, clusterName, nodeName, namespace string) *feat
 		Assess("test port forward", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			t.Log("test port forward")
 
-			cmd, err := exec.Command(exec.WithFork(ctx, true), kwokctlPath, "--name", clusterName, "kubectl", "port-forward", "-n", namespace, "pod0", "8080:8080")
+			cmd, err := utilsexec.Command(utilsexec.WithFork(ctx, true), kwokctlPath, "--name", clusterName, "kubectl", "port-forward", "-n", namespace, "pod0", "8080:8080")
 			if err != nil {
 				t.Fatal(err)
 			}

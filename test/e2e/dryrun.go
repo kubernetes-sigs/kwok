@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 var (
@@ -54,7 +54,7 @@ func formatCmdOutput(got, clusterName, rootDir string) string {
 }
 
 func executeCommand(args []string, absPath string, clusterName string, kwokctlPath string, rootDir string, updateTestdata bool) (string, error) {
-	testdataPath := path.Join(rootDir, absPath)
+	testdataPath := utilspath.Join(rootDir, absPath)
 	expected, err := os.ReadFile(testdataPath)
 	if err != nil {
 		return "", err
@@ -117,7 +117,7 @@ func CaseDryrunWithExtra(clusterName string, kwokctlPath string, rootDir string,
 	f := features.New("Dry run with extra")
 	f = f.Assess("test cluster dryrun with extra", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_extra.txt"
-		extraPath := path.Join(rootDir, "test/e2e/kwokctl/dryrun/testdata/extra.yaml")
+		extraPath := utilspath.Join(rootDir, "test/e2e/kwokctl/dryrun/testdata/extra.yaml")
 		args := []string{
 			"create", "cluster", "--dry-run",
 			"--runtime", clusterRuntime,
@@ -148,8 +148,8 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 	f := features.New("Dry run with verbosity")
 	f = f.Assess("test cluster dryrun with verbosity", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		absPath := "test/e2e/kwokctl/dryrun/testdata/" + clusterRuntime + "/create_cluster_with_verbosity.txt"
-		kubeAuditPath := path.Join(rootDir, "test/kwokctl/audit-policy.yaml")
-		schedulerConfigPath := path.Join(rootDir, "test/kwokctl/scheduler-config.yaml")
+		kubeAuditPath := utilspath.Join(rootDir, "test/kwokctl/audit-policy.yaml")
+		schedulerConfigPath := utilspath.Join(rootDir, "test/kwokctl/scheduler-config.yaml")
 		args := []string{
 			"create", "cluster", "--dry-run",
 			"--runtime", clusterRuntime,

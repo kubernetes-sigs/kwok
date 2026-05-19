@@ -19,24 +19,25 @@ package config
 import (
 	"context"
 	"os"
+	"slices"
 
 	"github.com/spf13/pflag"
 
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/file"
-	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // InitFlags initializes the flags for the configuration.
 func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, error) {
-	defaultConfigPath := path.RelFromHome(path.Join(WorkDir, consts.ConfigName))
+	defaultConfigPath := utilspath.RelFromHome(utilspath.Join(WorkDir, consts.ConfigName))
 	config := flags.StringSliceP("config", "c", []string{defaultConfigPath}, "config path")
 	_ = flags.Parse(os.Args[1:])
 
 	// Expand the all config paths.
-	defaultConfigPath, err := path.Expand(defaultConfigPath)
+	defaultConfigPath, err := utilspath.Expand(defaultConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +47,7 @@ func InitFlags(ctx context.Context, flags *pflag.FlagSet) (context.Context, erro
 			configPaths = append(configPaths, c)
 			continue
 		}
-		configPath, err := path.Expand(c)
+		configPath, err := utilspath.Expand(c)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +89,7 @@ func loadConfig(configPaths []string, defaultConfigPath string, existDefaultConf
 	} else {
 		if !existDefaultConfig {
 			// If the defaultConfigPath is specified and the default config does not exist, it will be removed.
-			return slices.Filter(configPaths, func(s string) bool {
+			return utilsslices.Filter(configPaths, func(s string) bool {
 				return s != defaultConfigPath
 			})
 		}

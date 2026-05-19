@@ -23,8 +23,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 
-	"sigs.k8s.io/kwok/pkg/utils/maps"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // HistogramOpts provides configuration options for Histogram.
@@ -66,7 +66,7 @@ type histogram struct {
 	buckets []float64
 
 	// stored is a map of le -> count
-	stored maps.SyncMap[float64, uint64]
+	stored utilsmaps.SyncMap[float64, uint64]
 }
 
 // Histogram is a metric to track distributions of events.
@@ -104,7 +104,7 @@ var inf = math.Inf(1)
 
 // Write writes out histogram data to the Metric dto.
 func (h *histogram) Write(out *dto.Metric) error {
-	buckets := slices.Map(h.buckets, func(le float64) *dto.Bucket {
+	buckets := utilsslices.Map(h.buckets, func(le float64) *dto.Bucket {
 		return &dto.Bucket{
 			CumulativeCount: new(uint64),
 			UpperBound:      new(le),

@@ -29,7 +29,7 @@ import (
 	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
 
 	"sigs.k8s.io/kwok/pkg/utils/envs"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 const (
@@ -40,7 +40,7 @@ const (
 
 // GetRecommendedKubeconfigPath returns the recommended config file based on the current environment
 func GetRecommendedKubeconfigPath() string {
-	defaultPath := path.Join(envs.GetEnv("HOME", ""), recommendedHomeDir, recommendedFileName)
+	defaultPath := utilspath.Join(envs.GetEnv("HOME", ""), recommendedHomeDir, recommendedFileName)
 	defaultPath = envs.GetEnv(recommendedConfigPathEnvVar, defaultPath)
 	return defaultPath
 }

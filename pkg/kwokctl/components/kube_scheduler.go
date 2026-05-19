@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -157,7 +157,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             schemeHTTPS,
-				Host:               net.LocalAddress + ":" + format.String(conf.Port),
+				Host:               utilsnet.LocalAddress + ":" + format.String(conf.Port),
 				Path:               metricsPath,
 				CertPath:           conf.AdminCertPath,
 				KeyPath:            conf.AdminKeyPath,
@@ -204,7 +204,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme: "http",
-				Host:   net.LocalAddress + ":" + format.String(conf.Port),
+				Host:   utilsnet.LocalAddress + ":" + format.String(conf.Port),
 				Path:   metricsPath,
 			}
 		}

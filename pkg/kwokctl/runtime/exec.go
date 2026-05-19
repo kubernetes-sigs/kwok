@@ -29,37 +29,37 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	utilsimage "sigs.k8s.io/kwok/pkg/utils/image"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 // ForkExec forks a new process and execs the given command.
 // The process will be terminated when the context is canceled.
 func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ...string) error {
-	pidPath := path.Join(dir, "pids", path.OnlyName(name)+".pid")
+	pidPath := utilspath.Join(dir, "pids", utilspath.OnlyName(name)+".pid")
 	if file.Exists(pidPath) {
 		pidData, err := os.ReadFile(pidPath)
 		if err == nil {
 			pid, err := strconv.Atoi(string(pidData))
 			if err == nil {
-				if exec.IsRunning(pid) {
+				if utilsexec.IsRunning(pid) {
 					return nil
 				}
 			}
 		}
 	}
-	ctx = exec.WithDir(ctx, dir)
-	ctx = exec.WithFork(ctx, true)
-	logPath := path.Join(dir, "logs", path.OnlyName(name)+".log")
+	ctx = utilsexec.WithDir(ctx, dir)
+	ctx = utilsexec.WithFork(ctx, true)
+	logPath := utilspath.Join(dir, "logs", utilspath.OnlyName(name)+".log")
 	logFile, err := c.OpenFile(logPath)
 	if err != nil {
 		return fmt.Errorf("open log file %s: %w", logPath, err)
 	}
 
-	ctx = exec.WithIOStreams(ctx, exec.IOStreams{
+	ctx = utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{
 		Out:    logFile,
 		ErrOut: logFile,
 	})
@@ -69,7 +69,7 @@ func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ..
 		dryrun.PrintMessagef("echo $! >%s", pidPath)
 		return nil
 	}
-	cmd, err := exec.Command(ctx, name, args...)
+	cmd, err := utilsexec.Command(ctx, name, args...)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ..
 
 // ForkExecKill kills the process if it is running.
 func (c *Cluster) ForkExecKill(ctx context.Context, dir string, name string) error {
-	pidPath := path.Join(dir, "pids", path.OnlyName(name)+".pid")
+	pidPath := utilspath.Join(dir, "pids", utilspath.OnlyName(name)+".pid")
 	if !file.Exists(pidPath) {
 		// No pid file exists, which means the process has been terminated
 		logger := log.FromContext(ctx)
@@ -104,7 +104,7 @@ func (c *Cluster) ForkExecKill(ctx context.Context, dir string, name string) err
 		if err != nil {
 			return fmt.Errorf("parse pid file %s: %w", pidPath, err)
 		}
-		err = exec.KillProcess(pid)
+		err = utilsexec.KillProcess(pid)
 		if err != nil {
 			return err
 		}
@@ -119,7 +119,7 @@ func (c *Cluster) ForkExecKill(ctx context.Context, dir string, name string) err
 
 // ForkExecIsRunning checks if the process is running.
 func (c *Cluster) ForkExecIsRunning(ctx context.Context, dir string, name string) bool {
-	pidPath := path.Join(dir, "pids", path.OnlyName(name)+".pid")
+	pidPath := utilspath.Join(dir, "pids", utilspath.OnlyName(name)+".pid")
 	if !file.Exists(pidPath) {
 		logger := log.FromContext(ctx)
 		logger.Debug("Stat file not exists",
@@ -138,7 +138,7 @@ func (c *Cluster) ForkExecIsRunning(ctx context.Context, dir string, name string
 	if err != nil {
 		return false
 	}
-	return exec.IsRunning(pid)
+	return utilsexec.IsRunning(pid)
 }
 
 // EnsureImage ensures the image exists.
@@ -156,7 +156,7 @@ func (c *Cluster) EnsureImage(ctx context.Context, command string, image string)
 
 	logger := log.FromContext(ctx)
 
-	err = exec.Exec(ctx,
+	err = utilsexec.Exec(ctx,
 		command, "inspect",
 		image,
 	)
@@ -185,18 +185,18 @@ func (c *Cluster) EnsureImage(ctx context.Context, command string, image string)
 }
 
 func (c *Cluster) ensureImage(ctx context.Context, command string, image string, quiet bool, cacheDir string) error {
-	dest := path.Join(cacheDir, "tarball", image+".tar")
+	dest := utilspath.Join(cacheDir, "tarball", image+".tar")
 	err := os.MkdirAll(filepath.Dir(dest), 0750)
 	if err != nil {
 		return err
 	}
-	cache := path.Join(cacheDir, "blobs")
+	cache := utilspath.Join(cacheDir, "blobs")
 	err = utilsimage.Pull(ctx, cache, image, dest, quiet)
 	if err != nil {
 		return err
 	}
 
-	err = exec.Exec(ctx, command, "load",
+	err = utilsexec.Exec(ctx, command, "load",
 		"-i", dest,
 	)
 	if err != nil {
@@ -216,7 +216,7 @@ func (c *Cluster) ensureImageWithRuntime(ctx context.Context, command string, im
 	if quiet {
 		out = nil
 	}
-	return exec.Exec(exec.WithAllWriteTo(ctx, out), command, "pull",
+	return utilsexec.Exec(utilsexec.WithAllWriteTo(ctx, out), command, "pull",
 		image,
 	)
 }
@@ -228,7 +228,7 @@ func (c *Cluster) Exec(ctx context.Context, name string, args ...string) error {
 		return nil
 	}
 
-	return exec.Exec(ctx, name, args...)
+	return utilsexec.Exec(ctx, name, args...)
 }
 
 // ParseVersionFromBinary parses the version from the given binary.
@@ -237,7 +237,7 @@ func (c *Cluster) ParseVersionFromBinary(ctx context.Context, path string) (vers
 		return version.Unknown, nil
 	}
 
-	return exec.ParseVersionFromBinary(ctx, path)
+	return utilsexec.ParseVersionFromBinary(ctx, path)
 }
 
 // ParseVersionFromImage parses the version from the image.
@@ -246,7 +246,7 @@ func (c *Cluster) ParseVersionFromImage(ctx context.Context, runtime string, ima
 		return version.Unknown, nil
 	}
 
-	return exec.ParseVersionFromImage(ctx, runtime, image, command)
+	return utilsexec.ParseVersionFromImage(ctx, runtime, image, command)
 }
 
 // WriteToPath writes the output of a command to a specified file
@@ -257,7 +257,7 @@ func (c *Cluster) WriteToPath(ctx context.Context, path string, commands []strin
 	}
 
 	buf := bytes.NewBuffer(nil)
-	err := exec.Exec(exec.WithAllWriteTo(ctx, buf), commands[0], commands[1:]...)
+	err := utilsexec.Exec(utilsexec.WithAllWriteTo(ctx, buf), commands[0], commands[1:]...)
 	if err != nil {
 		return err
 	}
@@ -267,7 +267,7 @@ func (c *Cluster) WriteToPath(ctx context.Context, path string, commands []strin
 
 // FormatExec prints the command to be executed to the output stream.
 func FormatExec(ctx context.Context, name string, args ...string) string {
-	opt := exec.GetExecOptions(ctx)
+	opt := utilsexec.GetExecOptions(ctx)
 	out := bytes.NewBuffer(nil)
 	if opt.Dir != "" {
 		_, _ = fmt.Fprintf(out, "cd %s && ", opt.Dir)
@@ -277,7 +277,7 @@ func FormatExec(ctx context.Context, name string, args ...string) string {
 		_, _ = fmt.Fprintf(out, "%s ", strings.Join(opt.Env, " "))
 	}
 
-	_, _ = fmt.Fprintf(out, "%s", path.OnlyName(name))
+	_, _ = fmt.Fprintf(out, "%s", utilspath.OnlyName(name))
 
 	for _, arg := range args {
 		_, _ = fmt.Fprintf(out, " %s", arg)

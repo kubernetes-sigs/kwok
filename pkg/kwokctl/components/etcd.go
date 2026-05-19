@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -142,7 +142,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
-			Host:   net.LocalAddress + ":" + etcdClientPortStr,
+			Host:   utilsnet.LocalAddress + ":" + etcdClientPortStr,
 			Path:   metricsPath,
 		}
 	}

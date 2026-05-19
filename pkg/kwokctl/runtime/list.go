@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/file"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
 )
 
@@ -44,11 +44,11 @@ func ListClusters(ctx context.Context) ([]string, error) {
 	for _, entry := range entries {
 		name := entry.Name()
 		if !entry.IsDir() {
-			logger.Warn("Found non-directory entry in clusters directory, please remove it", "path", path.Join(workdir, name))
+			logger.Warn("Found non-directory entry in clusters directory, please remove it", "path", utilspath.Join(workdir, name))
 			continue
 		}
-		if !file.Exists(path.Join(workdir, name, consts.ConfigName)) {
-			logger.Warn("Found directory without a config file, please remove it", "path", path.Join(workdir, name))
+		if !file.Exists(utilspath.Join(workdir, name, consts.ConfigName)) {
+			logger.Warn("Found directory without a config file, please remove it", "path", utilspath.Join(workdir, name))
 			continue
 		}
 
@@ -74,12 +74,12 @@ func GetUsedPorts(ctx context.Context) (rets sets.Sets[uint32]) {
 	for _, entry := range entries {
 		name := entry.Name()
 		if !entry.IsDir() {
-			logger.Warn("Found non-directory entry in clusters directory, please remove it", "path", path.Join(workdir, name))
+			logger.Warn("Found non-directory entry in clusters directory, please remove it", "path", utilspath.Join(workdir, name))
 			continue
 		}
-		confPath := path.Join(workdir, name, consts.ConfigName)
+		confPath := utilspath.Join(workdir, name, consts.ConfigName)
 		if !file.Exists(confPath) {
-			logger.Warn("Found directory without a config file, please remove it", "path", path.Join(workdir, name))
+			logger.Warn("Found directory without a config file, please remove it", "path", utilspath.Join(workdir, name))
 			continue
 		}
 

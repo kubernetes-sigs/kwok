@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -37,10 +37,10 @@ var (
 	DefaultCluster = "kwok"
 
 	// WorkDir is the directory of the work spaces.
-	WorkDir = envs.GetEnvWithPrefix("WORKDIR", path.WorkDir())
+	WorkDir = envs.GetEnvWithPrefix("WORKDIR", utilspath.WorkDir())
 
 	// ClustersDir is the directory of the clusters.
-	ClustersDir = path.Join(WorkDir, "clusters")
+	ClustersDir = utilspath.Join(WorkDir, "clusters")
 
 	// GOOS is the operating system target for which the code is compiled.
 	GOOS = runtime.GOOS
@@ -184,7 +184,7 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 	}
 
 	if conf.CacheDir == "" {
-		conf.CacheDir = path.Join(WorkDir, "cache")
+		conf.CacheDir = utilspath.Join(WorkDir, "cache")
 	}
 
 	if conf.BinSuffix == "" {

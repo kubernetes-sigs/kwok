@@ -24,7 +24,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // ConvertToPod converts a component to a pod.
@@ -130,7 +130,7 @@ func ConvertFromPod(p corev1.Pod) internalversion.Component {
 	volumes := []internalversion.Volume{}
 
 	for _, vm := range container.VolumeMounts {
-		v, ok := slices.Find(p.Spec.Volumes, func(v corev1.Volume) bool {
+		v, ok := utilsslices.Find(p.Spec.Volumes, func(v corev1.Volume) bool {
 			return v.Name == vm.Name
 		})
 		if !ok {

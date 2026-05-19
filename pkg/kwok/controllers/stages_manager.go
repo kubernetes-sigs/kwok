@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // StagesManagerConfig is the configuration for a stages manager
@@ -85,7 +85,7 @@ func (c *StagesManager) manage(ctx context.Context) {
 		}
 
 		lifecycle := resources.NewFilter[lifecycle.Lifecycle, []*internalversion.Stage](c.stageGetter, func(stages []*internalversion.Stage) lifecycle.Lifecycle {
-			return slices.FilterAndMap(stages, func(stage *internalversion.Stage) (*lifecycle.Stage, bool) {
+			return utilsslices.FilterAndMap(stages, func(stage *internalversion.Stage) (*lifecycle.Stage, bool) {
 				if stage.Spec.ResourceRef != ref {
 					return nil, false
 				}

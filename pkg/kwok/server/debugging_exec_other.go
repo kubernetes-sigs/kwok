@@ -26,7 +26,7 @@ import (
 	"k8s.io/cri-streaming/pkg/streaming/remotecommand"
 
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 )
 
@@ -77,14 +77,14 @@ func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io
 	}
 
 	// Set the stream as the stdin/stdout/stderr.
-	ctx = exec.WithIOStreams(ctx, exec.IOStreams{
+	ctx = utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{
 		In:     tty,
 		Out:    tty,
 		ErrOut: tty,
 	})
 
 	// Execute the command.
-	err = exec.Exec(ctx, cmd[0], cmd[1:]...)
+	err = utilsexec.Exec(ctx, cmd[0], cmd[1:]...)
 	if err != nil {
 		return err
 	}

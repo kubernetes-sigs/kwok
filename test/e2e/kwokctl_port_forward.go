@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
 // CaseKwokctlPortForward creates a feature that tests port forward
@@ -35,7 +35,7 @@ func CaseKwokctlPortForward(kwokctlPath, clusterName string) *features.FeatureBu
 		Assess("test port forward", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			t.Log("test port forward")
 
-			cmd, err := exec.Command(exec.WithFork(ctx, true), kwokctlPath, "--name", clusterName, "port-forward", "kwok-controller", "8080:http")
+			cmd, err := utilsexec.Command(utilsexec.WithFork(ctx, true), kwokctlPath, "--name", clusterName, "port-forward", "kwok-controller", "8080:http")
 			if err != nil {
 				t.Fatal(err)
 			}

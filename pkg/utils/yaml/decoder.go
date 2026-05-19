@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/yaml" //nolint:depguard
 
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // Decoder is a YAML decoder.
@@ -82,7 +82,7 @@ func (d *Decoder) DecodeUnstructured() (*unstructured.Unstructured, error) {
 			return nil
 		})
 		// Reverse the slice to keep the order.
-		slices.Reverse(d.buf)
+		utilsslices.Reverse(d.buf)
 		return d.DecodeUnstructured()
 	}
 

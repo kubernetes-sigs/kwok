@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/utils/heap"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 // WeightDelayingQueue is a generic weight delaying queue interface.
@@ -134,7 +134,7 @@ func (q *weightDelayingQueue[T]) next() (t T, weight int, ok bool, wait *time.Du
 
 	// Check if the orders slice is out of sync with the queues map
 	if len(q.orders) != len(q.heaps) {
-		orders := maps.Keys(q.heaps)
+		orders := utilsmaps.Keys(q.heaps)
 		sort.Ints(orders)
 		q.orders = orders
 	}

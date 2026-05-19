@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 )
 
 // SnapshotSave save the snapshot of cluster
@@ -229,11 +229,11 @@ func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
 
 	if conf.EtcdPort != 0 {
 		return c.Kectl(ctx, append([]string{
-			"--endpoints=http://" + net.LocalAddress + ":" + format.String(conf.EtcdPort),
+			"--endpoints=http://" + utilsnet.LocalAddress + ":" + format.String(conf.EtcdPort),
 		}, args...)...)
 	}
 
-	unused, err := net.GetUnusedPort(ctx, nil)
+	unused, err := utilsnet.GetUnusedPort(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -245,6 +245,6 @@ func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
 	defer cancel()
 
 	return c.Kectl(ctx, append([]string{
-		"--endpoints=http://" + net.LocalAddress + ":" + format.String(unused),
+		"--endpoints=http://" + utilsnet.LocalAddress + ":" + format.String(unused),
 	}, args...)...)
 }

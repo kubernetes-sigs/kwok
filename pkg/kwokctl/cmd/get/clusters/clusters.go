@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/printers"
 )
 
@@ -75,7 +75,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 			for _, cluster := range clusters {
 				var readyMsg = "0/0"
 				var count int
-				workdir := path.Join(config.ClustersDir, cluster)
+				workdir := utilspath.Join(config.ClustersDir, cluster)
 				rt, err := runtime.DefaultRegistry.Load(ctx, cluster, workdir)
 				if err != nil {
 					records = append(records, []string{cluster, readyMsg, "Failed:" + err.Error()})

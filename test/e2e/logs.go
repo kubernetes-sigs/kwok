@@ -26,8 +26,8 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -48,7 +48,7 @@ func CaseLogs(kwokctlPath, clusterName, nodeName, namespace, tmpDir string) *fea
 		Assess("test logs", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			t.Log("test logs")
 
-			f, err := os.OpenFile(path.Join(tmpDir, "logs.log"), os.O_WRONLY|os.O_CREATE, 0644)
+			f, err := os.OpenFile(utilspath.Join(tmpDir, "logs.log"), os.O_WRONLY|os.O_CREATE, 0644)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -57,12 +57,12 @@ func CaseLogs(kwokctlPath, clusterName, nodeName, namespace, tmpDir string) *fea
 				if err != nil {
 					t.Fatal(err)
 				}
-				_ = os.Remove(path.Join(tmpDir, "logs.log"))
+				_ = os.Remove(utilspath.Join(tmpDir, "logs.log"))
 			}()
 
 			buf := bytes.NewBuffer(nil)
 
-			cmd, err := exec.Command(exec.WithWriteTo(exec.WithFork(ctx, true), buf), kwokctlPath, "--name", clusterName, "kubectl", "logs", "-f", "-n", namespace, "pod0")
+			cmd, err := utilsexec.Command(utilsexec.WithWriteTo(utilsexec.WithFork(ctx, true), buf), kwokctlPath, "--name", clusterName, "kubectl", "logs", "-f", "-n", namespace, "pod0")
 			if err != nil {
 				t.Fatal(err)
 			}

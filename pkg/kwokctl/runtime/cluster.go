@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"slices"
 	"strings"
 	"time"
 
@@ -42,10 +44,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
@@ -338,7 +340,7 @@ func getDefaultNodeStages(updateFrequency int64, lease bool) ([]config.InternalO
 }
 
 func getDefaultPodStages() ([]config.InternalObject, error) {
-	return slices.MapWithError([]string{
+	return utilsslices.MapWithError([]string{
 		podfast.DefaultPodReady,
 		podfast.DefaultPodComplete,
 		podfast.DefaultPodDelete,
@@ -379,7 +381,7 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 // Ready returns true if the cluster is ready
 func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	out := bytes.NewBuffer(nil)
-	err := c.KubectlInCluster(exec.WithAllWriteTo(ctx, out), "get", "--raw", "/healthz")
+	err := c.KubectlInCluster(utilsexec.WithAllWriteTo(ctx, out), "get", "--raw", "/healthz")
 	if err != nil {
 		return false, err
 	}
@@ -427,7 +429,7 @@ func (c *Cluster) GetComponent(ctx context.Context, name string) (internalversio
 	if err != nil {
 		return internalversion.Component{}, err
 	}
-	component, ok := slices.Find(config.Components, func(component internalversion.Component) bool {
+	component, ok := utilsslices.Find(config.Components, func(component internalversion.Component) bool {
 		return component.Name == name
 	})
 	if !ok {
@@ -490,21 +492,21 @@ func (c *Cluster) Components(ctx context.Context) ([]string, error) {
 	}
 
 	if len(disable) != 0 {
-		components = slices.Filter(components, func(s string) bool {
+		components = utilsslices.Filter(components, func(s string) bool {
 			return !slices.Contains(disable, s)
 		})
 	}
 
-	components = slices.Unique(components)
+	components = utilsslices.Unique(components)
 
-	_, hasEtcd := slices.Find(components, func(s string) bool {
+	_, hasEtcd := utilsslices.Find(components, func(s string) bool {
 		return s == consts.ComponentEtcd
 	})
 	if !hasEtcd {
 		return nil, fmt.Errorf("etcd must be enabled")
 	}
 
-	_, hasApiserver := slices.Find(components, func(s string) bool {
+	_, hasApiserver := utilsslices.Find(components, func(s string) bool {
 		return s == consts.ComponentKubeApiserver
 	})
 	if !hasApiserver {
@@ -596,17 +598,17 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 
 // GetWorkdirPath returns the path to the file in the workdir.
 func (c *Cluster) GetWorkdirPath(name string) string {
-	return path.Join(c.workdir, name)
+	return utilspath.Join(c.workdir, name)
 }
 
 // GetBinPath returns the path to the given binary name.
 func (c *Cluster) GetBinPath(name string) string {
-	return path.Join(c.workdir, "bin", name)
+	return utilspath.Join(c.workdir, "bin", name)
 }
 
 // GetLogPath returns the path of the given log name.
 func (c *Cluster) GetLogPath(name string) string {
-	return path.Join(c.workdir, "logs", name)
+	return utilspath.Join(c.workdir, "logs", name)
 }
 
 func (c *Cluster) etcdctlPath(ctx context.Context) (string, error) {
@@ -667,7 +669,7 @@ func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
 	}
 
 	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
-	ctx = exec.WithEnv(ctx, []string{"ETCDCTL_API=3"})
+	ctx = utilsexec.WithEnv(ctx, []string{"ETCDCTL_API=3"})
 	return c.Exec(ctx, etcdctlPath, args...)
 }
 

@@ -38,9 +38,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/file"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/patch"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
@@ -60,7 +60,7 @@ func loadRawMessages(src []string) ([]json.RawMessage, error) {
 			raws = append(raws, r...)
 			continue
 		}
-		p, err := path.Expand(p)
+		p, err := utilspath.Expand(p)
 		if err != nil {
 			return nil, err
 		}
@@ -309,7 +309,7 @@ func Load(ctx context.Context, src ...string) ([]InternalObject, error) {
 		result[gvk.Kind] = append(result[gvk.Kind], vobj)
 	}
 
-	kinds := maps.Keys(result)
+	kinds := utilsmaps.Keys(result)
 	sort.Strings(kinds)
 	objs := []InternalObject{}
 	for _, kind := range kinds {
@@ -355,8 +355,8 @@ func LoadUnstructured(src ...string) ([]InternalObject, error) {
 
 // Save saves the given objects to the given path.
 func Save(ctx context.Context, dist string, objs []InternalObject) error {
-	dist = path.Clean(dist)
-	err := file.MkdirAll(path.Dir(dist))
+	dist = utilspath.Clean(dist)
+	err := file.MkdirAll(utilspath.Dir(dist))
 	if err != nil {
 		return err
 	}

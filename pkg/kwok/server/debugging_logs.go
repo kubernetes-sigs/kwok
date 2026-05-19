@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"slices"
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
@@ -35,7 +36,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // GetContainerLogs returns logs for a container in a pod.
@@ -119,7 +120,7 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 }
 
 func getPodLogs(rules []*internalversion.Logs, clusterRules []*internalversion.ClusterLogs, podName, podNamespace, containerName string) (*internalversion.Log, error) {
-	l, has := slices.Find(rules, func(l *internalversion.Logs) bool {
+	l, has := utilsslices.Find(rules, func(l *internalversion.Logs) bool {
 		return l.Name == podName && l.Namespace == podNamespace
 	})
 	if has {

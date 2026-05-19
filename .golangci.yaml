@@ -75,6 +75,16 @@ linters:
         alias: metav1
       - pkg: k8s.io/apimachinery/pkg/api/errors
         alias: apierrors
+      - pkg: sigs.k8s.io/kwok/pkg/utils/slices
+        alias: utilsslices
+      - pkg: sigs.k8s.io/kwok/pkg/utils/maps
+        alias: utilsmaps
+      - pkg: sigs.k8s.io/kwok/pkg/utils/path
+        alias: utilspath
+      - pkg: sigs.k8s.io/kwok/pkg/utils/exec
+        alias: utilsexec
+      - pkg: sigs.k8s.io/kwok/pkg/utils/net
+        alias: utilsnet
       no-unaliased: true
     revive:
       rules:
@@ -84,7 +94,6 @@ linters:
     staticcheck:
       checks:
       - all
-      - -ST1000
       - -ST1003
   exclusions:
     generated: lax
@@ -99,6 +108,7 @@ linters:
     paths:
     - .*\.zz_generated\..*
     - (.+)_test\.go$
+    - test/.*
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

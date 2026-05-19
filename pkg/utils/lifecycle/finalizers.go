@@ -17,10 +17,10 @@ limitations under the License.
 package lifecycle
 
 import (
+	"slices"
 	"strconv"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type jsonpathOperation struct {

@@ -27,9 +27,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // PortForward expose the port of the component
@@ -45,7 +45,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		if err != nil {
 			return nil, err
 		}
-		port, ok := slices.Find(component.Ports, func(port internalversion.Port) bool {
+		port, ok := utilsslices.Find(component.Ports, func(port internalversion.Port) bool {
 			return port.Name == portOrName && port.Protocol == internalversion.ProtocolTCP
 		})
 		if !ok {
@@ -73,7 +73,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 	args = append(args, kwokController.Image)
 
 	r, w := io.Pipe()
-	command, err := exec.Command(exec.WithWait(exec.WithIOStreams(ctx, exec.IOStreams{In: r}), false),
+	command, err := utilsexec.Command(utilsexec.WithWait(utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{In: r}), false),
 		c.runtime, args...)
 	if err != nil {
 		return nil, fmt.Errorf("running command: %w", err)
@@ -86,7 +86,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		if c.runtime == consts.RuntimeTypeNerdctl ||
 			c.runtime == consts.RuntimeTypeLima ||
 			c.runtime == consts.RuntimeTypeFinch {
-			_, err := exec.Command(context.Background(), c.runtime, "rm", "--force", tempContainerName)
+			_, err := utilsexec.Command(context.Background(), c.runtime, "rm", "--force", tempContainerName)
 			if err != nil {
 				logger.Error("Remove temporary port-forward container", err)
 			}
@@ -129,7 +129,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 				defer func() {
 					_ = conn.Close()
 				}()
-				err := c.Exec(exec.WithReadWriter(ctx, conn),
+				err := c.Exec(utilsexec.WithReadWriter(ctx, conn),
 					c.runtime, "exec", "-i", tempContainerName,
 					"nc", c.Name()+"-"+name, format.String(targetPort))
 				if err != nil {

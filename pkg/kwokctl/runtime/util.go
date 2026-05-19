@@ -28,10 +28,10 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // ForeachComponents starts components.
@@ -46,7 +46,7 @@ func (c *Cluster) ForeachComponents(ctx context.Context, reverse, order bool, fu
 		return err
 	}
 	if reverse {
-		groups = slices.Reverse(groups)
+		groups = utilsslices.Reverse(groups)
 	}
 
 	if c.IsDryRun() {
@@ -97,7 +97,7 @@ func (c *Cluster) ForeachComponents(ctx context.Context, reverse, order bool, fu
 
 // GetComponentPatches returns the patches for a component.
 func GetComponentPatches(conf *internalversion.KwokctlConfiguration, componentName string) internalversion.ComponentPatches {
-	componentPatches, _ := slices.Find(conf.ComponentsPatches, func(patch internalversion.ComponentPatches) bool {
+	componentPatches, _ := utilsslices.Find(conf.ComponentsPatches, func(patch internalversion.ComponentPatches) bool {
 		return patch.Name == componentName
 	})
 	return componentPatches
@@ -147,7 +147,7 @@ func applyComponentArgsOverride(ctx context.Context, args []string, a internalve
 func ExpandVolumesHostPaths(volumes []internalversion.Volume) ([]internalversion.Volume, error) {
 	result := make([]internalversion.Volume, 0, len(volumes))
 	for _, v := range volumes {
-		hostPath, err := path.Expand(v.HostPath)
+		hostPath, err := utilspath.Expand(v.HostPath)
 		if err != nil {
 			return nil, err
 		}
@@ -168,32 +168,32 @@ func GetLogVolumes(ctx context.Context) []internalversion.Volume {
 	mountDirs := sets.NewSets[string]()
 	for _, log := range logs {
 		for _, l := range log.Spec.Logs {
-			mountDirs.Insert(path.Dir(l.LogsFile))
-			mountDirs.Insert(path.Dir(l.PreviousLogsFile))
+			mountDirs.Insert(utilspath.Dir(l.LogsFile))
+			mountDirs.Insert(utilspath.Dir(l.PreviousLogsFile))
 		}
 	}
 
 	for _, cl := range clusterLogs {
 		for _, l := range cl.Spec.Logs {
-			mountDirs.Insert(path.Dir(l.LogsFile))
-			mountDirs.Insert(path.Dir(l.PreviousLogsFile))
+			mountDirs.Insert(utilspath.Dir(l.LogsFile))
+			mountDirs.Insert(utilspath.Dir(l.PreviousLogsFile))
 		}
 	}
 
 	for _, attach := range attaches {
 		for _, a := range attach.Spec.Attaches {
-			mountDirs.Insert(path.Dir(a.LogsFile))
+			mountDirs.Insert(utilspath.Dir(a.LogsFile))
 		}
 	}
 
 	for _, ca := range clusterAttaches {
 		for _, a := range ca.Spec.Attaches {
-			mountDirs.Insert(path.Dir(a.LogsFile))
+			mountDirs.Insert(utilspath.Dir(a.LogsFile))
 		}
 	}
 	mountDirs.Delete(".", "/")
 
-	logsDirs := maps.Keys(mountDirs)
+	logsDirs := utilsmaps.Keys(mountDirs)
 	sort.Strings(logsDirs)
 
 	volumes := make([]internalversion.Volume, 0, len(logsDirs))

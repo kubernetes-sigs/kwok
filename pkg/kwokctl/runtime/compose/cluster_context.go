@@ -25,8 +25,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
-	"sigs.k8s.io/kwok/pkg/utils/net"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // AddContext add the context of cluster to kubeconfig
@@ -51,7 +51,7 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 
 	if conf.InsecureKubeconfig && conf.KubeApiserverInsecurePort != 0 {
 		kubeConfig.Cluster = &clientcmdapi.Cluster{
-			Server: "http://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverInsecurePort),
+			Server: "http://" + utilsnet.LocalAddress + ":" + format.String(conf.KubeApiserverInsecurePort),
 		}
 	} else {
 		scheme := "http"
@@ -60,12 +60,12 @@ func (c *Cluster) AddContext(ctx context.Context, kubeconfigPath string) error {
 		}
 
 		pkiPath := c.GetWorkdirPath(runtime.PkiName)
-		adminKeyPath := path.Join(pkiPath, "admin.key")
-		adminCertPath := path.Join(pkiPath, "admin.crt")
-		caCertPath := path.Join(pkiPath, "ca.crt")
+		adminKeyPath := utilspath.Join(pkiPath, "admin.key")
+		adminCertPath := utilspath.Join(pkiPath, "admin.crt")
+		caCertPath := utilspath.Join(pkiPath, "ca.crt")
 
 		kubeConfig.Cluster = &clientcmdapi.Cluster{
-			Server: scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
+			Server: scheme + "://" + utilsnet.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
 		}
 		if conf.SecurePort {
 			kubeConfig.Cluster.CertificateAuthority = caCertPath

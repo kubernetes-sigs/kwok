@@ -18,13 +18,14 @@ package client
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // MappingFor returns the RESTMapping for the given resource or kind argument.
@@ -75,7 +76,7 @@ func MatchShortResourceName(arl []*metav1.APIResourceList, name string) (gvr sch
 	name = strings.ToLower(name)
 
 	for _, r := range arl {
-		ar, ok := slices.Find(r.APIResources, func(ar metav1.APIResource) bool {
+		ar, ok := utilsslices.Find(r.APIResources, func(ar metav1.APIResource) bool {
 			return ar.Name == name ||
 				ar.SingularName == name ||
 				slices.Contains(ar.ShortNames, name)
@@ -104,7 +105,7 @@ func MatchGVK(arl []*metav1.APIResourceList, gvk schema.GroupVersionKind) (gvr s
 		if gvStr != r.GroupVersion {
 			continue
 		}
-		ar, ok := slices.Find(r.APIResources, func(ar metav1.APIResource) bool {
+		ar, ok := utilsslices.Find(r.APIResources, func(ar metav1.APIResource) bool {
 			return ar.Kind == gvk.Kind
 		})
 		if ok {
@@ -130,7 +131,7 @@ func MatchGK(arl []*metav1.APIResourceList, gvk schema.GroupKind) (gvr schema.Gr
 		if gv.Group != gvk.Group {
 			continue
 		}
-		ar, ok := slices.Find(r.APIResources, func(ar metav1.APIResource) bool {
+		ar, ok := utilsslices.Find(r.APIResources, func(ar metav1.APIResource) bool {
 			return ar.Kind == gvk.Kind
 		})
 		if ok {

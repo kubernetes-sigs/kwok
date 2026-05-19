@@ -26,9 +26,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -144,7 +144,7 @@ func (c *Cluster) isCanNerdctlUnlessStopped(ctx context.Context) (bool, error) {
 
 	if canNerdctlUnlessStopped == nil {
 		buf := bytes.NewBuffer(nil)
-		err = c.Exec(exec.WithWriteTo(ctx, buf), c.runtime, "create", "--help")
+		err = c.Exec(utilsexec.WithWriteTo(ctx, buf), c.runtime, "create", "--help")
 		if err != nil {
 			return false, fmt.Errorf("canNerdctlUnlessStopped failed: %w", err)
 		}
@@ -195,7 +195,7 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 	if err != nil {
 		return err
 	}
-	component, ok := slices.Find(conf.Components, func(component internalversion.Component) bool {
+	component, ok := utilsslices.Find(conf.Components, func(component internalversion.Component) bool {
 		return component.Name == componentName
 	})
 	if !ok {
@@ -375,7 +375,7 @@ func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (r
 
 	args = append(args, "--format={{ json . }}")
 
-	err := c.Exec(exec.WithWriteTo(ctx, buf), c.runtime, args...)
+	err := c.Exec(utilsexec.WithWriteTo(ctx, buf), c.runtime, args...)
 	if err != nil {
 		// TODO: check if component exists or other error
 		return false, false
