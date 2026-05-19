@@ -126,9 +126,13 @@ type KwokctlConfigurationOptions struct {
 	KectlVersion string `json:"kectlVersion,omitempty"`
 
 	// DashboardVersion is the version of Kubernetes dashboard to use.
+	//
+	// Deprecated: Use headlamp instead
 	DashboardVersion string `json:"dashboardVersion,omitempty"`
 
 	// DashboardMetricsScraperVersion is the version of Kubernetes dashboard metrics scraper to use.
+	//
+	// Deprecated: Use headlamp instead
 	DashboardMetricsScraperVersion string `json:"dashboardMetricsScraperVersion,omitempty"`
 
 	// PrometheusVersion is the version of Prometheus to use.
@@ -211,6 +215,8 @@ type KwokctlConfigurationOptions struct {
 	KwokImagePrefix string `json:"kwokImagePrefix,omitempty"`
 
 	// DashboardImagePrefix is the prefix of the dashboard image.
+	//
+	// Deprecated: Use HeadlampImagePrefix instead
 	//+k8s:conversion-gen=false
 	DashboardImagePrefix string `json:"dashboardImagePrefix,omitempty"`
 
@@ -262,9 +268,13 @@ type KwokctlConfigurationOptions struct {
 	KwokControllerImage string `json:"kwokControllerImage,omitempty"`
 
 	// DashboardImage is the image of dashboard.
+	//
+	// Deprecated: Use headlamp instead
 	DashboardImage string `json:"dashboardImage,omitempty"`
 
 	// DashboardMetricsScraperImage is the image of dashboard metrics scraper.
+	//
+	// Deprecated: Use headlamp instead
 	DashboardMetricsScraperImage string `json:"dashboardMetricsScraperImage,omitempty"`
 
 	// PrometheusImage is the image of Prometheus.
@@ -371,14 +381,6 @@ type KwokctlConfigurationOptions struct {
 	// is the default value for flag --controller-binary and env KWOK_CONTROLLER_BINARY
 	KwokControllerBinary string `json:"kwokControllerBinary,omitempty"`
 
-	// TODO: Add dashboard binary
-	// // DashboardBinaryPrefix is the prefix of the dashboard binary.
-	// //+k8s:conversion-gen=false
-	// DashboardBinaryPrefix string `json:"dashboardBinaryPrefix,omitempty"`
-	//
-	// // DashboardBinary is the binary of dashboard.
-	// DashboardBinary string `json:"dashboardBinary,omitempty"`
-
 	// PrometheusBinaryPrefix is the prefix of the Prometheus binary.
 	// is the default value for env KWOK_PROMETHEUS_PREFIX
 	//+k8s:conversion-gen=false
@@ -475,6 +477,8 @@ type KwokctlConfigurationOptions struct {
 	KubeSchedulerPort uint32 `json:"kubeSchedulerPort,omitempty"`
 
 	// DashboardPort is dashboard port in the binary runtime
+	//
+	// Deprecated: Use headlamp instead
 	DashboardPort uint32 `json:"dashboardPort,omitempty"`
 
 	// KueuevizPort is kueueviz port that is exposed to the host.

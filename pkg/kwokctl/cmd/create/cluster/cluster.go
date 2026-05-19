@@ -109,9 +109,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 '${KWOK_KIND_NODE_IMAGE_PREFIX}/node:${KWOK_KUBE_VERSION}'
 `)
 	cmd.Flags().Uint32Var(&flags.Options.DashboardPort, "dashboard-port", flags.Options.DashboardPort, `Port of dashboard given to the host`)
+	_ = cmd.Flags().MarkDeprecated("dashboard-port", "--dashboard-port is deprecated and will be removed in a future release because Kubernetes Dashboard has been retired")
 	cmd.Flags().StringVar(&flags.Options.DashboardImage, "dashboard-image", flags.Options.DashboardImage, `Image of dashboard, only for docker/podman/nerdctl/kind/kind-podman runtime
 '${KWOK_DASHBOARD_IMAGE_PREFIX}/dashboard:${KWOK_DASHBOARD_VERSION}'
 `)
+	_ = cmd.Flags().MarkDeprecated("dashboard-image", "--dashboard-image is deprecated and will be removed in a future release because Kubernetes Dashboard has been retired")
 	cmd.Flags().StringVar(&flags.Options.KubeApiserverBinary, "kube-apiserver-binary", flags.Options.KubeApiserverBinary, `Binary of kube-apiserver, only for binary runtime
 `)
 	cmd.Flags().StringVar(&flags.Options.KubeControllerManagerBinary, "kube-controller-manager-binary", flags.Options.KubeControllerManagerBinary, `Binary of kube-controller-manager, only for binary runtime

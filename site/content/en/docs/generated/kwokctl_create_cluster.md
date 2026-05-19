@@ -11,10 +11,6 @@ kwokctl create cluster [flags]
 ```
       --components strings                      Default of components (default [etcd,kube-apiserver,kube-controller-manager,kube-scheduler,kwok-controller])
       --controller-port uint32                  Port of kwok-controller given to the host
-      --dashboard-image string                  Image of dashboard, only for docker/podman/nerdctl/kind/kind-podman runtime
-                                                '${KWOK_DASHBOARD_IMAGE_PREFIX}/dashboard:${KWOK_DASHBOARD_VERSION}'
-                                                 (default "docker.io/kubernetesui/dashboard:v2.7.0")
-      --dashboard-port uint32                   Port of dashboard given to the host
       --disable strings                         Disable list of components
       --disable-qps-limits                      Disable QPS limits for components
       --enable strings                          Enable list of components
