@@ -31,7 +31,6 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
-	"sigs.k8s.io/kwok/pkg/kwok/cni"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
@@ -48,7 +47,6 @@ var (
 // PodController is a fake pods implementation that can be used to test
 type PodController struct {
 	clock                                 clock.Clock
-	enableCNI                             bool
 	typedClient                           kubernetes.Interface
 	nodeCacheGetter                       informer.Getter[*corev1.Node]
 	disregardStatusWithAnnotationSelector labels.Selector
@@ -78,7 +76,6 @@ type PodInfo struct {
 // PodControllerConfig is the configuration for the PodController
 type PodControllerConfig struct {
 	Clock                                 clock.Clock
-	EnableCNI                             bool
 	TypedClient                           kubernetes.Interface
 	NodeCacheGetter                       informer.Getter[*corev1.Node]
 	DisregardStatusWithAnnotationSelector string
@@ -117,7 +114,6 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 
 	c := &PodController{
 		clock:                                 conf.Clock,
-		enableCNI:                             conf.EnableCNI,
 		typedClient:                           conf.TypedClient,
 		nodeCacheGetter:                       conf.NodeCacheGetter,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
@@ -511,37 +507,28 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 	}
 
 	logger := log.FromContext(ctx)
-	if !c.enableCNI {
-		if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
-			cidr := c.defaultCIDR
-			node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
-			if ok {
-				if node.Spec.PodCIDR != "" {
-					cidr = node.Spec.PodCIDR
-				}
-				pool, err := c.ipPool(cidr)
-				if err != nil {
-					logger.Error("Failed to get ip pool", err,
-						"pod", log.KObj(pod),
-						"node", pod.Spec.NodeName,
-					)
-				} else {
-					pool.Put(pod.Status.PodIP)
-				}
+
+	if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
+		cidr := c.defaultCIDR
+		node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
+		if ok {
+			if node.Spec.PodCIDR != "" {
+				cidr = node.Spec.PodCIDR
 			}
-		}
-	} else {
-		err := cni.Remove(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
-		if err != nil {
-			logger.Error("cni remove", err)
+			pool, err := c.ipPool(cidr)
+			if err != nil {
+				logger.Error("Failed to get ip pool", err,
+					"pod", log.KObj(pod),
+					"node", pod.Spec.NodeName,
+				)
+			} else {
+				pool.Put(pod.Status.PodIP)
+			}
 		}
 	}
 }
 
 func (c *PodController) markPodIP(pod *corev1.Pod) {
-	if c.enableCNI {
-		return
-	}
 	// Mark the pod IP that existed before the kubelet was started
 	if _, has := c.nodeGetFunc(pod.Spec.NodeName); has {
 		if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
@@ -590,14 +577,6 @@ func (c *PodController) funcPodIP() string {
 func (c *PodController) funcPodIPWith(nodeName string, hostNetwork bool, uid, name, namespace string) (string, error) {
 	if hostNetwork {
 		return c.funcNodeIPWith(nodeName), nil
-	}
-
-	if c.enableCNI {
-		ips, err := cni.Setup(context.Background(), uid, name, namespace)
-		if err != nil {
-			return "", err
-		}
-		return ips[0], nil
 	}
 
 	podCIDR := c.defaultCIDR

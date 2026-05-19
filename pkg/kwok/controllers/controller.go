@@ -100,7 +100,6 @@ type Controller struct {
 // Config is the configuration for the controller
 type Config struct {
 	Clock                                 clock.Clock
-	EnableCNI                             bool
 	DynamicClient                         dynamic.Interface
 	RESTClient                            rest.Interface
 	ImpersonatingDynamicClient            client.DynamicClientImpersonator
@@ -450,7 +449,6 @@ func (c *Controller) initNodeController(ctx context.Context, lifecycle resources
 func (c *Controller) initPodController(ctx context.Context, lifecycle resources.Getter[lifecycle.Lifecycle]) (err error) {
 	c.pods, err = NewPodController(PodControllerConfig{
 		Clock:                                 c.conf.Clock,
-		EnableCNI:                             c.conf.EnableCNI,
 		TypedClient:                           c.conf.TypedClient,
 		NodeCacheGetter:                       c.nodeCacheGetter,
 		NodeIP:                                c.conf.NodeIP,

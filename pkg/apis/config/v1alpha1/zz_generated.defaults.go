@@ -42,10 +42,6 @@ func SetObjectDefaults_KwokConfiguration(in *KwokConfiguration) {
 		var ptrVar1 bool = false
 		in.Options.ManageAllNodes = &ptrVar1
 	}
-	if in.Options.EnableCNI == nil {
-		var ptrVar1 bool = false
-		in.Options.EnableCNI = &ptrVar1
-	}
 	if in.Options.EnableDebuggingHandlers == nil {
 		var ptrVar1 bool = true
 		in.Options.EnableDebuggingHandlers = &ptrVar1
