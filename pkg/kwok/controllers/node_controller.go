@@ -37,7 +37,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -53,13 +53,13 @@ type NodeController struct {
 	disregardStatusWithLabelSelector      labels.Selector
 	onNodeManagedFunc                     func(nodeName string)
 	onNodeUnmanagedFunc                   func(nodeName string)
-	nodesSets                             maps.SyncMap[string, *NodeInfo]
+	nodesSets                             utilsmaps.SyncMap[string, *NodeInfo]
 	renderer                              gotpl.Renderer
 	preprocessChan                        chan *corev1.Node
 	playStageParallelism                  uint
 	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*corev1.Node]]
-	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Node]]
+	delayQueueMapping                     utilsmaps.SyncMap[string, resourceStageJob[*corev1.Node]]
 	backoff                               wait.Backoff
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
@@ -130,7 +130,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		enableMetrics:                         conf.EnableMetrics,
 	}
 
-	funcMap := maps.Merge(gotpl.FuncMap{
+	funcMap := utilsmaps.Merge(gotpl.FuncMap{
 		"NodeIP":   c.funcNodeIP,
 		"NodeName": c.funcNodeName,
 		"NodePort": c.funcNodePort,

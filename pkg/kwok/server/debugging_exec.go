@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -29,8 +30,8 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // ExecInContainer executes a command in a container.
@@ -52,20 +53,20 @@ func (s *Server) ExecInContainer(ctx context.Context, name string, uid string, c
 
 	// Set the environment variables.
 	if len(execTarget.Local.Envs) != 0 {
-		envs := slices.Map(execTarget.Local.Envs, func(env internalversion.EnvVar) string {
+		envs := utilsslices.Map(execTarget.Local.Envs, func(env internalversion.EnvVar) string {
 			return fmt.Sprintf("%s=%s", env.Name, env.Value)
 		})
-		ctx = exec.WithEnv(ctx, envs)
+		ctx = utilsexec.WithEnv(ctx, envs)
 	}
 
 	// Set the user.
 	if execTarget.Local.SecurityContext != nil {
-		ctx = exec.WithUser(ctx, execTarget.Local.SecurityContext.RunAsUser, execTarget.Local.SecurityContext.RunAsGroup)
+		ctx = utilsexec.WithUser(ctx, execTarget.Local.SecurityContext.RunAsUser, execTarget.Local.SecurityContext.RunAsGroup)
 	}
 
 	// Set the working directory.
 	if execTarget.Local.WorkDir != "" {
-		ctx = exec.WithDir(ctx, execTarget.Local.WorkDir)
+		ctx = utilsexec.WithDir(ctx, execTarget.Local.WorkDir)
 	}
 
 	// Set cancel context.
@@ -82,18 +83,18 @@ func (s *Server) ExecInContainer(ctx context.Context, name string, uid string, c
 func (s *Server) execInContainer(ctx context.Context, cmd []string, in io.Reader, out, errOut io.WriteCloser) error {
 	// Set the pipe stdin.
 	if in != nil {
-		ctx = exec.WithPipeStdin(ctx, true)
+		ctx = utilsexec.WithPipeStdin(ctx, true)
 	}
 
 	// Set the stream as the stdin/stdout/stderr.
-	ctx = exec.WithIOStreams(ctx, exec.IOStreams{
+	ctx = utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{
 		In:     in,
 		Out:    out,
 		ErrOut: errOut,
 	})
 
 	// Execute the command.
-	err := exec.Exec(ctx, cmd[0], cmd[1:]...)
+	err := utilsexec.Exec(ctx, cmd[0], cmd[1:]...)
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,7 @@ func (s *Server) execInContainer(ctx context.Context, cmd []string, in io.Reader
 }
 
 func getExecTarget(rules []*internalversion.Exec, clusterRules []*internalversion.ClusterExec, podName, podNamespace string, containerName string) (*internalversion.ExecTarget, error) {
-	e, has := slices.Find(rules, func(pf *internalversion.Exec) bool {
+	e, has := utilsslices.Find(rules, func(pf *internalversion.Exec) bool {
 		return pf.Name == podName && pf.Namespace == podNamespace
 	})
 	if has {

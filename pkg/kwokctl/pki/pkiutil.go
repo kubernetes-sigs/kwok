@@ -32,7 +32,7 @@ import (
 	"os"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 const (
@@ -340,9 +340,9 @@ func writeFile(certPath string, data []byte) error {
 }
 
 func pathForKey(pkiPath, name string) string {
-	return path.Join(pkiPath, fmt.Sprintf("%s.key", name))
+	return utilspath.Join(pkiPath, fmt.Sprintf("%s.key", name))
 }
 
 func pathForCert(pkiPath, name string) string {
-	return path.Join(pkiPath, fmt.Sprintf("%s.crt", name))
+	return utilspath.Join(pkiPath, fmt.Sprintf("%s.crt", name))
 }

@@ -30,9 +30,9 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
-	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -50,14 +50,14 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 		WithNodeName(node1.Name).
 		Build()
 
-	recordingPath := path.Join(tmpDir, "recording.yaml")
+	recordingPath := utilspath.Join(tmpDir, "recording.yaml")
 
-	var tmpCmd *exec.Cmd
+	var tmpCmd *utilsexec.Cmd
 	return features.New("Recording").
 		Setup(helper.CreateNode(node0)).
 		Setup(helper.CreatePod(pod0)).
 		Assess("test record", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			cmd, err := exec.Command(exec.WithFork(ctx, true), kwokctlPath, "--name", clusterName, "kectl", "snapshot", "record", "--path", recordingPath)
+			cmd, err := utilsexec.Command(utilsexec.WithFork(ctx, true), kwokctlPath, "--name", clusterName, "kectl", "snapshot", "record", "--path", recordingPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -89,7 +89,7 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 				t.Fatal(err)
 			}
 
-			podItems := slices.Filter(pods.Items, func(pod corev1.Pod) bool {
+			podItems := utilsslices.Filter(pods.Items, func(pod corev1.Pod) bool {
 				return strings.HasPrefix(pod.Name, "pod")
 			})
 			if len(podItems) != 2 {
@@ -102,7 +102,7 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 				t.Fatal(err)
 			}
 
-			nodeItems := slices.Filter(nodes.Items, func(node corev1.Node) bool {
+			nodeItems := utilsslices.Filter(nodes.Items, func(node corev1.Node) bool {
 				return strings.HasPrefix(node.Name, "node")
 			})
 			if len(nodeItems) != 2 {
@@ -130,7 +130,7 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 		Assess("delete node0", helper.DeleteNode(node0)).
 		Assess("delete node1", helper.DeleteNode(node1)).
 		Assess("test replay", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := exec.Command(ctx, kwokctlPath, "--name", clusterName, "kectl", "snapshot", "replay", "--path", recordingPath)
+			_, err := utilsexec.Command(ctx, kwokctlPath, "--name", clusterName, "kectl", "snapshot", "replay", "--path", recordingPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -158,7 +158,7 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 				t.Fatal(err)
 			}
 
-			podItems := slices.Filter(pods.Items, func(pod corev1.Pod) bool {
+			podItems := utilsslices.Filter(pods.Items, func(pod corev1.Pod) bool {
 				return strings.HasPrefix(pod.Name, "pod")
 			})
 			if len(podItems) != 2 {
@@ -171,7 +171,7 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 				t.Fatal(err)
 			}
 
-			nodeItems := slices.Filter(nodes.Items, func(node corev1.Node) bool {
+			nodeItems := utilsslices.Filter(nodes.Items, func(node corev1.Node) bool {
 				return strings.HasPrefix(node.Name, "node")
 			})
 			if len(nodeItems) != 2 {
@@ -200,17 +200,17 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 		WithNodeName(node1.Name).
 		Build()
 
-	recordingPath := path.Join(tmpDir, "recording.yaml")
+	recordingPath := utilspath.Join(tmpDir, "recording.yaml")
 
 	homeDir, _ := os.UserHomeDir()
 	kubeconfigPath := filepath.Join(homeDir, ".kube/config")
 
-	var tmpCmd *exec.Cmd
+	var tmpCmd *utilsexec.Cmd
 	return features.New("Recording").
 		Setup(helper.CreateNode(node0)).
 		Setup(helper.CreatePod(pod0)).
 		Assess("test record", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			cmd, err := exec.Command(exec.WithFork(ctx, true), kwokctlPath, "snapshot", "export", "--kubeconfig", kubeconfigPath, "--record", "--name", clusterName, "--path", recordingPath)
+			cmd, err := utilsexec.Command(utilsexec.WithFork(ctx, true), kwokctlPath, "snapshot", "export", "--kubeconfig", kubeconfigPath, "--record", "--name", clusterName, "--path", recordingPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -242,7 +242,7 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 				t.Fatal(err)
 			}
 
-			podItems := slices.Filter(pods.Items, func(pod corev1.Pod) bool {
+			podItems := utilsslices.Filter(pods.Items, func(pod corev1.Pod) bool {
 				return strings.HasPrefix(pod.Name, "pod")
 			})
 			if len(podItems) != 2 {
@@ -255,7 +255,7 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 				t.Fatal(err)
 			}
 
-			nodeItems := slices.Filter(nodes.Items, func(node corev1.Node) bool {
+			nodeItems := utilsslices.Filter(nodes.Items, func(node corev1.Node) bool {
 				return strings.HasPrefix(node.Name, "node")
 			})
 			if len(nodeItems) != 2 {
@@ -283,7 +283,7 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 		Assess("delete node0", helper.DeleteNode(node0)).
 		Assess("delete node1", helper.DeleteNode(node1)).
 		Assess("test replay", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := exec.Command(ctx, kwokctlPath, "--name", clusterName, "kectl", "snapshot", "replay", "--path", recordingPath)
+			_, err := utilsexec.Command(ctx, kwokctlPath, "--name", clusterName, "kectl", "snapshot", "replay", "--path", recordingPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -311,7 +311,7 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 				t.Fatal(err)
 			}
 
-			podItems := slices.Filter(pods.Items, func(pod corev1.Pod) bool {
+			podItems := utilsslices.Filter(pods.Items, func(pod corev1.Pod) bool {
 				return strings.HasPrefix(pod.Name, "pod")
 			})
 			if len(podItems) != 2 {
@@ -324,7 +324,7 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 				t.Fatal(err)
 			}
 
-			nodeItems := slices.Filter(nodes.Items, func(node corev1.Node) bool {
+			nodeItems := utilsslices.Filter(nodes.Items, func(node corev1.Node) bool {
 				return strings.HasPrefix(node.Name, "node")
 			})
 			if len(nodeItems) != 2 {

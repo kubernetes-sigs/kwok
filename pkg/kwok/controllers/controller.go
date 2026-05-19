@@ -49,7 +49,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	"sigs.k8s.io/kwok/pkg/utils/patch"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 var (
@@ -374,7 +374,7 @@ func (c *Controller) initStagesManager(ctx context.Context) error {
 	](
 		c.conf.TypedKwokClient.KwokV1alpha1().Stages(),
 		func(objs []*v1alpha1.Stage) []*internalversion.Stage {
-			return slices.FilterAndMap(objs, func(obj *v1alpha1.Stage) (*internalversion.Stage, bool) {
+			return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Stage) (*internalversion.Stage, bool) {
 				r, err := internalversion.ConvertToInternalStage(obj)
 				if err != nil {
 					logger.Error("failed to convert to internal stage", err, "obj", obj)

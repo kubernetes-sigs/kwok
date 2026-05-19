@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type flagpole struct {
@@ -95,7 +95,7 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	}
 
 	krcs := config.FilterWithTypeFromContext[*internalversion.KwokctlResource](ctx)
-	krc, ok := slices.Find(krcs, func(krc *internalversion.KwokctlResource) bool {
+	krc, ok := utilsslices.Find(krcs, func(krc *internalversion.KwokctlResource) bool {
 		return krc.Name == resourceKind
 	})
 	if !ok {

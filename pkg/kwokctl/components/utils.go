@@ -18,12 +18,13 @@ package components
 
 import (
 	"fmt"
+	"slices"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 var (
@@ -51,13 +52,13 @@ func GroupByLinks(components []internalversion.Component) ([][]internalversion.C
 		}
 		if len(group) == 0 {
 			if len(next) != 0 {
-				next := slices.Map(next, func(component internalversion.Component) string {
+				next := utilsslices.Map(next, func(component internalversion.Component) string {
 					return component.Name
 				})
 				return nil, fmt.Errorf("%w: %v", ErrBrokenLinks, next)
 			}
 		} else {
-			added := slices.Map(group, func(component internalversion.Component) string {
+			added := utilsslices.Map(group, func(component internalversion.Component) string {
 				return component.Name
 			})
 			had.Insert(added...)

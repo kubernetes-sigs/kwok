@@ -35,8 +35,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
-	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type flagpole struct {
@@ -75,7 +75,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 func runE(ctx context.Context, flags *flagpole) error {
 	name := config.ClusterName(flags.Name)
-	workdir := path.Join(config.ClustersDir, flags.Name)
+	workdir := utilspath.Join(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", flags.Name)
@@ -124,7 +124,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	userName := kubeConfig.Contexts[currentContext].AuthInfo
 
-	if userName != "" && (!slices.Equal(pki.DefaultGroups, flags.Groups) || flags.User != pki.DefaultUser) {
+	if userName != "" && (!utilsslices.Equal(pki.DefaultGroups, flags.Groups) || flags.User != pki.DefaultUser) {
 		// Load CA cert and key
 		caCert, caKey, err := pki.ReadCertAndKey(rt.GetWorkdirPath(runtime.PkiName), "ca")
 		if err != nil {

@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -46,7 +46,7 @@ func CaseExec(kwokctlPath, clusterName, nodeName, namespace string) *features.Fe
 		Assess("test exec", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			t.Log("test exec")
 			buf := &bytes.Buffer{}
-			_, err := exec.Command(exec.WithAllWriteTo(ctx, buf), kwokctlPath, "--name", clusterName, "kubectl", "exec", "-n", namespace, "pod0", "--", "env")
+			_, err := utilsexec.Command(utilsexec.WithAllWriteTo(ctx, buf), kwokctlPath, "--name", clusterName, "kubectl", "exec", "-n", namespace, "pod0", "--", "env")
 			if err != nil {
 				t.Fatal(err)
 			}

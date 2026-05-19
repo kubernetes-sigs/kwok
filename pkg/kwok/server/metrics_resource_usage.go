@@ -18,6 +18,7 @@ package server
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -25,7 +26,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/kwok/metrics"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type cumulative struct {
@@ -118,7 +119,7 @@ func (s *Server) containerResourceUsage(resourceName, podNamespace, podName, con
 		return 0
 	}
 
-	c, ok := slices.Find(pod.Spec.Containers, func(c corev1.Container) bool {
+	c, ok := utilsslices.Find(pod.Spec.Containers, func(c corev1.Container) bool {
 		return c.Name == containerName
 	})
 	if !ok {
@@ -221,7 +222,7 @@ func (s *Server) nodeResourceUsage(resourceName, nodeName string) float64 {
 }
 
 func (s *Server) getResourceUsage(podName, podNamespace, containerName string) (*internalversion.ResourceUsageContainer, error) {
-	u, has := slices.Find(s.resourceUsages.Get(), func(a *internalversion.ResourceUsage) bool {
+	u, has := utilsslices.Find(s.resourceUsages.Get(), func(a *internalversion.ResourceUsage) bool {
 		return a.Name == podName && a.Namespace == podNamespace
 	})
 	if has {

@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -28,7 +29,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/utils/cel"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // EnvironmentConfig holds configuration for a cel program

@@ -24,8 +24,8 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // PortForward expose the port of the component
@@ -36,7 +36,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		if err != nil {
 			return nil, err
 		}
-		port, ok := slices.Find(component.Ports, func(port internalversion.Port) bool {
+		port, ok := utilsslices.Find(component.Ports, func(port internalversion.Port) bool {
 			return port.Name == portOrName && port.Protocol == internalversion.ProtocolTCP
 		})
 		if !ok {
@@ -76,7 +76,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 				}()
 
 				command := fmt.Sprintf(`{ cat <&3 & cat >&3; } 3<> /dev/tcp/127.0.0.1/%d`, targetPort)
-				err := c.Exec(exec.WithReadWriter(ctx, conn),
+				err := c.Exec(utilsexec.WithReadWriter(ctx, conn),
 					c.runtime, "exec", "-i", c.getClusterName(),
 					"bash", "-c", command)
 				if err != nil {

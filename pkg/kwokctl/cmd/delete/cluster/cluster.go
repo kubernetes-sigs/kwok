@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type flagpole struct {
@@ -42,7 +42,7 @@ type flagpole struct {
 // NewCommand returns a new cobra.Command for cluster deletion
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
-	flags.Kubeconfig = path.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
+	flags.Kubeconfig = utilspath.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
 	flags.All = false
 
 	cmd := &cobra.Command{
@@ -88,14 +88,14 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath string, force bool) error {
 	name := config.ClusterName(clusterName)
-	workdir := path.Join(config.ClustersDir, clusterName)
+	workdir := utilspath.Join(config.ClustersDir, clusterName)
 
 	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", clusterName)
 	ctx = log.NewContext(ctx, logger)
 
 	var err error
-	kubeconfigPath, err = path.Expand(kubeconfigPath)
+	kubeconfigPath, err = utilspath.Expand(kubeconfigPath)
 	if err != nil {
 		return err
 	}

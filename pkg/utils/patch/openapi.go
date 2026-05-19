@@ -30,8 +30,8 @@ import (
 	"k8s.io/kube-openapi/pkg/spec3"
 	"k8s.io/kube-openapi/pkg/validation/spec"
 
-	"sigs.k8s.io/kwok/pkg/utils/maps"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 const (
@@ -70,7 +70,7 @@ func (p *PatchMetaFromOpenAPI3) Lookup(gvr schema.GroupVersionResource) (strateg
 
 	// Match the suffix like "/nodes/{name}" and exclude the watch path like "/watch/nodes/{name}"
 	findResourceWithPath := "/" + gvr.Resource + "/{name}"
-	paths := slices.Filter(maps.Keys(spec.Paths.Paths), func(s string) bool {
+	paths := utilsslices.Filter(utilsmaps.Keys(spec.Paths.Paths), func(s string) bool {
 		return strings.HasSuffix(s, findResourceWithPath) &&
 			!strings.Contains(s[:len(s)-len(findResourceWithPath)+1], "/watch/")
 	})
@@ -268,7 +268,7 @@ func parsePatchMetadata(extensions map[string]any) (strategicpatch.PatchMeta, er
 	var meta strategicpatch.PatchMeta
 	if len(patchStrategies) != 0 {
 		// Avoid duplicate values being ignored, e.g. heartbeat on condition
-		patchStrategies = slices.Filter(patchStrategies, func(s string) bool {
+		patchStrategies = utilsslices.Filter(patchStrategies, func(s string) bool {
 			return s != "retainKeys"
 		})
 

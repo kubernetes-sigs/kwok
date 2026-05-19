@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -143,11 +143,11 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	var metricsHost string
 	switch GetRuntimeMode(conf.Runtime) {
 	case RuntimeModeNative:
-		metricsHost = net.LocalAddress + ":" + format.String(conf.Port)
+		metricsHost = utilsnet.LocalAddress + ":" + format.String(conf.Port)
 	case RuntimeModeContainer:
 		metricsHost = conf.ProjectName + "-" + consts.ComponentKwokController + ":10247"
 	case RuntimeModeCluster:
-		metricsHost = net.LocalAddress + ":10247"
+		metricsHost = utilsnet.LocalAddress + ":10247"
 	}
 
 	var metric *internalversion.ComponentMetric

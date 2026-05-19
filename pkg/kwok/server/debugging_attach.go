@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
@@ -29,7 +30,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // AttachContainer attaches to a container in a pod,
@@ -78,7 +79,7 @@ func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
 }
 
 func getPodAttach(rules []*internalversion.Attach, clusterRules []*internalversion.ClusterAttach, podName, podNamespace, containerName string) (*internalversion.AttachConfig, error) {
-	a, has := slices.Find(rules, func(a *internalversion.Attach) bool {
+	a, has := utilsslices.Find(rules, func(a *internalversion.Attach) bool {
 		return a.Name == podName && a.Namespace == podNamespace
 	})
 	if has {

@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -79,7 +79,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		)
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
-			Host:   net.LocalAddress + ":9090",
+			Host:   utilsnet.LocalAddress + ":9090",
 			Path:   metricsPath,
 		}
 		prometheusArgs = append(prometheusArgs,
@@ -98,7 +98,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		)
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
-			Host:   net.LocalAddress + ":" + format.String(conf.Port),
+			Host:   utilsnet.LocalAddress + ":" + format.String(conf.Port),
 			Path:   metricsPath,
 		}
 		prometheusArgs = append(prometheusArgs,

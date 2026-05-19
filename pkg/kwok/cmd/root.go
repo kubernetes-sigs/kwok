@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -44,8 +45,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
-	"sigs.k8s.io/kwok/pkg/utils/path"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -74,7 +75,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		},
 	}
 
-	flags.Kubeconfig = path.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
+	flags.Kubeconfig = utilspath.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
 
 	cmd.Flags().StringVar(&flags.Options.CIDR, "cidr", flags.Options.CIDR, "CIDR of the pod ip")
 	cmd.Flags().StringVar(&flags.Options.NodeIP, "node-ip", flags.Options.NodeIP, "IP of the node")
@@ -127,7 +128,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	if flags.Kubeconfig != "" {
 		var err error
-		flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
+		flags.Kubeconfig, err = utilspath.Expand(flags.Kubeconfig)
 		if err != nil {
 			return err
 		}
@@ -153,7 +154,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	var groupStages map[internalversion.StageResourceRef][]*internalversion.Stage
 
 	if !slices.Contains(flags.Options.EnableCRDs, v1alpha1.StageKind) {
-		groupStages = slices.GroupBy(stagesData, func(stage *internalversion.Stage) internalversion.StageResourceRef {
+		groupStages = utilsslices.GroupBy(stagesData, func(stage *internalversion.Stage) internalversion.StageResourceRef {
 			return stage.Spec.ResourceRef
 		})
 

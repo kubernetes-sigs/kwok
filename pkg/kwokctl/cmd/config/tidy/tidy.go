@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // NewCommand returns a new cobra.Command for config save
@@ -43,7 +43,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 func runE(ctx context.Context) error {
 	list := config.GetFromContext(ctx)
-	p := path.Join(config.WorkDir, consts.ConfigName)
+	p := utilspath.Join(config.WorkDir, consts.ConfigName)
 	if dryrun.DryRun {
 		dryrun.PrintMessagef("# Tidy the config file")
 		return nil

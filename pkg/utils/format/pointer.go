@@ -16,13 +16,6 @@ limitations under the License.
 
 package format
 
-// Ptr returns the pointer of v.
-//
-//go:fix inline
-func Ptr[T any](v T) *T {
-	return new(v)
-}
-
 // ElemOrDefault returns the element of v or default.
 func ElemOrDefault[T any](v *T) (t T) {
 	if v == nil {

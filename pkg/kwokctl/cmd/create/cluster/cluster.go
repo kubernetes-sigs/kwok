@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type flagpole struct {
@@ -49,7 +49,7 @@ type flagpole struct {
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 	flags.KwokctlConfiguration = config.GetKwokctlConfiguration(ctx)
-	flags.Kubeconfig = path.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
+	flags.Kubeconfig = utilspath.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
 
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
@@ -204,7 +204,7 @@ func mutationComponentPatches(flags *flagpole) {
 
 func runE(ctx context.Context, flags *flagpole) error {
 	name := config.ClusterName(flags.Name)
-	workdir := path.Join(config.ClustersDir, flags.Name)
+	workdir := utilspath.Join(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)
 	logger = logger.With("cluster", flags.Name)
@@ -212,7 +212,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	var err error
 	if flags.Kubeconfig != "" {
-		flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
+		flags.Kubeconfig, err = utilspath.Expand(flags.Kubeconfig)
 		if err != nil {
 			return err
 		}

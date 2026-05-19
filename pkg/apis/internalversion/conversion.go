@@ -21,7 +21,7 @@ import (
 
 	configv1alpha1 "sigs.k8s.io/kwok/pkg/apis/config/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // ConvertToV1alpha1KwokctlConfiguration converts an internal version KwokctlConfiguration to a v1alpha1.KwokctlConfiguration.
@@ -188,14 +188,14 @@ func ConvertToInternalClusterLogs(in *v1alpha1.ClusterLogs) (*ClusterLogs, error
 	for i := range out.Spec.Logs {
 		logsFile := out.Spec.Logs[i].LogsFile
 		if logsFile != "" {
-			out.Spec.Logs[i].LogsFile, err = path.Expand(logsFile)
+			out.Spec.Logs[i].LogsFile, err = utilspath.Expand(logsFile)
 			if err != nil {
 				return nil, err
 			}
 		}
 		previousLogsFile := out.Spec.Logs[i].PreviousLogsFile
 		if previousLogsFile != "" {
-			out.Spec.Logs[i].PreviousLogsFile, err = path.Expand(previousLogsFile)
+			out.Spec.Logs[i].PreviousLogsFile, err = utilspath.Expand(previousLogsFile)
 			if err != nil {
 				return nil, err
 			}
@@ -260,14 +260,14 @@ func ConvertToInternalLogs(in *v1alpha1.Logs) (*Logs, error) {
 	for i := range out.Spec.Logs {
 		logsFile := out.Spec.Logs[i].LogsFile
 		if logsFile != "" {
-			out.Spec.Logs[i].LogsFile, err = path.Expand(logsFile)
+			out.Spec.Logs[i].LogsFile, err = utilspath.Expand(logsFile)
 			if err != nil {
 				return nil, err
 			}
 		}
 		previousLogsFile := out.Spec.Logs[i].PreviousLogsFile
 		if previousLogsFile != "" {
-			out.Spec.Logs[i].PreviousLogsFile, err = path.Expand(previousLogsFile)
+			out.Spec.Logs[i].PreviousLogsFile, err = utilspath.Expand(previousLogsFile)
 			if err != nil {
 				return nil, err
 			}
@@ -310,7 +310,7 @@ func ConvertToInternalClusterAttach(in *v1alpha1.ClusterAttach) (*ClusterAttach,
 	for i := range out.Spec.Attaches {
 		logsFile := out.Spec.Attaches[i].LogsFile
 		if logsFile != "" {
-			out.Spec.Attaches[i].LogsFile, err = path.Expand(logsFile)
+			out.Spec.Attaches[i].LogsFile, err = utilspath.Expand(logsFile)
 			if err != nil {
 				return nil, err
 			}
@@ -329,7 +329,7 @@ func ConvertToInternalAttach(in *v1alpha1.Attach) (*Attach, error) {
 	for i := range out.Spec.Attaches {
 		logsFile := out.Spec.Attaches[i].LogsFile
 		if logsFile != "" {
-			out.Spec.Attaches[i].LogsFile, err = path.Expand(logsFile)
+			out.Spec.Attaches[i].LogsFile, err = utilspath.Expand(logsFile)
 			if err != nil {
 				return nil, err
 			}

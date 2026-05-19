@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/env"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 )
 
 // BuildKwokImage builds the kwok image and returns a function that can be used
@@ -35,15 +35,15 @@ func BuildKwokImage(rootDir string, image string, builder string) env.Func {
 		if len(ref) != 2 {
 			return nil, fmt.Errorf("invalid image reference %q", image)
 		}
-		ctx = exec.WithStdIO(ctx)
-		ctx = exec.WithDir(ctx, rootDir)
+		ctx = utilsexec.WithStdIO(ctx)
+		ctx = utilsexec.WithDir(ctx, rootDir)
 
-		err := exec.Exec(ctx, "bash", "./hack/releases.sh", "--bin", "kwok", "--platform", "linux/"+runtime.GOARCH)
+		err := utilsexec.Exec(ctx, "bash", "./hack/releases.sh", "--bin", "kwok", "--platform", "linux/"+runtime.GOARCH)
 		if err != nil {
 			return ctx, err
 		}
 
-		err = exec.Exec(ctx, "bash", "./images/kwok/build.sh", "--image", ref[0], "--builder", builder, "--version", ref[1], "--platform", "linux/"+runtime.GOARCH)
+		err = utilsexec.Exec(ctx, "bash", "./images/kwok/build.sh", "--image", ref[0], "--builder", builder, "--version", ref[1], "--platform", "linux/"+runtime.GOARCH)
 		if err != nil {
 			return ctx, err
 		}
@@ -64,10 +64,10 @@ func BuildKwokctlBinary(rootDir string) env.Func {
 // buildBinary builds the kwok binary and returns a function that can be used
 func buildBinary(rootDir string, binary string) env.Func {
 	return func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
-		ctx = exec.WithStdIO(ctx)
-		ctx = exec.WithDir(ctx, rootDir)
+		ctx = utilsexec.WithStdIO(ctx)
+		ctx = utilsexec.WithDir(ctx, rootDir)
 
-		err := exec.Exec(ctx, "bash", "./hack/releases.sh", "--bin", binary, "--platform", runtime.GOOS+"/"+runtime.GOARCH)
+		err := utilsexec.Exec(ctx, "bash", "./hack/releases.sh", "--bin", binary, "--platform", runtime.GOOS+"/"+runtime.GOARCH)
 		if err != nil {
 			return ctx, err
 		}

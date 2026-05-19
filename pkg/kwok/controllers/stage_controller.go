@@ -40,7 +40,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -60,7 +60,7 @@ type StageController struct {
 	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*unstructured.Unstructured]]
 	backoff                               wait.Backoff
-	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*unstructured.Unstructured]]
+	delayQueueMapping                     utilsmaps.SyncMap[string, resourceStageJob[*unstructured.Unstructured]]
 	recorder                              record.EventRecorder
 }
 

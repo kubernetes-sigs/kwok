@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 // UpdateHandler handles updating metrics on request
@@ -43,9 +43,9 @@ type UpdateHandler struct {
 	handler  http.Handler
 	registry *prometheus.Registry
 
-	gauges     maps.SyncMap[string, Gauge]
-	counters   maps.SyncMap[string, Counter]
-	histograms maps.SyncMap[string, Histogram]
+	gauges     utilsmaps.SyncMap[string, Gauge]
+	counters   utilsmaps.SyncMap[string, Counter]
+	histograms utilsmaps.SyncMap[string, Histogram]
 }
 
 // DataSource is the interface for getting data for metrics
@@ -505,7 +505,7 @@ func uniqueKey(name string, kind internalversion.Kind, labels map[string]string)
 	_, _ = builder.WriteString(string(kind))
 	if len(labels) != 0 {
 		_, _ = builder.WriteString("|")
-		keys := maps.Keys(labels)
+		keys := utilsmaps.Keys(labels)
 		sort.Strings(keys)
 		for _, k := range keys {
 			v := labels[k]

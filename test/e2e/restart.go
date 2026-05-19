@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -58,7 +58,7 @@ func CaseRestart(kwokctlPath, clusterName string, clusterRuntime string, rootDir
 			return ctx
 		}).
 		Assess("test stop", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := exec.Command(ctx, kwokctlPath, "stop", "cluster", "--name", clusterName)
+			_, err := utilsexec.Command(ctx, kwokctlPath, "stop", "cluster", "--name", clusterName)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -81,7 +81,7 @@ func CaseRestart(kwokctlPath, clusterName string, clusterRuntime string, rootDir
 			return ctx
 		}).
 		Assess("test start", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := exec.Command(ctx, kwokctlPath, "start", "cluster", "--name", clusterName)
+			_, err := utilsexec.Command(ctx, kwokctlPath, "start", "cluster", "--name", clusterName)
 			if err != nil {
 				t.Fatal(err)
 			}

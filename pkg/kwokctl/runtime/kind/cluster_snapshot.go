@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -167,14 +167,14 @@ func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
 
 	if conf.EtcdPort != 0 {
 		return c.Kectl(ctx, append([]string{
-			"--endpoints=https://" + net.LocalAddress + ":" + format.String(conf.EtcdPort),
+			"--endpoints=https://" + utilsnet.LocalAddress + ":" + format.String(conf.EtcdPort),
 			"--key=" + keyFile,
 			"--cert=" + certFile,
 			"--cacert=" + cacertFile,
 		}, args...)...)
 	}
 
-	unused, err := net.GetUnusedPort(ctx, nil)
+	unused, err := utilsnet.GetUnusedPort(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
 	defer cancel()
 
 	return c.Kectl(ctx, append([]string{
-		"--endpoints=https://" + net.LocalAddress + ":" + format.String(unused),
+		"--endpoints=https://" + utilsnet.LocalAddress + ":" + format.String(unused),
 		"--key=" + keyFile,
 		"--cert=" + certFile,
 		"--cacert=" + cacertFile,

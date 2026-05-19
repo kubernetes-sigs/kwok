@@ -20,7 +20,7 @@ import (
 	"sort"
 	"sync"
 
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 // WeightQueue is a generic weight queue interface.
@@ -89,7 +89,7 @@ func (q *weightQueue[T]) step() bool {
 
 	// Check if the orders slice is out of sync with the queues map
 	if len(q.orders) != len(q.queues) {
-		orders := maps.Keys(q.queues)
+		orders := utilsmaps.Keys(q.queues)
 		sort.Ints(orders)
 		q.orders = orders
 	}

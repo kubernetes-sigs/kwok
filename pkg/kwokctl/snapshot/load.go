@@ -40,7 +40,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
@@ -157,7 +157,7 @@ func (l *Loader) finishLoad(ctx context.Context, startTime time.Time) error {
 
 	for _, pendingObj := range pending {
 		missing := l.getMissingOwnerReferences(pendingObj)
-		missingData := slices.Map(missing, func(or metav1.OwnerReference) ownerReference {
+		missingData := utilsslices.Map(missing, func(or metav1.OwnerReference) ownerReference {
 			return ownerReference{
 				APIVersion: or.APIVersion,
 				Kind:       or.Kind,

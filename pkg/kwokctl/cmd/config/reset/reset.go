@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/utils/file"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // NewCommand returns a new cobra.Command for config reset
@@ -43,7 +43,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func runE(_ context.Context) error {
-	p := path.Join(config.WorkDir, consts.ConfigName)
+	p := utilspath.Join(config.WorkDir, consts.ConfigName)
 	if dryrun.DryRun {
 		dryrun.PrintMessagef("# Removing config file %s", p)
 		return nil

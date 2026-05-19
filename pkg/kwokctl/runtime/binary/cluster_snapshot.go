@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -158,6 +158,6 @@ func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
 	}
 	conf := &config.Options
 	return c.Kectl(ctx, append([]string{
-		"--endpoints=http://" + net.LocalAddress + ":" + format.String(conf.EtcdPort),
+		"--endpoints=http://" + utilsnet.LocalAddress + ":" + format.String(conf.EtcdPort),
 	}, args...)...)
 }

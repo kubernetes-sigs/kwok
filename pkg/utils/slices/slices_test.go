@@ -23,43 +23,6 @@ import (
 	"testing"
 )
 
-func TestContains(t *testing.T) {
-	type args[S ~[]T, T comparable] struct {
-		s S
-		t T
-	}
-	type testCase[S ~[]T, T comparable] struct {
-		name string
-		args args[S, T]
-		want bool
-	}
-	tests := []testCase[[]string, string]{
-		{
-			name: "test contains expect string",
-			args: args[[]string, string]{
-				s: []string{"a", "b", "c"},
-				t: "b",
-			},
-			want: true,
-		},
-		{
-			name: "test not contains expect string",
-			args: args[[]string, string]{
-				s: []string{"a", "b", "c"},
-				t: "d",
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Contains(tt.args.s, tt.args.t); got != tt.want {
-				t.Errorf("Contains() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestFilter(t *testing.T) {
 	type args[S ~[]T, T any] struct {
 		s S
