@@ -64,7 +64,7 @@ linters:
       min-len: 5
       min-occurrences: 10
     gocyclo:
-      min-complexity: 50
+      min-complexity: 35
     importas:
       alias:
       - pkg: k8s.io/api/core/v1
@@ -90,10 +90,6 @@ linters:
     generated: lax
     rules:
     - linters:
-      - revive
-      - staticcheck
-      text: '(ST1003: should not use underscores in Go names; func (Convert_.*_To_.*|SetDefaults_)|exported: exported function (Convert|SetDefaults)_.* should be of the form)'
-    - linters:
       - goconst
       path: (.+)_test\.go
     - linters:
@@ -102,9 +98,7 @@ linters:
       text: 'SA1019: '
     paths:
     - .*\.zz_generated\..*
-    - third_party$
-    - builtin$
-    - examples$
+    - (.+)_test\.go$
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
@@ -126,6 +120,3 @@ formatters:
     generated: lax
     paths:
     - .*\.zz_generated\..*
-    - third_party$
-    - builtin$
-    - examples$
