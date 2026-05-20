@@ -2881,6 +2881,7 @@ string
 </td>
 <td>
 <p>DashboardVersion is the version of Kubernetes dashboard to use.</p>
+<p>Deprecated: Use headlamp instead</p>
 </td>
 </tr>
 <tr>
@@ -2892,6 +2893,7 @@ string
 </td>
 <td>
 <p>DashboardMetricsScraperVersion is the version of Kubernetes dashboard metrics scraper to use.</p>
+<p>Deprecated: Use headlamp instead</p>
 </td>
 </tr>
 <tr>
@@ -3116,6 +3118,7 @@ string
 </td>
 <td>
 <p>DashboardImagePrefix is the prefix of the dashboard image.</p>
+<p>Deprecated: Use HeadlampImagePrefix instead</p>
 </td>
 </tr>
 <tr>
@@ -3257,6 +3260,7 @@ string
 </td>
 <td>
 <p>DashboardImage is the image of dashboard.</p>
+<p>Deprecated: Use headlamp instead</p>
 </td>
 </tr>
 <tr>
@@ -3268,6 +3272,7 @@ string
 </td>
 <td>
 <p>DashboardMetricsScraperImage is the image of dashboard metrics scraper.</p>
+<p>Deprecated: Use headlamp instead</p>
 </td>
 </tr>
 <tr>
@@ -3861,6 +3866,7 @@ uint32
 </td>
 <td>
 <p>DashboardPort is dashboard port in the binary runtime</p>
+<p>Deprecated: Use headlamp instead</p>
 </td>
 </tr>
 <tr>
