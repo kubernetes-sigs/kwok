@@ -72,7 +72,7 @@ var (
 	KueueImagePrefix    = "registry.k8s.io/kueue"
 	KueueManifestPrefix = "https://github.com/kubernetes-sigs/kueue/releases/download"
 
-	JobSetVersion        = "0.11.1"
+	JobSetVersion        = "0.12.0"
 	JobSetBinaryPrefix   = ""
 	JobSetImagePrefix    = "registry.k8s.io/jobset"
 	JobSetManifestPrefix = "https://github.com/kubernetes-sigs/jobset/releases/download"
