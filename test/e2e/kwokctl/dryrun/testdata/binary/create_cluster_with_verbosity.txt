@@ -36,8 +36,8 @@ leaderElection:
   retryPeriod: 0s
 EOF
 # Download https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwok-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
-# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
-# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/components.yaml to <ROOT_DIR>/workdir/cache/manifest/f3daa12b5f6d54a577801f047e143b947ad75baf9146f8799dd953a01c3e6bd3.yaml
+# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
+# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml to <ROOT_DIR>/workdir/cache/manifest/49813f4ec9caba92a73718bf218a6a07e283942ec2088fe8d58ac793f5f6998b.yaml
 # Download https://github.com/prometheus/prometheus/releases/download/v3.8.1/prometheus-3.8.1.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
 # Download https://github.com/jaegertracing/jaeger/releases/download/v1.76.0/jaeger-1.76.0-<OS>-<ARCH>.<TAR> and extract jaeger-all-in-one to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml

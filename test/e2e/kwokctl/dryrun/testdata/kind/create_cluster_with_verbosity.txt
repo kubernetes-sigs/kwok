@@ -391,8 +391,8 @@ spec:
     name: volume-3
 status: {}
 EOF
-docker pull registry.k8s.io/metrics-server/metrics-server:v0.8.0
-# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.0/components.yaml to <ROOT_DIR>/workdir/cache/manifest/f3daa12b5f6d54a577801f047e143b947ad75baf9146f8799dd953a01c3e6bd3.yaml
+docker pull registry.k8s.io/metrics-server/metrics-server:v0.8.1
+# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml to <ROOT_DIR>/workdir/cache/manifest/49813f4ec9caba92a73718bf218a6a07e283942ec2088fe8d58ac793f5f6998b.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/metrics-server.yaml
 apiVersion: v1
 kind: Pod
@@ -415,7 +415,7 @@ spec:
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     command:
     - /metrics-server
-    image: registry.k8s.io/metrics-server/metrics-server:v0.8.0
+    image: registry.k8s.io/metrics-server/metrics-server:v0.8.1
     imagePullPolicy: Never
     name: metrics-server
     ports:
@@ -660,7 +660,7 @@ KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kubectl
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.8.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/dashboard:v2.7.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/metrics-scraper:v1.0.9 --name kwok-<CLUSTER_NAME>
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/metrics-server/metrics-server:v0.8.0 --name kwok-<CLUSTER_NAME>
+KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/metrics-server/metrics-server:v0.8.1 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v3.8.1 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/jaegertracing/all-in-one:1.76.0 --name kwok-<CLUSTER_NAME>
 kubectl config view --minify=true --raw=true
