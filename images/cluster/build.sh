@@ -33,7 +33,7 @@ KUBE_VERSIONS=()
 BUILDER="docker"
 
 function usage() {
-  echo "Usage: ${0} [--help] [--version <version>] [--kube-version <kube-version> ...] [--image <image> ...] [--extra-tag <extra-tag> ...] [--staging-prefix <staging-prefix>] [--platform <platform> ...] [--push] [--dry-run]"
+  echo "Usage: ${0} [--help] [--version <version>] [--kube-version <kube-version> ...] [--image <image> ...] [--extra-tag <extra-tag> ...] [--staging-prefix <staging-prefix>] [--platform <platform> ...] [--push] [--dry-run] [--builder <builder>]"
   echo "  --version <version> is kwok version, is required"
   echo "  --kube-version <kube-version> is kubernetes version, is required"
   echo "  --image <image> is image, is required"
@@ -42,7 +42,7 @@ function usage() {
   echo "  --platform <platform> is multi-platform capable for image"
   echo "  --push will push image to registry"
   echo "  --dry-run just show what would be done"
-  echo "  --builder <builder> specify image builder, default: ${BUILDER}. available options: docker, nerdctl, podman"
+  echo "  --builder <builder> specify image builder, default: ${BUILDER}. available options: docker, nerdctl, podman, apple-container"
 }
 
 function args() {
@@ -178,6 +178,13 @@ function main() {
           dry_run nerdctl push "${platform_args[@]}" "${image}"
         done
       fi
+    elif [[ "${BUILDER}" == "apple-container" ]]; then
+      build_with_apple_container "${extra_args[@]}"
+      if [[ "${PUSH}" == "true" ]]; then
+        for image in "${images[@]}"; do
+          dry_run container image push "${platform_args[@]}" "${image}"
+        done
+      fi
     elif [[ "${BUILDER}" == "podman" ]]; then
       build_with_podman "${extra_args[@]}"
       if [[ "${PUSH}" == "true" ]]; then
@@ -218,6 +225,15 @@ function build_with_podman() {
   local extra_args
   extra_args=("$@")
   dry_run podman build \
+    "${extra_args[@]}" \
+    -f "${DOCKERFILE}" \
+    .
+}
+
+function build_with_apple_container() {
+  local extra_args
+  extra_args=("$@")
+  dry_run container build \
     "${extra_args[@]}" \
     -f "${DOCKERFILE}" \
     .

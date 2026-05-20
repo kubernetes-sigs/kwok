@@ -63,7 +63,13 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		"run",
 		"--rm",
 		"-i",
-		"--pull=never",
+	)
+
+	if !c.isAppleContainer {
+		args = append(args, "--pull=never")
+	}
+
+	args = append(args,
 		"--network="+c.networkName(),
 		"--name="+tempContainerName,
 		"--entrypoint=/bin/sh",

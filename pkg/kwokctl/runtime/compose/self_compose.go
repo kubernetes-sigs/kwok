@@ -56,7 +56,9 @@ func (c *Cluster) createNetwork(ctx context.Context) error {
 	args = append(args,
 		"network", "create", network,
 	)
+
 	args = append(args, labelArgs...)
+
 	logger.Debug("Creating network")
 	return c.Exec(ctx, c.runtime, args...)
 }
@@ -113,6 +115,22 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 }
 
 func (c *Cluster) inspectNetwork(ctx context.Context, name string) (exist bool) {
+	if c.isAppleContainer {
+		buf := bytes.NewBuffer(nil)
+		ctx := utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{
+			Out: buf,
+		})
+		err := c.Exec(ctx, c.runtime, "network", "inspect", name)
+		if err != nil {
+			// TODO: check if network exists or other error
+			return false
+		}
+		if strings.TrimSpace(buf.String()) == "[]" {
+			return false
+		}
+
+		return true
+	}
 	err := c.Exec(ctx, c.runtime, "network", "inspect", name)
 	if err != nil {
 		// TODO: check if network exists or other error
@@ -216,7 +234,10 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 
 	args := []string{"create",
 		"--name=" + c.Name() + "-" + componentName,
-		"--pull=never",
+	}
+
+	if !c.isAppleContainer {
+		args = append(args, "--pull=never")
 	}
 
 	entrypoint := strings.Join(component.Command, " ")
@@ -384,17 +405,47 @@ func checkInspect(raw []byte) (bool, error) {
 	}
 }
 
+type inspectAppleContaeinerStatus struct {
+	Status string `json:"status"`
+}
+
+func checkAppleInspect(raw []byte) (running bool, exist bool, err error) {
+	var tmp []inspectAppleContaeinerStatus
+	err = json.Unmarshal(raw, &tmp)
+	if err != nil {
+		return false, false, fmt.Errorf("failed to unmarshal inspect result: %w", err)
+	}
+
+	if len(tmp) == 0 {
+		return false, false, nil
+	}
+	return tmp[0].Status == "running", true, nil
+}
+
 func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (running bool, exist bool) {
 	buf := bytes.NewBuffer(nil)
 	args := make([]string, 0, 3)
 	args = append(args, "inspect", c.Name()+"-"+componentName)
 
-	args = append(args, "--format={{ json . }}")
+	if !c.isAppleContainer {
+		args = append(args, "--format={{ json . }}")
+	}
 
 	err := c.Exec(utilsexec.WithWriteTo(ctx, buf), c.runtime, args...)
 	if err != nil {
-		// TODO: check if component exists or other error
+		logger := log.FromContext(ctx)
+		logger.Debug("Failed to inspect component", "component", componentName, "err", err)
 		return false, false
+	}
+
+	if c.isAppleContainer {
+		running, exist, err = checkAppleInspect(buf.Bytes())
+		if err != nil {
+			logger := log.FromContext(ctx)
+			logger.Warn("Failed to check inspect result", "err", err)
+			return false, false
+		}
+		return running, exist
 	}
 
 	running, err = checkInspect(buf.Bytes())

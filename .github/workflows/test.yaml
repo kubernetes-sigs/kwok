@@ -128,6 +128,7 @@ jobs:
       fail-fast: false
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+        # https://github.com/actions/runner-images#available-images
         include:
         # Windows
         # Linux containers are not supported on Windows Runner
@@ -141,6 +142,9 @@ jobs:
         # MacOS arm64
         - os: macos-15
           kwokctl-runtime: binary
+        # MacOS arm64 container
+        - os: macos-26
+          kwokctl-runtime: apple-container
 
         # Linux
         - os: ubuntu-latest
@@ -168,6 +172,14 @@ jobs:
       shell: bash
       run: |
         brew install coreutils bash
+
+    - name: Install Apple Container
+      if: ${{ startsWith(matrix.os, 'macos-') && matrix.kwokctl-runtime == 'apple-container' }}
+      shell: bash
+      run: |
+        curl -sSL https://github.com/apple/container/releases/download/1.0.0/container-installer-unsigned.pkg -o container-installer.pkg
+        sudo installer -pkg container-installer.pkg -target /
+        container system start --enable-kernel-install
 
     - name: Install Nerdctl and Start Containerd
       if: ${{ matrix.kwokctl-runtime == 'nerdctl' }}

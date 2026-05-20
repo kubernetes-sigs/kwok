@@ -339,7 +339,7 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	logger := log.FromContext(ctx)
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.KindNodeImage)
+	err = c.ensureImage(ctx, conf.KindNodeImage)
 	if err != nil {
 		logger.Warn("Failed to ensure kind node image, attempting to build locally",
 			"image", conf.KindNodeImage,
@@ -582,7 +582,7 @@ func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kubectl
-	err = c.EnsureImage(ctx, c.runtime, conf.KubectlImage)
+	err = c.ensureImage(ctx, conf.KubectlImage)
 	if err != nil {
 		return err
 	}
@@ -663,7 +663,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	}
 
 	conf := &env.kwokctlConfig.Options
-	err = c.EnsureImage(ctx, c.runtime, conf.KwokControllerImage)
+	err = c.ensureImage(ctx, conf.KwokControllerImage)
 	if err != nil {
 		return err
 	}
@@ -739,7 +739,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.DashboardImage)
+	err = c.ensureImage(ctx, conf.DashboardImage)
 	if err != nil {
 		return err
 	}
@@ -781,7 +781,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, dashboardComponent)
 
 	if enableMetricsServer {
-		err = c.EnsureImage(ctx, c.runtime, conf.DashboardMetricsScraperImage)
+		err = c.ensureImage(ctx, conf.DashboardMetricsScraperImage)
 		if err != nil {
 			return err
 		}
@@ -817,7 +817,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	}
 
 	conf := &env.kwokctlConfig.Options
-	err = c.EnsureImage(ctx, c.runtime, conf.MetricsServerImage)
+	err = c.ensureImage(ctx, conf.MetricsServerImage)
 	if err != nil {
 		return err
 	}
@@ -890,7 +890,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.PrometheusImage)
+	err = c.ensureImage(ctx, conf.PrometheusImage)
 	if err != nil {
 		return err
 	}
@@ -953,7 +953,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.JaegerPort != 0 {
-		err = c.EnsureImage(ctx, c.runtime, conf.JaegerImage)
+		err = c.ensureImage(ctx, conf.JaegerImage)
 		if err != nil {
 			return err
 		}
@@ -1683,4 +1683,8 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	}
 
 	return "kind", nil
+}
+
+func (c *Cluster) ensureImage(ctx context.Context, image string) error {
+	return c.EnsureImage(ctx, []string{c.runtime}, image)
 }
