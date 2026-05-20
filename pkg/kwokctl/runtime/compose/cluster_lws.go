@@ -35,7 +35,7 @@ func (c *Cluster) addLWS(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the lws
-	err = c.EnsureImage(ctx, c.runtime, conf.LWSImage)
+	err = c.ensureImage(ctx, conf.LWSImage)
 	if err != nil {
 		return err
 	}

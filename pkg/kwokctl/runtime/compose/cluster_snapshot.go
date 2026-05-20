@@ -42,8 +42,12 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 	}
 
 	etcdContainerName := c.Name() + "-etcd"
+	runtimeBinary := conf.Runtime
+	if c.isAppleContainer {
+		runtimeBinary = c.runtime
+	}
 	// Copy to host path from container
-	err = c.Exec(ctx, conf.Runtime, "cp", etcdContainerName+":"+tmpFile, path)
+	err = c.Exec(ctx, runtimeBinary, "cp", etcdContainerName+":"+tmpFile, path)
 	if err != nil {
 		return err
 	}
@@ -75,6 +79,10 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	}()
 
 	etcdContainerName := c.Name() + "-etcd"
+	runtimeBinary := conf.Runtime
+	if c.isAppleContainer {
+		runtimeBinary = c.runtime
+	}
 	if !c.isNerdctl {
 		// Restart etcd and kube-apiserver
 		components := []string{
@@ -125,7 +133,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}()
 
 		// Copy to container from host temporary directory
-		err = c.Exec(ctx, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
+		err = c.Exec(ctx, runtimeBinary, "cp", etcdDataTmp, etcdContainerName+":/")
 		if err != nil {
 			return err
 		}
@@ -150,7 +158,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		}()
 
 		// Copy to container from host temporary directory
-		err = c.Exec(ctx, conf.Runtime, "cp", etcdDataTmp, etcdContainerName+":/")
+		err = c.Exec(ctx, runtimeBinary, "cp", etcdDataTmp, etcdContainerName+":/")
 		if err != nil {
 			return err
 		}

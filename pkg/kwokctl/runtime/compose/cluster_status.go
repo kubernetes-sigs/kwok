@@ -98,12 +98,25 @@ func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (r
 	args := make([]string, 0, 3)
 	args = append(args, "inspect", c.Name()+"-"+componentName)
 
-	args = append(args, "--format={{ json . }}")
+	if !c.isAppleContainer {
+		args = append(args, "--format={{ json . }}")
+	}
 
 	err := c.Exec(utilsexec.WithWriteTo(ctx, buf), c.runtime, args...)
 	if err != nil {
-		// TODO: check if component exists or other error
+		logger := log.FromContext(ctx)
+		logger.Debug("Failed to inspect component", "component", componentName, "err", err)
 		return false, false
+	}
+
+	if c.isAppleContainer {
+		running, exist, err = checkAppleInspect(buf.Bytes())
+		if err != nil {
+			logger := log.FromContext(ctx)
+			logger.Warn("Failed to check inspect result", "err", err)
+			return false, false
+		}
+		return running, exist
 	}
 
 	running, err = checkInspect(buf.Bytes())
@@ -152,4 +165,33 @@ func checkInspect(raw []byte) (bool, error) {
 	default:
 		return false, fmt.Errorf("unexpected inspect result: %s", raw)
 	}
+}
+
+type inspectAppleContainerStatus struct {
+	// Status is a string on CLI 1.0.x and an object with a state field on 1.6.x.
+	Status json.RawMessage `json:"status"`
+}
+
+func checkAppleInspect(raw []byte) (running bool, exist bool, err error) {
+	var tmp []inspectAppleContainerStatus
+	err = json.Unmarshal(raw, &tmp)
+	if err != nil {
+		return false, false, fmt.Errorf("failed to unmarshal inspect result: %w", err)
+	}
+
+	if len(tmp) == 0 {
+		return false, false, nil
+	}
+
+	var state string
+	if err = json.Unmarshal(tmp[0].Status, &state); err != nil {
+		var status struct {
+			State string `json:"state"`
+		}
+		if err = json.Unmarshal(tmp[0].Status, &status); err != nil {
+			return false, false, fmt.Errorf("failed to unmarshal inspect status: %w", err)
+		}
+		state = status.State
+	}
+	return state == "running", true, nil
 }

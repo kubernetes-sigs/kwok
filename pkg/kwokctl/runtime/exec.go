@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -142,9 +143,9 @@ func (c *Cluster) ForkExecIsRunning(ctx context.Context, dir string, name string
 }
 
 // EnsureImage ensures the image exists.
-func (c *Cluster) EnsureImage(ctx context.Context, command string, image string) error {
+func (c *Cluster) EnsureImage(ctx context.Context, commands []string, image string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessagef("%s pull %s", command, image)
+		dryrun.PrintMessagef("%s pull %s", strings.Join(commands, " "), image)
 		return nil
 	}
 
@@ -157,8 +158,11 @@ func (c *Cluster) EnsureImage(ctx context.Context, command string, image string)
 	logger := log.FromContext(ctx)
 
 	err = utilsexec.Exec(ctx,
-		command, "inspect",
-		image,
+		commands[0],
+		append(commands[1:],
+			"inspect",
+			image,
+		)...,
 	)
 	if err == nil {
 		logger.Debug("Image already exists",
@@ -167,7 +171,7 @@ func (c *Cluster) EnsureImage(ctx context.Context, command string, image string)
 		return nil
 	}
 
-	err = c.ensureImage(ctx, command, image, conf.QuietPull, conf.CacheDir)
+	err = c.ensureImage(ctx, commands, image, conf.QuietPull, conf.CacheDir)
 	if err != nil {
 		if ctx.Err() != nil {
 			return err
@@ -176,7 +180,7 @@ func (c *Cluster) EnsureImage(ctx context.Context, command string, image string)
 			"image", image,
 			"err", err,
 		)
-		err0 := c.ensureImageWithRuntime(ctx, command, image, conf.QuietPull)
+		err0 := c.ensureImageWithRuntime(ctx, commands, image, conf.QuietPull)
 		if err0 != nil {
 			return errors.Join(err, err0)
 		}
@@ -184,20 +188,31 @@ func (c *Cluster) EnsureImage(ctx context.Context, command string, image string)
 	return nil
 }
 
-func (c *Cluster) ensureImage(ctx context.Context, command string, image string, quiet bool, cacheDir string) error {
+func (c *Cluster) ensureImage(ctx context.Context, commands []string, image string, quiet bool, cacheDir string) error {
+	format := utilsimage.FormatDocker
 	dest := utilspath.Join(cacheDir, "tarball", image+".tar")
+	if len(commands) >= 2 && commands[0] == "container" && commands[1] == "image" {
+		format = utilsimage.FormatOCI
+		dest = utilspath.Join(cacheDir, string(format), image+".tar")
+	}
+
 	err := c.MkdirAll(filepath.Dir(dest))
 	if err != nil {
 		return err
 	}
 	cache := utilspath.Join(cacheDir, "blobs")
-	err = utilsimage.Pull(ctx, cache, image, dest, quiet)
+	err = utilsimage.Pull(ctx, cache, image, dest, quiet, format)
 	if err != nil {
 		return err
 	}
 
-	err = utilsexec.Exec(ctx, command, "load",
-		"-i", dest,
+	err = utilsexec.Exec(ctx,
+		commands[0],
+		append(commands[1:],
+			"load",
+			"-i",
+			dest,
+		)...,
 	)
 	if err != nil {
 		return err
@@ -213,13 +228,17 @@ func (c *Cluster) ensureImage(ctx context.Context, command string, image string,
 	return nil
 }
 
-func (c *Cluster) ensureImageWithRuntime(ctx context.Context, command string, image string, quiet bool) error {
+func (c *Cluster) ensureImageWithRuntime(ctx context.Context, commands []string, image string, quiet bool) error {
 	var out io.Writer = os.Stderr
 	if quiet {
 		out = nil
 	}
-	return utilsexec.Exec(utilsexec.WithAllWriteTo(ctx, out), command, "pull",
-		image,
+	return utilsexec.Exec(utilsexec.WithAllWriteTo(ctx, out),
+		commands[0],
+		append(commands[1:],
+			"pull",
+			image,
+		)...,
 	)
 }
 

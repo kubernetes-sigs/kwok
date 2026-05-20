@@ -35,7 +35,7 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the jobset
-	err = c.EnsureImage(ctx, c.runtime, conf.JobSetImage)
+	err = c.ensureImage(ctx, conf.JobSetImage)
 	if err != nil {
 		return err
 	}

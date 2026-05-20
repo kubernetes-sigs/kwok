@@ -36,7 +36,7 @@ func (c *Cluster) addSchedulerPlugins(ctx context.Context, env *env) (err error)
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.SchedulerPluginsControllerImage)
+	err = c.ensureImage(ctx, conf.SchedulerPluginsControllerImage)
 	if err != nil {
 		return err
 	}

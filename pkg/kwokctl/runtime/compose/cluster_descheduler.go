@@ -35,7 +35,7 @@ func (c *Cluster) addDescheduler(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the descheduler
-	err = c.EnsureImage(ctx, c.runtime, conf.DeschedulerImage)
+	err = c.ensureImage(ctx, conf.DeschedulerImage)
 	if err != nil {
 		return err
 	}

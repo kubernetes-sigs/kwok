@@ -27,4 +27,5 @@ func init() {
 	runtime.DefaultRegistry.Register(consts.RuntimeTypeNerdctl, NewNerdctlCluster)
 	runtime.DefaultRegistry.Register(consts.RuntimeTypeLima, NewLimaCluster)
 	runtime.DefaultRegistry.Register(consts.RuntimeTypeFinch, NewFinchCluster)
+	runtime.DefaultRegistry.Register(consts.RuntimeTypeAppleContainer, NewAppleContainerCluster)
 }
