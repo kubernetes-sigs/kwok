@@ -57,11 +57,6 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 
-	kueueArgs = append(kueueArgs,
-		// Remove this after https://github.com/kubernetes-sigs/kueue/issues/8606 is fixed
-		"--feature-gates=VisibilityOnDemand=false",
-	)
-
 	envs := []internalversion.Env{
 		{
 			Name:  "NAMESPACE",

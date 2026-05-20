@@ -67,7 +67,7 @@ var (
 	MetricsServerImagePrefix    = "registry.k8s.io/metrics-server"
 	MetricsServerManifestPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 
-	KueueVersion        = "0.16.0"
+	KueueVersion        = "0.17.3"
 	KueueBinaryPrefix   = ""
 	KueueImagePrefix    = "registry.k8s.io/kueue"
 	KueueManifestPrefix = "https://github.com/kubernetes-sigs/kueue/releases/download"
