@@ -67,7 +67,7 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 	volumes = append(volumes,
 		internalversion.Volume{
 			HostPath:  conf.KubeconfigPath,
-			MountPath: "/root/.kube/config",
+			MountPath: kubeconfigPath,
 			ReadOnly:  true,
 		},
 		internalversion.Volume{
@@ -146,7 +146,7 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 	}
 
 	kueueArgs = append(kueueArgs,
-		"--kubeconfig=/root/.kube/config",
+		"--kubeconfig="+kubeconfigPath,
 	)
 	user := "root"
 
