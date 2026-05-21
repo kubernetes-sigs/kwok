@@ -7,3 +7,5 @@ spec:
   - name: container
     image: image
   nodeName: node
+status:
+  phase: Pending
