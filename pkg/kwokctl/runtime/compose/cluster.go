@@ -367,6 +367,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.CheckComponentIssues(ctx, env.kwokctlConfig.Components)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

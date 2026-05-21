@@ -372,6 +372,56 @@ func (c *Cluster) Install(ctx context.Context) error {
 	return c.MkdirAll(c.Workdir())
 }
 
+// CheckComponentIssues checks and warns about component enable/disable issues.
+func (c *Cluster) CheckComponentIssues(ctx context.Context, components []internalversion.Component) error {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return err
+	}
+
+	enabled, disabled, err := c.getEnabledAndDisabledComponents(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Get available component names from configuration
+	available := utilsslices.Map(conf.Components, func(c internalversion.Component) string {
+		return c.Name
+	})
+
+	logger := log.FromContext(ctx)
+
+	// Check for disabled components not in available list
+	disabled = utilsslices.Unique(disabled)
+	if len(disabled) > 0 {
+		unknown := utilsslices.Filter(disabled, func(name string) bool {
+			return !slices.Contains(available, name)
+		})
+		if len(unknown) > 0 {
+			logger.Warn("Some disabled components are not known to the runtime",
+				"components", unknown,
+			)
+		}
+	}
+
+	// Check for enabled components not in final built components
+	enabled = utilsslices.Unique(enabled)
+	if len(enabled) > 0 {
+		actualNames := utilsslices.Map(components, func(component internalversion.Component) string {
+			return component.Name
+		})
+		unused := utilsslices.Filter(enabled, func(name string) bool {
+			return !slices.Contains(actualNames, name)
+		})
+		if len(unused) > 0 {
+			logger.Warn("Some enabled components are not used in the runtime",
+				"components", unused,
+			)
+		}
+	}
+	return nil
+}
+
 // Uninstall uninstalls the cluster.
 func (c *Cluster) Uninstall(ctx context.Context) error {
 	// cleanup workdir
@@ -449,11 +499,11 @@ func (c *Cluster) ListComponents(ctx context.Context) ([]internalversion.Compone
 	return config.Components, nil
 }
 
-// Components returns component names of the cluster
-func (c *Cluster) Components(ctx context.Context) ([]string, error) {
+// getEnabledAndDisabledComponents builds the enable and disable component lists from config.
+func (c *Cluster) getEnabledAndDisabledComponents(ctx context.Context) ([]string, []string, error) {
 	conf, err := c.Config(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	enable := conf.Options.Enable
@@ -484,6 +534,21 @@ func (c *Cluster) Components(ctx context.Context) ([]string, error) {
 	}
 	if conf.Options.KueuevizPort != 0 {
 		enable = append(enable, consts.ComponentKueue, consts.ComponentKueueviz)
+	}
+
+	return enable, disable, nil
+}
+
+// Components returns component names of the cluster
+func (c *Cluster) Components(ctx context.Context) ([]string, error) {
+	conf, err := c.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	enable, disable, err := c.getEnabledAndDisabledComponents(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	components := conf.Options.Components
