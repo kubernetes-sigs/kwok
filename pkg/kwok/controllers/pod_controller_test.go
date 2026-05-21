@@ -89,6 +89,9 @@ func TestPodController(t *testing.T) {
 				},
 				NodeName: "node0",
 			},
+			Status: corev1.PodStatus{
+				Phase: corev1.PodPending,
+			},
 		},
 		&corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -104,6 +107,9 @@ func TestPodController(t *testing.T) {
 					},
 				},
 				NodeName: "xxxx",
+			},
+			Status: corev1.PodStatus{
+				Phase: corev1.PodPending,
 			},
 		},
 		&corev1.Pod{
@@ -122,6 +128,9 @@ func TestPodController(t *testing.T) {
 				},
 				NodeName: "node0",
 			},
+			Status: corev1.PodStatus{
+				Phase: corev1.PodPending,
+			},
 		},
 		&corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -137,6 +146,9 @@ func TestPodController(t *testing.T) {
 					},
 				},
 				NodeName: "node1",
+			},
+			Status: corev1.PodStatus{
+				Phase: corev1.PodPending,
 			},
 		},
 	)
@@ -284,6 +296,9 @@ func TestPodController(t *testing.T) {
 				},
 			},
 			NodeName: "node0",
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodPending,
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {

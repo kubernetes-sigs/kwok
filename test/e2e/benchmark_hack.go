@@ -53,6 +53,8 @@ spec:
   - image: busybox
     name: container-0
   nodeName: fake-node-000000
+status:
+  phase: Pending
 ---
 `
 
