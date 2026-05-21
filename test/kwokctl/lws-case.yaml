@@ -1,0 +1,21 @@
+apiVersion: leaderworkerset.x-k8s.io/v1
+kind: LeaderWorkerSet
+metadata:
+  name: sample-lws
+  namespace: default
+spec:
+  replicas: 1
+  leaderWorkerTemplate:
+    size: 2
+    workerTemplate:
+      spec:
+        containers:
+        - name: dummy-worker
+          image: gcr.io/k8s-staging-perf-tests/sleep:v0.1.0
+          args: ["30s"]
+          resources:
+            requests:
+              cpu: "1"
+              memory: "200Mi"
+        nodeSelector:
+          type: kwok

@@ -221,6 +221,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setJobSetConfig(conf)
 
+	setLWSConfig(conf)
+
 	setKectlConfig(conf)
 
 	return config
@@ -626,6 +628,28 @@ func setKueueConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.KueuevizFrontendImage = joinImageURI(conf.KueueImagePrefix, "kueueviz-frontend", conf.KueueVersion)
 	}
 	conf.KueuevizFrontendImage = envs.GetEnvWithPrefix("KUEUEVIZ_FRONTEND_IMAGE", conf.KueuevizFrontendImage)
+}
+
+func setLWSConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.LWSVersion == "" {
+		conf.LWSVersion = consts.LWSVersion
+	}
+	conf.LWSVersion = version.AddPrefixV(envs.GetEnvWithPrefix("LWS_VERSION", conf.LWSVersion))
+
+	if conf.LWSImagePrefix == "" {
+		conf.LWSImagePrefix = consts.LWSImagePrefix
+	}
+	conf.LWSImagePrefix = envs.GetEnvWithPrefix("LWS_IMAGE_PREFIX", conf.LWSImagePrefix)
+
+	if conf.LWSImage == "" {
+		conf.LWSImage = joinImageURI(conf.LWSImagePrefix, "lws", conf.LWSVersion)
+	}
+	conf.LWSImage = envs.GetEnvWithPrefix("LWS_IMAGE", conf.LWSImage)
+
+	if conf.LWSManifest == "" {
+		conf.LWSManifest = consts.LWSManifestPrefix + "/" + conf.LWSVersion + "/manifests.yaml"
+	}
+	conf.LWSManifest = envs.GetEnvWithPrefix("LWS_MANIFEST", conf.LWSManifest)
 }
 
 // joinImageURI joins the image URI.

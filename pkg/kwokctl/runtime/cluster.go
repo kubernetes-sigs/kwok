@@ -64,6 +64,7 @@ var (
 	Prometheus              = "prometheus.yaml"
 	Kueue                   = "kueue.yaml"
 	JobSet                  = "jobset.yaml"
+	LWS                     = "lws.yaml"
 	KindName                = "kind.yaml"
 	AuditPolicyName         = "audit.yaml"
 	AuditLogName            = "audit.log"

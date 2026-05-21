@@ -77,6 +77,11 @@ var (
 	JobSetImagePrefix    = "registry.k8s.io/jobset"
 	JobSetManifestPrefix = "https://github.com/kubernetes-sigs/jobset/releases/download"
 
+	LWSVersion        = "0.8.0"
+	LWSBinaryPrefix   = ""
+	LWSImagePrefix    = "registry.k8s.io/lws"
+	LWSManifestPrefix = "https://github.com/kubernetes-sigs/lws/releases/download"
+
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000
 )
@@ -129,4 +134,5 @@ const (
 	ComponentKueue                      = "kueue"
 	ComponentKueueviz                   = "kueueviz"
 	ComponentJobSet                     = "jobset"
+	ComponentLWS                        = "lws"
 )

@@ -41,6 +41,7 @@ var (
 		"kubernetes.default.svc.cluster.local",
 		"kueue-webhook-service.kueue-system.svc",
 		"jobset-webhook-service.jobset-system.svc",
+		"lws-webhook-service.lws-system.svc",
 		"localhost",
 		"127.0.0.1",
 		"::1",

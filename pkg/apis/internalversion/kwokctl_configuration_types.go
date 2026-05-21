@@ -128,6 +128,9 @@ type KwokctlConfigurationOptions struct {
 	// JobSetVersion is the version of jobset to use.
 	JobSetVersion string
 
+	// LWSVersion is the version of lws to use.
+	LWSVersion string
+
 	// KindVersion is the version of kind to use.
 	KindVersion string
 
@@ -213,6 +216,12 @@ type KwokctlConfigurationOptions struct {
 	// JobSetManifest is the full URL of the jobset manifest.
 	JobSetManifest string
 
+	// LWSImage is the image of lws.
+	LWSImage string
+
+	// LWSManifest is the full URL of the lws manifest.
+	LWSManifest string
+
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string
 
@@ -289,6 +298,9 @@ type KwokctlConfigurationOptions struct {
 
 	// JobSetBinary is the binary of jobset.
 	JobSetBinary string
+
+	// LWSBinary is the binary of lws.
+	LWSBinary string
 
 	// KindBinary is the binary of kind.
 	KindBinary string
