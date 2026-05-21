@@ -57,7 +57,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
-				MountPath: "/root/.kube/config",
+				MountPath: kubeconfigPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
@@ -77,7 +77,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 			},
 		)
 		kubectlProxyArgs = append(kubectlProxyArgs,
-			"--kubeconfig=/root/.kube/config",
+			"--kubeconfig="+kubeconfigPath,
 			"--port=8001",
 		)
 		ports = append(

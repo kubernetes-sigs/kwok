@@ -72,7 +72,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
-				MountPath: "/root/.kube/config",
+				MountPath: kubeconfigPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
@@ -107,10 +107,10 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			},
 		)
 		kwokControllerArgs = append(kwokControllerArgs,
-			"--kubeconfig=/root/.kube/config",
+			"--kubeconfig="+kubeconfigPath,
 			"--config=/root/.kwok/kwok.yaml",
-			"--tls-cert-file=/etc/kubernetes/pki/admin.crt",
-			"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
+			"--tls-cert-file="+pkiAdminCertPath,
+			"--tls-private-key-file="+pkiAdminKeyPath,
 			"--node-ip="+conf.NodeIP,
 			"--node-name="+conf.NodeName,
 			"--node-port=10247",

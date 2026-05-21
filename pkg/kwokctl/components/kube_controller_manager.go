@@ -80,7 +80,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
-				MountPath: "/root/.kube/config",
+				MountPath: kubeconfigPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
@@ -100,7 +100,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			},
 		)
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-			"--kubeconfig=/root/.kube/config",
+			"--kubeconfig="+kubeconfigPath,
 		)
 	} else {
 		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
@@ -214,8 +214,8 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	if conf.KubeAuthorization {
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
-				"--root-ca-file=/etc/kubernetes/pki/ca.crt",
-				"--service-account-private-key-file=/etc/kubernetes/pki/admin.key",
+				"--root-ca-file="+pkiCACertPath,
+				"--service-account-private-key-file="+pkiAdminKeyPath,
 			)
 		} else {
 			kubeControllerManagerArgs = append(kubeControllerManagerArgs,

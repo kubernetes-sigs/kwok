@@ -47,12 +47,12 @@ func BuildDashboardMetricsScraperComponent(conf BuildDashboardMetricsScraperComp
 	var ports []internalversion.Port
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		dashboardArgs = append(dashboardArgs,
-			"--kubeconfig=/root/.kube/config",
+			"--kubeconfig="+kubeconfigPath,
 		)
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
-				MountPath: "/root/.kube/config",
+				MountPath: kubeconfigPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{

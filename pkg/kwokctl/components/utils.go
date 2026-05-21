@@ -76,6 +76,7 @@ const (
 )
 
 const (
+	kubeconfigPath   = "/root/.kube/config"
 	pkiCACertPath    = "/etc/kubernetes/pki/ca.crt"
 	pkiAdminCertPath = "/etc/kubernetes/pki/admin.crt"
 	pkiAdminKeyPath  = "/etc/kubernetes/pki/admin.key"

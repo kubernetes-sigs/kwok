@@ -57,7 +57,7 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 	volumes = append(volumes,
 		internalversion.Volume{
 			HostPath:  conf.KubeconfigPath,
-			MountPath: "/root/.kube/config",
+			MountPath: kubeconfigPath,
 			ReadOnly:  true,
 		},
 		internalversion.Volume{
@@ -106,7 +106,7 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 	}
 
 	jobsetArgs = append(jobsetArgs,
-		"--kubeconfig=/root/.kube/config",
+		"--kubeconfig="+kubeconfigPath,
 	)
 	user := "root"
 

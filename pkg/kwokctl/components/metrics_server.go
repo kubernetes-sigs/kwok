@@ -79,7 +79,7 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
-				MountPath: "/root/.kube/config",
+				MountPath: kubeconfigPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
@@ -102,11 +102,11 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		metricsServerArgs = append(metricsServerArgs,
 			"--bind-address="+conf.BindAddress,
 			"--secure-port=4443",
-			"--kubeconfig=/root/.kube/config",
-			"--authentication-kubeconfig=/root/.kube/config",
-			"--authorization-kubeconfig=/root/.kube/config",
-			"--tls-cert-file=/etc/kubernetes/pki/admin.crt",
-			"--tls-private-key-file=/etc/kubernetes/pki/admin.key",
+			"--kubeconfig="+kubeconfigPath,
+			"--authentication-kubeconfig="+kubeconfigPath,
+			"--authorization-kubeconfig="+kubeconfigPath,
+			"--tls-cert-file="+pkiAdminCertPath,
+			"--tls-private-key-file="+pkiAdminKeyPath,
 		)
 		ports = append(
 			ports,

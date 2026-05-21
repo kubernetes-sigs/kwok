@@ -64,7 +64,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		volumes = append(volumes,
 			internalversion.Volume{
 				HostPath:  conf.KubeconfigPath,
-				MountPath: "/root/.kube/config",
+				MountPath: kubeconfigPath,
 				ReadOnly:  true,
 			},
 			internalversion.Volume{
@@ -97,7 +97,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			)
 		} else {
 			kubeSchedulerArgs = append(kubeSchedulerArgs,
-				"--kubeconfig=/root/.kube/config",
+				"--kubeconfig="+kubeconfigPath,
 			)
 		}
 	} else {
