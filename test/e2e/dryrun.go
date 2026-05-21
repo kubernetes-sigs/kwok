@@ -164,6 +164,7 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 			"--kube-apiserver-insecure-port=6080",
 			"--enable=metrics-server",
 			"--enable=jobset",
+			"--enable=lws",
 			"--kueueviz-port=18080",
 			"--kube-audit-policy", kubeAuditPath,
 			"--kube-scheduler-config", schedulerConfigPath,

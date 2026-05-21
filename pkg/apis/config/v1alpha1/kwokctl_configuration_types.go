@@ -152,6 +152,9 @@ type KwokctlConfigurationOptions struct {
 	// JobSetVersion is the version of jobset to use.
 	JobSetVersion string `json:"jobsetVersion,omitempty"`
 
+	// LWSVersion is the version of lws to use.
+	LWSVersion string `json:"lwsVersion,omitempty"`
+
 	// KindVersion is the version of kind to use.
 	// is the default value for env KWOK_KIND_VERSION
 	KindVersion string `json:"kindVersion,omitempty"`
@@ -243,6 +246,10 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	JobSetImagePrefix string `json:"jobsetImagePrefix,omitempty"`
 
+	// LWSImagePrefix is the prefix of the lws image.
+	//+k8s:conversion-gen=false
+	LWSImagePrefix string `json:"lwsImagePrefix,omitempty"`
+
 	// EtcdImage is the image of etcd.
 	// is the default value for flag --etcd-image and env KWOK_ETCD_IMAGE
 	EtcdImage string `json:"etcdImage,omitempty"`
@@ -302,6 +309,12 @@ type KwokctlConfigurationOptions struct {
 
 	// JobSetManifest is the full URL of the jobset manifest.
 	JobSetManifest string `json:"jobsetManifest,omitempty"`
+
+	// LWSImage is the image of lws.
+	LWSImage string `json:"lwsImage,omitempty"`
+
+	// LWSManifest is the full URL of the lws manifest.
+	LWSManifest string `json:"lwsManifest,omitempty"`
 
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string `json:"kueuevizFrontendImage,omitempty"`
@@ -432,8 +445,15 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	JobSetBinaryPrefix string `json:"jobsetBinaryPrefix,omitempty"`
 
+	// LWSBinaryPrefix is the prefix of the lws binary.
+	//+k8s:conversion-gen=false
+	LWSBinaryPrefix string `json:"lwsBinaryPrefix,omitempty"`
+
 	// JobSetBinary is the binary of jobset.
 	JobSetBinary string `json:"jobsetBinary,omitempty"`
+
+	// LWSBinary is the binary of lws.
+	LWSBinary string `json:"lwsBinary,omitempty"`
 
 	// KindBinaryPrefix is the binary prefix of kind.
 	// is the default value for env KWOK_KIND_BINARY_PREFIX

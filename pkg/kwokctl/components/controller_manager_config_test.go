@@ -123,3 +123,47 @@ data:
 		t.Fatalf("internalCertManagement.enable = true, want false")
 	}
 }
+
+func TestBuildLWSConfig(t *testing.T) {
+	rawManifest := strings.TrimSpace(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lws-manager-config
+  namespace: lws-system
+data:
+  controller_manager_config.yaml: |
+    apiVersion: config.lws.x-k8s.io/v1alpha1
+    kind: Configuration
+    leaderElection:
+      leaderElect: true
+    internalCertManagement:
+      enable: true
+`)
+
+	got, err := BuildLWSConfig(rawManifest)
+	if err != nil {
+		t.Fatalf("BuildLWSConfig() error = %v", err)
+	}
+
+	config := map[string]any{}
+	if err := utilyaml.Unmarshal([]byte(got), &config); err != nil {
+		t.Fatalf("failed to unmarshal config: %v", err)
+	}
+
+	leaderElect, found, err := unstructured.NestedBool(config, "leaderElection", "leaderElect")
+	if err != nil || !found {
+		t.Fatalf("leaderElection.leaderElect not found: found=%v err=%v", found, err)
+	}
+	if leaderElect {
+		t.Fatalf("leaderElection.leaderElect = true, want false")
+	}
+
+	internalCertManagement, found, err := unstructured.NestedBool(config, "internalCertManagement", "enable")
+	if err != nil || !found {
+		t.Fatalf("internalCertManagement.enable not found: found=%v err=%v", found, err)
+	}
+	if internalCertManagement {
+		t.Fatalf("internalCertManagement.enable = true, want false")
+	}
+}

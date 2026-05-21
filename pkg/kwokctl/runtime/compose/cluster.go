@@ -357,6 +357,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addLWS(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.setupPrometheusConfig(ctx, env)
 	if err != nil {
 		return err
@@ -1025,6 +1030,66 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 	}
 
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, jobsetComponent)
+	return nil
+}
+
+func (c *Cluster) addLWS(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentLWS) {
+		return nil
+	}
+
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the lws
+	err = c.EnsureImage(ctx, c.runtime, conf.LWSImage)
+	if err != nil {
+		return err
+	}
+
+	lwsVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.LWSImage, "")
+	if err != nil {
+		return err
+	}
+
+	rawManifest, err := c.EnsureManifest(ctx, conf.LWSManifest)
+	if err != nil {
+		return err
+	}
+
+	lwsConfigPath := c.GetWorkdirPath(runtime.LWS)
+
+	if !c.IsDryRun() {
+		lwsConfigData, err := components.BuildLWSConfig(string(rawManifest))
+		if err != nil {
+			return err
+		}
+
+		err = c.WriteFile(lwsConfigPath, []byte(lwsConfigData))
+		if err != nil {
+			return fmt.Errorf("failed to write lws yaml: %w", err)
+		}
+	}
+
+	lwsComponent, err := components.BuildLWSComponent(components.BuildLWSComponentConfig{
+		Runtime:        conf.Runtime,
+		ProjectName:    c.Name(),
+		Workdir:        env.workdir,
+		Image:          conf.LWSImage,
+		RawManifest:    string(rawManifest),
+		Version:        lwsVersion,
+		BindAddress:    utilsnet.PublicAddress,
+		CaCertPath:     env.caCertPath,
+		AdminCertPath:  env.adminCertPath,
+		AdminKeyPath:   env.adminKeyPath,
+		ConfigPath:     lwsConfigPath,
+		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+		Verbosity:      env.verbosity,
+	})
+	if err != nil {
+		return err
+	}
+
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, lwsComponent)
 	return nil
 }
 

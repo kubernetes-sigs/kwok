@@ -2955,6 +2955,17 @@ string
 </tr>
 <tr>
 <td>
+<code>lwsVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LWSVersion is the version of lws to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kindVersion</code>
 <em>
 string
@@ -3181,6 +3192,17 @@ string
 </tr>
 <tr>
 <td>
+<code>lwsImagePrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LWSImagePrefix is the prefix of the lws image.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>etcdImage</code>
 <em>
 string
@@ -3363,6 +3385,28 @@ string
 </td>
 <td>
 <p>JobSetManifest is the full URL of the jobset manifest.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lwsImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LWSImage is the image of lws.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lwsManifest</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LWSManifest is the full URL of the lws manifest.</p>
 </td>
 </tr>
 <tr>
@@ -3720,6 +3764,17 @@ string
 </tr>
 <tr>
 <td>
+<code>lwsBinaryPrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LWSBinaryPrefix is the prefix of the lws binary.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>jobsetBinary</code>
 <em>
 string
@@ -3727,6 +3782,17 @@ string
 </td>
 <td>
 <p>JobSetBinary is the binary of jobset.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lwsBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LWSBinary is the binary of lws.</p>
 </td>
 </tr>
 <tr>

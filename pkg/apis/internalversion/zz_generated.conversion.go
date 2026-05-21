@@ -1758,6 +1758,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.MetricsServerVersion = in.MetricsServerVersion
 	out.KueueVersion = in.KueueVersion
 	out.JobSetVersion = in.JobSetVersion
+	out.LWSVersion = in.LWSVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_bool_To_Pointer_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
 		return err
@@ -1794,6 +1795,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.KueueManifest = in.KueueManifest
 	out.JobSetImage = in.JobSetImage
 	out.JobSetManifest = in.JobSetManifest
+	out.LWSImage = in.LWSImage
+	out.LWSManifest = in.LWSManifest
 	out.KueuevizFrontendImage = in.KueuevizFrontendImage
 	out.KueuevizBackendImage = in.KueuevizBackendImage
 	out.KindNodeImage = in.KindNodeImage
@@ -1816,6 +1819,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.MetricsServerBinary = in.MetricsServerBinary
 	out.KueueBinary = in.KueueBinary
 	out.JobSetBinary = in.JobSetBinary
+	out.LWSBinary = in.LWSBinary
 	out.KindBinary = in.KindBinary
 	out.KubeFeatureGates = in.KubeFeatureGates
 	out.KubeRuntimeConfig = in.KubeRuntimeConfig
@@ -1877,6 +1881,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.MetricsServerVersion = in.MetricsServerVersion
 	out.KueueVersion = in.KueueVersion
 	out.JobSetVersion = in.JobSetVersion
+	out.LWSVersion = in.LWSVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_Pointer_bool_To_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
 		return err
@@ -1906,6 +1911,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.MetricsServerImagePrefix opted out of conversion generation
 	// INFO: in.KueueImagePrefix opted out of conversion generation
 	// INFO: in.JobSetImagePrefix opted out of conversion generation
+	// INFO: in.LWSImagePrefix opted out of conversion generation
 	out.EtcdImage = in.EtcdImage
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
@@ -1922,6 +1928,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.KueueManifest = in.KueueManifest
 	out.JobSetImage = in.JobSetImage
 	out.JobSetManifest = in.JobSetManifest
+	out.LWSImage = in.LWSImage
+	out.LWSManifest = in.LWSManifest
 	out.KueuevizFrontendImage = in.KueuevizFrontendImage
 	out.KueuevizBackendImage = in.KueuevizBackendImage
 	// INFO: in.KindNodeImagePrefix opted out of conversion generation
@@ -1952,7 +1960,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.KueueBinaryPrefix opted out of conversion generation
 	out.KueueBinary = in.KueueBinary
 	// INFO: in.JobSetBinaryPrefix opted out of conversion generation
+	// INFO: in.LWSBinaryPrefix opted out of conversion generation
 	out.JobSetBinary = in.JobSetBinary
+	out.LWSBinary = in.LWSBinary
 	// INFO: in.KindBinaryPrefix opted out of conversion generation
 	out.KindBinary = in.KindBinary
 	out.KubeFeatureGates = in.KubeFeatureGates
