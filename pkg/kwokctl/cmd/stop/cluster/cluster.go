@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
@@ -39,9 +40,10 @@ type flagpole struct {
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "cluster",
-		Short: "Stop a cluster",
+		Args:              cobra.NoArgs,
+		Use:               "cluster",
+		Short:             "Stop a cluster",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)

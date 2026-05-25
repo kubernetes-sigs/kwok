@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/printers"
 )
@@ -37,16 +38,21 @@ type flagpole struct {
 
 // NewCommand returns a new cobra.Command for getting the list of clusters
 func NewCommand(ctx context.Context) *cobra.Command {
-	flags := &flagpole{}
+	flags := &flagpole{
+		Output: "name",
+	}
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "clusters",
-		Short: "Lists existing clusters by their name",
+		Args:              cobra.NoArgs,
+		Use:               "clusters",
+		Short:             "Lists existing clusters by their name",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context(), flags)
 		},
 	}
-	cmd.Flags().StringVarP(&flags.Output, "output", "o", "name", "Output format (name, wide)")
+	cmd.Flags().StringVarP(&flags.Output, "output", "o", flags.Output, "Output format (name, wide)")
+	_ = cmd.RegisterFlagCompletionFunc("output", completion.FixedCompletions([]string{"name", "wide"}))
+
 	return cmd
 }
 

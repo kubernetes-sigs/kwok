@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 type flagpole struct {
@@ -44,6 +45,35 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Use:   "port-forward [component] [local-port]:[port-name]",
 		Short: "Forward one local ports to a component",
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) != 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+			flags.Name = config.DefaultCluster
+			name := config.ClusterName(flags.Name)
+			workdir := utilspath.Join(config.ClustersDir, flags.Name)
+
+			logger := log.FromContext(ctx)
+			logger = logger.With("cluster", flags.Name)
+			ctx = log.NewContext(ctx, logger)
+
+			rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			components, err := rt.ListComponents(ctx)
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			list := []string{}
+
+			for _, component := range components {
+				list = append(list, component.Name)
+			}
+			return list, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(ctx, flags, args)

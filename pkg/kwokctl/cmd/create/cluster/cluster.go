@@ -21,18 +21,22 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 type flagpole struct {
@@ -52,9 +56,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags.Kubeconfig = utilspath.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
 
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "cluster",
-		Short: "Creates a cluster",
+		Args:              cobra.NoArgs,
+		Use:               "cluster",
+		Short:             "Creates a cluster",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)
@@ -69,8 +74,41 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&flags.Options.QuietPull, "quiet-pull", flags.Options.QuietPull, `Pull without printing progress information`)
 	cmd.Flags().StringVar(&flags.Options.KubeSchedulerConfig, "kube-scheduler-config", flags.Options.KubeSchedulerConfig, `Path to a kube-scheduler configuration file`)
 	cmd.Flags().StringSliceVar(&flags.Options.Components, "components", flags.Options.Components, `Default of components`)
+	_ = cmd.RegisterFlagCompletionFunc("components", completion.FixedCompletions([]string{
+		consts.ComponentEtcd,
+		consts.ComponentKubeApiserver,
+		consts.ComponentKubeControllerManager,
+		consts.ComponentKubeScheduler,
+		consts.ComponentKwokController,
+	}))
 	cmd.Flags().StringSliceVar(&flags.Options.Disable, "disable", flags.Options.Disable, `Disable list of components`)
+	_ = cmd.RegisterFlagCompletionFunc("disable", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		components := utilsslices.Filter(flags.Options.Components, func(s string) bool {
+			return s != consts.ComponentEtcd &&
+				s != consts.ComponentKubeApiserver &&
+				!slices.Contains(flags.Options.Disable, s) &&
+				!slices.Contains(flags.Options.Enable, s)
+		})
+		return components, cobra.ShellCompDirectiveNoFileComp
+	})
 	cmd.Flags().StringSliceVar(&flags.Options.Enable, "enable", flags.Options.Enable, `Enable list of components`)
+	_ = cmd.RegisterFlagCompletionFunc("enable", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		availableComponents := []string{
+			consts.ComponentMetricsServer,
+			consts.ComponentPrometheus,
+			consts.ComponentJaeger,
+			consts.ComponentKueue,
+			consts.ComponentJobSet,
+			consts.ComponentLWS,
+		}
+
+		components := utilsslices.Filter(availableComponents, func(s string) bool {
+			return !slices.Contains(flags.Options.Components, s) &&
+				!slices.Contains(flags.Options.Disable, s) &&
+				!slices.Contains(flags.Options.Enable, s)
+		})
+		return components, cobra.ShellCompDirectiveNoFileComp
+	})
 	cmd.Flags().BoolVar(&flags.Options.DisableKubeScheduler, "disable-kube-scheduler", flags.Options.DisableKubeScheduler, `Disable the kube-scheduler`)
 	_ = cmd.Flags().MarkDeprecated("disable-kube-scheduler", "--disable-kube-scheduler will be removed in a future release, please use --disable kube-scheduler instead")
 	cmd.Flags().BoolVar(&flags.Options.DisableKubeControllerManager, "disable-kube-controller-manager", flags.Options.DisableKubeControllerManager, `Disable the kube-controller-manager`)
@@ -145,11 +183,40 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&flags.Options.KubeAuthorization, "kube-authorization", flags.Options.KubeAuthorization, "Enable authorization for kube-apiserver, only for non kind/kind-podman runtime")
 	cmd.Flags().BoolVar(&flags.Options.KubeAdmission, "kube-admission", flags.Options.KubeAdmission, "Enable admission for kube-apiserver, only for non kind/kind-podman runtime")
 	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
-	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 0, "Timeout for waiting for the cluster to be created")
-	cmd.Flags().DurationVar(&flags.Wait, "wait", 0, "Wait for the cluster to be ready")
+	_ = cmd.RegisterFlagCompletionFunc("runtime", completion.FixedCompletions(runtime.DefaultRegistry.List()))
+	cmd.Flags().DurationVar(&flags.Timeout, "timeout", flags.Timeout, "Timeout for waiting for the cluster to be created")
+	cmd.Flags().DurationVar(&flags.Wait, "wait", flags.Wait, "Wait for the cluster to be ready")
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "The path to the kubeconfig file will be added to the newly created cluster and set to current-context")
+	_ = cmd.RegisterFlagCompletionFunc("kubeconfig", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		defaultKubeconfig := kubeconfig.GetRecommendedKubeconfigPath()
+		if strings.HasPrefix(defaultKubeconfig, toComplete) {
+			return []string{defaultKubeconfig}, cobra.ShellCompDirectiveNoFileComp
+		}
+		return nil, cobra.ShellCompDirectiveDefault
+	})
 	cmd.Flags().BoolVar(&flags.Options.DisableQPSLimits, "disable-qps-limits", flags.Options.DisableQPSLimits, "Disable QPS limits for components")
 	cmd.Flags().StringSliceVar(&flags.Options.EnableCRDs, "enable-crds", flags.Options.EnableCRDs, "List of CRDs to enable")
+	_ = cmd.RegisterFlagCompletionFunc("enable-crds", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		availableCRDs := []string{
+			v1alpha1.StageKind,
+			v1alpha1.AttachKind,
+			v1alpha1.ClusterAttachKind,
+			v1alpha1.ExecKind,
+			v1alpha1.ClusterExecKind,
+			v1alpha1.PortForwardKind,
+			v1alpha1.ClusterPortForwardKind,
+			v1alpha1.LogsKind,
+			v1alpha1.ClusterLogsKind,
+			v1alpha1.ResourceUsageKind,
+			v1alpha1.ClusterResourceUsageKind,
+			v1alpha1.MetricKind,
+		}
+
+		crds := utilsslices.Filter(availableCRDs, func(s string) bool {
+			return !slices.Contains(flags.Options.EnableCRDs, s)
+		})
+		return crds, cobra.ShellCompDirectiveNoFileComp
+	})
 	cmd.Flags().UintVar(&flags.Options.NodeLeaseDurationSeconds, "node-lease-duration-seconds", flags.Options.NodeLeaseDurationSeconds, "Duration of node lease in seconds")
 	cmd.Flags().Float64Var(&flags.Options.HeartbeatFactor, "heartbeat-factor", flags.Options.HeartbeatFactor, "Scale factor for all about heartbeat")
 	cmd.Flags().StringVar(&flags.Options.EtcdQuotaBackendSize, "etcd-quota-backend-size", flags.Options.EtcdQuotaBackendSize, "Quota backend size for etcd")

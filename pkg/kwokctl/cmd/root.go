@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/start"
 	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/stop"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
@@ -75,5 +76,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		export.NewCommand(ctx),
 		port_forward.NewCommand(ctx),
 	)
+
+	_ = cmd.RegisterFlagCompletionFunc("name", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		clusters, err := runtime.ListClusters(ctx)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		return clusters, cobra.ShellCompDirectiveNoFileComp
+	})
 	return cmd
 }

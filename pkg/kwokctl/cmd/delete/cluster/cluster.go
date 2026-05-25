@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -28,6 +29,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
@@ -43,12 +45,12 @@ type flagpole struct {
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 	flags.Kubeconfig = utilspath.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
-	flags.All = false
 
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "cluster",
-		Short: "Deletes a cluster",
+		Args:              cobra.NoArgs,
+		Use:               "cluster",
+		Short:             "Deletes a cluster",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 
@@ -56,8 +58,15 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&flags.Kubeconfig, "kubeconfig", flags.Kubeconfig, "The path to the kubeconfig file that will remove the deleted cluster")
+	_ = cmd.RegisterFlagCompletionFunc("kubeconfig", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		defaultKubeconfig := kubeconfig.GetRecommendedKubeconfigPath()
+		if strings.HasPrefix(defaultKubeconfig, toComplete) {
+			return []string{defaultKubeconfig}, cobra.ShellCompDirectiveNoFileComp
+		}
+		return nil, cobra.ShellCompDirectiveDefault
+	})
 	cmd.Flags().BoolVar(&flags.All, "all", flags.All, "Delete all clusters managed by kwokctl")
-	cmd.Flags().BoolVar(&flags.Force, "force", false, "Force delete the cluster")
+	cmd.Flags().BoolVar(&flags.Force, "force", flags.Force, "Force delete the cluster")
 	return cmd
 }
 

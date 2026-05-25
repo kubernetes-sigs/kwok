@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
@@ -46,16 +47,20 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags.KwokctlConfiguration = config.GetKwokctlConfiguration(ctx)
 
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "artifacts",
-		Short: "Lists binaries or images used by cluster",
+		Args:              cobra.NoArgs,
+		Use:               "artifacts",
+		Short:             "Lists binaries or images used by cluster",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)
 		},
 	}
 	cmd.Flags().StringVar(&flags.Options.Runtime, "runtime", flags.Options.Runtime, fmt.Sprintf("Runtime of the cluster (%s)", strings.Join(runtime.DefaultRegistry.List(), " or ")))
+	_ = cmd.RegisterFlagCompletionFunc("runtime", completion.FixedCompletions(runtime.DefaultRegistry.List()))
 	cmd.Flags().StringVar(&flags.Filter, "filter", flags.Filter, "Filter the list of (binary or image)")
+	_ = cmd.RegisterFlagCompletionFunc("filter", completion.FixedCompletions([]string{"binary", "image"}))
+
 	return cmd
 }
 

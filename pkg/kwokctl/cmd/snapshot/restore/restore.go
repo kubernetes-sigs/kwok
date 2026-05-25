@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
@@ -42,20 +43,27 @@ type flagpole struct {
 
 // NewCommand returns a new cobra.Command to restore the cluster as a snapshot.
 func NewCommand(ctx context.Context) *cobra.Command {
-	flags := &flagpole{}
+	flags := &flagpole{
+		Format:  "etcd",
+		Filters: snapshot.Resources,
+	}
 
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "restore",
-		Short: "Restore the snapshot of the cluster",
+		Args:              cobra.NoArgs,
+		Use:               "restore",
+		Short:             "Restore the snapshot of the cluster",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)
 		},
 	}
-	cmd.Flags().StringVar(&flags.Path, "path", "", "Path to the snapshot")
-	cmd.Flags().StringVar(&flags.Format, "format", "etcd", "Format of the snapshot file (etcd, k8s)")
-	cmd.Flags().StringSliceVar(&flags.Filters, "filter", snapshot.Resources, "Filter the resources to restore, only support for k8s format")
+	cmd.Flags().StringVar(&flags.Path, "path", flags.Path, "Path to the snapshot")
+	cmd.Flags().StringVar(&flags.Format, "format", flags.Format, "Format of the snapshot file (etcd, k8s)")
+	_ = cmd.RegisterFlagCompletionFunc("format", completion.FixedCompletions([]string{"etcd", "k8s"}))
+	cmd.Flags().StringSliceVar(&flags.Filters, "filter", flags.Filters, "Filter the resources to restore, only support for k8s format")
+	_ = cmd.RegisterFlagCompletionFunc("filter", completion.FixedCompletions(snapshot.Resources))
+
 	return cmd
 }
 
