@@ -41,7 +41,45 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "logs [component]",
-		Short: "Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, metrics-server, prometheus, jaeger]",
+		Short: "Logs 'audit' (if enabled) or any component name",
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) != 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+			flags.Name = config.DefaultCluster
+			name := config.ClusterName(flags.Name)
+			workdir := utilspath.Join(config.ClustersDir, flags.Name)
+
+			logger := log.FromContext(ctx)
+			logger = logger.With("cluster", flags.Name)
+			ctx = log.NewContext(ctx, logger)
+
+			rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			components, err := rt.ListComponents(ctx)
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			list := []string{}
+
+			config, err := rt.Config(ctx)
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+			conf := &config.Options
+			if conf.KubeAuditPolicy != "" {
+				list = append(list, "audit")
+			}
+
+			for _, component := range components {
+				list = append(list, component.Name)
+			}
+			return list, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return cmd.Help()
@@ -50,7 +88,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			return runE(cmd.Context(), flags, args)
 		},
 	}
-	cmd.Flags().BoolVarP(&flags.Follow, "follow", "f", false, "Specify if the logs should be streamed")
+	cmd.Flags().BoolVarP(&flags.Follow, "follow", "f", flags.Follow, "Specify if the logs should be streamed")
+
 	return cmd
 }
 

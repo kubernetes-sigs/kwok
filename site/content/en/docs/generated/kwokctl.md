@@ -26,7 +26,7 @@ kwokctl [command] [flags]
 * [kwokctl get](kwokctl_get.md)	 - Gets one of [artifacts, clusters, components, kubeconfig]
 * [kwokctl kectl](kwokctl_kectl.md)	 - [experimental] Run kubectl-like commands directly against etcd
 * [kwokctl kubectl](kwokctl_kubectl.md)	 - kubectl in cluster
-* [kwokctl logs](kwokctl_logs.md)	 - Logs one of [audit, etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kwok-controller, dashboard, metrics-server, prometheus, jaeger]
+* [kwokctl logs](kwokctl_logs.md)	 - Logs 'audit' (if enabled) or any component name
 * [kwokctl port-forward](kwokctl_port-forward.md)	 - Forward one local ports to a component
 * [kwokctl scale](kwokctl_scale.md)	 - Scale a resource in cluster
 * [kwokctl snapshot](kwokctl_snapshot.md)	 - [experimental] Snapshot [save, restore, export] one of cluster

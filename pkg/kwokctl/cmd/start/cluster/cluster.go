@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
@@ -41,17 +42,18 @@ type flagpole struct {
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "cluster",
-		Short: "Start a cluster",
+		Args:              cobra.NoArgs,
+		Use:               "cluster",
+		Short:             "Start a cluster",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)
 		},
 	}
 
-	cmd.Flags().DurationVar(&flags.Timeout, "timeout", 0, "Timeout for waiting for the cluster to be started")
-	cmd.Flags().DurationVar(&flags.Wait, "wait", 0, "Wait for the cluster to be ready")
+	cmd.Flags().DurationVar(&flags.Timeout, "timeout", flags.Timeout, "Timeout for waiting for the cluster to be started")
+	cmd.Flags().DurationVar(&flags.Wait, "wait", flags.Wait, "Wait for the cluster to be ready")
 
 	return cmd
 }

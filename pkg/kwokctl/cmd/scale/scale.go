@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -49,19 +50,42 @@ type flagpole struct {
 
 // NewCommand returns a new cobra.Command for scale resource.
 func NewCommand(ctx context.Context) *cobra.Command {
-	flags := &flagpole{}
+	flags := &flagpole{
+		Replicas:     1,
+		SerialLength: 6,
+	}
 
 	cmd := &cobra.Command{
 		Args:  cobra.RangeArgs(1, 2),
 		Use:   "scale [node, pod, ...] [name]",
 		Short: "Scale a resource in cluster",
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) != 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			krcs := config.FilterWithTypeFromContext[*internalversion.KwokctlResource](ctx)
+			var resourceKinds []string
+			for _, krc := range krcs {
+				resourceKinds = append(resourceKinds, krc.Name)
+			}
+			if !slices.Contains(resourceKinds, "pod") {
+				resourceKinds = append(resourceKinds, "pod")
+			}
+
+			if !slices.Contains(resourceKinds, "node") {
+				resourceKinds = append(resourceKinds, "node")
+			}
+
+			return resourceKinds, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags, args)
 		},
 	}
-	cmd.Flags().Uint64Var(&flags.Replicas, "replicas", 1, "Number of replicas")
-	cmd.Flags().IntVar(&flags.SerialLength, "serial-length", 6, "Length of serial number")
+	cmd.Flags().Uint64Var(&flags.Replicas, "replicas", flags.Replicas, "Number of replicas")
+	cmd.Flags().IntVar(&flags.SerialLength, "serial-length", flags.SerialLength, "Length of serial number")
 	cmd.Flags().StringVarP(&flags.Namespace, "namespace", "n", flags.Namespace, "Namespace of resource to scale")
 	cmd.Flags().StringArrayVar(&flags.Params, "param", flags.Params, "Parameter to update")
 	return cmd

@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
@@ -32,9 +33,10 @@ import (
 // NewCommand returns a new cobra.Command for config reset
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "reset",
-		Short: "Remove the default config file",
+		Args:              cobra.NoArgs,
+		Use:               "reset",
+		Short:             "Remove the default config file",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context())
 		},

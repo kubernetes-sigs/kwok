@@ -26,15 +26,17 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
 
 // NewCommand returns a new cobra.Command for config view
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "view",
-		Short: "Display the default config file. When combined with --config, it displays the default config file with the specified ones merged.",
+		Args:              cobra.NoArgs,
+		Use:               "view",
+		Short:             "Display the default config file. When combined with --config, it displays the default config file with the specified ones merged.",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context())
 		},

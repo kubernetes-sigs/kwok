@@ -18,6 +18,7 @@ limitations under the License.
 package kubectl
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -28,6 +29,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	utilscompletion "sigs.k8s.io/kwok/pkg/utils/completion"
 	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
@@ -43,6 +45,29 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kubectl [command]",
 		Short: "kubectl in cluster",
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			flags.Name = config.DefaultCluster
+			name := config.ClusterName(flags.Name)
+			workdir := utilspath.Join(config.ClustersDir, flags.Name)
+
+			logger := log.FromContext(ctx)
+			logger = logger.With("cluster", flags.Name)
+			ctx = log.NewContext(ctx, logger)
+
+			rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			var completeArgs = make([]string, 0, len(args)+4)
+			completeArgs = append(completeArgs, "__complete", "--kubeconfig", rt.GetWorkdirPath(runtime.InHostKubeconfigName))
+			completeArgs = append(completeArgs, args...)
+			completeArgs = append(completeArgs, toComplete)
+			var buf bytes.Buffer
+			_ = rt.Kubectl(utilsexec.WithWriteTo(ctx, &buf), completeArgs...)
+
+			return utilscompletion.ParseCobraOutput(buf.String())
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			err := runE(cmd.Context(), flags, args)

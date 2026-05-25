@@ -42,6 +42,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwok/server"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	"sigs.k8s.io/kwok/pkg/utils/envs"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
@@ -64,12 +65,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags.KwokConfiguration = config.GetKwokConfiguration(ctx)
 
 	cmd := &cobra.Command{
-		Args:          cobra.NoArgs,
-		Use:           "kwok",
-		Short:         "kwok is a tool for simulating the lifecycle of fake nodes, pods, and other Kubernetes API resources.",
-		SilenceUsage:  true,
-		SilenceErrors: true,
-		Version:       version.DisplayVersion(),
+		Args:              cobra.NoArgs,
+		Use:               "kwok",
+		Short:             "kwok is a tool for simulating the lifecycle of fake nodes, pods, and other Kubernetes API resources.",
+		SilenceUsage:      true,
+		SilenceErrors:     true,
+		Version:           version.DisplayVersion(),
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runE(cmd.Context(), flags)
 		},

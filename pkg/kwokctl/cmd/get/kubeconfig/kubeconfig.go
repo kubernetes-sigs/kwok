@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/completion"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
@@ -57,9 +58,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "kubeconfig",
-		Short: "Prints cluster kubeconfig",
+		Args:              cobra.NoArgs,
+		Use:               "kubeconfig",
+		Short:             "Prints cluster kubeconfig",
+		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster
 			return runE(cmd.Context(), flags)
