@@ -72,15 +72,24 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 	args = append(args, labelArgs...)
 	args = append(args, kwokController.Image)
 
-	r, w := io.Pipe()
-	command, err := utilsexec.Command(utilsexec.WithWait(utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{In: r}), false),
+	inR, inW := io.Pipe()
+	outR, outW := io.Pipe()
+	command, err := utilsexec.Command(utilsexec.WithWait(utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{In: inR, Out: outW, ErrOut: outW}), false),
 		c.runtime, args...)
 	if err != nil {
 		return nil, fmt.Errorf("running command: %w", err)
 	}
 
+	_, _ = inW.Write([]byte("pwd\n"))
+
+	var buf [16]byte
+	_, err = outR.Read(buf[:])
+	if err != nil {
+		return nil, fmt.Errorf("starting temporary port-forward container: %w", err)
+	}
+
 	cleanTempContainer := func() {
-		_, _ = w.Write([]byte("exit\n"))
+		_, _ = inW.Write([]byte("exit\n"))
 		_ = command.Cancel()
 
 		if c.runtime == consts.RuntimeTypeNerdctl ||
@@ -109,18 +118,21 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		}
 	}()
 
+	ctx, ctxCancel := context.WithCancel(ctx)
+
 	cancel = func() {
+		ctxCancel()
 		_ = listener.Close()
 		cleanTempContainer()
 	}
 
 	go func() {
-		ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
-
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
+				if ctx.Err() != nil {
+					return
+				}
 				logger.Error("accepting connection", err)
 				return
 			}
