@@ -155,6 +155,9 @@ type KwokctlConfigurationOptions struct {
 	// LWSVersion is the version of lws to use.
 	LWSVersion string `json:"lwsVersion,omitempty"`
 
+	// DeschedulerVersion is the version of descheduler to use.
+	DeschedulerVersion string `json:"deschedulerVersion,omitempty"`
+
 	// KindVersion is the version of kind to use.
 	// is the default value for env KWOK_KIND_VERSION
 	KindVersion string `json:"kindVersion,omitempty"`
@@ -250,6 +253,10 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	LWSImagePrefix string `json:"lwsImagePrefix,omitempty"`
 
+	// DeschedulerImagePrefix is the prefix of the descheduler image.
+	//+k8s:conversion-gen=false
+	DeschedulerImagePrefix string `json:"deschedulerImagePrefix,omitempty"`
+
 	// EtcdImage is the image of etcd.
 	// is the default value for flag --etcd-image and env KWOK_ETCD_IMAGE
 	EtcdImage string `json:"etcdImage,omitempty"`
@@ -315,6 +322,12 @@ type KwokctlConfigurationOptions struct {
 
 	// LWSManifest is the full URL of the lws manifest.
 	LWSManifest string `json:"lwsManifest,omitempty"`
+
+	// DeschedulerImage is the image of descheduler.
+	DeschedulerImage string `json:"deschedulerImage,omitempty"`
+
+	// DeschedulerManifest is the full URL of the descheduler manifest.
+	DeschedulerManifest string `json:"deschedulerManifest,omitempty"`
 
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string `json:"kueuevizFrontendImage,omitempty"`
@@ -454,6 +467,13 @@ type KwokctlConfigurationOptions struct {
 
 	// LWSBinary is the binary of lws.
 	LWSBinary string `json:"lwsBinary,omitempty"`
+
+	// DeschedulerBinaryPrefix is the prefix of the descheduler binary.
+	//+k8s:conversion-gen=false
+	DeschedulerBinaryPrefix string `json:"deschedulerBinaryPrefix,omitempty"`
+
+	// DeschedulerBinary is the binary of descheduler.
+	DeschedulerBinary string `json:"deschedulerBinary,omitempty"`
 
 	// KindBinaryPrefix is the binary prefix of kind.
 	// is the default value for env KWOK_KIND_BINARY_PREFIX

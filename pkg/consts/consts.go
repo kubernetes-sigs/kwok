@@ -82,6 +82,11 @@ var (
 	LWSImagePrefix    = "registry.k8s.io/lws"
 	LWSManifestPrefix = "https://github.com/kubernetes-sigs/lws/releases/download"
 
+	DeschedulerVersion        = "0.36.0"
+	DeschedulerBinaryPrefix   = ""
+	DeschedulerImagePrefix    = "registry.k8s.io/descheduler"
+	DeschedulerManifestPrefix = "github.com/kubernetes-sigs/descheduler/kubernetes/deployment?ref="
+
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000
 )
@@ -135,4 +140,5 @@ const (
 	ComponentKueueviz                   = "kueueviz"
 	ComponentJobSet                     = "jobset"
 	ComponentLWS                        = "lws"
+	ComponentDescheduler                = "descheduler"
 )

@@ -17,6 +17,7 @@ limitations under the License.
 package runtime
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -25,8 +26,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -41,6 +44,10 @@ func (c *Cluster) EnsureManifest(ctx context.Context, url string) ([]byte, error
 	cachePath := manifestCachePath(config.Options.CacheDir, url)
 
 	if c.IsDryRun() {
+		if isKustomizeManifestSource(url) {
+			dryrun.PrintMessagef("# Build %s by kubectl kustomize to %s", url, cachePath)
+			return nil, nil
+		}
 		dryrun.PrintMessagef("# Download %s to %s", url, cachePath)
 		return nil, nil
 	}
@@ -49,6 +56,45 @@ func (c *Cluster) EnsureManifest(ctx context.Context, url string) ([]byte, error
 		return os.ReadFile(cachePath)
 	}
 
+	var data []byte
+	if isKustomizeManifestSource(url) {
+		data, err = c.buildManifestByKustomize(ctx, url)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		data, err = fetchRemoteManifest(ctx, url)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = os.MkdirAll(filepath.Dir(cachePath), 0750)
+	if err != nil {
+		return nil, err
+	}
+	err = os.WriteFile(cachePath, data, 0640)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func isKustomizeManifestSource(url string) bool {
+	return !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://")
+}
+
+func (c *Cluster) buildManifestByKustomize(ctx context.Context, source string) ([]byte, error) {
+	var out bytes.Buffer
+	err := c.Kubectl(utilsexec.WithAllWriteTo(ctx, &out), "kustomize", source)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build remote manifest %q by kubectl kustomize: %w", source, err)
+	}
+	return out.Bytes(), nil
+}
+
+func fetchRemoteManifest(ctx context.Context, url string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for manifest %q: %w", url, err)
@@ -66,7 +112,6 @@ func (c *Cluster) EnsureManifest(ctx context.Context, url string) ([]byte, error
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to fetch remote manifest %q: unexpected status %s", url, resp.Status)
 	}
-
 	if resp.ContentLength > 10*1024*1024 {
 		return nil, fmt.Errorf("manifest %q is too large: %d bytes", url, resp.ContentLength)
 	}
@@ -75,16 +120,6 @@ func (c *Cluster) EnsureManifest(ctx context.Context, url string) ([]byte, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to read remote manifest %q: %w", url, err)
 	}
-
-	err = os.MkdirAll(filepath.Dir(cachePath), 0750)
-	if err != nil {
-		return nil, err
-	}
-	err = os.WriteFile(cachePath, data, 0640)
-	if err != nil {
-		return nil, err
-	}
-
 	return data, nil
 }
 

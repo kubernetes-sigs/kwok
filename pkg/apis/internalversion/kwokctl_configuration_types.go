@@ -131,6 +131,9 @@ type KwokctlConfigurationOptions struct {
 	// LWSVersion is the version of lws to use.
 	LWSVersion string
 
+	// DeschedulerVersion is the version of descheduler to use.
+	DeschedulerVersion string
+
 	// KindVersion is the version of kind to use.
 	KindVersion string
 
@@ -222,6 +225,12 @@ type KwokctlConfigurationOptions struct {
 	// LWSManifest is the full URL of the lws manifest.
 	LWSManifest string
 
+	// DeschedulerImage is the image of descheduler.
+	DeschedulerImage string
+
+	// DeschedulerManifest is the full URL of the descheduler manifest.
+	DeschedulerManifest string
+
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string
 
@@ -301,6 +310,9 @@ type KwokctlConfigurationOptions struct {
 
 	// LWSBinary is the binary of lws.
 	LWSBinary string
+
+	// DeschedulerBinary is the binary of descheduler.
+	DeschedulerBinary string
 
 	// KindBinary is the binary of kind.
 	KindBinary string
