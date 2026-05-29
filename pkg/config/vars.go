@@ -223,6 +223,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setLWSConfig(conf)
 
+	setDeschedulerConfig(conf)
+
 	setKectlConfig(conf)
 
 	return config
@@ -650,6 +652,28 @@ func setLWSConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.LWSManifest = consts.LWSManifestPrefix + "/" + conf.LWSVersion + "/manifests.yaml"
 	}
 	conf.LWSManifest = envs.GetEnvWithPrefix("LWS_MANIFEST", conf.LWSManifest)
+}
+
+func setDeschedulerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.DeschedulerVersion == "" {
+		conf.DeschedulerVersion = consts.DeschedulerVersion
+	}
+	conf.DeschedulerVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DESCHEDULER_VERSION", conf.DeschedulerVersion))
+
+	if conf.DeschedulerImagePrefix == "" {
+		conf.DeschedulerImagePrefix = consts.DeschedulerImagePrefix
+	}
+	conf.DeschedulerImagePrefix = envs.GetEnvWithPrefix("DESCHEDULER_IMAGE_PREFIX", conf.DeschedulerImagePrefix)
+
+	if conf.DeschedulerImage == "" {
+		conf.DeschedulerImage = joinImageURI(conf.DeschedulerImagePrefix, "descheduler", conf.DeschedulerVersion)
+	}
+	conf.DeschedulerImage = envs.GetEnvWithPrefix("DESCHEDULER_IMAGE", conf.DeschedulerImage)
+
+	if conf.DeschedulerManifest == "" {
+		conf.DeschedulerManifest = consts.DeschedulerManifestPrefix + conf.DeschedulerVersion
+	}
+	conf.DeschedulerManifest = envs.GetEnvWithPrefix("DESCHEDULER_MANIFEST", conf.DeschedulerManifest)
 }
 
 // joinImageURI joins the image URI.

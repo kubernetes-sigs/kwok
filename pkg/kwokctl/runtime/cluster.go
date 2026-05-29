@@ -65,6 +65,7 @@ var (
 	Kueue                   = "kueue.yaml"
 	JobSet                  = "jobset.yaml"
 	LWS                     = "lws.yaml"
+	Descheduler             = "descheduler.yaml"
 	KindName                = "kind.yaml"
 	AuditPolicyName         = "audit.yaml"
 	AuditLogName            = "audit.log"

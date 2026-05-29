@@ -2966,6 +2966,17 @@ string
 </tr>
 <tr>
 <td>
+<code>deschedulerVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DeschedulerVersion is the version of descheduler to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kindVersion</code>
 <em>
 string
@@ -3203,6 +3214,17 @@ string
 </tr>
 <tr>
 <td>
+<code>deschedulerImagePrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DeschedulerImagePrefix is the prefix of the descheduler image.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>etcdImage</code>
 <em>
 string
@@ -3407,6 +3429,28 @@ string
 </td>
 <td>
 <p>LWSManifest is the full URL of the lws manifest.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>deschedulerImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DeschedulerImage is the image of descheduler.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>deschedulerManifest</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DeschedulerManifest is the full URL of the descheduler manifest.</p>
 </td>
 </tr>
 <tr>
@@ -3793,6 +3837,28 @@ string
 </td>
 <td>
 <p>LWSBinary is the binary of lws.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>deschedulerBinaryPrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DeschedulerBinaryPrefix is the prefix of the descheduler binary.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>deschedulerBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DeschedulerBinary is the binary of descheduler.</p>
 </td>
 </tr>
 <tr>

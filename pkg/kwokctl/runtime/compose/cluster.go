@@ -362,6 +362,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addDescheduler(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.setupPrometheusConfig(ctx, env)
 	if err != nil {
 		return err
@@ -1095,6 +1100,65 @@ func (c *Cluster) addLWS(ctx context.Context, env *env) (err error) {
 	}
 
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, lwsComponent)
+	return nil
+}
+
+func (c *Cluster) addDescheduler(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentDescheduler) {
+		return nil
+	}
+
+	conf := &env.kwokctlConfig.Options
+
+	// Configure the descheduler
+	err = c.EnsureImage(ctx, c.runtime, conf.DeschedulerImage)
+	if err != nil {
+		return err
+	}
+
+	deschedulerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.DeschedulerImage, "")
+	if err != nil {
+		return err
+	}
+
+	rawManifest, err := c.EnsureManifest(ctx, conf.DeschedulerManifest)
+	if err != nil {
+		return err
+	}
+
+	deschedulerConfigPath := c.GetWorkdirPath(runtime.Descheduler)
+
+	if !c.IsDryRun() {
+		deschedulerPolicyData, err := components.BuildDeschedulerPolicy(string(rawManifest))
+		if err != nil {
+			return err
+		}
+
+		err = c.WriteFileWithMode(deschedulerConfigPath, []byte(deschedulerPolicyData), 0644)
+		if err != nil {
+			return fmt.Errorf("failed to write descheduler yaml: %w", err)
+		}
+	}
+
+	deschedulerComponent, err := components.BuildDeschedulerComponent(components.BuildDeschedulerComponentConfig{
+		Runtime:        conf.Runtime,
+		Workdir:        env.workdir,
+		Image:          conf.DeschedulerImage,
+		RawManifest:    string(rawManifest),
+		Version:        deschedulerVersion,
+		BindAddress:    utilsnet.PublicAddress,
+		CaCertPath:     env.caCertPath,
+		AdminCertPath:  env.adminCertPath,
+		AdminKeyPath:   env.adminKeyPath,
+		ConfigPath:     deschedulerConfigPath,
+		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+		Verbosity:      env.verbosity,
+	})
+	if err != nil {
+		return err
+	}
+
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, deschedulerComponent)
 	return nil
 }
 
