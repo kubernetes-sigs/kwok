@@ -193,8 +193,8 @@ github.com/wzshiming/easycel v0.6.0 h1:TwvbeAhi3a1Hf2wjcxlHQvE3W5pQAnhHynekCg5ca
 github.com/wzshiming/easycel v0.6.0/go.mod h1:e9t2Fk3f6jxAN4JVwOq8BLPPeOC/4eknIy+QFIYaa2w=
 github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27 h1:jKLZ5tGpOZRid6GpBbDmP4BiooSF5zDd7Cg9jHCN4Yk=
 github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27/go.mod h1:TYK5eJtSD5cVebob9fE7D3jR1fbRU1EwkoPzbLWsOAk=
-github.com/wzshiming/httpseek v0.5.0 h1:9pFLlTcebylAtLA4ni0Qo5xwXTgeQOo0iVQA3G1Q+hw=
-github.com/wzshiming/httpseek v0.5.0/go.mod h1:YoZhlLIwNjTBDXIT8NpK5zRjOgZouRXPaBfjVXdqMMs=
+github.com/wzshiming/httpseek v0.6.1 h1:nmrpxl7SNtj8KmmZ8XRMCnKVfOvj1yNAGXNYtPfeRoA=
+github.com/wzshiming/httpseek v0.6.1/go.mod h1:YoZhlLIwNjTBDXIT8NpK5zRjOgZouRXPaBfjVXdqMMs=
 github.com/wzshiming/trie v0.3.1 h1:YpuoqmEQFJiW0mns/mM6Qk4kdWrXc8kc28/KR1vn0m8=
 github.com/wzshiming/trie v0.3.1/go.mod h1:c9thxXTh4KcGkejt4sUsO4c5GUmWpxeWzOJ7AZJaI+8=
 github.com/wzshiming/winseq v0.0.0-20200112104235-db357dc107ae/go.mod h1:VTAq37rkGeV+WOybvZwjXiJOicICdpLCN8ifpISjK20=
