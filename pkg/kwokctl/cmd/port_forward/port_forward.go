@@ -42,9 +42,10 @@ type flagpole struct {
 func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 	cmd := &cobra.Command{
-		Args:  cobra.ExactArgs(2),
-		Use:   "port-forward [component] [local-port]:[port-name]",
-		Short: "Forward one local ports to a component",
+		Args:    cobra.ExactArgs(2),
+		Use:     "port-forward [component] [local-port]:[port-name]",
+		Short:   "Forward one local ports to a component",
+		GroupID: "cluster",
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(args) != 0 {
 				return nil, cobra.ShellCompDirectiveNoFileComp

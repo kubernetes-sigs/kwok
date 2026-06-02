@@ -28,14 +28,14 @@ import (
 // NewCommand returns a new cobra.Command for export
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "export",
-		Short: "Exports one of [logs]",
+		Args:    cobra.NoArgs,
+		Use:     "export",
+		Short:   "Exports one of [logs]",
+		GroupID: "cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
 	}
-	// add subcommands
 	cmd.AddCommand(logs.NewCommand(ctx))
 	return cmd
 }

@@ -46,7 +46,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Args:              cobra.NoArgs,
 		Use:               "components",
-		Short:             "List components",
+		Short:             "List cluster components",
 		ValidArgsFunction: completion.NoFileCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flags.Name = config.DefaultCluster

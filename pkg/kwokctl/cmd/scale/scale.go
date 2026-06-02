@@ -56,9 +56,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Args:  cobra.RangeArgs(1, 2),
-		Use:   "scale [node, pod, ...] [name]",
-		Short: "Scale a resource in cluster",
+		Args:    cobra.RangeArgs(1, 2),
+		Use:     "scale [node, pod, ...] [name]",
+		Short:   "Scale a resource in cluster",
+		GroupID: "cluster",
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(args) != 0 {
 				return nil, cobra.ShellCompDirectiveNoFileComp

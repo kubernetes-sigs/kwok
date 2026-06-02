@@ -45,36 +45,45 @@ import (
 // NewCommand returns a new cobra.Command for root
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:          cobra.NoArgs,
-		Use:           "kwokctl [command]",
-		Short:         "kwokctl is a tool to streamline the creation and management of clusters, with nodes simulated by kwok",
-		Version:       version.DisplayVersion(),
-		SilenceUsage:  true,
-		SilenceErrors: true,
+		Args:             cobra.NoArgs,
+		Use:              "kwokctl [command]",
+		Short:            "kwokctl creates and manages local simulated Kubernetes clusters",
+		Version:          version.DisplayVersion(),
+		SilenceUsage:     true,
+		SilenceErrors:    true,
+		TraverseChildren: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
 	}
 
 	cmd.PersistentFlags().StringVar(&config.DefaultCluster, "name", config.DefaultCluster, "cluster name")
-	cmd.PersistentFlags().BoolVar(&dryrun.DryRun, "dry-run", dryrun.DryRun, "Print the command that would be executed, but do not execute it")
-	cmd.TraverseChildren = true
+	cmd.PersistentFlags().BoolVar(&dryrun.DryRun, "dry-run", dryrun.DryRun, "print the command that would be executed, but do not execute it")
 
 	cmd.AddCommand(
-		conf.NewCommand(ctx),
 		create.NewCommand(ctx),
 		del.NewCommand(ctx),
-		get.NewCommand(ctx),
 		start.NewCommand(ctx),
 		stop.NewCommand(ctx),
+		get.NewCommand(ctx),
+		snapshot.NewCommand(ctx),
+		logs.NewCommand(ctx),
+		scale.NewCommand(ctx),
+		port_forward.NewCommand(ctx),
+		export.NewCommand(ctx),
+		conf.NewCommand(ctx),
+	)
+	cmd.AddGroup(
+		&cobra.Group{ID: "cluster", Title: "Cluster Commands:"},
+	)
+
+	cmd.AddCommand(
 		kubectl.NewCommand(ctx),
 		etcdctl.NewCommand(ctx),
 		kectl.NewCommand(ctx),
-		logs.NewCommand(ctx),
-		scale.NewCommand(ctx),
-		snapshot.NewCommand(ctx),
-		export.NewCommand(ctx),
-		port_forward.NewCommand(ctx),
+	)
+	cmd.AddGroup(
+		&cobra.Group{ID: "tool", Title: "Tool Commands:"},
 	)
 
 	_ = cmd.RegisterFlagCompletionFunc("name", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {

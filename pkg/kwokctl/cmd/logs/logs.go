@@ -40,8 +40,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 
 	cmd := &cobra.Command{
-		Use:   "logs [component]",
-		Short: "Logs 'audit' (if enabled) or any component name",
+		Args:    cobra.ExactArgs(1),
+		Use:     "logs [component]",
+		Short:   "Logs 'audit' (if enabled) or any component name",
+		GroupID: "cluster",
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(args) != 0 {
 				return nil, cobra.ShellCompDirectiveNoFileComp

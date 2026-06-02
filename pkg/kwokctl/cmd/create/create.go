@@ -28,9 +28,10 @@ import (
 // NewCommand returns a new cobra.Command for cluster creation
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "create [command]",
-		Short: "Creates one of [cluster]",
+		Args:    cobra.NoArgs,
+		Use:     "create [command]",
+		Short:   "Creates one of [cluster]",
+		GroupID: "cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
