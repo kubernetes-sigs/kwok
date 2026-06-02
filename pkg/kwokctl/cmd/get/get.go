@@ -32,14 +32,14 @@ import (
 // NewCommand returns a new cobra.Command for get
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "get [command]",
-		Short: "Gets one of [artifacts, clusters, components, kubeconfig]",
+		Args:    cobra.NoArgs,
+		Use:     "get [command]",
+		Short:   "Gets one of [artifacts, clusters, components, kubeconfig]",
+		GroupID: "cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
 	}
-	// add subcommands
 	cmd.AddCommand(clusters.NewCommand(ctx))
 	cmd.AddCommand(components.NewCommand(ctx))
 	cmd.AddCommand(artifacts.NewCommand(ctx))

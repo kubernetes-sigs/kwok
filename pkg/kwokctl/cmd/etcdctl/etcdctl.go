@@ -41,8 +41,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags := &flagpole{}
 
 	cmd := &cobra.Command{
-		Use:   "etcdctl [command]",
-		Short: "etcdctl in cluster",
+		Use:                "etcdctl [command]",
+		Short:              "Run etcdctl in cluster",
+		GroupID:            "tool",
+		DisableFlagParsing: true,
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			flags.Name = config.DefaultCluster
 			name := config.ClusterName(flags.Name)
@@ -76,7 +78,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.DisableFlagParsing = true
 	return cmd
 }
 

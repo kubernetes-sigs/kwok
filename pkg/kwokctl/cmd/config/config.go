@@ -31,9 +31,10 @@ import (
 // NewCommand returns a new cobra.Command for config
 func NewCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "config [command]",
-		Short: "Manage [reset, tidy, view] default config",
+		Args:    cobra.NoArgs,
+		Use:     "config [command]",
+		Short:   "Manages config [convert, reset, tidy, view]",
+		GroupID: "cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
