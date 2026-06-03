@@ -437,7 +437,7 @@ func (c *Cluster) Ready(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if !bytes.Equal(out.Bytes(), []byte("ok")) {
+	if !bytes.Equal(bytes.TrimSpace(out.Bytes()), []byte("ok")) {
 		logger := log.FromContext(ctx)
 		logger.Debug("Check Ready",
 			"method", "get",
