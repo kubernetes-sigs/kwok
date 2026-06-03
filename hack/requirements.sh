@@ -23,7 +23,7 @@ LOCAL_BIN_DIR="${ROOT_DIR}/bin"
 
 export PATH="${LOCAL_BIN_DIR}:${PATH}"
 
-KIND_VERSION=0.31.0
+KIND_VERSION=0.32.0
 
 KUBE_VERSION=1.36.1
 
@@ -135,7 +135,9 @@ function install_go() {
 
 function install_kind() {
   if command_exist kind; then
-    return 0
+    if [[ $(kind version | awk -F . '{ print $2 }') -ge $(echo "${KIND_VERSION}" | awk -F . '{ print $2 }') ]]; then
+      return 0
+    fi
   fi
 
   mkdir -p "${LOCAL_BIN_DIR}"
@@ -144,6 +146,11 @@ function install_kind() {
 
   if ! command_exist kind; then
     echo kind is installed but not effective >&2
+    return 1
+  fi
+
+  if [[ $(kind version | awk -F . '{ print $2 }') -lt $(echo "${KIND_VERSION}" | awk -F . '{ print $2 }') ]]; then
+    echo kind version is lower than ${KIND_VERSION} >&2
     return 1
   fi
 
