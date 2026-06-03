@@ -1208,7 +1208,13 @@ func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.Co
 		return runtime.ComponentStatusStopped, nil
 	}
 
-	// TODO: check if the component is ready
+	ready, err := c.Cluster.Ready(ctx)
+	if err != nil {
+		return runtime.ComponentStatusRunning, nil
+	}
+	if !ready {
+		return runtime.ComponentStatusRunning, nil
+	}
 
 	return runtime.ComponentStatusReady, nil
 }

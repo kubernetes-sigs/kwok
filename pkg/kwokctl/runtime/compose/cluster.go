@@ -1537,13 +1537,27 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 
 // InspectComponent returns the status of the component
 func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.ComponentStatus, error) {
-	running, _ := c.inspectComponent(ctx, name)
+	component, err := c.GetComponent(ctx, name)
+	if err != nil {
+		return runtime.ComponentStatusUnknown, err
+	}
+
+	running, exist := c.inspectComponent(ctx, component.Name)
+	if !exist {
+		return runtime.ComponentStatusUnknown, fmt.Errorf("component %s does not exist", component.Name)
+	}
 
 	if !running {
 		return runtime.ComponentStatusStopped, nil
 	}
 
-	// TODO: check if the component is ready
+	ready, err := c.Cluster.Ready(ctx)
+	if err != nil {
+		return runtime.ComponentStatusRunning, nil
+	}
+	if !ready {
+		return runtime.ComponentStatusRunning, nil
+	}
 
 	return runtime.ComponentStatusReady, nil
 }
