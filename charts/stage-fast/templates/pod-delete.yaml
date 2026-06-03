@@ -11,6 +11,4 @@ spec:
     - key: '.metadata.deletionTimestamp'
       operator: 'Exists'
   next:
-    finalizers:
-      empty: true
     delete: true
