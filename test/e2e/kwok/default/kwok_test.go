@@ -47,3 +47,27 @@ func TestJsonpatch(t *testing.T) {
 		Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestVolumeProvisioner(t *testing.T) {
+	f0 := e2e.CaseVolumeProvisioner(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestPVCBeforePod(t *testing.T) {
+	f0 := e2e.CasePVCBeforePod(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestPodPVCSimultaneous(t *testing.T) {
+	f0 := e2e.CasePodPVCSimultaneous(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
+func TestPodFirstThenPVC(t *testing.T) {
+	f0 := e2e.CasePodFirstThenPVC(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}

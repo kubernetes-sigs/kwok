@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvc-aaaa-bbbb-cccc-dddd
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: kwok-volume
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: my-pvc
+    namespace: default
+    uid: "aaaa-bbbb-cccc-dddd"
+  hostPath:
+    path: /tmp/kwok-pv/default/my-pvc
+    type: DirectoryOrCreate
+status:
+  phase: Released

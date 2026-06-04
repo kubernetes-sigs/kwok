@@ -1,0 +1,60 @@
+apiGroup: v1
+kind: PersistentVolumeClaim
+name: my-pvc
+namespace: default
+stages:
+- next:
+  - data:
+      apiVersion: v1
+      kind: PersistentVolume
+      metadata:
+        annotations:
+          pv.kubernetes.io/provisioned-by: kwok.x-k8s.io/volume
+        name: pvc-aaaa-bbbb-cccc-dddd
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        capacity:
+          storage: 5Gi
+        claimRef:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          name: my-pvc
+          namespace: default
+          resourceVersion: "123"
+          uid: aaaa-bbbb-cccc-dddd
+        hostPath:
+          path: /tmp/kwok-local-path-provisioner/pvc-aaaa-bbbb-cccc-dddd
+          type: DirectoryOrCreate
+        persistentVolumeReclaimPolicy: Delete
+        storageClassName: kwok-volume
+        volumeMode: Filesystem
+    kind: apply
+    type: application/apply-patch+yaml
+  - data:
+      metadata:
+        annotations:
+          pv.kubernetes.io/bind-completed: "yes"
+          pv.kubernetes.io/bound-by-controller: "yes"
+          volume.beta.kubernetes.io/storage-provisioner: kwok.x-k8s.io/volume
+          volume.kubernetes.io/storage-provisioner: kwok.x-k8s.io/volume
+    kind: patch
+    type: application/merge-patch+json
+  - data:
+      spec:
+        volumeName: pvc-aaaa-bbbb-cccc-dddd
+    kind: patch
+    type: application/merge-patch+json
+  - data:
+      status:
+        accessModes:
+        - ReadWriteOnce
+        capacity:
+          storage: 5Gi
+        phase: Bound
+        volumeName: pvc-aaaa-bbbb-cccc-dddd
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pvc-provision
+  weight: 0

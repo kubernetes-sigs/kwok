@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+  namespace: default
+  uid: "aaaa-bbbb-cccc-dddd"
+  deletionTimestamp: "2006-01-02T15:04:05Z"
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: kwok-volume
+  volumeName: pvc-aaaa-bbbb-cccc-dddd
+status:
+  phase: Bound
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 5Gi
