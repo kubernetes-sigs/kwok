@@ -89,6 +89,23 @@ type StageStep struct {
 	Finalizers *StageFinalizers
 	// Delete means that the resource will be deleted if true.
 	Delete bool
+	// Apply means that a resource will be applied.
+	Apply *StageApply
+}
+
+// StageApply describes the application of a resource in the next stage.
+type StageApply struct {
+	// Template indicates the template for applying a resource in the next.
+	Template string
+	// Subresource indicates the name of the subresource that will be applied.
+	// When set, the target resource must already exist. The apply will perform
+	// a subresource update (e.g. "status") rather than a full create/update.
+	Subresource string
+	// Type indicates the type of the patch used when updating an existing resource.
+	// Defaults to apply (server-side apply) when omitted.
+	Type *StagePatchType
+	// Impersonation indicates the impersonating configuration for client when applying.
+	Impersonation *ImpersonationConfig
 }
 
 // StagePatch describes the patch for the resource.
@@ -118,6 +135,8 @@ const (
 	StagePatchTypeMergePatch StagePatchType = "merge"
 	// StagePatchTypeStrategicMergePatch is the strategic merge patch type.
 	StagePatchTypeStrategicMergePatch StagePatchType = "strategic"
+	// StagePatchTypeApply is the server-side apply type.
+	StagePatchTypeApply StagePatchType = "apply"
 )
 
 // ImpersonationConfig describes the configuration for impersonating clients

@@ -163,6 +163,27 @@ type StageStep struct {
 	Finalizers *StageFinalizers `json:"finalizers,omitempty"`
 	// Delete means that the resource will be deleted if true.
 	Delete bool `json:"delete,omitempty"`
+	// Apply means that a resource will be applied.
+	Apply *StageApply `json:"apply,omitempty"`
+}
+
+// StageApply describes the application of a resource in the next stage.
+type StageApply struct {
+	// Template indicates the template for applying a resource in the next.
+	Template string `json:"template,omitempty"`
+	// Subresource indicates the name of the subresource that will be applied.
+	// When set, the target resource must already exist. The apply will perform
+	// a subresource update (e.g. "status") rather than a full create/update.
+	Subresource string `json:"subresource,omitempty"`
+	// Type indicates the type of the patch used when updating an existing resource.
+	// Defaults to apply (server-side apply) when omitted.
+	// +kubebuilder:validation:Enum=apply;merge;strategic
+	Type *StagePatchType `json:"type,omitempty"`
+	// Impersonation indicates the impersonating configuration for client when applying.
+	// In most cases this will be empty, in which case the default client service account will be used.
+	// When this is not empty, a corresponding rbac change is required to grant `impersonate` privilege.
+	// The support for this field is not available in Pod and Node resources.
+	Impersonation *ImpersonationConfig `json:"impersonation,omitempty"`
 }
 
 // StagePatch describes the patch for the resource.
@@ -193,6 +214,8 @@ const (
 	StagePatchTypeMergePatch StagePatchType = "merge"
 	// StagePatchTypeStrategicMergePatch is the strategic merge patch type.
 	StagePatchTypeStrategicMergePatch StagePatchType = "strategic"
+	// StagePatchTypeApply is the server-side apply type.
+	StagePatchTypeApply StagePatchType = "apply"
 )
 
 // ImpersonationConfig describes the configuration for impersonating clients

@@ -498,8 +498,9 @@ func (s *Stage) DoSteps(
 	sendEvent func(event *internalversion.StageEvent) error,
 	deleteResource func() error,
 	patchResource func(patch *Patch) error,
+	applyResource func(apply *Apply) error,
 ) (int, error) {
-	remainStepIndex, err := doStageSteps(s.nextSteps[stepIndex:], metaFinalizers, resource, renderer, sendEvent, deleteResource, patchResource)
+	remainStepIndex, err := doStageSteps(s.nextSteps[stepIndex:], metaFinalizers, resource, renderer, sendEvent, deleteResource, patchResource, applyResource)
 	if remainStepIndex >= 0 {
 		remainStepIndex += stepIndex
 	}

@@ -23,8 +23,10 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
@@ -47,6 +49,8 @@ var (
 // PodController is a fake pods implementation that can be used to test
 type PodController struct {
 	clock                                 clock.Clock
+	dynamicClient                         dynamic.Interface
+	restMapper                            meta.RESTMapper
 	typedClient                           kubernetes.Interface
 	nodeCacheGetter                       informer.Getter[*corev1.Node]
 	disregardStatusWithAnnotationSelector labels.Selector
@@ -76,6 +80,8 @@ type PodInfo struct {
 // PodControllerConfig is the configuration for the PodController
 type PodControllerConfig struct {
 	Clock                                 clock.Clock
+	DynamicClient                         dynamic.Interface
+	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
 	NodeCacheGetter                       informer.Getter[*corev1.Node]
 	DisregardStatusWithAnnotationSelector string
@@ -114,6 +120,8 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 
 	c := &PodController{
 		clock:                                 conf.Clock,
+		dynamicClient:                         conf.DynamicClient,
+		restMapper:                            conf.RESTMapper,
 		typedClient:                           conf.TypedClient,
 		nodeCacheGetter:                       conf.NodeCacheGetter,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
@@ -343,6 +351,13 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *l
 			}
 			return nil
 		},
+		func(apply *lifecycle.Apply) error {
+			err := c.applyResource(ctx, pod, apply)
+			if err != nil {
+				return fmt.Errorf("failed to apply resource: %w", err)
+			}
+			return nil
+		},
 	)
 	if err != nil {
 		if shouldRetry(err) {
@@ -364,6 +379,28 @@ func (c *PodController) readOnly(nodeName string) bool {
 		return false
 	}
 	return c.readOnlyFunc(nodeName)
+}
+
+// applyResource applies the resource
+func (c *PodController) applyResource(ctx context.Context, pod *corev1.Pod, apply *lifecycle.Apply) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"pod", log.KObj(pod),
+		"node", pod.Spec.NodeName,
+	)
+
+	_, err := lifecycle.ApplyResource(
+		ctx,
+		c.dynamicClient,
+		c.restMapper,
+		pod.Namespace,
+		apply,
+	)
+	if err != nil {
+		return err
+	}
+	logger.Info("Apply resource")
+	return nil
 }
 
 // patchResource patches the resource

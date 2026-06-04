@@ -23,6 +23,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -50,6 +51,7 @@ type StageController struct {
 	clock                                 clock.Clock
 	dynamicClient                         dynamic.Interface
 	impersonatingDynamicClient            client.DynamicClientImpersonator
+	restMapper                            meta.RESTMapper
 	schema                                strategicpatch.LookupPatchMeta
 	gvr                                   schema.GroupVersionResource
 	disregardStatusWithAnnotationSelector labels.Selector
@@ -69,6 +71,7 @@ type StageControllerConfig struct {
 	Clock                                 clock.Clock
 	DynamicClient                         dynamic.Interface
 	ImpersonatingDynamicClient            client.DynamicClientImpersonator
+	RESTMapper                            meta.RESTMapper
 	Schema                                strategicpatch.LookupPatchMeta
 	GVR                                   schema.GroupVersionResource
 	DisregardStatusWithAnnotationSelector string
@@ -103,6 +106,7 @@ func NewStageController(conf StageControllerConfig) (*StageController, error) {
 		clock:                                 conf.Clock,
 		dynamicClient:                         conf.DynamicClient,
 		impersonatingDynamicClient:            conf.ImpersonatingDynamicClient,
+		restMapper:                            conf.RESTMapper,
 		schema:                                conf.Schema,
 		gvr:                                   conf.GVR,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
@@ -325,6 +329,13 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 			}
 			return nil
 		},
+		func(apply *lifecycle.Apply) error {
+			err := c.applyResource(ctx, resource, apply)
+			if err != nil {
+				return fmt.Errorf("failed to apply resource: %w", err)
+			}
+			return nil
+		},
 	)
 	if err != nil {
 		if shouldRetry(err) {
@@ -339,6 +350,40 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 		c.preprocessChan <- result
 	}
 	return -1, nil
+}
+
+// applyResource applies the resource
+func (c *StageController) applyResource(ctx context.Context, resource *unstructured.Unstructured, apply *lifecycle.Apply) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"resource", log.KObj(resource),
+	)
+
+	dynamicClient := c.dynamicClient
+	if apply.Impersonation != nil {
+		logger = logger.With(
+			"impersonate", apply.Impersonation.Username,
+		)
+		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: apply.Impersonation.Username})
+		if err != nil {
+			logger.Error("error getting impersonating client", err)
+			return err
+		}
+		dynamicClient = dc
+	}
+
+	_, err := lifecycle.ApplyResource(
+		ctx,
+		dynamicClient,
+		c.restMapper,
+		resource.GetNamespace(),
+		apply,
+	)
+	if err != nil {
+		return err
+	}
+	logger.Info("Apply resource")
+	return nil
 }
 
 // patchResource patches the resource

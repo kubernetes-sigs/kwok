@@ -24,8 +24,10 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
@@ -45,6 +47,8 @@ import (
 // NodeController is a fake nodes implementation that can be used to test
 type NodeController struct {
 	clock                                 clock.Clock
+	dynamicClient                         dynamic.Interface
+	restMapper                            meta.RESTMapper
 	typedClient                           kubernetes.Interface
 	nodeIP                                string
 	nodeName                              string
@@ -69,6 +73,8 @@ type NodeController struct {
 // NodeControllerConfig is the configuration for the NodeController
 type NodeControllerConfig struct {
 	Clock                                 clock.Clock
+	DynamicClient                         dynamic.Interface
+	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
 	OnNodeManagedFunc                     func(nodeName string)
 	OnNodeUnmanagedFunc                   func(nodeName string)
@@ -112,6 +118,8 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 
 	c := &NodeController{
 		clock:                                 conf.Clock,
+		dynamicClient:                         conf.DynamicClient,
+		restMapper:                            conf.RESTMapper,
 		typedClient:                           conf.TypedClient,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
@@ -410,6 +418,13 @@ func (c *NodeController) playStage(ctx context.Context, node *corev1.Node, stage
 			}
 			return nil
 		},
+		func(apply *lifecycle.Apply) error {
+			err := c.applyResource(ctx, node, apply)
+			if err != nil {
+				return fmt.Errorf("failed to apply resource: %w", err)
+			}
+			return nil
+		},
 	)
 	if err != nil {
 		if shouldRetry(err) {
@@ -431,6 +446,27 @@ func (c *NodeController) readOnly(nodeName string) bool {
 		return false
 	}
 	return c.readOnlyFunc(nodeName)
+}
+
+// applyResource applies the resource
+func (c *NodeController) applyResource(ctx context.Context, node *corev1.Node, apply *lifecycle.Apply) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"node", node.Name,
+	)
+
+	_, err := lifecycle.ApplyResource(
+		ctx,
+		c.dynamicClient,
+		c.restMapper,
+		node.Namespace,
+		apply,
+	)
+	if err != nil {
+		return err
+	}
+	logger.Info("Apply resource")
+	return nil
 }
 
 // patchResource patches the resource
