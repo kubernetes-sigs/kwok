@@ -1,0 +1,8 @@
+apiGroup: v1
+kind: PersistentVolume
+name: pvc-aaaa-bbbb-cccc-dddd
+stages:
+- next:
+  - kind: delete
+  stage: pv-delete
+  weight: 0

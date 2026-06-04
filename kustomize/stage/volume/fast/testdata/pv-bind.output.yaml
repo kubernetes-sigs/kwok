@@ -1,0 +1,14 @@
+apiGroup: v1
+kind: PersistentVolume
+name: pvc-aaaa-bbbb-cccc-dddd
+stages:
+- next:
+  - data:
+      status:
+        lastPhaseTransitionTime: <Now>
+        phase: Bound
+    kind: patch
+    subresource: status
+    type: application/merge-patch+json
+  stage: pv-bind
+  weight: 0

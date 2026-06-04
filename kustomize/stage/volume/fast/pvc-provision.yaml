@@ -1,0 +1,71 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pvc-provision
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: PersistentVolumeClaim
+  selector:
+    matchExpressions:
+    - cel:
+        expression: >-
+          self.spec.storageClassName == 'kwok-volume'
+    - cel:
+        expression: >-
+          !has(self.metadata.deletionTimestamp)
+    - cel:
+        expression: >-
+          !has(self.spec.volumeName)
+    - cel:
+        expression: >-
+          self.status.phase != 'Bound'
+  steps:
+  - apply:
+      template: |
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          name: pvc-{{ .metadata.uid }}
+          annotations:
+            pv.kubernetes.io/provisioned-by: kwok.x-k8s.io/volume
+        spec:
+          accessModes:
+          {{ YAML .spec.accessModes 2 }}
+          capacity:
+          {{ YAML .spec.resources.requests 2 }}
+          persistentVolumeReclaimPolicy: {{ default "Delete" .spec.reclaimPolicy | Quote }}
+          storageClassName: {{ .spec.storageClassName | Quote }}
+          volumeMode: {{ default "Filesystem" .spec.volumeMode | Quote }}
+          claimRef:
+            apiVersion: {{ .apiVersion | Quote }}
+            kind: {{ .kind | Quote }}
+            name: {{ .metadata.name | Quote }}
+            namespace: {{ .metadata.namespace | Quote }}
+            resourceVersion: {{ .metadata.resourceVersion | Quote }}
+            uid: {{ .metadata.uid | Quote }}
+          hostPath:
+            path: /tmp/kwok-local-path-provisioner/pvc-{{ .metadata.uid }}
+            type: DirectoryOrCreate
+  - patch:
+      root: metadata
+      template: |
+        annotations:
+          pv.kubernetes.io/bind-completed: "yes"
+          pv.kubernetes.io/bound-by-controller: "yes"
+          volume.beta.kubernetes.io/storage-provisioner: kwok.x-k8s.io/volume
+          volume.kubernetes.io/storage-provisioner: kwok.x-k8s.io/volume
+  - patch:
+      root: spec
+      template: |
+        volumeName: pvc-{{ .metadata.uid }}
+  - patch:
+      root: status
+      subresource: status
+      template: |
+        phase: Bound
+        accessModes:
+        {{ YAML .spec.accessModes 1 }}
+        capacity:
+        {{ YAML .spec.resources.requests 1 }}
+        volumeName: pvc-{{ .metadata.uid }}

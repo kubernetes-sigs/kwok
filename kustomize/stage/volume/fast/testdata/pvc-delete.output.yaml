@@ -1,0 +1,18 @@
+apiGroup: v1
+kind: PersistentVolumeClaim
+name: my-pvc
+namespace: default
+stages:
+- next:
+  - data:
+      apiVersion: v1
+      kind: PersistentVolume
+      metadata:
+        name: pvc-aaaa-bbbb-cccc-dddd
+      status:
+        phase: Released
+    kind: apply
+    subresource: status
+    type: application/merge-patch+json
+  stage: pvc-delete
+  weight: 0

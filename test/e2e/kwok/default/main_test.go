@@ -45,6 +45,7 @@ func TestMain(m *testing.M) {
 
 	deploy := pwd
 	crs := path.Join(rootDir, "kustomize/stage/fast")
+	volumeProvisionerStages := path.Join(rootDir, "kustomize/stage/volume/fast")
 	testEnv.Setup(
 		helper.BuildKwokImage(rootDir, testImage, consts.RuntimeTypeDocker),
 		envfuncs.CreateCluster(kind.NewProvider(), clusterName),
@@ -53,6 +54,7 @@ func TestMain(m *testing.M) {
 		helper.CreateByKustomize(deploy),
 		helper.WaitForAllPodsReady(),
 		helper.CreateByKustomize(crs),
+		helper.CreateByKustomize(volumeProvisionerStages),
 		helper.CreateNamespace(namespace),
 	)
 	testEnv.Finish(

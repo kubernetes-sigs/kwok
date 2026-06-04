@@ -1,0 +1,29 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: pv-bind
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: PersistentVolume
+  selector:
+    matchExpressions:
+    - cel:
+        expression: >-
+          self.spec.storageClassName == 'kwok-volume'
+    - cel:
+        expression: >-
+          !has(self.metadata.deletionTimestamp)
+    - cel:
+        expression: >-
+          has(self.spec.claimRef.name)
+    - cel:
+        expression: >-
+          !(self.status.phase in ['Bound', 'Released', 'Failed'])
+  steps:
+  - patch:
+      root: status
+      subresource: status
+      template: |
+        phase: Bound
+        lastPhaseTransitionTime: {{ Now | Quote }}

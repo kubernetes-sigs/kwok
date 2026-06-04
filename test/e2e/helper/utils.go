@@ -332,6 +332,142 @@ func WaitForAllPodsReady() env.Func {
 	}
 }
 
+// CreatePVC creates a PVC and waits for it to be Bound.
+func CreatePVC(pvc *corev1.PersistentVolumeClaim) features.Func {
+	return func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
+		client, err := resources.New(c.Client().RESTConfig())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log("creating pvc", log.KObj(pvc))
+		err = client.Create(ctx, pvc)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log("waiting for pvc to be bound", log.KObj(pvc))
+		err = wait.For(
+			conditions.New(client).ResourceMatch(pvc, func(obj k8s.Object) bool {
+				pvc := obj.(*corev1.PersistentVolumeClaim)
+				return pvc.Status.Phase == corev1.ClaimBound
+			}),
+			wait.WithContext(ctx),
+			wait.WithTimeout(20*time.Minute),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = client.Get(ctx, pvc.GetName(), pvc.GetNamespace(), pvc)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log("pvc is bound", log.KObj(pvc), "volumeName", pvc.Spec.VolumeName)
+		return ctx
+	}
+}
+
+// DeletePVC deletes a PVC and waits for it to be fully removed.
+func DeletePVC(pvc *corev1.PersistentVolumeClaim) features.Func {
+	return func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
+		client, err := resources.New(c.Client().RESTConfig())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log("deleting pvc", log.KObj(pvc))
+		err = client.Delete(ctx, pvc)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = wait.For(
+			conditions.New(client).ResourceDeleted(pvc),
+			wait.WithContext(ctx),
+			wait.WithTimeout(20*time.Minute),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log("pvc is deleted", log.KObj(pvc))
+		return ctx
+	}
+}
+
+// WaitForPVBound waits for a PersistentVolume with the given name to reach the Bound phase.
+func WaitForPVBound(pvName string) features.Func {
+	return func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
+		client, err := resources.New(c.Client().RESTConfig())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		logger := log.FromContext(ctx)
+		pv := &corev1.PersistentVolume{}
+		pv.Name = pvName
+
+		t.Log("waiting for pv to be bound", pvName)
+		err = wait.For(
+			conditions.New(client).ResourceMatch(pv, func(obj k8s.Object) bool {
+				v := obj.(*corev1.PersistentVolume)
+				if v.Status.Phase != corev1.VolumeBound {
+					logger.Info("pv not yet bound", "phase", v.Status.Phase)
+					return false
+				}
+				return true
+			}),
+			wait.WithContext(ctx),
+			wait.WithTimeout(20*time.Minute),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log("pv is bound", pvName)
+		return ctx
+	}
+}
+
+// WaitForPVDeleted waits for a PersistentVolume with the given name to be fully removed.
+func WaitForPVDeleted(pvName string) features.Func {
+	return func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
+		client, err := resources.New(c.Client().RESTConfig())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		logger := log.FromContext(ctx)
+		pv := &corev1.PersistentVolume{}
+		pv.Name = pvName
+
+		t.Log("waiting for pv to be deleted", pvName)
+		err = wait.For(
+			func(ctx context.Context) (bool, error) {
+				if err := client.Get(ctx, pvName, "", pv); err != nil {
+					if apierrors.IsNotFound(err) {
+						return true, nil
+					}
+					logger.Error("failed to get pv", err)
+					return false, nil
+				}
+				logger.Info("pv still exists", "phase", pv.Status.Phase)
+				return false, nil
+			},
+			wait.WithContext(ctx),
+			wait.WithTimeout(20*time.Minute),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log("pv is deleted", pvName)
+		return ctx
+	}
+}
+
 func waitForServiceAccountReady(ctx context.Context, resource *resources.Resources, name, namespace string) error {
 	var sa corev1.ServiceAccount
 
