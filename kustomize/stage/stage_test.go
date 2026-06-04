@@ -346,6 +346,10 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 			out = append(out, formatPatch(patch))
 			return nil
 		},
+		func(apply *lifecycle.Apply) error {
+			out = append(out, formatApply(apply))
+			return nil
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to do steps for stage %s: %w", stage.Name(), err)
@@ -396,6 +400,23 @@ func formatPatch(patch *lifecycle.Patch) any {
 
 	if patch.Impersonation != nil {
 		out["impersonation"] = patch.Impersonation.Username
+	}
+
+	return out
+}
+
+func formatApply(apply *lifecycle.Apply) any {
+	out := map[string]any{
+		"kind": "apply",
+	}
+	out["type"] = apply.Type
+	if apply.Subresource != "" {
+		out["subresource"] = apply.Subresource
+	}
+	out["data"] = json.RawMessage(apply.Data)
+
+	if apply.Impersonation != nil {
+		out["impersonation"] = apply.Impersonation.Username
 	}
 
 	return out

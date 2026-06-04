@@ -37,6 +37,7 @@ func doStageSteps(
 	sendEvent func(event *internalversion.StageEvent) error,
 	deleteResource func() error,
 	patchResource func(patch *Patch) error,
+	applyResource func(apply *Apply) error,
 ) (int, error) {
 	var deleted bool
 	for i, step := range nextSteps {
@@ -95,6 +96,25 @@ func doStageSteps(
 			err = patchResource(&patch)
 			if err != nil {
 				return i, fmt.Errorf("failed to patch resource for step %w", err)
+			}
+		}
+
+		if step.Apply != nil {
+			applyData, applyType, err := computeApply(renderer, resource, step.Apply)
+			if err != nil {
+				return i, fmt.Errorf("failed to compute apply %w", err)
+			}
+
+			apply := Apply{
+				Data:          applyData,
+				Subresource:   step.Apply.Subresource,
+				Type:          applyType,
+				Impersonation: step.Apply.Impersonation,
+			}
+
+			err = applyResource(&apply)
+			if err != nil {
+				return i, fmt.Errorf("failed to apply resource for step %w", err)
 			}
 		}
 	}
@@ -205,4 +225,28 @@ type jsonpatchData struct {
 	Path  string          `json:"path"`
 	Value json.RawMessage `json:"value,omitempty"`
 	From  string          `json:"from,omitempty"`
+}
+
+// Apply represents a create/apply operation for a resource.
+type Apply struct {
+	Data          []byte
+	Subresource   string
+	Type          types.PatchType
+	Impersonation *internalversion.ImpersonationConfig
+}
+
+func computeApply(renderer gotpl.Renderer, resource any, apply *internalversion.StageApply) ([]byte, types.PatchType, error) {
+	applyData, err := renderer.ToJSON(apply.Template, resource)
+	if err != nil {
+		return nil, "", err
+	}
+	switch format.ElemOrDefault(apply.Type) {
+	case internalversion.StagePatchTypeMergePatch:
+		return applyData, types.MergePatchType, nil
+	case internalversion.StagePatchTypeStrategicMergePatch:
+		return applyData, types.StrategicMergePatchType, nil
+	case internalversion.StagePatchTypeApply, "":
+		return applyData, types.ApplyPatchType, nil
+	}
+	return nil, "", fmt.Errorf("unknown apply type %s", *apply.Type)
 }

@@ -24,6 +24,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -130,5 +131,99 @@ func TestStageController(t *testing.T) {
 
 	if got.Status.Phase != corev1.VolumeAvailable {
 		t.Fatalf("expected phase %q, got %q", corev1.VolumeAvailable, got.Status.Phase)
+	}
+}
+
+func TestStageControllerWithCreateStep(t *testing.T) {
+	scheme := runtime.NewScheme()
+	scheme.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.PersistentVolume{})
+	client := fake.NewSimpleDynamicClient(scheme,
+		&corev1.PersistentVolume{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "pv-0",
+			},
+		},
+	)
+
+	gvr := corev1.SchemeGroupVersion.WithResource("persistentvolumes")
+
+	lc, _ := lifecycle.NewLifecycle([]*internalversion.Stage{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "pv-create",
+			},
+			Spec: internalversion.StageSpec{
+				Selector: &internalversion.StageSelector{
+					MatchExpressions: []internalversion.MatchExpression{
+						{
+							JQ: &internalversion.SelectorJQ{
+								Key:      ".metadata.name",
+								Operator: "In",
+								Values:   []string{"pv-0"},
+							},
+						},
+					},
+				},
+				Steps: []internalversion.StageStep{
+					{
+						Apply: &internalversion.StageApply{
+							Template: `apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .metadata.name }}-copy
+spec:
+  accessModes: ["ReadWriteOnce"]
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /tmp/kwok-pv-copy`,
+						},
+					},
+				},
+			},
+		},
+	})
+	restMapper := apimeta.NewDefaultRESTMapper(nil)
+	restMapper.Add(corev1.SchemeGroupVersion.WithKind("PersistentVolume"), apimeta.RESTScopeRoot)
+
+	patchMeta, _ := strategicpatch.NewPatchMetaFromStruct(corev1.PersistentVolume{})
+	controller, err := NewStageController(StageControllerConfig{
+		PlayStageParallelism: 1,
+		GVR:                  gvr,
+		DynamicClient:        client,
+		RESTMapper:           restMapper,
+		Schema:               patchMeta,
+		Lifecycle:            resources.NewStaticGetter(lc),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))
+	ctx, cancel := context.WithTimeout(ctx, 1000*time.Second)
+	t.Cleanup(func() {
+		cancel()
+		time.Sleep(time.Second)
+	})
+
+	resourceCh := make(chan informer.Event[*unstructured.Unstructured], 1)
+
+	podsInformer := informer.NewInformer[*unstructured.Unstructured, *unstructured.UnstructuredList](client.Resource(gvr))
+	err = podsInformer.Watch(ctx, informer.Option{}, resourceCh)
+	if err != nil {
+		t.Fatal(fmt.Errorf("watch resource error: %w", err))
+	}
+
+	err = controller.Start(ctx, resourceCh)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(2 * time.Second)
+
+	_, err = client.Resource(gvr).Get(ctx, "pv-0-copy", metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

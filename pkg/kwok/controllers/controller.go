@@ -421,6 +421,8 @@ func (c *Controller) onNodeUnmanaged(nodeName string) {
 func (c *Controller) initNodeController(ctx context.Context, lifecycle resources.Getter[lifecycle.Lifecycle]) (err error) {
 	c.nodes, err = NewNodeController(NodeControllerConfig{
 		Clock:                                 c.conf.Clock,
+		DynamicClient:                         c.conf.DynamicClient,
+		RESTMapper:                            c.conf.RESTMapper,
 		TypedClient:                           c.conf.TypedClient,
 		NodeIP:                                c.conf.NodeIP,
 		NodeName:                              c.conf.NodeName,
@@ -449,6 +451,8 @@ func (c *Controller) initNodeController(ctx context.Context, lifecycle resources
 func (c *Controller) initPodController(ctx context.Context, lifecycle resources.Getter[lifecycle.Lifecycle]) (err error) {
 	c.pods, err = NewPodController(PodControllerConfig{
 		Clock:                                 c.conf.Clock,
+		DynamicClient:                         c.conf.DynamicClient,
+		RESTMapper:                            c.conf.RESTMapper,
 		TypedClient:                           c.conf.TypedClient,
 		NodeCacheGetter:                       c.nodeCacheGetter,
 		NodeIP:                                c.conf.NodeIP,
@@ -511,6 +515,7 @@ func (c *Controller) initStageController(ctx context.Context, ref internalversio
 		Clock:                                 c.conf.Clock,
 		DynamicClient:                         c.conf.DynamicClient,
 		ImpersonatingDynamicClient:            c.conf.ImpersonatingDynamicClient,
+		RESTMapper:                            c.conf.RESTMapper,
 		Schema:                                schema,
 		GVR:                                   gvr,
 		DisregardStatusWithAnnotationSelector: c.conf.DisregardStatusWithAnnotationSelector,

@@ -5607,6 +5607,8 @@ ImpersonationConfig
 </h3>
 <p>
 <em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageApply">StageApply</a>
+, 
 <a href="#kwok.x-k8s.io/v1alpha1.StageNext">StageNext</a>
 , 
 <a href="#kwok.x-k8s.io/v1alpha1.StagePatch">StagePatch</a>
@@ -6602,6 +6604,81 @@ SelectorOperator
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.StageApply">
+StageApply
+<a href="#kwok.x-k8s.io%2fv1alpha1.StageApply"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageStep">StageStep</a>
+</p>
+<p>
+<p>StageApply describes the application of a resource in the next stage.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>template</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Template indicates the template for applying a resource in the next.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>subresource</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Subresource indicates the name of the subresource that will be applied.
+When set, the target resource must already exist. The apply will perform
+a subresource update (e.g. &ldquo;status&rdquo;) rather than a full create/update.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>type</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StagePatchType">
+StagePatchType
+</a>
+</em>
+</td>
+<td>
+<p>Type indicates the type of the patch used when updating an existing resource.
+Defaults to apply (server-side apply) when omitted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>impersonation</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ImpersonationConfig">
+ImpersonationConfig
+</a>
+</em>
+</td>
+<td>
+<p>Impersonation indicates the impersonating configuration for client when applying.
+In most cases this will be empty, in which case the default client service account will be used.
+When this is not empty, a corresponding rbac change is required to grant <code>impersonate</code> privilege.
+The support for this field is not available in Pod and Node resources.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.StageDelay">
 StageDelay
 <a href="#kwok.x-k8s.io%2fv1alpha1.StageDelay"> #</a>
@@ -6998,6 +7075,8 @@ StagePatchType
 </h3>
 <p>
 <em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageApply">StageApply</a>
+, 
 <a href="#kwok.x-k8s.io/v1alpha1.StagePatch">StagePatch</a>
 </p>
 <p>
@@ -7011,6 +7090,11 @@ StagePatchType
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>&#34;apply&#34;</code></td>
+<td><p>StagePatchTypeApply is the server-side apply type.</p>
+</td>
+</tr>
 <tr>
 <td><code>&#34;json&#34;</code></td>
 <td><p>StagePatchTypeJSONPatch is the JSON patch type.</p>
@@ -7361,6 +7445,19 @@ bool
 </td>
 <td>
 <p>Delete means that the resource will be deleted if true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apply</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.StageApply">
+StageApply
+</a>
+</em>
+</td>
+<td>
+<p>Apply means that a resource will be applied.</p>
 </td>
 </tr>
 </tbody>
