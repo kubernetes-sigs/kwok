@@ -70,7 +70,3 @@ type ClusterAttachList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ClusterAttach `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&ClusterAttach{}, &ClusterAttachList{})
-}
