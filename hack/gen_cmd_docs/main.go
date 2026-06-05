@@ -46,7 +46,7 @@ func main() {
 	config.GOARCH = "amd64"
 
 	flagset := pflag.NewFlagSet("global", pflag.ContinueOnError)
-	flagset.ParseErrorsWhitelist.UnknownFlags = true
+	flagset.ParseErrorsAllowlist.UnknownFlags = true
 	flagset.Usage = func() {}
 	ctx := context.Background()
 	ctx, logger := log.InitFlags(ctx, flagset)
