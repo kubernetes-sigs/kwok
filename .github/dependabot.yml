@@ -17,7 +17,15 @@ updates:
   - "release-note-none"
   - "ok-to-test"
 - package-ecosystem: "docker"
-  directory: "/"
+  directory: "/images/kwok"
+  schedule:
+    interval: weekly
+  labels:
+  - "area/dependency"
+  - "release-note-none"
+  - "ok-to-test"
+- package-ecosystem: "docker"
+  directory: "/images/cluster"
   schedule:
     interval: weekly
   labels:
