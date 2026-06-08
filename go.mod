@@ -20,7 +20,6 @@ require (
 	github.com/wzshiming/cmux v0.4.2
 	github.com/wzshiming/ctc v1.2.3
 	github.com/wzshiming/easycel v0.6.0
-	github.com/wzshiming/getch v0.0.0-20201023133301-8e758c21cf27
 	github.com/wzshiming/httpseek v0.6.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful v0.69.0
 	go.opentelemetry.io/otel v1.44.0
