@@ -13,27 +13,27 @@
 # limitations under the License.
 
 ARG BASE_IMAGE=docker.io/library/alpine:3.23
-FROM --platform=$TARGETPLATFORM $BASE_IMAGE AS cache
+FROM $BASE_IMAGE AS cache
 ARG TARGETPLATFORM
 COPY --chmod=0755 bin/$TARGETPLATFORM/kwok /usr/local/bin/
 COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
 
-ENV KWOK_CONTROLLER_BINARY /usr/local/bin/kwok
-ENV KWOK_KUBE_APISERVER_INSECURE_PORT 8080
-ENV KWOK_KUBE_APISERVER_PORT 0
-ENV KWOK_RUNTIME binary
+ENV KWOK_CONTROLLER_BINARY=/usr/local/bin/kwok
+ENV KWOK_KUBE_APISERVER_INSECURE_PORT=8080
+ENV KWOK_KUBE_APISERVER_PORT=0
+ENV KWOK_RUNTIME=binary
 
 ARG kube_version
-ENV KWOK_KUBE_VERSION $kube_version
+ENV KWOK_KUBE_VERSION=$kube_version
 
-ENV KWOK_QUIET_PULL true
+ENV KWOK_QUIET_PULL=true
 
 RUN echo "KUBE_VERSION: ${KWOK_KUBE_VERSION}" && \
     kwokctl create cluster && \
     kwokctl kubectl version && \
     kwokctl delete cluster
 
-FROM --platform=$TARGETPLATFORM $BASE_IMAGE
+FROM $BASE_IMAGE
 ARG TARGETPLATFORM
 
 # Cache dependent binaries as the first layer
@@ -42,13 +42,13 @@ COPY --chmod=0755 images/cluster/entrypoint.sh /entrypoint.sh
 COPY --chmod=0755 bin/$TARGETPLATFORM/kwok /usr/local/bin/
 COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
 
-ENV KWOK_CONTROLLER_BINARY /usr/local/bin/kwok
-ENV KWOK_KUBE_APISERVER_INSECURE_PORT 8080
-ENV KWOK_KUBE_APISERVER_PORT 0
-ENV KWOK_RUNTIME binary
+ENV KWOK_CONTROLLER_BINARY=/usr/local/bin/kwok
+ENV KWOK_KUBE_APISERVER_INSECURE_PORT=8080
+ENV KWOK_KUBE_APISERVER_PORT=0
+ENV KWOK_RUNTIME=binary
 
 ARG kube_version
-ENV KWOK_KUBE_VERSION $kube_version
+ENV KWOK_KUBE_VERSION=$kube_version
 
 EXPOSE 8080
 
