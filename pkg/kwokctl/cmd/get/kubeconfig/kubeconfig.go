@@ -40,6 +40,8 @@ import (
 	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
+var errCurrentClusterNotFound = errors.New("current cluster is not configured")
+
 type flagpole struct {
 	Name                  string
 	Host                  string
@@ -102,10 +104,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 	if err != nil {
 		return fmt.Errorf("failed to minify kubeconfig file %s: %w", kubeconfigPath, err)
 	}
-	currentContext := kubeConfig.CurrentContext
 
-	clusterName := kubeConfig.Contexts[currentContext].Cluster
-	if clusterName == "" || kubeConfig.Clusters[clusterName] == nil {
+	currentContext, clusterName, err := getCurrentCluster(kubeConfig)
+	if err != nil {
 		return fmt.Errorf("failed to load kubeconfig file %s: %w", kubeconfigPath, err)
 	}
 
@@ -171,6 +172,25 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	return nil
+}
+
+func getCurrentCluster(kubeConfig *clientcmdapi.Config) (string, string, error) {
+	currentContext := kubeConfig.CurrentContext
+	context := kubeConfig.Contexts[currentContext]
+	if context == nil {
+		return "", "", errCurrentClusterNotFound
+	}
+
+	clusterName := context.Cluster
+	if clusterName == "" {
+		return "", "", errCurrentClusterNotFound
+	}
+
+	if kubeConfig.Clusters[clusterName] == nil {
+		return "", "", errCurrentClusterNotFound
+	}
+
+	return currentContext, clusterName, nil
 }
 
 func modifyAddress(origin string, address string) (string, error) {
