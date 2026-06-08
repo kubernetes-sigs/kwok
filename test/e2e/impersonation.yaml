@@ -1,0 +1,23 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: namespace-impersonation
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Namespace
+  selector:
+    matchExpressions:
+    - key: '.metadata.deletionTimestamp'
+      operator: 'DoesNotExist'
+  steps:
+  - patch:
+      impersonation:
+        username: 'kwok-e2e-impersonated'
+      root: status
+      subresource: status
+      template: |
+        conditions:
+        - type: "kwok.x-k8s.io/impersonated"
+          status: "True"
+          reason: "Impersonated"

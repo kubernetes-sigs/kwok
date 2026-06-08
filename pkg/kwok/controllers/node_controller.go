@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 	netutils "k8s.io/utils/net"
@@ -36,6 +37,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
@@ -50,6 +52,7 @@ type NodeController struct {
 	dynamicClient                         dynamic.Interface
 	restMapper                            meta.RESTMapper
 	typedClient                           kubernetes.Interface
+	impersonatingTypedClient              client.TypedClientImpersonator
 	nodeIP                                string
 	nodeName                              string
 	nodePort                              int
@@ -76,6 +79,7 @@ type NodeControllerConfig struct {
 	DynamicClient                         dynamic.Interface
 	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
+	ImpersonatingTypedClient              client.TypedClientImpersonator
 	OnNodeManagedFunc                     func(nodeName string)
 	OnNodeUnmanagedFunc                   func(nodeName string)
 	DisregardStatusWithAnnotationSelector string
@@ -121,6 +125,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		dynamicClient:                         conf.DynamicClient,
 		restMapper:                            conf.RESTMapper,
 		typedClient:                           conf.TypedClient,
+		impersonatingTypedClient:              conf.ImpersonatingTypedClient,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		onNodeManagedFunc:                     conf.OnNodeManagedFunc,
@@ -483,7 +488,27 @@ func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, p
 		)
 		subresource = []string{patch.Subresource}
 	}
-	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
+
+	client := c.typedClient
+
+	if patch.Impersonation != nil {
+		if c.impersonatingTypedClient == nil {
+			return nil, fmt.Errorf("impersonating typed client is not configured")
+		}
+
+		logger = logger.With(
+			"impersonate", patch.Impersonation.Username,
+		)
+
+		tc, err := c.impersonatingTypedClient.ImpersonateTyped(rest.ImpersonationConfig{UserName: patch.Impersonation.Username})
+		if err != nil {
+			return nil, err
+		}
+
+		client = tc
+	}
+
+	result, err := client.CoreV1().Nodes().Patch(ctx, node.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
