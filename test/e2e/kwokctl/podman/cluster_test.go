@@ -27,3 +27,9 @@ func TestMultiCluster(t *testing.T) {
 		Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestGetClustersStatus(t *testing.T) {
+	f0 := e2e.CaseGetClustersStatus(kwokctlPath, clusterName).
+		Feature()
+	testEnv.Test(t, f0)
+}

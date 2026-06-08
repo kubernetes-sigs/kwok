@@ -82,7 +82,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 				var readyMsg = "0/0"
 				var count int
 				workdir := utilspath.Join(config.ClustersDir, cluster)
-				rt, err := runtime.DefaultRegistry.Load(ctx, cluster, workdir)
+				name := config.ClusterName(cluster)
+				rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 				if err != nil {
 					records = append(records, []string{cluster, readyMsg, "Failed:" + err.Error()})
 					continue
