@@ -87,7 +87,3 @@ type ResourceUsageList struct {
 	metav1.ListMeta `json:"metadata"`
 	Items           []ResourceUsage `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&ResourceUsage{}, &ResourceUsageList{})
-}

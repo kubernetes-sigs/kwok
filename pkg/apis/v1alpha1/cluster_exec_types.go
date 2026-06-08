@@ -74,7 +74,3 @@ type ClusterExecList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ClusterExec `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&ClusterExec{}, &ClusterExecList{})
-}
