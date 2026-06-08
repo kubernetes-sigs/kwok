@@ -24,3 +24,6 @@ If your repo has certain guidelines for contribution, put them here ahead of the
 
 - [Slack](https://kubernetes.slack.com/messages/sig-scheduling)
 - [Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-scheduling)
+- [#kwok Slack channel](https://kubernetes.slack.com/messages/kwok/)
+- [#kwok-dev Slack channel](https://kubernetes.slack.com/messages/kwok-dev/)
+- [GitHub Discussions](https://github.com/kubernetes-sigs/kwok/discussions)

@@ -48,6 +48,7 @@ The maintainers of this project are reachable via:
 - The issue tracker by [filing an issue][new issue]
 - The discussion tracker by [filing a discussion][new discussion]
 - The Kubernetes [SIG-Scheduling] [Mailing List]
+- The Kubernetes [#kwok] and [#kwok-dev] Slack channels
 
 Current maintainers in [owner list], feel free to reach out directly if you have any questions!
 
@@ -66,6 +67,8 @@ If you're looking to contribute documentation improvements, you'll want to read 
 [install docker]: https://docs.docker.com/install/#supported-platforms
 [SIG-Scheduling]: https://github.com/kubernetes/community/blob/master/sig-scheduling/README.md
 [Mailing List]: https://groups.google.com/forum/#!forum/kubernetes-sig-scheduling
+[#kwok]: https://kubernetes.slack.com/messages/kwok/
+[#kwok-dev]: https://kubernetes.slack.com/messages/kwok-dev/
 [Kubernetes Contributor Guide]: https://git.k8s.io/community/contributors/guide
 [Contributor Cheat Sheet]: https://git.k8s.io/community/contributors/guide/contributor-cheatsheet
 [owner list]: https://github.com/kubernetes-sigs/kwok/blob/main/OWNERS
