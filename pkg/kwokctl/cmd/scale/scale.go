@@ -93,7 +93,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func runE(ctx context.Context, flags *flagpole, args []string) error {
-	name := config.ClusterName(flags.Name)
+	name := flags.Name
 	workdir := path.Join(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)

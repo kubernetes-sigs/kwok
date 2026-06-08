@@ -49,7 +49,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		DisableFlagParsing: true,
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			flags.Name = config.DefaultCluster
-			name := config.ClusterName(flags.Name)
+			name := flags.Name
 			workdir := utilspath.Join(config.ClustersDir, flags.Name)
 
 			logger := log.FromContext(ctx)
@@ -83,7 +83,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func runE(ctx context.Context, flags *flagpole, args []string) error {
-	name := config.ClusterName(flags.Name)
+	name := flags.Name
 	workdir := utilspath.Join(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)

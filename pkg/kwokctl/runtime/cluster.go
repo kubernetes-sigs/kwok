@@ -86,7 +86,7 @@ type Cluster struct {
 // NewCluster creates a new cluster
 func NewCluster(name, workdir string) *Cluster {
 	return &Cluster{
-		name:    name,
+		name:    config.ClusterName(name),
 		workdir: workdir,
 		dryRun:  dryrun.DryRun,
 	}

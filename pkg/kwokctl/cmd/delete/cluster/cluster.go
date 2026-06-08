@@ -95,12 +95,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 	return nil
 }
 
-func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath string, force bool) error {
-	name := config.ClusterName(clusterName)
-	workdir := utilspath.Join(config.ClustersDir, clusterName)
+func deleteCluster(ctx context.Context, name string, kubeconfigPath string, force bool) error {
+	workdir := utilspath.Join(config.ClustersDir, name)
 
 	logger := log.FromContext(ctx)
-	logger = logger.With("cluster", clusterName)
+	logger = logger.With("cluster", name)
 	ctx = log.NewContext(ctx, logger)
 
 	var err error

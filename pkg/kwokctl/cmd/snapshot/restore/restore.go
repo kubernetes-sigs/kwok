@@ -68,7 +68,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func runE(ctx context.Context, flags *flagpole) error {
-	name := config.ClusterName(flags.Name)
+	name := flags.Name
 	workdir := utilspath.Join(config.ClustersDir, flags.Name)
 	if flags.Path == "" {
 		return fmt.Errorf("path is required")
