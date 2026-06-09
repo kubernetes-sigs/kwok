@@ -15,7 +15,8 @@
 ARG BASE_IMAGE=docker.io/library/alpine:3.23
 FROM $BASE_IMAGE AS cache
 ARG TARGETPLATFORM
-COPY --chmod=0755 bin/$TARGETPLATFORM/{kwok,kwokctl} /usr/local/bin/
+COPY --chmod=0755 bin/$TARGETPLATFORM/kwok /usr/local/bin/
+COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
 
 ENV KWOK_CONTROLLER_BINARY=/usr/local/bin/kwok
 ENV KWOK_KUBE_APISERVER_INSECURE_PORT=8080
@@ -38,7 +39,8 @@ ARG TARGETPLATFORM
 # Cache dependent binaries as the first layer
 COPY --from=cache /root/.kwok/cache /root/.kwok/cache
 COPY --chmod=0755 images/cluster/entrypoint.sh /entrypoint.sh
-COPY --chmod=0755 bin/$TARGETPLATFORM/{kwok,kwokctl} /usr/local/bin/
+COPY --chmod=0755 bin/$TARGETPLATFORM/kwok /usr/local/bin/
+COPY --chmod=0755 bin/$TARGETPLATFORM/kwokctl /usr/local/bin/
 
 ENV KWOK_CONTROLLER_BINARY=/usr/local/bin/kwok
 ENV KWOK_KUBE_APISERVER_INSECURE_PORT=8080
