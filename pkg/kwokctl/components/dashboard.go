@@ -69,7 +69,7 @@ func BuildDashboardComponent(conf BuildDashboardComponentConfig) (component inte
 		dashboardArgs = append(dashboardArgs, "--system-banner="+conf.Banner)
 	}
 
-	user := ""
+	user := "root"
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {

@@ -49,7 +49,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return nil, cobra.ShellCompDirectiveNoFileComp
 			}
 			flags.Name = config.DefaultCluster
-			name := config.ClusterName(flags.Name)
+			name := flags.Name
 			workdir := utilspath.Join(config.ClustersDir, flags.Name)
 
 			logger := log.FromContext(ctx)
@@ -96,7 +96,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func runE(ctx context.Context, flags *flagpole, args []string) error {
-	name := config.ClusterName(flags.Name)
+	name := flags.Name
 	workdir := utilspath.Join(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)

@@ -78,13 +78,13 @@ func runE(ctx context.Context, flags *flagpole) error {
 				{"NAME", "READY", "STATUS"},
 			}
 
-			for _, cluster := range clusters {
+			for _, name := range clusters {
 				var readyMsg = "0/0"
 				var count int
-				workdir := utilspath.Join(config.ClustersDir, cluster)
-				rt, err := runtime.DefaultRegistry.Load(ctx, cluster, workdir)
+				workdir := utilspath.Join(config.ClustersDir, name)
+				rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
 				if err != nil {
-					records = append(records, []string{cluster, readyMsg, "Failed:" + err.Error()})
+					records = append(records, []string{name, readyMsg, "Failed:" + err.Error()})
 					continue
 				}
 
@@ -100,27 +100,27 @@ func runE(ctx context.Context, flags *flagpole) error {
 				}
 
 				if len(components) == 0 {
-					records = append(records, []string{cluster, readyMsg, "Unknown"})
+					records = append(records, []string{name, readyMsg, "Unknown"})
 					continue
 				}
 
 				if count == 0 {
-					records = append(records, []string{cluster, readyMsg, "Stopped"})
+					records = append(records, []string{name, readyMsg, "Stopped"})
 					continue
 				}
 
 				ready, err := rt.Ready(ctx)
 				if err != nil {
-					records = append(records, []string{cluster, readyMsg, "Error:" + err.Error()})
+					records = append(records, []string{name, readyMsg, "Error:" + err.Error()})
 					continue
 				}
 
 				if !ready {
-					records = append(records, []string{cluster, readyMsg, "NotReady"})
+					records = append(records, []string{name, readyMsg, "NotReady"})
 					continue
 				}
 
-				records = append(records, []string{cluster, readyMsg, "Ready"})
+				records = append(records, []string{name, readyMsg, "Ready"})
 			}
 
 			w := printers.NewTablePrinter(os.Stdout)
