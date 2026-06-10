@@ -28,12 +28,14 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
@@ -52,6 +54,7 @@ type PodController struct {
 	dynamicClient                         dynamic.Interface
 	restMapper                            meta.RESTMapper
 	typedClient                           kubernetes.Interface
+	impersonatingTypedClient              client.TypedClientImpersonator
 	nodeCacheGetter                       informer.Getter[*corev1.Node]
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
@@ -83,6 +86,7 @@ type PodControllerConfig struct {
 	DynamicClient                         dynamic.Interface
 	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
+	ImpersonatingTypedClient              client.TypedClientImpersonator
 	NodeCacheGetter                       informer.Getter[*corev1.Node]
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
@@ -123,6 +127,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		dynamicClient:                         conf.DynamicClient,
 		restMapper:                            conf.RESTMapper,
 		typedClient:                           conf.TypedClient,
+		impersonatingTypedClient:              conf.ImpersonatingTypedClient,
 		nodeCacheGetter:                       conf.NodeCacheGetter,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
@@ -418,7 +423,27 @@ func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patc
 		)
 		subresource = []string{patch.Subresource}
 	}
-	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
+
+	client := c.typedClient
+
+	if patch.Impersonation != nil {
+		if c.impersonatingTypedClient == nil {
+			return nil, fmt.Errorf("impersonating typed client is not configured")
+		}
+
+		logger = logger.With(
+			"impersonate", patch.Impersonation.Username,
+		)
+
+		tc, err := c.impersonatingTypedClient.ImpersonateTyped(rest.ImpersonationConfig{UserName: patch.Impersonation.Username})
+		if err != nil {
+			return nil, err
+		}
+
+		client = tc
+	}
+
+	result, err := client.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}

@@ -364,7 +364,7 @@ func (c *StageController) applyResource(ctx context.Context, resource *unstructu
 		logger = logger.With(
 			"impersonate", apply.Impersonation.Username,
 		)
-		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: apply.Impersonation.Username})
+		dc, err := c.impersonatingDynamicClient.ImpersonateDynamic(rest.ImpersonationConfig{UserName: apply.Impersonation.Username})
 		if err != nil {
 			logger.Error("error getting impersonating client", err)
 			return err
@@ -395,11 +395,15 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 
 	nri := c.dynamicClient.Resource(c.gvr)
 	if patch.Impersonation != nil {
-		logger.With(
+		if c.impersonatingDynamicClient == nil {
+			return nil, fmt.Errorf("impersonating dynamic client is not configured")
+		}
+
+		logger = logger.With(
 			"impersonate", patch.Impersonation.Username,
 		)
 
-		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: patch.Impersonation.Username})
+		dc, err := c.impersonatingDynamicClient.ImpersonateDynamic(rest.ImpersonationConfig{UserName: patch.Impersonation.Username})
 		if err != nil {
 			logger.Error("error getting impersonating client", err)
 			return nil, err

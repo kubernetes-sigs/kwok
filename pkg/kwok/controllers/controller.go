@@ -103,6 +103,7 @@ type Config struct {
 	DynamicClient                         dynamic.Interface
 	RESTClient                            rest.Interface
 	ImpersonatingDynamicClient            client.DynamicClientImpersonator
+	ImpersonatingTypedClient              client.TypedClientImpersonator
 	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
 	TypedKwokClient                       versioned.Interface
@@ -424,6 +425,7 @@ func (c *Controller) initNodeController(ctx context.Context, lifecycle resources
 		DynamicClient:                         c.conf.DynamicClient,
 		RESTMapper:                            c.conf.RESTMapper,
 		TypedClient:                           c.conf.TypedClient,
+		ImpersonatingTypedClient:              c.conf.ImpersonatingTypedClient,
 		NodeIP:                                c.conf.NodeIP,
 		NodeName:                              c.conf.NodeName,
 		NodePort:                              c.conf.NodePort,
@@ -454,6 +456,7 @@ func (c *Controller) initPodController(ctx context.Context, lifecycle resources.
 		DynamicClient:                         c.conf.DynamicClient,
 		RESTMapper:                            c.conf.RESTMapper,
 		TypedClient:                           c.conf.TypedClient,
+		ImpersonatingTypedClient:              c.conf.ImpersonatingTypedClient,
 		NodeCacheGetter:                       c.nodeCacheGetter,
 		NodeIP:                                c.conf.NodeIP,
 		CIDR:                                  c.conf.CIDR,

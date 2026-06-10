@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
@@ -28,11 +29,17 @@ import (
 // This is useful for scenarios where you need to perform operations on behalf of
 // different users while maintaining a single client instance.
 type DynamicClientImpersonator interface {
-	Impersonate(impersonateConfig rest.ImpersonationConfig) (dynamic.Interface, error)
+	ImpersonateDynamic(impersonateConfig rest.ImpersonationConfig) (dynamic.Interface, error)
 }
 
-func (g *clientset) Impersonate(impersonateConfig rest.ImpersonationConfig) (dynamic.Interface, error) {
-	if cli, ok := g.impersonationCache[impersonateConfig.UserName]; ok {
+// TypedClientImpersonator is an interface that provides functionality to impersonate
+// a Kubernetes user and obtain a typed client with the impersonated credentials.
+type TypedClientImpersonator interface {
+	ImpersonateTyped(impersonateConfig rest.ImpersonationConfig) (kubernetes.Interface, error)
+}
+
+func (g *clientset) ImpersonateDynamic(impersonateConfig rest.ImpersonationConfig) (dynamic.Interface, error) {
+	if cli, ok := g.impersonationDynamicCache[impersonateConfig.UserName]; ok {
 		return cli, nil
 	}
 
@@ -48,6 +55,27 @@ func (g *clientset) Impersonate(impersonateConfig rest.ImpersonationConfig) (dyn
 		return nil, fmt.Errorf("could not get Kubernetes dynamicClient: %w", err)
 	}
 
-	g.impersonationCache[impersonateConfig.UserName] = cli
+	g.impersonationDynamicCache[impersonateConfig.UserName] = cli
+	return cli, nil
+}
+
+func (g *clientset) ImpersonateTyped(impersonateConfig rest.ImpersonationConfig) (kubernetes.Interface, error) {
+	if cli, ok := g.impersonationTypedCache[impersonateConfig.UserName]; ok {
+		return cli, nil
+	}
+
+	restConfig, err := g.ToRESTConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	newRestConfig := rest.CopyConfig(restConfig)
+	newRestConfig.Impersonate = impersonateConfig
+	cli, err := kubernetes.NewForConfig(newRestConfig)
+	if err != nil {
+		return nil, fmt.Errorf("could not get Kubernetes typedClient: %w", err)
+	}
+
+	g.impersonationTypedCache[impersonateConfig.UserName] = cli
 	return cli, nil
 }

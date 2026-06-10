@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -40,6 +41,7 @@ type Clientset interface {
 	ToRESTMapper() (meta.RESTMapper, error)
 	ToDynamicClient() (dynamic.Interface, error)
 	ToImpersonatingDynamicClient() DynamicClientImpersonator
+	ToImpersonatingTypedClient() TypedClientImpersonator
 }
 
 // clientset is a set of Kubernetes clients.
@@ -52,7 +54,8 @@ type clientset struct {
 	clientConfig    clientcmd.ClientConfig
 	dynamicClient   dynamic.Interface
 
-	impersonationCache map[string]dynamic.Interface
+	impersonationDynamicCache map[string]dynamic.Interface
+	impersonationTypedCache   map[string]kubernetes.Interface
 
 	opts []Option
 }
@@ -70,10 +73,11 @@ func WithImpersonate(impersonateConfig rest.ImpersonationConfig) Option {
 // NewClientset creates a new clientset.
 func NewClientset(masterURL, kubeconfigPath string, opts ...Option) (Clientset, error) {
 	return &clientset{
-		masterURL:          masterURL,
-		kubeconfigPath:     kubeconfigPath,
-		opts:               opts,
-		impersonationCache: map[string]dynamic.Interface{},
+		masterURL:                 masterURL,
+		kubeconfigPath:            kubeconfigPath,
+		opts:                      opts,
+		impersonationDynamicCache: map[string]dynamic.Interface{},
+		impersonationTypedCache:   map[string]kubernetes.Interface{},
 	}, nil
 }
 
@@ -170,6 +174,11 @@ func (g *clientset) ToDynamicClient() (dynamic.Interface, error) {
 
 // ToImpersonatingDynamicClient returns a dynamic Kubernetes client.
 func (g *clientset) ToImpersonatingDynamicClient() DynamicClientImpersonator {
+	return g
+}
+
+// ToImpersonatingTypedClient returns a typed Kubernetes client impersonator.
+func (g *clientset) ToImpersonatingTypedClient() TypedClientImpersonator {
 	return g
 }
 

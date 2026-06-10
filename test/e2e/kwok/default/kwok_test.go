@@ -71,3 +71,9 @@ func TestPodFirstThenPVC(t *testing.T) {
 		Feature()
 	testEnv.Test(t, f0)
 }
+
+func TestImpersonation(t *testing.T) {
+	f0 := e2e.CaseImpersonation().
+		Feature()
+	testEnv.Test(t, f0)
+}
