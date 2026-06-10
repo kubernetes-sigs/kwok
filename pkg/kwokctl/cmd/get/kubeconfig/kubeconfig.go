@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -207,7 +208,11 @@ func modifyAddress(origin string, address string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		u.Host = net.JoinHostPort(address, port)
+		u.Host = net.JoinHostPort(trimIPv6Brackets(address), port)
 	}
 	return u.String(), nil
+}
+
+func trimIPv6Brackets(host string) string {
+	return strings.TrimSuffix(strings.TrimPrefix(host, "["), "]")
 }

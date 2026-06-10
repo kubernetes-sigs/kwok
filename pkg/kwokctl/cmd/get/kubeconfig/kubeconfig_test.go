@@ -109,3 +109,49 @@ func TestGetCurrentClusterAfterMinifyConfig(t *testing.T) {
 		t.Fatalf("getCurrentCluster() error = %v, wantErr %v", err, errCurrentClusterNotFound)
 	}
 }
+
+func TestModifyAddress(t *testing.T) {
+	tests := []struct {
+		name    string
+		origin  string
+		address string
+		want    string
+	}{
+		{
+			name:    "hostname without port keeps original port",
+			origin:  "https://127.0.0.1:6443",
+			address: "localhost",
+			want:    "https://localhost:6443",
+		},
+		{
+			name:    "ipv6 without port keeps original port",
+			origin:  "https://127.0.0.1:6443",
+			address: "::1",
+			want:    "https://[::1]:6443",
+		},
+		{
+			name:    "bracketed ipv6 without port keeps original port",
+			origin:  "https://127.0.0.1:6443",
+			address: "[::1]",
+			want:    "https://[::1]:6443",
+		},
+		{
+			name:    "address with explicit port overrides original port",
+			origin:  "https://127.0.0.1:6443",
+			address: "[::1]:8443",
+			want:    "https://[::1]:8443",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := modifyAddress(tt.origin, tt.address)
+			if err != nil {
+				t.Fatalf("modifyAddress() error = %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("modifyAddress() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
