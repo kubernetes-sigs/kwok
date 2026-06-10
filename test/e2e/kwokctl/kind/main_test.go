@@ -86,7 +86,9 @@ func TestMain(m *testing.M) {
 				logger.Info("exporting logs for control plane")
 				err := exec.Exec(ctx, "docker", "logs", "kwok-"+clusterName+"-control-plane")
 				if err != nil {
-					logger.Error("failed to export logs for control plane", err)
+					logger.Error("failed to export logs for control plane",
+						"err", err,
+					)
 				}
 			}
 			return ctx, err

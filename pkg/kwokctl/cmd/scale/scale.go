@@ -97,7 +97,9 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	workdir := path.Join(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)
-	logger = logger.With("cluster", flags.Name)
+	logger = logger.With(
+		"cluster", flags.Name,
+	)
 	ctx = log.NewContext(ctx, logger)
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
@@ -134,7 +136,9 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 			resourceData = resource.DefaultNode
 		}
 
-		logger.Info("No resource found, use default resource", "resource", resourceKind)
+		logger.Info("No resource found, use default resource",
+			"resource", resourceKind,
+		)
 		krc, err = config.UnmarshalWithType[*internalversion.KwokctlResource](resourceData)
 		if err != nil {
 			return err

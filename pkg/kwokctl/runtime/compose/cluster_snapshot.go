@@ -68,7 +68,9 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	defer func() {
 		err = c.RemoveAll(etcdDataTmp)
 		if err != nil {
-			logger.Error("Failed to clear etcd temporary data", err)
+			logger.Error("Failed to clear etcd temporary data",
+				"err", err,
+			)
 		}
 	}()
 
@@ -82,14 +84,20 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		for _, component := range components {
 			err := c.StopComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to stop", err, "component", component)
+				logger.Error("Failed to stop",
+					"err", err,
+					"component", component,
+				)
 			}
 		}
 		defer func() {
 			for _, component := range components {
 				err := c.StartComponent(ctx, component)
 				if err != nil {
-					logger.Error("Failed to start", err, "component", component)
+					logger.Error("Failed to start",
+						"err", err,
+						"component", component,
+					)
 				}
 			}
 
@@ -101,11 +109,17 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 			for _, component := range components {
 				err := c.StopComponent(ctx, component)
 				if err != nil {
-					logger.Error("Failed to stop", err, "component", component)
+					logger.Error("Failed to stop",
+						"err", err,
+						"component", component,
+					)
 				}
 				err = c.StartComponent(ctx, component)
 				if err != nil {
-					logger.Error("Failed to start", err, "component", component)
+					logger.Error("Failed to start",
+						"err", err,
+						"component", component,
+					)
 				}
 			}
 		}()
@@ -122,12 +136,16 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		// Stop the kube-apiserver container to avoid data modification by etcd during restore.
 		err = c.StopComponent(ctx, consts.ComponentKubeApiserver)
 		if err != nil {
-			logger.Error("Failed to stop kube-apiserver", err)
+			logger.Error("Failed to stop kube-apiserver",
+				"err", err,
+			)
 		}
 		defer func() {
 			err = c.StartComponent(ctx, consts.ComponentKubeApiserver)
 			if err != nil {
-				logger.Error("Failed to start kube-apiserver", err)
+				logger.Error("Failed to start kube-apiserver",
+					"err", err,
+				)
 			}
 		}()
 
@@ -144,7 +162,10 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		for _, component := range components {
 			err := c.StopComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to stop", err, "component", component)
+				logger.Error("Failed to stop",
+					"err", err,
+					"component", component,
+				)
 			}
 		}
 		defer func() {
@@ -155,7 +176,10 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 			for _, component := range components {
 				err := c.StartComponent(ctx, component)
 				if err != nil {
-					logger.Error("Failed to start", err, "component", component)
+					logger.Error("Failed to start",
+						"err", err,
+						"component", component,
+					)
 				}
 			}
 
@@ -167,11 +191,17 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 			for _, component := range components {
 				err := c.StopComponent(ctx, component)
 				if err != nil {
-					logger.Error("Failed to stop", err, "component", component)
+					logger.Error("Failed to stop",
+						"err", err,
+						"component", component,
+					)
 				}
 				err = c.StartComponent(ctx, component)
 				if err != nil {
-					logger.Error("Failed to start", err, "component", component)
+					logger.Error("Failed to start",
+						"err", err,
+						"component", component,
+					)
 				}
 			}
 		}()
@@ -200,14 +230,20 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 	for _, component := range components {
 		err := c.StopComponent(ctx, component)
 		if err != nil {
-			logger.Error("Failed to stop", err, "component", component)
+			logger.Error("Failed to stop",
+				"err", err,
+				"component", component,
+			)
 		}
 	}
 	defer func() {
 		for _, component := range components {
 			err := c.StartComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to start", err, "component", component)
+				logger.Error("Failed to start",
+					"err", err,
+					"component", component,
+				)
 			}
 		}
 	}()

@@ -233,17 +233,21 @@ func WaitForAllNodesReady() env.Func {
 		err = wait.For(
 			func(ctx context.Context) (done bool, err error) {
 				if err = client.List(ctx, &list); err != nil {
-					logger.Error("failed to list nodes", err)
+					logger.Error("failed to list nodes",
+						"err", err,
+					)
 					return false, nil
 				}
 
 				metaList, err := meta.ExtractList(&list)
 				if err != nil {
-					logger.Error("failed to extract list", err)
+					logger.Error("failed to extract list",
+						"err", err,
+					)
 					return false, nil
 				}
 				if len(metaList) == 0 {
-					logger.Error("no node found", nil)
+					logger.Error("no node found")
 					return false, nil
 				}
 
@@ -258,7 +262,9 @@ func WaitForAllNodesReady() env.Func {
 					}
 				}
 				if len(notReady) != 0 {
-					logger.Error("not ready nodes", fmt.Errorf("%v", notReady))
+					logger.Error("not ready nodes",
+						"err", notReady,
+					)
 					return false, nil
 				}
 
@@ -289,17 +295,21 @@ func WaitForAllPodsReady() env.Func {
 		err = wait.For(
 			func(ctx context.Context) (done bool, err error) {
 				if err = client.List(ctx, &list); err != nil {
-					logger.Error("failed to list pods", err)
+					logger.Error("failed to list pods",
+						"err", err,
+					)
 					return false, nil
 				}
 
 				metaList, err := meta.ExtractList(&list)
 				if err != nil {
-					logger.Error("failed to extract list", err)
+					logger.Error("failed to extract list",
+						"err", err,
+					)
 					return false, nil
 				}
 				if len(metaList) == 0 {
-					logger.Error("no pod found", nil)
+					logger.Error("no pod found")
 					return false, nil
 				}
 
@@ -315,7 +325,9 @@ func WaitForAllPodsReady() env.Func {
 					}
 				}
 				if len(notReady) != 0 {
-					logger.Error("not ready pods", fmt.Errorf("%v", notReady))
+					logger.Error("not ready pods",
+						"err", notReady,
+					)
 					return false, nil
 				}
 
@@ -414,7 +426,9 @@ func WaitForPVBound(pvName string) features.Func {
 			conditions.New(client).ResourceMatch(pv, func(obj k8s.Object) bool {
 				v := obj.(*corev1.PersistentVolume)
 				if v.Status.Phase != corev1.VolumeBound {
-					logger.Info("pv not yet bound", "phase", v.Status.Phase)
+					logger.Info("pv not yet bound",
+						"phase", v.Status.Phase,
+					)
 					return false
 				}
 				return true
@@ -450,10 +464,14 @@ func WaitForPVDeleted(pvName string) features.Func {
 					if apierrors.IsNotFound(err) {
 						return true, nil
 					}
-					logger.Error("failed to get pv", err)
+					logger.Error("failed to get pv",
+						"err", err,
+					)
 					return false, nil
 				}
-				logger.Info("pv still exists", "phase", pv.Status.Phase)
+				logger.Info("pv still exists",
+					"phase", pv.Status.Phase,
+				)
 				return false, nil
 			},
 			wait.WithContext(ctx),
@@ -480,7 +498,9 @@ func waitForServiceAccountReady(ctx context.Context, resource *resources.Resourc
 				return true, nil
 			}
 			if !apierrors.IsNotFound(err) {
-				logger.Error("failed to get service account", err)
+				logger.Error("failed to get service account",
+					"err", err,
+				)
 				return false, nil
 			}
 
@@ -497,7 +517,9 @@ func waitForServiceAccountReady(ctx context.Context, resource *resources.Resourc
 				return false, nil
 			}
 
-			logger.Error("failed to create service account", err)
+			logger.Error("failed to create service account",
+				"err", err,
+			)
 			return false, nil
 		},
 		wait.WithContext(ctx),
@@ -514,7 +536,9 @@ func Environment() env.Environment {
 	logger := log.NewLogger(os.Stderr, log.LevelDebug)
 	cfg, err := envconf.NewFromFlags()
 	if err != nil {
-		logger.Error("failed to create config", err)
+		logger.Error("failed to create config",
+			"err", err,
+		)
 		os.Exit(1)
 	}
 
@@ -523,7 +547,9 @@ func Environment() env.Environment {
 
 	testEnv, err := env.NewWithContext(ctx, cfg)
 	if err != nil {
-		logger.Error("failed to create environment", err)
+		logger.Error("failed to create environment",
+			"err", err,
+		)
 		os.Exit(1)
 	}
 

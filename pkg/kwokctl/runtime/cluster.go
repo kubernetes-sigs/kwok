@@ -103,7 +103,9 @@ func (c *Cluster) Config(ctx context.Context) (*internalversion.KwokctlConfigura
 	}
 	c.conf = conf
 	logger := log.FromContext(ctx)
-	logger = logger.With("kwokctlVersion", consts.Version)
+	logger = logger.With(
+		"kwokctlVersion", consts.Version,
+	)
 	if conf.Status.Version == "" {
 		logger.Warn("The cluster was created by a older version of kwokctl, " +
 			"please recreate the cluster",
@@ -623,7 +625,9 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 	defer func() {
 		err = f.Close()
 		if err != nil {
-			logger.Error("Failed to close file", err)
+			logger.Error("Failed to close file",
+				"err", err,
+			)
 		}
 	}()
 
@@ -647,7 +651,9 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 	defer func() {
 		err = t.Stop()
 		if err != nil {
-			logger.Error("Failed to stop tail file", err)
+			logger.Error("Failed to stop tail file",
+				"err", err,
+			)
 		}
 	}()
 
@@ -655,7 +661,9 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 		for line := range t.Lines {
 			_, err = out.Write([]byte(line.Text + "\n"))
 			if err != nil {
-				logger.Error("Failed to write line text", err)
+				logger.Error("Failed to write line text",
+					"err", err,
+				)
 			}
 		}
 	}()
@@ -826,7 +834,10 @@ func (c *Cluster) InitCRDs(ctx context.Context) error {
 	}
 
 	logger := log.FromContext(ctx)
-	ctx = log.NewContext(ctx, logger.With("crds", strings.Join(crds, ",")))
+	logger = logger.With(
+		"crds", crds,
+	)
+	ctx = log.NewContext(ctx, logger)
 
 	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
 		Clientset: clientset,

@@ -316,12 +316,17 @@ func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 		}
 		node, ok := c.nodeCacheGetter.Get(nodeName)
 		if !ok {
-			logger.Warn("node not found in cache", "node", nodeName)
+			logger.Warn("node not found in cache",
+				"node", nodeName,
+			)
 			err := c.nodesInformer.Sync(ctx, informer.Option{
 				FieldSelector: fields.OneTermEqualSelector("metadata.name", nodeName).String(),
 			}, c.nodesChan)
 			if err != nil {
-				logger.Error("failed to update node", err, "node", nodeName)
+				logger.Error("failed to update node",
+					"err", err,
+					"node", nodeName,
+				)
 			}
 			continue
 		}
@@ -378,7 +383,10 @@ func (c *Controller) initStagesManager(ctx context.Context) error {
 			return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Stage) (*internalversion.Stage, bool) {
 				r, err := internalversion.ConvertToInternalStage(obj)
 				if err != nil {
-					logger.Error("failed to convert to internal stage", err, "obj", obj)
+					logger.Error("failed to convert to internal stage",
+						"err", err,
+						"obj", obj,
+					)
 					return nil, false
 				}
 				return r, true
@@ -506,7 +514,9 @@ func (c *Controller) initStageController(ctx context.Context, ref internalversio
 		return err
 	}
 
-	logger.Info("watching stages", "gvr", gvr)
+	logger.Info("watching stages",
+		"gvr", gvr,
+	)
 	stageInformer := informer.NewInformer[*unstructured.Unstructured, *unstructured.UnstructuredList](c.conf.DynamicClient.Resource(gvr))
 	stageChan := make(chan informer.Event[*unstructured.Unstructured], 1)
 	err = stageInformer.Watch(ctx, informer.Option{}, stageChan)
@@ -583,7 +593,10 @@ func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 
 		err := c.podsInformer.Sync(ctx, opt, c.podsChan)
 		if err != nil {
-			logger.Error("failed to update pods on node", err, "node", nodeName)
+			logger.Error("failed to update pods on node",
+				"err", err,
+				"node", nodeName,
+			)
 		}
 	}
 }

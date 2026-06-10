@@ -137,7 +137,11 @@ func (s *Server) evaluateContainerResourceUsage(resourceName string, data metric
 	u, err := s.getResourceUsage(data.Pod.Name, data.Pod.Namespace, data.Container.Name)
 	if err != nil {
 		logger := log.FromContext(s.ctx)
-		logger.Error("failed to get resource usage", err, "pod", log.KRef(data.Pod.Namespace, data.Pod.Name), "container", data.Container.Name)
+		logger.Error("failed to get resource usage",
+			"err", err,
+			"pod", log.KRef(data.Pod.Namespace, data.Pod.Name),
+			"container", data.Container.Name,
+		)
 		return 0
 	}
 	if u.Usage == nil {
@@ -152,14 +156,20 @@ func (s *Server) evaluateContainerResourceUsage(resourceName string, data metric
 		eval, err := s.env.Compile(*r.Expression)
 		if err != nil {
 			logger := log.FromContext(s.ctx)
-			logger.Error("failed to compile expression", err, "expression", r)
+			logger.Error("failed to compile expression",
+				"err", err,
+				"expression", *r.Expression,
+			)
 			return 0
 		}
 
 		out, err := eval.EvaluateFloat64(s.ctx, data)
 		if err != nil {
 			logger := log.FromContext(s.ctx)
-			logger.Error("failed to evaluate expression", err, "expression", r)
+			logger.Error("failed to evaluate expression",
+				"err", err,
+				"expression", *r.Expression,
+			)
 			return 0
 		}
 		return out

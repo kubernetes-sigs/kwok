@@ -121,7 +121,8 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 
 		lease, err := c.sync(ctx, nodeName, first)
 		if err != nil {
-			logger.Error("Failed to sync lease", err,
+			logger.Error("Failed to sync lease",
+				"err", err,
 				"node", nodeName,
 			)
 			c.delayQueue.AddWeightAfter(nodeName, 1, dur)
@@ -177,7 +178,9 @@ func (c *NodeLeaseController) Held(name string) bool {
 // sync syncs a lease for a node
 func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first bool) (lease *coordinationv1.Lease, err error) {
 	logger := log.FromContext(ctx)
-	logger = logger.With("node", nodeName)
+	logger = logger.With(
+		"node", nodeName,
+	)
 
 	lease, _ = c.getLease(nodeName)
 	if lease != nil {
@@ -207,7 +210,9 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first b
 
 		// kube-apiserver will not have finished initializing the resources when the cluster has just been created.
 		for apierrors.IsNotFound(err) {
-			logger.Error("lease namespace not found, retrying in 1 second", err)
+			logger.Error("lease namespace not found, retrying in 1 second",
+				"err", err,
+			)
 			c.clock.Sleep(1 * time.Second)
 			lease, err = c.ensureLease(ctx, nodeName)
 		}

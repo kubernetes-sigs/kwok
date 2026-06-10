@@ -115,7 +115,9 @@ func (s *Saver) Save(ctx context.Context, encoder *yaml.Encoder, tracks map[*met
 	for _, rm := range s.saveConfig.Filters {
 		gvr := rm.Resource
 		nri := s.dynamicClient.Resource(gvr)
-		logger := logger.With("resource", gvr.Resource)
+		logger := logger.With(
+			"resource", gvr.Resource,
+		)
 
 		start := time.Now()
 		page := 0
@@ -125,12 +127,17 @@ func (s *Saver) Save(ctx context.Context, encoder *yaml.Encoder, tracks map[*met
 			var list runtime.Object
 			var err error
 			page++
-			logger := logger.With("page", page, "limit", opts.Limit)
+			logger := logger.With(
+				"page", page,
+				"limit", opts.Limit,
+			)
 			logger.Debug("Listing resource")
 			err = retry.OnError(retry.DefaultBackoff, retriable, func() error {
 				l, err := nri.List(ctx, opts)
 				if err != nil {
-					logger.Error("failed to list resource", err)
+					logger.Error("failed to list resource",
+						"err", err,
+					)
 				} else {
 					list = l
 					latestResourceVersion = l.GetResourceVersion()
@@ -239,7 +246,9 @@ func (s *Saver) Record(ctx context.Context, encoder *yaml.Encoder, tracks map[*m
 
 			err := encoder.Encode(rp)
 			if err != nil {
-				logger.Warn("Failed to encode resource patch", "err", err)
+				logger.Warn("Failed to encode resource patch",
+					"err", err,
+				)
 			}
 		}
 	}
@@ -252,7 +261,9 @@ func (s *Saver) Record(ctx context.Context, encoder *yaml.Encoder, tracks map[*m
 		}
 		err := encoder.Encode(rp)
 		if err != nil {
-			logger.Warn("Failed to encode resource patch", "err", err)
+			logger.Warn("Failed to encode resource patch",
+				"err", err,
+			)
 		}
 	}
 
@@ -261,7 +272,9 @@ func (s *Saver) Record(ctx context.Context, encoder *yaml.Encoder, tracks map[*m
 
 func (s *Saver) buildResourcePatchWorker(ctx context.Context, w watch.Interface, que queue.Queue[*recording.ResourcePatch], patchMeta strategicpatch.LookupPatchMeta, gvr schema.GroupVersionResource, startTime time.Time, track map[log.ObjectRef]json.RawMessage) {
 	logger := log.FromContext(ctx)
-	logger = logger.With("resource", gvr.Resource)
+	logger = logger.With(
+		"resource", gvr.Resource,
+	)
 	ch := w.ResultChan()
 	for {
 		select {
@@ -277,7 +290,9 @@ func (s *Saver) buildResourcePatchWorker(ctx context.Context, w watch.Interface,
 				if errors.Is(err, context.Canceled) {
 					return
 				}
-				logger.Warn("Failed to generate resource patch", "err", err)
+				logger.Warn("Failed to generate resource patch",
+					"err", err,
+				)
 				continue
 			}
 			que.Add(resourcePatch)

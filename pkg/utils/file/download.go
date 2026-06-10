@@ -188,7 +188,9 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 		defer func() {
 			err = resp.Body.Close()
 			if err != nil {
-				logger.Error("Failed to close body of response", err)
+				logger.Error("Failed to close body of response",
+					"err", err,
+				)
 			}
 		}()
 
@@ -214,7 +216,9 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 		}
 		err = d.Close()
 		if err != nil {
-			logger.Error("Failed to close file", err)
+			logger.Error("Failed to close file",
+				"err", err,
+			)
 		}
 		if resp.ContentLength != contentLength {
 			return "", fmt.Errorf("content length mismatch: %d != %d", resp.ContentLength, contentLength)

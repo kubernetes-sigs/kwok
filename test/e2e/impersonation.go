@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
-	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 
@@ -139,7 +138,6 @@ func CaseImpersonation() *features.FeatureBuilder {
 				t.Fatal(err)
 			}
 			// Wait a bit to ensure the stage controllers have started and are watching for changes.
-			log.FromContext(ctx).Info("waiting for stage controllers to start")
 			time.Sleep(5 * time.Second)
 			return ctx
 		}).
@@ -159,11 +157,10 @@ func CaseImpersonation() *features.FeatureBuilder {
 				t.Fatal(err)
 			}
 
-			logger := log.FromContext(ctx)
 			err = wait.For(func(ctx context.Context) (bool, error) {
 				var n corev1.Namespace
 				if err = client.Get(ctx, ns.Name, "", &n); err != nil {
-					logger.Error("failed to get namespace", err, "namespace", ns.Name)
+					t.Logf("failed to get namespace %s: %v", ns.Name, err)
 					return false, nil
 				}
 				for _, cond := range n.Status.Conditions {
@@ -171,7 +168,6 @@ func CaseImpersonation() *features.FeatureBuilder {
 						return true, nil
 					}
 				}
-				logger.Info("waiting for impersonated condition", "namespace", ns.Name)
 				return false, nil
 			},
 				wait.WithContext(ctx),

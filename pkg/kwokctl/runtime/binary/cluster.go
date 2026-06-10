@@ -72,7 +72,9 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 		ips, err := utilsnet.GetAllIPs()
 		if err != nil {
 			logger := log.FromContext(ctx)
-			logger.Warn("failed to get all ips", "err", err)
+			logger.Warn("failed to get all ips",
+				"err", err,
+			)
 		} else {
 			sans = append(sans, ips...)
 		}
@@ -840,7 +842,9 @@ func (c *Cluster) isRunning(ctx context.Context, component internalversion.Compo
 
 func (c *Cluster) startComponent(ctx context.Context, component internalversion.Component) error {
 	logger := log.FromContext(ctx)
-	logger = logger.With("component", component.Name)
+	logger = logger.With(
+		"component", component.Name,
+	)
 	if c.isRunning(ctx, component) {
 		logger.Debug("Component already started")
 		return nil
@@ -884,7 +888,9 @@ func (c *Cluster) startComponents(ctx context.Context) error {
 
 func (c *Cluster) stopComponent(ctx context.Context, component internalversion.Component) error {
 	logger := log.FromContext(ctx)
-	logger = logger.With("component", component.Name)
+	logger = logger.With(
+		"component", component.Name,
+	)
 	if !c.isRunning(ctx, component) {
 		logger.Debug("Component already stopped")
 		return nil
@@ -939,7 +945,9 @@ func (c *Cluster) start(ctx context.Context) error {
 		logger := log.FromContext(ctx)
 		err = c.waitServed(ctx, 2*time.Minute)
 		if err != nil {
-			logger.Warn("Cluster is not served yet", "err", err)
+			logger.Warn("Cluster is not served yet",
+				"err", err,
+			)
 		}
 	}
 	return nil
@@ -1051,7 +1059,9 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	defer func() {
 		err = f.Close()
 		if err != nil {
-			logger.Error("Failed to close file", err)
+			logger.Error("Failed to close file",
+				"err", err,
+			)
 		}
 	}()
 
@@ -1084,7 +1094,9 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 	defer func() {
 		err = t.Stop()
 		if err != nil {
-			logger.Error("Failed to stop tail file", err)
+			logger.Error("Failed to stop tail file",
+				"err", err,
+			)
 		}
 	}()
 
@@ -1092,7 +1104,9 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 		for line := range t.Lines {
 			_, err = out.Write([]byte(line.Text + "\n"))
 			if err != nil {
-				logger.Error("Failed to write line text", err)
+				logger.Error("Failed to write line text",
+					"err", err,
+				)
 			}
 		}
 	}()
@@ -1112,7 +1126,9 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	if err := c.MkdirAll(dir); err != nil {
 		return fmt.Errorf("failed to create tmp directory: %w", err)
 	}
-	logger.Info("Exporting logs", "dir", dir)
+	logger.Info("Exporting logs",
+		"dir", dir,
+	)
 
 	err := c.CopyFile(c.GetWorkdirPath(runtime.ConfigName), kwokConfigPath)
 	if err != nil {
@@ -1147,14 +1163,18 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		src := c.GetLogPath(component.Name + ".log")
 		dest := utilspath.Join(componentsDir, component.Name+".log")
 		if err = c.CopyFile(src, dest); err != nil {
-			logger.Error("Failed to copy file", err)
+			logger.Error("Failed to copy file",
+				"err", err,
+			)
 		}
 	}
 	if conf.Options.KubeAuditPolicy != "" {
 		src := c.GetLogPath(runtime.AuditLogName)
 		dest := utilspath.Join(componentsDir, runtime.AuditLogName)
 		if err = c.CopyFile(src, dest); err != nil {
-			logger.Error("Failed to copy file", err)
+			logger.Error("Failed to copy file",
+				"err", err,
+			)
 		}
 	}
 

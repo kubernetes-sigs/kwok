@@ -78,7 +78,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	logger := log.FromContext(ctx)
-	logger = logger.With("cluster", flags.Name)
+	logger = logger.With(
+		"cluster", flags.Name,
+	)
 	ctx = log.NewContext(ctx, logger)
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)

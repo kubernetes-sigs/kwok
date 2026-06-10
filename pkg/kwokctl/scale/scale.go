@@ -117,7 +117,11 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	nri := dynamicClient.Resource(gvr)
 
 	logger := log.FromContext(ctx)
-	logger = logger.With("name", conf.Name, "replicas", conf.Replicas, "resource", gvr.Resource)
+	logger = logger.With(
+		"name", conf.Name,
+		"replicas", conf.Replicas,
+		"resource", gvr.Resource,
+	)
 
 	var ri dynamic.ResourceInterface = nri
 
@@ -126,7 +130,9 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	}
 	if namespace != "" {
 		ri = nri.Namespace(namespace)
-		logger = logger.With("namespace", namespace)
+		logger = logger.With(
+			"namespace", namespace,
+		)
 	}
 
 	start := time.Now()
@@ -165,7 +171,9 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		if len(objs) == 0 {
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
-				logger.Error("Delete resource", err)
+				logger.Error("Delete resource",
+					"err", err,
+				)
 			}
 			return nil
 		}
@@ -176,7 +184,9 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 			// Delete the last object.
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
-				logger.Error("Delete resource", err)
+				logger.Error("Delete resource",
+					"err", err,
+				)
 			}
 			return nil
 		}
@@ -184,7 +194,9 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		// Delete the end object.
 		err = ri.Delete(ctx, endObj.Name, metav1.DeleteOptions{})
 		if err != nil {
-			logger.Error("Delete resource", err)
+			logger.Error("Delete resource",
+				"err", err,
+			)
 		}
 
 		// Find the index of the new object to be inserted.
@@ -199,7 +211,9 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 			// Delete the last object.
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
-				logger.Error("Delete resource", err)
+				logger.Error("Delete resource",
+					"err", err,
+				)
 			}
 			return nil
 		}
@@ -216,7 +230,10 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	}
 
 	if deleteCount > 0 {
-		logger.Info("Deleted resources", "counter", deleteCount, "elapsed", time.Since(start))
+		logger.Info("Deleted resources",
+			"counter", deleteCount,
+			"elapsed", time.Since(start),
+		)
 		return nil
 	}
 

@@ -111,7 +111,9 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 		ips, err := utilsnet.GetAllIPs()
 		if err != nil {
 			logger := log.FromContext(ctx)
-			logger.Warn("failed to get all ips", "err", err)
+			logger.Warn("failed to get all ips",
+				"err", err,
+			)
 		} else {
 			sans = append(sans, ips...)
 		}
@@ -1425,7 +1427,9 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	if err := c.MkdirAll(dir); err != nil {
 		return fmt.Errorf("failed to create tmp directory: %w", err)
 	}
-	logger.Info("Exporting logs", "dir", dir)
+	logger.Info("Exporting logs",
+		"dir", dir,
+	)
 
 	err := c.CopyFile(c.GetWorkdirPath(runtime.ConfigName), kwokConfigPath)
 	if err != nil {
@@ -1453,22 +1457,34 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		logPath := utilspath.Join(componentsDir, component.Name+".log")
 		f, err := c.OpenFile(logPath)
 		if err != nil {
-			logger.Error("Failed to open file", err)
+			logger.Error("Failed to open file",
+				"err", err,
+			)
 			continue
 		}
 		if err = c.Logs(ctx, component.Name, f); err != nil {
-			logger.Error("Failed to get log", err)
+			logger.Error("Failed to get log",
+				"err", err,
+			)
 			if err = f.Close(); err != nil {
-				logger.Error("Failed to close file", err)
+				logger.Error("Failed to close file",
+					"err", err,
+				)
 				if err = c.Remove(logPath); err != nil {
-					logger.Error("Failed to remove file", err)
+					logger.Error("Failed to remove file",
+						"err", err,
+					)
 				}
 			}
 		}
 		if err = f.Close(); err != nil {
-			logger.Error("Failed to close file", err)
+			logger.Error("Failed to close file",
+				"err", err,
+			)
 			if err = c.Remove(logPath); err != nil {
-				logger.Error("Failed to remove file", err)
+				logger.Error("Failed to remove file",
+					"err", err,
+				)
 			}
 		}
 	}
@@ -1477,15 +1493,23 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		filePath := utilspath.Join(componentsDir, "audit.log")
 		f, err := c.OpenFile(filePath)
 		if err != nil {
-			logger.Error("Failed to open file", err)
+			logger.Error("Failed to open file",
+				"err", err,
+			)
 		} else {
 			if err = c.AuditLogs(ctx, f); err != nil {
-				logger.Error("Failed to get audit log", err)
+				logger.Error("Failed to get audit log",
+					"err", err,
+				)
 			}
 			if err = f.Close(); err != nil {
-				logger.Error("Failed to close file", err)
+				logger.Error("Failed to close file",
+					"err", err,
+				)
 				if err = c.Remove(filePath); err != nil {
-					logger.Error("Failed to remove file", err)
+					logger.Error("Failed to remove file",
+						"err", err,
+					)
 				}
 			}
 		}

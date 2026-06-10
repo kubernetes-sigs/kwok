@@ -284,7 +284,8 @@ func Load(ctx context.Context, src ...string) ([]InternalObject, error) {
 	for _, raw := range raws {
 		err := json.Unmarshal(raw, &meta)
 		if err != nil {
-			logger.Error("Unsupported config", err,
+			logger.Error("Unsupported config",
+				"err", err,
 				"src", src,
 			)
 			continue
@@ -388,7 +389,8 @@ func SaveTo(ctx context.Context, w io.Writer, objs []InternalObject) error {
 		data, err := Marshal(obj)
 		if err != nil {
 			if errors.Is(err, errUnsupportedType) {
-				logger.Warn("Unsupported type", err,
+				logger.Warn("Unsupported type",
+					"err", err,
 					"obj", obj,
 				)
 				continue

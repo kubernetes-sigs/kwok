@@ -51,7 +51,9 @@ func (c *Cluster) SnapshotSaveWithYAML(ctx context.Context, path string, conf Sn
 	filters, errs := client.MappingForResources(restMapper, conf.Filters)
 	if len(errs) > 0 {
 		for _, err := range errs {
-			logger.Error("failed to get mapping", err)
+			logger.Error("failed to get mapping",
+				"err", err,
+			)
 		}
 	}
 
@@ -111,7 +113,9 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 	filters, errs := client.MappingForResources(restMapper, conf.Filters)
 	if len(errs) > 0 {
 		for _, err := range errs {
-			logger.Error("failed to get mapping", err)
+			logger.Error("failed to get mapping",
+				"err", err,
+			)
 		}
 	}
 

@@ -177,7 +177,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterPortForward) (*internalversion.ClusterPortForward, bool) {
 						r, err := internalversion.ConvertToInternalClusterPortForward(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal cluster port forward", err, "obj", obj)
+							logger.Error("failed to convert to internal cluster port forward",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -200,7 +203,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.PortForward) (*internalversion.PortForward, bool) {
 						r, err := internalversion.ConvertToInternalPortForward(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal port forward", err, "obj", obj)
+							logger.Error("failed to convert to internal port forward",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -223,7 +229,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterExec) (*internalversion.ClusterExec, bool) {
 						r, err := internalversion.ConvertToInternalClusterExec(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal cluster exec", err, "obj", obj)
+							logger.Error("failed to convert to internal cluster exec",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -246,7 +255,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Exec) (*internalversion.Exec, bool) {
 						r, err := internalversion.ConvertToInternalExec(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal exec", err, "obj", obj)
+							logger.Error("failed to convert to internal exec",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -269,7 +281,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterLogs) (*internalversion.ClusterLogs, bool) {
 						r, err := internalversion.ConvertToInternalClusterLogs(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal cluster logs", err, "obj", obj)
+							logger.Error("failed to convert to internal cluster logs",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -292,7 +307,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Logs) (*internalversion.Logs, bool) {
 						r, err := internalversion.ConvertToInternalLogs(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal logs", err, "obj", obj)
+							logger.Error("failed to convert to internal logs",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -315,7 +333,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterAttach) (*internalversion.ClusterAttach, bool) {
 						r, err := internalversion.ConvertToInternalClusterAttach(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal cluster attach", err, "obj", obj)
+							logger.Error("failed to convert to internal cluster attach",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -338,7 +359,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Attach) (*internalversion.Attach, bool) {
 						r, err := internalversion.ConvertToInternalAttach(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal attach", err, "obj", obj)
+							logger.Error("failed to convert to internal attach",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -361,7 +385,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ClusterResourceUsage) (*internalversion.ClusterResourceUsage, bool) {
 						r, err := internalversion.ConvertToInternalClusterResourceUsage(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal cluster resource usage", err, "obj", obj)
+							logger.Error("failed to convert to internal cluster resource usage",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -384,7 +411,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.ResourceUsage) (*internalversion.ResourceUsage, bool) {
 						r, err := internalversion.ConvertToInternalResourceUsage(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal resource usage", err, "obj", obj)
+							logger.Error("failed to convert to internal resource usage",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true
@@ -407,7 +437,10 @@ func (s *Server) initWatchCRD(ctx context.Context) ([]resources.Starter, error) 
 					return utilsslices.FilterAndMap(objs, func(obj *v1alpha1.Metric) (*internalversion.Metric, bool) {
 						r, err := internalversion.ConvertToInternalMetric(obj)
 						if err != nil {
-							logger.Error("failed to convert to internal metric", err, "obj", obj)
+							logger.Error("failed to convert to internal metric",
+								"err", err,
+								"obj", obj,
+							)
 							return nil, false
 						}
 						return r, true

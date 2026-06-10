@@ -49,14 +49,20 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	for _, component := range components {
 		err := c.StopComponent(ctx, component)
 		if err != nil {
-			logger.Error("Failed to stop", err, "component", component)
+			logger.Error("Failed to stop",
+				"err", err,
+				"component", component,
+			)
 		}
 	}
 	defer func() {
 		for _, component := range components {
 			err := c.StartComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to start", err, "component", component)
+				logger.Error("Failed to start",
+					"err", err,
+					"component", component,
+				)
 			}
 		}
 
@@ -68,11 +74,17 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 		for _, component := range components {
 			err := c.StopComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to stop", err, "component", component)
+				logger.Error("Failed to stop",
+					"err", err,
+					"component", component,
+				)
 			}
 			err = c.StartComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to start", err, "component", component)
+				logger.Error("Failed to start",
+					"err", err,
+					"component", component,
+				)
 			}
 		}
 	}()
@@ -131,14 +143,20 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 			return !ready, nil
 		})
 		if err != nil {
-			logger.Error("Failed to stop", err, "component", component)
+			logger.Error("Failed to stop",
+				"err", err,
+				"component", component,
+			)
 		}
 	}
 	defer func() {
 		for _, component := range components {
 			err := c.StartComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to start", err, "component", component)
+				logger.Error("Failed to start",
+					"err", err,
+					"component", component,
+				)
 			}
 		}
 	}()

@@ -97,7 +97,10 @@ func (s *Server) dynamicMetricsPath(ctx context.Context, ws *restful.WebService,
 		newHasPaths := map[string]struct{}{}
 		for _, m := range s.metrics.Get() {
 			if !strings.HasPrefix(m.Spec.Path, rootPath) {
-				logger.Warn("metric path does not start with "+rootPath, "path", m.Spec.Path)
+				logger.Warn("metric path does not start",
+					"rootPath", rootPath,
+					"path", m.Spec.Path,
+				)
 				continue
 			}
 
@@ -106,7 +109,10 @@ func (s *Server) dynamicMetricsPath(ctx context.Context, ws *restful.WebService,
 			if _, ok := hasPaths[path]; ok {
 				err := ws.RemoveRoute(http.MethodGet, path)
 				if err != nil {
-					logger.Error("Failed to remove route", err, "path", path)
+					logger.Error("Failed to remove route",
+						"err", err,
+						"path", path,
+					)
 				}
 			}
 			ws.Route(ws.GET(path).
@@ -117,7 +123,10 @@ func (s *Server) dynamicMetricsPath(ctx context.Context, ws *restful.WebService,
 			if _, ok := newHasPaths[path]; !ok {
 				err := ws.RemoveRoute(http.MethodGet, path)
 				if err != nil {
-					logger.Error("Failed to remove route", err, "path", path)
+					logger.Error("Failed to remove route",
+						"err", err,
+						"path", path,
+					)
 				}
 			}
 		}

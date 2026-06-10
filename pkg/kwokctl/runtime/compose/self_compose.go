@@ -40,7 +40,9 @@ func (c *Cluster) networkName() string {
 func (c *Cluster) createNetwork(ctx context.Context) error {
 	network := c.networkName()
 	logger := log.FromContext(ctx)
-	logger = logger.With("network", network)
+	logger = logger.With(
+		"network", network,
+	)
 
 	if !c.IsDryRun() {
 		if exist := c.inspectNetwork(ctx, network); exist {
@@ -62,7 +64,9 @@ func (c *Cluster) createNetwork(ctx context.Context) error {
 func (c *Cluster) deleteNetwork(ctx context.Context) error {
 	network := c.networkName()
 	logger := log.FromContext(ctx)
-	logger = logger.With("network", network)
+	logger = logger.With(
+		"network", network,
+	)
 	if !c.IsDryRun() {
 		if exist := c.inspectNetwork(ctx, network); !exist {
 			logger.Debug("Network does not exist")
@@ -136,10 +140,14 @@ func (c *Cluster) isCanNerdctlUnlessStopped(ctx context.Context) (bool, error) {
 	logger := log.FromContext(ctx)
 	nerdctlVersion, err := c.ParseVersionFromBinary(ctx, c.runtime)
 	if err != nil {
-		logger.Warn("Failed to parse nerdctl version", "err", err)
+		logger.Warn("Failed to parse nerdctl version",
+			"err", err,
+		)
 	} else if nerdctlVersion.LE(version.NewVersion(1, 3, 0)) {
 		canNerdctlUnlessStopped = new(false)
-		logger = logger.With("nerdctlCheck", nerdctlVersion)
+		logger = logger.With(
+			"nerdctlCheck", nerdctlVersion,
+		)
 	}
 
 	if canNerdctlUnlessStopped == nil {
@@ -148,7 +156,9 @@ func (c *Cluster) isCanNerdctlUnlessStopped(ctx context.Context) (bool, error) {
 		if err != nil {
 			return false, fmt.Errorf("canNerdctlUnlessStopped failed: %w", err)
 		}
-		logger = logger.With("containerdCheck", "not support unless-stopped")
+		logger = logger.With(
+			"containerdCheck", "not support unless-stopped",
+		)
 		canNerdctlUnlessStopped = new(strings.Contains(buf.String(), "unless-stopped"))
 	}
 
@@ -184,7 +194,9 @@ func (c *Cluster) labelArgs() []string {
 
 func (c *Cluster) createComponent(ctx context.Context, componentName string) error {
 	logger := log.FromContext(ctx)
-	logger = logger.With("component", componentName)
+	logger = logger.With(
+		"component", componentName,
+	)
 	if !c.IsDryRun() {
 		if _, exist := c.inspectComponent(ctx, componentName); exist {
 			logger.Debug("Component already exists")
@@ -241,7 +253,9 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 		if c.isNerdctl {
 			canNerdctlUnlessStopped, err := c.isCanNerdctlUnlessStopped(ctx)
 			if err != nil {
-				logger.Error("Failed to check unless-stopped support", err)
+				logger.Error("Failed to check unless-stopped support",
+					"err", err,
+				)
 			}
 			if canNerdctlUnlessStopped {
 				args = append(args, "--restart=unless-stopped")
@@ -294,7 +308,9 @@ func (c *Cluster) createComponents(ctx context.Context) error {
 
 func (c *Cluster) deleteComponent(ctx context.Context, componentName string) error {
 	logger := log.FromContext(ctx)
-	logger = logger.With("component", componentName)
+	logger = logger.With(
+		"component", componentName,
+	)
 	if !c.IsDryRun() {
 		if running, exist := c.inspectComponent(ctx, componentName); !exist {
 			logger.Debug("Component does not exist")
@@ -384,7 +400,9 @@ func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (r
 	running, err = checkInspect(buf.Bytes())
 	if err != nil {
 		logger := log.FromContext(ctx)
-		logger.Warn("Failed to check inspect result", "err", err)
+		logger.Warn("Failed to check inspect result",
+			"err", err,
+		)
 		return false, false
 	}
 	return running, true
@@ -392,7 +410,9 @@ func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (r
 
 func (c *Cluster) startComponent(ctx context.Context, componentName string) error {
 	logger := log.FromContext(ctx)
-	logger = logger.With("component", componentName)
+	logger = logger.With(
+		"component", componentName,
+	)
 	if !c.IsDryRun() {
 		if running, exist := c.inspectComponent(ctx, componentName); !exist {
 			return fmt.Errorf("component %s does not exist", componentName)
@@ -449,7 +469,9 @@ func (c *Cluster) startComponents(ctx context.Context) error {
 
 func (c *Cluster) stopComponent(ctx context.Context, componentName string) error {
 	logger := log.FromContext(ctx)
-	logger = logger.With("component", componentName)
+	logger = logger.With(
+		"component", componentName,
+	)
 	if !c.IsDryRun() {
 		if running, exist := c.inspectComponent(ctx, componentName); !exist {
 			logger.Debug("Component does not exist")

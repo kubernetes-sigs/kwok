@@ -89,7 +89,9 @@ func (s *Server) getPortForward(req *restful.Request, resp *restful.Response) {
 	portForwardOptions, err := portforward.NewV4Options(req.Request)
 	if err != nil {
 		logger := log.FromContext(req.Request.Context())
-		logger.Error("NewV4Options", err)
+		logger.Error("NewV4Options",
+			"err", err,
+		)
 		_ = resp.WriteError(http.StatusBadRequest, err)
 		return
 	}

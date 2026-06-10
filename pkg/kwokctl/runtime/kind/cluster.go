@@ -115,7 +115,9 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 		ips, err := utilsnet.GetAllIPs()
 		if err != nil {
 			logger := log.FromContext(ctx)
-			logger.Warn("failed to get all ips", "err", err)
+			logger.Warn("failed to get all ips",
+				"err", err,
+			)
 		} else {
 			sans = append(sans, ips...)
 		}
@@ -528,7 +530,10 @@ func filterDuplicatedExtraArgs(ctx context.Context, extraArgs, passedExtraArgs [
 	}
 	for _, args := range passedExtraArgs {
 		if _, ok := extraArgsMap[args.Key]; ok {
-			logger.Warn("duplicated extraArgs and will be overwritten", "key", args.Key, "value", args.Value)
+			logger.Warn("duplicated extraArgs and will be overwritten",
+				"key", args.Key,
+				"value", args.Value,
+			)
 		}
 		extraArgsMap[args.Key] = args
 	}
@@ -1016,7 +1021,9 @@ func (c *Cluster) Up(ctx context.Context) error {
 		defer func() {
 			err := c.StopComponent(ctx, consts.ComponentKubeScheduler)
 			if err != nil {
-				logger.Error("Failed to disable kube-scheduler", err)
+				logger.Error("Failed to disable kube-scheduler",
+					"err", err,
+				)
 			}
 		}()
 	}
@@ -1025,7 +1032,9 @@ func (c *Cluster) Up(ctx context.Context) error {
 		defer func() {
 			err := c.StopComponent(ctx, consts.ComponentKubeControllerManager)
 			if err != nil {
-				logger.Error("Failed to disable kube-controller-manager", err)
+				logger.Error("Failed to disable kube-controller-manager",
+					"err", err,
+				)
 			}
 		}()
 	}
@@ -1101,12 +1110,16 @@ func (c *Cluster) Up(ctx context.Context) error {
 	// Cordoning the node to prevent fake pods from being scheduled on it
 	err = c.Kubectl(ctx, "cordon", c.getClusterName())
 	if err != nil {
-		logger.Error("Failed cordon node", err)
+		logger.Error("Failed cordon node",
+			"err", err,
+		)
 	}
 
 	err = c.Exec(ctx, c.runtime, "exec", c.getClusterName(), "chmod", "-R", "+r", "/etc/kubernetes/pki")
 	if err != nil {
-		logger.Error("Failed to chmod pki", err)
+		logger.Error("Failed to chmod pki",
+			"err", err,
+		)
 	}
 
 	return nil
@@ -1142,7 +1155,9 @@ func (c *Cluster) loadDockerImages(ctx context.Context, command string, kindClus
 		if err != nil {
 			return err
 		}
-		logger.Info("Loaded image", "image", image)
+		logger.Info("Loaded image",
+			"image", image,
+		)
 	}
 	return nil
 }
@@ -1170,7 +1185,9 @@ func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindClu
 		if err != nil {
 			return err
 		}
-		logger.Info("Loaded image", "image", image)
+		logger.Info("Loaded image",
+			"image", image,
+		)
 		err = c.Remove(archive)
 		if err != nil {
 			return err
@@ -1276,7 +1293,9 @@ func (c *Cluster) Down(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 	err = c.Exec(utilsexec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath, "delete", "cluster", "--name", c.Name())
 	if err != nil {
-		logger.Error("Failed to delete cluster", err)
+		logger.Error("Failed to delete cluster",
+			"err", err,
+		)
 	}
 
 	return nil
@@ -1312,7 +1331,9 @@ var stopImportantComponents = map[string]struct{}{
 // StartComponent starts a component in the cluster
 func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 	logger := log.FromContext(ctx)
-	logger = logger.With("component", name)
+	logger = logger.With(
+		"component", name,
+	)
 	if _, important := startImportantComponents[name]; !important {
 		if !c.IsDryRun() {
 			if _, _, exist, err := c.inspectComponent(ctx, name); err != nil {
@@ -1341,7 +1362,9 @@ func (c *Cluster) StartComponent(ctx context.Context, name string) error {
 // StopComponent stops a component in the cluster
 func (c *Cluster) StopComponent(ctx context.Context, name string) error {
 	logger := log.FromContext(ctx)
-	logger = logger.With("component", name)
+	logger = logger.With(
+		"component", name,
+	)
 	if _, important := stopImportantComponents[name]; !important {
 		if !c.IsDryRun() {
 			if _, _, exist, err := c.inspectComponent(ctx, name); err != nil {
@@ -1498,7 +1521,9 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	if err := c.MkdirAll(dir); err != nil {
 		return fmt.Errorf("failed to create tmp directory: %w", err)
 	}
-	logger.Info("Exporting logs", "dir", dir)
+	logger.Info("Exporting logs",
+		"dir", dir,
+	)
 
 	err := c.CopyFile(c.GetWorkdirPath(runtime.ConfigName), kwokConfigPath)
 	if err != nil {
@@ -1531,22 +1556,34 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		logPath := utilspath.Join(componentsDir, component.Name+".log")
 		f, err := c.OpenFile(logPath)
 		if err != nil {
-			logger.Error("Failed to open file", err)
+			logger.Error("Failed to open file",
+				"err", err,
+			)
 			continue
 		}
 		if err = c.Logs(ctx, component.Name, f); err != nil {
-			logger.Error("Failed to get log", err)
+			logger.Error("Failed to get log",
+				"err", err,
+			)
 			if err = f.Close(); err != nil {
-				logger.Error("Failed to close file", err)
+				logger.Error("Failed to close file",
+					"err", err,
+				)
 				if err = c.Remove(logPath); err != nil {
-					logger.Error("Failed to remove file", err)
+					logger.Error("Failed to remove file",
+						"err", err,
+					)
 				}
 			}
 		}
 		if err = f.Close(); err != nil {
-			logger.Error("Failed to close file", err)
+			logger.Error("Failed to close file",
+				"err", err,
+			)
 			if err = c.Remove(logPath); err != nil {
-				logger.Error("Failed to remove file", err)
+				logger.Error("Failed to remove file",
+					"err", err,
+				)
 			}
 		}
 	}
@@ -1555,15 +1592,23 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		filePath := utilspath.Join(componentsDir, "audit.log")
 		f, err := c.OpenFile(filePath)
 		if err != nil {
-			logger.Error("Failed to open file", err)
+			logger.Error("Failed to open file",
+				"err", err,
+			)
 		} else {
 			if err = c.AuditLogs(ctx, f); err != nil {
-				logger.Error("Failed to get audit log", err)
+				logger.Error("Failed to get audit log",
+					"err", err,
+				)
 			}
 			if err = f.Close(); err != nil {
-				logger.Error("Failed to close file", err)
+				logger.Error("Failed to close file",
+					"err", err,
+				)
 				if err = c.Remove(filePath); err != nil {
-					logger.Error("Failed to remove file", err)
+					logger.Error("Failed to remove file",
+						"err", err,
+					)
 				}
 			}
 		}

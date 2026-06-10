@@ -39,7 +39,9 @@ func main() {
 	ctx, err := config.InitFlags(ctx, flagset)
 	if err != nil {
 		_, _ = os.Stderr.Write([]byte(flagset.FlagUsages()))
-		logger.Error("Init config flags", err)
+		logger.Error("Init config flags",
+			"err", err,
+		)
 		os.Exit(1)
 	}
 
@@ -47,7 +49,9 @@ func main() {
 	command.PersistentFlags().AddFlagSet(flagset)
 	err = command.ExecuteContext(ctx)
 	if err != nil {
-		logger.Error("Execute exit", err)
+		logger.Error("Execute exit",
+			"err", err,
+		)
 		os.Exit(1)
 	}
 }

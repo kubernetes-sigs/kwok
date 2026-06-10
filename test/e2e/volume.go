@@ -148,15 +148,12 @@ func CaseVolumeProvisioner(nodeName, namespace string) *features.FeatureBuilder 
 				t.Fatal(err)
 			}
 
-			logger := log.FromContext(ctx)
-
 			// Wait for PVC to be Bound.
 			t.Log("waiting for pvc to be bound", log.KObj(pvc))
 			err = wait.For(
 				conditions.New(client).ResourceMatch(pvc, func(obj k8s.Object) bool {
 					p := obj.(*corev1.PersistentVolumeClaim)
 					if p.Status.Phase != corev1.ClaimBound {
-						logger.Info("pvc not yet bound", "phase", p.Status.Phase)
 						return false
 					}
 					return true
@@ -186,7 +183,6 @@ func CaseVolumeProvisioner(nodeName, namespace string) *features.FeatureBuilder 
 				conditions.New(client).ResourceMatch(pv, func(obj k8s.Object) bool {
 					v := obj.(*corev1.PersistentVolume)
 					if v.Status.Phase != corev1.VolumeBound {
-						logger.Info("pv not yet bound", "phase", v.Status.Phase)
 						return false
 					}
 					return true
@@ -275,7 +271,6 @@ func CaseVolumeProvisioner(nodeName, namespace string) *features.FeatureBuilder 
 
 			// The pv-delete stage should remove the PV once it reaches Released.
 			t.Log("waiting for pv to be deleted", pvName)
-			logger := log.FromContext(ctx)
 			pv := &corev1.PersistentVolume{}
 			pv.Name = pvName
 			err = wait.For(
@@ -284,10 +279,9 @@ func CaseVolumeProvisioner(nodeName, namespace string) *features.FeatureBuilder 
 						if apierrors.IsNotFound(getErr) {
 							return true, nil
 						}
-						logger.Error("failed to get pv", getErr)
+						t.Logf("failed to get pv %s: %v", pvName, getErr)
 						return false, nil
 					}
-					logger.Info("pv still exists", "phase", pv.Status.Phase)
 					return false, nil
 				},
 				wait.WithContext(ctx),
@@ -361,14 +355,11 @@ func CasePVCBeforePod(nodeName, namespace string) *features.FeatureBuilder {
 				t.Fatal(err)
 			}
 
-			logger := log.FromContext(ctx)
-
 			t.Log("waiting for pvc to be bound before creating pod", log.KObj(pvc))
 			err = wait.For(
 				conditions.New(client).ResourceMatch(pvc, func(obj k8s.Object) bool {
 					p := obj.(*corev1.PersistentVolumeClaim)
 					if p.Status.Phase != corev1.ClaimBound {
-						logger.Info("pvc not yet bound", "phase", p.Status.Phase)
 						return false
 					}
 					return true
@@ -459,14 +450,11 @@ func CasePodPVCSimultaneous(nodeName, namespace string) *features.FeatureBuilder
 				t.Fatal(err)
 			}
 
-			logger := log.FromContext(ctx)
-
 			t.Log("waiting for pvc to be bound", log.KObj(pvc))
 			err = wait.For(
 				conditions.New(client).ResourceMatch(pvc, func(obj k8s.Object) bool {
 					p := obj.(*corev1.PersistentVolumeClaim)
 					if p.Status.Phase != corev1.ClaimBound {
-						logger.Info("pvc not yet bound", "phase", p.Status.Phase)
 						return false
 					}
 					return true
@@ -584,14 +572,11 @@ func CasePodFirstThenPVC(nodeName, namespace string) *features.FeatureBuilder {
 				t.Fatal(err)
 			}
 
-			logger := log.FromContext(ctx)
-
 			t.Log("waiting for pvc to be bound", log.KObj(pvc))
 			err = wait.For(
 				conditions.New(client).ResourceMatch(pvc, func(obj k8s.Object) bool {
 					p := obj.(*corev1.PersistentVolumeClaim)
 					if p.Status.Phase != corev1.ClaimBound {
-						logger.Info("pvc not yet bound", "phase", p.Status.Phase)
 						return false
 					}
 					return true
@@ -619,7 +604,6 @@ func CasePodFirstThenPVC(nodeName, namespace string) *features.FeatureBuilder {
 				conditions.New(client).ResourceMatch(pv, func(obj k8s.Object) bool {
 					v := obj.(*corev1.PersistentVolume)
 					if v.Status.Phase != corev1.VolumeBound {
-						logger.Info("pv not yet bound", "phase", v.Status.Phase)
 						return false
 					}
 					return true

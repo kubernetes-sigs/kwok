@@ -63,7 +63,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 	workdir := utilspath.Join(config.ClustersDir, flags.Name)
 
 	logger := log.FromContext(ctx)
-	logger = logger.With("cluster", flags.Name)
+	logger = logger.With(
+		"cluster", flags.Name,
+	)
 	ctx = log.NewContext(ctx, logger)
 
 	gctx := ctx
@@ -96,7 +98,8 @@ func runE(ctx context.Context, flags *flagpole) error {
 		logger.Info("Waiting for cluster to be ready")
 		err = rt.WaitReady(gctx, flags.Wait)
 		if err != nil {
-			logger.Error("Failed to wait for cluster to be ready", err,
+			logger.Error("Failed to wait for cluster to be ready",
+				"err", err,
 				"elapsed", time.Since(start),
 			)
 		} else {

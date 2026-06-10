@@ -62,12 +62,17 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 
 		rio, err := config.Load(ctx, f)
 		if err != nil {
-			logger.Warn("Failed to load config file", "file", f, "error", err)
+			logger.Warn("Failed to load config file",
+				"file", f,
+				"err", err,
+			)
 			continue
 		}
 
 		if len(rio) == 0 {
-			logger.Warn("No resources found in config file", "file", f)
+			logger.Warn("No resources found in config file",
+				"file", f,
+			)
 			continue
 		}
 

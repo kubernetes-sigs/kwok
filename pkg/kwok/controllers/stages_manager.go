@@ -101,11 +101,16 @@ func (c *StagesManager) manage(ctx context.Context) {
 		cancelctx, cancel := context.WithCancelCause(ctx)
 		err := c.startFunc(cancelctx, ref, lifecycle)
 		if err != nil {
-			logger.Error("failed to start controller", err, "ref", ref)
+			logger.Error("failed to start controller",
+				"err", err,
+				"ref", ref,
+			)
 			continue
 		}
 
-		logger.Info("Start stage controller", "ref", ref)
+		logger.Info("Start stage controller",
+			"ref", ref,
+		)
 		c.cache[ref] = cancel
 	}
 
@@ -114,7 +119,9 @@ func (c *StagesManager) manage(ctx context.Context) {
 			continue
 		}
 
-		logger.Info("Stop stage controller", "ref", ref)
+		logger.Info("Stop stage controller",
+			"ref", ref,
+		)
 		cancel(context.Canceled)
 		delete(c.cache, ref)
 	}

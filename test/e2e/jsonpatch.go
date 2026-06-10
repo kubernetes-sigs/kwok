@@ -92,7 +92,9 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 				func(ctx context.Context) (done bool, err error) {
 					var item v1alpha1.Stage
 					if err = client.Get(ctx, ss[0].Name, ss[0].Namespace, &item); err != nil {
-						logger.Error("failed to list stage", err)
+						logger.Error("failed to list stage",
+							"err", err,
+						)
 						return false, nil
 					}
 
@@ -126,7 +128,9 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 				func(ctx context.Context) (done bool, err error) {
 					var item corev1.Node
 					if err = client.Get(ctx, node.Name, node.Namespace, &item); err != nil {
-						logger.Error("failed to list node", err)
+						logger.Error("failed to list node",
+							"err", err,
+						)
 						return false, nil
 					}
 
@@ -158,7 +162,9 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 				func(ctx context.Context) (done bool, err error) {
 					var item corev1.Pod
 					if err = client.Get(ctx, pod0.Name, pod0.Namespace, &item); err != nil {
-						logger.Error("failed to list pod", err)
+						logger.Error("failed to list pod",
+							"err", err,
+						)
 						return false, nil
 					}
 
