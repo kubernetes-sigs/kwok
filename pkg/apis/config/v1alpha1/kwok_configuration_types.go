@@ -48,16 +48,19 @@ type KwokConfigurationOptions struct {
 	EnableCRDs []string `json:"enableCRDs,omitempty"`
 
 	// The default IP assigned to the Pod on maintained Nodes.
-	// is the default value for flag --cidr
 	// +default="10.0.0.0/24"
+	//
+	// Deprecated: Please set the CIDR in the spec of node
 	CIDR string `json:"cidr,omitempty"`
 
 	// The ip of all nodes maintained by the Kwok
-	// is the default value for flag --node-ip
+	//
+	// Deprecated: Please set the IP in the status of node
 	NodeIP string `json:"nodeIP,omitempty"`
 
 	// The name of all nodes maintained by the Kwok
-	// is the default value for flag --node-name
+	//
+	// Deprecated: Please set the name in the status of node
 	NodeName string `json:"nodeName,omitempty"`
 
 	// The port of all nodes maintained by the Kwok

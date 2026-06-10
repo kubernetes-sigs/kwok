@@ -2422,8 +2422,8 @@ string
 </em>
 </td>
 <td>
-<p>The default IP assigned to the Pod on maintained Nodes.
-is the default value for flag &ndash;cidr</p>
+<p>The default IP assigned to the Pod on maintained Nodes.</p>
+<p>Deprecated: Please set the CIDR in the spec of node</p>
 </td>
 </tr>
 <tr>
@@ -2434,8 +2434,8 @@ string
 </em>
 </td>
 <td>
-<p>The ip of all nodes maintained by the Kwok
-is the default value for flag &ndash;node-ip</p>
+<p>The ip of all nodes maintained by the Kwok</p>
+<p>Deprecated: Please set the IP in the status of node</p>
 </td>
 </tr>
 <tr>
@@ -2446,8 +2446,8 @@ string
 </em>
 </td>
 <td>
-<p>The name of all nodes maintained by the Kwok
-is the default value for flag &ndash;node-name</p>
+<p>The name of all nodes maintained by the Kwok</p>
+<p>Deprecated: Please set the name in the status of node</p>
 </td>
 </tr>
 <tr>

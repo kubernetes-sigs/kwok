@@ -80,8 +80,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	flags.Kubeconfig = utilspath.RelFromHome(kubeconfig.GetRecommendedKubeconfigPath())
 
 	cmd.Flags().StringVar(&flags.Options.CIDR, "cidr", flags.Options.CIDR, "CIDR of the pod ip")
+	_ = cmd.Flags().MarkDeprecated("cidr", "Please set the CIDR in the spec of node")
 	cmd.Flags().StringVar(&flags.Options.NodeIP, "node-ip", flags.Options.NodeIP, "IP of the node")
+	_ = cmd.Flags().MarkDeprecated("node-ip", "Please set the IP in the status of node")
 	cmd.Flags().StringVar(&flags.Options.NodeName, "node-name", flags.Options.NodeName, "Name of the node")
+	_ = cmd.Flags().MarkDeprecated("node-name", "Please set the name in the status of node")
 	cmd.Flags().IntVar(&flags.Options.NodePort, "node-port", flags.Options.NodePort, "Port of the node")
 	cmd.Flags().StringVar(&flags.Options.TLSCertFile, "tls-cert-file", flags.Options.TLSCertFile, "File containing the default x509 Certificate for HTTPS")
 	cmd.Flags().StringVar(&flags.Options.TLSPrivateKeyFile, "tls-private-key-file", flags.Options.TLSPrivateKeyFile, "File containing the default x509 private key matching --tls-cert-file")

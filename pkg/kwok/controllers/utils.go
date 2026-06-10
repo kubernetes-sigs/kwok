@@ -37,20 +37,12 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
-func parseCIDR(s string) (*net.IPNet, error) {
-	return utilsnet.ParseCIDR(s)
-}
-
-func addIP(ip net.IP, add uint64) net.IP {
-	return utilsnet.AddIP(ip, add)
-}
-
 type ipPool struct {
 	mut    sync.Mutex
 	used   map[string]struct{}
 	usable map[string]struct{}
 	cidr   *net.IPNet
-	index  uint64
+	index  int
 }
 
 func newIPPool(cidr *net.IPNet) *ipPool {
@@ -64,7 +56,7 @@ func newIPPool(cidr *net.IPNet) *ipPool {
 func (i *ipPool) new() string {
 	for {
 		i.index++
-		ip := addIP(i.cidr.IP, i.index).String()
+		ip := utilsnet.AddIP(i.cidr.IP, i.index).String()
 
 		if _, ok := i.used[ip]; ok {
 			continue

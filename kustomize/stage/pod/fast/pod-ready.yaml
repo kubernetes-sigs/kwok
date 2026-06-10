@@ -67,8 +67,19 @@ spec:
             startedAt: {{ $now | Quote }}
         {{ end }}
       {{ end }}
-
-      hostIP: {{ NodeIPWith .spec.nodeName | Quote }}
-      podIP: {{ PodIPWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) | Quote }}
+      {{ $hostIPs := NodeIPsWith .spec.nodeName }}
+      {{ if $hostIPs }}
+      hostIP: {{ index $hostIPs 0 | Quote }}
+      hostIPs:
+      {{ range $hostIPs }}
+      - ip: {{ . | Quote }}
+      {{ end }}
+      {{ end }}
+      {{ $podIPs := PodIPsWith .spec.nodeName ( or .spec.hostNetwork false ) ( or .metadata.uid "" ) ( or .metadata.name "" ) ( or .metadata.namespace "" ) }}
+      podIP: {{ index $podIPs 0 | Quote }}
+      podIPs:
+      {{ range $podIPs }}
+      - ip: {{ . | Quote }}
+      {{ end }}
       phase: Running
       startTime: {{ $now | Quote }}

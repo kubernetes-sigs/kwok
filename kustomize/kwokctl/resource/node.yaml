@@ -3,7 +3,6 @@ kind: KwokctlResource
 metadata:
   name: node
 parameters:
-  podCIDR: "10.0.0.0/24"
   allocatable:
     cpu: 32
     memory: 256Gi
@@ -12,6 +11,12 @@ parameters:
   nodeInfo:
     architecture: amd64
     operatingSystem: linux
+  podCIDRs:
+  - 10.0.0.0/24
+  - fd00::/64
+  nodeIPs:
+  - 192.0.2.1
+  - 2001:db8::1
 template: |-
   kind: Node
   apiVersion: v1
@@ -31,8 +36,19 @@ template: |-
       node-role.kubernetes.io/agent: ""
       type: kwok
   spec:
-    podCIDR: {{ AddCIDR .podCIDR Index }}
+    {{ $index := Index }}
+    {{ $podCIDRs := .podCIDRs }}
+    podCIDR: {{ AddCIDR (index $podCIDRs 0) $index }}
+    podCIDRs:
+    {{ range $podCIDRs }}
+    - {{ AddCIDR . $index }}
+    {{ end }}
   status:
+    addresses:
+    {{ range .nodeIPs }}
+    - address: {{ AddIP . $index | Quote }}
+      type: InternalIP
+    {{ end }}
     allocatable:
     {{ range $key, $value := .allocatable }}
       {{ $key }}: {{ $value }}

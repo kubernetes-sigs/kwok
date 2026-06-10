@@ -18,6 +18,8 @@ package net
 
 import (
 	"encoding/binary"
+	"fmt"
+	"math/big"
 	"net"
 )
 
@@ -46,19 +48,31 @@ func GetAllIPs() ([]string, error) {
 	return ips, nil
 }
 
+// AddIPStr adds the IP string with the given offset.
+func AddIPStr(ipStr string, index int) (string, error) {
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return "", fmt.Errorf("invalid ip %q", ipStr)
+	}
+	return AddIP(ip, index).String(), nil
+}
+
 // AddIP adds or subtracts the IP.
-func AddIP(ip net.IP, add uint64) net.IP {
-	if len(ip) < 8 || add == 0 {
+func AddIP(ip net.IP, index int) net.IP {
+	if len(ip) < 8 || index == 0 {
 		return ip
 	}
 
 	out := make(net.IP, len(ip))
 	copy(out, ip)
 
-	i := binary.BigEndian.Uint64(out[len(out)-8:])
-	i += add
-
-	binary.BigEndian.PutUint64(out[len(out)-8:], i)
+	low := binary.BigEndian.Uint64(out[len(out)-8:])
+	if index < 0 {
+		low -= uint64(-index)
+	} else {
+		low += uint64(index)
+	}
+	binary.BigEndian.PutUint64(out[len(out)-8:], low)
 	return out
 }
 
@@ -72,13 +86,46 @@ func ParseCIDR(s string) (*net.IPNet, error) {
 	return ipnet, nil
 }
 
-// AddCIDR adds the CIDR.
-func AddCIDR(cidr string, index int) (string, error) {
+// AddCIDRStr adds the CIDR.
+func AddCIDRStr(cidr string, index int) (string, error) {
 	ipnet, err := ParseCIDR(cidr)
 	if err != nil {
 		return "", err
 	}
-	ones, bits := ipnet.Mask.Size()
-	ipnet.IP = AddIP(ipnet.IP, uint64((1<<(bits-ones))*index))
+
+	ipnet, err = AddCIDR(ipnet, index)
+	if err != nil {
+		return "", err
+	}
 	return ipnet.String(), nil
+}
+
+// AddCIDRStr adds the CIDR.
+func AddCIDR(ipnet *net.IPNet, index int) (*net.IPNet, error) {
+	ones, bits := ipnet.Mask.Size()
+	ip := ipnet.IP
+	if bits == net.IPv4len*8 {
+		ip = ip.To4()
+	} else {
+		ip = ip.To16()
+	}
+	if ip == nil {
+		return nil, fmt.Errorf("invalid cidr %q", ipnet.String())
+	}
+
+	offset := new(big.Int).SetInt64(int64(index))
+	offset.Lsh(offset, uint(bits-ones))
+
+	ipInt := new(big.Int).SetBytes(ip)
+	ipInt.Add(ipInt, offset)
+
+	maxIP := new(big.Int).Lsh(big.NewInt(1), uint(bits))
+	if ipInt.Cmp(maxIP) >= 0 {
+		return nil, fmt.Errorf("cidr %q with index %d overflows ip range", ipnet.String(), index)
+	}
+
+	return &net.IPNet{
+		IP:   ipInt.FillBytes(make([]byte, len(ip))),
+		Mask: ipnet.Mask,
+	}, nil
 }

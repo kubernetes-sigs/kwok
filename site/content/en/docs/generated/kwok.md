@@ -9,7 +9,6 @@ kwok [flags]
 ### Options
 
 ```
-      --cidr string                                    CIDR of the pod ip (default "10.0.0.0/24")
   -c, --config strings                                 config path (default [~/.kwok/kwok.yaml])
       --enable-crds strings                            List of CRDs to enable
   -h, --help                                           help for kwok
@@ -19,9 +18,7 @@ kwok [flags]
       --manage-nodes-with-label-selector string        Nodes that match the label selector will be watched and managed. It's conflicted with manage-all-nodes and manage-single-node.
       --manage-single-node string                      Node that matches the name will be watched and managed. It's conflicted with manage-nodes-with-annotation-selector, manage-nodes-with-label-selector and manage-all-nodes.
       --master string                                  The address of the Kubernetes API server (overrides any value in kubeconfig).
-      --node-ip string                                 IP of the node
       --node-lease-duration-seconds uint               Duration of node lease seconds
-      --node-name string                               Name of the node
       --node-port int                                  Port of the node
       --server-address string                          Address to expose the server on
       --tls-cert-file string                           File containing the default x509 Certificate for HTTPS

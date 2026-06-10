@@ -307,7 +307,7 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 	out := make([]any, 0)
 
 	fm := gotpl.FuncMap{}
-	funcNames := []string{
+	funcStringNames := []string{
 		// For node and pod
 		"NodeIP",
 
@@ -325,8 +325,23 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 		"now",
 		"Version",
 	}
-	for _, name := range funcNames {
-		fm[name] = wrapFunction(name)
+	for _, name := range funcStringNames {
+		fm[name] = wrapStringFunction(name)
+	}
+
+	funcStringsNames := []string{
+		// For node
+		"NodeIPs",
+
+		// For node
+		"NodeNames",
+
+		// For pod
+		"NodeIPsWith",
+		"PodIPsWith",
+	}
+	for _, name := range funcStringsNames {
+		fm[name] = wrapStringsFunction(name)
 	}
 
 	renderer := gotpl.NewRenderer(fm)
@@ -365,7 +380,7 @@ func testingStage(ctx context.Context, testTarget obj, event *lifecycle.Event, s
 	return meta, nil
 }
 
-func wrapFunction(name string) func(args ...any) any {
+func wrapStringFunction(name string) func(args ...any) any {
 	return func(args ...any) any {
 		if len(args) == 0 {
 			return fmt.Sprintf("<%s>", name)
@@ -385,6 +400,48 @@ func wrapFunction(name string) func(args ...any) any {
 				", ",
 			),
 		)
+	}
+}
+
+func wrapStringsFunction(name string) func(args ...any) any {
+	return func(args ...any) any {
+		if len(args) == 0 {
+			return []any{
+				fmt.Sprintf("<0 of %s>", name),
+				fmt.Sprintf("<1 of %s>", name),
+			}
+		}
+
+		return []any{
+			fmt.Sprintf("<0 of %s(%s)>", name,
+				strings.Join(
+					slices.Map(args,
+						func(arg any) string {
+							a := fmt.Sprintf("%#v", arg)
+							if a == "" {
+								return `""`
+							}
+							return a
+						},
+					),
+					", ",
+				),
+			),
+			fmt.Sprintf("<1 of %s(%s)>", name,
+				strings.Join(
+					slices.Map(args,
+						func(arg any) string {
+							a := fmt.Sprintf("%#v", arg)
+							if a == "" {
+								return `""`
+							}
+							return a
+						},
+					),
+					", ",
+				),
+			),
+		}
 	}
 }
 

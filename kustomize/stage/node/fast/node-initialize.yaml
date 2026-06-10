@@ -26,14 +26,26 @@ spec:
         type: {{ .type  | Quote}}
       {{ end }}
 
+      {{ $hasInternalIP := false }}
+      {{ $hasHostname := false }}
+      {{ range .status.addresses }}
+        {{ if eq .type "InternalIP" }}
+          {{ $hasInternalIP = true }}
+        {{ end }}
+        {{ if eq .type "Hostname" }}
+          {{ $hasHostname = true }}
+        {{ end }}
+      {{ end }}
+      {{ if or (not $hasInternalIP) (not $hasHostname) }}
       addresses:
-      {{ with .status.addresses }}
-      {{ YAML . 1 }}
-      {{ else }}
+      {{ end }}
+      {{ if not $hasInternalIP }}
       {{ with NodeIP }}
       - address: {{ . | Quote }}
         type: InternalIP
       {{ end }}
+      {{ end }}
+      {{ if not $hasHostname }}
       {{ with NodeName }}
       - address: {{ . | Quote }}
         type: Hostname
