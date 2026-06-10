@@ -102,7 +102,9 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 	err := convert_url_Values_To_v1_PodLogOptions(&query, logOptions, nil)
 	if err != nil {
 		logger := log.FromContext(request.Request.Context())
-		logger.Error("Unable to decode the request for container logs", err)
+		logger.Error("Unable to decode the request for container logs",
+			"err", err,
+		)
 		_ = response.WriteError(http.StatusBadRequest, fmt.Errorf(`{"message": "Unable to decode query."}`))
 		return
 	}

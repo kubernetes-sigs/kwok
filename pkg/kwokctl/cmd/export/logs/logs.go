@@ -53,7 +53,10 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	name := flags.Name
 	workdir := path.Join(config.ClustersDir, flags.Name)
 
-	logger := log.FromContext(ctx).With("cluster", flags.Name)
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"cluster", flags.Name,
+	)
 	ctx = log.NewContext(ctx, logger)
 
 	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)

@@ -66,7 +66,9 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
-				logger.Error("accepting connection", err)
+				logger.Error("accepting connection",
+					"err", err,
+				)
 				return
 			}
 
@@ -80,7 +82,9 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 					c.runtime, "exec", "-i", c.getClusterName(),
 					"bash", "-c", command)
 				if err != nil {
-					logger.Warn("failed tunneling port", "err", err)
+					logger.Warn("failed tunneling port",
+						"err", err,
+					)
 				}
 			}()
 		}

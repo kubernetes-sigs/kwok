@@ -97,7 +97,9 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 			c.runtime == consts.RuntimeTypeFinch {
 			_, err := utilsexec.Command(context.Background(), c.runtime, "rm", "--force", tempContainerName)
 			if err != nil {
-				logger.Error("Remove temporary port-forward container", err)
+				logger.Error("Remove temporary port-forward container",
+					"err", err,
+				)
 			}
 		}
 	}
@@ -133,7 +135,9 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 				if ctx.Err() != nil {
 					return
 				}
-				logger.Error("accepting connection", err)
+				logger.Error("accepting connection",
+					"err", err,
+				)
 				return
 			}
 
@@ -145,7 +149,9 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 					c.runtime, "exec", "-i", tempContainerName,
 					"nc", c.Name()+"-"+name, format.String(targetPort))
 				if err != nil {
-					logger.Warn("failed tunneling port", "err", err)
+					logger.Warn("failed tunneling port",
+						"err", err,
+					)
 				}
 			}()
 		}

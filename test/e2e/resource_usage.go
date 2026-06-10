@@ -78,21 +78,29 @@ func CaseResourceUsage(kwokctlPath, clusterName string) *features.FeatureBuilder
 					out := bytes.NewBuffer(nil)
 					_, err = utilsexec.Command(utilsexec.WithAllWriteTo(ctx, out), kwokctlPath, "--name", clusterName, "kubectl", "top", "pod")
 					if err != nil {
-						logger.Error("kubectl top pod", err)
+						logger.Error("kubectl top pod",
+							"err", err,
+						)
 						return false, nil
 					}
 
 					output := out.String()
 					if strings.Contains(output, "Metrics API not available") || strings.Contains(output, "metrics not available yet") {
-						logger.Warn("kubectl top pod", "output", output)
+						logger.Warn("kubectl top pod",
+							"output", output,
+						)
 						return false, nil
 					}
 					if !strings.Contains(output, "1Mi") {
-						logger.Info("kubectl top pod", "output", output)
+						logger.Info("kubectl top pod",
+							"output", output,
+						)
 						return false, nil
 					}
 					if !strings.Contains(output, "1m") && !strings.Contains(output, "2m") {
-						logger.Info("kubectl top pod", "output", output)
+						logger.Info("kubectl top pod",
+							"output", output,
+						)
 						return false, nil
 					}
 					return true, nil
@@ -128,30 +136,42 @@ func CaseResourceUsage(kwokctlPath, clusterName string) *features.FeatureBuilder
 					out := bytes.NewBuffer(nil)
 					_, err = utilsexec.Command(utilsexec.WithAllWriteTo(ctx, out), kwokctlPath, "--name", clusterName, "kubectl", "top", "pod")
 					if err != nil {
-						logger.Error("kubectl top pod", err)
+						logger.Error("kubectl top pod",
+							"err", err,
+						)
 						return false, nil
 					}
 
 					output := out.String()
 					if strings.Contains(output, "Metrics API not available") || strings.Contains(output, "metrics not available yet") {
-						logger.Warn("kubectl top pod", "output", output)
+						logger.Warn("kubectl top pod",
+							"output", output,
+						)
 						return false, nil
 					}
 					if !strings.Contains(output, "1Mi") {
-						logger.Info("kubectl top pod", "output", output)
+						logger.Info("kubectl top pod",
+							"output", output,
+						)
 						return false, nil
 					}
 					if !strings.Contains(output, "1m") && !strings.Contains(output, "2m") {
-						logger.Info("kubectl top pod", "output", output)
+						logger.Info("kubectl top pod",
+							"output", output,
+						)
 						return false, nil
 					}
 
 					if !strings.Contains(output, "100Mi") {
-						logger.Info("kubectl top pod", "output", output)
+						logger.Info("kubectl top pod",
+							"output", output,
+						)
 						return false, nil
 					}
 					if !strings.Contains(output, "100m") && !strings.Contains(output, "101m") {
-						logger.Info("kubectl top pod", "output", output)
+						logger.Info("kubectl top pod",
+							"output", output,
+						)
 						return false, nil
 					}
 					return true, nil

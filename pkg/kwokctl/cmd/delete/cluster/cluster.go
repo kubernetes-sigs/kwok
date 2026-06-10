@@ -99,7 +99,9 @@ func deleteCluster(ctx context.Context, name string, kubeconfigPath string, forc
 	workdir := utilspath.Join(config.ClustersDir, name)
 
 	logger := log.FromContext(ctx)
-	logger = logger.With("cluster", name)
+	logger = logger.With(
+		"cluster", name,
+	)
 	ctx = log.NewContext(ctx, logger)
 
 	var err error
@@ -121,7 +123,9 @@ func deleteCluster(ctx context.Context, name string, kubeconfigPath string, forc
 		if !force {
 			return err
 		}
-		logger.Warn("Unavailable runtime but proceed with force delete", "err", err)
+		logger.Warn("Unavailable runtime but proceed with force delete",
+			"err", err,
+		)
 	}
 
 	// Stop the cluster
@@ -141,7 +145,8 @@ func deleteCluster(ctx context.Context, name string, kubeconfigPath string, forc
 	if kubeconfigPath != "" {
 		err = rt.RemoveContext(ctx, kubeconfigPath)
 		if err != nil {
-			logger.Error("Failed to remove context from kubeconfig", err,
+			logger.Error("Failed to remove context from kubeconfig",
+				"err", err,
 				"kubeconfig", kubeconfigPath,
 			)
 		}

@@ -111,7 +111,9 @@ func (l *Loader) Load(ctx context.Context, decoder *yaml.Decoder) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			logger.Warn("Failed to decode resource", "err", err)
+			logger.Warn("Failed to decode resource",
+				"err", err,
+			)
 			continue
 		}
 
@@ -269,7 +271,9 @@ func (l *Loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 	err := retry.OnError(defaultRetry, discovery.IsGroupDiscoveryFailedError, func() error {
 		g, err := l.restMapper.ResourceFor(gvr)
 		if err != nil {
-			logger.Warn("failed to get resource", "err", err)
+			logger.Warn("failed to get resource",
+				"err", err,
+			)
 			return err
 		}
 		gvr = g
@@ -297,7 +301,9 @@ func (l *Loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			l.failedCounter++
-			logger.Error("Failed to create resource", err)
+			logger.Error("Failed to create resource",
+				"err", err,
+			)
 			return nil
 		}
 		newObj, err = ri.Update(ctx, obj, metav1.UpdateOptions{FieldValidation: "Ignore"})
@@ -307,7 +313,9 @@ func (l *Loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 				logger.Warn("Conflict")
 				return nil
 			}
-			logger.Error("Failed to update resource", err)
+			logger.Error("Failed to update resource",
+				"err", err,
+			)
 			return nil
 		}
 		logger.Debug("Updated")
@@ -318,7 +326,9 @@ func (l *Loader) apply(ctx context.Context, obj *unstructured.Unstructured) *uns
 				newObj.Object["status"] = status
 				newObj, err = ri.UpdateStatus(ctx, newObj, metav1.UpdateOptions{FieldValidation: "Ignore"})
 				if err != nil {
-					logger.Error("Failed to update resource status", err)
+					logger.Error("Failed to update resource status",
+						"err", err,
+					)
 				}
 			}
 		}

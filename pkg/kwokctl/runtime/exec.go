@@ -131,7 +131,9 @@ func (c *Cluster) ForkExecIsRunning(ctx context.Context, dir string, name string
 	pidData, err := os.ReadFile(pidPath)
 	if err != nil {
 		logger := log.FromContext(ctx)
-		logger.Error("Read pid file", err)
+		logger.Error("Read pid file",
+			"err", err,
+		)
 		return false
 	}
 	pid, err := strconv.Atoi(string(pidData))
@@ -206,7 +208,9 @@ func (c *Cluster) ensureImage(ctx context.Context, command string, image string,
 	err = file.Remove(dest)
 	if err != nil {
 		logger := log.FromContext(ctx)
-		logger.Error("Remove file", err)
+		logger.Error("Remove file",
+			"err", err,
+		)
 	}
 	return nil
 }

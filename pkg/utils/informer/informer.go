@@ -66,7 +66,10 @@ func (i *Informer[T, L]) Sync(ctx context.Context, opt Option, events chan<- Eve
 
 	if opt.EnableStreamWatch {
 		if watchListOptions, hasWatchListOptionsPrepared, watchListOptionsErr := watchlist.PrepareWatchListOptionsFromListOptions(opt.toListOptions()); watchListOptionsErr != nil {
-			log.FromContext(ctx).Error("Failed preparing watchlist options, falling back to the standard LIST semantics", watchListOptionsErr)
+			logger := log.FromContext(ctx)
+			logger.Error("Failed preparing watchlist options, falling back to the standard LIST semantics",
+				"err", watchListOptionsErr,
+			)
 		} else if hasWatchListOptionsPrepared {
 			watcher, err := i.WatchFunc(ctx, watchListOptions)
 			if err != nil {

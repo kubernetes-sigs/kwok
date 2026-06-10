@@ -44,11 +44,15 @@ func ListClusters(ctx context.Context) ([]string, error) {
 	for _, entry := range entries {
 		name := entry.Name()
 		if !entry.IsDir() {
-			logger.Warn("Found non-directory entry in clusters directory, please remove it", "path", utilspath.Join(workdir, name))
+			logger.Warn("Found non-directory entry in clusters directory, please remove it",
+				"path", utilspath.Join(workdir, name),
+			)
 			continue
 		}
 		if !file.Exists(utilspath.Join(workdir, name, consts.ConfigName)) {
-			logger.Warn("Found directory without a config file, please remove it", "path", utilspath.Join(workdir, name))
+			logger.Warn("Found directory without a config file, please remove it",
+				"path", utilspath.Join(workdir, name),
+			)
 			continue
 		}
 
@@ -66,7 +70,10 @@ func GetUsedPorts(ctx context.Context) (rets sets.Sets[uint32]) {
 	entries, err := os.ReadDir(workdir)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			logger.Warn("Failed to read clusters directory", "path", workdir, "error", err)
+			logger.Warn("Failed to read clusters directory",
+				"path", workdir,
+				"err", err,
+			)
 		}
 		return rets
 	}
@@ -74,23 +81,32 @@ func GetUsedPorts(ctx context.Context) (rets sets.Sets[uint32]) {
 	for _, entry := range entries {
 		name := entry.Name()
 		if !entry.IsDir() {
-			logger.Warn("Found non-directory entry in clusters directory, please remove it", "path", utilspath.Join(workdir, name))
+			logger.Warn("Found non-directory entry in clusters directory, please remove it",
+				"path", utilspath.Join(workdir, name),
+			)
 			continue
 		}
 		confPath := utilspath.Join(workdir, name, consts.ConfigName)
 		if !file.Exists(confPath) {
-			logger.Warn("Found directory without a config file, please remove it", "path", utilspath.Join(workdir, name))
+			logger.Warn("Found directory without a config file, please remove it",
+				"path", utilspath.Join(workdir, name),
+			)
 			continue
 		}
 
 		confs, err := config.Load(ctx, confPath)
 		if err != nil {
-			logger.Warn("Failed to load config file", "path", confPath, "error", err)
+			logger.Warn("Failed to load config file",
+				"path", confPath,
+				"err", err,
+			)
 			continue
 		}
 		kubectlConfs := config.FilterWithType[*internalversion.KwokctlConfiguration](confs)
 		if len(kubectlConfs) == 0 {
-			logger.Warn("Not found kwokctl config in cluster", "path", confPath)
+			logger.Warn("Not found kwokctl config in cluster",
+				"path", confPath,
+			)
 			continue
 		}
 

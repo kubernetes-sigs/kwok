@@ -138,7 +138,9 @@ func applyComponentArgsOverride(ctx context.Context, args []string, a internalve
 	}
 	if !overrided {
 		logger := log.FromContext(ctx)
-		logger.Warn("have not match override", "key", a.Key)
+		logger.Warn("have not match override",
+			"key", a.Key,
+		)
 	}
 	return args
 }

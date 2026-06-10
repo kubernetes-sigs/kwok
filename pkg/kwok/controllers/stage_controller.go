@@ -166,7 +166,8 @@ func (c *StageController) preprocessWorker(ctx context.Context) {
 		case resource := <-c.preprocessChan:
 			err := c.preprocess(ctx, resource)
 			if err != nil {
-				logger.Error("Failed to preprocess resource", err,
+				logger.Error("Failed to preprocess resource",
+					"err", err,
 					"resource", log.KObj(resource),
 				)
 			}
@@ -254,7 +255,8 @@ func (c *StageController) playStageWorker(ctx context.Context) {
 		c.delayQueueMapping.Delete(resource.Key)
 		remainIndex, err := c.playStage(ctx, resource.Resource, resource.Stage, int(*resource.StepIndex))
 		if err != nil {
-			logger.Error("failed to apply stage", err,
+			logger.Error("failed to apply stage",
+				"err", err,
 				"resource", resource.Key,
 				"stage", resource.Stage.Name(),
 			)
@@ -346,7 +348,8 @@ func (c *StageController) playStage(ctx context.Context, resource *unstructured.
 
 	if result != nil && stage.ImmediateNextStage() {
 		logger.Debug("Re-push to preprocessChan",
-			"reason", "immediateNextStage is true")
+			"reason", "immediateNextStage is true",
+		)
 		c.preprocessChan <- result
 	}
 	return -1, nil
@@ -366,7 +369,9 @@ func (c *StageController) applyResource(ctx context.Context, resource *unstructu
 		)
 		dc, err := c.impersonatingDynamicClient.ImpersonateDynamic(rest.ImpersonationConfig{UserName: apply.Impersonation.Username})
 		if err != nil {
-			logger.Error("error getting impersonating client", err)
+			logger.Error("error getting impersonating client",
+				"err", err,
+			)
 			return err
 		}
 		dynamicClient = dc
@@ -405,7 +410,9 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 
 		dc, err := c.impersonatingDynamicClient.ImpersonateDynamic(rest.ImpersonationConfig{UserName: patch.Impersonation.Username})
 		if err != nil {
-			logger.Error("error getting impersonating client", err)
+			logger.Error("error getting impersonating client",
+				"err", err,
+			)
 			return nil, err
 		}
 		nri = dc.Resource(c.gvr)

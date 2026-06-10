@@ -54,19 +54,25 @@ func main() {
 	_, err := config.InitFlags(ctx, flagset)
 	if err != nil {
 		_, _ = os.Stderr.Write([]byte(flagset.FlagUsages()))
-		logger.Error("Init config flags", err)
+		logger.Error("Init config flags",
+			"err", err,
+		)
 		os.Exit(1)
 	}
 	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelWarn))
 
 	err = genKwok(ctx, flagset, basePath)
 	if err != nil {
-		logger.Error("Generate kwok docs", err)
+		logger.Error("Generate kwok docs",
+			"err", err,
+		)
 		os.Exit(1)
 	}
 	err = genKwokctl(ctx, flagset, basePath)
 	if err != nil {
-		logger.Error("Generate kwokctl docs", err)
+		logger.Error("Generate kwokctl docs",
+			"err", err,
+		)
 		os.Exit(1)
 	}
 }

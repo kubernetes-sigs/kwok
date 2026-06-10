@@ -66,14 +66,19 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
-				logger.Error("accepting connection", err)
+				logger.Error("accepting connection",
+					"err", err,
+				)
 				return
 			}
 
 			target, err := net.Dial("tcp", fmt.Sprintf(":%d", targetPort))
 			if err != nil {
 				_ = conn.Close()
-				logger.Error("failed to connect", err, "port", targetPort)
+				logger.Error("failed to connect",
+					"err", err,
+					"port", targetPort,
+				)
 				return
 			}
 			go func() {
@@ -83,7 +88,9 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 				}()
 				err = utilsnet.Tunnel(ctx, conn, target, nil, nil)
 				if err != nil {
-					logger.Warn("failed tunneling port", "err", err)
+					logger.Warn("failed tunneling port",
+						"err", err,
+					)
 				}
 			}()
 		}

@@ -192,7 +192,8 @@ func (c *PodController) preprocessWorker(ctx context.Context) {
 		case pod := <-c.preprocessChan:
 			err := c.preprocess(ctx, pod)
 			if err != nil {
-				logger.Error("Failed to preprocess node", err,
+				logger.Error("Failed to preprocess node",
+					"err", err,
 					"pod", log.KObj(pod),
 					"node", pod.Spec.NodeName,
 				)
@@ -281,7 +282,8 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 		c.delayQueueMapping.Delete(pod.Key)
 		remainIndex, err := c.playStage(ctx, pod.Resource, pod.Stage, int(*pod.StepIndex))
 		if err != nil {
-			logger.Error("failed to apply stage", err,
+			logger.Error("failed to apply stage",
+				"err", err,
 				"pod", pod.Key,
 				"stage", pod.Stage.Name(),
 			)
@@ -373,7 +375,8 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *l
 
 	if result != nil && stage.ImmediateNextStage() {
 		logger.Debug("Re-push to preprocessChan",
-			"reason", "immediateNextStage is true")
+			"reason", "immediateNextStage is true",
+		)
 		c.preprocessChan <- result
 	}
 	return -1, nil
@@ -579,7 +582,8 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 			}
 			pool, err := c.ipPool(cidr)
 			if err != nil {
-				logger.Error("Failed to get ip pool", err,
+				logger.Error("Failed to get ip pool",
+					"err", err,
 					"pod", log.KObj(pod),
 					"node", pod.Spec.NodeName,
 				)

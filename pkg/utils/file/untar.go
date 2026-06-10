@@ -51,7 +51,9 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 	defer func() {
 		err = r.Close()
 		if err != nil {
-			logger.Error("Failed to close file", err)
+			logger.Error("Failed to close file",
+				"err", err,
+			)
 		}
 	}()
 
@@ -81,7 +83,9 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 			defer func() {
 				err = rc.Close()
 				if err != nil {
-					logger.Error("Failed to close file of tar", err)
+					logger.Error("Failed to close file of tar",
+						"err", err,
+					)
 				}
 			}()
 
@@ -92,7 +96,9 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 			defer func() {
 				err = outFile.Close()
 				if err != nil {
-					logger.Error("Failed to close file", err)
+					logger.Error("Failed to close file",
+						"err", err,
+					)
 				}
 			}()
 
@@ -118,7 +124,9 @@ func untargz(ctx context.Context, src string, filter func(file string) (string, 
 	defer func() {
 		err = r.Close()
 		if err != nil {
-			logger.Error("Failed to close file", err)
+			logger.Error("Failed to close file",
+				"err", err,
+			)
 		}
 	}()
 
@@ -129,7 +137,9 @@ func untargz(ctx context.Context, src string, filter func(file string) (string, 
 	defer func() {
 		err = gzr.Close()
 		if err != nil {
-			logger.Error("Failed to close gzip reader", err)
+			logger.Error("Failed to close gzip reader",
+				"err", err,
+			)
 		}
 	}()
 
@@ -165,7 +175,9 @@ func untargz(ctx context.Context, src string, filter func(file string) (string, 
 			defer func() {
 				err = outFile.Close()
 				if err != nil {
-					logger.Error("Failed to close file", err)
+					logger.Error("Failed to close file",
+						"err", err,
+					)
 				}
 			}()
 
