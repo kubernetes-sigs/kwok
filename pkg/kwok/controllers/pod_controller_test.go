@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -337,7 +338,7 @@ func TestPodController(t *testing.T) {
 							return false, fmt.Errorf("want pod %s podIP=%s, got %s", pod.Name, wantHostIP, pod.Status.PodIP)
 						}
 					} else {
-						cidr, _ := parseCIDR(wantPodCIRD)
+						cidr, _ := utilsnet.ParseCIDR(wantPodCIRD)
 						if !cidr.Contains(net.ParseIP(pod.Status.PodIP)) {
 							return false, fmt.Errorf("want pod %s podIP=%s in %s, got not", pod.Name, pod.Status.PodIP, wantPodCIRD)
 						}

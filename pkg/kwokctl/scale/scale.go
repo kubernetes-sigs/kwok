@@ -73,7 +73,8 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		"Index": func() int {
 			return index
 		},
-		"AddCIDR": utilsnet.AddCIDR,
+		"AddCIDR": utilsnet.AddCIDRStr,
+		"AddIP":   utilsnet.AddIPStr,
 	})
 	data, err := renderer.ToJSON(conf.Template, param)
 	if err != nil {

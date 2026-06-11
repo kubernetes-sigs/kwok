@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"net"
 	"sync/atomic"
 	"time"
 
@@ -40,7 +41,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
 	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -144,10 +147,12 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		enableMetrics:                         conf.EnableMetrics,
 	}
 	funcMap := utilsmaps.Merge(gotpl.FuncMap{
-		"NodeIP":     c.funcNodeIP,
-		"PodIP":      c.funcPodIP,
-		"NodeIPWith": c.funcNodeIPWith,
-		"PodIPWith":  c.funcPodIPWith,
+		"NodeIP":      c.funcNodeIP,
+		"PodIP":       c.funcPodIP,
+		"NodeIPWith":  c.funcNodeIPWith,
+		"NodeIPsWith": c.funcNodeIPsWith,
+		"PodIPWith":   c.funcPodIPWith,
+		"PodIPsWith":  c.funcPodIPsWith,
 	}, conf.FuncMap)
 	c.renderer = gotpl.NewRenderer(funcMap)
 	return c, nil
@@ -341,7 +346,7 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *l
 			return nil
 		},
 		func(patch *lifecycle.Patch) error {
-			c.markPodIP(pod)
+			c.markPodIP(ctx, pod)
 			changed, err := checkNeedPatchWithTyped(pod, patch.Data, patch.Type)
 			if err != nil {
 				return fmt.Errorf("failed to check need patch for pod %s: %w", pod.Name, err)
@@ -548,7 +553,7 @@ func (c *PodController) ipPool(cidr string) (*ipPool, error) {
 	if ok {
 		return pool, nil
 	}
-	ipnet, err := parseCIDR(cidr)
+	ipnet, err := utilsnet.ParseCIDR(cidr)
 	if err != nil {
 		return nil, err
 	}
@@ -565,50 +570,106 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 		return
 	}
 
-	// Skip not managed node
+	if c.nodeCacheGetter == nil {
+		return
+	}
+
 	_, has := c.nodeGetFunc(pod.Spec.NodeName)
 	if !has {
 		return
 	}
 
-	logger := log.FromContext(ctx)
+	node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
+	if !ok {
+		return
+	}
 
-	if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
-		cidr := c.defaultCIDR
-		node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
-		if ok {
-			if node.Spec.PodCIDR != "" {
-				cidr = node.Spec.PodCIDR
-			}
-			pool, err := c.ipPool(cidr)
-			if err != nil {
-				logger.Error("Failed to get ip pool",
-					"err", err,
-					"pod", log.KObj(pod),
-					"node", pod.Spec.NodeName,
-				)
-			} else {
-				pool.Put(pod.Status.PodIP)
-			}
+	cidrs := []string{c.defaultCIDR}
+	if len(node.Spec.PodCIDRs) != 0 {
+		cidrs = node.Spec.PodCIDRs
+	} else if node.Spec.PodCIDR != "" {
+		cidrs = []string{node.Spec.PodCIDR}
+	}
+
+	ips := make([]string, 0, min(len(pod.Status.PodIPs), 1))
+	if len(pod.Status.PodIPs) != 0 {
+		for _, podIP := range pod.Status.PodIPs {
+			ips = append(ips, podIP.IP)
+		}
+	} else if pod.Status.PodIP != "" {
+		ips = []string{pod.Status.PodIP}
+	}
+
+	for i, ip := range ips {
+		if i >= len(cidrs) {
+			break
+		}
+		pool, err := c.ipPool(cidrs[i])
+		if err != nil {
+			logger := log.FromContext(ctx)
+			logger.Error("Failed to get ip pool",
+				"err", err,
+				"pod", log.KObj(pod),
+				"node", pod.Spec.NodeName,
+			)
+		} else {
+			pool.Put(ip)
 		}
 	}
 }
 
-func (c *PodController) markPodIP(pod *corev1.Pod) {
+func (c *PodController) markPodIP(ctx context.Context, pod *corev1.Pod) {
+	// Skip host network
+	if pod.Spec.HostNetwork {
+		return
+	}
+
+	if c.nodeCacheGetter == nil {
+		return
+	}
+
+	_, has := c.nodeGetFunc(pod.Spec.NodeName)
+	if !has {
+		return
+	}
+
+	node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
+	if !ok {
+		return
+	}
+
+	cidrs := []string{c.defaultCIDR}
+	if len(node.Spec.PodCIDRs) != 0 {
+		cidrs = node.Spec.PodCIDRs
+	} else if node.Spec.PodCIDR != "" {
+		cidrs = []string{node.Spec.PodCIDR}
+	}
+
+	ips := make([]string, 0, min(len(pod.Status.PodIPs), 1))
+	if len(pod.Status.PodIPs) != 0 {
+		for _, podIP := range pod.Status.PodIPs {
+			ips = append(ips, podIP.IP)
+		}
+	} else if pod.Status.PodIP != "" {
+		ips = []string{pod.Status.PodIP}
+	}
+
 	// Mark the pod IP that existed before the kubelet was started
-	if _, has := c.nodeGetFunc(pod.Spec.NodeName); has {
-		if pod.Status.PodIP != "" && c.nodeCacheGetter != nil {
-			cidr := c.defaultCIDR
-			node, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
-			if ok {
-				if node.Spec.PodCIDR != "" {
-					cidr = node.Spec.PodCIDR
-				}
-				pool, err := c.ipPool(cidr)
-				if err == nil {
-					pool.Use(pod.Status.PodIP)
-				}
-			}
+
+	for i, ip := range ips {
+		if i >= len(cidrs) {
+			break
+		}
+		pool, err := c.ipPool(cidrs[i])
+		if err != nil {
+			logger := log.FromContext(ctx)
+			logger.Error("Failed to get ip pool",
+				"err", err,
+				"pod", log.KObj(pod),
+				"node", pod.Spec.NodeName,
+			)
+		} else {
+			pool.Use(ip)
 		}
 	}
 }
@@ -617,18 +678,59 @@ func (c *PodController) funcNodeIP() string {
 	return c.nodeIP
 }
 
-func (c *PodController) funcNodeIPWith(nodeName string) string {
-	_, has := c.nodeGetFunc(nodeName)
-	if has && c.nodeCacheGetter != nil {
-		node, ok := c.nodeCacheGetter.Get(nodeName)
-		if ok {
-			hostIPs := getNodeHostIPs(node)
-			if len(hostIPs) != 0 {
-				return hostIPs[0].String()
-			}
-		}
+func (c *PodController) nodeIPs() []string {
+	if c.nodeIP == "" {
+		return []string{}
 	}
+	return []string{c.nodeIP}
+}
+
+func (c *PodController) funcNodeIPWith(nodeName string) string {
+	if c.nodeCacheGetter == nil {
+		return c.nodeIP
+	}
+
+	_, has := c.nodeGetFunc(nodeName)
+	if !has {
+		return c.nodeIP
+	}
+
+	node, ok := c.nodeCacheGetter.Get(nodeName)
+	if !ok {
+		return c.nodeIP
+	}
+
+	hostIPs := getNodeHostIPs(node)
+	if len(hostIPs) != 0 {
+		return hostIPs[0].String()
+	}
+
 	return c.nodeIP
+}
+
+func (c *PodController) funcNodeIPsWith(nodeName string) []string {
+	if c.nodeCacheGetter == nil {
+		return c.nodeIPs()
+	}
+
+	_, has := c.nodeGetFunc(nodeName)
+	if !has {
+		return c.nodeIPs()
+	}
+
+	node, ok := c.nodeCacheGetter.Get(nodeName)
+	if !ok {
+		return c.nodeIPs()
+	}
+
+	hostIPs := getNodeHostIPs(node)
+	if len(hostIPs) != 0 {
+		return utilsslices.Map(hostIPs, func(ip net.IP) string {
+			return ip.String()
+		})
+	}
+
+	return c.nodeIPs()
 }
 
 func (c *PodController) funcPodIP() string {
@@ -645,22 +747,72 @@ func (c *PodController) funcPodIPWith(nodeName string, hostNetwork bool, uid, na
 		return c.funcNodeIPWith(nodeName), nil
 	}
 
-	podCIDR := c.defaultCIDR
-	_, has := c.nodeGetFunc(nodeName)
-	if has && c.nodeCacheGetter != nil {
-		node, ok := c.nodeCacheGetter.Get(nodeName)
-		if ok {
-			if node.Spec.PodCIDR != "" {
-				podCIDR = node.Spec.PodCIDR
-			}
-		}
+	if c.nodeCacheGetter == nil {
+		return c.nodeIP, nil
 	}
 
-	pool, err := c.ipPool(podCIDR)
+	_, has := c.nodeGetFunc(nodeName)
+	if !has {
+		return c.nodeIP, nil
+	}
+
+	node, ok := c.nodeCacheGetter.Get(nodeName)
+	if !ok {
+		return c.nodeIP, nil
+	}
+
+	podCIDRs := []string{c.defaultCIDR}
+	if len(node.Spec.PodCIDRs) != 0 {
+		podCIDRs = node.Spec.PodCIDRs
+	} else if node.Spec.PodCIDR != "" {
+		podCIDRs = []string{node.Spec.PodCIDR}
+	}
+
+	pool, err := c.ipPool(podCIDRs[0])
 	if err == nil {
 		return pool.Get(), nil
 	}
 	return c.nodeIP, nil
+}
+
+func (c *PodController) funcPodIPsWith(nodeName string, hostNetwork bool, uid, name, namespace string) ([]string, error) {
+	if hostNetwork {
+		return c.funcNodeIPsWith(nodeName), nil
+	}
+
+	if c.nodeCacheGetter == nil {
+		return c.nodeIPs(), nil
+	}
+
+	_, has := c.nodeGetFunc(nodeName)
+	if !has {
+		return c.nodeIPs(), nil
+	}
+
+	node, ok := c.nodeCacheGetter.Get(nodeName)
+	if !ok {
+		return c.nodeIPs(), nil
+	}
+
+	podCIDRs := []string{c.defaultCIDR}
+	if len(node.Spec.PodCIDRs) != 0 {
+		podCIDRs = node.Spec.PodCIDRs
+	} else if node.Spec.PodCIDR != "" {
+		podCIDRs = []string{node.Spec.PodCIDR}
+	}
+
+	ips := make([]string, 0, len(podCIDRs))
+	for _, podCIDR := range podCIDRs {
+		pool, err := c.ipPool(podCIDR)
+		if err != nil {
+			continue
+		}
+		ips = append(ips, pool.Get())
+	}
+	if len(ips) == 0 {
+		return c.nodeIPs(), nil
+	}
+	return ips, nil
 }
 
 // putPodInfo puts pod info
