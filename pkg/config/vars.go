@@ -221,6 +221,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setMetricsServerConfig(conf)
 
+	setSchedulerPluginsConfig(conf)
+
 	setKueueConfig(conf)
 
 	setJobSetConfig(conf)
@@ -580,6 +582,40 @@ func setMetricsServerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.MetricsServerBinary = conf.MetricsServerBinaryPrefix + "/metrics-server-" + GOOS + "-" + GOARCH + conf.BinSuffix
 	}
 	conf.MetricsServerBinary = envs.GetEnvWithPrefix("METRICS_SERVER_BINARY", conf.MetricsServerBinary)
+}
+
+func setSchedulerPluginsConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.SchedulerPluginsVersion == "" {
+		conf.SchedulerPluginsVersion = consts.SchedulerPluginsVersion
+	}
+	conf.SchedulerPluginsVersion = version.AddPrefixV(envs.GetEnvWithPrefix("SCHEDULER_PLUGINS_VERSION", conf.SchedulerPluginsVersion))
+
+	if conf.SchedulerPluginsImagePrefix == "" {
+		conf.SchedulerPluginsImagePrefix = consts.SchedulerPluginsImagePrefix
+	}
+	conf.SchedulerPluginsImagePrefix = envs.GetEnvWithPrefix("SCHEDULER_PLUGINS_IMAGE_PREFIX", conf.SchedulerPluginsImagePrefix)
+
+	if conf.SchedulerPluginsControllerImage == "" {
+		conf.SchedulerPluginsControllerImage = joinImageURI(conf.SchedulerPluginsImagePrefix, "controller", conf.SchedulerPluginsVersion)
+	}
+	conf.SchedulerPluginsControllerImage = envs.GetEnvWithPrefix("SCHEDULER_PLUGINS_CONTROLLER_IMAGE", conf.SchedulerPluginsControllerImage)
+
+	if conf.SchedulerPluginsSchedulerImage == "" {
+		conf.SchedulerPluginsSchedulerImage = joinImageURI(conf.SchedulerPluginsImagePrefix, "kube-scheduler", conf.SchedulerPluginsVersion)
+	}
+	conf.SchedulerPluginsSchedulerImage = envs.GetEnvWithPrefix("SCHEDULER_PLUGINS_SCHEDULER_IMAGE", conf.SchedulerPluginsSchedulerImage)
+
+	if len(conf.SchedulerPluginsManifests) == 0 {
+		conf.SchedulerPluginsManifests = []string{
+			consts.SchedulerPluginsManifestPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + "/manifests/install/all-in-one.yaml",
+			consts.SchedulerPluginsManifestPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + "/manifests/capacityscheduling/crd.yaml",
+			consts.SchedulerPluginsManifestPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + "/manifests/coscheduling/crd.yaml",
+			consts.SchedulerPluginsManifestPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + "/manifests/appgroup/crd.yaml",
+			consts.SchedulerPluginsManifestPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + "/manifests/networktopology/crd.yaml",
+			consts.SchedulerPluginsManifestPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + "/manifests/sysched/crd.yaml",
+			consts.SchedulerPluginsManifestPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + "/manifests/noderesourcetopology/crd.yaml",
+		}
+	}
 }
 
 func setJobSetConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {

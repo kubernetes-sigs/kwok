@@ -804,6 +804,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.SchedulerPluginsManifests != nil {
+		in, out := &in.SchedulerPluginsManifests, &out.SchedulerPluginsManifests
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.KubeApiserverCertSANs != nil {
 		in, out := &in.KubeApiserverCertSANs, &out.KubeApiserverCertSANs
 		*out = make([]string, len(*in))

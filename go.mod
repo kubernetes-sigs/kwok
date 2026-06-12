@@ -38,7 +38,6 @@ require (
 	k8s.io/cri-client v0.36.1
 	k8s.io/cri-streaming v0.36.1
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a
-	k8s.io/kube-scheduler v0.36.1
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
 	sigs.k8s.io/e2e-framework v0.7.0
 	sigs.k8s.io/kustomize/api v0.21.1

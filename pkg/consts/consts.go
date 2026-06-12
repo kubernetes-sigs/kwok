@@ -67,6 +67,11 @@ var (
 	MetricsServerImagePrefix    = "registry.k8s.io/metrics-server"
 	MetricsServerManifestPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 
+	SchedulerPluginsVersion        = "0.34.7"
+	SchedulerPluginsBinaryPrefix   = ""
+	SchedulerPluginsImagePrefix    = "registry.k8s.io/scheduler-plugins"
+	SchedulerPluginsManifestPrefix = "https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/"
+
 	KueueVersion        = "0.17.3"
 	KueueBinaryPrefix   = ""
 	KueueImagePrefix    = "registry.k8s.io/kueue"
@@ -136,6 +141,7 @@ const (
 	ComponentPrometheus                 = "prometheus"
 	ComponentJaeger                     = "jaeger"
 	ComponentMetricsServer              = "metrics-server"
+	ComponentSchedulerPlugins           = "scheduler-plugins"
 	ComponentKueue                      = "kueue"
 	ComponentKueueviz                   = "kueueviz"
 	ComponentJobSet                     = "jobset"

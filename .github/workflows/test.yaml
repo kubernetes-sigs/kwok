@@ -207,6 +207,12 @@ jobs:
         fi
         PATH=$(pwd)/bin:${PATH} ./hack/e2e-test.sh kwokctl/kwokctl_${{ matrix.kwokctl-runtime }}
 
+    - name: Test PodGroup
+      if: ${{ matrix.kwokctl-runtime == 'docker' }}
+      shell: bash
+      run: |
+        PATH=$(pwd)/bin:${PATH} ./hack/e2e-test.sh kwokctl/kwokctl_podgroup
+
     - name: Test Kueue
       if: ${{ matrix.kwokctl-runtime == 'docker' }}
       shell: bash

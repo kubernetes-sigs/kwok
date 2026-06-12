@@ -345,6 +345,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = new(bool)
 		**out = **in
 	}
+	if in.SchedulerPluginsManifests != nil {
+		in, out := &in.SchedulerPluginsManifests, &out.SchedulerPluginsManifests
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.KubeAuthorization != nil {
 		in, out := &in.KubeAuthorization, &out.KubeAuthorization
 		*out = new(bool)

@@ -344,6 +344,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addSchedulerPlugins(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.addKueue(ctx, env)
 	if err != nil {
 		return err
@@ -580,11 +585,19 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		}
 	}
 
-	err = c.EnsureImage(ctx, c.runtime, conf.KubeSchedulerImage)
+	user := ""
+	kubeSchedulerImage := conf.KubeSchedulerImage
+	if slices.Contains(env.components, consts.ComponentSchedulerPlugins) {
+		kubeSchedulerImage = conf.SchedulerPluginsSchedulerImage
+		user = "root"
+	}
+
+	err = c.EnsureImage(ctx, c.runtime, kubeSchedulerImage)
 	if err != nil {
 		return err
 	}
-	kubeSchedulerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, conf.KubeSchedulerImage, consts.ComponentKubeScheduler)
+
+	kubeSchedulerVersion, err := c.ParseVersionFromImage(ctx, c.runtime, kubeSchedulerImage, consts.ComponentKubeScheduler)
 	if err != nil {
 		return err
 	}
@@ -593,7 +606,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		Runtime:          conf.Runtime,
 		ProjectName:      c.Name(),
 		Workdir:          env.workdir,
-		Image:            conf.KubeSchedulerImage,
+		Image:            kubeSchedulerImage,
 		Version:          kubeSchedulerVersion,
 		BindAddress:      utilsnet.PublicAddress,
 		Port:             conf.KubeSchedulerPort,
@@ -610,6 +623,8 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
+	kubeSchedulerComponent.User = user
+
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeSchedulerComponent)
 	return nil
 }
@@ -863,6 +878,56 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 		return err
 	}
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, jaegerComponent)
+	return nil
+}
+
+func (c *Cluster) addSchedulerPlugins(ctx context.Context, env *env) (err error) {
+	if !slices.Contains(env.components, consts.ComponentSchedulerPlugins) {
+		return nil
+	}
+
+	if !slices.Contains(env.components, consts.ComponentKubeScheduler) {
+		return fmt.Errorf("failed to find kube-scheduler component for mutating with scheduler plugins controller")
+	}
+
+	conf := &env.kwokctlConfig.Options
+
+	err = c.EnsureImage(ctx, c.runtime, conf.SchedulerPluginsControllerImage)
+	if err != nil {
+		return err
+	}
+
+	var rawManifests []string
+
+	for _, manifest := range conf.SchedulerPluginsManifests {
+		manifestData, err := c.EnsureManifest(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		rawManifests = append(rawManifests, string(manifestData))
+	}
+
+	version, err := c.ParseVersionFromImage(ctx, c.runtime, conf.SchedulerPluginsControllerImage, "")
+	if err != nil {
+		return err
+	}
+
+	schedulerPluginsControllerComponent, err := components.BuildSchedulerPluginsControllerComponent(components.BuildSchedulerPluginsControllerComponentConfig{
+		Runtime:        conf.Runtime,
+		Workdir:        env.workdir,
+		Image:          conf.SchedulerPluginsControllerImage,
+		RawManifests:   rawManifests,
+		Version:        version,
+		CaCertPath:     env.caCertPath,
+		AdminCertPath:  env.adminCertPath,
+		AdminKeyPath:   env.adminKeyPath,
+		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
+	})
+	if err != nil {
+		return err
+	}
+
+	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, schedulerPluginsControllerComponent)
 	return nil
 }
 

@@ -20,41 +20,48 @@ import (
 	"fmt"
 	"os"
 
-	v1 "k8s.io/kube-scheduler/config/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // CopySchedulerConfig copies the scheduler configuration file to the given path.
 func (c *Cluster) CopySchedulerConfig(oldpath, newpath, kubeconfig string) error {
-	var config v1.KubeSchedulerConfiguration
-
 	data, err := os.ReadFile(oldpath)
 	if err != nil {
 		return fmt.Errorf("failed to read file %s: %w", oldpath, err)
 	}
+
+	var config unstructured.Unstructured
 
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal YAML from %s: %w", oldpath, err)
 	}
 
-	expectedAPIVersion := v1.SchemeGroupVersion.String()
-	if config.APIVersion != expectedAPIVersion {
-		return fmt.Errorf("invalid apiVersion in scheduler configuration at %s: expected %s, got %s", oldpath, expectedAPIVersion, config.APIVersion)
+	expectedAPIVersion := "kubescheduler.config.k8s.io/v1"
+	if apiVersion := config.GetAPIVersion(); apiVersion != expectedAPIVersion {
+		return fmt.Errorf("invalid apiVersion in scheduler configuration at %s: expected %s, got %s", oldpath, expectedAPIVersion, apiVersion)
 	}
 
 	expectedKind := "KubeSchedulerConfiguration"
-	if config.Kind != expectedKind {
-		return fmt.Errorf("invalid kind in scheduler configuration at %s: expected %s, got %s", oldpath, expectedKind, config.Kind)
+	if kind := config.GetKind(); kind != expectedKind {
+		return fmt.Errorf("invalid kind in scheduler configuration at %s: expected %s, got %s", oldpath, expectedKind, kind)
 	}
 
-	if config.ClientConnection.Kubeconfig != "" {
-		return fmt.Errorf("kubeconfig already exists in scheduler configuration at %s", oldpath)
+	clientConnection, ok := config.Object["clientConnection"]
+	if !ok {
+		clientConnection = map[string]any{}
 	}
 
-	config.ClientConnection.Kubeconfig = kubeconfig
-	updatedData, err := yaml.Marshal(config)
+	clientConnectionMap, ok := clientConnection.(map[string]any)
+	if !ok {
+		clientConnectionMap = map[string]any{}
+	}
+
+	clientConnectionMap["kubeconfig"] = kubeconfig
+	config.Object["clientConnection"] = clientConnectionMap
+	updatedData, err := yaml.Marshal(config.Object)
 	if err != nil {
 		return fmt.Errorf("failed to marshal YAML: %w", err)
 	}
