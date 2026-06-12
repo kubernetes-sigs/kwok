@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
-	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
 func (c *Cluster) networkName() string {
@@ -79,34 +78,9 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 	logger.Debug("Deleting network")
 	err := c.Exec(ctx, c.runtime, args...)
 	if err != nil {
-		if !c.isNerdctl {
-			return err
-		}
-
-		errMessage := err.Error()
-		if !strings.Contains(errMessage, "is in use by container") {
-			return err
-		}
-
-		logger.Warn("Network is in use by container, try to delete containers")
-		if err := c.deleteComponents(ctx); err != nil {
-			return err
-		}
-
-		err = wait.Poll(ctx,
-			func(ctx context.Context) (bool, error) {
-				if exist := c.inspectNetwork(ctx, network); !exist {
-					return true, nil
-				}
-				logger.Warn("Retrying to delete network")
-				err := c.Exec(ctx, c.runtime, args...)
-				return err == nil, err
-			},
-			wait.WithContinueOnError(2),
+		logger.Error("Failed to delete network",
+			"err", err,
 		)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
