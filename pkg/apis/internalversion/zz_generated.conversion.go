@@ -1766,6 +1766,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
 	out.MetricsServerVersion = in.MetricsServerVersion
+	out.SchedulerPluginsVersion = in.SchedulerPluginsVersion
 	out.KueueVersion = in.KueueVersion
 	out.JobSetVersion = in.JobSetVersion
 	out.LWSVersion = in.LWSVersion
@@ -1802,6 +1803,9 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
 	out.MetricsServerManifest = in.MetricsServerManifest
+	out.SchedulerPluginsControllerImage = in.SchedulerPluginsControllerImage
+	out.SchedulerPluginsSchedulerImage = in.SchedulerPluginsSchedulerImage
+	out.SchedulerPluginsManifests = *(*[]string)(unsafe.Pointer(&in.SchedulerPluginsManifests))
 	out.KueueImage = in.KueueImage
 	out.KueueManifest = in.KueueManifest
 	out.JobSetImage = in.JobSetImage
@@ -1830,6 +1834,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.JaegerBinary = in.JaegerBinary
 	out.JaegerBinaryTar = in.JaegerBinaryTar
 	out.MetricsServerBinary = in.MetricsServerBinary
+	out.SchedulerPluginsControllerBinary = in.SchedulerPluginsControllerBinary
+	out.SchedulerPluginsSchedulerBinary = in.SchedulerPluginsSchedulerBinary
 	out.KueueBinary = in.KueueBinary
 	out.JobSetBinary = in.JobSetBinary
 	out.LWSBinary = in.LWSBinary
@@ -1893,6 +1899,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.PrometheusVersion = in.PrometheusVersion
 	out.JaegerVersion = in.JaegerVersion
 	out.MetricsServerVersion = in.MetricsServerVersion
+	out.SchedulerPluginsVersion = in.SchedulerPluginsVersion
 	out.KueueVersion = in.KueueVersion
 	out.JobSetVersion = in.JobSetVersion
 	out.LWSVersion = in.LWSVersion
@@ -1924,6 +1931,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.PrometheusImagePrefix opted out of conversion generation
 	// INFO: in.JaegerImagePrefix opted out of conversion generation
 	// INFO: in.MetricsServerImagePrefix opted out of conversion generation
+	// INFO: in.SchedulerPluginsImagePrefix opted out of conversion generation
 	// INFO: in.KueueImagePrefix opted out of conversion generation
 	// INFO: in.JobSetImagePrefix opted out of conversion generation
 	// INFO: in.LWSImagePrefix opted out of conversion generation
@@ -1940,6 +1948,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
 	out.MetricsServerManifest = in.MetricsServerManifest
+	out.SchedulerPluginsControllerImage = in.SchedulerPluginsControllerImage
+	out.SchedulerPluginsSchedulerImage = in.SchedulerPluginsSchedulerImage
+	out.SchedulerPluginsManifests = *(*[]string)(unsafe.Pointer(&in.SchedulerPluginsManifests))
 	out.KueueImage = in.KueueImage
 	out.KueueManifest = in.KueueManifest
 	out.JobSetImage = in.JobSetImage
@@ -1970,6 +1981,9 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.PrometheusBinaryPrefix opted out of conversion generation
 	out.PrometheusBinary = in.PrometheusBinary
 	// INFO: in.PrometheusBinaryTar opted out of conversion generation
+	// INFO: in.SchedulerPluginsBinaryPrefix opted out of conversion generation
+	out.SchedulerPluginsControllerBinary = in.SchedulerPluginsControllerBinary
+	out.SchedulerPluginsSchedulerBinary = in.SchedulerPluginsSchedulerBinary
 	// INFO: in.JaegerBinaryPrefix opted out of conversion generation
 	out.JaegerBinary = in.JaegerBinary
 	// INFO: in.JaegerBinaryTar opted out of conversion generation

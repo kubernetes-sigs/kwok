@@ -2933,6 +2933,17 @@ string
 </tr>
 <tr>
 <td>
+<code>schedulerPluginsVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsVersion is the version of scheduler-plugins to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kueueVersion</code>
 <em>
 string
@@ -3180,6 +3191,17 @@ string
 </tr>
 <tr>
 <td>
+<code>schedulerPluginsImagePrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsImagePrefix is the prefix of the scheduler-plugins image.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kueueImagePrefix</code>
 <em>
 string
@@ -3363,6 +3385,39 @@ string
 </td>
 <td>
 <p>MetricsServerManifest is the full URL of the metrics-server manifest.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerPluginsControllerImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsControllerImage is the image of scheduler-plugins controller.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerPluginsSchedulerImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsSchedulerImage is the image of scheduler-plugins scheduler.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerPluginsManifests</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsManifests is the full URLs of the scheduler-plugins manifest.</p>
 </td>
 </tr>
 <tr>
@@ -3711,6 +3766,39 @@ string
 <p>PrometheusBinaryTar is the tar of binary of Prometheus.
 is the default value for env KWOK_PROMETHEUS_BINARY_TAR</p>
 <p>Deprecated: Use PrometheusBinary instead</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerPluginsBinaryPrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsBinaryPrefix is the prefix of the scheduler-plugins binary.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerPluginsControllerBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsControllerBinary is the binary of scheduler-plugins.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerPluginsSchedulerBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsSchedulerBinary is the binary of scheduler-plugins schedule.</p>
 </td>
 </tr>
 <tr>

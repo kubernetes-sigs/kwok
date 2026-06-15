@@ -122,6 +122,9 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerVersion is the version of metrics-server to use.
 	MetricsServerVersion string
 
+	// SchedulerPluginsVersion is the version of scheduler-plugins to use.
+	SchedulerPluginsVersion string
+
 	// KueueVersion is the version of kueue to use.
 	KueueVersion string
 
@@ -206,6 +209,15 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerManifest is the full URL of the metrics-server manifest.
 	MetricsServerManifest string
+
+	// SchedulerPluginsControllerImage is the image of scheduler-plugins controller.
+	SchedulerPluginsControllerImage string
+
+	// SchedulerPluginsSchedulerImage is the image of scheduler-plugins scheduler.
+	SchedulerPluginsSchedulerImage string
+
+	// SchedulerPluginsManifests is the full URL of the scheduler-plugins manifests.
+	SchedulerPluginsManifests []string
 
 	// KueueImage is the image of kueue.
 	KueueImage string
@@ -301,6 +313,12 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerBinary is the binary of metrics-server.
 	MetricsServerBinary string
+
+	// SchedulerPluginsControllerBinary is the binary of scheduler-plugins.
+	SchedulerPluginsControllerBinary string
+
+	// SchedulerPluginsSchedulerBinary is the binary of scheduler-plugins schedule.
+	SchedulerPluginsSchedulerBinary string
 
 	// KueueBinary is the binary of kueue.
 	KueueBinary string

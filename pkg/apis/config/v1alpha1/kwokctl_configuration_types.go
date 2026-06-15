@@ -146,6 +146,9 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerVersion is the version of metrics-server to use.
 	MetricsServerVersion string `json:"metricsServerVersion,omitempty"`
 
+	// SchedulerPluginsVersion is the version of scheduler-plugins to use.
+	SchedulerPluginsVersion string `json:"schedulerPluginsVersion,omitempty"`
+
 	// KueueVersion is the version of kueue to use.
 	KueueVersion string `json:"kueueVersion,omitempty"`
 
@@ -240,6 +243,10 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	MetricsServerImagePrefix string `json:"metricsServerImagePrefix,omitempty"`
 
+	// SchedulerPluginsImagePrefix is the prefix of the scheduler-plugins image.
+	//+k8s:conversion-gen=false
+	SchedulerPluginsImagePrefix string `json:"schedulerPluginsImagePrefix,omitempty"`
+
 	// KueueImagePrefix is the prefix of the kueue image.
 	// is the default value for env KWOK_KUEUE_IMAGE_PREFIX
 	//+k8s:conversion-gen=false
@@ -304,6 +311,15 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerManifest is the full URL of the metrics-server manifest.
 	MetricsServerManifest string `json:"metricsServerManifest,omitempty"`
+
+	// SchedulerPluginsControllerImage is the image of scheduler-plugins controller.
+	SchedulerPluginsControllerImage string `json:"schedulerPluginsControllerImage,omitempty"`
+
+	// SchedulerPluginsSchedulerImage is the image of scheduler-plugins scheduler.
+	SchedulerPluginsSchedulerImage string `json:"schedulerPluginsSchedulerImage,omitempty"`
+
+	// SchedulerPluginsManifests is the full URLs of the scheduler-plugins manifest.
+	SchedulerPluginsManifests []string `json:"schedulerPluginsManifests,omitempty"`
 
 	// KueueImage is the image of kueue.
 	KueueImage string `json:"kueueImage,omitempty"`
@@ -422,6 +438,16 @@ type KwokctlConfigurationOptions struct {
 	// Deprecated: Use PrometheusBinary instead
 	//+k8s:conversion-gen=false
 	PrometheusBinaryTar string `json:"prometheusBinaryTar,omitempty"`
+
+	// SchedulerPluginsBinaryPrefix is the prefix of the scheduler-plugins binary.
+	//+k8s:conversion-gen=false
+	SchedulerPluginsBinaryPrefix string `json:"schedulerPluginsBinaryPrefix,omitempty"`
+
+	// SchedulerPluginsControllerBinary is the binary of scheduler-plugins.
+	SchedulerPluginsControllerBinary string `json:"schedulerPluginsControllerBinary,omitempty"`
+
+	// SchedulerPluginsSchedulerBinary is the binary of scheduler-plugins schedule.
+	SchedulerPluginsSchedulerBinary string `json:"schedulerPluginsSchedulerBinary,omitempty"`
 
 	// JaegerBinaryPrefix is the prefix of the Jaeger binary.
 	// is the default value for env KWOK_JAEGER_PREFIX
