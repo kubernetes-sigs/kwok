@@ -47,8 +47,7 @@ func (s *Server) AttachContainer(ctx context.Context, name string, uid string, c
 	}
 
 	opts := &crilogs.LogOptions{
-		TailLines: new(int64),
-		Follow:    true,
+		Follow: true,
 	}
 
 	logsFile := attach.LogsFile
