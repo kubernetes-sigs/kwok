@@ -345,8 +345,33 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = new(bool)
 		**out = **in
 	}
+	if in.MetricsServerManifests != nil {
+		in, out := &in.MetricsServerManifests, &out.MetricsServerManifests
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.SchedulerPluginsManifests != nil {
 		in, out := &in.SchedulerPluginsManifests, &out.SchedulerPluginsManifests
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.KueueManifests != nil {
+		in, out := &in.KueueManifests, &out.KueueManifests
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.JobSetManifests != nil {
+		in, out := &in.JobSetManifests, &out.JobSetManifests
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.LWSManifests != nil {
+		in, out := &in.LWSManifests, &out.LWSManifests
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.DeschedulerManifests != nil {
+		in, out := &in.DeschedulerManifests, &out.DeschedulerManifests
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

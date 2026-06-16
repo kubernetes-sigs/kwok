@@ -24,15 +24,26 @@ const deschedulerConfigMapName = "descheduler-policy-configmap"
 const deschedulerPolicyKey = "policy.yaml"
 
 // BuildDeschedulerPolicy extracts the descheduler policy from the upstream manifest.
-func BuildDeschedulerPolicy(rawManifest string) (string, error) {
-	if rawManifest == "" {
-		return "", fmt.Errorf("raw descheduler manifest is empty")
+func BuildDeschedulerPolicy(rawManifests []string) (string, error) {
+	if len(rawManifests) == 0 {
+		return "", fmt.Errorf("raw descheduler manifests are empty")
 	}
 
-	policy, err := getConfigFromManifest(rawManifest, deschedulerConfigMapName, deschedulerPolicyKey)
-	if err != nil {
-		return "", fmt.Errorf("get policy from manifest: %w", err)
+	var rawConfig string
+	for _, rawManifest := range rawManifests {
+		config, err := getConfigFromManifest(rawManifest, deschedulerConfigMapName, deschedulerPolicyKey)
+		if err != nil {
+			return "", fmt.Errorf("get config from manifest: %w", err)
+		}
+		if config != "" {
+			rawConfig = config
+			break
+		}
 	}
 
-	return policy, nil
+	if rawConfig == "" {
+		return "", fmt.Errorf("config not found in manifests")
+	}
+
+	return rawConfig, nil
 }

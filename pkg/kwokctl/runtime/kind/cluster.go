@@ -825,9 +825,17 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
-	rawManifest, err := c.EnsureManifest(ctx, conf.MetricsServerManifest)
-	if err != nil {
-		return err
+
+	var rawManifests []string
+	for _, manifest := range conf.MetricsServerManifests {
+		rawManifest, err := c.EnsureManifest(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		if len(rawManifest) == 0 {
+			continue
+		}
+		rawManifests = append(rawManifests, string(rawManifest))
 	}
 
 	metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
@@ -835,7 +843,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.MetricsServerImage,
-		RawManifest:    string(rawManifest),
+		RawManifests:   rawManifests,
 		Version:        metricsServerVersion,
 		BindAddress:    utilsnet.PublicAddress,
 		Port:           443,

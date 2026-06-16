@@ -33,7 +33,7 @@ type BuildKueueComponentConfig struct {
 	ProjectName       string
 	Binary            string
 	Image             string
-	RawManifest       string
+	RawManifests      []string
 	Version           version.Version
 	Workdir           string
 	KubeApiserverPort uint32
@@ -171,21 +171,24 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		User:    user,
 	}
 
-	if conf.RawManifest != "" {
+	if len(conf.RawManifests) != 0 {
 		caData, readErr := os.ReadFile(conf.CaCertPath)
 		if readErr != nil {
 			return internalversion.Component{}, readErr
 		}
 
-		component.ManifestContents, err = BuildKueueManifest(BuildManifestConfig{
-			Port:           9443,
-			ExternalName:   conf.ProjectName + "-" + consts.ComponentKueue,
-			VisibilityPort: 8082,
-			CABundle:       base64.StdEncoding.EncodeToString(caData),
-			RawManifest:    conf.RawManifest,
-		})
-		if err != nil {
-			return internalversion.Component{}, err
+		for _, manifest := range conf.RawManifests {
+			manifestContents, err := BuildKueueManifest(BuildManifestConfig{
+				Port:           9443,
+				ExternalName:   conf.ProjectName + "-" + consts.ComponentKueue,
+				VisibilityPort: 8082,
+				CABundle:       base64.StdEncoding.EncodeToString(caData),
+				RawManifest:    manifest,
+			})
+			if err != nil {
+				return internalversion.Component{}, err
+			}
+			component.ManifestContents = append(component.ManifestContents, manifestContents...)
 		}
 	} else {
 		component.ManifestContents = []string{}

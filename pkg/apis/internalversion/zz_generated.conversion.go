@@ -1802,18 +1802,18 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
-	out.MetricsServerManifest = in.MetricsServerManifest
+	out.MetricsServerManifests = *(*[]string)(unsafe.Pointer(&in.MetricsServerManifests))
 	out.SchedulerPluginsControllerImage = in.SchedulerPluginsControllerImage
 	out.SchedulerPluginsSchedulerImage = in.SchedulerPluginsSchedulerImage
 	out.SchedulerPluginsManifests = *(*[]string)(unsafe.Pointer(&in.SchedulerPluginsManifests))
 	out.KueueImage = in.KueueImage
-	out.KueueManifest = in.KueueManifest
+	out.KueueManifests = *(*[]string)(unsafe.Pointer(&in.KueueManifests))
 	out.JobSetImage = in.JobSetImage
-	out.JobSetManifest = in.JobSetManifest
+	out.JobSetManifests = *(*[]string)(unsafe.Pointer(&in.JobSetManifests))
 	out.LWSImage = in.LWSImage
-	out.LWSManifest = in.LWSManifest
+	out.LWSManifests = *(*[]string)(unsafe.Pointer(&in.LWSManifests))
 	out.DeschedulerImage = in.DeschedulerImage
-	out.DeschedulerManifest = in.DeschedulerManifest
+	out.DeschedulerManifests = *(*[]string)(unsafe.Pointer(&in.DeschedulerManifests))
 	out.KueuevizFrontendImage = in.KueuevizFrontendImage
 	out.KueuevizBackendImage = in.KueuevizBackendImage
 	out.KindNodeImage = in.KindNodeImage
@@ -1834,12 +1834,6 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.JaegerBinary = in.JaegerBinary
 	out.JaegerBinaryTar = in.JaegerBinaryTar
 	out.MetricsServerBinary = in.MetricsServerBinary
-	out.SchedulerPluginsControllerBinary = in.SchedulerPluginsControllerBinary
-	out.SchedulerPluginsSchedulerBinary = in.SchedulerPluginsSchedulerBinary
-	out.KueueBinary = in.KueueBinary
-	out.JobSetBinary = in.JobSetBinary
-	out.LWSBinary = in.LWSBinary
-	out.DeschedulerBinary = in.DeschedulerBinary
 	out.KindBinary = in.KindBinary
 	out.KubeFeatureGates = in.KubeFeatureGates
 	out.KubeRuntimeConfig = in.KubeRuntimeConfig
@@ -1947,18 +1941,18 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.PrometheusImage = in.PrometheusImage
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
-	out.MetricsServerManifest = in.MetricsServerManifest
+	out.MetricsServerManifests = *(*[]string)(unsafe.Pointer(&in.MetricsServerManifests))
 	out.SchedulerPluginsControllerImage = in.SchedulerPluginsControllerImage
 	out.SchedulerPluginsSchedulerImage = in.SchedulerPluginsSchedulerImage
 	out.SchedulerPluginsManifests = *(*[]string)(unsafe.Pointer(&in.SchedulerPluginsManifests))
 	out.KueueImage = in.KueueImage
-	out.KueueManifest = in.KueueManifest
+	out.KueueManifests = *(*[]string)(unsafe.Pointer(&in.KueueManifests))
 	out.JobSetImage = in.JobSetImage
-	out.JobSetManifest = in.JobSetManifest
+	out.JobSetManifests = *(*[]string)(unsafe.Pointer(&in.JobSetManifests))
 	out.LWSImage = in.LWSImage
-	out.LWSManifest = in.LWSManifest
+	out.LWSManifests = *(*[]string)(unsafe.Pointer(&in.LWSManifests))
 	out.DeschedulerImage = in.DeschedulerImage
-	out.DeschedulerManifest = in.DeschedulerManifest
+	out.DeschedulerManifests = *(*[]string)(unsafe.Pointer(&in.DeschedulerManifests))
 	out.KueuevizFrontendImage = in.KueuevizFrontendImage
 	out.KueuevizBackendImage = in.KueuevizBackendImage
 	// INFO: in.KindNodeImagePrefix opted out of conversion generation
@@ -1981,22 +1975,11 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.PrometheusBinaryPrefix opted out of conversion generation
 	out.PrometheusBinary = in.PrometheusBinary
 	// INFO: in.PrometheusBinaryTar opted out of conversion generation
-	// INFO: in.SchedulerPluginsBinaryPrefix opted out of conversion generation
-	out.SchedulerPluginsControllerBinary = in.SchedulerPluginsControllerBinary
-	out.SchedulerPluginsSchedulerBinary = in.SchedulerPluginsSchedulerBinary
 	// INFO: in.JaegerBinaryPrefix opted out of conversion generation
 	out.JaegerBinary = in.JaegerBinary
 	// INFO: in.JaegerBinaryTar opted out of conversion generation
 	// INFO: in.MetricsServerBinaryPrefix opted out of conversion generation
 	out.MetricsServerBinary = in.MetricsServerBinary
-	// INFO: in.KueueBinaryPrefix opted out of conversion generation
-	out.KueueBinary = in.KueueBinary
-	// INFO: in.JobSetBinaryPrefix opted out of conversion generation
-	// INFO: in.LWSBinaryPrefix opted out of conversion generation
-	out.JobSetBinary = in.JobSetBinary
-	out.LWSBinary = in.LWSBinary
-	// INFO: in.DeschedulerBinaryPrefix opted out of conversion generation
-	out.DeschedulerBinary = in.DeschedulerBinary
 	// INFO: in.KindBinaryPrefix opted out of conversion generation
 	out.KindBinary = in.KindBinary
 	out.KubeFeatureGates = in.KubeFeatureGates

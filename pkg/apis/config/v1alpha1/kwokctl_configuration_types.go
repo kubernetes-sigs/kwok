@@ -309,8 +309,8 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerImage is the image of metrics-server.
 	MetricsServerImage string `json:"metricsServerImage,omitempty"`
 
-	// MetricsServerManifest is the full URL of the metrics-server manifest.
-	MetricsServerManifest string `json:"metricsServerManifest,omitempty"`
+	// MetricsServerManifests is the full URLs of the metrics-server manifest.
+	MetricsServerManifests []string `json:"metricsServerManifests,omitempty"`
 
 	// SchedulerPluginsControllerImage is the image of scheduler-plugins controller.
 	SchedulerPluginsControllerImage string `json:"schedulerPluginsControllerImage,omitempty"`
@@ -324,26 +324,26 @@ type KwokctlConfigurationOptions struct {
 	// KueueImage is the image of kueue.
 	KueueImage string `json:"kueueImage,omitempty"`
 
-	// KueueManifest is the full URL of the kueue manifest.
-	KueueManifest string `json:"kueueManifest,omitempty"`
+	// KueueManifests is the full URLs of the kueue manifest.
+	KueueManifests []string `json:"kueueManifests,omitempty"`
 
 	// JobSetImage is the image of jobset.
 	JobSetImage string `json:"jobsetImage,omitempty"`
 
-	// JobSetManifest is the full URL of the jobset manifest.
-	JobSetManifest string `json:"jobsetManifest,omitempty"`
+	// JobSetManifests is the full URLs of the jobset manifest.
+	JobSetManifests []string `json:"jobsetManifests,omitempty"`
 
 	// LWSImage is the image of lws.
 	LWSImage string `json:"lwsImage,omitempty"`
 
-	// LWSManifest is the full URL of the lws manifest.
-	LWSManifest string `json:"lwsManifest,omitempty"`
+	// LWSManifests is the full URLs of the lws manifest.
+	LWSManifests []string `json:"lwsManifests,omitempty"`
 
 	// DeschedulerImage is the image of descheduler.
 	DeschedulerImage string `json:"deschedulerImage,omitempty"`
 
-	// DeschedulerManifest is the full URL of the descheduler manifest.
-	DeschedulerManifest string `json:"deschedulerManifest,omitempty"`
+	// DeschedulerManifests is the full URLs of the descheduler manifest.
+	DeschedulerManifests []string `json:"deschedulerManifests,omitempty"`
 
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string `json:"kueuevizFrontendImage,omitempty"`
@@ -439,16 +439,6 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	PrometheusBinaryTar string `json:"prometheusBinaryTar,omitempty"`
 
-	// SchedulerPluginsBinaryPrefix is the prefix of the scheduler-plugins binary.
-	//+k8s:conversion-gen=false
-	SchedulerPluginsBinaryPrefix string `json:"schedulerPluginsBinaryPrefix,omitempty"`
-
-	// SchedulerPluginsControllerBinary is the binary of scheduler-plugins.
-	SchedulerPluginsControllerBinary string `json:"schedulerPluginsControllerBinary,omitempty"`
-
-	// SchedulerPluginsSchedulerBinary is the binary of scheduler-plugins schedule.
-	SchedulerPluginsSchedulerBinary string `json:"schedulerPluginsSchedulerBinary,omitempty"`
-
 	// JaegerBinaryPrefix is the prefix of the Jaeger binary.
 	// is the default value for env KWOK_JAEGER_PREFIX
 	//+k8s:conversion-gen=false
@@ -471,35 +461,6 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerBinary is the binary of metrics-server.
 	MetricsServerBinary string `json:"metricsServerBinary,omitempty"`
-
-	// KueueBinaryPrefix is the prefix of the kueue binary.
-	// is the default value for env KWOK_KUEUE_BINARY_PREFIX
-	//+k8s:conversion-gen=false
-	KueueBinaryPrefix string `json:"kueueBinaryPrefix,omitempty"`
-
-	// KueueBinary is the binary of kueue.
-	KueueBinary string `json:"kueueBinary,omitempty"`
-
-	// JobSetBinaryPrefix is the prefix of the jobset binary.
-	//+k8s:conversion-gen=false
-	JobSetBinaryPrefix string `json:"jobsetBinaryPrefix,omitempty"`
-
-	// LWSBinaryPrefix is the prefix of the lws binary.
-	//+k8s:conversion-gen=false
-	LWSBinaryPrefix string `json:"lwsBinaryPrefix,omitempty"`
-
-	// JobSetBinary is the binary of jobset.
-	JobSetBinary string `json:"jobsetBinary,omitempty"`
-
-	// LWSBinary is the binary of lws.
-	LWSBinary string `json:"lwsBinary,omitempty"`
-
-	// DeschedulerBinaryPrefix is the prefix of the descheduler binary.
-	//+k8s:conversion-gen=false
-	DeschedulerBinaryPrefix string `json:"deschedulerBinaryPrefix,omitempty"`
-
-	// DeschedulerBinary is the binary of descheduler.
-	DeschedulerBinary string `json:"deschedulerBinary,omitempty"`
 
 	// KindBinaryPrefix is the binary prefix of kind.
 	// is the default value for env KWOK_KIND_BINARY_PREFIX

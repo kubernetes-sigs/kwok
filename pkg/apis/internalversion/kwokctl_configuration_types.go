@@ -207,8 +207,8 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerImage is the image of metrics-server.
 	MetricsServerImage string
 
-	// MetricsServerManifest is the full URL of the metrics-server manifest.
-	MetricsServerManifest string
+	// MetricsServerManifests is the full URLs of the metrics-server manifest.
+	MetricsServerManifests []string
 
 	// SchedulerPluginsControllerImage is the image of scheduler-plugins controller.
 	SchedulerPluginsControllerImage string
@@ -222,26 +222,26 @@ type KwokctlConfigurationOptions struct {
 	// KueueImage is the image of kueue.
 	KueueImage string
 
-	// KueueManifest is the full URL of the kueue manifest.
-	KueueManifest string
+	// KueueManifest is the full URLs of the kueue manifest.
+	KueueManifests []string
 
 	// JobSetImage is the image of jobset.
 	JobSetImage string
 
-	// JobSetManifest is the full URL of the jobset manifest.
-	JobSetManifest string
+	// JobSetManifests is the full URLs of the jobset manifest.
+	JobSetManifests []string
 
 	// LWSImage is the image of lws.
 	LWSImage string
 
-	// LWSManifest is the full URL of the lws manifest.
-	LWSManifest string
+	// LWSManifests is the full URLs of the lws manifest.
+	LWSManifests []string
 
 	// DeschedulerImage is the image of descheduler.
 	DeschedulerImage string
 
-	// DeschedulerManifest is the full URL of the descheduler manifest.
-	DeschedulerManifest string
+	// DeschedulerManifests is the full URLs of the descheduler manifest.
+	DeschedulerManifests []string
 
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string
@@ -313,24 +313,6 @@ type KwokctlConfigurationOptions struct {
 
 	// MetricsServerBinary is the binary of metrics-server.
 	MetricsServerBinary string
-
-	// SchedulerPluginsControllerBinary is the binary of scheduler-plugins.
-	SchedulerPluginsControllerBinary string
-
-	// SchedulerPluginsSchedulerBinary is the binary of scheduler-plugins schedule.
-	SchedulerPluginsSchedulerBinary string
-
-	// KueueBinary is the binary of kueue.
-	KueueBinary string
-
-	// JobSetBinary is the binary of jobset.
-	JobSetBinary string
-
-	// LWSBinary is the binary of lws.
-	LWSBinary string
-
-	// DeschedulerBinary is the binary of descheduler.
-	DeschedulerBinary string
 
 	// KindBinary is the binary of kind.
 	KindBinary string

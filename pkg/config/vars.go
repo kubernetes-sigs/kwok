@@ -567,10 +567,10 @@ func setMetricsServerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	}
 	conf.MetricsServerImage = envs.GetEnvWithPrefix("METRICS_SERVER_IMAGE", conf.MetricsServerImage)
 
-	if conf.MetricsServerManifest == "" {
-		conf.MetricsServerManifest = consts.MetricsServerManifestPrefix + "/" + conf.MetricsServerVersion + "/components.yaml"
+	if len(conf.MetricsServerManifests) == 0 {
+		conf.MetricsServerManifests = []string{consts.MetricsServerManifestPrefix + "/" + conf.MetricsServerVersion + "/components.yaml"}
 	}
-	conf.MetricsServerManifest = envs.GetEnvWithPrefix("METRICS_SERVER_MANIFEST", conf.MetricsServerManifest)
+	conf.MetricsServerManifests = envs.GetEnvWithPrefix("METRICS_SERVER_MANIFESTS", conf.MetricsServerManifests)
 
 	if conf.MetricsServerBinaryPrefix == "" {
 		conf.MetricsServerBinaryPrefix = consts.MetricsServerBinaryPrefix + "/" + conf.MetricsServerVersion
@@ -616,6 +616,7 @@ func setSchedulerPluginsConfig(conf *configv1alpha1.KwokctlConfigurationOptions)
 			consts.SchedulerPluginsManifestPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + "/manifests/noderesourcetopology/crd.yaml",
 		}
 	}
+	conf.SchedulerPluginsManifests = envs.GetEnvWithPrefix("SCHEDULER_PLUGINS_MANIFESTS", conf.SchedulerPluginsManifests)
 }
 
 func setJobSetConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
@@ -634,10 +635,10 @@ func setJobSetConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	}
 	conf.JobSetImage = envs.GetEnvWithPrefix("JOBSET_IMAGE", conf.JobSetImage)
 
-	if conf.JobSetManifest == "" {
-		conf.JobSetManifest = consts.JobSetManifestPrefix + "/" + conf.JobSetVersion + "/manifests.yaml"
+	if len(conf.JobSetManifests) == 0 {
+		conf.JobSetManifests = []string{consts.JobSetManifestPrefix + "/" + conf.JobSetVersion + "/manifests.yaml"}
 	}
-	conf.JobSetManifest = envs.GetEnvWithPrefix("JOBSET_MANIFEST", conf.JobSetManifest)
+	conf.JobSetManifests = envs.GetEnvWithPrefix("JOBSET_MANIFESTS", conf.JobSetManifests)
 }
 
 func setKueueConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
@@ -656,10 +657,10 @@ func setKueueConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	}
 	conf.KueueImage = envs.GetEnvWithPrefix("KUEUE_IMAGE", conf.KueueImage)
 
-	if conf.KueueManifest == "" {
-		conf.KueueManifest = consts.KueueManifestPrefix + "/" + conf.KueueVersion + "/manifests.yaml"
+	if len(conf.KueueManifests) == 0 {
+		conf.KueueManifests = []string{consts.KueueManifestPrefix + "/" + conf.KueueVersion + "/manifests.yaml"}
 	}
-	conf.KueueManifest = envs.GetEnvWithPrefix("KUEUE_MANIFEST", conf.KueueManifest)
+	conf.KueueManifests = envs.GetEnvWithPrefix("KUEUE_MANIFESTS", conf.KueueManifests)
 
 	if conf.KueuevizBackendImage == "" {
 		conf.KueuevizBackendImage = joinImageURI(conf.KueueImagePrefix, "kueueviz-backend", conf.KueueVersion)
@@ -688,10 +689,10 @@ func setLWSConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	}
 	conf.LWSImage = envs.GetEnvWithPrefix("LWS_IMAGE", conf.LWSImage)
 
-	if conf.LWSManifest == "" {
-		conf.LWSManifest = consts.LWSManifestPrefix + "/" + conf.LWSVersion + "/manifests.yaml"
+	if len(conf.LWSManifests) == 0 {
+		conf.LWSManifests = []string{consts.LWSManifestPrefix + "/" + conf.LWSVersion + "/manifests.yaml"}
 	}
-	conf.LWSManifest = envs.GetEnvWithPrefix("LWS_MANIFEST", conf.LWSManifest)
+	conf.LWSManifests = envs.GetEnvWithPrefix("LWS_MANIFESTS", conf.LWSManifests)
 }
 
 func setDeschedulerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
@@ -710,10 +711,10 @@ func setDeschedulerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	}
 	conf.DeschedulerImage = envs.GetEnvWithPrefix("DESCHEDULER_IMAGE", conf.DeschedulerImage)
 
-	if conf.DeschedulerManifest == "" {
-		conf.DeschedulerManifest = consts.DeschedulerManifestPrefix + conf.DeschedulerVersion
+	if len(conf.DeschedulerManifests) == 0 {
+		conf.DeschedulerManifests = []string{consts.DeschedulerManifestPrefix + conf.DeschedulerVersion}
 	}
-	conf.DeschedulerManifest = envs.GetEnvWithPrefix("DESCHEDULER_MANIFEST", conf.DeschedulerManifest)
+	conf.DeschedulerManifests = envs.GetEnvWithPrefix("DESCHEDULER_MANIFESTS", conf.DeschedulerManifests)
 }
 
 // joinImageURI joins the image URI.
