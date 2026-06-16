@@ -25,14 +25,25 @@ import (
 const jobsetConfigMapName = "jobset-manager-config"
 
 // BuildJobSetConfig builds the jobset configuration from the upstream manifest.
-func BuildJobSetConfig(rawManifest string) (string, error) {
-	if rawManifest == "" {
-		return "", fmt.Errorf("raw jobset manifest is empty")
+func BuildJobSetConfig(rawManifests []string) (string, error) {
+	if len(rawManifests) == 0 {
+		return "", fmt.Errorf("raw jobset manifests are empty")
 	}
 
-	rawConfig, err := getConfigFromManifest(rawManifest, jobsetConfigMapName, controllerManagerConfigKey)
-	if err != nil {
-		return "", fmt.Errorf("get config from manifest: %w", err)
+	var rawConfig string
+	for _, rawManifest := range rawManifests {
+		config, err := getConfigFromManifest(rawManifest, jobsetConfigMapName, controllerManagerConfigKey)
+		if err != nil {
+			return "", fmt.Errorf("get config from manifest: %w", err)
+		}
+		if config != "" {
+			rawConfig = config
+			break
+		}
+	}
+
+	if rawConfig == "" {
+		return "", fmt.Errorf("config not found in manifests")
 	}
 
 	config, err := rewriteConfig(rawConfig, func(config map[string]any) error {

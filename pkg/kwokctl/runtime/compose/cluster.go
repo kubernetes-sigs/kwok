@@ -695,9 +695,17 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
-	rawManifest, err := c.EnsureManifest(ctx, conf.MetricsServerManifest)
-	if err != nil {
-		return err
+
+	var rawManifests []string
+	for _, manifest := range conf.MetricsServerManifests {
+		rawManifest, err := c.EnsureManifest(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		if len(rawManifest) == 0 {
+			continue
+		}
+		rawManifests = append(rawManifests, string(rawManifest))
 	}
 
 	metricsServerComponent, err := components.BuildMetricsServerComponent(components.BuildMetricsServerComponentConfig{
@@ -705,7 +713,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.MetricsServerImage,
-		RawManifest:    string(rawManifest),
+		RawManifests:   rawManifests,
 		Version:        metricsServerVersion,
 		BindAddress:    conf.BindAddress,
 		Port:           conf.MetricsServerPort,
@@ -897,19 +905,21 @@ func (c *Cluster) addSchedulerPlugins(ctx context.Context, env *env) (err error)
 		return err
 	}
 
-	var rawManifests []string
-
-	for _, manifest := range conf.SchedulerPluginsManifests {
-		manifestData, err := c.EnsureManifest(ctx, manifest)
-		if err != nil {
-			return err
-		}
-		rawManifests = append(rawManifests, string(manifestData))
-	}
-
 	version, err := c.ParseVersionFromImage(ctx, c.runtime, conf.SchedulerPluginsControllerImage, "")
 	if err != nil {
 		return err
+	}
+
+	var rawManifests []string
+	for _, manifest := range conf.SchedulerPluginsManifests {
+		rawManifest, err := c.EnsureManifest(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		if len(rawManifest) == 0 {
+			continue
+		}
+		rawManifests = append(rawManifests, string(rawManifest))
 	}
 
 	schedulerPluginsControllerComponent, err := components.BuildSchedulerPluginsControllerComponent(components.BuildSchedulerPluginsControllerComponentConfig{
@@ -949,15 +959,22 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	rawManifest, err := c.EnsureManifest(ctx, conf.KueueManifest)
-	if err != nil {
-		return err
+	var rawManifests []string
+	for _, manifest := range conf.KueueManifests {
+		rawManifest, err := c.EnsureManifest(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		if len(rawManifest) == 0 {
+			continue
+		}
+		rawManifests = append(rawManifests, string(rawManifest))
 	}
 
 	kueueConfigPath := c.GetWorkdirPath(runtime.Kueue)
 
 	if !c.IsDryRun() {
-		kueueConfigData, err := components.BuildKueueConfig(string(rawManifest))
+		kueueConfigData, err := components.BuildKueueConfig(rawManifests)
 		if err != nil {
 			return err
 		}
@@ -972,7 +989,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 		ProjectName:       c.Name(),
 		Workdir:           env.workdir,
 		Image:             conf.KueueImage,
-		RawManifest:       string(rawManifest),
+		RawManifests:      rawManifests,
 		Version:           kueueVersion,
 		BindAddress:       utilsnet.PublicAddress,
 		Port:              conf.MetricsServerPort,
@@ -1068,15 +1085,23 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	rawManifest, err := c.EnsureManifest(ctx, conf.JobSetManifest)
-	if err != nil {
-		return err
+	var rawManifests []string
+
+	for _, manifest := range conf.JobSetManifests {
+		rawManifest, err := c.EnsureManifest(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		if len(rawManifest) == 0 {
+			continue
+		}
+		rawManifests = append(rawManifests, string(rawManifest))
 	}
 
 	jobsetConfigPath := c.GetWorkdirPath(runtime.JobSet)
 
 	if !c.IsDryRun() {
-		jobsetConfigData, err := components.BuildJobSetConfig(string(rawManifest))
+		jobsetConfigData, err := components.BuildJobSetConfig(rawManifests)
 		if err != nil {
 			return err
 		}
@@ -1092,7 +1117,7 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.JobSetImage,
-		RawManifest:    string(rawManifest),
+		RawManifests:   rawManifests,
 		Version:        jobsetVersion,
 		BindAddress:    utilsnet.PublicAddress,
 		CaCertPath:     env.caCertPath,
@@ -1128,15 +1153,23 @@ func (c *Cluster) addLWS(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	rawManifest, err := c.EnsureManifest(ctx, conf.LWSManifest)
-	if err != nil {
-		return err
+	var rawManifests []string
+
+	for _, manifest := range conf.LWSManifests {
+		rawManifest, err := c.EnsureManifest(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		if len(rawManifest) == 0 {
+			continue
+		}
+		rawManifests = append(rawManifests, string(rawManifest))
 	}
 
 	lwsConfigPath := c.GetWorkdirPath(runtime.LWS)
 
 	if !c.IsDryRun() {
-		lwsConfigData, err := components.BuildLWSConfig(string(rawManifest))
+		lwsConfigData, err := components.BuildLWSConfig(rawManifests)
 		if err != nil {
 			return err
 		}
@@ -1152,7 +1185,7 @@ func (c *Cluster) addLWS(ctx context.Context, env *env) (err error) {
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.LWSImage,
-		RawManifest:    string(rawManifest),
+		RawManifests:   rawManifests,
 		Version:        lwsVersion,
 		BindAddress:    utilsnet.PublicAddress,
 		CaCertPath:     env.caCertPath,
@@ -1188,15 +1221,22 @@ func (c *Cluster) addDescheduler(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	rawManifest, err := c.EnsureManifest(ctx, conf.DeschedulerManifest)
-	if err != nil {
-		return err
+	var rawManifests []string
+	for _, manifest := range conf.DeschedulerManifests {
+		rawManifest, err := c.EnsureManifest(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		if len(rawManifest) == 0 {
+			continue
+		}
+		rawManifests = append(rawManifests, string(rawManifest))
 	}
 
 	deschedulerConfigPath := c.GetWorkdirPath(runtime.Descheduler)
 
 	if !c.IsDryRun() {
-		deschedulerPolicyData, err := components.BuildDeschedulerPolicy(string(rawManifest))
+		deschedulerPolicyData, err := components.BuildDeschedulerPolicy(rawManifests)
 		if err != nil {
 			return err
 		}
@@ -1211,7 +1251,7 @@ func (c *Cluster) addDescheduler(ctx context.Context, env *env) (err error) {
 		Runtime:        conf.Runtime,
 		Workdir:        env.workdir,
 		Image:          conf.DeschedulerImage,
-		RawManifest:    string(rawManifest),
+		RawManifests:   rawManifests,
 		Version:        deschedulerVersion,
 		BindAddress:    utilsnet.PublicAddress,
 		CaCertPath:     env.caCertPath,

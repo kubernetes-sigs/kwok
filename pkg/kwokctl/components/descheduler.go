@@ -33,7 +33,7 @@ type BuildDeschedulerComponentConfig struct {
 	Runtime        string
 	Binary         string
 	Image          string
-	RawManifest    string
+	RawManifests   []string
 	Version        version.Version
 	Workdir        string
 	BindAddress    string
@@ -116,12 +116,15 @@ func BuildDeschedulerComponent(conf BuildDeschedulerComponentConfig) (component 
 		User:    user,
 	}
 
-	if conf.RawManifest != "" {
-		component.ManifestContents, err = BuildDeschedulerManifest(BuildDeschedulerManifestConfig{
-			RawManifest: conf.RawManifest,
-		})
-		if err != nil {
-			return internalversion.Component{}, err
+	if len(conf.RawManifests) != 0 {
+		for _, rawManifest := range conf.RawManifests {
+			manifest, err := BuildDeschedulerManifest(BuildDeschedulerManifestConfig{
+				RawManifest: rawManifest,
+			})
+			if err != nil {
+				return internalversion.Component{}, err
+			}
+			component.ManifestContents = append(component.ManifestContents, manifest...)
 		}
 	} else {
 		component.ManifestContents = []string{}

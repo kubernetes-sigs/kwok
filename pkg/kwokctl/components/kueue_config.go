@@ -25,14 +25,25 @@ import (
 const kueueConfigMapName = "kueue-manager-config"
 
 // BuildKueueConfig builds the kueue configuration from the upstream manifest.
-func BuildKueueConfig(rawManifest string) (string, error) {
-	if rawManifest == "" {
+func BuildKueueConfig(rawManifest []string) (string, error) {
+	if len(rawManifest) == 0 {
 		return "", fmt.Errorf("raw kueue manifest is empty")
 	}
 
-	rawConfig, err := getConfigFromManifest(rawManifest, kueueConfigMapName, controllerManagerConfigKey)
-	if err != nil {
-		return "", fmt.Errorf("get config from manifest: %w", err)
+	var rawConfig string
+	for _, manifest := range rawManifest {
+		config, err := getConfigFromManifest(manifest, kueueConfigMapName, controllerManagerConfigKey)
+		if err != nil {
+			return "", fmt.Errorf("get config from manifest: %w", err)
+		}
+		if config != "" {
+			rawConfig = config
+			break
+		}
+	}
+
+	if rawConfig == "" {
+		return "", fmt.Errorf("config not found in manifests")
 	}
 
 	config, err := rewriteConfig(rawConfig, func(config map[string]any) error {

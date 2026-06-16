@@ -25,14 +25,25 @@ import (
 const lwsConfigMapName = "lws-manager-config"
 
 // BuildLWSConfig builds the lws configuration from the upstream manifest.
-func BuildLWSConfig(rawManifest string) (string, error) {
-	if rawManifest == "" {
-		return "", fmt.Errorf("raw lws manifest is empty")
+func BuildLWSConfig(rawManifests []string) (string, error) {
+	if len(rawManifests) == 0 {
+		return "", fmt.Errorf("raw lws manifests are empty")
 	}
 
-	rawConfig, err := getConfigFromManifest(rawManifest, lwsConfigMapName, controllerManagerConfigKey)
-	if err != nil {
-		return "", fmt.Errorf("get config from manifest: %w", err)
+	var rawConfig string
+	for _, rawManifest := range rawManifests {
+		config, err := getConfigFromManifest(rawManifest, lwsConfigMapName, controllerManagerConfigKey)
+		if err != nil {
+			return "", fmt.Errorf("get config from manifest: %w", err)
+		}
+		if config != "" {
+			rawConfig = config
+			break
+		}
+	}
+
+	if rawConfig == "" {
+		return "", fmt.Errorf("config not found in manifests")
 	}
 
 	config, err := rewriteConfig(rawConfig, func(config map[string]any) error {

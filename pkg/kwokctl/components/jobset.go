@@ -33,7 +33,7 @@ type BuildJobSetComponentConfig struct {
 	ProjectName    string
 	Binary         string
 	Image          string
-	RawManifest    string
+	RawManifests   []string
 	Version        version.Version
 	Workdir        string
 	BindAddress    string
@@ -129,21 +129,25 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		User:    user,
 	}
 
-	if conf.RawManifest != "" {
+	if len(conf.RawManifests) != 0 {
 		caData, readErr := os.ReadFile(conf.CaCertPath)
 		if readErr != nil {
 			return internalversion.Component{}, readErr
 		}
 
-		component.ManifestContents, err = BuildJobSetManifest(BuildJobSetManifestConfig{
-			Port:         9443,
-			ExternalName: conf.ProjectName + "-" + consts.ComponentJobSet,
-			CABundle:     base64.StdEncoding.EncodeToString(caData),
-			RawManifest:  conf.RawManifest,
-		})
-		if err != nil {
-			return internalversion.Component{}, err
+		for _, rawManifest := range conf.RawManifests {
+			manifestContents, err := BuildJobSetManifest(BuildJobSetManifestConfig{
+				Port:         9443,
+				ExternalName: conf.ProjectName + "-" + consts.ComponentJobSet,
+				CABundle:     base64.StdEncoding.EncodeToString(caData),
+				RawManifest:  rawManifest,
+			})
+			if err != nil {
+				return internalversion.Component{}, err
+			}
+			component.ManifestContents = append(component.ManifestContents, manifestContents...)
 		}
+
 	} else {
 		component.ManifestContents = []string{}
 	}

@@ -49,7 +49,7 @@ data:
       port: 9443
 `)
 
-	got, err := BuildKueueConfig(rawManifest)
+	got, err := BuildKueueConfig([]string{rawManifest})
 	if err != nil {
 		t.Fatalf("BuildKueueConfig() error = %v", err)
 	}
@@ -97,7 +97,7 @@ data:
       enable: true
 `)
 
-	got, err := BuildJobSetConfig(rawManifest)
+	got, err := BuildJobSetConfig([]string{rawManifest})
 	if err != nil {
 		t.Fatalf("BuildJobSetConfig() error = %v", err)
 	}
@@ -141,7 +141,7 @@ data:
       enable: true
 `)
 
-	got, err := BuildLWSConfig(rawManifest)
+	got, err := BuildLWSConfig([]string{rawManifest})
 	if err != nil {
 		t.Fatalf("BuildLWSConfig() error = %v", err)
 	}

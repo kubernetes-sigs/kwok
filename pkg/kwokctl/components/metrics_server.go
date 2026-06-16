@@ -33,7 +33,7 @@ type BuildMetricsServerComponentConfig struct {
 	ProjectName    string
 	Binary         string
 	Image          string
-	RawManifest    string
+	RawManifests   []string
 	Version        version.Version
 	Workdir        string
 	BindAddress    string
@@ -179,14 +179,17 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		Envs:    envs,
 	}
 
-	if conf.RawManifest != "" {
-		component.ManifestContents, err = BuildMetricsServerManifest(BuildMetricsServerManifestConfig{
-			Port:         metricsPort,
-			ExternalName: metricsHost,
-			RawManifest:  conf.RawManifest,
-		})
-		if err != nil {
-			return internalversion.Component{}, err
+	if len(conf.RawManifests) != 0 {
+		for _, manifest := range conf.RawManifests {
+			manifestContents, err := BuildMetricsServerManifest(BuildMetricsServerManifestConfig{
+				Port:         metricsPort,
+				ExternalName: metricsHost,
+				RawManifest:  manifest,
+			})
+			if err != nil {
+				return internalversion.Component{}, err
+			}
+			component.ManifestContents = append(component.ManifestContents, manifestContents...)
 		}
 	} else {
 		component.ManifestContents = []string{}

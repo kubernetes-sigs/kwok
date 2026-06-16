@@ -3378,13 +3378,13 @@ string
 </tr>
 <tr>
 <td>
-<code>metricsServerManifest</code>
+<code>metricsServerManifests</code>
 <em>
-string
+[]string
 </em>
 </td>
 <td>
-<p>MetricsServerManifest is the full URL of the metrics-server manifest.</p>
+<p>MetricsServerManifests is the full URLs of the metrics-server manifest.</p>
 </td>
 </tr>
 <tr>
@@ -3433,13 +3433,13 @@ string
 </tr>
 <tr>
 <td>
-<code>kueueManifest</code>
+<code>kueueManifests</code>
 <em>
-string
+[]string
 </em>
 </td>
 <td>
-<p>KueueManifest is the full URL of the kueue manifest.</p>
+<p>KueueManifests is the full URLs of the kueue manifest.</p>
 </td>
 </tr>
 <tr>
@@ -3455,13 +3455,13 @@ string
 </tr>
 <tr>
 <td>
-<code>jobsetManifest</code>
+<code>jobsetManifests</code>
 <em>
-string
+[]string
 </em>
 </td>
 <td>
-<p>JobSetManifest is the full URL of the jobset manifest.</p>
+<p>JobSetManifests is the full URLs of the jobset manifest.</p>
 </td>
 </tr>
 <tr>
@@ -3477,13 +3477,13 @@ string
 </tr>
 <tr>
 <td>
-<code>lwsManifest</code>
+<code>lwsManifests</code>
 <em>
-string
+[]string
 </em>
 </td>
 <td>
-<p>LWSManifest is the full URL of the lws manifest.</p>
+<p>LWSManifests is the full URLs of the lws manifest.</p>
 </td>
 </tr>
 <tr>
@@ -3499,13 +3499,13 @@ string
 </tr>
 <tr>
 <td>
-<code>deschedulerManifest</code>
+<code>deschedulerManifests</code>
 <em>
-string
+[]string
 </em>
 </td>
 <td>
-<p>DeschedulerManifest is the full URL of the descheduler manifest.</p>
+<p>DeschedulerManifests is the full URLs of the descheduler manifest.</p>
 </td>
 </tr>
 <tr>
@@ -3770,39 +3770,6 @@ is the default value for env KWOK_PROMETHEUS_BINARY_TAR</p>
 </tr>
 <tr>
 <td>
-<code>schedulerPluginsBinaryPrefix</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>SchedulerPluginsBinaryPrefix is the prefix of the scheduler-plugins binary.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>schedulerPluginsControllerBinary</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>SchedulerPluginsControllerBinary is the binary of scheduler-plugins.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>schedulerPluginsSchedulerBinary</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>SchedulerPluginsSchedulerBinary is the binary of scheduler-plugins schedule.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>jaegerBinaryPrefix</code>
 <em>
 string
@@ -3858,95 +3825,6 @@ string
 </td>
 <td>
 <p>MetricsServerBinary is the binary of metrics-server.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>kueueBinaryPrefix</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>KueueBinaryPrefix is the prefix of the kueue binary.
-is the default value for env KWOK_KUEUE_BINARY_PREFIX</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>kueueBinary</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>KueueBinary is the binary of kueue.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>jobsetBinaryPrefix</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>JobSetBinaryPrefix is the prefix of the jobset binary.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>lwsBinaryPrefix</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>LWSBinaryPrefix is the prefix of the lws binary.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>jobsetBinary</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>JobSetBinary is the binary of jobset.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>lwsBinary</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>LWSBinary is the binary of lws.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>deschedulerBinaryPrefix</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DeschedulerBinaryPrefix is the prefix of the descheduler binary.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>deschedulerBinary</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DeschedulerBinary is the binary of descheduler.</p>
 </td>
 </tr>
 <tr>
