@@ -17,19 +17,10 @@ limitations under the License.
 package runtime
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
 	"slices"
-	"strings"
-	"time"
 
-	"github.com/nxadm/tail"
-
-	"sigs.k8s.io/kwok/kustomize/crd"
 	"sigs.k8s.io/kwok/kustomize/metrics/resource"
 	"sigs.k8s.io/kwok/kustomize/metrics/usage"
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
@@ -41,16 +32,12 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
-	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
-	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
-	"sigs.k8s.io/kwok/pkg/utils/wait"
-	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // The following functions are used to get the path of the cluster
@@ -351,132 +338,6 @@ func getDefaultPodStages() ([]config.InternalObject, error) {
 	}, config.UnmarshalWithType[config.InternalObject, string])
 }
 
-// KubectlPath returns the path to the kubectl binary. It first tries to find kubectl in the system PATH.
-// If not found, it will download and install the kubectl binary using the configured version.
-// Returns the path to the kubectl binary or an error if it cannot be found or installed.
-func (c *Cluster) KubectlPath(ctx context.Context) (string, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return "", err
-	}
-	conf := &config.Options
-
-	kubectlPath, err := exec.LookPath("kubectl")
-	if err != nil {
-		kubectlPath, err = c.EnsureBinary(ctx, "kubectl", conf.KubectlBinary)
-		if err != nil {
-			return "", err
-		}
-	}
-	return kubectlPath, nil
-}
-
-// Install installs the cluster
-func (c *Cluster) Install(ctx context.Context) error {
-	return c.MkdirAll(c.Workdir())
-}
-
-// CheckComponentIssues checks and warns about component enable/disable issues.
-func (c *Cluster) CheckComponentIssues(ctx context.Context, components []internalversion.Component) error {
-	conf, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	enabled, disabled, err := c.getEnabledAndDisabledComponents(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Get available component names from configuration
-	available := utilsslices.Map(conf.Components, func(c internalversion.Component) string {
-		return c.Name
-	})
-
-	logger := log.FromContext(ctx)
-
-	// Check for disabled components not in available list
-	disabled = utilsslices.Unique(disabled)
-	if len(disabled) > 0 {
-		unknown := utilsslices.Filter(disabled, func(name string) bool {
-			return !slices.Contains(available, name)
-		})
-		if len(unknown) > 0 {
-			logger.Warn("Some disabled components are not known to the runtime",
-				"components", unknown,
-			)
-		}
-	}
-
-	// Check for enabled components not in final built components
-	enabled = utilsslices.Unique(enabled)
-	if len(enabled) > 0 {
-		actualNames := utilsslices.Map(components, func(component internalversion.Component) string {
-			return component.Name
-		})
-		unused := utilsslices.Filter(enabled, func(name string) bool {
-			return !slices.Contains(actualNames, name)
-		})
-		if len(unused) > 0 {
-			logger.Warn("Some enabled components are not used in the runtime",
-				"components", unused,
-			)
-		}
-	}
-	return nil
-}
-
-// Uninstall uninstalls the cluster.
-func (c *Cluster) Uninstall(ctx context.Context) error {
-	// cleanup workdir
-	return c.RemoveAll(c.Workdir())
-}
-
-// Ready returns true if the cluster is ready
-func (c *Cluster) Ready(ctx context.Context) (bool, error) {
-	out := bytes.NewBuffer(nil)
-	err := c.KubectlInCluster(utilsexec.WithAllWriteTo(ctx, out), "get", "--raw", "/healthz")
-	if err != nil {
-		return false, err
-	}
-	if !bytes.Equal(out.Bytes(), []byte("ok")) {
-		logger := log.FromContext(ctx)
-		logger.Debug("Check Ready",
-			"method", "get",
-			"path", "/healthz",
-			"response", out,
-		)
-		return false, nil
-	}
-	return true, nil
-}
-
-// WaitReady waits for the cluster to be ready.
-func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
-	var (
-		err     error
-		waitErr error
-		ready   bool
-	)
-	logger := log.FromContext(ctx)
-	waitErr = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
-		ready, err = c.Ready(ctx)
-		if err != nil {
-			logger.Debug("Cluster is not ready",
-				"err", err,
-			)
-		}
-		return ready, nil
-	}, wait.WithTimeout(timeout), wait.WithImmediate())
-	if err != nil {
-		return err
-	}
-	if waitErr != nil {
-		return waitErr
-	}
-	return nil
-}
-
 // GetComponent returns the component by name
 func (c *Cluster) GetComponent(ctx context.Context, name string) (internalversion.Component, error) {
 	config, err := c.Config(ctx)
@@ -585,92 +446,6 @@ func (c *Cluster) Components(ctx context.Context) ([]string, error) {
 	return components, nil
 }
 
-// Kubectl runs kubectl.
-func (c *Cluster) Kubectl(ctx context.Context, args ...string) error {
-	kubectlPath, err := c.KubectlPath(ctx)
-	if err != nil {
-		return err
-	}
-
-	return c.Exec(ctx, kubectlPath, args...)
-}
-
-// KubectlInCluster runs kubectl in the cluster.
-func (c *Cluster) KubectlInCluster(ctx context.Context, args ...string) error {
-	kubectlPath, err := c.KubectlPath(ctx)
-	if err != nil {
-		return err
-	}
-
-	return c.Exec(ctx, kubectlPath, append([]string{"--kubeconfig", c.GetWorkdirPath(InHostKubeconfigName)}, args...)...)
-}
-
-// AuditLogs returns the audit logs of the cluster.
-func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
-	logs := c.GetLogPath(AuditLogName)
-	if c.IsDryRun() {
-		if file, ok := dryrun.IsCatToFileWriter(out); ok {
-			dryrun.PrintMessagef("cp %s %s", logs, file)
-		} else {
-			dryrun.PrintMessagef("cat %s", logs)
-		}
-		return nil
-	}
-
-	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
-	if err != nil {
-		return err
-	}
-	logger := log.FromContext(ctx)
-	defer func() {
-		err = f.Close()
-		if err != nil {
-			logger.Error("Failed to close file",
-				"err", err,
-			)
-		}
-	}()
-
-	_, err = io.Copy(out, f)
-	return err
-}
-
-// AuditLogsFollow follows the audit logs of the cluster.
-func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
-	logs := c.GetLogPath(AuditLogName)
-	if c.IsDryRun() {
-		dryrun.PrintMessagef("tail -f %s", logs)
-		return nil
-	}
-
-	t, err := tail.TailFile(logs, tail.Config{ReOpen: true, Follow: true})
-	if err != nil {
-		return err
-	}
-	logger := log.FromContext(ctx)
-	defer func() {
-		err = t.Stop()
-		if err != nil {
-			logger.Error("Failed to stop tail file",
-				"err", err,
-			)
-		}
-	}()
-
-	go func() {
-		for line := range t.Lines {
-			_, err = out.Write([]byte(line.Text + "\n"))
-			if err != nil {
-				logger.Error("Failed to write line text",
-					"err", err,
-				)
-			}
-		}
-	}()
-	<-ctx.Done()
-	return nil
-}
-
 // GetWorkdirPath returns the path to the file in the workdir.
 func (c *Cluster) GetWorkdirPath(name string) string {
 	return utilspath.Join(c.workdir, name)
@@ -684,101 +459,6 @@ func (c *Cluster) GetBinPath(name string) string {
 // GetLogPath returns the path of the given log name.
 func (c *Cluster) GetLogPath(name string) string {
 	return utilspath.Join(c.workdir, "logs", name)
-}
-
-func (c *Cluster) etcdctlPath(ctx context.Context) (string, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return "", err
-	}
-	conf := &config.Options
-	etcdctlPath, err := c.EnsureBinary(ctx, "etcdctl", conf.EtcdctlBinary)
-	if err != nil {
-		return "", err
-	}
-	return etcdctlPath, nil
-}
-
-func (c *Cluster) etcdutlPath(ctx context.Context) (string, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return "", err
-	}
-	conf := &config.Options
-
-	etcdutlPath, err := c.EnsureBinary(ctx, "etcdutl", conf.EtcdutlBinary)
-	if err != nil {
-		return "", err
-	}
-	return etcdutlPath, nil
-}
-
-// Snapshot takes a snapshot of the cluster with the given arguments.
-// The arguments are passed to etcdctl or etcdutl, which depends on the etcd version.
-func (c *Cluster) Snapshot(ctx context.Context, args ...string) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
-	etcdVersion, err := version.ParseVersion(conf.EtcdVersion)
-	if err != nil {
-		return err
-	}
-
-	// etcdctl is remove snapshot restore in v3.6,
-	// so use etcdutl for v3.6 and later, and use etcdctl for earlier versions.
-	if etcdVersion.LT(version.NewVersion(3, 6, 0)) {
-		return c.Etcdctl(ctx, args...)
-	}
-
-	return c.Etcdutl(ctx, args...)
-}
-
-// Etcdctl runs etcdctl.
-func (c *Cluster) Etcdctl(ctx context.Context, args ...string) error {
-	etcdctlPath, err := c.etcdctlPath(ctx)
-	if err != nil {
-		return err
-	}
-
-	// If using versions earlier than v3.4, set `ETCDCTL_API=3` to use v3 API.
-	ctx = utilsexec.WithEnv(ctx, []string{"ETCDCTL_API=3"})
-	return c.Exec(ctx, etcdctlPath, args...)
-}
-
-// Etcdutl runs etcdutl.
-func (c *Cluster) Etcdutl(ctx context.Context, args ...string) error {
-	etcdutlPath, err := c.etcdutlPath(ctx)
-	if err != nil {
-		return err
-	}
-
-	return c.Exec(ctx, etcdutlPath, args...)
-}
-
-func (c *Cluster) kectlPath(ctx context.Context) (string, error) {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return "", err
-	}
-	conf := &config.Options
-	kectlPath, err := c.EnsureBinary(ctx, "kectl", conf.KectlBinary)
-	if err != nil {
-		return "", err
-	}
-	return kectlPath, nil
-}
-
-// Kectl runs kectl.
-func (c *Cluster) Kectl(ctx context.Context, args ...string) error {
-	kectlPath, err := c.kectlPath(ctx)
-	if err != nil {
-		return err
-	}
-
-	return c.Exec(ctx, kectlPath, args...)
 }
 
 // GetClientset returns the clientset of the cluster.
@@ -798,128 +478,4 @@ func (c *Cluster) GetClientset(ctx context.Context) (client.Clientset, error) {
 // IsDryRun returns true if the runtime is in dry-run mode
 func (c *Cluster) IsDryRun() bool {
 	return c.dryRun
-}
-
-// InitCRDs initializes the CRDs.
-func (c *Cluster) InitCRDs(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-	conf := &config.Options
-
-	crds := conf.EnableCRDs
-	if len(crds) == 0 {
-		return nil
-	}
-
-	if c.IsDryRun() {
-		dryrun.PrintMessagef("# Init CRDs %s", strings.Join(crds, ","))
-		return nil
-	}
-
-	clientset, err := c.GetClientset(ctx)
-	if err != nil {
-		return err
-	}
-
-	buf := bytes.NewBuffer(nil)
-	for _, name := range crds {
-		c, ok := crdDefines[name]
-		if !ok {
-			return fmt.Errorf("no crd define found for %s", name)
-		}
-		_, _ = buf.WriteString("\n---\n")
-		_, _ = buf.Write(c)
-	}
-
-	logger := log.FromContext(ctx)
-	logger = logger.With(
-		"crds", crds,
-	)
-	ctx = log.NewContext(ctx, logger)
-
-	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
-		Clientset: clientset,
-		NoFilers:  true,
-	})
-	if err != nil {
-		return err
-	}
-
-	decoder := yaml.NewDecoder(buf)
-	err = loader.Load(ctx, decoder)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-var crdDefines = map[string][]byte{
-	v1alpha1.StageKind:                crd.Stage,
-	v1alpha1.AttachKind:               crd.Attach,
-	v1alpha1.ClusterAttachKind:        crd.ClusterAttach,
-	v1alpha1.ExecKind:                 crd.Exec,
-	v1alpha1.ClusterExecKind:          crd.ClusterExec,
-	v1alpha1.PortForwardKind:          crd.PortForward,
-	v1alpha1.ClusterPortForwardKind:   crd.ClusterPortForward,
-	v1alpha1.LogsKind:                 crd.Logs,
-	v1alpha1.ClusterLogsKind:          crd.ClusterLogs,
-	v1alpha1.ResourceUsageKind:        crd.ResourceUsage,
-	v1alpha1.ClusterResourceUsageKind: crd.ClusterResourceUsage,
-	v1alpha1.MetricKind:               crd.Metric,
-}
-
-// InitCRs initializes the CRs.
-func (c *Cluster) InitCRs(ctx context.Context) error {
-	config, err := c.Config(ctx)
-	if err != nil {
-		return err
-	}
-
-	if c.IsDryRun() {
-		for _, component := range config.Components {
-			if component.ManifestContents == nil {
-				continue
-			}
-
-			dryrun.PrintMessagef("# Set up manifest for %s", component.Name)
-		}
-		return nil
-	}
-
-	var buf strings.Builder
-	for _, component := range config.Components {
-		if component.ManifestContents == nil {
-			continue
-		}
-
-		for _, v := range component.ManifestContents {
-			_, _ = buf.WriteString("---\n")
-			_, _ = buf.WriteString(v)
-			_, _ = buf.WriteString("\n")
-		}
-	}
-
-	if buf.Len() == 0 {
-		return nil
-	}
-
-	clientset, err := c.GetClientset(ctx)
-	if err != nil {
-		return err
-	}
-
-	loader, err := snapshot.NewLoader(snapshot.LoadConfig{
-		Clientset: clientset,
-		NoFilers:  true,
-	})
-	if err != nil {
-		return err
-	}
-
-	decoder := yaml.NewDecoder(strings.NewReader(buf.String()))
-
-	return loader.Load(ctx, decoder)
 }

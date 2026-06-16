@@ -64,7 +64,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		"--rm",
 		"-i",
 		"--pull=never",
-		"--network="+c.networkName(),
+		"--network="+c.Name(),
 		"--name="+tempContainerName,
 		"--entrypoint=/bin/sh",
 	)

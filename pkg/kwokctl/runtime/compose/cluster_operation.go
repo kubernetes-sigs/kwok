@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package compose
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -33,12 +33,187 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
-func (c *Cluster) networkName() string {
-	return c.Name()
+// Up starts the cluster.
+func (c *Cluster) Up(ctx context.Context) error {
+	return c.start(ctx)
+}
+
+// Down stops the cluster
+func (c *Cluster) Down(ctx context.Context) error {
+	return c.stop(ctx)
+}
+
+// Start starts the cluster
+func (c *Cluster) Start(ctx context.Context) error {
+	return c.start(ctx)
+}
+
+// Stop stops the cluster
+func (c *Cluster) Stop(ctx context.Context) error {
+	return c.stop(ctx)
+}
+
+func (c *Cluster) start(ctx context.Context) error {
+	if c.isNerdctl {
+		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+		if !canNerdctlUnlessStopped {
+			// TODO: Remove this, nerdctl stop will restart containers
+			// https://github.com/containerd/nerdctl/issues/1980
+			err := c.createComponents(ctx)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.ForeachComponents(ctx, false, true, func(ctx context.Context, component internalversion.Component) error {
+			return c.StartComponent(ctx, component.Name)
+		})
+		return err == nil, err
+	},
+		wait.WithContinueOnError(5),
+		wait.WithImmediate(),
+	)
+	if err != nil {
+		return err
+	}
+
+	if c.isNerdctl {
+		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+		if !canNerdctlUnlessStopped {
+			backupFilename := c.GetWorkdirPath("restart.db")
+			fi, err := os.Stat(backupFilename)
+			if err == nil {
+				if fi.IsDir() {
+					return fmt.Errorf("wrong backup file %s, it cannot be a directory, please remove it", backupFilename)
+				}
+				if err := c.SnapshotRestore(ctx, backupFilename); err != nil {
+					return fmt.Errorf("failed to restore cluster data: %w", err)
+				}
+				if err := c.Remove(backupFilename); err != nil {
+					return fmt.Errorf("failed to remove backup file: %w", err)
+				}
+			} else if !os.IsNotExist(err) {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (c *Cluster) stop(ctx context.Context) error {
+	if c.isNerdctl {
+		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+		if !canNerdctlUnlessStopped {
+			err := c.SnapshotSave(ctx, c.GetWorkdirPath("restart.db"))
+			if err != nil {
+				return fmt.Errorf("failed to snapshot cluster data: %w", err)
+			}
+		}
+	}
+	err := wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+		err := c.ForeachComponents(ctx, true, false, func(ctx context.Context, component internalversion.Component) error {
+			return c.StopComponent(ctx, component.Name)
+		})
+		return err == nil, err
+	},
+		wait.WithContinueOnError(5),
+		wait.WithImmediate(),
+	)
+	if err != nil {
+		return err
+	}
+	if c.isNerdctl {
+		canNerdctlUnlessStopped, _ := c.isCanNerdctlUnlessStopped(ctx)
+		if !canNerdctlUnlessStopped {
+			// TODO: Remove this, nerdctl stop will restart containers
+			// https://github.com/containerd/nerdctl/issues/1980
+			err = c.deleteComponents(ctx)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// StartComponent starts a component in the cluster
+func (c *Cluster) StartComponent(ctx context.Context, componentName string) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"component", componentName,
+	)
+	if !c.IsDryRun() {
+		if running, exist := c.inspectComponent(ctx, componentName); !exist {
+			return fmt.Errorf("component %s does not exist", componentName)
+		} else if running {
+			logger.Debug("Component already started")
+			return nil
+		}
+	}
+
+	args := []string{
+		"start",
+		c.Name() + "-" + componentName,
+	}
+
+	logger.Debug("Starting component")
+	err := c.Exec(ctx, c.runtime, args...)
+	if err != nil {
+		// TODO: Remove this after nerdctl fix
+		// https://github.com/containerd/nerdctl/issues/2270
+		if c.isNerdctl {
+			errMessage := err.Error()
+			switch {
+			case strings.Contains(errMessage, "already exists"),
+				strings.Contains(errMessage, "file exists"):
+				logger.Warn("Component may already started, ignore error, "+
+					"see https://github.com/containerd/nerdctl/issues/2270",
+					"err", errMessage,
+				)
+			case strings.Contains(errMessage, "cannot start a container that has stopped"):
+				logger.Warn("Component stopped, nerdctl create will start containers, ignore error, "+
+					"see https://github.com/containerd/nerdctl/issues/2270",
+					"err", errMessage,
+				)
+			default:
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// StopComponent stops a component in the cluster
+func (c *Cluster) StopComponent(ctx context.Context, componentName string) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With(
+		"component", componentName,
+	)
+	if !c.IsDryRun() {
+		if running, exist := c.inspectComponent(ctx, componentName); !exist {
+			logger.Debug("Component does not exist")
+			return nil
+		} else if !running {
+			logger.Debug("Component already stopped")
+			return nil
+		}
+	}
+
+	args := []string{"stop",
+		c.Name() + "-" + componentName,
+		"--time=0",
+	}
+
+	logger.Debug("Stopping component")
+	return c.Exec(ctx, c.runtime, args...)
 }
 
 func (c *Cluster) createNetwork(ctx context.Context) error {
-	network := c.networkName()
+	network := c.Name()
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"network", network,
@@ -62,7 +237,7 @@ func (c *Cluster) createNetwork(ctx context.Context) error {
 }
 
 func (c *Cluster) deleteNetwork(ctx context.Context) error {
-	network := c.networkName()
+	network := c.Name()
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"network", network,
@@ -93,15 +268,14 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 			return err
 		}
 
-		err = wait.Poll(ctx,
-			func(ctx context.Context) (bool, error) {
-				if exist := c.inspectNetwork(ctx, network); !exist {
-					return true, nil
-				}
-				logger.Warn("Retrying to delete network")
-				err := c.Exec(ctx, c.runtime, args...)
-				return err == nil, err
-			},
+		err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
+			if exist := c.inspectNetwork(ctx, network); !exist {
+				return true, nil
+			}
+			logger.Warn("Retrying to delete network")
+			err := c.Exec(ctx, c.runtime, args...)
+			return err == nil, err
+		},
 			wait.WithContinueOnError(2),
 		)
 		if err != nil {
@@ -224,7 +398,7 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 		args = append(args, "--entrypoint="+entrypoint)
 	}
 
-	network := c.networkName()
+	network := c.Name()
 	if network != "" {
 		args = append(args, "--network="+network)
 	}
@@ -340,160 +514,6 @@ func (c *Cluster) deleteComponent(ctx context.Context, componentName string) err
 func (c *Cluster) deleteComponents(ctx context.Context) error {
 	err := c.ForeachComponents(ctx, true, true, func(ctx context.Context, component internalversion.Component) error {
 		return c.deleteComponent(ctx, component.Name)
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type inspectStatus struct {
-	State struct {
-		Running bool
-	}
-}
-
-func checkInspect(raw []byte) (bool, error) {
-	if len(raw) == 0 {
-		return false, fmt.Errorf("empty inspect result")
-	}
-	raw = bytes.TrimSpace(raw)
-	switch raw[0] {
-	case '{':
-		var tmp inspectStatus
-
-		err := json.Unmarshal(raw, &tmp)
-		if err != nil {
-			return false, fmt.Errorf("failed to unmarshal inspect result: %w", err)
-		}
-
-		return tmp.State.Running, nil
-	case '[':
-		var tmp []inspectStatus
-		err := json.Unmarshal(raw, &tmp)
-		if err != nil {
-			return false, fmt.Errorf("failed to unmarshal inspect result: %w", err)
-		}
-
-		if len(tmp) == 0 {
-			return false, nil
-		}
-		return tmp[0].State.Running, nil
-	default:
-		return false, fmt.Errorf("unexpected inspect result: %s", raw)
-	}
-}
-
-func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (running bool, exist bool) {
-	buf := bytes.NewBuffer(nil)
-	args := make([]string, 0, 3)
-	args = append(args, "inspect", c.Name()+"-"+componentName)
-
-	args = append(args, "--format={{ json . }}")
-
-	err := c.Exec(utilsexec.WithWriteTo(ctx, buf), c.runtime, args...)
-	if err != nil {
-		// TODO: check if component exists or other error
-		return false, false
-	}
-
-	running, err = checkInspect(buf.Bytes())
-	if err != nil {
-		logger := log.FromContext(ctx)
-		logger.Warn("Failed to check inspect result",
-			"err", err,
-		)
-		return false, false
-	}
-	return running, true
-}
-
-func (c *Cluster) startComponent(ctx context.Context, componentName string) error {
-	logger := log.FromContext(ctx)
-	logger = logger.With(
-		"component", componentName,
-	)
-	if !c.IsDryRun() {
-		if running, exist := c.inspectComponent(ctx, componentName); !exist {
-			return fmt.Errorf("component %s does not exist", componentName)
-		} else if running {
-			logger.Debug("Component already started")
-			return nil
-		}
-	}
-
-	args := []string{
-		"start",
-		c.Name() + "-" + componentName,
-	}
-
-	logger.Debug("Starting component")
-	err := c.Exec(ctx, c.runtime, args...)
-	if err != nil {
-		// TODO: Remove this after nerdctl fix
-		// https://github.com/containerd/nerdctl/issues/2270
-		if c.isNerdctl {
-			errMessage := err.Error()
-			switch {
-			case strings.Contains(errMessage, "already exists"),
-				strings.Contains(errMessage, "file exists"):
-				logger.Warn("Component may already started, ignore error, "+
-					"see https://github.com/containerd/nerdctl/issues/2270",
-					"err", errMessage,
-				)
-			case strings.Contains(errMessage, "cannot start a container that has stopped"):
-				logger.Warn("Component stopped, nerdctl create will start containers, ignore error, "+
-					"see https://github.com/containerd/nerdctl/issues/2270",
-					"err", errMessage,
-				)
-			default:
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c *Cluster) startComponents(ctx context.Context) error {
-	err := c.ForeachComponents(ctx, false, true, func(ctx context.Context, component internalversion.Component) error {
-		return c.startComponent(ctx, component.Name)
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Cluster) stopComponent(ctx context.Context, componentName string) error {
-	logger := log.FromContext(ctx)
-	logger = logger.With(
-		"component", componentName,
-	)
-	if !c.IsDryRun() {
-		if running, exist := c.inspectComponent(ctx, componentName); !exist {
-			logger.Debug("Component does not exist")
-			return nil
-		} else if !running {
-			logger.Debug("Component already stopped")
-			return nil
-		}
-	}
-
-	args := []string{"stop",
-		c.Name() + "-" + componentName,
-		"--time=0",
-	}
-
-	logger.Debug("Stopping component")
-	return c.Exec(ctx, c.runtime, args...)
-}
-
-func (c *Cluster) stopComponents(ctx context.Context) error {
-	err := c.ForeachComponents(ctx, true, false, func(ctx context.Context, component internalversion.Component) error {
-		return c.stopComponent(ctx, component.Name)
 	})
 	if err != nil {
 		return err
