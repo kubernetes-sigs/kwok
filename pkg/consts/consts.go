@@ -54,7 +54,7 @@ var (
 
 	DashboardMetricsScraperVersion = "1.0.9"
 
-	PrometheusVersion      = "3.8.1"
+	PrometheusVersion      = "3.12.0"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
 
