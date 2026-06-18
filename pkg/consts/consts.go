@@ -82,7 +82,7 @@ var (
 	JobSetImagePrefix    = "registry.k8s.io/jobset"
 	JobSetManifestPrefix = "https://github.com/kubernetes-sigs/jobset/releases/download"
 
-	LWSVersion        = "0.8.0"
+	LWSVersion        = "0.9.0"
 	LWSBinaryPrefix   = ""
 	LWSImagePrefix    = "registry.k8s.io/lws"
 	LWSManifestPrefix = "https://github.com/kubernetes-sigs/lws/releases/download"
