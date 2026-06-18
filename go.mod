@@ -34,9 +34,9 @@ require (
 	k8s.io/apiserver v0.36.1
 	k8s.io/client-go v0.36.1
 	k8s.io/component-base v0.36.1
-	k8s.io/cri-api v0.36.1
+	k8s.io/cri-api v0.36.2
 	k8s.io/cri-client v0.36.1
-	k8s.io/cri-streaming v0.36.1
+	k8s.io/cri-streaming v0.36.2
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
 	sigs.k8s.io/e2e-framework v0.7.0
@@ -129,7 +129,7 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
-	k8s.io/streaming v0.36.1 // indirect
+	k8s.io/streaming v0.36.2 // indirect
 	sigs.k8s.io/controller-runtime v0.24.1 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
