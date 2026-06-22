@@ -50,6 +50,10 @@ func BuildLWSManifest(conf BuildLWSManifestConfig) ([]string, error) {
 			},
 		},
 		{
+			Kind:       "CustomResourceDefinition",
+			APIVersion: "apiextensions.k8s.io/v1",
+		},
+		{
 			Kind:       "Service",
 			APIVersion: "v1",
 			Transform: func(obj *unstructured.Unstructured) error {
