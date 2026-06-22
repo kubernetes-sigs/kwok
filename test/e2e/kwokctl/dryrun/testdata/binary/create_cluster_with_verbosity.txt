@@ -38,7 +38,7 @@ EOF
 # Download https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwok-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
 # Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
 # Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml to <ROOT_DIR>/workdir/cache/manifest/49813f4ec9caba92a73718bf218a6a07e283942ec2088fe8d58ac793f5f6998b.yaml
-# Download https://github.com/prometheus/prometheus/releases/download/v3.8.1/prometheus-3.8.1.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
+# Download https://github.com/prometheus/prometheus/releases/download/v3.12.0/prometheus-3.12.0.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
 # Download https://github.com/jaegertracing/jaeger/releases/download/v1.76.0/jaeger-1.76.0-<OS>-<ARCH>.<TAR> and extract jaeger-all-in-one to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 global:
