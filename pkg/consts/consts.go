@@ -72,7 +72,7 @@ var (
 	SchedulerPluginsImagePrefix    = "registry.k8s.io/scheduler-plugins"
 	SchedulerPluginsManifestPrefix = "https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/"
 
-	KueueVersion        = "0.17.3"
+	KueueVersion        = "0.18.1"
 	KueueBinaryPrefix   = ""
 	KueueImagePrefix    = "registry.k8s.io/kueue"
 	KueueManifestPrefix = "https://github.com/kubernetes-sigs/kueue/releases/download"
