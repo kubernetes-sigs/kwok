@@ -2,6 +2,26 @@ apiVersion: v1
 entries:
   kwok:
   - apiVersion: v2
+    appVersion: v0.8.0
+    created: "2026-06-23T06:25:16.541259Z"
+    description: KWOK (Kubernetes WithOut Kubelet)
+    digest: 1d3d61a267a2f65be21db7d0182d335c7adf6253ad558489b981146e6ddca17e
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    maintainers:
+    - email: wzshiming@hotmail.com
+      name: wzshiming
+    name: kwok
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwok-chart-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
     appVersion: v0.7.0
     created: "2025-05-16T04:40:12.034766Z"
     description: KWOK (Kubernetes WithOut Kubelet)
@@ -103,6 +123,27 @@ entries:
     version: 0.0.1
   metrics-usage:
   - apiVersion: v2
+    appVersion: v0.8.0
+    created: "2026-06-23T06:25:16.541698Z"
+    description: Default metrics usage policy of KWOK (Kubernetes WithOut Kubelet)
+    digest: 4002d7d8fc1ffc3cb4d823f5dc1a9c24b7a3a621563a7adef18a10ad6ccdf9fe
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    - kwok metrics usage policy
+    maintainers:
+    - email: wzshiming@hotmail.com
+      name: wzshiming
+    name: metrics-usage
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwok-metrics-usage-chart-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
     appVersion: v0.7.0
     created: "2025-05-16T04:40:12.035341Z"
     description: Default metrics usage policy of KWOK (Kubernetes WithOut Kubelet)
@@ -188,6 +229,27 @@ entries:
     version: 0.0.1
   stage-fast:
   - apiVersion: v2
+    appVersion: v0.8.0
+    created: "2026-06-23T06:25:16.542009Z"
+    description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
+    digest: d706a99d1acd297b6dfd05c493c0384fe022698e7ff805a520b2a4dd1f20cac2
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    - kwok stage policy
+    maintainers:
+    - email: wzshiming@hotmail.com
+      name: wzshiming
+    name: stage-fast
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwok-stage-fast-chart-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
     appVersion: v0.7.0
     created: "2025-05-16T04:40:12.036Z"
     description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
@@ -271,4 +333,4 @@ entries:
     urls:
     - https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.2/kwok-stage-fast-chart-0.0.1.tgz
     version: 0.0.1
-generated: "2025-05-16T04:40:12.033253Z"
+generated: "2026-06-23T06:25:16.539053Z"
