@@ -27,6 +27,8 @@ import (
 )
 
 var (
+	// DefaultCN is the default common name for the admin user
+	DefaultCN = "kwok-ca"
 	// DefaultUser is the default user for the admin user
 	DefaultUser = "kwok-admin"
 	// DefaultGroups is the default groups for the admin user
@@ -55,7 +57,7 @@ func GeneratePki(pkiPath string, sans ...string) error {
 	notAfter := now.Add(CertificateValidity).UTC()
 
 	// Generate CA
-	caCert, caKey, err := GenerateCA("kwok-ca", notBefore, notAfter)
+	caCert, caKey, err := GenerateCA(DefaultCN, notBefore, notAfter)
 	if err != nil {
 		return fmt.Errorf("failed to generate CA: %w", err)
 	}
