@@ -2,8 +2,6 @@ apiVersion: flowcontrol.apiserver.k8s.io/v1
 kind: FlowSchema
 metadata:
   name: {{ include "kwok.fullname" . }}
-  labels:
-    {{- include "kwok.labels" . | nindent 4 }}
 spec:
   priorityLevelConfiguration:
     name: exempt

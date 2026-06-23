@@ -26,7 +26,6 @@ function sync_object_to_chart() {
   local dest=$2
 
   sed \
-    -e ':a;N;$!ba;s#metadata:\n  name: kwok-controller\n#metadata:\n  name: {{ include "kwok.fullname" . }}\n  labels:\n    {{- include "kwok.labels" . | nindent 4 }}\n#g' \
     -e 's#kwok-controller#{{ include "kwok.fullname" . }}#g' \
     -e 's#kube-system#{{ .Release.Namespace }}#g' \
     <"${src}" \
