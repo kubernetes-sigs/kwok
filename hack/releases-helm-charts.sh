@@ -21,6 +21,8 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
 
+export TZ=UTC
+
 function blob_base() {
   local tag=${1}
   local repo
