@@ -115,7 +115,7 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 			time.Sleep(1 * time.Second)
 
 			sig := os.Interrupt
-			if runtime.GOOS == "winddows" {
+			if runtime.GOOS == "windows" {
 				sig = os.Kill
 			}
 			err := tmpCmd.Process.Signal(sig)
@@ -268,7 +268,7 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 			time.Sleep(1 * time.Second)
 
 			sig := os.Interrupt
-			if runtime.GOOS == "winddows" {
+			if runtime.GOOS == "windows" {
 				sig = os.Kill
 			}
 			err := tmpCmd.Process.Signal(sig)
