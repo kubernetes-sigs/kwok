@@ -74,7 +74,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		AdminCertPath:                     env.adminCertPath,
 		AdminKeyPath:                      env.adminKeyPath,
 		NodeIP:                            "$(POD_IP)",
-		NodeName:                          "kwok-controller.kube-system.svc",
+		NodeName:                          "localhost",
 		ManageNodesWithAnnotationSelector: "kwok.x-k8s.io/node=fake",
 		Verbosity:                         env.verbosity,
 		NodeLeaseDurationSeconds:          40,

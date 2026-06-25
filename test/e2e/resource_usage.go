@@ -57,6 +57,10 @@ func CaseResourceUsage(kwokctlPath, clusterName string) *features.FeatureBuilder
 		Setup(helper.CreatePod(pod0)).
 		Setup(helper.CreateNode(node1)).
 		Setup(helper.CreatePod(pod1)).
+		Teardown(helper.DeletePod(pod0)).
+		Teardown(helper.DeletePod(pod1)).
+		Teardown(helper.DeleteNode(node0)).
+		Teardown(helper.DeleteNode(node1)).
 		Assess("wait ready", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 			_, err := helper.WaitForAllNodesReady()(ctx, cfg)
 			if err != nil {
