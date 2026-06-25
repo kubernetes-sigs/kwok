@@ -37,7 +37,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 	args = append(args, c.Name()+"-"+name)
 	if c.IsDryRun() && !follow {
 		if file, ok := dryrun.IsCatToFileWriter(out); ok {
-			dryrun.PrintMessagef("%s >%s", runtime.FormatExec(ctx, name, args...), file)
+			dryrun.PrintMessagef("%s >%s", runtime.FormatExec(ctx, c.runtime, args...), file)
 			return nil
 		}
 	}
