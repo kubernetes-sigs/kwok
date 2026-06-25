@@ -107,12 +107,6 @@ type KwokctlConfigurationOptions struct {
 	// KectlVersion it the version of Kectl to use.
 	KectlVersion string
 
-	// DashboardVersion is the version of Kubernetes dashboard to use.
-	DashboardVersion string
-
-	// DashboardMetricsScraperVersion is the version of dashboard metrics scraper to use.
-	DashboardMetricsScraperVersion string
-
 	// PrometheusVersion is the version of Prometheus to use.
 	PrometheusVersion string
 
@@ -191,12 +185,6 @@ type KwokctlConfigurationOptions struct {
 
 	// KwokControllerImage is the image of Kwok.
 	KwokControllerImage string
-
-	// DashboardImage is the image of dashboard.
-	DashboardImage string
-
-	// DashboardMetricsScraperImage is the image of dashboard metrics scraper.
-	DashboardMetricsScraperImage string
 
 	// PrometheusImage is the image of Prometheus.
 	PrometheusImage string
@@ -291,10 +279,6 @@ type KwokctlConfigurationOptions struct {
 	// KwokControllerBinary is the binary of kwok.
 	KwokControllerBinary string
 
-	// TODO: Add dashboard binary
-	// // DashboardBinary is the binary of dashboard.
-	// DashboardBinary string
-
 	// PrometheusBinary  is the binary of Prometheus.
 	PrometheusBinary string
 
@@ -343,9 +327,6 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeSchedulerPort is kube-scheduler port in the binary runtime
 	KubeSchedulerPort uint32
-
-	// DashboardPort is dashboard port that is exposed to the host.
-	DashboardPort uint32
 
 	// KueuevizPort is kueueviz port that is exposed to the host.
 	KueuevizPort uint32

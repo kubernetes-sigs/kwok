@@ -171,7 +171,6 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 		KubeApiserverInsecurePort:     conf.KubeApiserverInsecurePort,
 		EtcdPort:                      conf.EtcdPort,
 		JaegerPort:                    conf.JaegerPort,
-		DashboardPort:                 conf.DashboardPort,
 		PrometheusPort:                conf.PrometheusPort,
 		KwokControllerPort:            conf.KwokControllerPort,
 		FeatureGates:                  featureGates,

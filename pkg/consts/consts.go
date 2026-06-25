@@ -48,12 +48,6 @@ var (
 	KindBinaryPrefix    = "https://github.com/kubernetes-sigs/kind/releases/download"
 	KindNodeImagePrefix = "docker.io/kindest"
 
-	DashboardVersion      = "2.7.0"
-	DashboardBinaryPrefix = ""
-	DashboardImagePrefix  = "docker.io/kubernetesui"
-
-	DashboardMetricsScraperVersion = "1.0.9"
-
 	PrometheusVersion      = "3.12.0"
 	PrometheusBinaryPrefix = "https://github.com/prometheus/prometheus/releases/download"
 	PrometheusImagePrefix  = "docker.io/prom"
@@ -136,8 +130,6 @@ const (
 	ComponentKubeControllerManager      = "kube-controller-manager"
 	ComponentKubeScheduler              = "kube-scheduler"
 	ComponentKwokController             = "kwok-controller"
-	ComponentDashboard                  = "dashboard"
-	ComponentDashboardMetricsScraper    = "dashboard-metrics-scraper"
 	ComponentPrometheus                 = "prometheus"
 	ComponentJaeger                     = "jaeger"
 	ComponentMetricsServer              = "metrics-server"

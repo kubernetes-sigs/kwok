@@ -125,16 +125,6 @@ type KwokctlConfigurationOptions struct {
 	// KectlVersion it the version of Kectl to use.
 	KectlVersion string `json:"kectlVersion,omitempty"`
 
-	// DashboardVersion is the version of Kubernetes dashboard to use.
-	//
-	// Deprecated: Use headlamp instead
-	DashboardVersion string `json:"dashboardVersion,omitempty"`
-
-	// DashboardMetricsScraperVersion is the version of Kubernetes dashboard metrics scraper to use.
-	//
-	// Deprecated: Use headlamp instead
-	DashboardMetricsScraperVersion string `json:"dashboardMetricsScraperVersion,omitempty"`
-
 	// PrometheusVersion is the version of Prometheus to use.
 	// is the default value for env KWOK_PROMETHEUS_VERSION
 	PrometheusVersion string `json:"prometheusVersion,omitempty"`
@@ -223,12 +213,6 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	KwokImagePrefix string `json:"kwokImagePrefix,omitempty"`
 
-	// DashboardImagePrefix is the prefix of the dashboard image.
-	//
-	// Deprecated: Use HeadlampImagePrefix instead
-	//+k8s:conversion-gen=false
-	DashboardImagePrefix string `json:"dashboardImagePrefix,omitempty"`
-
 	// PrometheusImagePrefix is the prefix of the Prometheus image.
 	// is the default value for env KWOK_PROMETHEUS_IMAGE_PREFIX
 	//+k8s:conversion-gen=false
@@ -287,16 +271,6 @@ type KwokctlConfigurationOptions struct {
 	// KwokControllerImage is the image of Kwok.
 	// is the default value for flag --controller-image and env KWOK_CONTROLLER_IMAGE
 	KwokControllerImage string `json:"kwokControllerImage,omitempty"`
-
-	// DashboardImage is the image of dashboard.
-	//
-	// Deprecated: Use headlamp instead
-	DashboardImage string `json:"dashboardImage,omitempty"`
-
-	// DashboardMetricsScraperImage is the image of dashboard metrics scraper.
-	//
-	// Deprecated: Use headlamp instead
-	DashboardMetricsScraperImage string `json:"dashboardMetricsScraperImage,omitempty"`
 
 	// PrometheusImage is the image of Prometheus.
 	// is the default value for flag --prometheus-image and env KWOK_PROMETHEUS_IMAGE
@@ -502,11 +476,6 @@ type KwokctlConfigurationOptions struct {
 
 	// KubeSchedulerPort is kube-scheduler port in the binary runtime
 	KubeSchedulerPort uint32 `json:"kubeSchedulerPort,omitempty"`
-
-	// DashboardPort is dashboard port in the binary runtime
-	//
-	// Deprecated: Use headlamp instead
-	DashboardPort uint32 `json:"dashboardPort,omitempty"`
 
 	// KueuevizPort is kueueviz port that is exposed to the host.
 	KueuevizPort uint32 `json:"kueuevizPort,omitempty"`

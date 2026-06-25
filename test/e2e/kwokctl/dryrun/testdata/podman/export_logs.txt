@@ -10,5 +10,3 @@ podman logs kwok-<CLUSTER_NAME>-kwok-controller ><ROOT_DIR>/workdir/clusters/<CL
 podman logs kwok-<CLUSTER_NAME>-metrics-server ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/metrics-server.log
 podman logs kwok-<CLUSTER_NAME>-prometheus ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/prometheus.log
 podman logs kwok-<CLUSTER_NAME>-jaeger ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/jaeger.log
-podman logs kwok-<CLUSTER_NAME>-dashboard ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/dashboard.log
-podman logs kwok-<CLUSTER_NAME>-dashboard-metrics-scraper ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/dashboard-metrics-scraper.log

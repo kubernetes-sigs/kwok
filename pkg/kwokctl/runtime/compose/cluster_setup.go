@@ -172,11 +172,6 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	err = c.addDashboard(ctx, env)
-	if err != nil {
-		return err
-	}
-
 	err = c.addSchedulerPlugins(ctx, env)
 	if err != nil {
 		return err

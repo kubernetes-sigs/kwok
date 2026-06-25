@@ -115,9 +115,6 @@ nodes:
   - containerPort: 8001
     hostPort: 6080
     protocol: TCP
-  - containerPort: 8080
-    hostPort: 8000
-    protocol: TCP
   - containerPort: 9090
     hostPort: 9090
     protocol: TCP
@@ -270,125 +267,6 @@ spec:
       path: /etc/kwok/kwok.yaml
       type: File
     name: volume-4
-status: {}
-EOF
-docker pull docker.io/kubernetesui/dashboard:v2.7.0
-cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/dashboard.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: dashboard
-  namespace: kube-system
-spec:
-  containers:
-  - args:
-    - --insecure-bind-address=0.0.0.0
-    - --bind-address=127.0.0.1
-    - --port=0
-    - --enable-insecure-login
-    - --enable-skip-login
-    - --disable-settings-authorizer
-    - --sidecar-host=127.0.0.1:8000
-    - --system-banner=Welcome to kwok-<CLUSTER_NAME>
-    - --kubeconfig=~/.kube/config
-    - --insecure-port=8080
-    image: docker.io/kubernetesui/dashboard:v2.7.0
-    imagePullPolicy: Never
-    name: dashboard
-    ports:
-    - containerPort: 8080
-      hostPort: 8080
-      name: http
-      protocol: TCP
-    resources: {}
-    volumeMounts:
-    - mountPath: ~/.kube/config
-      name: volume-0
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki/ca.crt
-      name: volume-1
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki/admin.crt
-      name: volume-2
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki/admin.key
-      name: volume-3
-      readOnly: true
-  hostNetwork: true
-  restartPolicy: Always
-  securityContext:
-    runAsGroup: 0
-    runAsUser: 0
-  volumes:
-  - hostPath:
-      path: /etc/kubernetes/admin.conf
-      type: File
-    name: volume-0
-  - hostPath:
-      path: /etc/kubernetes/pki/ca.crt
-      type: File
-    name: volume-1
-  - hostPath:
-      path: /etc/kubernetes/pki/admin.crt
-      type: File
-    name: volume-2
-  - hostPath:
-      path: /etc/kubernetes/pki/admin.key
-      type: File
-    name: volume-3
-status: {}
-EOF
-docker pull docker.io/kubernetesui/metrics-scraper:v1.0.9
-cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/manifests/dashboard-metrics-scraper.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: dashboard-metrics-scraper
-  namespace: kube-system
-spec:
-  containers:
-  - args:
-    - --db-file=/metrics.db
-    - --kubeconfig=~/.kube/config
-    image: docker.io/kubernetesui/metrics-scraper:v1.0.9
-    imagePullPolicy: Never
-    name: dashboard-metrics-scraper
-    resources: {}
-    volumeMounts:
-    - mountPath: ~/.kube/config
-      name: volume-0
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki/ca.crt
-      name: volume-1
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki/admin.crt
-      name: volume-2
-      readOnly: true
-    - mountPath: /etc/kubernetes/pki/admin.key
-      name: volume-3
-      readOnly: true
-  hostNetwork: true
-  restartPolicy: Always
-  securityContext:
-    runAsGroup: 0
-    runAsUser: 0
-  volumes:
-  - hostPath:
-      path: /etc/kubernetes/admin.conf
-      type: File
-    name: volume-0
-  - hostPath:
-      path: /etc/kubernetes/pki/ca.crt
-      type: File
-    name: volume-1
-  - hostPath:
-      path: /etc/kubernetes/pki/admin.crt
-      type: File
-    name: volume-2
-  - hostPath:
-      path: /etc/kubernetes/pki/admin.key
-      type: File
-    name: volume-3
 status: {}
 EOF
 docker pull registry.k8s.io/metrics-server/metrics-server:v0.8.1
@@ -658,8 +536,6 @@ EOF
 KIND_EXPERIMENTAL_PROVIDER=docker kind create cluster --config <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml --name kwok-<CLUSTER_NAME> --image docker.io/kindest/node:v1.36.1 --wait 29m
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kubectl:v1.36.1 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/kwok/kwok:v0.9.0 --name kwok-<CLUSTER_NAME>
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/dashboard:v2.7.0 --name kwok-<CLUSTER_NAME>
-KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/kubernetesui/metrics-scraper:v1.0.9 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image registry.k8s.io/metrics-server/metrics-server:v0.8.1 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/prom/prometheus:v3.12.0 --name kwok-<CLUSTER_NAME>
 KIND_EXPERIMENTAL_PROVIDER=docker kind load docker-image docker.io/jaegertracing/all-in-one:1.76.0 --name kwok-<CLUSTER_NAME>

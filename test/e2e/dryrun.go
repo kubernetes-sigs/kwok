@@ -160,7 +160,6 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 			"--disable-qps-limits",
 			"--prometheus-port=9090",
 			"--jaeger-port=16686",
-			"--dashboard-port=8000",
 			"--kube-apiserver-insecure-port=6080",
 			"--enable=metrics-server",
 			"--enable=jobset",
