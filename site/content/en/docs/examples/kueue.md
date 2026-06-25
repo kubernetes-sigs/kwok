@@ -8,39 +8,24 @@ More information about Kueue can be found [here](https://kueue.sigs.k8s.io/).
 
 ## Set up Cluster
 
-Create a new KWOK cluster using the kind runtime
+Create a new KWOK cluster and enable Kueue component
 ``` bash
-kwokctl create cluster --runtime kind
+kwokctl create cluster --enable kueue
 ```
 
 ## Create Node
 
 Create KWOK fake nodes (the example node already has type=kwok label)
 ``` bash
-kubectl apply -f https://kwok.sigs.k8s.io/examples/node.yaml
+kwokctl scale node --replicas 2
 ```
 
 Verify that the nodes have the correct label using a label selector
 ```bash
 kubectl get nodes -l type=kwok
-kwok-node-0   Ready    agent   4s    kwok-v0.7.0
-```
-
-## Deploy Kueue
-
-Install Kueue controller-manager
-```bash
-kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.14.4/manifests.yaml
-```
-
-Patch the Kueue controller-manager deployment to run on the control plane node
-```bash
-kubectl patch deploy kueue-controller-manager -n kueue-system --type=json -p='[{"op":"add","path":"/spec/template/spec/nodeName","value":"kwok-kwok-control-plane"}]'
-```
-
-Wait for Kueue to be ready
-```bash
-kubectl wait --for=condition=available --timeout=300s deployment/kueue-controller-manager -n kueue-system
+NAME          STATUS   ROLES   AGE  VERSION
+node-000000   Ready    agent   4s   kwok-v0.8.0
+node-000001   Ready    agent   4s   kwok-v0.8.0
 ```
 
 ## Create Kueue Resources
