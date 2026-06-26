@@ -48,7 +48,7 @@ type BuildMetricsServerComponentConfig struct {
 // BuildMetricsServerComponent builds a metrics server component.
 func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (component internalversion.Component, err error) {
 	metricsServerArgs := []string{
-		"--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname",
+		"--kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP",
 		"--kubelet-use-node-status-port",
 		"--kubelet-insecure-tls", // TODO: remove this flag
 		"--metric-resolution=15s",

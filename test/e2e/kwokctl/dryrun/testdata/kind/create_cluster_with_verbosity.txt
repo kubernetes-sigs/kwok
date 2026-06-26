@@ -203,7 +203,7 @@ spec:
     - --tls-cert-file=/etc/kubernetes/pki/admin.crt
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     - --node-ip=$(POD_IP)
-    - --node-name=kwok-controller.kube-system.svc
+    - --node-name=localhost
     - --node-port=10247
     - --server-address=0.0.0.0:10247
     - --node-lease-duration-seconds=40
@@ -280,7 +280,7 @@ metadata:
 spec:
   containers:
   - args:
-    - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+    - --kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP
     - --kubelet-use-node-status-port
     - --kubelet-insecure-tls
     - --metric-resolution=15s
