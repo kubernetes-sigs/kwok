@@ -222,16 +222,17 @@ func TestController(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
-	ctx = log.NewContext(ctx, log.NewLogger(os.Stderr, log.LevelDebug))
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	t.Cleanup(func() {
-		cancel()
-		time.Sleep(time.Second)
-	})
+	baseCtx := context.Background()
+	baseCtx = log.NewContext(baseCtx, log.NewLogger(os.Stderr, log.LevelDebug))
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(baseCtx, 10*time.Second)
+			t.Cleanup(func() {
+				cancel()
+				time.Sleep(time.Second)
+			})
+
 			ctr, err := NewController(tt.conf)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("NewController() error = %v, wantErr %v", err, tt.wantErr)
