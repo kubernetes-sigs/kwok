@@ -388,9 +388,6 @@ func (c *Cluster) getEnabledAndDisabledComponents(ctx context.Context) ([]string
 	if conf.Options.KubeApiserverInsecurePort != 0 {
 		enable = append(enable, consts.ComponentKubeApiserverInsecureProxy)
 	}
-	if conf.Options.DashboardPort != 0 {
-		enable = append(enable, consts.ComponentDashboard)
-	}
 	if conf.Options.PrometheusPort != 0 {
 		enable = append(enable, consts.ComponentPrometheus)
 	}

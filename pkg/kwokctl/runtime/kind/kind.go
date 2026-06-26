@@ -301,7 +301,6 @@ type BuildKindConfig struct {
 	KubeApiserverPort         uint32
 	KubeApiserverInsecurePort uint32
 	EtcdPort                  uint32
-	DashboardPort             uint32
 	PrometheusPort            uint32
 	JaegerPort                uint32
 	KwokControllerPort        uint32
@@ -342,14 +341,6 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 		extraPortMappings = append(extraPortMappings, kindv1alpha4.PortMapping{
 			ContainerPort: 8001,
 			HostPort:      int32(conf.KubeApiserverInsecurePort),
-			Protocol:      kindv1alpha4.PortMappingProtocolTCP,
-		})
-	}
-
-	if conf.DashboardPort != 0 {
-		extraPortMappings = append(extraPortMappings, kindv1alpha4.PortMapping{
-			ContainerPort: 8080,
-			HostPort:      int32(conf.DashboardPort),
 			Protocol:      kindv1alpha4.PortMappingProtocolTCP,
 		})
 	}

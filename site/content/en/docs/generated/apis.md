@@ -2874,30 +2874,6 @@ string
 </tr>
 <tr>
 <td>
-<code>dashboardVersion</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DashboardVersion is the version of Kubernetes dashboard to use.</p>
-<p>Deprecated: Use headlamp instead</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dashboardMetricsScraperVersion</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DashboardMetricsScraperVersion is the version of Kubernetes dashboard metrics scraper to use.</p>
-<p>Deprecated: Use headlamp instead</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>prometheusVersion</code>
 <em>
 string
@@ -3144,18 +3120,6 @@ is the default value for env KWOK_IMAGE_PREFIX</p>
 </tr>
 <tr>
 <td>
-<code>dashboardImagePrefix</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DashboardImagePrefix is the prefix of the dashboard image.</p>
-<p>Deprecated: Use HeadlampImagePrefix instead</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>prometheusImagePrefix</code>
 <em>
 string
@@ -3315,30 +3279,6 @@ string
 <td>
 <p>KwokControllerImage is the image of Kwok.
 is the default value for flag &ndash;controller-image and env KWOK_CONTROLLER_IMAGE</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dashboardImage</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DashboardImage is the image of dashboard.</p>
-<p>Deprecated: Use headlamp instead</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dashboardMetricsScraperImage</code>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DashboardMetricsScraperImage is the image of dashboard metrics scraper.</p>
-<p>Deprecated: Use headlamp instead</p>
 </td>
 </tr>
 <tr>
@@ -3953,18 +3893,6 @@ uint32
 </td>
 <td>
 <p>KubeSchedulerPort is kube-scheduler port in the binary runtime</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dashboardPort</code>
-<em>
-uint32
-</em>
-</td>
-<td>
-<p>DashboardPort is dashboard port in the binary runtime</p>
-<p>Deprecated: Use headlamp instead</p>
 </td>
 </tr>
 <tr>

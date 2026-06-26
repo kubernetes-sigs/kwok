@@ -213,8 +213,6 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setKwokctlKindConfig(conf)
 
-	setKwokctlDashboardConfig(conf)
-
 	setKwokctlPrometheusConfig(conf)
 
 	setKwokctlJaegerConfig(conf)
@@ -431,44 +429,6 @@ func setKwokctlKindConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.KindBinary = conf.KindBinaryPrefix + "/kind-" + GOOS + "-" + GOARCH + conf.BinSuffix
 	}
 	conf.KindBinary = envs.GetEnvWithPrefix("KIND_BINARY", conf.KindBinary)
-}
-
-func setKwokctlDashboardConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
-	if conf.DashboardVersion == "" {
-		conf.DashboardVersion = consts.DashboardVersion
-	}
-	conf.DashboardVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DASHBOARD_VERSION", conf.DashboardVersion))
-
-	if conf.DashboardImagePrefix == "" {
-		conf.DashboardImagePrefix = consts.DashboardImagePrefix
-	}
-	conf.DashboardImagePrefix = envs.GetEnvWithPrefix("DASHBOARD_IMAGE_PREFIX", conf.DashboardImagePrefix)
-
-	if conf.DashboardImage == "" {
-		conf.DashboardImage = joinImageURI(conf.DashboardImagePrefix, "dashboard", conf.DashboardVersion)
-	}
-	conf.DashboardImage = envs.GetEnvWithPrefix("DASHBOARD_IMAGE", conf.DashboardImage)
-
-	if conf.DashboardMetricsScraperVersion == "" {
-		conf.DashboardMetricsScraperVersion = consts.DashboardMetricsScraperVersion
-	}
-	conf.DashboardMetricsScraperVersion = version.AddPrefixV(envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_VERSION", conf.DashboardMetricsScraperVersion))
-
-	if conf.DashboardMetricsScraperImage == "" {
-		conf.DashboardMetricsScraperImage = joinImageURI(conf.DashboardImagePrefix, "metrics-scraper", conf.DashboardMetricsScraperVersion)
-	}
-	conf.DashboardMetricsScraperImage = envs.GetEnvWithPrefix("DASHBOARD_METRICS_SCRAPER_IMAGE", conf.DashboardMetricsScraperImage)
-
-	// TODO: Add dashboard binary
-	// if conf.DashboardBinaryPrefix == "" {
-	// 	conf.DashboardBinaryPrefix = consts.DashboardBinaryPrefix + "/" + conf.DashboardVersion
-	// }
-	// conf.DashboardBinaryPrefix = envs.GetEnvWithPrefix("DASHBOARD_BINARY_PREFIX", conf.DashboardBinaryPrefix)\
-	//
-	// if conf.DashboardBinary == "" {
-	// 	conf.DashboardBinary = conf.DashboardBinaryPrefix + "/dashboard-" + GOOS + "-" + GOARCH + conf.BinSuffix
-	// }
-	// conf.DashboardBinary = envs.GetEnvWithPrefix("DASHBOARD_BINARY", conf.DashboardBinary)
 }
 
 func setKwokctlPrometheusConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {

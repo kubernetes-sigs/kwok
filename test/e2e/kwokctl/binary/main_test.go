@@ -76,7 +76,6 @@ func TestMain(m *testing.M) {
 			"--etcd-port=2400",
 			"--kube-scheduler-port=10250",
 			"--kube-controller-manager-port=10260",
-			"--dashboard-port=6060",
 			"--jaeger-port=16686",
 			"--config="+path.Join(rootDir, "test/e2e"),
 			"--config="+path.Join(rootDir, "kustomize/metrics/usage"),
