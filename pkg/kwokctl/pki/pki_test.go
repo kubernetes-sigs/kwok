@@ -27,7 +27,7 @@ func TestGeneratePki(t *testing.T) {
 	notBefore := now.UTC()
 	notAfter := now.Add(CertificateValidity).UTC()
 
-	caCert, caKey, err := GenerateCA("kwok-ca", notBefore, notAfter)
+	caCert, caKey, err := GenerateCA(DefaultCN, notBefore, notAfter)
 	if err != nil {
 		t.Fatal(fmt.Errorf("failed to generate CA: %w", err))
 	}

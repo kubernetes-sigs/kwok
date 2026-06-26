@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/kwokctl/pki"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
@@ -176,6 +177,11 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--service-account-issuer=https://kubernetes.default.svc.cluster.local",
 				"--proxy-client-key-file="+pkiAdminKeyPath,
 				"--proxy-client-cert-file="+pkiAdminCertPath,
+				"--requestheader-client-ca-file="+pkiCACertPath,
+				"--requestheader-allowed-names="+pki.DefaultCN,
+				"--requestheader-username-headers=X-Remote-User",
+				"--requestheader-group-headers=X-Remote-Group",
+				"--requestheader-extra-headers-prefix=X-Remote-Extra-",
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             schemeHTTPS,
@@ -206,6 +212,11 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				"--service-account-issuer=https://kubernetes.default.svc.cluster.local",
 				"--proxy-client-key-file="+conf.AdminKeyPath,
 				"--proxy-client-cert-file="+conf.AdminCertPath,
+				"--requestheader-client-ca-file="+conf.CaCertPath,
+				"--requestheader-allowed-names="+pki.DefaultCN,
+				"--requestheader-username-headers=X-Remote-User",
+				"--requestheader-group-headers=X-Remote-Group",
+				"--requestheader-extra-headers-prefix=X-Remote-Extra-",
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             schemeHTTPS,
