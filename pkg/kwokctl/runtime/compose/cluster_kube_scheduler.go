@@ -43,11 +43,9 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		}
 	}
 
-	user := ""
 	kubeSchedulerImage := conf.KubeSchedulerImage
 	if slices.Contains(env.components, consts.ComponentSchedulerPlugins) {
 		kubeSchedulerImage = conf.SchedulerPluginsSchedulerImage
-		user = "root"
 	}
 
 	err = c.EnsureImage(ctx, c.runtime, kubeSchedulerImage)
@@ -81,7 +79,6 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return err
 	}
-	kubeSchedulerComponent.User = user
 
 	env.kwokctlConfig.Components = append(env.kwokctlConfig.Components, kubeSchedulerComponent)
 	return nil

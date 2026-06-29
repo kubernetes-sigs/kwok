@@ -51,7 +51,7 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		return internalversion.Component{}, fmt.Errorf("jobset only supports container runtime for now")
 	}
 
-	var jobsetArgs []string
+	var args []string
 	var volumes []internalversion.Volume
 
 	volumes = append(volumes,
@@ -100,18 +100,17 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 				ReadOnly:  true,
 			},
 		)
-		jobsetArgs = append(jobsetArgs,
+		args = append(args,
 			"--config=/controller_manager_config.yaml",
 		)
 	}
 
-	jobsetArgs = append(jobsetArgs,
+	args = append(args,
 		"--kubeconfig="+kubeconfigPath,
 	)
-	user := "root"
 
 	if conf.Verbosity != log.LevelInfo {
-		jobsetArgs = append(jobsetArgs, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
+		args = append(args, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
 	}
 
 	component = internalversion.Component{
@@ -122,11 +121,10 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		},
 		Command: []string{"/manager"},
 		Volumes: volumes,
-		Args:    jobsetArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
-		User:    user,
 	}
 
 	if len(conf.RawManifests) != 0 {
@@ -147,7 +145,6 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 			}
 			component.ManifestContents = append(component.ManifestContents, manifestContents...)
 		}
-
 	} else {
 		component.ManifestContents = []string{}
 	}

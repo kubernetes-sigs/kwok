@@ -53,20 +53,22 @@ type BuildKwokControllerComponentConfig struct {
 
 // BuildKwokControllerComponent builds a kwok controller component.
 func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (component internalversion.Component) {
-	kwokControllerArgs := []string{}
+	var args []string
+	var volumes []internalversion.Volume
+	var ports []internalversion.Port
+	var metric *internalversion.ComponentMetric
+	var metricsDiscovery *internalversion.ComponentMetric
+
 	if conf.ManageNodesWithAnnotationSelector == "" {
-		kwokControllerArgs = append(kwokControllerArgs,
+		args = append(args,
 			"--manage-all-nodes=true",
 		)
 	} else {
-		kwokControllerArgs = append(kwokControllerArgs,
+		args = append(args,
 			"--manage-all-nodes=false",
 			"--manage-nodes-with-annotation-selector="+conf.ManageNodesWithAnnotationSelector,
 		)
 	}
-
-	var volumes []internalversion.Volume
-	var ports []internalversion.Port
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
@@ -106,7 +108,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
-		kwokControllerArgs = append(kwokControllerArgs,
+		args = append(args,
 			"--kubeconfig="+kubeconfigPath,
 			"--config=/root/.kwok/kwok.yaml",
 			"--tls-cert-file="+pkiAdminCertPath,
@@ -127,7 +129,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
-		kwokControllerArgs = append(kwokControllerArgs,
+		args = append(args,
 			"--kubeconfig="+conf.KubeconfigPath,
 			"--config="+conf.ConfigPath,
 			"--tls-cert-file="+conf.AdminCertPath,
@@ -150,9 +152,6 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		metricsHost = utilsnet.LocalAddress + ":10247"
 	}
 
-	var metric *internalversion.ComponentMetric
-	var metricsDiscovery *internalversion.ComponentMetric
-
 	if metricsHost != "" {
 		metric = &internalversion.ComponentMetric{
 			Scheme: "http",
@@ -167,21 +166,19 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		kwokControllerArgs = append(kwokControllerArgs, "--v="+format.String(conf.Verbosity))
+		args = append(args, "--v="+format.String(conf.Verbosity))
 	}
 
 	if len(conf.EnableCRDs) != 0 {
-		kwokControllerArgs = append(kwokControllerArgs, "--enable-crds="+strings.Join(conf.EnableCRDs, ","))
+		args = append(args, "--enable-crds="+strings.Join(conf.EnableCRDs, ","))
 	}
 
 	if conf.OtlpGrpcAddress != "" {
-		kwokControllerArgs = append(kwokControllerArgs,
+		args = append(args,
 			"--tracing-endpoint="+conf.OtlpGrpcAddress,
 			"--tracing-sampling-rate-per-million=1000000",
 		)
 	}
-
-	envs := []internalversion.Env{}
 
 	return internalversion.Component{
 		Name:    consts.ComponentKwokController,
@@ -192,12 +189,11 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		Ports:            ports,
 		Command:          []string{"kwok"},
 		Volumes:          volumes,
-		Args:             kwokControllerArgs,
+		Args:             args,
 		Binary:           conf.Binary,
 		Image:            conf.Image,
 		Metric:           metric,
 		MetricsDiscovery: metricsDiscovery,
 		WorkDir:          conf.Workdir,
-		Envs:             envs,
 	}
 }

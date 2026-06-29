@@ -22,6 +22,7 @@ import (
 	"slices"
 
 	corev1 "k8s.io/api/core/v1"
+
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/components"
@@ -94,11 +95,11 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 			},
 		},
 	})
-	kwokControllerPod, err := yaml.Marshal(pod)
+	podYaml, err := yaml.Marshal(pod)
 	if err != nil {
 		return fmt.Errorf("failed to marshal kwok controller pod: %w", err)
 	}
-	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKwokController+".yaml"), kwokControllerPod)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKwokController+".yaml"), podYaml)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}

@@ -42,8 +42,8 @@ func BuildKueuevizBackendComponent(conf BuildKueuevizBackendComponentConfig) (co
 		return internalversion.Component{}, fmt.Errorf("kueue only supports container runtime for now")
 	}
 
-	volumes := make([]internalversion.Volume, 0, 4)
-	ports := make([]internalversion.Port, 0, 1)
+	var volumes []internalversion.Volume
+	var ports []internalversion.Port
 
 	volumes = append(volumes,
 		internalversion.Volume{

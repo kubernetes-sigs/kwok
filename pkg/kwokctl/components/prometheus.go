@@ -44,8 +44,7 @@ type BuildPrometheusComponentConfig struct {
 
 // BuildPrometheusComponent builds a prometheus component.
 func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component internalversion.Component, err error) {
-	prometheusArgs := []string{}
-
+	var args []string
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
@@ -82,7 +81,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			Host:   utilsnet.LocalAddress + ":9090",
 			Path:   metricsPath,
 		}
-		prometheusArgs = append(prometheusArgs,
+		args = append(args,
 			"--config.file=/etc/prometheus/prometheus.yaml",
 			"--web.listen-address="+conf.BindAddress+":9090",
 		)
@@ -101,17 +100,15 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			Host:   utilsnet.LocalAddress + ":" + format.String(conf.Port),
 			Path:   metricsPath,
 		}
-		prometheusArgs = append(prometheusArgs,
+		args = append(args,
 			"--config.file="+conf.ConfigPath,
 			"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),
 		)
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		prometheusArgs = append(prometheusArgs, "--log.level="+log.ToLogSeverityLevel(conf.Verbosity))
+		args = append(args, "--log.level="+log.ToLogSeverityLevel(conf.Verbosity))
 	}
-
-	envs := []internalversion.Env{}
 
 	links := []string{
 		consts.ComponentEtcd,
@@ -132,11 +129,10 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		Command: []string{consts.ComponentPrometheus},
 		Ports:   ports,
 		Volumes: volumes,
-		Args:    prometheusArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
 		Metric:  metric,
-		Envs:    envs,
 	}, nil
 }

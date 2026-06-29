@@ -51,7 +51,7 @@ func BuildLWSComponent(conf BuildLWSComponentConfig) (component internalversion.
 		return internalversion.Component{}, fmt.Errorf("lws only supports container runtime for now")
 	}
 
-	var lwsArgs []string
+	var args []string
 	var volumes []internalversion.Volume
 
 	volumes = append(volumes,
@@ -100,18 +100,17 @@ func BuildLWSComponent(conf BuildLWSComponentConfig) (component internalversion.
 				ReadOnly:  true,
 			},
 		)
-		lwsArgs = append(lwsArgs,
+		args = append(args,
 			"--config=/controller_manager_config.yaml",
 		)
 	}
 
-	lwsArgs = append(lwsArgs,
+	args = append(args,
 		"--kubeconfig="+kubeconfigPath,
 	)
-	user := "root"
 
 	if conf.Verbosity != log.LevelInfo {
-		lwsArgs = append(lwsArgs, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
+		args = append(args, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
 	}
 
 	component = internalversion.Component{
@@ -122,11 +121,10 @@ func BuildLWSComponent(conf BuildLWSComponentConfig) (component internalversion.
 		},
 		Command: []string{"/manager"},
 		Volumes: volumes,
-		Args:    lwsArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
-		User:    user,
 	}
 
 	if len(conf.RawManifests) != 0 {

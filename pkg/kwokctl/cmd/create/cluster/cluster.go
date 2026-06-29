@@ -100,6 +100,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			consts.ComponentKueue,
 			consts.ComponentJobSet,
 			consts.ComponentLWS,
+			consts.ComponentSchedulerPlugins,
 			consts.ComponentDescheduler,
 		}
 

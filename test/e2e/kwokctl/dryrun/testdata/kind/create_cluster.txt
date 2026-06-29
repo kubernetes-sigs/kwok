@@ -57,7 +57,7 @@ spec:
   - args:
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-    - --kubeconfig=~/.kube/config
+    - --kubeconfig=/etc/kubernetes/kubeconfig.yaml
     - --config=~/.kwok/kwok.yaml
     - --tls-cert-file=/etc/kubernetes/pki/admin.crt
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
@@ -83,7 +83,7 @@ spec:
       protocol: TCP
     resources: {}
     volumeMounts:
-    - mountPath: ~/.kube/config
+    - mountPath: /etc/kubernetes/kubeconfig.yaml
       name: volume-0
       readOnly: true
     - mountPath: /etc/kubernetes/pki/ca.crt

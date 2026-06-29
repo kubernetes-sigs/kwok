@@ -42,12 +42,11 @@ type BuildKubectlProxyComponentConfig struct {
 
 // BuildKubectlProxyComponent builds a kubectl proxy component.
 func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (component internalversion.Component, err error) {
-	kubectlProxyArgs := []string{}
-
+	var args []string
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 
-	kubectlProxyArgs = append(kubectlProxyArgs,
+	args = append(args,
 		"proxy",
 		"--accept-hosts=^*$",
 		"--address="+conf.BindAddress,
@@ -76,7 +75,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 				ReadOnly:  true,
 			},
 		)
-		kubectlProxyArgs = append(kubectlProxyArgs,
+		args = append(args,
 			"--kubeconfig="+kubeconfigPath,
 			"--port=8001",
 		)
@@ -90,7 +89,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 			},
 		)
 	} else {
-		kubectlProxyArgs = append(kubectlProxyArgs,
+		args = append(args,
 			"--kubeconfig="+conf.KubeconfigPath,
 			"--port="+format.String(conf.Port),
 		)
@@ -106,10 +105,8 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		kubectlProxyArgs = append(kubectlProxyArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
+		args = append(args, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
-
-	envs := []internalversion.Env{}
 
 	return internalversion.Component{
 		Name: consts.ComponentKubeApiserverInsecureProxy,
@@ -118,11 +115,10 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 		},
 		Command: []string{"kubectl"},
 		Volumes: volumes,
-		Args:    kubectlProxyArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		Ports:   ports,
 		WorkDir: conf.Workdir,
-		Envs:    envs,
 	}, nil
 }

@@ -26,8 +26,6 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
-const deschedulerKubeconfigPath = "/tmp/kubeconfig"
-
 // BuildDeschedulerComponentConfig is the configuration for building a descheduler component.
 type BuildDeschedulerComponentConfig struct {
 	Runtime        string
@@ -51,13 +49,13 @@ func BuildDeschedulerComponent(conf BuildDeschedulerComponentConfig) (component 
 		return internalversion.Component{}, fmt.Errorf("descheduler only supports container runtime for now")
 	}
 
-	var deschedulerArgs []string
+	var args []string
 	var volumes []internalversion.Volume
 
 	volumes = append(volumes,
 		internalversion.Volume{
 			HostPath:  conf.KubeconfigPath,
-			MountPath: deschedulerKubeconfigPath,
+			MountPath: kubeconfigPath,
 			ReadOnly:  true,
 		},
 		internalversion.Volume{
@@ -77,8 +75,8 @@ func BuildDeschedulerComponent(conf BuildDeschedulerComponentConfig) (component 
 		},
 	)
 
-	deschedulerArgs = append(deschedulerArgs,
-		"--kubeconfig="+deschedulerKubeconfigPath,
+	args = append(args,
+		"--kubeconfig="+kubeconfigPath,
 		"--descheduling-interval=5m",
 	)
 
@@ -90,16 +88,14 @@ func BuildDeschedulerComponent(conf BuildDeschedulerComponentConfig) (component 
 				ReadOnly:  true,
 			},
 		)
-		deschedulerArgs = append(deschedulerArgs,
+		args = append(args,
 			"--policy-config-file=/policy-config-file.yaml",
 		)
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		deschedulerArgs = append(deschedulerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
+		args = append(args, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
-
-	user := "0"
 
 	component = internalversion.Component{
 		Name:    consts.ComponentDescheduler,
@@ -109,11 +105,10 @@ func BuildDeschedulerComponent(conf BuildDeschedulerComponentConfig) (component 
 		},
 		Command: []string{"/bin/descheduler"},
 		Volumes: volumes,
-		Args:    deschedulerArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
-		User:    user,
 	}
 
 	if len(conf.RawManifests) != 0 {

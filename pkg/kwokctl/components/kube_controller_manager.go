@@ -52,29 +52,28 @@ type BuildKubeControllerManagerComponentConfig struct {
 
 // BuildKubeControllerManagerComponent builds a kube-controller-manager component.
 func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponentConfig) (component internalversion.Component, err error) {
-	kubeControllerManagerArgs := []string{}
+	var args []string
+	var volumes []internalversion.Volume
+	var ports []internalversion.Port
+	var metric *internalversion.ComponentMetric
 
 	if conf.KubeFeatureGates != "" {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+		args = append(args,
 			"--feature-gates="+conf.KubeFeatureGates,
 		)
 	}
 
 	if conf.NodeMonitorPeriodMilliseconds > 0 {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+		args = append(args,
 			"--node-monitor-period="+format.String(time.Duration(conf.NodeMonitorPeriodMilliseconds)*time.Millisecond),
 		)
 	}
 
 	if conf.NodeMonitorGracePeriodMilliseconds > 0 {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+		args = append(args,
 			"--node-monitor-grace-period="+format.String(time.Duration(conf.NodeMonitorGracePeriodMilliseconds)*time.Millisecond),
 		)
 	}
-
-	var volumes []internalversion.Volume
-	var ports []internalversion.Port
-	var metric *internalversion.ComponentMetric
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
@@ -99,24 +98,24 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				ReadOnly:  true,
 			},
 		)
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+		args = append(args,
 			"--kubeconfig="+kubeconfigPath,
 		)
 	} else {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+		args = append(args,
 			"--kubeconfig="+conf.KubeconfigPath,
 		)
 	}
 
 	if conf.SecurePort {
 		if conf.Version.GE(version.NewVersion(1, 13, 0)) {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			args = append(args,
 				"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
 			)
 		}
 
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10257",
 			)
@@ -138,7 +137,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				InsecureSkipVerify: true,
 			}
 		} else {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
 			)
@@ -162,12 +161,12 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		}
 
 		// TODO: Support disable insecure port
-		//	kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+		//	args = append(args,
 		//		"--port=0",
 		//	)
 	} else {
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			args = append(args,
 				"--address="+conf.BindAddress,
 				"--port=10252",
 			)
@@ -186,7 +185,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				Path:   metricsPath,
 			}
 		} else {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			args = append(args,
 				"--address="+conf.BindAddress,
 				"--port="+format.String(conf.Port),
 			)
@@ -206,19 +205,19 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			}
 		}
 
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+		args = append(args,
 			"--secure-port=0",
 		)
 	}
 
 	if conf.KubeAuthorization {
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			args = append(args,
 				"--root-ca-file="+pkiCACertPath,
 				"--service-account-private-key-file="+pkiAdminKeyPath,
 			)
 		} else {
-			kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+			args = append(args,
 				"--root-ca-file="+conf.CaCertPath,
 				"--service-account-private-key-file="+conf.AdminKeyPath,
 			)
@@ -226,17 +225,15 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	}
 
 	if conf.DisableQPSLimits {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs,
+		args = append(args,
 			"--kube-api-qps="+format.String(consts.DefaultUnlimitedQPS),
 			"--kube-api-burst="+format.String(consts.DefaultUnlimitedBurst),
 		)
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		kubeControllerManagerArgs = append(kubeControllerManagerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
+		args = append(args, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
-
-	envs := []internalversion.Env{}
 
 	return internalversion.Component{
 		Name:    consts.ComponentKubeControllerManager,
@@ -246,12 +243,11 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		},
 		Command: []string{consts.ComponentKubeControllerManager},
 		Volumes: volumes,
-		Args:    kubeControllerManagerArgs,
+		Args:    args,
 		Ports:   ports,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
 		Metric:  metric,
-		Envs:    envs,
 	}, nil
 }

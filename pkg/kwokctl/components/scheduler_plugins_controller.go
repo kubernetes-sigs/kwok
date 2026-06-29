@@ -43,8 +43,8 @@ func BuildSchedulerPluginsControllerComponent(conf BuildSchedulerPluginsControll
 		return internalversion.Component{}, fmt.Errorf("scheduler-plugins only supports container runtime for now")
 	}
 
-	args := make([]string, 0, 1)
-	volumes := make([]internalversion.Volume, 0, 4)
+	var args []string
+	var volumes []internalversion.Volume
 
 	volumes = append(volumes,
 		internalversion.Volume{
@@ -73,8 +73,6 @@ func BuildSchedulerPluginsControllerComponent(conf BuildSchedulerPluginsControll
 		"--kubeconfig="+kubeconfigPath,
 	)
 
-	user := "root"
-
 	component = internalversion.Component{
 		Name:  consts.ComponentSchedulerPlugins,
 		Image: conf.Image,
@@ -83,7 +81,6 @@ func BuildSchedulerPluginsControllerComponent(conf BuildSchedulerPluginsControll
 		},
 		Command: []string{"controller"},
 		Args:    args,
-		User:    user,
 		Volumes: volumes,
 		Version: conf.Version.String(),
 		WorkDir: conf.Workdir,

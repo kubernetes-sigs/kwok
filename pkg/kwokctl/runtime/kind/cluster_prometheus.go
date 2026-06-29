@@ -99,11 +99,11 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 
 	runtime.ApplyComponentPatches(ctx, &prometheusComponent, env.kwokctlConfig.ComponentsPatches)
 
-	prometheusPod, err := yaml.Marshal(components.ConvertToPod(prometheusComponent))
+	podYaml, err := yaml.Marshal(components.ConvertToPod(prometheusComponent))
 	if err != nil {
 		return fmt.Errorf("failed to marshal prometheus pod: %w", err)
 	}
-	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentPrometheus+".yaml"), prometheusPod)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentPrometheus+".yaml"), podYaml)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}

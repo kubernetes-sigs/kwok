@@ -47,12 +47,17 @@ type BuildMetricsServerComponentConfig struct {
 
 // BuildMetricsServerComponent builds a metrics server component.
 func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (component internalversion.Component, err error) {
-	metricsServerArgs := []string{
+	var args []string
+	var volumes []internalversion.Volume
+	var ports []internalversion.Port
+	var metric *internalversion.ComponentMetric
+
+	args = append(args,
 		"--kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP",
 		"--kubelet-use-node-status-port",
 		"--kubelet-insecure-tls", // TODO: remove this flag
 		"--metric-resolution=15s",
-	}
+	)
 
 	var metricsHost string
 	var metricsPort uint32
@@ -70,11 +75,6 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 
 	metricsAddress := net.JoinHostPort(metricsHost, format.String(metricsPort))
 
-	var metric *internalversion.ComponentMetric
-
-	user := ""
-	var volumes []internalversion.Volume
-	var ports []internalversion.Port
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
 			internalversion.Volume{
@@ -99,7 +99,7 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 			},
 		)
 
-		metricsServerArgs = append(metricsServerArgs,
+		args = append(args,
 			"--bind-address="+conf.BindAddress,
 			"--secure-port=4443",
 			"--kubeconfig="+kubeconfigPath,
@@ -125,9 +125,8 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 			KeyPath:            pkiAdminKeyPath,
 			InsecureSkipVerify: true,
 		}
-		user = "root"
 	} else {
-		metricsServerArgs = append(metricsServerArgs,
+		args = append(args,
 			"--bind-address="+conf.BindAddress,
 			"--secure-port="+format.String(conf.Port),
 			"--kubeconfig="+conf.KubeconfigPath,
@@ -156,10 +155,8 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		metricsServerArgs = append(metricsServerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
+		args = append(args, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
-
-	envs := []internalversion.Env{}
 
 	component = internalversion.Component{
 		Name:    consts.ComponentMetricsServer,
@@ -168,15 +165,13 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 			consts.ComponentKwokController,
 		},
 		Command: []string{"/metrics-server"},
-		User:    user,
 		Ports:   ports,
 		Volumes: volumes,
-		Args:    metricsServerArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		Metric:  metric,
 		WorkDir: conf.Workdir,
-		Envs:    envs,
 	}
 
 	if len(conf.RawManifests) != 0 {

@@ -48,17 +48,16 @@ type BuildKubeSchedulerComponentConfig struct {
 
 // BuildKubeSchedulerComponent builds a kube-scheduler component.
 func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (component internalversion.Component, err error) {
-	kubeSchedulerArgs := []string{}
-
-	if conf.KubeFeatureGates != "" {
-		kubeSchedulerArgs = append(kubeSchedulerArgs,
-			"--feature-gates="+conf.KubeFeatureGates,
-		)
-	}
-
+	var args []string
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
+
+	if conf.KubeFeatureGates != "" {
+		args = append(args,
+			"--feature-gates="+conf.KubeFeatureGates,
+		)
+	}
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
@@ -92,21 +91,21 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 					ReadOnly:  true,
 				},
 			)
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--config=/etc/kubernetes/scheduler.yaml",
 			)
 		} else {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--kubeconfig="+kubeconfigPath,
 			)
 		}
 	} else {
 		if conf.ConfigPath != "" {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--config="+conf.ConfigPath,
 			)
 		} else {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--kubeconfig="+conf.KubeconfigPath,
 			)
 		}
@@ -114,13 +113,13 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 
 	if conf.SecurePort {
 		if conf.Version.GE(version.NewVersion(1, 13, 0)) {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
 			)
 		}
 
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10259",
 			)
@@ -142,7 +141,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				InsecureSkipVerify: true,
 			}
 		} else {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
 			)
@@ -165,12 +164,12 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			}
 		}
 		// TODO: Support disable insecure port
-		//	kubeSchedulerArgs = append(kubeSchedulerArgs,
+		//	args = append(args,
 		//		"--port=0",
 		//	)
 	} else {
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--address="+conf.BindAddress,
 				"--port=10251",
 			)
@@ -189,7 +188,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				Path:   metricsPath,
 			}
 		} else {
-			kubeSchedulerArgs = append(kubeSchedulerArgs,
+			args = append(args,
 				"--address="+conf.BindAddress,
 				"--port="+format.String(conf.Port),
 			)
@@ -210,23 +209,21 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		}
 
 		// TODO: Support disable secure port
-		//	kubeSchedulerArgs = append(kubeSchedulerArgs,
+		//	args = append(args,
 		//		"--secure-port=0",
 		//	)
 	}
 
 	if conf.DisableQPSLimits {
-		kubeSchedulerArgs = append(kubeSchedulerArgs,
+		args = append(args,
 			"--kube-api-qps="+format.String(consts.DefaultUnlimitedQPS),
 			"--kube-api-burst="+format.String(consts.DefaultUnlimitedBurst),
 		)
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		kubeSchedulerArgs = append(kubeSchedulerArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
+		args = append(args, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
-
-	envs := []internalversion.Env{}
 
 	return internalversion.Component{
 		Name:    consts.ComponentKubeScheduler,
@@ -236,12 +233,11 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		},
 		Command: []string{consts.ComponentKubeScheduler},
 		Volumes: volumes,
-		Args:    kubeSchedulerArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		Ports:   ports,
 		WorkDir: conf.Workdir,
 		Metric:  metric,
-		Envs:    envs,
 	}, nil
 }

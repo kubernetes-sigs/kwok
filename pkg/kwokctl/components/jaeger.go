@@ -40,10 +40,13 @@ type BuildJaegerComponentConfig struct {
 
 // BuildJaegerComponent builds a jaeger component.
 func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalversion.Component, err error) {
-	jaegerArgs := []string{"--collector.otlp.enabled=true"}
-
+	var args []string
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
+
+	args = append(args,
+		"--collector.otlp.enabled=true",
+	)
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		ports = append(
@@ -61,7 +64,7 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
-		jaegerArgs = append(jaegerArgs,
+		args = append(args,
 			"--query.http-server.host-port="+conf.BindAddress+":16686",
 			"--collector.otlp.grpc.host-port="+conf.BindAddress+":4317",
 		)
@@ -81,14 +84,14 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
-		jaegerArgs = append(jaegerArgs,
+		args = append(args,
 			"--query.http-server.host-port="+conf.BindAddress+":"+format.String(conf.Port),
 			"--collector.otlp.grpc.host-port="+utilsnet.LocalAddress+":"+format.String(conf.OtlpGrpcPort),
 		)
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		jaegerArgs = append(jaegerArgs, "--log-level="+log.ToLogSeverityLevel(conf.Verbosity))
+		args = append(args, "--log-level="+log.ToLogSeverityLevel(conf.Verbosity))
 	}
 
 	return internalversion.Component{
@@ -96,7 +99,7 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 		Version: conf.Version.String(),
 		Ports:   ports,
 		Volumes: volumes,
-		Args:    jaegerArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
