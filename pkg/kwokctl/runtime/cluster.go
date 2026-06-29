@@ -397,7 +397,12 @@ func (c *Cluster) getEnabledAndDisabledComponents(ctx context.Context) ([]string
 	if conf.Options.KueuevizPort != 0 {
 		enable = append(enable, consts.ComponentKueue, consts.ComponentKueueviz)
 	}
-
+	if slices.Contains(enable, consts.ComponentKueueviz) {
+		enable = utilsslices.Filter(enable, func(s string) bool {
+			return s != consts.ComponentKueueviz
+		})
+		enable = append(enable, consts.ComponentKueuevizFrontend, consts.ComponentKueuevizBackend)
+	}
 	return enable, disable, nil
 }
 
