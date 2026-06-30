@@ -21,22 +21,20 @@ ROOT_DIR="$(realpath "${DIR}/../..")"
 
 VERSION="$("${ROOT_DIR}/hack/get-version.sh")"
 
-GOOS="$(go env GOOS)"
-GOARCH="$(go env GOARCH)"
-
 CASES_PATH="${DIR}/cases.txt"
 
 function clear_testdata() {
   local kind="${1}"
   sed "s|${VERSION}|<VERSION>|g" |
-    clear_testdata_goos "${kind}" |
-    clear_testdata_goarch "${kind}"
+    sed "s|<VERSION>-dirty|<VERSION>|g" |
+    clear_testdata_goarch "${kind}" |
+    clear_testdata_goos "${kind}"
 }
 
 function clear_testdata_goos() {
   local kind="${1}"
   if [[ "${kind}" == *"GOOS"* ]]; then
-    sed "s|${GOOS}|<OS>|g"
+    sed "s|linux|<OS>|g" | sed "s|darwin|<OS>|g" | sed "s|windows|<OS>|g"
   else
     cat
   fi
@@ -45,7 +43,7 @@ function clear_testdata_goos() {
 function clear_testdata_goarch() {
   local kind="${1}"
   if [[ "${kind}" == *"GOARCH"* ]]; then
-    sed "s|${GOARCH}|<ARCH>|g"
+    sed "s|amd64|<ARCH>|g" | sed "s|arm64|<ARCH>|g"
   else
     cat
   fi

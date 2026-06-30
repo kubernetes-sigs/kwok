@@ -39,7 +39,7 @@ func (c *Cluster) AuditLogs(ctx context.Context, out io.Writer) error {
 		return nil
 	}
 
-	f, err := os.OpenFile(logs, os.O_RDONLY, 0640)
+	f, err := os.OpenFile(logs, os.O_RDONLY, 0644)
 	if err != nil {
 		return err
 	}

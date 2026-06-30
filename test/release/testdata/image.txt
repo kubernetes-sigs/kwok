@@ -1,1 +1,9 @@
-docker buildx build --tag=image-prefix/kwok:<VERSION> --platform=linux/<ARCH> --load -f ./images/kwok/Dockerfile .
+docker \
+  buildx \
+  build \
+  --tag=image-prefix/kwok:<VERSION> \
+  --platform=linux/<ARCH> \
+  --load \
+  -f \
+  ./images/kwok/Dockerfile \
+  .

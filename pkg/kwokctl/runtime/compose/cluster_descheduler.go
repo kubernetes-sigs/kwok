@@ -65,7 +65,7 @@ func (c *Cluster) addDescheduler(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		err = c.WriteFileWithMode(deschedulerConfigPath, []byte(deschedulerPolicyData), 0644)
+		err = c.WriteFile(deschedulerConfigPath, []byte(deschedulerPolicyData))
 		if err != nil {
 			return fmt.Errorf("failed to write descheduler yaml: %w", err)
 		}

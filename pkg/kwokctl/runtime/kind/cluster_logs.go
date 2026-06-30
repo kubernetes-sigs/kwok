@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 
-	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
@@ -37,13 +36,6 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 		args = append(args, "-f")
 	}
 	args = append(args, componentName)
-	if c.IsDryRun() && !follow {
-		if file, ok := dryrun.IsCatToFileWriter(out); ok {
-			dryrun.PrintMessagef("%s >%s", runtime.FormatExec(ctx, "kubectl", args...), file)
-			return nil
-		}
-	}
-
 	err := c.Kubectl(utilsexec.WithAllWriteTo(ctx, out), args...)
 	if err != nil {
 		return err

@@ -38,7 +38,7 @@ import (
 const basePath = "./site/content/en/docs/generated/"
 
 func main() {
-	if err := os.MkdirAll(basePath, os.FileMode(0750)); err != nil {
+	if err := os.MkdirAll(basePath, 0755); err != nil {
 		_, _ = fmt.Println(err)
 		os.Exit(1)
 	}

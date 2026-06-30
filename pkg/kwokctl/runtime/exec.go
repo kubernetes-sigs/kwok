@@ -17,7 +17,6 @@ limitations under the License.
 package runtime
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -25,7 +24,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -65,7 +63,7 @@ func (c *Cluster) ForkExec(ctx context.Context, dir string, name string, args ..
 	})
 
 	if c.IsDryRun() {
-		dryrun.PrintMessagef("%s", FormatExec(ctx, name, args...))
+		dryrun.PrintExec(ctx, name, args...)
 		dryrun.PrintMessagef("echo $! >%s", pidPath)
 		return nil
 	}
@@ -188,7 +186,7 @@ func (c *Cluster) EnsureImage(ctx context.Context, command string, image string)
 
 func (c *Cluster) ensureImage(ctx context.Context, command string, image string, quiet bool, cacheDir string) error {
 	dest := utilspath.Join(cacheDir, "tarball", image+".tar")
-	err := os.MkdirAll(filepath.Dir(dest), 0750)
+	err := c.MkdirAll(filepath.Dir(dest))
 	if err != nil {
 		return err
 	}
@@ -228,7 +226,7 @@ func (c *Cluster) ensureImageWithRuntime(ctx context.Context, command string, im
 // Exec executes the given command and returns the output.
 func (c *Cluster) Exec(ctx context.Context, name string, args ...string) error {
 	if c.IsDryRun() {
-		dryrun.PrintMessagef("%s", FormatExec(ctx, name, args...))
+		dryrun.PrintExec(ctx, name, args...)
 		return nil
 	}
 
@@ -255,53 +253,16 @@ func (c *Cluster) ParseVersionFromImage(ctx context.Context, runtime string, ima
 
 // WriteToPath writes the output of a command to a specified file
 func (c *Cluster) WriteToPath(ctx context.Context, path string, commands []string) error {
-	if c.IsDryRun() {
-		dryrun.PrintMessagef("%s >%s", strings.Join(commands, " "), path)
-		return nil
-	}
-
-	buf := bytes.NewBuffer(nil)
-	err := utilsexec.Exec(utilsexec.WithAllWriteTo(ctx, buf), commands[0], commands[1:]...)
+	out, err := c.OpenFile(path)
 	if err != nil {
 		return err
 	}
-
-	return file.Write(path, buf.Bytes())
-}
-
-// FormatExec prints the command to be executed to the output stream.
-func FormatExec(ctx context.Context, name string, args ...string) string {
-	opt := utilsexec.GetExecOptions(ctx)
-	out := bytes.NewBuffer(nil)
-	if opt.Dir != "" {
-		_, _ = fmt.Fprintf(out, "cd %s && ", opt.Dir)
+	defer func() {
+		_ = out.Close()
+	}()
+	err = c.Exec(utilsexec.WithAllWriteTo(ctx, out), commands[0], commands[1:]...)
+	if err != nil {
+		return err
 	}
-
-	if len(opt.Env) != 0 {
-		_, _ = fmt.Fprintf(out, "%s ", strings.Join(opt.Env, " "))
-	}
-
-	_, _ = fmt.Fprintf(out, "%s", utilspath.OnlyName(name))
-
-	for _, arg := range args {
-		_, _ = fmt.Fprintf(out, " %s", arg)
-	}
-
-	outfile, ok := dryrun.IsCatToFileWriter(opt.Out)
-	if ok {
-		_, _ = fmt.Fprintf(out, " >%s", outfile)
-	}
-
-	if erroutfile, ok := dryrun.IsCatToFileWriter(opt.ErrOut); ok {
-		if erroutfile == outfile {
-			_, _ = fmt.Fprintf(out, " 2>&1")
-		} else {
-			_, _ = fmt.Fprintf(out, " 2>%s", outfile)
-		}
-	}
-
-	if opt.Fork {
-		_, _ = fmt.Fprintf(out, " &")
-	}
-	return out.String()
+	return nil
 }

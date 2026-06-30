@@ -4,7 +4,12 @@ kill $(cat <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid)
 rm <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kube-apiserver.pid
 rm -rf <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data
 # Download https://github.com/etcd-io/etcd/releases/download/v3.6.10/etcd-v3.6.10-<OS>-<ARCH>.<TAR> and extract etcdutl to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/etcdutl
-etcdutl snapshot restore <ROOT_DIR>/test/e2e/kwokctl/binary/snapshot.db --data-dir <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data
+etcdutl \
+  snapshot \
+  restore \
+  <ROOT_DIR>/test/e2e/kwokctl/binary/snapshot.db \
+  --data-dir \
+  <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data
 rm -rf <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 mv <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd-data <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 kill $(cat <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kwok-controller.pid)

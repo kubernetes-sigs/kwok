@@ -278,7 +278,7 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 		return err
 	}
 
-	err = c.WriteFileWithMode(env.inClusterOnHostKubeconfigPath, inClusterKubeconfigData, 0644)
+	err = c.WriteFile(env.inClusterOnHostKubeconfigPath, inClusterKubeconfigData)
 	if err != nil {
 		return err
 	}

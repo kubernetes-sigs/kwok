@@ -34,7 +34,6 @@ leaderElection:
   resourceNamespace: ""
   retryPeriod: 0s
 EOF
-chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 nerdctl pull registry.k8s.io/scheduler-plugins/kube-scheduler:v0.34.7
 nerdctl pull registry.k8s.io/kwok/kwok:v0.9.0
 nerdctl pull registry.k8s.io/metrics-server/metrics-server:v0.8.1
@@ -151,7 +150,6 @@ scrape_configs:
   - targets:
     - 127.0.0.1:9090
 EOF
-chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
 clusters:
@@ -192,44 +190,398 @@ users:
     client-certificate: /etc/kubernetes/pki/admin.crt
     client-key: /etc/kubernetes/pki/admin.key
 EOF
-chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig
 # Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
-nerdctl network create kwok-<CLUSTER_NAME> --label=com.docker.compose.project=kwok-<CLUSTER_NAME>
-nerdctl create --name=kwok-<CLUSTER_NAME>-etcd --pull=never --entrypoint=etcd --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> registry.k8s.io/etcd:3.6.10-0 --name=node0 --auto-compaction-retention=1 --quota-backend-bytes=8589934592 --data-dir=/etcd-data --initial-advertise-peer-urls=http://0.0.0.0:2380 --listen-peer-urls=http://0.0.0.0:2380 --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --initial-cluster=node0=http://0.0.0.0:2380 --experimental-enable-distributed-tracing=true --experimental-distributed-tracing-address=kwok-<CLUSTER_NAME>-jaeger:4317 --experimental-distributed-tracing-sampling-rate=1000000
-nerdctl create --name=kwok-<CLUSTER_NAME>-jaeger --pull=never --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=16686:16686/tcp docker.io/jaegertracing/all-in-one:1.76.0 --collector.otlp.enabled=true --query.http-server.host-port=0.0.0.0:16686 --collector.otlp.grpc.host-port=0.0.0.0:4317
-nerdctl create --name=kwok-<CLUSTER_NAME>-kube-apiserver --pull=never --entrypoint=kube-apiserver --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=32766:6443/tcp --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml:/etc/kubernetes/audit-policy.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log:/var/log/kubernetes/audit/audit.log --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml:/etc/kubernetes/apiserver-tracing-config.yaml:ro registry.k8s.io/kube-apiserver:v1.36.1 --etcd-prefix=/registry --allow-privileged=true --max-requests-inflight=0 --max-mutating-requests-inflight=0 --enable-priority-and-fairness=false --etcd-servers=http://kwok-<CLUSTER_NAME>-etcd:2379 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --secure-port=6443 --tls-cert-file=/etc/kubernetes/pki/admin.crt --tls-private-key-file=/etc/kubernetes/pki/admin.key --client-ca-file=/etc/kubernetes/pki/ca.crt --service-account-key-file=/etc/kubernetes/pki/admin.key --service-account-signing-key-file=/etc/kubernetes/pki/admin.key --service-account-issuer=https://kubernetes.default.svc.cluster.local --proxy-client-key-file=/etc/kubernetes/pki/admin.key --proxy-client-cert-file=/etc/kubernetes/pki/admin.crt --requestheader-client-ca-file=/etc/kubernetes/pki/ca.crt --requestheader-allowed-names=kwok-ca --requestheader-username-headers=X-Remote-User --requestheader-group-headers=X-Remote-Group --requestheader-extra-headers-prefix=X-Remote-Extra- --audit-policy-file=/etc/kubernetes/audit-policy.yaml --audit-log-path=/var/log/kubernetes/audit/audit.log --tracing-config-file=/etc/kubernetes/apiserver-tracing-config.yaml
-nerdctl create --name=kwok-<CLUSTER_NAME>-kube-apiserver-insecure-proxy --pull=never --entrypoint=kubectl --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=6080:8001/tcp --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro registry.k8s.io/kubectl:v1.36.1 proxy --accept-hosts=^*$ --address=0.0.0.0 --kubeconfig=/etc/kubernetes/kubeconfig.yaml --port=8001
-nerdctl create --name=kwok-<CLUSTER_NAME>-kube-controller-manager --pull=never --entrypoint=kube-controller-manager --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro registry.k8s.io/kube-controller-manager:v1.36.1 --node-monitor-period=25s --node-monitor-grace-period=3m20s --kubeconfig=/etc/kubernetes/kubeconfig.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=10257 --root-ca-file=/etc/kubernetes/pki/ca.crt --service-account-private-key-file=/etc/kubernetes/pki/admin.key --kube-api-qps=5000 --kube-api-burst=10000
-nerdctl create --name=kwok-<CLUSTER_NAME>-kube-scheduler --pull=never --entrypoint=kube-scheduler --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml:/etc/kubernetes/scheduler.yaml:ro registry.k8s.io/scheduler-plugins/kube-scheduler:v0.34.7 --config=/etc/kubernetes/scheduler.yaml --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics --bind-address=0.0.0.0 --secure-port=10259 --kube-api-qps=5000 --kube-api-burst=10000
-nerdctl create --name=kwok-<CLUSTER_NAME>-kwok-controller --pull=never --entrypoint=kwok --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml:~/.kwok/kwok.yaml:ro registry.k8s.io/kwok/kwok:v0.9.0 --manage-all-nodes=true --kubeconfig=/etc/kubernetes/kubeconfig.yaml --config=~/.kwok/kwok.yaml --tls-cert-file=/etc/kubernetes/pki/admin.crt --tls-private-key-file=/etc/kubernetes/pki/admin.key --node-ip= --node-name=kwok-<CLUSTER_NAME>-kwok-controller --node-port=10247 --server-address=0.0.0.0:10247 --node-lease-duration-seconds=200 --tracing-endpoint=kwok-<CLUSTER_NAME>-jaeger:4317 --tracing-sampling-rate-per-million=1000000
-nerdctl create --name=kwok-<CLUSTER_NAME>-scheduler-plugins --pull=never --entrypoint=controller --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro registry.k8s.io/scheduler-plugins/controller:v0.34.7 --kubeconfig=/etc/kubernetes/kubeconfig.yaml
-nerdctl create --name=kwok-<CLUSTER_NAME>-kueue --pull=never --entrypoint=/manager --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kueue/metrics/certs/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kueue/metrics/certs/tls.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kueue/metrics/certs/tls.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/visibility/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/visibility/tls.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/visibility/tls.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kueue.yaml:/controller_manager_config.yaml:ro --env=NAMESPACE=kueue-system registry.k8s.io/kueue/kueue:v0.18.1 --config=/controller_manager_config.yaml --kubeconfig=/etc/kubernetes/kubeconfig.yaml
-nerdctl create --name=kwok-<CLUSTER_NAME>-jobset --pull=never --entrypoint=/manager --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/jobset.yaml:/controller_manager_config.yaml:ro registry.k8s.io/jobset/jobset:v0.12.0 --config=/controller_manager_config.yaml --kubeconfig=/etc/kubernetes/kubeconfig.yaml
-nerdctl create --name=kwok-<CLUSTER_NAME>-lws --pull=never --entrypoint=/manager --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/lws.yaml:/controller_manager_config.yaml:ro registry.k8s.io/lws/lws:v0.9.0 --config=/controller_manager_config.yaml --kubeconfig=/etc/kubernetes/kubeconfig.yaml
-nerdctl create --name=kwok-<CLUSTER_NAME>-descheduler --pull=never --entrypoint=/bin/descheduler --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/descheduler.yaml:/policy-config-file.yaml:ro registry.k8s.io/descheduler/descheduler:v0.36.0 --kubeconfig=/etc/kubernetes/kubeconfig.yaml --descheduling-interval=5m --policy-config-file=/policy-config-file.yaml
-nerdctl create --name=kwok-<CLUSTER_NAME>-node-readiness-controller --pull=never --entrypoint=/manager --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro registry.k8s.io/node-readiness-controller/node-readiness-controller:v0.3.0 --kubeconfig=/etc/kubernetes/kubeconfig.yaml --leader-elect=false
-nerdctl create --name=kwok-<CLUSTER_NAME>-metrics-server --pull=never --entrypoint=/metrics-server --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro registry.k8s.io/metrics-server/metrics-server:v0.8.1 --kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP --kubelet-use-node-status-port --kubelet-insecure-tls --metric-resolution=15s --bind-address=0.0.0.0 --secure-port=4443 --kubeconfig=/etc/kubernetes/kubeconfig.yaml --authentication-kubeconfig=/etc/kubernetes/kubeconfig.yaml --authorization-kubeconfig=/etc/kubernetes/kubeconfig.yaml --tls-cert-file=/etc/kubernetes/pki/admin.crt --tls-private-key-file=/etc/kubernetes/pki/admin.key
-nerdctl create --name=kwok-<CLUSTER_NAME>-prometheus --pull=never --entrypoint=prometheus --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=9090:9090/tcp --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro docker.io/prom/prometheus:v3.12.0 --config.file=/etc/prometheus/prometheus.yaml --web.listen-address=0.0.0.0:9090
-nerdctl create --name=kwok-<CLUSTER_NAME>-kueueviz-backend --pull=never --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=32765:8080/tcp --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/home/nonroot/.kube/config:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro registry.k8s.io/kueue/kueueviz-backend:v0.18.1
-nerdctl create --name=kwok-<CLUSTER_NAME>-kueueviz-frontend --pull=never --network=kwok-<CLUSTER_NAME> --restart=unless-stopped --label=com.docker.compose.project=kwok-<CLUSTER_NAME> --publish=18080:8080/tcp --env=REACT_APP_WEBSOCKET_URL=ws://localhost:32765 registry.k8s.io/kueue/kueueviz-frontend:v0.18.1
+nerdctl \
+  network \
+  create \
+  kwok-<CLUSTER_NAME> \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME>
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-etcd \
+  --pull=never \
+  --entrypoint=etcd \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  registry.k8s.io/etcd:3.6.10-0 \
+  --name=node0 \
+  --auto-compaction-retention=1 \
+  --quota-backend-bytes=8589934592 \
+  --data-dir=/etcd-data \
+  --initial-advertise-peer-urls=http://0.0.0.0:2380 \
+  --listen-peer-urls=http://0.0.0.0:2380 \
+  --advertise-client-urls=http://0.0.0.0:2379 \
+  --listen-client-urls=http://0.0.0.0:2379 \
+  --initial-cluster=node0=http://0.0.0.0:2380 \
+  --experimental-enable-distributed-tracing=true \
+  --experimental-distributed-tracing-address=kwok-<CLUSTER_NAME>-jaeger:4317 \
+  --experimental-distributed-tracing-sampling-rate=1000000
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-jaeger \
+  --pull=never \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --publish=16686:16686/tcp \
+  docker.io/jaegertracing/all-in-one:1.76.0 \
+  --collector.otlp.enabled=true \
+  --query.http-server.host-port=0.0.0.0:16686 \
+  --collector.otlp.grpc.host-port=0.0.0.0:4317
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kube-apiserver \
+  --pull=never \
+  --entrypoint=kube-apiserver \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --publish=32766:6443/tcp \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml:/etc/kubernetes/audit-policy.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log:/var/log/kubernetes/audit/audit.log \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml:/etc/kubernetes/apiserver-tracing-config.yaml:ro \
+  registry.k8s.io/kube-apiserver:v1.36.1 \
+  --etcd-prefix=/registry \
+  --allow-privileged=true \
+  --max-requests-inflight=0 \
+  --max-mutating-requests-inflight=0 \
+  --enable-priority-and-fairness=false \
+  --etcd-servers=http://kwok-<CLUSTER_NAME>-etcd:2379 \
+  --authorization-mode=Node,RBAC \
+  --bind-address=0.0.0.0 \
+  --secure-port=6443 \
+  --tls-cert-file=/etc/kubernetes/pki/admin.crt \
+  --tls-private-key-file=/etc/kubernetes/pki/admin.key \
+  --client-ca-file=/etc/kubernetes/pki/ca.crt \
+  --service-account-key-file=/etc/kubernetes/pki/admin.key \
+  --service-account-signing-key-file=/etc/kubernetes/pki/admin.key \
+  --service-account-issuer=https://kubernetes.default.svc.cluster.local \
+  --proxy-client-key-file=/etc/kubernetes/pki/admin.key \
+  --proxy-client-cert-file=/etc/kubernetes/pki/admin.crt \
+  --requestheader-client-ca-file=/etc/kubernetes/pki/ca.crt \
+  --requestheader-allowed-names=kwok-ca \
+  --requestheader-username-headers=X-Remote-User \
+  --requestheader-group-headers=X-Remote-Group \
+  --requestheader-extra-headers-prefix=X-Remote-Extra- \
+  --audit-policy-file=/etc/kubernetes/audit-policy.yaml \
+  --audit-log-path=/var/log/kubernetes/audit/audit.log \
+  --tracing-config-file=/etc/kubernetes/apiserver-tracing-config.yaml
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kube-apiserver-insecure-proxy \
+  --pull=never \
+  --entrypoint=kubectl \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --publish=6080:8001/tcp \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/kubectl:v1.36.1 \
+  proxy \
+  --accept-hosts=^*$ \
+  --address=0.0.0.0 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --port=8001
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kube-controller-manager \
+  --pull=never \
+  --entrypoint=kube-controller-manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/kube-controller-manager:v1.36.1 \
+  --node-monitor-period=25s \
+  --node-monitor-grace-period=3m20s \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics \
+  --bind-address=0.0.0.0 \
+  --secure-port=10257 \
+  --root-ca-file=/etc/kubernetes/pki/ca.crt \
+  --service-account-private-key-file=/etc/kubernetes/pki/admin.key \
+  --kube-api-qps=5000 \
+  --kube-api-burst=10000
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kube-scheduler \
+  --pull=never \
+  --entrypoint=kube-scheduler \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml:/etc/kubernetes/scheduler.yaml:ro \
+  registry.k8s.io/scheduler-plugins/kube-scheduler:v0.34.7 \
+  --config=/etc/kubernetes/scheduler.yaml \
+  --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics \
+  --bind-address=0.0.0.0 \
+  --secure-port=10259 \
+  --kube-api-qps=5000 \
+  --kube-api-burst=10000
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kwok-controller \
+  --pull=never \
+  --entrypoint=kwok \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml:~/.kwok/kwok.yaml:ro \
+  registry.k8s.io/kwok/kwok:v0.9.0 \
+  --manage-all-nodes=true \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --config=~/.kwok/kwok.yaml \
+  --tls-cert-file=/etc/kubernetes/pki/admin.crt \
+  --tls-private-key-file=/etc/kubernetes/pki/admin.key \
+  --node-ip= \
+  --node-name=kwok-<CLUSTER_NAME>-kwok-controller \
+  --node-port=10247 \
+  --server-address=0.0.0.0:10247 \
+  --node-lease-duration-seconds=200 \
+  --tracing-endpoint=kwok-<CLUSTER_NAME>-jaeger:4317 \
+  --tracing-sampling-rate-per-million=1000000
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-scheduler-plugins \
+  --pull=never \
+  --entrypoint=controller \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/scheduler-plugins/controller:v0.34.7 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kueue \
+  --pull=never \
+  --entrypoint=/manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kueue/metrics/certs/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kueue/metrics/certs/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kueue/metrics/certs/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/visibility/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/visibility/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/visibility/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kueue.yaml:/controller_manager_config.yaml:ro \
+  --env=NAMESPACE=kueue-system \
+  registry.k8s.io/kueue/kueue:v0.18.1 \
+  --config=/controller_manager_config.yaml \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-jobset \
+  --pull=never \
+  --entrypoint=/manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/jobset.yaml:/controller_manager_config.yaml:ro \
+  registry.k8s.io/jobset/jobset:v0.12.0 \
+  --config=/controller_manager_config.yaml \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-lws \
+  --pull=never \
+  --entrypoint=/manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/lws.yaml:/controller_manager_config.yaml:ro \
+  registry.k8s.io/lws/lws:v0.9.0 \
+  --config=/controller_manager_config.yaml \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-descheduler \
+  --pull=never \
+  --entrypoint=/bin/descheduler \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/descheduler.yaml:/policy-config-file.yaml:ro \
+  registry.k8s.io/descheduler/descheduler:v0.36.0 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --descheduling-interval=5m \
+  --policy-config-file=/policy-config-file.yaml
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-node-readiness-controller \
+  --pull=never \
+  --entrypoint=/manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/node-readiness-controller/node-readiness-controller:v0.3.0 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --leader-elect=false
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-metrics-server \
+  --pull=never \
+  --entrypoint=/metrics-server \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/metrics-server/metrics-server:v0.8.1 \
+  --kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP \
+  --kubelet-use-node-status-port \
+  --kubelet-insecure-tls \
+  --metric-resolution=15s \
+  --bind-address=0.0.0.0 \
+  --secure-port=4443 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --authentication-kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --authorization-kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --tls-cert-file=/etc/kubernetes/pki/admin.crt \
+  --tls-private-key-file=/etc/kubernetes/pki/admin.key
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-prometheus \
+  --pull=never \
+  --entrypoint=prometheus \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --publish=9090:9090/tcp \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  docker.io/prom/prometheus:v3.12.0 \
+  --config.file=/etc/prometheus/prometheus.yaml \
+  --web.listen-address=0.0.0.0:9090
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kueueviz-backend \
+  --pull=never \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --publish=32765:8080/tcp \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/home/nonroot/.kube/config:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/kueue/kueueviz-backend:v0.18.1
+nerdctl \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kueueviz-frontend \
+  --pull=never \
+  --network=kwok-<CLUSTER_NAME> \
+  --restart=unless-stopped \
+  --label=com.docker.compose.project=kwok-<CLUSTER_NAME> \
+  --publish=18080:8080/tcp \
+  --env=REACT_APP_WEBSOCKET_URL=ws://localhost:32765 \
+  registry.k8s.io/kueue/kueueviz-frontend:v0.18.1
 # Add context kwok-<CLUSTER_NAME> to ~/.kube/config
-nerdctl start kwok-<CLUSTER_NAME>-etcd
-nerdctl start kwok-<CLUSTER_NAME>-jaeger
-nerdctl start kwok-<CLUSTER_NAME>-kube-apiserver
-nerdctl start kwok-<CLUSTER_NAME>-kube-apiserver-insecure-proxy
-nerdctl start kwok-<CLUSTER_NAME>-kube-controller-manager
-nerdctl start kwok-<CLUSTER_NAME>-kube-scheduler
-nerdctl start kwok-<CLUSTER_NAME>-kwok-controller
-nerdctl start kwok-<CLUSTER_NAME>-scheduler-plugins
-nerdctl start kwok-<CLUSTER_NAME>-kueue
-nerdctl start kwok-<CLUSTER_NAME>-jobset
-nerdctl start kwok-<CLUSTER_NAME>-lws
-nerdctl start kwok-<CLUSTER_NAME>-descheduler
-nerdctl start kwok-<CLUSTER_NAME>-node-readiness-controller
-nerdctl start kwok-<CLUSTER_NAME>-metrics-server
-nerdctl start kwok-<CLUSTER_NAME>-prometheus
-nerdctl start kwok-<CLUSTER_NAME>-kueueviz-backend
-nerdctl start kwok-<CLUSTER_NAME>-kueueviz-frontend
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-etcd
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-jaeger
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-kube-apiserver
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-kube-apiserver-insecure-proxy
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-kube-controller-manager
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-kube-scheduler
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-kwok-controller
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-scheduler-plugins
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-kueue
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-jobset
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-lws
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-descheduler
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-node-readiness-controller
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-metrics-server
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-prometheus
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-kueueviz-backend
+nerdctl \
+  start \
+  kwok-<CLUSTER_NAME>-kueueviz-frontend
 # Set up manifest for metrics-server
 # Set up manifest for scheduler-plugins
 # Set up manifest for kueue

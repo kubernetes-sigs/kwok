@@ -43,7 +43,7 @@ func (c *Cluster) setupPrometheusConfig(_ context.Context, env *env) (err error)
 
 	// We don't need to check the permissions of the prometheus config file,
 	// because it's working in a non-root container.
-	err = c.WriteFileWithMode(prometheusConfigPath, []byte(prometheusData), 0644)
+	err = c.WriteFile(prometheusConfigPath, []byte(prometheusData))
 	if err != nil {
 		return fmt.Errorf("failed to write prometheus yaml: %w", err)
 	}

@@ -81,7 +81,7 @@ func testGetKubeconfig(ctx context.Context, kwokctlPath, name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get kubeconfig: %w", err)
 	}
-	if err := os.WriteFile(kubeconfigPath, output, 0640); err != nil {
+	if err := os.WriteFile(kubeconfigPath, output, 0644); err != nil {
 		return fmt.Errorf("failed to write kubeconfig: %w", err)
 	}
 	defer func() {
