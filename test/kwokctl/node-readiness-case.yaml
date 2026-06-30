@@ -1,0 +1,16 @@
+apiVersion: readiness.node.x-k8s.io/v1alpha1
+kind: NodeReadinessRule
+metadata:
+  name: nodereadinessrule-sample
+spec:
+  conditions:
+  - type: "network.kubernetes.io/CNIReady"
+    requiredStatus: "True"
+  taint:
+    key: "readiness.k8s.io/NetworkReady"
+    effect: "NoSchedule"
+    value: "pending"
+  enforcementMode: "bootstrap-only"
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/agent: ""

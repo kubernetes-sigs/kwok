@@ -375,6 +375,11 @@ func (in *KwokctlConfigurationOptions) DeepCopyInto(out *KwokctlConfigurationOpt
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.NodeReadinessControllerManifests != nil {
+		in, out := &in.NodeReadinessControllerManifests, &out.NodeReadinessControllerManifests
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.KubeAuthorization != nil {
 		in, out := &in.KubeAuthorization, &out.KubeAuthorization
 		*out = new(bool)

@@ -2964,6 +2964,17 @@ string
 </tr>
 <tr>
 <td>
+<code>nodeReadinessControllerVersion</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>NodeReadinessControllerVersion is the version of node-readiness-controller to use.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>kindVersion</code>
 <em>
 string
@@ -3211,6 +3222,17 @@ string
 </tr>
 <tr>
 <td>
+<code>nodeReadinessControllerImagePrefix</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>NodeReadinessControllerImagePrefix is the prefix of the node-readiness-controller image.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>etcdImage</code>
 <em>
 string
@@ -3446,6 +3468,28 @@ string
 </td>
 <td>
 <p>DeschedulerManifests is the full URLs of the descheduler manifest.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeReadinessControllerImage</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>NodeReadinessControllerImage is the image of node-readiness-controller.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeReadinessControllerManifests</code>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>NodeReadinessControllerManifests is the full URLs of the node-readiness-controller manifest.</p>
 </td>
 </tr>
 <tr>

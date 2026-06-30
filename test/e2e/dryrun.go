@@ -167,6 +167,7 @@ func CaseDryrunWithVerbosity(clusterName string, kwokctlPath string, rootDir str
 			"--enable=lws",
 			"--enable=scheduler-plugins",
 			"--enable=descheduler",
+			"--enable=node-readiness-controller",
 			"--kueueviz-port=18080",
 			"--kube-audit-policy", kubeAuditPath,
 			"--kube-scheduler-config", schedulerConfigPath,

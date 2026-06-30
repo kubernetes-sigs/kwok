@@ -237,6 +237,12 @@ jobs:
       run: |
         PATH=$(pwd)/bin:${PATH} ./hack/e2e-test.sh kwokctl/kwokctl_descheduler
 
+    - name: Test Node Readiness
+      if: ${{ matrix.kwokctl-runtime == 'docker' }}
+      shell: bash
+      run: |
+        PATH=$(pwd)/bin:${PATH} ./hack/e2e-test.sh kwokctl/kwokctl_node_readiness
+
     - name: Upload logs
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: failure()

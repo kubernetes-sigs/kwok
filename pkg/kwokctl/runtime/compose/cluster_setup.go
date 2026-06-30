@@ -202,6 +202,11 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
+	err = c.addNodeReadinessController(ctx, env)
+	if err != nil {
+		return err
+	}
+
 	err = c.setupPrometheusConfig(ctx, env)
 	if err != nil {
 		return err
