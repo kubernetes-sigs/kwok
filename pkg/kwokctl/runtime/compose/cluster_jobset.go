@@ -65,7 +65,7 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		err = c.WriteFileWithMode(jobsetConfigPath, []byte(jobsetConfigData), 0644)
+		err = c.WriteFile(jobsetConfigPath, []byte(jobsetConfigData))
 		if err != nil {
 			return fmt.Errorf("failed to write jobset yaml: %w", err)
 		}

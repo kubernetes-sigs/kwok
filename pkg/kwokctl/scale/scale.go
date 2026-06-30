@@ -58,6 +58,11 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		return fmt.Errorf("serial length must be greater than 0 when replicas is greater than 1")
 	}
 
+	if conf.DryRun {
+		dryrun.PrintMessagef("# Scale resource %s to %d replicas", conf.Name, conf.Replicas)
+		return nil
+	}
+
 	param := conf.Parameters
 
 	name := conf.Name
@@ -79,12 +84,6 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 	data, err := renderer.ToJSON(conf.Template, param)
 	if err != nil {
 		return err
-	}
-
-	if conf.DryRun {
-		dryrun.PrintMessagef("# Scale resource %s to %d replicas", conf.Name, conf.Replicas)
-		dryrun.PrintMessagef("# Resource example: %s", string(data))
-		return nil
 	}
 
 	var u *unstructured.Unstructured

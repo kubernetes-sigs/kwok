@@ -80,7 +80,7 @@ func TestRemoveContext(t *testing.T) {
 	defer func() {
 		_ = os.Remove(kubeconfigPath)
 	}()
-	_ = os.WriteFile(kubeconfigPath, []byte(testKubeconfig), 0640)
+	_ = os.WriteFile(kubeconfigPath, []byte(testKubeconfig), 0644)
 	err := RemoveContext("./test/kubeconfig", "test-cluster")
 	if err != nil {
 		t.Errorf("failed to delete context: %v", err)

@@ -47,8 +47,8 @@ func formatCmdOutput(got, clusterName, rootDir string) string {
 	got = strings.ReplaceAll(got, ".tar.gz", ".<TAR>")
 	got = strings.ReplaceAll(got, homeDir, "~")
 	got = strings.ReplaceAll(got, "/root", "~")
-	got = strings.ReplaceAll(got, " --env=ETCD_UNSUPPORTED_ARCH=<ARCH> ", " ")
-	got = strings.ReplaceAll(got, " ETCD_UNSUPPORTED_ARCH=<ARCH> ", " ")
+	got = strings.ReplaceAll(got, "--env=ETCD_UNSUPPORTED_ARCH=<ARCH> \\\n  ", "")
+	got = strings.ReplaceAll(got, "ETCD_UNSUPPORTED_ARCH=<ARCH> \\\n  ", "")
 	got = emptyLine.ReplaceAllLiteralString(got, "\n")
 	return got
 }

@@ -69,11 +69,11 @@ func (c *Cluster) EnsureManifest(ctx context.Context, url string) ([]byte, error
 		}
 	}
 
-	err = os.MkdirAll(filepath.Dir(cachePath), 0750)
+	err = os.MkdirAll(filepath.Dir(cachePath), 0755)
 	if err != nil {
 		return nil, err
 	}
-	err = os.WriteFile(cachePath, data, 0640)
+	err = os.WriteFile(cachePath, data, 0644)
 	if err != nil {
 		return nil, err
 	}

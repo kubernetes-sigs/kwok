@@ -20,7 +20,6 @@ import (
 	"context"
 	"io"
 	"io/fs"
-	"os"
 	"strings"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
@@ -134,17 +133,6 @@ func (c *Cluster) WriteFile(name string, content []byte) error {
 	return file.Write(name, content)
 }
 
-// WriteFileWithMode writes content to a file with the given mode.
-func (c *Cluster) WriteFileWithMode(name string, content []byte, mode os.FileMode) error {
-	if c.IsDryRun() {
-		dryrun.PrintMessagef("cat <<EOF >%s\n%s\nEOF", name, string(content))
-		dryrun.PrintMessagef("chmod 0%o %s", mode, name)
-		return nil
-	}
-
-	return file.WriteWithMode(name, content, mode)
-}
-
 // MkdirAll creates a directory.
 func (c *Cluster) MkdirAll(name string) error {
 	if c.IsDryRun() {
@@ -164,7 +152,7 @@ func (c *Cluster) EnsureBinary(ctx context.Context, name, binary string) (string
 	conf := config.Options
 
 	binaryPath := c.GetBinPath(name + conf.BinSuffix)
-	err = c.DownloadWithCache(ctx, conf.CacheDir, binary, binaryPath, 0750, conf.QuietPull)
+	err = c.DownloadWithCache(ctx, conf.CacheDir, binary, binaryPath, 0755, conf.QuietPull)
 	if err != nil {
 		return "", err
 	}

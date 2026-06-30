@@ -23,7 +23,7 @@ import (
 
 // Create creates a file.
 func Create(name string) error {
-	file, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
+	file, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func RemoveAll(name string) error {
 
 // Open opens/creates a file for writing.
 func Open(name string) (io.WriteCloser, error) {
-	return os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
+	return os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 }
 
 // Read reads the content of a file.
@@ -114,15 +114,10 @@ func Read(name string) ([]byte, error) {
 
 // Write writes content to a file.
 func Write(name string, content []byte) error {
-	return os.WriteFile(name, content, 0640)
-}
-
-// WriteWithMode writes content to a file with the given mode.
-func WriteWithMode(name string, content []byte, mode os.FileMode) error {
-	return os.WriteFile(name, content, mode)
+	return os.WriteFile(name, content, 0644)
 }
 
 // MkdirAll creates a directory.
 func MkdirAll(name string) error {
-	return os.MkdirAll(name, 0750)
+	return os.MkdirAll(name, 0755)
 }

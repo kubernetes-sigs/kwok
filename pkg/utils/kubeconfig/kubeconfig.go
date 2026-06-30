@@ -54,7 +54,7 @@ type Config struct {
 
 // AddContext adds a context to the kubeconfig file
 func AddContext(kubeconfigPath, contextName string, config *Config) error {
-	err := os.MkdirAll(filepath.Dir(kubeconfigPath), 0750)
+	err := os.MkdirAll(filepath.Dir(kubeconfigPath), 0755)
 	if err != nil {
 		return err
 	}

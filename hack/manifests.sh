@@ -96,7 +96,17 @@ function args() {
 }
 
 function dry_run() {
-  echo "$*"
+  cmd_str=""
+  first=true
+  for arg in "$@"; do
+    if $first; then
+      cmd_str+="$arg"
+      first=false
+    else
+      cmd_str+=$' \\\n  '"$arg"
+    fi
+  done
+  echo "$cmd_str"
   if [[ "${DRY_RUN}" != "true" ]]; then
     eval "$*"
   fi
