@@ -79,7 +79,7 @@ func BuildKueuevizBackendComponent(conf BuildKueuevizBackendComponentConfig) (co
 	)
 
 	return internalversion.Component{
-		Name: consts.ComponentKueueviz + "-backend",
+		Name: consts.ComponentKueuevizBackend,
 		Links: []string{
 			consts.ComponentKubeApiserver,
 			consts.ComponentKueue,

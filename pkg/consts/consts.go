@@ -144,6 +144,8 @@ const (
 	ComponentSchedulerPlugins           = "scheduler-plugins"
 	ComponentKueue                      = "kueue"
 	ComponentKueueviz                   = "kueueviz"
+	ComponentKueuevizFrontend           = ComponentKueueviz + "-frontend"
+	ComponentKueuevizBackend            = ComponentKueueviz + "-backend"
 	ComponentJobSet                     = "jobset"
 	ComponentLWS                        = "lws"
 	ComponentDescheduler                = "descheduler"
