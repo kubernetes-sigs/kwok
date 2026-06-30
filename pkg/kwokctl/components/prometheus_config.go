@@ -36,11 +36,11 @@ func BuildPrometheus(conf BuildPrometheusConfig) (string, error) {
 		ScrapeConfigs: convertToScrapeConfigs(conf.Components),
 	}
 
-	configJSON, err := yaml.Marshal(config)
+	data, err := yaml.Marshal(config)
 	if err != nil {
 		return "", fmt.Errorf("build prometheus config error: %w", err)
 	}
-	return string(configJSON), nil
+	return string(data), nil
 }
 
 // convertToScrapeConfigs converts internalversion.Component to prometheus.ScrapeConfig.

@@ -50,8 +50,11 @@ type BuildEtcdComponentConfig struct {
 
 // BuildEtcdComponent builds an etcd component.
 func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversion.Component, err error) {
+	var args []string
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
+	var envs []internalversion.Env
+	var metric *internalversion.ComponentMetric
 
 	quantity, err := resource.ParseQuantity(conf.QuotaBackendSize)
 	if err != nil {
@@ -63,13 +66,11 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		return internalversion.Component{}, fmt.Errorf("failed to convert quota backend size to int64")
 	}
 
-	etcdArgs := []string{
+	args = append(args,
 		"--name=node0",
 		"--auto-compaction-retention=1",
-		"--quota-backend-bytes=" + strconv.FormatInt(quotaBackendSize, 10),
-	}
-
-	var metric *internalversion.ComponentMetric
+		"--quota-backend-bytes="+strconv.FormatInt(quotaBackendSize, 10),
+	)
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		// TODO: use a volume for the data path
@@ -79,7 +80,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		//		MountPath: "/etcd-data",
 		//	},
 		//)
-		etcdArgs = append(etcdArgs,
+		args = append(args,
 			"--data-dir=/etcd-data",
 		)
 
@@ -98,7 +99,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
-		etcdArgs = append(etcdArgs,
+		args = append(args,
 			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":2380",
 			"--listen-peer-urls=http://"+conf.BindAddress+":2380",
 			"--advertise-client-urls=http://"+conf.BindAddress+":2379",
@@ -131,7 +132,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			},
 		)
 
-		etcdArgs = append(etcdArgs,
+		args = append(args,
 			"--data-dir="+conf.DataPath,
 			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
 			"--listen-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
@@ -149,23 +150,22 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 
 	if conf.Version.GTE(version.NewVersion(3, 4, 0)) {
 		if conf.Verbosity != log.LevelInfo {
-			etcdArgs = append(etcdArgs, "--log-level="+log.ToLogSeverityLevel(conf.Verbosity))
+			args = append(args, "--log-level="+log.ToLogSeverityLevel(conf.Verbosity))
 		}
 	} else {
 		if conf.Verbosity <= log.LevelDebug {
-			etcdArgs = append(etcdArgs, "--debug")
+			args = append(args, "--debug")
 		}
 	}
 
 	if conf.OtlpGrpcAddress != "" {
-		etcdArgs = append(etcdArgs,
+		args = append(args,
 			"--experimental-enable-distributed-tracing=true",
 			"--experimental-distributed-tracing-address="+conf.OtlpGrpcAddress,
 			"--experimental-distributed-tracing-sampling-rate=1000000",
 		)
 	}
 
-	envs := []internalversion.Env{}
 	if runtime.GOARCH != "amd64" {
 		envs = append(envs, internalversion.Env{
 			Name:  "ETCD_UNSUPPORTED_ARCH",
@@ -178,7 +178,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		Version: conf.Version.String(),
 		Volumes: volumes,
 		Command: []string{consts.ComponentEtcd},
-		Args:    etcdArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Ports:   ports,
 		Metric:  metric,

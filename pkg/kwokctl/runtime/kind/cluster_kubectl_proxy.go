@@ -61,11 +61,11 @@ func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
 
 	runtime.ApplyComponentPatches(ctx, &kubectlProxyComponent, env.kwokctlConfig.ComponentsPatches)
 
-	kubectlProxyYaml, err := yaml.Marshal(components.ConvertToPod(kubectlProxyComponent))
+	podYaml, err := yaml.Marshal(components.ConvertToPod(kubectlProxyComponent))
 	if err != nil {
 		return fmt.Errorf("failed to marshal kubectl proxy pod: %w", err)
 	}
-	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKubeApiserverInsecureProxy+".yaml"), kubectlProxyYaml)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKubeApiserverInsecureProxy+".yaml"), podYaml)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}

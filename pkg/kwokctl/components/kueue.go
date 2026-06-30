@@ -53,16 +53,17 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		return internalversion.Component{}, fmt.Errorf("kueue only supports container runtime for now")
 	}
 
-	var kueueArgs []string
+	var args []string
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
+	var envs []internalversion.Env
 
-	envs := []internalversion.Env{
-		{
+	envs = append(envs,
+		internalversion.Env{
 			Name:  "NAMESPACE",
 			Value: "kueue-system",
 		},
-	}
+	)
 
 	volumes = append(volumes,
 		internalversion.Volume{
@@ -140,18 +141,17 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 				ReadOnly:  true,
 			},
 		)
-		kueueArgs = append(kueueArgs,
+		args = append(args,
 			"--config=/controller_manager_config.yaml",
 		)
 	}
 
-	kueueArgs = append(kueueArgs,
+	args = append(args,
 		"--kubeconfig="+kubeconfigPath,
 	)
-	user := "root"
 
 	if conf.Verbosity != log.LevelInfo {
-		kueueArgs = append(kueueArgs, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
+		args = append(args, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
 	}
 
 	component = internalversion.Component{
@@ -162,13 +162,12 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		},
 		Command: []string{"/manager"},
 		Volumes: volumes,
-		Args:    kueueArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		Ports:   ports,
 		WorkDir: conf.Workdir,
 		Envs:    envs,
-		User:    user,
 	}
 
 	if len(conf.RawManifests) != 0 {

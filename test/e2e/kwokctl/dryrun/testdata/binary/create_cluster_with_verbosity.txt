@@ -35,6 +35,7 @@ leaderElection:
   resourceNamespace: ""
   retryPeriod: 0s
 EOF
+chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 # Download https://github.com/kubernetes-sigs/kwok/releases/download/v0.9.0/kwok-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kwok-controller
 # Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/metrics-server-<OS>-<ARCH> to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/metrics-server
 # Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml to <ROOT_DIR>/workdir/cache/manifest/49813f4ec9caba92a73718bf218a6a07e283942ec2088fe8d58ac793f5f6998b.yaml

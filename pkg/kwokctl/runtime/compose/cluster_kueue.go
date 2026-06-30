@@ -64,7 +64,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 		if err != nil {
 			return err
 		}
-		err = c.WriteFile(kueueConfigPath, []byte(kueueConfigData))
+		err = c.WriteFileWithMode(kueueConfigPath, []byte(kueueConfigData), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to write kueue yaml: %w", err)
 		}

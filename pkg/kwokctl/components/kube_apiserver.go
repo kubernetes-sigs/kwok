@@ -59,14 +59,19 @@ type BuildKubeApiserverComponentConfig struct {
 
 // BuildKubeApiserverComponent builds a kube-apiserver component.
 func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (component internalversion.Component, err error) {
+	var args []string
+	var volumes []internalversion.Volume
+	var ports []internalversion.Port
+	var metric *internalversion.ComponentMetric
+
 	if conf.EtcdPort == 0 {
 		conf.EtcdPort = 2379
 	}
 
-	kubeApiserverArgs := []string{
-		"--etcd-prefix=" + conf.EtcdPrefix,
+	args = append(args,
+		"--etcd-prefix="+conf.EtcdPrefix,
 		"--allow-privileged=true",
-	}
+	)
 
 	if conf.KubeAdmission {
 		if conf.Version.LT(version.NewVersion(1, 21, 0)) && !conf.KubeAuthorization {
@@ -74,13 +79,13 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		}
 	} else {
 		// TODO: use enable-admission-plugins and disable-admission-plugins instead of admission-control
-		kubeApiserverArgs = append(kubeApiserverArgs,
+		args = append(args,
 			"--admission-control=",
 		)
 	}
 
 	if conf.KubeRuntimeConfig != "" {
-		kubeApiserverArgs = append(kubeApiserverArgs,
+		args = append(args,
 			"--runtime-config="+conf.KubeRuntimeConfig,
 		)
 	}
@@ -99,42 +104,38 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	if len(featureGates) != 0 {
-		kubeApiserverArgs = append(kubeApiserverArgs,
+		args = append(args,
 			"--feature-gates="+strings.Join(featureGates, ","),
 		)
 	}
 
 	if conf.DisableQPSLimits {
-		kubeApiserverArgs = append(kubeApiserverArgs,
+		args = append(args,
 			"--max-requests-inflight=0",
 			"--max-mutating-requests-inflight=0",
 		)
 
 		// FeatureGate APIPriorityAndFairness is not available before 1.17.0
 		if conf.Version.GE(version.NewVersion(1, 18, 0)) {
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--enable-priority-and-fairness=false",
 			)
 		}
 	}
 
-	var ports []internalversion.Port
-	var volumes []internalversion.Volume
-	var metric *internalversion.ComponentMetric
-
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
-		kubeApiserverArgs = append(kubeApiserverArgs,
+		args = append(args,
 			"--etcd-servers=http://"+conf.EtcdAddress+":2379",
 		)
 	} else {
-		kubeApiserverArgs = append(kubeApiserverArgs,
+		args = append(args,
 			"--etcd-servers=http://"+conf.EtcdAddress+":"+format.String(conf.EtcdPort),
 		)
 	}
 
 	if conf.SecurePort {
 		if conf.KubeAuthorization {
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--authorization-mode=Node,RBAC",
 			)
 		}
@@ -166,7 +167,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 					ReadOnly:  true,
 				},
 			)
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=6443",
 				"--tls-cert-file="+pkiAdminCertPath,
@@ -201,7 +202,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 					Protocol: internalversion.ProtocolTCP,
 				},
 			)
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
 				"--tls-cert-file="+conf.AdminCertPath,
@@ -239,7 +240,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				},
 			)
 
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--insecure-bind-address="+conf.BindAddress,
 				"--insecure-port=8080",
 			)
@@ -258,7 +259,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 					Protocol: internalversion.ProtocolTCP,
 				},
 			)
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--insecure-bind-address="+conf.BindAddress,
 				"--insecure-port="+format.String(conf.Port),
 			)
@@ -284,12 +285,12 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 					ReadOnly:  false,
 				},
 			)
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--audit-policy-file=/etc/kubernetes/audit-policy.yaml",
 				"--audit-log-path=/var/log/kubernetes/audit/audit.log",
 			)
 		} else {
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--audit-policy-file="+conf.AuditPolicyPath,
 				"--audit-log-path="+conf.AuditLogPath,
 			)
@@ -305,21 +306,19 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 					ReadOnly:  true,
 				},
 			)
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--tracing-config-file=/etc/kubernetes/apiserver-tracing-config.yaml",
 			)
 		} else {
-			kubeApiserverArgs = append(kubeApiserverArgs,
+			args = append(args,
 				"--tracing-config-file="+conf.TracingConfigPath,
 			)
 		}
 	}
 
 	if conf.Verbosity != log.LevelInfo {
-		kubeApiserverArgs = append(kubeApiserverArgs, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
+		args = append(args, "--v="+format.String(log.ToKlogLevel(conf.Verbosity)))
 	}
-
-	envs := []internalversion.Env{}
 
 	links := []string{consts.ComponentEtcd}
 	if conf.TracingConfigPath != "" {
@@ -333,11 +332,10 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		Command: []string{consts.ComponentKubeApiserver},
 		Ports:   ports,
 		Volumes: volumes,
-		Args:    kubeApiserverArgs,
+		Args:    args,
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		Metric:  metric,
 		WorkDir: conf.Workdir,
-		Envs:    envs,
 	}, nil
 }

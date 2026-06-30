@@ -27,6 +27,7 @@ leaderElection:
   resourceNamespace: ""
   retryPeriod: 0s
 EOF
+chmod 0644 <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
 endpoint: 0.0.0.0:4317
@@ -136,7 +137,7 @@ spec:
     - proxy
     - --accept-hosts=^*$
     - --address=0.0.0.0
-    - --kubeconfig=~/.kube/config
+    - --kubeconfig=/etc/kubernetes/kubeconfig.yaml
     - --port=8001
     command:
     - kubectl
@@ -150,7 +151,7 @@ spec:
       protocol: TCP
     resources: {}
     volumeMounts:
-    - mountPath: ~/.kube/config
+    - mountPath: /etc/kubernetes/kubeconfig.yaml
       name: volume-0
       readOnly: true
     - mountPath: /etc/kubernetes/pki/ca.crt
@@ -198,7 +199,7 @@ spec:
   - args:
     - --manage-all-nodes=false
     - --manage-nodes-with-annotation-selector=kwok.x-k8s.io/node=fake
-    - --kubeconfig=~/.kube/config
+    - --kubeconfig=/etc/kubernetes/kubeconfig.yaml
     - --config=~/.kwok/kwok.yaml
     - --tls-cert-file=/etc/kubernetes/pki/admin.crt
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
@@ -226,7 +227,7 @@ spec:
       protocol: TCP
     resources: {}
     volumeMounts:
-    - mountPath: ~/.kube/config
+    - mountPath: /etc/kubernetes/kubeconfig.yaml
       name: volume-0
       readOnly: true
     - mountPath: /etc/kubernetes/pki/ca.crt
@@ -286,9 +287,9 @@ spec:
     - --metric-resolution=15s
     - --bind-address=0.0.0.0
     - --secure-port=4443
-    - --kubeconfig=~/.kube/config
-    - --authentication-kubeconfig=~/.kube/config
-    - --authorization-kubeconfig=~/.kube/config
+    - --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+    - --authentication-kubeconfig=/etc/kubernetes/kubeconfig.yaml
+    - --authorization-kubeconfig=/etc/kubernetes/kubeconfig.yaml
     - --tls-cert-file=/etc/kubernetes/pki/admin.crt
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     command:
@@ -303,7 +304,7 @@ spec:
       protocol: TCP
     resources: {}
     volumeMounts:
-    - mountPath: ~/.kube/config
+    - mountPath: /etc/kubernetes/kubeconfig.yaml
       name: volume-0
       readOnly: true
     - mountPath: /etc/kubernetes/pki/ca.crt

@@ -125,7 +125,7 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	}
 
 	inClusterOnHostKubeconfigPath := c.GetWorkdirPath(runtime.InClusterKubeconfigName)
-	inClusterKubeconfig := "/root/.kube/config"
+	inClusterKubeconfig := "/etc/kubernetes/kubeconfig.yaml"
 	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
 	etcdDataPath := c.GetWorkdirPath(runtime.EtcdDataDirName)
 	kwokConfigPath := c.GetWorkdirPath(runtime.ConfigName)

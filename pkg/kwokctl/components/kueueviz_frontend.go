@@ -41,15 +41,16 @@ func BuildKueuevizFrontendComponent(conf BuildKueuevizFrontendComponentConfig) (
 		return internalversion.Component{}, fmt.Errorf("kueue only supports container runtime for now")
 	}
 
-	ports := make([]internalversion.Port, 0, 1)
+	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
+	var envs []internalversion.Env
 
-	envs := []internalversion.Env{
-		{
+	envs = append(envs,
+		internalversion.Env{
 			Name:  "REACT_APP_WEBSOCKET_URL",
 			Value: "ws://localhost:" + format.String(conf.BackendPort),
 		},
-	}
+	)
 
 	ports = append(
 		ports,

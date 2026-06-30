@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/nxadm/tail"
+
 	"sigs.k8s.io/kwok/pkg/kwokctl/dryrun"
 	"sigs.k8s.io/kwok/pkg/log"
 )

@@ -65,7 +65,7 @@ func (c *Cluster) addLWS(ctx context.Context, env *env) (err error) {
 			return err
 		}
 
-		err = c.WriteFile(lwsConfigPath, []byte(lwsConfigData))
+		err = c.WriteFileWithMode(lwsConfigPath, []byte(lwsConfigData), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to write lws yaml: %w", err)
 		}

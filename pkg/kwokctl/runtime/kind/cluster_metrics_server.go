@@ -75,11 +75,11 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 		return err
 	}
 
-	metricsServerPod, err := yaml.Marshal(components.ConvertToPod(metricsServerComponent))
+	podYaml, err := yaml.Marshal(components.ConvertToPod(metricsServerComponent))
 	if err != nil {
 		return fmt.Errorf("failed to marshal metrics server pod: %w", err)
 	}
-	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentMetricsServer+".yaml"), metricsServerPod)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentMetricsServer+".yaml"), podYaml)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}

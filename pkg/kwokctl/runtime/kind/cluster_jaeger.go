@@ -62,11 +62,11 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 
 		runtime.ApplyComponentPatches(ctx, &jaegerComponent, env.kwokctlConfig.ComponentsPatches)
 
-		jaegerPod, err := yaml.Marshal(components.ConvertToPod(jaegerComponent))
+		podYaml, err := yaml.Marshal(components.ConvertToPod(jaegerComponent))
 		if err != nil {
 			return fmt.Errorf("failed to marshal jaeger pod: %w", err)
 		}
-		err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentJaeger+".yaml"), jaegerPod)
+		err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentJaeger+".yaml"), podYaml)
 		if err != nil {
 			return fmt.Errorf("failed to write: %w", err)
 		}
