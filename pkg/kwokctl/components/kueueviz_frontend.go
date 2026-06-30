@@ -62,9 +62,9 @@ func BuildKueuevizFrontendComponent(conf BuildKueuevizFrontendComponentConfig) (
 	)
 
 	return internalversion.Component{
-		Name: consts.ComponentKueueviz + "-frontend",
+		Name: consts.ComponentKueuevizFrontend,
 		Links: []string{
-			consts.ComponentKueueviz + "-backend",
+			consts.ComponentKueuevizBackend,
 		},
 		Binary: conf.Binary,
 		Image:  conf.Image,

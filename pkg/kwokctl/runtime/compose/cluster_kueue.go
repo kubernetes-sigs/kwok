@@ -96,12 +96,12 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 }
 
 func (c *Cluster) addKueueviz(ctx context.Context, env *env) (err error) {
-	if !slices.Contains(env.components, consts.ComponentKueueviz) {
+	if !slices.Contains(env.components, consts.ComponentKueuevizFrontend) || !slices.Contains(env.components, consts.ComponentKueuevizBackend) {
 		return nil
 	}
 
 	conf := &env.kwokctlConfig.Options
-	// Configure the kueueviz backend
+	// Configure the kueueviz
 	err = c.EnsureImage(ctx, c.runtime, conf.KueuevizBackendImage)
 	if err != nil {
 		return err
