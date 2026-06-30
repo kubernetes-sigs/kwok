@@ -86,6 +86,11 @@ var (
 	DeschedulerImagePrefix    = "registry.k8s.io/descheduler"
 	DeschedulerManifestPrefix = "github.com/kubernetes-sigs/descheduler/kubernetes/deployment?ref="
 
+	NodeReadinessControllerVersion        = "0.3.0"
+	NodeReadinessControllerBinaryPrefix   = ""
+	NodeReadinessControllerImagePrefix    = "registry.k8s.io/node-readiness-controller"
+	NodeReadinessControllerManifestPrefix = "https://github.com/kubernetes-sigs/node-readiness-controller/releases/download"
+
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000
 )
@@ -141,4 +146,5 @@ const (
 	ComponentJobSet                     = "jobset"
 	ComponentLWS                        = "lws"
 	ComponentDescheduler                = "descheduler"
+	ComponentNodeReadinessController    = "node-readiness-controller"
 )

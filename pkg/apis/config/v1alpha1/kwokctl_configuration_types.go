@@ -151,6 +151,9 @@ type KwokctlConfigurationOptions struct {
 	// DeschedulerVersion is the version of descheduler to use.
 	DeschedulerVersion string `json:"deschedulerVersion,omitempty"`
 
+	// NodeReadinessControllerVersion is the version of node-readiness-controller to use.
+	NodeReadinessControllerVersion string `json:"nodeReadinessControllerVersion,omitempty"`
+
 	// KindVersion is the version of kind to use.
 	// is the default value for env KWOK_KIND_VERSION
 	KindVersion string `json:"kindVersion,omitempty"`
@@ -248,6 +251,10 @@ type KwokctlConfigurationOptions struct {
 	//+k8s:conversion-gen=false
 	DeschedulerImagePrefix string `json:"deschedulerImagePrefix,omitempty"`
 
+	// NodeReadinessControllerImagePrefix is the prefix of the node-readiness-controller image.
+	//+k8s:conversion-gen=false
+	NodeReadinessControllerImagePrefix string `json:"nodeReadinessControllerImagePrefix,omitempty"`
+
 	// EtcdImage is the image of etcd.
 	// is the default value for flag --etcd-image and env KWOK_ETCD_IMAGE
 	EtcdImage string `json:"etcdImage,omitempty"`
@@ -318,6 +325,12 @@ type KwokctlConfigurationOptions struct {
 
 	// DeschedulerManifests is the full URLs of the descheduler manifest.
 	DeschedulerManifests []string `json:"deschedulerManifests,omitempty"`
+
+	// NodeReadinessControllerImage is the image of node-readiness-controller.
+	NodeReadinessControllerImage string `json:"nodeReadinessControllerImage,omitempty"`
+
+	// NodeReadinessControllerManifests is the full URLs of the node-readiness-controller manifest.
+	NodeReadinessControllerManifests []string `json:"nodeReadinessControllerManifests,omitempty"`
 
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string `json:"kueuevizFrontendImage,omitempty"`

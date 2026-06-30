@@ -131,6 +131,9 @@ type KwokctlConfigurationOptions struct {
 	// DeschedulerVersion is the version of descheduler to use.
 	DeschedulerVersion string
 
+	// NodeReadinessControllerVersion is the version of node-readiness-controller to use.
+	NodeReadinessControllerVersion string
+
 	// KindVersion is the version of kind to use.
 	KindVersion string
 
@@ -230,6 +233,12 @@ type KwokctlConfigurationOptions struct {
 
 	// DeschedulerManifests is the full URLs of the descheduler manifest.
 	DeschedulerManifests []string
+
+	// NodeReadinessControllerImage is the image of node-readiness-controller.
+	NodeReadinessControllerImage string
+
+	// NodeReadinessControllerManifests is the full URLs of the node-readiness-controller manifest.
+	NodeReadinessControllerManifests []string
 
 	// KueuevizFrontendImage is the image of kueueviz frontend.
 	KueuevizFrontendImage string

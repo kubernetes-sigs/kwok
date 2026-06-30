@@ -229,6 +229,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setDeschedulerConfig(conf)
 
+	setNodeReadinessControllerConfig(conf)
+
 	setKectlConfig(conf)
 
 	return config
@@ -675,6 +677,31 @@ func setDeschedulerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.DeschedulerManifests = []string{consts.DeschedulerManifestPrefix + conf.DeschedulerVersion}
 	}
 	conf.DeschedulerManifests = envs.GetEnvWithPrefix("DESCHEDULER_MANIFESTS", conf.DeschedulerManifests)
+}
+
+func setNodeReadinessControllerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.NodeReadinessControllerVersion == "" {
+		conf.NodeReadinessControllerVersion = consts.NodeReadinessControllerVersion
+	}
+	conf.NodeReadinessControllerVersion = version.AddPrefixV(envs.GetEnvWithPrefix("NODE_READINESS_VERSION", conf.NodeReadinessControllerVersion))
+
+	if conf.NodeReadinessControllerImagePrefix == "" {
+		conf.NodeReadinessControllerImagePrefix = consts.NodeReadinessControllerImagePrefix
+	}
+	conf.NodeReadinessControllerImagePrefix = envs.GetEnvWithPrefix("NODE_READINESS_IMAGE_PREFIX", conf.NodeReadinessControllerImagePrefix)
+
+	if conf.NodeReadinessControllerImage == "" {
+		conf.NodeReadinessControllerImage = joinImageURI(conf.NodeReadinessControllerImagePrefix, "node-readiness-controller", conf.NodeReadinessControllerVersion)
+	}
+	conf.NodeReadinessControllerImage = envs.GetEnvWithPrefix("NODE_READINESS_IMAGE", conf.NodeReadinessControllerImage)
+
+	if len(conf.NodeReadinessControllerManifests) == 0 {
+		conf.NodeReadinessControllerManifests = []string{
+			consts.NodeReadinessControllerManifestPrefix + "/" + conf.NodeReadinessControllerVersion + "/crds.yaml",
+			consts.NodeReadinessControllerManifestPrefix + "/" + conf.NodeReadinessControllerVersion + "/install.yaml",
+		}
+	}
+	conf.NodeReadinessControllerManifests = envs.GetEnvWithPrefix("NODE_READINESS_MANIFESTS", conf.NodeReadinessControllerManifests)
 }
 
 // joinImageURI joins the image URI.

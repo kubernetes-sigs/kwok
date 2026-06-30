@@ -102,6 +102,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			consts.ComponentLWS,
 			consts.ComponentSchedulerPlugins,
 			consts.ComponentDescheduler,
+			consts.ComponentNodeReadinessController,
 		}
 
 		components := utilsslices.Filter(availableComponents, func(s string) bool {

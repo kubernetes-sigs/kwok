@@ -1769,6 +1769,7 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.JobSetVersion = in.JobSetVersion
 	out.LWSVersion = in.LWSVersion
 	out.DeschedulerVersion = in.DeschedulerVersion
+	out.NodeReadinessControllerVersion = in.NodeReadinessControllerVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_bool_To_Pointer_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
 		return err
@@ -1810,6 +1811,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.LWSManifests = *(*[]string)(unsafe.Pointer(&in.LWSManifests))
 	out.DeschedulerImage = in.DeschedulerImage
 	out.DeschedulerManifests = *(*[]string)(unsafe.Pointer(&in.DeschedulerManifests))
+	out.NodeReadinessControllerImage = in.NodeReadinessControllerImage
+	out.NodeReadinessControllerManifests = *(*[]string)(unsafe.Pointer(&in.NodeReadinessControllerManifests))
 	out.KueuevizFrontendImage = in.KueuevizFrontendImage
 	out.KueuevizBackendImage = in.KueuevizBackendImage
 	out.KindNodeImage = in.KindNodeImage
@@ -1891,6 +1894,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.JobSetVersion = in.JobSetVersion
 	out.LWSVersion = in.LWSVersion
 	out.DeschedulerVersion = in.DeschedulerVersion
+	out.NodeReadinessControllerVersion = in.NodeReadinessControllerVersion
 	out.KindVersion = in.KindVersion
 	if err := v1.Convert_Pointer_bool_To_bool(&in.SecurePort, &out.SecurePort, s); err != nil {
 		return err
@@ -1922,6 +1926,7 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	// INFO: in.JobSetImagePrefix opted out of conversion generation
 	// INFO: in.LWSImagePrefix opted out of conversion generation
 	// INFO: in.DeschedulerImagePrefix opted out of conversion generation
+	// INFO: in.NodeReadinessControllerImagePrefix opted out of conversion generation
 	out.EtcdImage = in.EtcdImage
 	out.KubeApiserverImage = in.KubeApiserverImage
 	out.KubeControllerManagerImage = in.KubeControllerManagerImage
@@ -1943,6 +1948,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.LWSManifests = *(*[]string)(unsafe.Pointer(&in.LWSManifests))
 	out.DeschedulerImage = in.DeschedulerImage
 	out.DeschedulerManifests = *(*[]string)(unsafe.Pointer(&in.DeschedulerManifests))
+	out.NodeReadinessControllerImage = in.NodeReadinessControllerImage
+	out.NodeReadinessControllerManifests = *(*[]string)(unsafe.Pointer(&in.NodeReadinessControllerManifests))
 	out.KueuevizFrontendImage = in.KueuevizFrontendImage
 	out.KueuevizBackendImage = in.KueuevizBackendImage
 	// INFO: in.KindNodeImagePrefix opted out of conversion generation
