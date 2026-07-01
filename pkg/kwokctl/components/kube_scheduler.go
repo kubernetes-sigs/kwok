@@ -118,7 +118,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 			)
 		}
 
-		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+		if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10259",
@@ -168,7 +168,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		//		"--port=0",
 		//	)
 	} else {
-		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+		if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 			args = append(args,
 				"--address="+conf.BindAddress,
 				"--port=10251",

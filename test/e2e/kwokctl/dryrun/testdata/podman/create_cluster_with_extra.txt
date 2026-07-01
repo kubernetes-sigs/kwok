@@ -172,6 +172,7 @@ podman \
   registry.k8s.io/kube-apiserver:v1.36.1 \
   --etcd-prefix=/registry \
   --allow-privileged=true \
+  --endpoint-reconciler-type=none \
   --max-requests-inflight=0 \
   --max-mutating-requests-inflight=0 \
   --enable-priority-and-fairness=false \
@@ -184,11 +185,11 @@ podman \
   --client-ca-file=/etc/kubernetes/pki/ca.crt \
   --service-account-key-file=/etc/kubernetes/pki/admin.key \
   --service-account-signing-key-file=/etc/kubernetes/pki/admin.key \
-  --service-account-issuer=https://kubernetes.default.svc.cluster.local \
   --proxy-client-key-file=/etc/kubernetes/pki/admin.key \
   --proxy-client-cert-file=/etc/kubernetes/pki/admin.crt \
   --requestheader-client-ca-file=/etc/kubernetes/pki/ca.crt \
   --requestheader-allowed-names=kwok-ca \
+  --service-account-issuer=https://kubernetes.default.svc.cluster.local \
   --requestheader-username-headers=X-Remote-User \
   --requestheader-group-headers=X-Remote-Group \
   --requestheader-extra-headers-prefix=X-Remote-Extra- \
@@ -270,9 +271,9 @@ podman \
   --tls-private-key-file=/etc/kubernetes/pki/admin.key \
   --node-ip= \
   --node-name=kwok-<CLUSTER_NAME>-kwok-controller \
+  --node-lease-duration-seconds=200 \
   --node-port=10247 \
   --server-address=0.0.0.0:10247 \
-  --node-lease-duration-seconds=200 \
   --v=-4
 podman \
   create \

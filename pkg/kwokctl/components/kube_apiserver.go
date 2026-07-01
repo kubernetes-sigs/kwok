@@ -71,6 +71,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	args = append(args,
 		"--etcd-prefix="+conf.EtcdPrefix,
 		"--allow-privileged=true",
+		"--endpoint-reconciler-type=none",
 	)
 
 	if conf.KubeAdmission {
@@ -123,13 +124,13 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 		}
 	}
 
-	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+	if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 		args = append(args,
 			"--etcd-servers=http://"+conf.EtcdAddress+":2379",
 		)
 	} else {
 		args = append(args,
-			"--etcd-servers=http://"+conf.EtcdAddress+":"+format.String(conf.EtcdPort),
+			"--etcd-servers=http://localhost:"+format.String(conf.EtcdPort),
 		)
 	}
 
@@ -140,7 +141,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			)
 		}
 
-		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+		if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 			ports = append(
 				ports,
 				internalversion.Port{
@@ -150,39 +151,10 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 					Protocol: internalversion.ProtocolTCP,
 				},
 			)
-			volumes = append(volumes,
-				internalversion.Volume{
-					HostPath:  conf.CaCertPath,
-					MountPath: pkiCACertPath,
-					ReadOnly:  true,
-				},
-				internalversion.Volume{
-					HostPath:  conf.AdminCertPath,
-					MountPath: pkiAdminCertPath,
-					ReadOnly:  true,
-				},
-				internalversion.Volume{
-					HostPath:  conf.AdminKeyPath,
-					MountPath: pkiAdminKeyPath,
-					ReadOnly:  true,
-				},
-			)
+
 			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=6443",
-				"--tls-cert-file="+pkiAdminCertPath,
-				"--tls-private-key-file="+pkiAdminKeyPath,
-				"--client-ca-file="+pkiCACertPath,
-				"--service-account-key-file="+pkiAdminKeyPath,
-				"--service-account-signing-key-file="+pkiAdminKeyPath,
-				"--service-account-issuer=https://kubernetes.default.svc.cluster.local",
-				"--proxy-client-key-file="+pkiAdminKeyPath,
-				"--proxy-client-cert-file="+pkiAdminCertPath,
-				"--requestheader-client-ca-file="+pkiCACertPath,
-				"--requestheader-allowed-names="+pki.DefaultCN,
-				"--requestheader-username-headers=X-Remote-User",
-				"--requestheader-group-headers=X-Remote-Group",
-				"--requestheader-extra-headers-prefix=X-Remote-Extra-",
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             schemeHTTPS,
@@ -205,19 +177,6 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port="+format.String(conf.Port),
-				"--tls-cert-file="+conf.AdminCertPath,
-				"--tls-private-key-file="+conf.AdminKeyPath,
-				"--client-ca-file="+conf.CaCertPath,
-				"--service-account-key-file="+conf.AdminKeyPath,
-				"--service-account-signing-key-file="+conf.AdminKeyPath,
-				"--service-account-issuer=https://kubernetes.default.svc.cluster.local",
-				"--proxy-client-key-file="+conf.AdminKeyPath,
-				"--proxy-client-cert-file="+conf.AdminCertPath,
-				"--requestheader-client-ca-file="+conf.CaCertPath,
-				"--requestheader-allowed-names="+pki.DefaultCN,
-				"--requestheader-username-headers=X-Remote-User",
-				"--requestheader-group-headers=X-Remote-Group",
-				"--requestheader-extra-headers-prefix=X-Remote-Extra-",
 			)
 			metric = &internalversion.ComponentMetric{
 				Scheme:             schemeHTTPS,
@@ -228,8 +187,58 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				InsecureSkipVerify: true,
 			}
 		}
-	} else {
+
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+			volumes = append(volumes,
+				internalversion.Volume{
+					HostPath:  conf.CaCertPath,
+					MountPath: pkiCACertPath,
+					ReadOnly:  true,
+				},
+				internalversion.Volume{
+					HostPath:  conf.AdminCertPath,
+					MountPath: pkiAdminCertPath,
+					ReadOnly:  true,
+				},
+				internalversion.Volume{
+					HostPath:  conf.AdminKeyPath,
+					MountPath: pkiAdminKeyPath,
+					ReadOnly:  true,
+				},
+			)
+			args = append(args,
+				"--tls-cert-file="+pkiAdminCertPath,
+				"--tls-private-key-file="+pkiAdminKeyPath,
+				"--client-ca-file="+pkiCACertPath,
+				"--service-account-key-file="+pkiAdminKeyPath,
+				"--service-account-signing-key-file="+pkiAdminKeyPath,
+				"--proxy-client-key-file="+pkiAdminKeyPath,
+				"--proxy-client-cert-file="+pkiAdminCertPath,
+				"--requestheader-client-ca-file="+pkiCACertPath,
+				"--requestheader-allowed-names="+pki.DefaultCN,
+			)
+		} else {
+			args = append(args,
+				"--tls-cert-file="+conf.AdminCertPath,
+				"--tls-private-key-file="+conf.AdminKeyPath,
+				"--client-ca-file="+conf.CaCertPath,
+				"--service-account-key-file="+conf.AdminKeyPath,
+				"--service-account-signing-key-file="+conf.AdminKeyPath,
+				"--proxy-client-key-file="+conf.AdminKeyPath,
+				"--proxy-client-cert-file="+conf.AdminCertPath,
+				"--requestheader-client-ca-file="+conf.CaCertPath,
+				"--requestheader-allowed-names="+pki.DefaultCN,
+			)
+		}
+
+		args = append(args,
+			"--service-account-issuer=https://kubernetes.default.svc.cluster.local",
+			"--requestheader-username-headers=X-Remote-User",
+			"--requestheader-group-headers=X-Remote-Group",
+			"--requestheader-extra-headers-prefix=X-Remote-Extra-",
+		)
+	} else {
+		if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 			ports = append(
 				ports,
 				internalversion.Port{

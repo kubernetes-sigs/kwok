@@ -99,6 +99,28 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			},
 		)
 
+		args = append(args,
+			"--kubeconfig="+kubeconfigPath,
+			"--config=/root/.kwok/kwok.yaml",
+			"--tls-cert-file="+pkiAdminCertPath,
+			"--tls-private-key-file="+pkiAdminKeyPath,
+			"--node-ip="+conf.NodeIP,
+			"--node-name="+conf.NodeName,
+			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
+		)
+	} else {
+		args = append(args,
+			"--kubeconfig="+conf.KubeconfigPath,
+			"--config="+conf.ConfigPath,
+			"--tls-cert-file="+conf.AdminCertPath,
+			"--tls-private-key-file="+conf.AdminKeyPath,
+			"--node-ip="+conf.NodeIP,
+			"--node-name="+conf.NodeName,
+			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
+		)
+	}
+
+	if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 		ports = append(
 			ports,
 			internalversion.Port{
@@ -109,15 +131,8 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			},
 		)
 		args = append(args,
-			"--kubeconfig="+kubeconfigPath,
-			"--config=/root/.kwok/kwok.yaml",
-			"--tls-cert-file="+pkiAdminCertPath,
-			"--tls-private-key-file="+pkiAdminKeyPath,
-			"--node-ip="+conf.NodeIP,
-			"--node-name="+conf.NodeName,
 			"--node-port=10247",
 			"--server-address="+conf.BindAddress+":10247",
-			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
 	} else {
 		ports = append(
@@ -130,25 +145,18 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			},
 		)
 		args = append(args,
-			"--kubeconfig="+conf.KubeconfigPath,
-			"--config="+conf.ConfigPath,
-			"--tls-cert-file="+conf.AdminCertPath,
-			"--tls-private-key-file="+conf.AdminKeyPath,
-			"--node-ip="+conf.NodeIP,
-			"--node-name="+conf.NodeName,
 			"--node-port="+format.String(conf.Port),
 			"--server-address="+conf.BindAddress+":"+format.String(conf.Port),
-			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
 	}
 
 	var metricsHost string
-	switch GetRuntimeMode(conf.Runtime) {
-	case RuntimeModeNative:
+	switch GetRuntimeNetwork(conf.Runtime) {
+	case RuntimeNetworkHost:
 		metricsHost = utilsnet.LocalAddress + ":" + format.String(conf.Port)
-	case RuntimeModeContainer:
+	case RuntimeNetworkBridge:
 		metricsHost = conf.ProjectName + "-" + consts.ComponentKwokController + ":10247"
-	case RuntimeModeCluster:
+	case RuntimeNetworkCluster:
 		metricsHost = utilsnet.LocalAddress + ":10247"
 	}
 
