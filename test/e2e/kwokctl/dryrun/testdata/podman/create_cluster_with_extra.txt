@@ -172,6 +172,7 @@ podman \
   registry.k8s.io/kube-apiserver:v1.36.1 \
   --etcd-prefix=/registry \
   --allow-privileged=true \
+  --endpoint-reconciler-type=none \
   --max-requests-inflight=0 \
   --max-mutating-requests-inflight=0 \
   --enable-priority-and-fairness=false \

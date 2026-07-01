@@ -71,6 +71,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	args = append(args,
 		"--etcd-prefix="+conf.EtcdPrefix,
 		"--allow-privileged=true",
+		"--endpoint-reconciler-type=none",
 	)
 
 	if conf.KubeAdmission {
