@@ -53,6 +53,7 @@ func BuildLWSComponent(conf BuildLWSComponentConfig) (component internalversion.
 
 	var args []string
 	var volumes []internalversion.Volume
+	var metric *internalversion.ComponentMetric
 
 	volumes = append(volumes,
 		internalversion.Volume{
@@ -107,7 +108,18 @@ func BuildLWSComponent(conf BuildLWSComponentConfig) (component internalversion.
 
 	args = append(args,
 		"--kubeconfig="+kubeconfigPath,
+		"--leader-elect=false",
+		"--metrics-bind-address=:8443",
 	)
+
+	metric = &internalversion.ComponentMetric{
+		Scheme:             schemeHTTPS,
+		Host:               conf.ProjectName + "-" + consts.ComponentLWS + ":8443",
+		Path:               metricsPath,
+		CertPath:           pkiAdminCertPath,
+		KeyPath:            pkiAdminKeyPath,
+		InsecureSkipVerify: true,
+	}
 
 	if conf.Verbosity != log.LevelInfo {
 		args = append(args, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
@@ -125,6 +137,7 @@ func BuildLWSComponent(conf BuildLWSComponentConfig) (component internalversion.
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Metric:  metric,
 	}
 
 	if len(conf.RawManifests) != 0 {
