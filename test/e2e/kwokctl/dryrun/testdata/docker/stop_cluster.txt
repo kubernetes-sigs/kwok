@@ -20,6 +20,10 @@ docker \
   --time=0
 docker \
   stop \
+  kwok-<CLUSTER_NAME>-scheduler-plugins \
+  --time=0
+docker \
+  stop \
   kwok-<CLUSTER_NAME>-kube-apiserver \
   --time=0
 docker \

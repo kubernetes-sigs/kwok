@@ -18,6 +18,9 @@ docker \
   kwok-<CLUSTER_NAME>-kwok-controller
 docker \
   start \
+  kwok-<CLUSTER_NAME>-scheduler-plugins
+docker \
+  start \
   kwok-<CLUSTER_NAME>-metrics-server
 docker \
   start \

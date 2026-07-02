@@ -27,6 +27,7 @@ import (
 // BuildSchedulerPluginsControllerComponentConfig is the configuration for building the scheduler-plugins controller component.
 type BuildSchedulerPluginsControllerComponentConfig struct {
 	Runtime        string
+	ProjectName    string
 	Image          string
 	RawManifests   []string
 	Version        version.Version
@@ -45,6 +46,7 @@ func BuildSchedulerPluginsControllerComponent(conf BuildSchedulerPluginsControll
 
 	var args []string
 	var volumes []internalversion.Volume
+	var metric *internalversion.ComponentMetric
 
 	volumes = append(volumes,
 		internalversion.Volume{
@@ -71,19 +73,28 @@ func BuildSchedulerPluginsControllerComponent(conf BuildSchedulerPluginsControll
 
 	args = append(args,
 		"--kubeconfig="+kubeconfigPath,
+		"--metricsAddr=:8080",
 	)
 
+	metric = &internalversion.ComponentMetric{
+		Scheme:             "http",
+		Host:               conf.ProjectName + "-" + consts.ComponentSchedulerPlugins + ":8080",
+		Path:               metricsPath,
+		InsecureSkipVerify: true,
+	}
+
 	component = internalversion.Component{
-		Name:  consts.ComponentSchedulerPlugins,
-		Image: conf.Image,
+		Name:    consts.ComponentSchedulerPlugins,
+		Image:   conf.Image,
+		Version: conf.Version.String(),
 		Links: []string{
 			consts.ComponentKubeApiserver,
 		},
 		Command: []string{"controller"},
 		Args:    args,
 		Volumes: volumes,
-		Version: conf.Version.String(),
 		WorkDir: conf.Workdir,
+		Metric:  metric,
 	}
 
 	if len(conf.RawManifests) != 0 {

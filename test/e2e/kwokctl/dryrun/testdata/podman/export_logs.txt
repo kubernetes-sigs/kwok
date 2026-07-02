@@ -45,3 +45,8 @@ podman \
   kwok-<CLUSTER_NAME>-jaeger \
   ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/jaeger.log \
   2>&1
+podman \
+  logs \
+  kwok-<CLUSTER_NAME>-scheduler-plugins \
+  ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/scheduler-plugins.log \
+  2>&1

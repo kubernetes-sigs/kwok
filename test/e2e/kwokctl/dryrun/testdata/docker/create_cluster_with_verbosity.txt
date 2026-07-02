@@ -149,6 +149,15 @@ scrape_configs:
   static_configs:
   - targets:
     - 127.0.0.1:9090
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: scheduler-plugins
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-scheduler-plugins:8080
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
@@ -379,7 +388,8 @@ docker \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
   registry.k8s.io/scheduler-plugins/controller:v0.34.7 \
-  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --metricsAddr=:8080
 docker \
   create \
   --name=kwok-<CLUSTER_NAME>-kueue \

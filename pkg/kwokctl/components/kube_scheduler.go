@@ -112,11 +112,9 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	}
 
 	if conf.SecurePort {
-		if conf.Version.GE(version.NewVersion(1, 13, 0)) {
-			args = append(args,
-				"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
-			)
-		}
+		args = append(args,
+			"--authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics",
+		)
 
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 			args = append(args,

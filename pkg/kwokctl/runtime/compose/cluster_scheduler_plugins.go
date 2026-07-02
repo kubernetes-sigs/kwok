@@ -59,6 +59,7 @@ func (c *Cluster) addSchedulerPlugins(ctx context.Context, env *env) (err error)
 	}
 
 	schedulerPluginsControllerComponent, err := components.BuildSchedulerPluginsControllerComponent(components.BuildSchedulerPluginsControllerComponentConfig{
+		ProjectName:    c.Name(),
 		Runtime:        conf.Runtime,
 		Workdir:        env.workdir,
 		Image:          conf.SchedulerPluginsControllerImage,
