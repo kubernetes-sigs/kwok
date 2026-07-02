@@ -32,6 +32,7 @@ func TestMetrics(t *testing.T) {
 		consts.ComponentKwokController,
 		consts.ComponentPrometheus,
 		consts.ComponentMetricsServer,
+		consts.ComponentKueue,
 	).Feature()
 	testEnv.Test(t, f0)
 }

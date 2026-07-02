@@ -57,6 +57,7 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 	var envs []internalversion.Env
+	var metric *internalversion.ComponentMetric
 
 	envs = append(envs,
 		internalversion.Env{
@@ -154,6 +155,15 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		args = append(args, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
 	}
 
+	metric = &internalversion.ComponentMetric{
+		Scheme:             schemeHTTPS,
+		Host:               conf.ProjectName + "-" + consts.ComponentKueue + ":8443",
+		Path:               metricsPath,
+		CertPath:           pkiAdminCertPath,
+		KeyPath:            pkiAdminKeyPath,
+		InsecureSkipVerify: true,
+	}
+
 	component = internalversion.Component{
 		Name:    consts.ComponentKueue,
 		Version: conf.Version.String(),
@@ -168,6 +178,7 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		Ports:   ports,
 		WorkDir: conf.Workdir,
 		Envs:    envs,
+		Metric:  metric,
 	}
 
 	if len(conf.RawManifests) != 0 {
