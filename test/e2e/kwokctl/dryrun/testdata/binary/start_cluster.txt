@@ -29,6 +29,7 @@ cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
   kube-apiserver \
   --etcd-prefix=/registry \
   --allow-privileged=true \
+  --endpoint-reconciler-type=none \
   --etcd-servers=http://127.0.0.1:2400 \
   --authorization-mode=Node,RBAC \
   --bind-address=0.0.0.0 \

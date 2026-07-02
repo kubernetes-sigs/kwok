@@ -51,6 +51,7 @@ cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
   kube-apiserver \
   --etcd-prefix=/registry \
   --allow-privileged=true \
+  --endpoint-reconciler-type=none \
   --max-requests-inflight=0 \
   --max-mutating-requests-inflight=0 \
   --enable-priority-and-fairness=false \
