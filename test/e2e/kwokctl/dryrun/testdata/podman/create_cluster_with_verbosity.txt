@@ -149,6 +149,19 @@ scrape_configs:
   static_configs:
   - targets:
     - 127.0.0.1:9090
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: lws
+  metrics_path: /metrics
+  scheme: https
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-lws:8443
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
@@ -458,7 +471,9 @@ podman \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/lws.yaml:/controller_manager_config.yaml:ro \
   registry.k8s.io/lws/lws:v0.9.0 \
   --config=/controller_manager_config.yaml \
-  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --leader-elect=false \
+  --metrics-bind-address=:8443
 podman \
   create \
   --name=kwok-<CLUSTER_NAME>-descheduler \
