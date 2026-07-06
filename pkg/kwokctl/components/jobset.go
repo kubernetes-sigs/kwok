@@ -53,6 +53,7 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 
 	var args []string
 	var volumes []internalversion.Volume
+	var metric *internalversion.ComponentMetric
 
 	volumes = append(volumes,
 		internalversion.Volume{
@@ -107,7 +108,18 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 
 	args = append(args,
 		"--kubeconfig="+kubeconfigPath,
+		"--leader-elect=false",
+		"--metrics-bind-address=:8443",
 	)
+
+	metric = &internalversion.ComponentMetric{
+		Scheme:             schemeHTTPS,
+		Host:               conf.ProjectName + "-" + consts.ComponentJobSet + ":8443",
+		Path:               metricsPath,
+		CertPath:           pkiAdminCertPath,
+		KeyPath:            pkiAdminKeyPath,
+		InsecureSkipVerify: true,
+	}
 
 	if conf.Verbosity != log.LevelInfo {
 		args = append(args, "--zap-log-level="+log.ToZapLevel(conf.Verbosity))
@@ -125,6 +137,7 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Metric:  metric,
 	}
 
 	if len(conf.RawManifests) != 0 {
