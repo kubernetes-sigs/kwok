@@ -18,6 +18,9 @@ nerdctl \
   kwok-<CLUSTER_NAME>-kwok-controller
 nerdctl \
   start \
+  kwok-<CLUSTER_NAME>-scheduler-plugins
+nerdctl \
+  start \
   kwok-<CLUSTER_NAME>-metrics-server
 nerdctl \
   start \
