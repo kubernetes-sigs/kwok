@@ -27,6 +27,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/utils/cel"
 )
@@ -37,6 +38,7 @@ type EnvironmentConfig struct {
 
 	Now                    func() time.Time
 	StartedContainersTotal func(nodeName string) int64
+	WorkloadForPod         func(pod *corev1.Pod) *Workload
 
 	ContainerResourceUsage func(resourceName, podNamespace, podName, containerName string) float64
 	PodResourceUsage       func(resourceName, podNamespace, podName string) float64
@@ -63,6 +65,10 @@ func NewEnvironment(conf EnvironmentConfig) (*Environment, error) {
 	conversions := slices.Clone(cel.DefaultConversions)
 	funcs := maps.Clone(cel.DefaultFuncs)
 	methods := maps.Clone(cel.FuncsToMethods(cel.DefaultFuncs))
+	types = append(types, Workload{})
+	methods["SinceSecond"] = append(methods["SinceSecond"], func(workload *Workload) float64 {
+		return time.Since(workload.CreationTimestamp.Time).Seconds()
+	})
 
 	if conf.Now != nil {
 		funcs[nowOldName] = []any{conf.Now}
@@ -126,6 +132,7 @@ func NewEnvironment(conf EnvironmentConfig) (*Environment, error) {
 			"node":      corev1.Node{},
 			"pod":       corev1.Pod{},
 			"container": corev1.Container{},
+			"workload":  Workload{},
 		},
 	})
 	if err != nil {
@@ -161,6 +168,7 @@ func (e *Environment) Compile(src string) (*Evaluator, error) {
 	evaluator := &Evaluator{
 		program:        program,
 		latestCacheVer: e.resultCacheVer,
+		workloadForPod: e.conf.WorkloadForPod,
 	}
 	return evaluator, nil
 }
@@ -179,12 +187,13 @@ type Evaluator struct {
 
 	latestCacheVer *int64
 	cacheVer       int64
+	workloadForPod func(*corev1.Pod) *Workload
 
 	cache    map[string]cel.Val
 	cacheMut sync.Mutex
 }
 
-func resultUniqueKey(node *corev1.Node, pod *corev1.Pod, container *corev1.Container) string {
+func resultUniqueKey(node *corev1.Node, pod *corev1.Pod, container *corev1.Container, workload *Workload) string {
 	tmp := make([]string, 0, 5)
 	if node != nil {
 		tmp = append(tmp, string(node.UID), node.ResourceVersion)
@@ -195,21 +204,33 @@ func resultUniqueKey(node *corev1.Node, pod *corev1.Pod, container *corev1.Conta
 	if container != nil {
 		tmp = append(tmp, container.Name)
 	}
+	if workload != nil {
+		tmp = append(tmp, workload.UID, fmt.Sprint(workload.Replicas), fmt.Sprint(workload.PodIndex), fmt.Sprint(workload.Version))
+	}
 	return strings.Join(tmp, "/")
 }
 
 func (e *Evaluator) evaluate(ctx context.Context, data Data) (cel.Val, error) {
+	if data.Workload == nil && data.Pod != nil {
+		if e.workloadForPod != nil {
+			data.Workload = e.workloadForPod(data.Pod)
+		}
+		if data.Workload == nil {
+			data.Workload = WorkloadForPod(data.Pod)
+		}
+	}
 	var key string
 	if e.latestCacheVer != nil {
 		e.cacheMut.Lock()
 		defer e.cacheMut.Unlock()
 
-		if e.cache == nil || *e.latestCacheVer != e.cacheVer {
+		latestCacheVer := atomic.LoadInt64(e.latestCacheVer)
+		if e.cache == nil || latestCacheVer != e.cacheVer {
 			e.cache = map[string]cel.Val{}
-			e.cacheVer = *e.latestCacheVer
+			e.cacheVer = latestCacheVer
 		}
 
-		key = resultUniqueKey(data.Node, data.Pod, data.Container)
+		key = resultUniqueKey(data.Node, data.Pod, data.Container, data.Workload)
 		if val, ok := e.cache[key]; ok {
 			return val, nil
 		}
@@ -219,6 +240,7 @@ func (e *Evaluator) evaluate(ctx context.Context, data Data) (cel.Val, error) {
 		"node":      data.Node,
 		"pod":       data.Pod,
 		"container": data.Container,
+		"workload":  data.Workload,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to evaluate metric expression: %w", err)
@@ -254,4 +276,41 @@ type Data struct {
 	Node      *corev1.Node
 	Pod       *corev1.Pod
 	Container *corev1.Container
+	Workload  *Workload
+}
+
+// Workload is the metric-bearing top-level workload for a pod.
+type Workload struct {
+	APIVersion        string      `json:"apiVersion"`
+	Kind              string      `json:"kind"`
+	Namespace         string      `json:"namespace"`
+	Name              string      `json:"name"`
+	UID               string      `json:"uid"`
+	Replicas          int64       `json:"replicas"`
+	PodIndex          int64       `json:"podIndex"`
+	CreationTimestamp metav1.Time `json:"creationTimestamp"`
+	Version           int64       `json:"-"`
+}
+
+// WorkloadResolver optionally resolves a pod to its metric-bearing workload.
+type WorkloadResolver interface {
+	ResolveWorkload(pod *corev1.Pod) *Workload
+}
+
+// GetCreationTimestamp allows workload.SinceSecond() in CEL expressions.
+func (w Workload) GetCreationTimestamp() metav1.Time {
+	return w.CreationTimestamp
+}
+
+// WorkloadForPod returns the compatibility workload for an unresolved pod.
+func WorkloadForPod(pod *corev1.Pod) *Workload {
+	return &Workload{
+		APIVersion:        corev1.SchemeGroupVersion.String(),
+		Kind:              "Pod",
+		Namespace:         pod.Namespace,
+		Name:              pod.Name,
+		UID:               string(pod.UID),
+		Replicas:          1,
+		CreationTimestamp: pod.CreationTimestamp,
+	}
 }

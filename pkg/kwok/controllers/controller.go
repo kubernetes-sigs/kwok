@@ -22,6 +22,8 @@ import (
 	"os"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -42,6 +44,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 	"sigs.k8s.io/kwok/pkg/config/resources"
+	"sigs.k8s.io/kwok/pkg/kwok/metrics"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
@@ -68,9 +71,16 @@ type Controller struct {
 	broadcaster record.EventBroadcaster
 	recorder    record.EventRecorder
 
-	nodeCacheGetter      informer.Getter[*corev1.Node]
-	podCacheGetter       informer.Getter[*corev1.Pod]
-	nodeLeaseCacheGetter informer.Getter[*coordinationv1.Lease]
+	nodeCacheGetter        informer.Getter[*corev1.Node]
+	podCacheGetter         informer.Getter[*corev1.Pod]
+	replicaSetCacheGetter  informer.Getter[*appsv1.ReplicaSet]
+	deploymentCacheGetter  informer.Getter[*appsv1.Deployment]
+	statefulSetCacheGetter informer.Getter[*appsv1.StatefulSet]
+	daemonSetCacheGetter   informer.Getter[*appsv1.DaemonSet]
+	jobCacheGetter         informer.Getter[*batchv1.Job]
+	cronJobCacheGetter     informer.Getter[*batchv1.CronJob]
+	nodeLeaseCacheGetter   informer.Getter[*coordinationv1.Lease]
+	workloads              *workloadResolver
 
 	onNodeManagedFunc   func(nodeName string)
 	onNodeUnmanagedFunc func(nodeName string)
@@ -85,9 +95,15 @@ type Controller struct {
 	nodesChan chan informer.Event[*corev1.Node]
 	podsChan  chan informer.Event[*corev1.Pod]
 
-	nodeLeasesInformer *informer.Informer[*coordinationv1.Lease, *coordinationv1.LeaseList]
-	nodesInformer      *informer.Informer[*corev1.Node, *corev1.NodeList]
-	podsInformer       *informer.Informer[*corev1.Pod, *corev1.PodList]
+	nodeLeasesInformer   *informer.Informer[*coordinationv1.Lease, *coordinationv1.LeaseList]
+	nodesInformer        *informer.Informer[*corev1.Node, *corev1.NodeList]
+	podsInformer         *informer.Informer[*corev1.Pod, *corev1.PodList]
+	replicaSetsInformer  *informer.Informer[*appsv1.ReplicaSet, *appsv1.ReplicaSetList]
+	deploymentsInformer  *informer.Informer[*appsv1.Deployment, *appsv1.DeploymentList]
+	statefulSetsInformer *informer.Informer[*appsv1.StatefulSet, *appsv1.StatefulSetList]
+	daemonSetsInformer   *informer.Informer[*appsv1.DaemonSet, *appsv1.DaemonSetList]
+	jobsInformer         *informer.Informer[*batchv1.Job, *batchv1.JobList]
+	cronJobsInformer     *informer.Informer[*batchv1.CronJob, *batchv1.CronJobList]
 
 	patchMeta *patch.PatchMetaFromOpenAPI3
 
@@ -215,6 +231,12 @@ func (c *Controller) init(ctx context.Context) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to watch pods: %w", err)
 	}
+	if c.conf.EnableMetrics {
+		err = c.initWorkloadResolver(ctx)
+		if err != nil {
+			return err
+		}
+	}
 
 	if c.conf.NodeLeaseDurationSeconds != 0 {
 		nodeLeasesCli := c.conf.TypedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease)
@@ -226,6 +248,103 @@ func (c *Controller) init(ctx context.Context) (err error) {
 	c.podOnNodeManageQueue = queue.NewQueue[string]()
 	c.nodeManageQueue = queue.NewQueue[string]()
 	return nil
+}
+
+func (c *Controller) initWorkloadResolver(ctx context.Context) error {
+	replicaSetEvents := make(chan informer.Event[*appsv1.ReplicaSet], 32)
+	deploymentEvents := make(chan informer.Event[*appsv1.Deployment], 32)
+	statefulSetEvents := make(chan informer.Event[*appsv1.StatefulSet], 32)
+	daemonSetEvents := make(chan informer.Event[*appsv1.DaemonSet], 32)
+	jobEvents := make(chan informer.Event[*batchv1.Job], 32)
+	cronJobEvents := make(chan informer.Event[*batchv1.CronJob], 32)
+
+	c.replicaSetsInformer = informer.NewInformer[*appsv1.ReplicaSet, *appsv1.ReplicaSetList](c.conf.TypedClient.AppsV1().ReplicaSets(corev1.NamespaceAll))
+	var err error
+	c.replicaSetCacheGetter, err = c.replicaSetsInformer.WatchWithCache(ctx, informer.Option{}, replicaSetEvents)
+	if err != nil {
+		return fmt.Errorf("failed to watch replica sets: %w", err)
+	}
+	c.deploymentsInformer = informer.NewInformer[*appsv1.Deployment, *appsv1.DeploymentList](c.conf.TypedClient.AppsV1().Deployments(corev1.NamespaceAll))
+	c.deploymentCacheGetter, err = c.deploymentsInformer.WatchWithCache(ctx, informer.Option{}, deploymentEvents)
+	if err != nil {
+		return fmt.Errorf("failed to watch deployments: %w", err)
+	}
+	c.statefulSetsInformer = informer.NewInformer[*appsv1.StatefulSet, *appsv1.StatefulSetList](c.conf.TypedClient.AppsV1().StatefulSets(corev1.NamespaceAll))
+	c.statefulSetCacheGetter, err = c.statefulSetsInformer.WatchWithCache(ctx, informer.Option{}, statefulSetEvents)
+	if err != nil {
+		return fmt.Errorf("failed to watch stateful sets: %w", err)
+	}
+	c.daemonSetsInformer = informer.NewInformer[*appsv1.DaemonSet, *appsv1.DaemonSetList](c.conf.TypedClient.AppsV1().DaemonSets(corev1.NamespaceAll))
+	c.daemonSetCacheGetter, err = c.daemonSetsInformer.WatchWithCache(ctx, informer.Option{}, daemonSetEvents)
+	if err != nil {
+		return fmt.Errorf("failed to watch daemon sets: %w", err)
+	}
+	c.jobsInformer = informer.NewInformer[*batchv1.Job, *batchv1.JobList](c.conf.TypedClient.BatchV1().Jobs(corev1.NamespaceAll))
+	c.jobCacheGetter, err = c.jobsInformer.WatchWithCache(ctx, informer.Option{}, jobEvents)
+	if err != nil {
+		return fmt.Errorf("failed to watch jobs: %w", err)
+	}
+	c.cronJobsInformer = informer.NewInformer[*batchv1.CronJob, *batchv1.CronJobList](c.conf.TypedClient.BatchV1().CronJobs(corev1.NamespaceAll))
+	c.cronJobCacheGetter, err = c.cronJobsInformer.WatchWithCache(ctx, informer.Option{}, cronJobEvents)
+	if err != nil {
+		return fmt.Errorf("failed to watch cron jobs: %w", err)
+	}
+	c.workloads = newWorkloadResolver(c.replicaSetCacheGetter, c.deploymentCacheGetter, c.statefulSetCacheGetter, c.daemonSetCacheGetter, c.jobCacheGetter, c.cronJobCacheGetter)
+	go c.invalidateWorkloads(ctx, replicaSetEvents, deploymentEvents, statefulSetEvents, daemonSetEvents, jobEvents, cronJobEvents)
+	return nil
+}
+
+func (c *Controller) invalidateWorkloads(
+	ctx context.Context,
+	replicaSets <-chan informer.Event[*appsv1.ReplicaSet],
+	deployments <-chan informer.Event[*appsv1.Deployment],
+	statefulSets <-chan informer.Event[*appsv1.StatefulSet],
+	daemonSets <-chan informer.Event[*appsv1.DaemonSet],
+	jobs <-chan informer.Event[*batchv1.Job],
+	cronJobs <-chan informer.Event[*batchv1.CronJob],
+) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case _, ok := <-replicaSets:
+			if !ok {
+				replicaSets = nil
+				continue
+			}
+			c.workloads.invalidate()
+		case _, ok := <-deployments:
+			if !ok {
+				deployments = nil
+				continue
+			}
+			c.workloads.invalidate()
+		case _, ok := <-statefulSets:
+			if !ok {
+				statefulSets = nil
+				continue
+			}
+			c.workloads.invalidate()
+		case _, ok := <-daemonSets:
+			if !ok {
+				daemonSets = nil
+				continue
+			}
+			c.workloads.invalidate()
+		case _, ok := <-jobs:
+			if !ok {
+				jobs = nil
+				continue
+			}
+			c.workloads.invalidate()
+		case _, ok := <-cronJobs:
+			if !ok {
+				cronJobs = nil
+				continue
+			}
+			c.workloads.invalidate()
+		}
+	}
 }
 
 func (c *Controller) initNodeLeaseController(ctx context.Context) error {
@@ -488,6 +607,16 @@ func (c *Controller) initPodController(ctx context.Context, lifecycle resources.
 		Recorder:      c.recorder,
 		ReadOnlyFunc:  c.readOnlyFunc,
 		EnableMetrics: c.conf.EnableMetrics,
+		OnPodUpdated: func(pod *corev1.Pod) {
+			if c.workloads != nil {
+				c.workloads.updatePod(pod)
+			}
+		},
+		OnPodDeleted: func(pod *corev1.Pod) {
+			if c.workloads != nil {
+				c.workloads.deletePod(pod)
+			}
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create pods controller: %w", err)
@@ -630,6 +759,14 @@ func (c *Controller) GetPodCache() informer.Getter[*corev1.Pod] {
 // GetNodeCache returns the node cache
 func (c *Controller) GetNodeCache() informer.Getter[*corev1.Node] {
 	return c.nodeCacheGetter
+}
+
+// ResolveWorkload returns the metric-bearing top-level workload for a pod.
+func (c *Controller) ResolveWorkload(pod *corev1.Pod) *metrics.Workload {
+	if c.workloads == nil {
+		return metrics.WorkloadForPod(pod)
+	}
+	return c.workloads.ResolveWorkload(pod)
 }
 
 // StartedContainersTotal returns the total number of containers started

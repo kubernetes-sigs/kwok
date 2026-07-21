@@ -85,6 +85,8 @@ type PodController struct {
 	deferredRetries                       utilsmaps.SyncMap[log.ObjectRef, deferredRetryState]
 	deferredRetryToken                    atomic.Uint64
 	contextRetryQueue                     queue.DelayingQueue[log.ObjectRef]
+	onPodUpdated                          func(*corev1.Pod)
+	onPodDeleted                          func(*corev1.Pod)
 }
 
 // PodInfo is the collection of necessary pod information
@@ -132,6 +134,8 @@ type PodControllerConfig struct {
 	Recorder                              record.EventRecorder
 	ReadOnlyFunc                          func(nodeName string) bool
 	EnableMetrics                         bool
+	OnPodUpdated                          func(*corev1.Pod)
+	OnPodDeleted                          func(*corev1.Pod)
 }
 
 // NewPodController creates a new fake pods controller
@@ -176,6 +180,8 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		enableMetrics:                         conf.EnableMetrics,
 		deferredQueue:                         queue.NewDelayingQueue[deferredRetryJob](conf.Clock),
 		contextRetryQueue:                     queue.NewDelayingQueue[log.ObjectRef](conf.Clock),
+		onPodUpdated:                          conf.OnPodUpdated,
+		onPodDeleted:                          conf.OnPodDeleted,
 	}
 	funcMap := utilsmaps.Merge(gotpl.FuncMap{
 		"NodeIP":      c.funcNodeIP,
@@ -1052,6 +1058,9 @@ func (c *PodController) funcPodIPsWith(nodeName string, hostNetwork bool, uid, n
 
 // putPodInfo puts pod info
 func (c *PodController) putPodInfo(pod *corev1.Pod) bool {
+	if c.onPodUpdated != nil {
+		c.onPodUpdated(pod)
+	}
 	deferredGeneration, deferred := podDeferredGeneration(pod)
 	podInfo := &PodInfo{
 		NodeName:           pod.Spec.NodeName,
@@ -1140,6 +1149,9 @@ func resourceListsEqual(a, b corev1.ResourceList) bool {
 
 // deletePodInfo deletes pod info
 func (c *PodController) deletePodInfo(pod *corev1.Pod) bool {
+	if c.onPodDeleted != nil {
+		c.onPodDeleted(pod)
+	}
 	key := log.KObj(pod)
 	podInfo, loaded := c.podsSets.LoadAndDelete(key)
 	if !loaded {
