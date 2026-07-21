@@ -20,10 +20,12 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -36,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
 	"sigs.k8s.io/kwok/pkg/log"
+	utilscel "sigs.k8s.io/kwok/pkg/utils/cel"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
@@ -77,11 +80,37 @@ type PodController struct {
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
 	enableMetrics                         bool
+	nodeLocks                             utilsmaps.SyncMap[string, *sync.Mutex]
+	deferredQueue                         queue.DelayingQueue[deferredRetryJob]
+	deferredRetries                       utilsmaps.SyncMap[log.ObjectRef, deferredRetryState]
+	deferredRetryToken                    atomic.Uint64
+	contextRetryQueue                     queue.DelayingQueue[log.ObjectRef]
 }
 
 // PodInfo is the collection of necessary pod information
 type PodInfo struct {
+	NodeName           string
+	Requests           corev1.ResourceList
+	Deferred           bool
+	DeferredGeneration int64
+	Infeasible         bool
 }
+
+type deferredRetryJob struct {
+	Ref        log.ObjectRef
+	Generation int64
+	Token      uint64
+}
+
+type deferredRetryState struct {
+	Generation int64
+	Token      uint64
+}
+
+const (
+	deferredInitialRetryDelay  = 30 * time.Second
+	deferredPeriodicRetryDelay = 3 * time.Minute
+)
 
 // PodControllerConfig is the configuration for the PodController
 type PodControllerConfig struct {
@@ -145,6 +174,8 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		recorder:                              conf.Recorder,
 		readOnlyFunc:                          conf.ReadOnlyFunc,
 		enableMetrics:                         conf.EnableMetrics,
+		deferredQueue:                         queue.NewDelayingQueue[deferredRetryJob](conf.Clock),
+		contextRetryQueue:                     queue.NewDelayingQueue[log.ObjectRef](conf.Clock),
 	}
 	funcMap := utilsmaps.Merge(gotpl.FuncMap{
 		"NodeIP":      c.funcNodeIP,
@@ -162,6 +193,8 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 // It will modify the pods status to we want
 func (c *PodController) Start(ctx context.Context, events <-chan informer.Event[*corev1.Pod]) error {
 	go c.preprocessWorker(ctx)
+	go c.deferredRetryWorker(ctx)
+	go c.contextRetryWorker(ctx)
 	for i := uint(0); i < c.playStageParallelism; i++ {
 		go c.playStageWorker(ctx)
 	}
@@ -207,6 +240,64 @@ func (c *PodController) preprocessWorker(ctx context.Context) {
 	}
 }
 
+func (c *PodController) deferredRetryWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
+	for ctx.Err() == nil {
+		job, ok := c.deferredQueue.GetOrWaitWithDone(ctx.Done())
+		if !ok {
+			return
+		}
+		state, ok := c.deferredRetries.Load(job.Ref)
+		if !ok || state.Generation != job.Generation || state.Token != job.Token {
+			continue
+		}
+
+		pod, err := c.typedClient.CoreV1().Pods(job.Ref.Namespace).Get(ctx, job.Ref.Name, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				c.deferredRetries.Delete(job.Ref)
+				continue
+			}
+			logger.Warn("Failed to get deferred pod for retry",
+				"err", err,
+				"pod", job.Ref,
+			)
+			c.scheduleDeferredRetry(job.Ref, job.Generation, deferredPeriodicRetryDelay)
+			continue
+		}
+		generation, deferred := podDeferredGeneration(pod)
+		if !deferred || generation != job.Generation || !c.need(pod) || c.readOnly(pod.Spec.NodeName) {
+			c.deferredRetries.Delete(job.Ref)
+			continue
+		}
+
+		c.scheduleDeferredRetry(job.Ref, job.Generation, deferredPeriodicRetryDelay)
+		select {
+		case c.preprocessChan <- pod.DeepCopy():
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func (c *PodController) contextRetryWorker(ctx context.Context) {
+	for ctx.Err() == nil {
+		ref, ok := c.contextRetryQueue.GetOrWaitWithDone(ctx.Done())
+		if !ok {
+			return
+		}
+		pod, err := c.typedClient.CoreV1().Pods(ref.Namespace).Get(ctx, ref.Name, metav1.GetOptions{})
+		if err != nil {
+			continue
+		}
+		select {
+		case c.preprocessChan <- pod.DeepCopy():
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
 // preprocess the pod and send it to the playStageWorker
 func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 	key := log.KObj(pod).String()
@@ -216,6 +307,10 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		"pod", key,
 		"node", pod.Spec.NodeName,
 	)
+	if !c.nodeContextAvailable(pod) {
+		c.scheduleContextRetry(pod)
+		return fmt.Errorf("node %q is not available for pod lifecycle context", pod.Spec.NodeName)
+	}
 
 	resourceJob, ok := c.delayQueueMapping.Load(key)
 	if ok {
@@ -228,11 +323,7 @@ func (c *PodController) preprocess(ctx context.Context, pod *corev1.Pod) error {
 		}
 	}
 
-	event := &lifecycle.Event{
-		Labels:      pod.Labels,
-		Annotations: pod.Annotations,
-		Data:        pod,
-	}
+	event := c.lifecycleEvent(pod)
 
 	lc := c.lifecycle.Get()
 	stage, err := lc.Match(ctx, event)
@@ -313,6 +404,38 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 // playStage plays the stage.
 // The returned boolean indicates whether the applying action needs to be retried.
 func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *lifecycle.Stage, stepIndex int) (int, error) {
+	if !stage.UsesPodResourceContext() {
+		return c.doPlayStage(ctx, pod, stage, stepIndex)
+	}
+
+	nodeLock := c.nodeLock(pod.Spec.NodeName)
+	nodeLock.Lock()
+	defer nodeLock.Unlock()
+
+	latest, err := c.typedClient.CoreV1().Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return -1, nil
+		}
+		return stepIndex, fmt.Errorf("failed to revalidate pod %s: %w", pod.Name, err)
+	}
+	if !c.nodeContextAvailable(latest) {
+		return stepIndex, fmt.Errorf("node %q is not available while revalidating pod %s", latest.Spec.NodeName, latest.Name)
+	}
+	latestStage, err := c.lifecycle.Get().Match(ctx, c.lifecycleEvent(latest))
+	if err != nil {
+		return -1, fmt.Errorf("failed to revalidate stage for pod %s: %w", pod.Name, err)
+	}
+	if latestStage == nil {
+		return -1, nil
+	}
+	if latestStage.Name() != stage.Name() {
+		stepIndex = 0
+	}
+	return c.doPlayStage(ctx, latest, latestStage, stepIndex)
+}
+
+func (c *PodController) doPlayStage(ctx context.Context, pod *corev1.Pod, stage *lifecycle.Stage, stepIndex int) (int, error) {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"pod", log.KObj(pod),
@@ -360,6 +483,9 @@ func (c *PodController) playStage(ctx context.Context, pod *corev1.Pod, stage *l
 				if err != nil {
 					return fmt.Errorf("failed to patch pod %s: %w", pod.Name, err)
 				}
+				if c.putPodInfo(result) {
+					c.retryDeferredPods(result.Spec.NodeName)
+				}
 			}
 			return nil
 		},
@@ -392,6 +518,107 @@ func (c *PodController) readOnly(nodeName string) bool {
 		return false
 	}
 	return c.readOnlyFunc(nodeName)
+}
+
+func (c *PodController) lifecycleEvent(pod *corev1.Pod) *lifecycle.Event {
+	var node *corev1.Node
+	if c.nodeCacheGetter != nil {
+		node, _ = c.nodeCacheGetter.Get(pod.Spec.NodeName)
+	}
+	return &lifecycle.Event{
+		Labels:      pod.Labels,
+		Annotations: pod.Annotations,
+		Data:        pod,
+		CELVariables: map[string]any{
+			"node":                  node,
+			"nodeAllocatedRequests": utilscel.NewResourceList(c.nodeAllocatedRequests(pod.Spec.NodeName)),
+		},
+	}
+}
+
+func (c *PodController) nodeLock(nodeName string) *sync.Mutex {
+	lock, _ := c.nodeLocks.LoadOrStore(nodeName, &sync.Mutex{})
+	return lock
+}
+
+func (c *PodController) nodeContextAvailable(pod *corev1.Pod) bool {
+	if c.nodeCacheGetter == nil {
+		return true
+	}
+	_, ok := c.nodeCacheGetter.Get(pod.Spec.NodeName)
+	return ok
+}
+
+func (c *PodController) scheduleContextRetry(pod *corev1.Pod) {
+	c.scheduleContextRetryRef(log.KObj(pod), time.Second)
+}
+
+func (c *PodController) scheduleContextRetryRef(ref log.ObjectRef, delay time.Duration) {
+	c.contextRetryQueue.Cancel(ref)
+	c.contextRetryQueue.AddAfter(ref, delay)
+}
+
+func (c *PodController) nodeAllocatedRequests(nodeName string) corev1.ResourceList {
+	requests := corev1.ResourceList{}
+	pods, ok := c.podsOnNode.Load(nodeName)
+	if !ok {
+		return requests
+	}
+	pods.Range(func(_ log.ObjectRef, pod *PodInfo) bool {
+		addResourceList(requests, pod.Requests)
+		return true
+	})
+	return requests
+}
+
+// NodeAllocatableChanged retries deferred pods after a node capacity change.
+func (c *PodController) NodeAllocatableChanged(nodeName string) {
+	c.retryDeferredPods(nodeName)
+	c.retryInfeasiblePods(nodeName)
+}
+
+func (c *PodController) retryDeferredPods(nodeName string) {
+	pods, ok := c.podsOnNode.Load(nodeName)
+	if !ok {
+		return
+	}
+	pods.Range(func(ref log.ObjectRef, pod *PodInfo) bool {
+		if pod.Deferred {
+			c.scheduleDeferredRetry(ref, pod.DeferredGeneration, 0)
+		}
+		return true
+	})
+}
+
+func (c *PodController) retryInfeasiblePods(nodeName string) {
+	pods, ok := c.podsOnNode.Load(nodeName)
+	if !ok {
+		return
+	}
+	pods.Range(func(ref log.ObjectRef, pod *PodInfo) bool {
+		if pod.Infeasible {
+			c.scheduleContextRetryRef(ref, 0)
+		}
+		return true
+	})
+}
+
+func (c *PodController) ensureDeferredRetry(pod *corev1.Pod, generation int64) {
+	ref := log.KObj(pod)
+	state, ok := c.deferredRetries.Load(ref)
+	if ok && state.Generation == generation {
+		return
+	}
+	c.scheduleDeferredRetry(ref, generation, deferredInitialRetryDelay)
+}
+
+func (c *PodController) scheduleDeferredRetry(ref log.ObjectRef, generation int64, delay time.Duration) {
+	if state, ok := c.deferredRetries.Load(ref); ok {
+		c.deferredQueue.Cancel(deferredRetryJob{Ref: ref, Generation: state.Generation, Token: state.Token})
+	}
+	token := c.deferredRetryToken.Add(1)
+	c.deferredRetries.Store(ref, deferredRetryState{Generation: generation, Token: token})
+	c.deferredQueue.AddAfter(deferredRetryJob{Ref: ref, Generation: generation, Token: token}, delay)
 }
 
 // applyResource applies the resource
@@ -492,8 +719,9 @@ loop:
 			switch event.Type {
 			case informer.Added, informer.Modified, informer.Sync:
 				pod := event.Object
-				if c.enableMetrics {
-					c.putPodInfo(pod)
+				allocationDecreased := c.putPodInfo(pod)
+				if allocationDecreased {
+					c.retryDeferredPods(pod.Spec.NodeName)
 				}
 				if c.need(pod) {
 					if c.readOnly(pod.Spec.NodeName) {
@@ -503,10 +731,14 @@ loop:
 							"pod", log.KObj(pod),
 							"node", pod.Spec.NodeName,
 						)
+					} else if generation, deferred := podDeferredGeneration(pod); deferred {
+						c.ensureDeferredRetry(pod, generation)
 					} else {
+						c.deferredRetries.Delete(log.KObj(pod))
 						c.preprocessChan <- pod.DeepCopy()
 					}
 				} else {
+					c.deferredRetries.Delete(log.KObj(pod))
 					logger.Debug("Skip pod",
 						"reason", "not managed",
 						"event", event.Type,
@@ -525,8 +757,11 @@ loop:
 				}
 			case informer.Deleted:
 				pod := event.Object
-				if c.enableMetrics {
-					c.deletePodInfo(pod)
+				allocationReleased := c.deletePodInfo(pod)
+				c.deferredRetries.Delete(log.KObj(pod))
+				c.contextRetryQueue.Cancel(log.KObj(pod))
+				if allocationReleased {
+					c.retryDeferredPods(pod.Spec.NodeName)
 				}
 				if c.need(pod) {
 					// Recycling PodIP
@@ -816,27 +1051,106 @@ func (c *PodController) funcPodIPsWith(nodeName string, hostNetwork bool, uid, n
 }
 
 // putPodInfo puts pod info
-func (c *PodController) putPodInfo(pod *corev1.Pod) {
-	podInfo := &PodInfo{}
+func (c *PodController) putPodInfo(pod *corev1.Pod) bool {
+	deferredGeneration, deferred := podDeferredGeneration(pod)
+	podInfo := &PodInfo{
+		NodeName:           pod.Spec.NodeName,
+		Requests:           podAllocatedRequests(pod),
+		Deferred:           deferred,
+		DeferredGeneration: deferredGeneration,
+		Infeasible:         podInfeasible(pod),
+	}
 	key := log.KObj(pod)
-	c.podsSets.Store(key, podInfo)
+	old, loaded := c.podsSets.Swap(key, podInfo)
+	if loaded && old.NodeName != podInfo.NodeName {
+		if oldNodePods, ok := c.podsOnNode.Load(old.NodeName); ok {
+			oldNodePods.Delete(key)
+		}
+		c.retryDeferredPods(old.NodeName)
+	}
 	m, ok := c.podsOnNode.Load(pod.Spec.NodeName)
 	if !ok {
 		m = &utilsmaps.SyncMap[log.ObjectRef, *PodInfo]{}
 		c.podsOnNode.Store(pod.Spec.NodeName, m)
 	}
 	m.Store(key, podInfo)
+	return loaded && (old.NodeName != podInfo.NodeName || resourceListDecreased(old.Requests, podInfo.Requests))
+}
+
+func podAllocatedRequests(pod *corev1.Pod) corev1.ResourceList {
+	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+		return corev1.ResourceList{}
+	}
+	return utilscel.PodRequests(pod, true)
+}
+
+func podDeferredGeneration(pod *corev1.Pod) (int64, bool) {
+	for _, condition := range pod.Status.Conditions {
+		if condition.Type == corev1.PodResizePending &&
+			condition.Status == corev1.ConditionTrue &&
+			condition.Reason == corev1.PodReasonDeferred &&
+			condition.ObservedGeneration == pod.Generation {
+			return condition.ObservedGeneration, true
+		}
+	}
+	return 0, false
+}
+
+func podInfeasible(pod *corev1.Pod) bool {
+	for _, condition := range pod.Status.Conditions {
+		if condition.Type == corev1.PodResizePending &&
+			condition.Status == corev1.ConditionTrue &&
+			condition.Reason == corev1.PodReasonInfeasible &&
+			condition.ObservedGeneration == pod.Generation {
+			return true
+		}
+	}
+	return false
+}
+
+func addResourceList(target, resources corev1.ResourceList) {
+	for name, quantity := range resources {
+		current := target[name]
+		current.Add(quantity)
+		target[name] = current
+	}
+}
+
+func resourceListDecreased(old, current corev1.ResourceList) bool {
+	for name, oldQuantity := range old {
+		if oldQuantity.Cmp(current[name]) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func resourceListsEqual(a, b corev1.ResourceList) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for name, quantity := range a {
+		other, ok := b[name]
+		if !ok || !quantity.Equal(other) {
+			return false
+		}
+	}
+	return true
 }
 
 // deletePodInfo deletes pod info
-func (c *PodController) deletePodInfo(pod *corev1.Pod) {
+func (c *PodController) deletePodInfo(pod *corev1.Pod) bool {
 	key := log.KObj(pod)
-	c.podsSets.Delete(key)
-	m, ok := c.podsOnNode.Load(pod.Spec.NodeName)
+	podInfo, loaded := c.podsSets.LoadAndDelete(key)
+	if !loaded {
+		return false
+	}
+	m, ok := c.podsOnNode.Load(podInfo.NodeName)
 	if !ok {
-		return
+		return len(podInfo.Requests) != 0
 	}
 	m.Delete(key)
+	return len(podInfo.Requests) != 0
 }
 
 // Get gets pod info

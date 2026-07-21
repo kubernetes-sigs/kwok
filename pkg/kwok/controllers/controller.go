@@ -441,12 +441,17 @@ func (c *Controller) initNodeController(ctx context.Context, lifecycle resources
 		DisregardStatusWithLabelSelector:      c.conf.DisregardStatusWithLabelSelector,
 		OnNodeManagedFunc:                     c.onNodeManaged,
 		OnNodeUnmanagedFunc:                   c.onNodeUnmanaged,
-		Lifecycle:                             lifecycle,
-		PlayStageParallelism:                  c.conf.NodePlayStageParallelism,
-		FuncMap:                               c.conf.FuncMap,
-		Recorder:                              c.recorder,
-		ReadOnlyFunc:                          c.readOnlyFunc,
-		EnableMetrics:                         c.conf.EnableMetrics,
+		OnNodeAllocatableChangedFunc: func(nodeName string) {
+			if c.pods != nil {
+				c.pods.NodeAllocatableChanged(nodeName)
+			}
+		},
+		Lifecycle:            lifecycle,
+		PlayStageParallelism: c.conf.NodePlayStageParallelism,
+		FuncMap:              c.conf.FuncMap,
+		Recorder:             c.recorder,
+		ReadOnlyFunc:         c.readOnlyFunc,
+		EnableMetrics:        c.conf.EnableMetrics,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create nodes controller: %w", err)
