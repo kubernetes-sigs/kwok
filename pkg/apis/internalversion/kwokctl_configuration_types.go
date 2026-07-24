@@ -46,7 +46,7 @@ type ExtraArgs struct {
 	// Key is the key of the extra args.
 	Key string
 	// Value is the value of the extra args.
-	Value string
+	Value *string
 	// Override is the value of is it override the arg
 	Override bool
 }
