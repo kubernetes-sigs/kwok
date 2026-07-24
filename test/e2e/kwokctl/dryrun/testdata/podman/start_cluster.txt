@@ -21,6 +21,9 @@ podman \
   kwok-<CLUSTER_NAME>-scheduler-plugins
 podman \
   start \
+  kwok-<CLUSTER_NAME>-node-readiness-controller
+podman \
+  start \
   kwok-<CLUSTER_NAME>-metrics-server
 podman \
   start \
