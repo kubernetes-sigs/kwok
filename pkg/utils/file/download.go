@@ -31,6 +31,7 @@ import (
 	"github.com/wzshiming/httpseek"
 
 	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/flock"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/progressbar"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -145,91 +146,186 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 	}
 	switch u.Scheme {
 	case "http", "https":
-
-		logger := log.FromContext(ctx)
-		logger = logger.With(
-			"uri", src,
-		)
-		logger.Info("Download")
-
-		var transport = http.DefaultTransport
-		transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, retry int, err error) error {
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				return err
-			}
-			if retry > 10 {
-				return err
-			}
-			logger.Warn("Retry after 1s",
-				"err", err,
-				"retry", retry,
-			)
-			time.Sleep(time.Second)
-			return nil
-		})
-
-		if !quiet {
-			transport = progressbar.NewTransport(transport)
-		}
-
-		cli := &http.Client{
-			Transport: transport,
-		}
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-		if err != nil {
-			return "", err
-		}
-		req.Header.Set("User-Agent", version.DefaultUserAgent())
-		resp, err := cli.Do(req)
-		if err != nil {
-			return "", err
-		}
-
-		defer func() {
-			err = resp.Body.Close()
-			if err != nil {
-				logger.Error("Failed to close body of response",
-					"err", err,
-				)
-			}
-		}()
-
-		if resp.StatusCode != http.StatusOK {
-			return "", fmt.Errorf("%s: %s", u.String(), resp.Status)
-		}
-
-		err = os.MkdirAll(utilspath.Dir(cache), 0755)
-		if err != nil {
-			return "", err
-		}
-
-		d, err := os.OpenFile(cache+".tmp", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, mode)
-		if err != nil {
-			return "", err
-		}
-
-		contentLength, err := io.Copy(d, resp.Body)
-		if err != nil {
-			_ = d.Close()
-			fmt.Println()
-			return "", err
-		}
-		err = d.Close()
-		if err != nil {
-			logger.Error("Failed to close file",
-				"err", err,
-			)
-		}
-		if resp.ContentLength != contentLength {
-			return "", fmt.Errorf("content length mismatch: %d != %d", resp.ContentLength, contentLength)
-		}
-
-		err = os.Rename(cache+".tmp", cache)
-		if err != nil {
-			return "", err
-		}
-		return cache, nil
+		return downloadHTTPWithCache(ctx, cache, src, u, mode, quiet)
 	default:
 		return src, nil
 	}
+}
+
+func lockIncompleteFile(ctx context.Context, path string) (*os.File, error) {
+	incompleteFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	var lastUpdate = time.Now()
+	var offset int64
+	for {
+		err = flock.Lock(incompleteFile)
+		if err == nil {
+			return incompleteFile, nil
+		}
+		if !errors.Is(err, flock.ErrLocked) {
+			_ = incompleteFile.Close()
+			return nil, fmt.Errorf("failed to lock download cache: %w", err)
+		}
+
+		off, err := incompleteFile.Seek(0, io.SeekEnd)
+		if err != nil {
+			_ = incompleteFile.Close()
+			return nil, err
+		}
+		if offset == off && time.Since(lastUpdate) > time.Minute {
+			_ = incompleteFile.Close()
+			return nil, fmt.Errorf("download is locked and not updated for more than 1 minute, please check the download process or remove the incomplete file: %s", path)
+		}
+
+		offset = off
+		lastUpdate = time.Now()
+		select {
+		case <-ctx.Done():
+			_ = incompleteFile.Close()
+			return nil, ctx.Err()
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
+}
+
+func downloadHTTPWithCache(ctx context.Context, cache, src string, u *url.URL, mode fs.FileMode, quiet bool) (string, error) {
+	err := os.MkdirAll(utilspath.Dir(cache), 0755)
+	if err != nil {
+		return "", err
+	}
+	if _, err := os.Stat(cache); err == nil {
+		return cache, nil
+	}
+
+	tmp := cache + ".incomplete"
+	incompleteFile, err := lockIncompleteFile(ctx, tmp)
+	if err != nil {
+		return "", err
+	}
+
+	logger := log.FromContext(ctx).With("uri", src)
+	closed := false
+	defer func() {
+		if closed {
+			return
+		}
+		err := incompleteFile.Close()
+		if err != nil {
+			logger.Error("Failed to close incomplete file", "path", tmp, "err", err)
+		}
+	}()
+	locked := true
+
+	if _, err := os.Stat(cache); err == nil {
+		err = flock.Unlock(incompleteFile)
+		if err != nil {
+			logger.Error("Failed to unlock download cache", "path", tmp, "err", err)
+		}
+		locked = false
+		err = os.Remove(tmp)
+		if err != nil {
+			logger.Debug("Failed to remove incomplete file", "path", tmp, "err", err)
+		}
+		return cache, nil
+	}
+	defer func() {
+		if !locked {
+			return
+		}
+		err := flock.Unlock(incompleteFile)
+		if err != nil {
+			log.FromContext(ctx).Error("Failed to unlock download cache",
+				"path", tmp,
+				"err", err,
+			)
+		}
+	}()
+
+	logger.Info("Download")
+
+	var transport = http.DefaultTransport
+	transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, retry int, err error) error {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+		if retry > 10 {
+			return err
+		}
+		logger.Warn("Retry after 1s",
+			"err", err,
+			"retry", retry,
+		)
+		time.Sleep(time.Second)
+		return nil
+	})
+
+	offset, err := incompleteFile.Seek(0, io.SeekEnd)
+	if err != nil {
+		return "", err
+	}
+	if !quiet {
+		transport = progressbar.NewTransportWithOffset(transport, uint64(offset))
+	}
+	cli := &http.Client{Transport: transport}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("User-Agent", version.DefaultUserAgent())
+	if offset > 0 {
+		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", offset))
+	}
+	resp, err := cli.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			logger.Error("Failed to close body of response", "err", err)
+		}
+	}()
+
+	if offset == 0 {
+		if resp.StatusCode != http.StatusOK {
+			return "", fmt.Errorf("GET %s: %s", u.String(), resp.Status)
+		}
+	} else if resp.StatusCode != http.StatusPartialContent {
+		return "", fmt.Errorf("GET Partial %s: %s", u.String(), resp.Status)
+	}
+
+	contentLength, err := io.Copy(incompleteFile, resp.Body)
+	if err != nil {
+		return "", err
+	}
+	if resp.ContentLength >= 0 && resp.ContentLength != contentLength {
+		return "", fmt.Errorf("content length mismatch: %d != %d", resp.ContentLength, contentLength)
+	}
+
+	err = os.Chmod(tmp, mode)
+	if err != nil {
+		return "", err
+	}
+	err = flock.Unlock(incompleteFile)
+	if err != nil {
+		return "", err
+	}
+	locked = false
+	err = incompleteFile.Close()
+	if err != nil {
+		return "", err
+	}
+	closed = true
+
+	err = os.Rename(tmp, cache)
+	if err != nil {
+		if _, statErr := os.Stat(cache); statErr == nil {
+			return cache, nil
+		}
+		return "", err
+	}
+	return cache, nil
 }

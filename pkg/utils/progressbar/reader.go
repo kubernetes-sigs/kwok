@@ -38,6 +38,11 @@ type reader struct {
 
 // NewReader returns a new reader that writes a progress bar to out.
 func NewReader(r io.Reader, name string, total uint64) io.Reader {
+	return NewReaderWithOffset(r, name, total, 0)
+}
+
+// NewReaderWithOffset returns a new reader that writes a progress bar to out starting at offset.
+func NewReaderWithOffset(r io.Reader, name string, total, offset uint64) io.Reader {
 	out := os.Stderr
 	if !term.IsTerminal(int(out.Fd())) {
 		return r
@@ -45,6 +50,7 @@ func NewReader(r io.Reader, name string, total uint64) io.Reader {
 
 	return &reader{
 		reader:    r,
+		current:   offset,
 		name:      name,
 		total:     total,
 		startTime: time.Now(),
@@ -77,11 +83,16 @@ func (r *reader) Read(b []byte) (int, error) {
 
 // NewReadCloser returns a new ReadCloser that writes a progress bar to out.
 func NewReadCloser(rc io.ReadCloser, name string, total uint64) io.ReadCloser {
+	return NewReadCloserWithOffset(rc, name, total, 0)
+}
+
+// NewReadCloserWithOffset returns a ReadCloser that writes a progress bar to out starting at offset.
+func NewReadCloserWithOffset(rc io.ReadCloser, name string, total, offset uint64) io.ReadCloser {
 	return struct {
 		io.Reader
 		io.Closer
 	}{
-		Reader: NewReader(rc, name, total),
+		Reader: NewReaderWithOffset(rc, name, total, offset),
 		Closer: rc,
 	}
 }
