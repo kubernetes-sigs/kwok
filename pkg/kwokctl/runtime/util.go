@@ -118,10 +118,13 @@ func applyComponentPatch(ctx context.Context, component *internalversion.Compone
 	component.Volumes = append(component.Volumes, patch.ExtraVolumes...)
 	component.Envs = append(component.Envs, patch.ExtraEnvs...)
 	for _, a := range patch.ExtraArgs {
-		if a.Override {
+		switch {
+		case a.Override:
 			component.Args = applyComponentArgsOverride(ctx, component.Args, a)
-		} else {
-			component.Args = append(component.Args, fmt.Sprintf("--%s=%s", a.Key, a.Value))
+		case a.Value == nil:
+			component.Args = append(component.Args, fmt.Sprintf("--%s", a.Key))
+		default:
+			component.Args = append(component.Args, fmt.Sprintf("--%s=%s", a.Key, *a.Value))
 		}
 	}
 }
@@ -131,7 +134,11 @@ func applyComponentArgsOverride(ctx context.Context, args []string, a internalve
 	overrided := false
 	for i := len(args) - 1; i >= 0; i-- {
 		if strings.HasPrefix(args[i], k) {
-			args[i] = fmt.Sprintf("--%s=%s", a.Key, a.Value)
+			if a.Value == nil {
+				args[i] = fmt.Sprintf("--%s", a.Key)
+			} else {
+				args[i] = fmt.Sprintf("--%s=%s", a.Key, *a.Value)
+			}
 			overrided = true
 			break
 		}

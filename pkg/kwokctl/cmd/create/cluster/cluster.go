@@ -248,7 +248,7 @@ func mutationComponentPatches(flags *flagpole) {
 		if n, ok := componentNames[splitedArgs[0]]; ok {
 			componentPatches[n].ExtraArgs = append(componentPatches[n].ExtraArgs, internalversion.ExtraArgs{
 				Key:   splitedArgs[1],
-				Value: splitedArgs[2],
+				Value: new(splitedArgs[2]),
 			})
 			continue
 		}
@@ -257,7 +257,7 @@ func mutationComponentPatches(flags *flagpole) {
 			ExtraArgs: []internalversion.ExtraArgs{
 				{
 					Key:   splitedArgs[1],
-					Value: splitedArgs[2],
+					Value: new(splitedArgs[2]),
 				},
 			},
 		})

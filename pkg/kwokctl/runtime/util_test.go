@@ -39,7 +39,7 @@ func TestApplyComponentArgsOverride(t *testing.T) {
 			},
 			patch: internalversion.ExtraArgs{
 				Key:      "foo",
-				Value:    "10",
+				Value:    new("10"),
 				Override: true,
 			},
 			wantArgs: []string{
@@ -54,7 +54,7 @@ func TestApplyComponentArgsOverride(t *testing.T) {
 			},
 			patch: internalversion.ExtraArgs{
 				Key:      "bar",
-				Value:    "2",
+				Value:    new("2"),
 				Override: true,
 			},
 			wantArgs: []string{
@@ -96,7 +96,7 @@ func TestApplyComponentPatch(t *testing.T) {
 				ExtraArgs: []internalversion.ExtraArgs{
 					{
 						Key:      "etcd-servers",
-						Value:    "http://127.0.0.1:2379",
+						Value:    new("http://127.0.0.1:2379"),
 						Override: true,
 					},
 				},
@@ -114,12 +114,48 @@ func TestApplyComponentPatch(t *testing.T) {
 				ExtraArgs: []internalversion.ExtraArgs{
 					{
 						Key:      "etcd-servers",
-						Value:    "http://127.0.0.1:2379",
+						Value:    new("http://127.0.0.1:2379"),
 						Override: false,
 					},
 				},
 			},
 			wantArgs: []string{"--etcd-servers=http://localhost:2379", "--etcd-prefix=/registry", "--etcd-servers=http://127.0.0.1:2379"},
+		},
+		{
+			name: "Append bare flag when value is nil",
+			component: internalversion.Component{
+				Name: "test",
+				Args: []string{"--config.file=/etc/prometheus/prometheus.yaml"},
+			},
+			patch: internalversion.ComponentPatches{
+				Name: "test",
+				ExtraArgs: []internalversion.ExtraArgs{
+					{
+						Key:      "web.enable-lifecycle",
+						Value:    nil,
+						Override: false,
+					},
+				},
+			},
+			wantArgs: []string{"--config.file=/etc/prometheus/prometheus.yaml", "--web.enable-lifecycle"},
+		},
+		{
+			name: "Append flag with explicit empty value",
+			component: internalversion.Component{
+				Name: "test",
+				Args: []string{"--server=https://127.0.0.1:6443", "--namespace=default"},
+			},
+			patch: internalversion.ComponentPatches{
+				Name: "test",
+				ExtraArgs: []internalversion.ExtraArgs{
+					{
+						Key:      "cluster",
+						Value:    new(""),
+						Override: false,
+					},
+				},
+			},
+			wantArgs: []string{"--server=https://127.0.0.1:6443", "--namespace=default", "--cluster="},
 		},
 	}
 
