@@ -204,9 +204,9 @@ spec:
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     - --node-ip=$(POD_IP)
     - --node-name=localhost
+    - --node-lease-duration-seconds=40
     - --node-port=10247
     - --server-address=0.0.0.0:10247
-    - --node-lease-duration-seconds=40
     - --tracing-endpoint=127.0.0.1:4317
     - --tracing-sampling-rate-per-million=1000000
     command:
@@ -284,13 +284,13 @@ spec:
     - --kubelet-use-node-status-port
     - --kubelet-insecure-tls
     - --metric-resolution=15s
-    - --bind-address=0.0.0.0
-    - --secure-port=4443
     - --kubeconfig=/etc/kubernetes/kubeconfig.yaml
     - --authentication-kubeconfig=/etc/kubernetes/kubeconfig.yaml
     - --authorization-kubeconfig=/etc/kubernetes/kubeconfig.yaml
     - --tls-cert-file=/etc/kubernetes/pki/admin.crt
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
+    - --bind-address=0.0.0.0
+    - --secure-port=4443
     command:
     - /metrics-server
     image: registry.k8s.io/metrics-server/metrics-server:v0.8.1

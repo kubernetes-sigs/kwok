@@ -104,6 +104,8 @@ const (
 
 	// RuntimeTypeDocker is the docker runtime.
 	RuntimeTypeDocker = "docker"
+	// RuntimeTypeDockerHost is the docker runtime with host networking.
+	RuntimeTypeDockerHost = "docker-host"
 	// RuntimeTypePodman is the podman runtime.
 	RuntimeTypePodman = "podman"
 	// RuntimeTypeNerdctl is the nerdctl runtime.

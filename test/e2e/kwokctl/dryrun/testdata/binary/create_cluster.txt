@@ -55,7 +55,7 @@ cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
   --max-requests-inflight=0 \
   --max-mutating-requests-inflight=0 \
   --enable-priority-and-fairness=false \
-  --etcd-servers=http://127.0.0.1:32765 \
+  --etcd-servers=http://localhost:32765 \
   --bind-address=0.0.0.0 \
   --secure-port=32764 \
   --tls-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt \
@@ -63,11 +63,11 @@ cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
   --client-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt \
   --service-account-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key \
   --service-account-signing-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key \
-  --service-account-issuer=https://kubernetes.default.svc.cluster.local \
   --proxy-client-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key \
   --proxy-client-cert-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt \
   --requestheader-client-ca-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt \
   --requestheader-allowed-names=kwok-ca \
+  --service-account-issuer=https://kubernetes.default.svc.cluster.local \
   --requestheader-username-headers=X-Remote-User \
   --requestheader-group-headers=X-Remote-Group \
   --requestheader-extra-headers-prefix=X-Remote-Extra- \
@@ -110,9 +110,9 @@ cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
   --tls-private-key-file=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key \
   --node-ip= \
   --node-name=localhost \
+  --node-lease-duration-seconds=200 \
   --node-port=32763 \
   --server-address=0.0.0.0:32763 \
-  --node-lease-duration-seconds=200 \
   ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/kwok-controller.log \
   2>&1 \
   &

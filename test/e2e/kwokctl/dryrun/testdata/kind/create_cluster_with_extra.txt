@@ -98,9 +98,9 @@ spec:
     - --tls-private-key-file=/etc/kubernetes/pki/admin.key
     - --node-ip=$(POD_IP)
     - --node-name=localhost
+    - --node-lease-duration-seconds=40
     - --node-port=10247
     - --server-address=0.0.0.0:10247
-    - --node-lease-duration-seconds=40
     - --v=-4
     command:
     - kwok
