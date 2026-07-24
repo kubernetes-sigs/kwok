@@ -557,6 +557,16 @@ func setSchedulerPluginsConfig(conf *configv1alpha1.KwokctlConfigurationOptions)
 	}
 	conf.SchedulerPluginsImagePrefix = envs.GetEnvWithPrefix("SCHEDULER_PLUGINS_IMAGE_PREFIX", conf.SchedulerPluginsImagePrefix)
 
+	if conf.SchedulerPluginsControllerBinary == "" {
+		conf.SchedulerPluginsControllerBinary = consts.SchedulerPluginsBinaryPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + ".tar.gz#cmd/controller"
+	}
+	conf.SchedulerPluginsControllerBinary = envs.GetEnvWithPrefix("SCHEDULER_PLUGINS_CONTROLLER_BINARY", conf.SchedulerPluginsControllerBinary)
+
+	if conf.SchedulerPluginsSchedulerBinary == "" {
+		conf.SchedulerPluginsSchedulerBinary = consts.SchedulerPluginsBinaryPrefix + "/" + version.AddPrefixV(conf.SchedulerPluginsVersion) + ".tar.gz#cmd/scheduler"
+	}
+	conf.SchedulerPluginsSchedulerBinary = envs.GetEnvWithPrefix("SCHEDULER_PLUGINS_SCHEDULER_BINARY", conf.SchedulerPluginsSchedulerBinary)
+
 	if conf.SchedulerPluginsControllerImage == "" {
 		conf.SchedulerPluginsControllerImage = joinImageURI(conf.SchedulerPluginsImagePrefix, "controller", conf.SchedulerPluginsVersion)
 	}

@@ -1800,6 +1800,8 @@ func autoConvert_internalversion_KwokctlConfigurationOptions_To_v1alpha1_Kwokctl
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
 	out.MetricsServerManifests = *(*[]string)(unsafe.Pointer(&in.MetricsServerManifests))
+	out.SchedulerPluginsControllerBinary = in.SchedulerPluginsControllerBinary
+	out.SchedulerPluginsSchedulerBinary = in.SchedulerPluginsSchedulerBinary
 	out.SchedulerPluginsControllerImage = in.SchedulerPluginsControllerImage
 	out.SchedulerPluginsSchedulerImage = in.SchedulerPluginsSchedulerImage
 	out.SchedulerPluginsManifests = *(*[]string)(unsafe.Pointer(&in.SchedulerPluginsManifests))
@@ -1937,6 +1939,8 @@ func autoConvert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_Kwokctl
 	out.JaegerImage = in.JaegerImage
 	out.MetricsServerImage = in.MetricsServerImage
 	out.MetricsServerManifests = *(*[]string)(unsafe.Pointer(&in.MetricsServerManifests))
+	out.SchedulerPluginsControllerBinary = in.SchedulerPluginsControllerBinary
+	out.SchedulerPluginsSchedulerBinary = in.SchedulerPluginsSchedulerBinary
 	out.SchedulerPluginsControllerImage = in.SchedulerPluginsControllerImage
 	out.SchedulerPluginsSchedulerImage = in.SchedulerPluginsSchedulerImage
 	out.SchedulerPluginsManifests = *(*[]string)(unsafe.Pointer(&in.SchedulerPluginsManifests))

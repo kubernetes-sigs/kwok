@@ -3351,6 +3351,28 @@ string
 </tr>
 <tr>
 <td>
+<code>schedulerPluginsControllerBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsControllerBinary is the binary of scheduler-plugins controller.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerPluginsSchedulerBinary</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SchedulerPluginsSchedulerBinary is the binary of scheduler-plugins scheduler.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>schedulerPluginsControllerImage</code>
 <em>
 string

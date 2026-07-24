@@ -23,7 +23,7 @@ function main() {
     name="test-kwokctl-podgroup-${release}"
 
     kwokctl create cluster --name "${name}" \
-      --runtime=docker --enable scheduler-plugins \
+      --enable scheduler-plugins \
       --kube-scheduler-config "${DIR}/podgroup-scheduler-config.yaml"
 
     kwokctl scale node --replicas 2 --name "${name}"
@@ -48,8 +48,6 @@ function main() {
     kwokctl delete cluster --name "${name}"
   done
 }
-
-requirements
 
 mapfile -t releases < <(supported_releases)
 main "${releases[@]}"

@@ -16,7 +16,7 @@ kind: TracingConfiguration
 samplingRatePerMillion: 1000000
 EOF
 # Download https://dl.k8s.io/release/v1.36.1/bin/<OS>/<ARCH>/kube-controller-manager to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-controller-manager
-# Download https://dl.k8s.io/release/v1.36.1/bin/<OS>/<ARCH>/kube-scheduler to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/archive/refs/tags/v0.34.7.<TAR> and build cmd/scheduler from source to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/kube-scheduler
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 apiVersion: kubescheduler.config.k8s.io/v1
 clientConnection:
@@ -40,6 +40,14 @@ EOF
 # Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml to <ROOT_DIR>/workdir/cache/manifest/49813f4ec9caba92a73718bf218a6a07e283942ec2088fe8d58ac793f5f6998b.yaml
 # Download https://github.com/prometheus/prometheus/releases/download/v3.12.0/prometheus-3.12.0.<OS>-<ARCH>.<TAR> and extract prometheus to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/prometheus
 # Download https://github.com/jaegertracing/jaeger/releases/download/v1.76.0/jaeger-1.76.0-<OS>-<ARCH>.<TAR> and extract jaeger-all-in-one to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/jaeger
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/archive/refs/tags/v0.34.7.<TAR> and build cmd/controller from source to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/bin/scheduler-plugins
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/install/all-in-one.yaml to <ROOT_DIR>/workdir/cache/manifest/309ba2d77709ffdefe8aa82c544005c5956165abce45a44c8ce42dfdd5701780.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/capacityscheduling/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/eda30957f44d40b62ae09ee8b1bd01c8d8589fd20c1ed23c3ebaaf0b701ff26b.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/coscheduling/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/6cfaedb711ee13766b67d761f7455e1196f83ba4d154a09bdc8ac53bcd63c2d3.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/appgroup/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/5237ee84ac947b31465dd1756fe14b18c89cfb545feb91916857e5060c51b1aa.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/networktopology/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/e266412bf740d9d6641d54f7a9c032fe633d6ed92e9e4f3658b6599c58b54aa2.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/sysched/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/0b92760f424b9d058e9ac76fb74b53a0c10c0011b6f7fa093d0142ea6dfe4404.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/noderesourcetopology/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/864cc21a8033acc2835c06cbe95b86601dcb44b4834216aa512c1ae375d63174.yaml
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
 global:
   evaluation_interval: 15s
@@ -128,6 +136,15 @@ scrape_configs:
   static_configs:
   - targets:
     - 127.0.0.1:9090
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: scheduler-plugins
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+  - targets:
+    - -scheduler-plugins:8080
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig
 apiVersion: v1
@@ -283,6 +300,13 @@ cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
   &
 echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/kwok-controller.pid
 cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
+  scheduler-plugins \
+  --kubeconfig=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig \
+  ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/scheduler-plugins.log \
+  2>&1 \
+  &
+echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/scheduler-plugins.pid
+cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
   metrics-server \
   --kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP \
   --kubelet-use-node-status-port \
@@ -308,3 +332,4 @@ cd <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME> && \
   &
 echo $! ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pids/prometheus.pid
 # Set up manifest for metrics-server
+# Set up manifest for scheduler-plugins
