@@ -34,7 +34,7 @@ require (
 	k8s.io/apiserver v0.36.1
 	k8s.io/client-go v0.36.1
 	k8s.io/component-base v0.36.1
-	k8s.io/cri-api v0.36.1
+	k8s.io/cri-api v0.36.3
 	k8s.io/cri-client v0.36.1
 	k8s.io/cri-streaming v0.36.1
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a
