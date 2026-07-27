@@ -130,10 +130,11 @@ func applyComponentPatch(ctx context.Context, component *internalversion.Compone
 }
 
 func applyComponentArgsOverride(ctx context.Context, args []string, a internalversion.ExtraArgs) []string {
-	k := fmt.Sprintf("--%s=", a.Key)
+	keyPrefix := fmt.Sprintf("--%s=", a.Key)
+	keyFlag := fmt.Sprintf("--%s", a.Key)
 	overrided := false
 	for i := len(args) - 1; i >= 0; i-- {
-		if strings.HasPrefix(args[i], k) {
+		if args[i] == keyFlag || strings.HasPrefix(args[i], keyPrefix) {
 			if a.Value == nil {
 				args[i] = fmt.Sprintf("--%s", a.Key)
 			} else {
