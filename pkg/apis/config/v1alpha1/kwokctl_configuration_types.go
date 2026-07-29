@@ -55,7 +55,7 @@ type ExtraArgs struct {
 	// Key is the key of the extra args.
 	Key string `json:"key"`
 	// Value is the value of the extra args.
-	Value string `json:"value"`
+	Value *string `json:"value,omitempty"`
 	// Override is the value of is it override the arg
 	Override bool `json:"override"`
 }
