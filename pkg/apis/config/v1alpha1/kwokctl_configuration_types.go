@@ -293,6 +293,12 @@ type KwokctlConfigurationOptions struct {
 	// MetricsServerManifests is the full URLs of the metrics-server manifest.
 	MetricsServerManifests []string `json:"metricsServerManifests,omitempty"`
 
+	// SchedulerPluginsControllerBinary is the binary of scheduler-plugins controller.
+	SchedulerPluginsControllerBinary string `json:"schedulerPluginsControllerBinary,omitempty"`
+
+	// SchedulerPluginsSchedulerBinary is the binary of scheduler-plugins scheduler.
+	SchedulerPluginsSchedulerBinary string `json:"schedulerPluginsSchedulerBinary,omitempty"`
+
 	// SchedulerPluginsControllerImage is the image of scheduler-plugins controller.
 	SchedulerPluginsControllerImage string `json:"schedulerPluginsControllerImage,omitempty"`
 

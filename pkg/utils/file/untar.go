@@ -115,6 +115,23 @@ func unzip(ctx context.Context, src string, filter func(file string) (string, bo
 	return nil
 }
 
+// UntarTo extracts all files from an archive to the destination directory,
+// stripping the given number of leading path components from each file.
+func UntarTo(ctx context.Context, src, dest string, stripComponents int) error {
+	return untar(ctx, src, func(file string) (string, bool) {
+		// Strip leading path components
+		parts := strings.SplitN(file, "/", stripComponents+1)
+		if len(parts) <= stripComponents {
+			return "", false
+		}
+		target := filepath.Join(dest, parts[stripComponents])
+		if target == dest {
+			return "", false
+		}
+		return target, true
+	})
+}
+
 func untargz(ctx context.Context, src string, filter func(file string) (string, bool)) error {
 	logger := log.FromContext(ctx)
 	r, err := os.Open(src)

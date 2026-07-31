@@ -42,7 +42,7 @@ func DownloadWithCacheAndExtract(ctx context.Context, cacheDir, src, dest string
 		return nil
 	}
 
-	cacheTar, err := getCachePath(cacheDir, src)
+	cacheTar, err := GetCachePath(cacheDir, src)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,8 @@ func DownloadWithCache(ctx context.Context, cacheDir, src, dest string, mode fs.
 	return nil
 }
 
-func getCachePath(cacheDir, src string) (string, error) {
+// GetCachePath returns the cache path for the given source URL.
+func GetCachePath(cacheDir, src string) (string, error) {
 	u, err := url.Parse(src)
 	if err != nil {
 		return "", err
@@ -131,7 +132,7 @@ func getCachePath(cacheDir, src string) (string, error) {
 }
 
 func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileMode, quiet bool) (string, error) {
-	cache, err := getCachePath(cacheDir, src)
+	cache, err := GetCachePath(cacheDir, src)
 	if err != nil {
 		return "", err
 	}
@@ -220,7 +221,7 @@ func getCacheOrDownload(ctx context.Context, cacheDir, src string, mode fs.FileM
 				"err", err,
 			)
 		}
-		if resp.ContentLength != contentLength {
+		if resp.ContentLength >= 0 && resp.ContentLength != contentLength {
 			return "", fmt.Errorf("content length mismatch: %d != %d", resp.ContentLength, contentLength)
 		}
 

@@ -33,7 +33,11 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-scheduler
-	kubeSchedulerPath, err := c.EnsureBinary(ctx, consts.ComponentKubeScheduler, conf.KubeSchedulerBinary)
+	kubeSchedulerBinary := conf.KubeSchedulerBinary
+	if slices.Contains(env.components, consts.ComponentSchedulerPlugins) {
+		kubeSchedulerBinary = conf.SchedulerPluginsSchedulerBinary
+	}
+	kubeSchedulerPath, err := c.EnsureBinary(ctx, consts.ComponentKubeScheduler, kubeSchedulerBinary)
 	if err != nil {
 		return err
 	}

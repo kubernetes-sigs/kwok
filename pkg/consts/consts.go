@@ -62,7 +62,7 @@ var (
 	MetricsServerManifestPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 
 	SchedulerPluginsVersion        = "0.34.7"
-	SchedulerPluginsBinaryPrefix   = ""
+	SchedulerPluginsBinaryPrefix   = "https://github.com/kubernetes-sigs/scheduler-plugins/archive/refs/tags"
 	SchedulerPluginsImagePrefix    = "registry.k8s.io/scheduler-plugins"
 	SchedulerPluginsManifestPrefix = "https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags"
 
