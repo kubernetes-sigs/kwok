@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-node-0
+  uid: "aaaa-bbbb-cccc-dddd"
+  annotations:
+    kwok.x-k8s.io/node: fake
+    kwok.x-k8s.io/dra-google-tpu: "2"
+    kwok.x-k8s.io/dra-google-tpu-gen: "v6e"
+    kwok.x-k8s.io/dra-google-tpu-published: "v4/2"
+  labels:
+    type: kwok
+status:
+  phase: Running

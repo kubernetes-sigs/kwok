@@ -1,0 +1,78 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: nvidia-gpu-resource-slice-publish
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Node
+  selector:
+    matchExpressions:
+    - cel:
+        expression: >-
+          !has(self.metadata.deletionTimestamp)
+    - cel:
+        expression: >-
+          has(self.metadata.annotations) &&
+          'kwok.x-k8s.io/dra-nvidia-gpu' in self.metadata.annotations
+    - cel:
+        expression: >-
+          !('kwok.x-k8s.io/dra-nvidia-gpu-published' in self.metadata.annotations) ||
+          self.metadata.annotations['kwok.x-k8s.io/dra-nvidia-gpu-published'] !=
+          ('kwok.x-k8s.io/dra-nvidia-gpu-memory' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-nvidia-gpu-memory'] : '80Gi')
+          + '/' +
+          self.metadata.annotations['kwok.x-k8s.io/dra-nvidia-gpu']
+  steps:
+  - apply:
+      template: |
+        {{ $nodeName := .metadata.name }}
+        {{ $nodeUID := .metadata.uid }}
+        {{ $memory := index .metadata.annotations "kwok.x-k8s.io/dra-nvidia-gpu-memory" | default "80Gi" }}
+        apiVersion: resource.k8s.io/v1
+        kind: ResourceSlice
+        metadata:
+          name: {{ $nodeName }}-gpu.nvidia.com
+          ownerReferences:
+          - apiVersion: v1
+            kind: Node
+            name: {{ $nodeName | Quote }}
+            uid: {{ $nodeUID | Quote }}
+        spec:
+          driver: gpu.nvidia.com
+          nodeName: {{ $nodeName | Quote }}
+          pool:
+            name: {{ $nodeName | Quote }}
+            generation: 1
+            resourceSliceCount: 1
+          devices:
+          {{ range $index := until (atoi (index $.metadata.annotations "kwok.x-k8s.io/dra-nvidia-gpu")) }}
+          - name: gpu-{{ $index }}
+            attributes:
+              type:
+                string: gpu
+              uuid:
+                string: GPU-{{ $nodeUID }}-{{ $index }}
+              productName:
+                string: NVIDIA H100 80GB HBM3
+              brand:
+                string: Nvidia
+              architecture:
+                string: Hopper
+              cudaComputeCapability:
+                version: "9.0.0"
+              driverVersion:
+                version: "550.54.15"
+              cudaDriverVersion:
+                version: "12.4.0"
+              resource.kubernetes.io/numaNode:
+                int: 0
+            capacity:
+              memory:
+                value: {{ $memory | Quote }}
+          {{ end }}
+  - patch:
+      root: metadata
+      template: |
+        {{ $memory := index .metadata.annotations "kwok.x-k8s.io/dra-nvidia-gpu-memory" | default "80Gi" }}
+        annotations:
+          kwok.x-k8s.io/dra-nvidia-gpu-published: {{ printf "%s/%s" $memory (index .metadata.annotations "kwok.x-k8s.io/dra-nvidia-gpu") | Quote }}
