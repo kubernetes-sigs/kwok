@@ -28,17 +28,24 @@ import (
 
 // NewTransport returns a new transport that writes a progress bar to out.
 func NewTransport(base http.RoundTripper) http.RoundTripper {
+	return NewTransportWithOffset(base, 0)
+}
+
+// NewTransportWithOffset returns a new transport that writes a progress bar starting at offset.
+func NewTransportWithOffset(base http.RoundTripper, offset uint64) http.RoundTripper {
 	out := os.Stderr
 	if !term.IsTerminal(int(out.Fd())) {
 		return base
 	}
 	return &transport{
-		base: base,
+		base:   base,
+		offset: offset,
 	}
 }
 
 type transport struct {
-	base http.RoundTripper
+	base   http.RoundTripper
+	offset uint64
 }
 
 func (p *transport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -55,13 +62,8 @@ func (p *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return resp, nil
 	}
 
-	contentLength := resp.Header.Get("Content-Length")
-	if contentLength == "" {
-		return resp, nil
-	}
-
-	contentLengthInt, _ := strconv.Atoi(contentLength)
-	if contentLengthInt <= 0 {
+	contentLength, _ := strconv.ParseUint(resp.Header.Get("Content-Length"), 10, 64)
+	if contentLength == 0 {
 		return resp, nil
 	}
 
@@ -73,7 +75,11 @@ func (p *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		name = path.Base(req.URL.Path)
 	}
 
-	resp.Body = NewReadCloser(resp.Body, name, uint64(contentLengthInt))
+	offset := uint64(0)
+	if resp.StatusCode == http.StatusPartialContent {
+		offset = p.offset
+	}
+	resp.Body = NewReadCloserWithOffset(resp.Body, name, contentLength+offset, offset)
 
 	return resp, nil
 }
