@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-node-0
+  uid: "aaaa-bbbb-cccc-dddd"
+  annotations:
+    kwok.x-k8s.io/node: fake
+    kwok.x-k8s.io/dra-cpu: "6"
+    kwok.x-k8s.io/dra-cpu-numa: "2"
+    kwok.x-k8s.io/dra-cpu-mode: individual
+    kwok.x-k8s.io/dra-cpu-published: "grouped/2/6"
+  labels:
+    type: kwok
+status:
+  phase: Running

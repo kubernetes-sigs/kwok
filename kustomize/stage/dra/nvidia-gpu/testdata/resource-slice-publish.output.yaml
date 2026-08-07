@@ -1,0 +1,79 @@
+apiGroup: v1
+kind: Node
+name: kwok-node-0
+stages:
+- next:
+  - data:
+      apiVersion: resource.k8s.io/v1
+      kind: ResourceSlice
+      metadata:
+        name: kwok-node-0-gpu.nvidia.com
+        ownerReferences:
+        - apiVersion: v1
+          kind: Node
+          name: kwok-node-0
+          uid: aaaa-bbbb-cccc-dddd
+      spec:
+        devices:
+        - attributes:
+            architecture:
+              string: Hopper
+            brand:
+              string: Nvidia
+            cudaComputeCapability:
+              version: 9.0.0
+            cudaDriverVersion:
+              version: 12.4.0
+            driverVersion:
+              version: 550.54.15
+            productName:
+              string: NVIDIA H100 80GB HBM3
+            resource.kubernetes.io/numaNode:
+              int: 0
+            type:
+              string: gpu
+            uuid:
+              string: GPU-aaaa-bbbb-cccc-dddd-0
+          capacity:
+            memory:
+              value: 80Gi
+          name: gpu-0
+        - attributes:
+            architecture:
+              string: Hopper
+            brand:
+              string: Nvidia
+            cudaComputeCapability:
+              version: 9.0.0
+            cudaDriverVersion:
+              version: 12.4.0
+            driverVersion:
+              version: 550.54.15
+            productName:
+              string: NVIDIA H100 80GB HBM3
+            resource.kubernetes.io/numaNode:
+              int: 0
+            type:
+              string: gpu
+            uuid:
+              string: GPU-aaaa-bbbb-cccc-dddd-1
+          capacity:
+            memory:
+              value: 80Gi
+          name: gpu-1
+        driver: gpu.nvidia.com
+        nodeName: kwok-node-0
+        pool:
+          generation: 1
+          name: kwok-node-0
+          resourceSliceCount: 1
+    kind: apply
+    type: application/apply-patch+yaml
+  - data:
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-nvidia-gpu-published: 80Gi/2
+    kind: patch
+    type: application/merge-patch+json
+  stage: nvidia-gpu-resource-slice-publish
+  weight: 0

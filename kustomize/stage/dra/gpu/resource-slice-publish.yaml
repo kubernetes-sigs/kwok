@@ -1,0 +1,69 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: gpu-resource-slice-publish
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Node
+  selector:
+    matchExpressions:
+    - cel:
+        expression: >-
+          !has(self.metadata.deletionTimestamp)
+    - cel:
+        expression: >-
+          has(self.metadata.annotations) &&
+          'kwok.x-k8s.io/dra-gpu' in self.metadata.annotations
+    - cel:
+        expression: >-
+          !('kwok.x-k8s.io/dra-gpu-published' in self.metadata.annotations) ||
+          self.metadata.annotations['kwok.x-k8s.io/dra-gpu-published'] !=
+          ('kwok.x-k8s.io/dra-gpu-memory' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-gpu-memory'] : '16Gi')
+          + '/' +
+          self.metadata.annotations['kwok.x-k8s.io/dra-gpu']
+  steps:
+  - apply:
+      template: |
+        {{ $nodeName := .metadata.name }}
+        {{ $memory := index .metadata.annotations "kwok.x-k8s.io/dra-gpu-memory" | default "16Gi" }}
+        apiVersion: resource.k8s.io/v1
+        kind: ResourceSlice
+        metadata:
+          name: {{ $nodeName }}-gpu.kwok.x-k8s.io
+          ownerReferences:
+          - apiVersion: v1
+            kind: Node
+            name: {{ $nodeName | Quote }}
+            uid: {{ .metadata.uid | Quote }}
+        spec:
+          driver: gpu.kwok.x-k8s.io
+          nodeName: {{ $nodeName | Quote }}
+          pool:
+            name: {{ $nodeName | Quote }}
+            generation: 1
+            resourceSliceCount: 1
+          devices:
+          {{ range $index := until (atoi (index $.metadata.annotations "kwok.x-k8s.io/dra-gpu")) }}
+          - name: gpu-{{ $index }}
+            attributes:
+              type:
+                string: gpu
+              index:
+                int: {{ $index }}
+              brand:
+                string: Kwok
+              productName:
+                string: Kwok GPU
+              driverVersion:
+                version: "1.0.0"
+            capacity:
+              memory:
+                value: {{ $memory | Quote }}
+          {{ end }}
+  - patch:
+      root: metadata
+      template: |
+        {{ $memory := index .metadata.annotations "kwok.x-k8s.io/dra-gpu-memory" | default "16Gi" }}
+        annotations:
+          kwok.x-k8s.io/dra-gpu-published: {{ printf "%s/%s" $memory (index .metadata.annotations "kwok.x-k8s.io/dra-gpu") | Quote }}
