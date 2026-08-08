@@ -68,11 +68,12 @@ func GroupByLinks(components []internalversion.Component) ([][]internalversion.C
 	return groups, nil
 }
 
-// The following runtime mode is classification of runtime for components.
+type RuntimeMode string
+
 const (
-	RuntimeModeNative    = "native"
-	RuntimeModeContainer = "container"
-	RuntimeModeCluster   = "cluster"
+	RuntimeModeNative    RuntimeMode = "native"
+	RuntimeModeContainer RuntimeMode = "container"
+	RuntimeModeCluster   RuntimeMode = "cluster"
 )
 
 const (
@@ -85,9 +86,10 @@ const (
 )
 
 var (
-	runtimeTypeMap = map[string]string{
+	runtimeTypeMap = map[string]RuntimeMode{
 		consts.RuntimeTypeBinary:      RuntimeModeNative,
 		consts.RuntimeTypeDocker:      RuntimeModeContainer,
+		consts.RuntimeTypeDockerHost:  RuntimeModeContainer,
 		consts.RuntimeTypePodman:      RuntimeModeContainer,
 		consts.RuntimeTypeNerdctl:     RuntimeModeContainer,
 		consts.RuntimeTypeLima:        RuntimeModeContainer,
@@ -101,6 +103,36 @@ var (
 )
 
 // GetRuntimeMode returns the mode of runtime.
-func GetRuntimeMode(runtime string) string {
+func GetRuntimeMode(runtime string) RuntimeMode {
 	return runtimeTypeMap[runtime]
+}
+
+type RuntimeNetwork string
+
+const (
+	RuntimeNetworkHost    RuntimeNetwork = "host"
+	RuntimeNetworkBridge  RuntimeNetwork = "bridge"
+	RuntimeNetworkCluster RuntimeNetwork = "cluster"
+)
+
+var (
+	runtimeNetwork = map[string]RuntimeNetwork{
+		consts.RuntimeTypeBinary:      RuntimeNetworkHost,
+		consts.RuntimeTypeDocker:      RuntimeNetworkBridge,
+		consts.RuntimeTypeDockerHost:  RuntimeNetworkHost,
+		consts.RuntimeTypePodman:      RuntimeNetworkBridge,
+		consts.RuntimeTypeNerdctl:     RuntimeNetworkBridge,
+		consts.RuntimeTypeLima:        RuntimeNetworkBridge,
+		consts.RuntimeTypeFinch:       RuntimeNetworkBridge,
+		consts.RuntimeTypeKind:        RuntimeNetworkCluster,
+		consts.RuntimeTypeKindPodman:  RuntimeNetworkCluster,
+		consts.RuntimeTypeKindNerdctl: RuntimeNetworkCluster,
+		consts.RuntimeTypeKindLima:    RuntimeNetworkCluster,
+		consts.RuntimeTypeKindFinch:   RuntimeNetworkCluster,
+	}
+)
+
+// GetRuntimeNetwork returns the network mode of runtime.
+func GetRuntimeNetwork(runtime string) RuntimeNetwork {
+	return runtimeNetwork[runtime]
 }
