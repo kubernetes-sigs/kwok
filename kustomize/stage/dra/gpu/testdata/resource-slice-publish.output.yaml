@@ -56,6 +56,7 @@ stages:
   - data:
       metadata:
         annotations:
+          kwok.x-k8s.io/dra-gpu-generation: "1"
           kwok.x-k8s.io/dra-gpu-published: 16Gi/2
     kind: patch
     type: application/merge-patch+json

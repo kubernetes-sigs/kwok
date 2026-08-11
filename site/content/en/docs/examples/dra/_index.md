@@ -20,11 +20,12 @@ kube-controller-manager.
 
 ## Setup Cluster
 
-DRA is enabled by default since Kubernetes 1.34, so no extra flags are needed
-(the built-in stages use `resource.k8s.io/v1`, which requires Kubernetes 1.34 or later):
+DRA is enabled by default since Kubernetes 1.34, so no feature gates are needed
+(the built-in stages use `resource.k8s.io/v1`, which requires Kubernetes 1.34 or later).
+The simulations ship as Stage resources, so the cluster needs the Stage CRD enabled:
 
 ```bash
-kwokctl create cluster
+kwokctl create cluster --enable-crds=Stage
 ```
 
 [Simulate GPUs]: {{< relref "/docs/examples/dra/gpu" >}}

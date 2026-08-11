@@ -72,6 +72,7 @@ stages:
   - data:
       metadata:
         annotations:
+          kwok.x-k8s.io/dra-nvidia-gpu-generation: "1"
           kwok.x-k8s.io/dra-nvidia-gpu-published: 80Gi/2
     kind: patch
     type: application/merge-patch+json

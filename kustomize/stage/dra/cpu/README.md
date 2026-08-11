@@ -13,6 +13,11 @@ a ResourceSlice for the node, and then records the published configuration in th
 annotations republishes the slice.
 The ResourceSlice is owned by the node, so it is garbage collected when the node is deleted.
 
+The CPU count must be an integer between 1 and 9999 and the NUMA count between 1 and the
+CPU count, and the resulting device count must not exceed 128; nodes annotated with anything
+else are ignored, leaving any previously published slice untouched. Each republish bumps
+`spec.pool.generation`, tracked by the `kwok.x-k8s.io/dra-cpu-generation` annotation.
+
 Like the real driver, devices are published in one of two modes
 (`kwok.x-k8s.io/dra-cpu-mode` annotation, mirroring the real driver's `cpuDeviceMode`):
 

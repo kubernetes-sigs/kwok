@@ -8,6 +8,7 @@ metadata:
     kwok.x-k8s.io/dra-gpu: "1"
     kwok.x-k8s.io/dra-gpu-memory: "24Gi"
     kwok.x-k8s.io/dra-gpu-published: "16Gi/1"
+    kwok.x-k8s.io/dra-gpu-generation: "1"
   labels:
     type: kwok
 status:

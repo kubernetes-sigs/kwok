@@ -13,17 +13,22 @@ spec:
           !has(self.metadata.deletionTimestamp)
     - cel:
         expression: >-
-          has(self.metadata.annotations) &&
-          'kwok.x-k8s.io/dra-cpu' in self.metadata.annotations
+          has(self.metadata.annotations) && 'kwok.x-k8s.io/dra-cpu' in self.metadata.annotations
     - cel:
         expression: >-
-          !('kwok.x-k8s.io/dra-cpu-published' in self.metadata.annotations) ||
-          self.metadata.annotations['kwok.x-k8s.io/dra-cpu-published'] !=
-          ('kwok.x-k8s.io/dra-cpu-mode' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-mode'] : 'grouped')
-          + '/' +
-          ('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'] : '1')
-          + '/' +
-          self.metadata.annotations['kwok.x-k8s.io/dra-cpu']
+          self.metadata.annotations['kwok.x-k8s.io/dra-cpu'].matches('^[1-9][0-9]{0,3}$')
+    - cel:
+        expression: >-
+          !('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations) || self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'].matches('^[1-9][0-9]{0,2}$')
+    - cel:
+        expression: >-
+          int('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'] : '1') <= int(self.metadata.annotations['kwok.x-k8s.io/dra-cpu'])
+    - cel:
+        expression: >-
+          (('kwok.x-k8s.io/dra-cpu-mode' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-mode'] : 'grouped') == 'individual' ? int(self.metadata.annotations['kwok.x-k8s.io/dra-cpu']) : int('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'] : '1')) <= 128
+    - cel:
+        expression: >-
+          !('kwok.x-k8s.io/dra-cpu-published' in self.metadata.annotations) || self.metadata.annotations['kwok.x-k8s.io/dra-cpu-published'] != ('kwok.x-k8s.io/dra-cpu-mode' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-mode'] : 'grouped') + '/' + ('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'] : '1') + '/' + self.metadata.annotations['kwok.x-k8s.io/dra-cpu']
   steps:
   - apply:
       template: |
@@ -32,6 +37,7 @@ spec:
         {{ $numaNodes := atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu-numa" | default "1") }}
         {{ $mode := index .metadata.annotations "kwok.x-k8s.io/dra-cpu-mode" | default "grouped" }}
         {{ $cpusPerNuma := int (ceil (divf $cpus $numaNodes)) }}
+        {{ $generation := add 1 (atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu-generation" | default "0")) }}
         apiVersion: resource.k8s.io/v1
         kind: ResourceSlice
         metadata:
@@ -46,7 +52,7 @@ spec:
           nodeName: {{ $nodeName | Quote }}
           pool:
             name: {{ $nodeName | Quote }}
-            generation: 1
+            generation: {{ $generation }}
             resourceSliceCount: 1
           devices:
           {{ if eq $mode "individual" }}
@@ -99,3 +105,4 @@ spec:
         {{ $numaNodes := index .metadata.annotations "kwok.x-k8s.io/dra-cpu-numa" | default "1" }}
         annotations:
           kwok.x-k8s.io/dra-cpu-published: {{ printf "%s/%s/%s" $mode $numaNodes (index .metadata.annotations "kwok.x-k8s.io/dra-cpu") | Quote }}
+          kwok.x-k8s.io/dra-cpu-generation: {{ add 1 (atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu-generation" | default "0")) | Quote }}

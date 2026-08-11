@@ -13,20 +13,19 @@ spec:
           !has(self.metadata.deletionTimestamp)
     - cel:
         expression: >-
-          has(self.metadata.annotations) &&
-          'kwok.x-k8s.io/dra-google-tpu' in self.metadata.annotations
+          has(self.metadata.annotations) && 'kwok.x-k8s.io/dra-google-tpu' in self.metadata.annotations
     - cel:
         expression: >-
-          !('kwok.x-k8s.io/dra-google-tpu-published' in self.metadata.annotations) ||
-          self.metadata.annotations['kwok.x-k8s.io/dra-google-tpu-published'] !=
-          ('kwok.x-k8s.io/dra-google-tpu-gen' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-google-tpu-gen'] : 'v4')
-          + '/' +
-          self.metadata.annotations['kwok.x-k8s.io/dra-google-tpu']
+          self.metadata.annotations['kwok.x-k8s.io/dra-google-tpu'].matches('^[1-9][0-9]{0,2}$') && int(self.metadata.annotations['kwok.x-k8s.io/dra-google-tpu']) <= 128
+    - cel:
+        expression: >-
+          !('kwok.x-k8s.io/dra-google-tpu-published' in self.metadata.annotations) || self.metadata.annotations['kwok.x-k8s.io/dra-google-tpu-published'] != ('kwok.x-k8s.io/dra-google-tpu-gen' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-google-tpu-gen'] : 'v4') + '/' + self.metadata.annotations['kwok.x-k8s.io/dra-google-tpu']
   steps:
   - apply:
       template: |
         {{ $nodeName := .metadata.name }}
         {{ $tpuGen := index .metadata.annotations "kwok.x-k8s.io/dra-google-tpu-gen" | default "v4" }}
+        {{ $generation := add 1 (atoi (index .metadata.annotations "kwok.x-k8s.io/dra-google-tpu-generation" | default "0")) }}
         apiVersion: resource.k8s.io/v1
         kind: ResourceSlice
         metadata:
@@ -41,7 +40,7 @@ spec:
           nodeName: {{ $nodeName | Quote }}
           pool:
             name: {{ $nodeName | Quote }}
-            generation: 1
+            generation: {{ $generation }}
             resourceSliceCount: 1
           devices:
           {{ range $index := until (atoi (index $.metadata.annotations "kwok.x-k8s.io/dra-google-tpu")) }}
@@ -60,3 +59,4 @@ spec:
         {{ $tpuGen := index .metadata.annotations "kwok.x-k8s.io/dra-google-tpu-gen" | default "v4" }}
         annotations:
           kwok.x-k8s.io/dra-google-tpu-published: {{ printf "%s/%s" $tpuGen (index .metadata.annotations "kwok.x-k8s.io/dra-google-tpu") | Quote }}
+          kwok.x-k8s.io/dra-google-tpu-generation: {{ add 1 (atoi (index .metadata.annotations "kwok.x-k8s.io/dra-google-tpu-generation" | default "0")) | Quote }}

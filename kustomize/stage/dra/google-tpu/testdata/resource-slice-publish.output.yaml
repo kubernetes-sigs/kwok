@@ -58,6 +58,7 @@ stages:
   - data:
       metadata:
         annotations:
+          kwok.x-k8s.io/dra-google-tpu-generation: "1"
           kwok.x-k8s.io/dra-google-tpu-published: v4/4
     kind: patch
     type: application/merge-patch+json

@@ -41,7 +41,7 @@ stages:
         driver: gpu.nvidia.com
         nodeName: kwok-node-0
         pool:
-          generation: 1
+          generation: 2
           name: kwok-node-0
           resourceSliceCount: 1
     kind: apply
@@ -49,6 +49,7 @@ stages:
   - data:
       metadata:
         annotations:
+          kwok.x-k8s.io/dra-nvidia-gpu-generation: "2"
           kwok.x-k8s.io/dra-nvidia-gpu-published: 40Gi/1
     kind: patch
     type: application/merge-patch+json

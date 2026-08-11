@@ -15,5 +15,9 @@ reports the memory given by the `kwok.x-k8s.io/dra-gpu-memory` annotation, defau
 annotation on the node, so that changing any of the annotations republishes the slice.
 The ResourceSlice is owned by the node, so it is garbage collected when the node is deleted.
 
+The device count must be an integer between 1 and 128; nodes annotated with anything else
+are ignored, leaving any previously published slice untouched. Each republish bumps
+`spec.pool.generation`, tracked by the `kwok.x-k8s.io/dra-gpu-generation` annotation.
+
 Allocation and reservation of ResourceClaims are handled natively by the
 kube-scheduler and kube-controller-manager once the ResourceSlices exist.
