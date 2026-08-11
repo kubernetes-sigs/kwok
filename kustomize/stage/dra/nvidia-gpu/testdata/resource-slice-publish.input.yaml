@@ -10,3 +10,6 @@ metadata:
     type: kwok
 status:
   phase: Running
+  conditions:
+  - type: Ready
+    status: "True"

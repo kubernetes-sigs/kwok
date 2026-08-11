@@ -8,8 +8,10 @@ metadata:
     kwok.x-k8s.io/dra-nvidia-gpu: "1"
     kwok.x-k8s.io/dra-nvidia-gpu-memory: "40Gi"
     kwok.x-k8s.io/dra-nvidia-gpu-published: "80Gi/1"
-    kwok.x-k8s.io/dra-nvidia-gpu-generation: "1"
   labels:
     type: kwok
 status:
   phase: Running
+  conditions:
+  - type: Ready
+    status: "True"

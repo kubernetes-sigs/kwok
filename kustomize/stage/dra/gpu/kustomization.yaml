@@ -4,4 +4,5 @@ kind: Kustomization
 resources:
 - device-class.yaml
 - resource-slice-publish.yaml
+- resource-slice-repair.yaml
 - ../rbac

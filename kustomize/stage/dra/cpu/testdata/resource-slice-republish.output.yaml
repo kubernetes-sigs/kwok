@@ -7,6 +7,10 @@ stages:
       apiVersion: resource.k8s.io/v1
       kind: ResourceSlice
       metadata:
+        annotations:
+          kwok.x-k8s.io/dra-cpu: "6"
+          kwok.x-k8s.io/dra-cpu-mode: individual
+          kwok.x-k8s.io/dra-cpu-numa: "2"
         name: kwok-node-0-dra.cpu
         ownerReferences:
         - apiVersion: v1
@@ -126,7 +130,7 @@ stages:
         driver: dra.cpu
         nodeName: kwok-node-0
         pool:
-          generation: 2
+          generation: 1
           name: kwok-node-0
           resourceSliceCount: 1
     kind: apply
@@ -134,7 +138,6 @@ stages:
   - data:
       metadata:
         annotations:
-          kwok.x-k8s.io/dra-cpu-generation: "2"
           kwok.x-k8s.io/dra-cpu-published: individual/2/6
     kind: patch
     type: application/merge-patch+json

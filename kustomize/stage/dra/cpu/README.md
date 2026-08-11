@@ -6,8 +6,10 @@ and Pod scheduling) can be exercised without running the real driver.
 
 The `dra.cpu` DeviceClass selects all devices published by the simulated driver.
 
-The `cpu-resource-slice-publish` Stage is applied to nodes that have a `kwok.x-k8s.io/dra-cpu`
-annotation whose configuration has not yet been published. When applied, this Stage applies
+The `cpu-resource-slice-publish` Stage is applied to Ready nodes that have a
+`kwok.x-k8s.io/dra-cpu` annotation whose configuration has not yet been published.
+Waiting for Ready mirrors a real driver, which only publishes once the node is registered,
+and keeps this Stage from competing with the node lifecycle Stages. When applied, this Stage applies
 a ResourceSlice for the node, and then records the published configuration in the
 `kwok.x-k8s.io/dra-cpu-published` annotation on the node, so that changing any of the
 annotations republishes the slice.
@@ -15,8 +17,9 @@ The ResourceSlice is owned by the node, so it is garbage collected when the node
 
 The CPU count must be an integer between 1 and 9999 and the NUMA count between 1 and the
 CPU count, and the resulting device count must not exceed 128; nodes annotated with anything
-else are ignored, leaving any previously published slice untouched. Each republish bumps
-`spec.pool.generation`, tracked by the `kwok.x-k8s.io/dra-cpu-generation` annotation.
+else are ignored, leaving any previously published slice untouched. The pool holds a single
+ResourceSlice that is updated in place, so `spec.pool.generation` stays constant, matching
+what the upstream resourceslice controller does for single-slice pools.
 
 Like the real driver, devices are published in one of two modes
 (`kwok.x-k8s.io/dra-cpu-mode` annotation, mirroring the real driver's `cpuDeviceMode`):
@@ -37,6 +40,13 @@ across the number of NUMA nodes given by the `kwok.x-k8s.io/dra-cpu-numa` annota
 (defaulting to `1`; `socketID` and `cacheL3ID` follow the NUMA node), so ResourceClaims
 written for the real driver — including CEL selectors over the topology attributes and
 `matchAttribute`/`distinctAttribute` constraints — work unchanged.
+
+The published ResourceSlice carries its own desired configuration in the
+`kwok.x-k8s.io/dra-cpu`, `kwok.x-k8s.io/dra-cpu-numa` and `kwok.x-k8s.io/dra-cpu-mode`
+annotations, which lets the `cpu-resource-slice-repair` Stage rebuild the devices from those
+annotations whenever they no longer match. This restores slices that were edited out of band,
+the way a real driver reconciles its published state. A slice that is deleted outright is not
+restored, since kwok Stages are not run for deletion events.
 
 Allocation and reservation of ResourceClaims are handled natively by the
 kube-scheduler and kube-controller-manager once the ResourceSlices exist.

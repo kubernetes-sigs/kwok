@@ -7,6 +7,9 @@ stages:
       apiVersion: resource.k8s.io/v1
       kind: ResourceSlice
       metadata:
+        annotations:
+          kwok.x-k8s.io/dra-gpu: "1"
+          kwok.x-k8s.io/dra-gpu-memory: 24Gi
         name: kwok-node-0-gpu.kwok.x-k8s.io
         ownerReferences:
         - apiVersion: v1
@@ -33,7 +36,7 @@ stages:
         driver: gpu.kwok.x-k8s.io
         nodeName: kwok-node-0
         pool:
-          generation: 2
+          generation: 1
           name: kwok-node-0
           resourceSliceCount: 1
     kind: apply
@@ -41,7 +44,6 @@ stages:
   - data:
       metadata:
         annotations:
-          kwok.x-k8s.io/dra-gpu-generation: "2"
           kwok.x-k8s.io/dra-gpu-published: 24Gi/1
     kind: patch
     type: application/merge-patch+json

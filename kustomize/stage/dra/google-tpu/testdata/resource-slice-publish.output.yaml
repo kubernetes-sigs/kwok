@@ -7,6 +7,9 @@ stages:
       apiVersion: resource.k8s.io/v1
       kind: ResourceSlice
       metadata:
+        annotations:
+          kwok.x-k8s.io/dra-google-tpu: "4"
+          kwok.x-k8s.io/dra-google-tpu-gen: v4
         name: kwok-node-0-tpu.google.com
         ownerReferences:
         - apiVersion: v1
@@ -58,7 +61,6 @@ stages:
   - data:
       metadata:
         annotations:
-          kwok.x-k8s.io/dra-google-tpu-generation: "1"
           kwok.x-k8s.io/dra-google-tpu-published: v4/4
     kind: patch
     type: application/merge-patch+json

@@ -7,6 +7,9 @@ stages:
       apiVersion: resource.k8s.io/v1
       kind: ResourceSlice
       metadata:
+        annotations:
+          kwok.x-k8s.io/dra-gpu: "2"
+          kwok.x-k8s.io/dra-gpu-memory: 16Gi
         name: kwok-node-0-gpu.kwok.x-k8s.io
         ownerReferences:
         - apiVersion: v1
@@ -56,7 +59,6 @@ stages:
   - data:
       metadata:
         annotations:
-          kwok.x-k8s.io/dra-gpu-generation: "1"
           kwok.x-k8s.io/dra-gpu-published: 16Gi/2
     kind: patch
     type: application/merge-patch+json

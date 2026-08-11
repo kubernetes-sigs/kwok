@@ -11,6 +11,10 @@ spec:
     - cel:
         expression: >-
           !has(self.metadata.deletionTimestamp)
+    - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+      operator: 'In'
+      values:
+      - 'True'
     - cel:
         expression: >-
           has(self.metadata.annotations) && 'kwok.x-k8s.io/dra-cpu' in self.metadata.annotations
@@ -37,11 +41,14 @@ spec:
         {{ $numaNodes := atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu-numa" | default "1") }}
         {{ $mode := index .metadata.annotations "kwok.x-k8s.io/dra-cpu-mode" | default "grouped" }}
         {{ $cpusPerNuma := int (ceil (divf $cpus $numaNodes)) }}
-        {{ $generation := add 1 (atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu-generation" | default "0")) }}
         apiVersion: resource.k8s.io/v1
         kind: ResourceSlice
         metadata:
           name: {{ $nodeName }}-dra.cpu
+          annotations:
+            kwok.x-k8s.io/dra-cpu: {{ $cpus | Quote }}
+            kwok.x-k8s.io/dra-cpu-numa: {{ $numaNodes | Quote }}
+            kwok.x-k8s.io/dra-cpu-mode: {{ $mode | Quote }}
           ownerReferences:
           - apiVersion: v1
             kind: Node
@@ -52,7 +59,7 @@ spec:
           nodeName: {{ $nodeName | Quote }}
           pool:
             name: {{ $nodeName | Quote }}
-            generation: {{ $generation }}
+            generation: 1
             resourceSliceCount: 1
           devices:
           {{ if eq $mode "individual" }}
@@ -105,4 +112,3 @@ spec:
         {{ $numaNodes := index .metadata.annotations "kwok.x-k8s.io/dra-cpu-numa" | default "1" }}
         annotations:
           kwok.x-k8s.io/dra-cpu-published: {{ printf "%s/%s/%s" $mode $numaNodes (index .metadata.annotations "kwok.x-k8s.io/dra-cpu") | Quote }}
-          kwok.x-k8s.io/dra-cpu-generation: {{ add 1 (atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu-generation" | default "0")) | Quote }}

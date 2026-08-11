@@ -11,6 +11,10 @@ spec:
     - cel:
         expression: >-
           !has(self.metadata.deletionTimestamp)
+    - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+      operator: 'In'
+      values:
+      - 'True'
     - cel:
         expression: >-
           has(self.metadata.annotations) && 'kwok.x-k8s.io/dra-gpu' in self.metadata.annotations
@@ -25,11 +29,13 @@ spec:
       template: |
         {{ $nodeName := .metadata.name }}
         {{ $memory := index .metadata.annotations "kwok.x-k8s.io/dra-gpu-memory" | default "16Gi" }}
-        {{ $generation := add 1 (atoi (index .metadata.annotations "kwok.x-k8s.io/dra-gpu-generation" | default "0")) }}
         apiVersion: resource.k8s.io/v1
         kind: ResourceSlice
         metadata:
           name: {{ $nodeName }}-gpu.kwok.x-k8s.io
+          annotations:
+            kwok.x-k8s.io/dra-gpu: {{ index .metadata.annotations "kwok.x-k8s.io/dra-gpu" | Quote }}
+            kwok.x-k8s.io/dra-gpu-memory: {{ $memory | Quote }}
           ownerReferences:
           - apiVersion: v1
             kind: Node
@@ -40,7 +46,7 @@ spec:
           nodeName: {{ $nodeName | Quote }}
           pool:
             name: {{ $nodeName | Quote }}
-            generation: {{ $generation }}
+            generation: 1
             resourceSliceCount: 1
           devices:
           {{ range $index := until (atoi (index $.metadata.annotations "kwok.x-k8s.io/dra-gpu")) }}
@@ -66,4 +72,3 @@ spec:
         {{ $memory := index .metadata.annotations "kwok.x-k8s.io/dra-gpu-memory" | default "16Gi" }}
         annotations:
           kwok.x-k8s.io/dra-gpu-published: {{ printf "%s/%s" $memory (index .metadata.annotations "kwok.x-k8s.io/dra-gpu") | Quote }}
-          kwok.x-k8s.io/dra-gpu-generation: {{ add 1 (atoi (index .metadata.annotations "kwok.x-k8s.io/dra-gpu-generation" | default "0")) | Quote }}
