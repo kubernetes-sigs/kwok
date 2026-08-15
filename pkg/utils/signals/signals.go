@@ -34,13 +34,14 @@ func SetupSignalContext() context.Context {
 	close(onlyOneSignalHandler) // panics when called twice
 
 	shutdownHandler = make(chan os.Signal, 2)
+	handler := shutdownHandler
 
 	ctx, cancel := context.WithCancel(context.Background())
-	signal.Notify(shutdownHandler, shutdownSignals...)
+	signal.Notify(handler, shutdownSignals...)
 	go func() {
-		<-shutdownHandler
+		<-handler
 		cancel()
-		<-shutdownHandler
+		<-handler
 		os.Exit(1) // second signal. Exit directly.
 	}()
 
