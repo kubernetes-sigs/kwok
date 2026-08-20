@@ -21,35 +21,16 @@ import (
 )
 
 func TestPool(t *testing.T) {
-	index := 0
 	pool := NewPool(func() int {
-		index++
-		return index
+		return 1
 	})
 
-	pool.Put(3)
-	if pool.Get() != 3 {
-		t.Errorf("expected 3, got %d", pool.Get())
-	}
-
-	if pool.Get() != 1 {
-		t.Errorf("expected 1, got %d", pool.Get())
-	}
-	if pool.Get() != 2 {
-		t.Errorf("expected 2, got %d", pool.Get())
-	}
-
-	pool.Put(1)
-	if pool.Get() != 1 {
-		t.Errorf("expected 1, got %d", pool.Get())
+	if got := pool.Get(); got != 1 {
+		t.Errorf("expected 1, got %d", got)
 	}
 
 	pool.Put(2)
-	if pool.Get() != 2 {
-		t.Errorf("expected 2, got %d", pool.Get())
-	}
-
-	if pool.Get() != 3 {
-		t.Errorf("expected 3, got %d", pool.Get())
+	if got := pool.Get(); got != 1 && got != 2 {
+		t.Errorf("expected 1 or 2, got %d", got)
 	}
 }

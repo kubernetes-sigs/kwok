@@ -71,7 +71,7 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 	}
 	logger := log.FromContext(ctx)
 	defer func() {
-		err = t.Stop()
+		err := t.Stop()
 		if err != nil {
 			logger.Error("Failed to stop tail file",
 				"err", err,
@@ -81,7 +81,7 @@ func (c *Cluster) AuditLogsFollow(ctx context.Context, out io.Writer) error {
 
 	go func() {
 		for line := range t.Lines {
-			_, err = out.Write([]byte(line.Text + "\n"))
+			_, err := out.Write([]byte(line.Text + "\n"))
 			if err != nil {
 				logger.Error("Failed to write line text",
 					"err", err,

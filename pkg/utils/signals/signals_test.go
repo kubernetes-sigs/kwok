@@ -17,6 +17,7 @@ limitations under the License.
 package signals
 
 import (
+	"os/signal"
 	"syscall"
 	"testing"
 	"time"
@@ -39,6 +40,7 @@ func TestSetupSignalContext(t *testing.T) {
 	}
 
 	// Reset global variables to allow repeated tests
+	signal.Stop(shutdownHandler)
 	onlyOneSignalHandler = make(chan struct{})
 	shutdownHandler = nil
 }
@@ -50,6 +52,9 @@ func TestSetupSignalContextTwice(t *testing.T) {
 
 	// Second call should panic
 	defer func() {
+		signal.Stop(shutdownHandler)
+		onlyOneSignalHandler = make(chan struct{})
+		shutdownHandler = nil
 		if r := recover(); r == nil {
 			t.Errorf("Expected panic when calling SetupSignalContext twice, but did not panic")
 		}

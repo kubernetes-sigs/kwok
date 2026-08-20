@@ -87,7 +87,7 @@ default: help
 ## unit-test: Run unit tests
 .PHONY: unit-test
 unit-test:
-	@$(GO_CMD) test ./pkg/...
+	@$(GO_CMD) test -race ./pkg/...
 
 ## verify: Verify code
 .PHONY: verify
