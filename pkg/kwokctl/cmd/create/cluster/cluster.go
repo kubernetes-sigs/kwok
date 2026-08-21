@@ -240,7 +240,7 @@ func mutationHeartbeat(flags *flagpole) {
 func mutationComponentPatches(flags *flagpole) {
 	componentPatches := make([]internalversion.ComponentPatches, 0, len(flags.ExtraArgs))
 	componentNames := make(map[string]int)
-	for i, extraArgs := range flags.ExtraArgs {
+	for _, extraArgs := range flags.ExtraArgs {
 		splitedArgs := strings.SplitN(extraArgs, "=", 3)
 		if len(splitedArgs) != 3 {
 			continue
@@ -261,7 +261,7 @@ func mutationComponentPatches(flags *flagpole) {
 				},
 			},
 		})
-		componentNames[splitedArgs[0]] = i
+		componentNames[splitedArgs[0]] = len(componentPatches) - 1
 	}
 	flags.ComponentsPatches = append(flags.ComponentsPatches, componentPatches...)
 }
