@@ -1,0 +1,137 @@
+apiGroup: v1
+kind: Node
+name: kwok-node-0
+stages:
+- next:
+  - data:
+      apiVersion: resource.k8s.io/v1
+      kind: ResourceSlice
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-cpu: "5"
+          kwok.x-k8s.io/dra-cpu-mode: individual
+          kwok.x-k8s.io/dra-cpu-numa: "4"
+        name: kwok-node-0-dra.cpu
+        ownerReferences:
+        - apiVersion: v1
+          kind: Node
+          name: kwok-node-0
+          uid: aaaa-bbbb-cccc-dddd
+      spec:
+        devices:
+        - attributes:
+            dra.cpu/cacheL3ID:
+              int: 0
+            dra.cpu/coreID:
+              int: 0
+            dra.cpu/coreType:
+              string: standard
+            dra.cpu/cpuID:
+              int: 0
+            dra.cpu/numaNodeID:
+              int: 0
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.cpu/socketID:
+              int: 0
+            dra.net/numaNode:
+              int: 0
+            resource.kubernetes.io/numaNode:
+              int: 0
+          name: cpudev000
+        - attributes:
+            dra.cpu/cacheL3ID:
+              int: 0
+            dra.cpu/coreID:
+              int: 1
+            dra.cpu/coreType:
+              string: standard
+            dra.cpu/cpuID:
+              int: 1
+            dra.cpu/numaNodeID:
+              int: 0
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.cpu/socketID:
+              int: 0
+            dra.net/numaNode:
+              int: 0
+            resource.kubernetes.io/numaNode:
+              int: 0
+          name: cpudev001
+        - attributes:
+            dra.cpu/cacheL3ID:
+              int: 1
+            dra.cpu/coreID:
+              int: 2
+            dra.cpu/coreType:
+              string: standard
+            dra.cpu/cpuID:
+              int: 2
+            dra.cpu/numaNodeID:
+              int: 1
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.cpu/socketID:
+              int: 1
+            dra.net/numaNode:
+              int: 1
+            resource.kubernetes.io/numaNode:
+              int: 1
+          name: cpudev002
+        - attributes:
+            dra.cpu/cacheL3ID:
+              int: 2
+            dra.cpu/coreID:
+              int: 3
+            dra.cpu/coreType:
+              string: standard
+            dra.cpu/cpuID:
+              int: 3
+            dra.cpu/numaNodeID:
+              int: 2
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.cpu/socketID:
+              int: 2
+            dra.net/numaNode:
+              int: 2
+            resource.kubernetes.io/numaNode:
+              int: 2
+          name: cpudev003
+        - attributes:
+            dra.cpu/cacheL3ID:
+              int: 3
+            dra.cpu/coreID:
+              int: 4
+            dra.cpu/coreType:
+              string: standard
+            dra.cpu/cpuID:
+              int: 4
+            dra.cpu/numaNodeID:
+              int: 3
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.cpu/socketID:
+              int: 3
+            dra.net/numaNode:
+              int: 3
+            resource.kubernetes.io/numaNode:
+              int: 3
+          name: cpudev004
+        driver: dra.cpu
+        nodeName: kwok-node-0
+        pool:
+          generation: 1
+          name: kwok-node-0
+          resourceSliceCount: 1
+    kind: apply
+    type: application/apply-patch+yaml
+  - data:
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-cpu-published: individual/4/5
+    kind: patch
+    type: application/merge-patch+json
+  stage: cpu-resource-slice-publish
+  weight: 1

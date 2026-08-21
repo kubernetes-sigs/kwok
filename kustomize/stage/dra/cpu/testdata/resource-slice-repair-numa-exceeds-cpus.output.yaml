@@ -1,0 +1,4 @@
+apiGroup: resource.k8s.io/v1
+kind: ResourceSlice
+name: kwok-node-0-dra.cpu
+stages: []

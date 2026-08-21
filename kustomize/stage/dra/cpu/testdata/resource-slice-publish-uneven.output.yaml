@@ -1,0 +1,73 @@
+apiGroup: v1
+kind: Node
+name: kwok-node-0
+stages:
+- next:
+  - data:
+      apiVersion: resource.k8s.io/v1
+      kind: ResourceSlice
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-cpu: "5"
+          kwok.x-k8s.io/dra-cpu-mode: grouped
+          kwok.x-k8s.io/dra-cpu-numa: "2"
+        name: kwok-node-0-dra.cpu
+        ownerReferences:
+        - apiVersion: v1
+          kind: Node
+          name: kwok-node-0
+          uid: aaaa-bbbb-cccc-dddd
+      spec:
+        devices:
+        - allowMultipleAllocations: true
+          attributes:
+            dra.cpu/numCPUs:
+              int: 3
+            dra.cpu/numaNodeID:
+              int: 0
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.cpu/socketID:
+              int: 0
+            dra.net/numaNode:
+              int: 0
+            resource.kubernetes.io/numaNode:
+              int: 0
+          capacity:
+            dra.cpu/cpu:
+              value: "3"
+          name: cpudevnuma000
+        - allowMultipleAllocations: true
+          attributes:
+            dra.cpu/numCPUs:
+              int: 2
+            dra.cpu/numaNodeID:
+              int: 1
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.cpu/socketID:
+              int: 1
+            dra.net/numaNode:
+              int: 1
+            resource.kubernetes.io/numaNode:
+              int: 1
+          capacity:
+            dra.cpu/cpu:
+              value: "2"
+          name: cpudevnuma001
+        driver: dra.cpu
+        nodeName: kwok-node-0
+        pool:
+          generation: 1
+          name: kwok-node-0
+          resourceSliceCount: 1
+    kind: apply
+    type: application/apply-patch+yaml
+  - data:
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-cpu-published: grouped/2/5
+    kind: patch
+    type: application/merge-patch+json
+  stage: cpu-resource-slice-publish
+  weight: 1

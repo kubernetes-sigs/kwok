@@ -241,7 +241,8 @@ e2e-test:
 		--skip=podman \
 		--skip=kind \
 		--skip=benchmark \
-		--skip=kwokctl_binary_port_forward
+		--skip=kwokctl_binary_port_forward \
+		--skip=dra-cpu
 
 ## release: Release kwok
 .PHONY: release

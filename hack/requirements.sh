@@ -31,6 +31,8 @@ BUILDX_VERSION=0.34.1
 
 KUSTOMIZE_VERSION=5.3.0
 
+HELM_VERSION=3.19.0
+
 GO_VERSION=1.26.0
 
 function command_exist() {
@@ -131,6 +133,23 @@ function install_go() {
   fi
 }
 
+function install_helm() {
+  if command_exist helm; then
+    return 0
+  fi
+
+  mkdir -p "${LOCAL_BIN_DIR}"
+  curl -SL "https://get.helm.sh/helm-v${HELM_VERSION}-$(runtime_os)-$(runtime_arch).tar.gz" |
+    tar -xzf - -C "${LOCAL_BIN_DIR}" --strip-components=1 "$(runtime_os)-$(runtime_arch)/helm"
+
+  if ! command_exist helm; then
+    echo helm is installed but not effective >&2
+    return 1
+  fi
+
+  helm version
+}
+
 function install_kind() {
   if command_exist kind; then
     if [[ $(kind version | awk -F . '{ print $2 }') -ge $(echo "${KIND_VERSION}" | awk -F . '{ print $2 }') ]]; then
@@ -217,6 +236,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
       kubectl
       kind
       buildx
+      helm
     )
     echo "Usage: ${0} [flags] [requirements]"
     echo "  Empty argument will install all requirements."
