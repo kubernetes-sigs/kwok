@@ -128,7 +128,7 @@ func (l *Loader) Load(ctx context.Context, decoder *yaml.Decoder) error {
 				"kind", obj.GetKind(),
 				"name", log.KObj(obj),
 			)
-			return nil
+			continue
 		}
 
 		l.load(ctx, obj)
