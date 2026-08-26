@@ -24,6 +24,10 @@ podman \
   --time=0
 podman \
   stop \
+  kwok-<CLUSTER_NAME>-node-readiness-controller \
+  --time=0
+podman \
+  stop \
   kwok-<CLUSTER_NAME>-kube-apiserver \
   --time=0
 podman \
