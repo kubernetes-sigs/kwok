@@ -183,7 +183,12 @@ func CaseRecording(kwokctlPath, clusterName string, tmpDir string) *features.Fea
 		Assess("delete pod0", helper.DeletePod(pod0)).
 		Assess("delete pod1", helper.DeletePod(pod1)).
 		Assess("delete node0", helper.DeleteNode(node0)).
-		Assess("delete node1", helper.DeleteNode(node1))
+		Assess("delete node1", helper.DeleteNode(node1)).
+		WithTeardown("cleanup recording file", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+			// "snapshot export" refuses to overwrite an existing file, so a leftover recording would break the next case.
+			_ = os.Remove(recordingPath)
+			return ctx
+		})
 }
 
 // CaseRecordingExternal is the recording of a test case.
@@ -336,5 +341,10 @@ func CaseRecordingExternal(kwokctlPath, clusterName string, tmpDir string) *feat
 		Assess("delete pod0", helper.DeletePod(pod0)).
 		Assess("delete pod1", helper.DeletePod(pod1)).
 		Assess("delete node0", helper.DeleteNode(node0)).
-		Assess("delete node1", helper.DeleteNode(node1))
+		Assess("delete node1", helper.DeleteNode(node1)).
+		WithTeardown("cleanup recording file", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+			// "snapshot export" refuses to overwrite an existing file, so a leftover recording would break the next case.
+			_ = os.Remove(recordingPath)
+			return ctx
+		})
 }
