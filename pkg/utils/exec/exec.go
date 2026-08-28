@@ -243,6 +243,13 @@ func Command(ctx context.Context, name string, args ...string) (cmd *Cmd, err er
 		return nil, fmt.Errorf("cmd start: %s %s: %w", name, strings.Join(args, " "), err)
 	}
 
+	if opt.Fork && !opt.Wait {
+		// Reap the child if it exits, otherwise the zombie keeps its pid alive and masks liveness checks.
+		go func() {
+			_ = cmd.Wait()
+		}()
+	}
+
 	if opt.Wait {
 		err = cmd.Wait()
 		if err != nil {
