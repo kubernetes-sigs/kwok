@@ -451,11 +451,14 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 	featureGates := map[string]bool{}
 	for _, fg := range conf.FeatureGates {
 		kv := strings.SplitN(fg, "=", 2)
-		if len(kv) == 2 {
-			featureGates[kv[0]], _ = strconv.ParseBool(kv[1])
-		} else {
+		if len(kv) != 2 {
 			return nil, fmt.Errorf("invalid feature gate: %s", fg)
 		}
+		v, err := strconv.ParseBool(kv[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid feature gate: %s: %w", fg, err)
+		}
+		featureGates[kv[0]] = v
 	}
 
 	runtimeConfig := map[string]string{}
