@@ -51,10 +51,22 @@ func TestPortForwardRecoversAfterFailedTargetDial(t *testing.T) {
 	ctx, cancelCtx := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelCtx()
 
+	// Step 1: reserve targetPort by opening a real listener and immediately
+	// closing it. Closing before PortForward starts is what guarantees the
+	// FIRST dial to targetPort fails, reproducing #1740; targetLn is reused
+	// below once the target comes up on this same port number.
+	targetLn, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("failed to allocate target port: %v", err)
+	}
+	targetPort := uint32(targetLn.Addr().(*net.TCPAddr).Port)
+	if err := targetLn.Close(); err != nil {
+		t.Fatalf("failed to release target port: %v", err)
+	}
+
 	hostPort := pickUnusedPort(t)
-	targetPort := pickUnusedPort(t)
-	for targetPort == hostPort {
-		targetPort = pickUnusedPort(t)
+	for hostPort == targetPort {
+		hostPort = pickUnusedPort(t)
 	}
 	// nothing listens on targetPort yet
 
@@ -95,7 +107,7 @@ func TestPortForwardRecoversAfterFailedTargetDial(t *testing.T) {
 
 	// Step 3: bring the target up and prove the SAME PortForward instance
 	// can still serve a new connection.
-	targetLn, err := net.Listen("tcp", fmt.Sprintf(":%d", targetPort))
+	targetLn, err = net.Listen("tcp", fmt.Sprintf(":%d", targetPort))
 	if err != nil {
 		t.Fatalf("failed to start target listener: %v", err)
 	}
