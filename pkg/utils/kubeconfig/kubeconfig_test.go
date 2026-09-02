@@ -18,6 +18,8 @@ package kubeconfig
 
 import (
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"k8s.io/client-go/tools/clientcmd"
@@ -25,11 +27,41 @@ import (
 )
 
 func TestGetRecommendedKubeconfigPath(t *testing.T) {
-	gotKubeconfigPath := GetRecommendedKubeconfigPath()
-	wantKubeconfigPath := clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
-	if gotKubeconfigPath != wantKubeconfigPath {
-		t.Errorf("got %q, want %q", gotKubeconfigPath, wantKubeconfigPath)
-	}
+	t.Run("default", func(t *testing.T) {
+		t.Setenv(clientcmd.RecommendedConfigPathEnvVar, "")
+
+		gotKubeconfigPath := GetRecommendedKubeconfigPath()
+		wantKubeconfigPath := clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
+		if gotKubeconfigPath != wantKubeconfigPath {
+			t.Errorf("got %q, want %q", gotKubeconfigPath, wantKubeconfigPath)
+		}
+	})
+
+	t.Run("path list", func(t *testing.T) {
+		dir := t.TempDir()
+		firstPath := filepath.Join(dir, "first")
+		secondPath := filepath.Join(dir, "second")
+		if err := os.WriteFile(firstPath, nil, 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(secondPath, nil, 0644); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv(clientcmd.RecommendedConfigPathEnvVar, strings.Join([]string{firstPath, secondPath}, string(os.PathListSeparator)))
+
+		gotKubeconfigPath := GetRecommendedKubeconfigPath()
+		if gotKubeconfigPath != firstPath {
+			t.Errorf("got %q, want %q", gotKubeconfigPath, firstPath)
+		}
+
+		if err := os.Remove(firstPath); err != nil {
+			t.Fatal(err)
+		}
+		gotKubeconfigPath = GetRecommendedKubeconfigPath()
+		if gotKubeconfigPath != secondPath {
+			t.Errorf("got %q, want %q", gotKubeconfigPath, secondPath)
+		}
+	})
 }
 
 var testKubeconfig = `apiVersion: v1

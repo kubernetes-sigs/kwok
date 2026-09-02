@@ -27,22 +27,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
-
-	"sigs.k8s.io/kwok/pkg/utils/envs"
-	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
-)
-
-const (
-	recommendedConfigPathEnvVar = "KUBECONFIG"
-	recommendedHomeDir          = ".kube"
-	recommendedFileName         = "config"
 )
 
 // GetRecommendedKubeconfigPath returns the recommended config file based on the current environment
 func GetRecommendedKubeconfigPath() string {
-	defaultPath := utilspath.Join(envs.GetEnv("HOME", ""), recommendedHomeDir, recommendedFileName)
-	defaultPath = envs.GetEnv(recommendedConfigPathEnvVar, defaultPath)
-	return defaultPath
+	return clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
 }
 
 // Config is a struct that contains the information needed to create a kubeconfig file
