@@ -18,6 +18,7 @@ package binary
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -26,22 +27,9 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
+	"sigs.k8s.io/kwok/pkg/utils/sets"
 )
-
-// pickUnusedPort asks the OS for an ephemeral TCP port and releases it
-// immediately so the caller can reuse the port number.
-func pickUnusedPort(t *testing.T) uint32 {
-	t.Helper()
-	listener, err := net.Listen("tcp", ":0")
-	if err != nil {
-		t.Fatalf("failed to allocate an unused port: %v", err)
-	}
-	port := listener.Addr().(*net.TCPAddr).Port
-	if err := listener.Close(); err != nil {
-		t.Fatalf("failed to release allocated port: %v", err)
-	}
-	return uint32(port)
-}
 
 // TestPortForwardRecoversAfterFailedTargetDial is a regression test for
 // https://github.com/kubernetes-sigs/kwok/issues/1740: a single failed dial
@@ -51,10 +39,9 @@ func TestPortForwardRecoversAfterFailedTargetDial(t *testing.T) {
 	ctx, cancelCtx := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelCtx()
 
-	// Step 1: reserve targetPort by opening a real listener and immediately
-	// closing it. Closing before PortForward starts is what guarantees the
-	// FIRST dial to targetPort fails, reproducing #1740; targetLn is reused
-	// below once the target comes up on this same port number.
+	// Step 1: reserve a target port, then close the listener so the first
+	// internal target dial fails. The listener cannot remain open because TCP
+	// connection establishment does not require the application to call Accept.
 	targetLn, err := net.Listen("tcp", ":0")
 	if err != nil {
 		t.Fatalf("failed to allocate target port: %v", err)
@@ -64,11 +51,11 @@ func TestPortForwardRecoversAfterFailedTargetDial(t *testing.T) {
 		t.Fatalf("failed to release target port: %v", err)
 	}
 
-	hostPort := pickUnusedPort(t)
-	for hostPort == targetPort {
-		hostPort = pickUnusedPort(t)
+	// hostPort must differ from targetPort.
+	hostPort, err := utilsnet.GetUnusedPort(ctx, sets.NewSets(targetPort))
+	if err != nil {
+		t.Fatalf("failed to allocate host port: %v", err)
 	}
-	// nothing listens on targetPort yet
 
 	c := &Cluster{
 		Cluster: runtime.NewCluster("test", t.TempDir()),
@@ -82,7 +69,7 @@ func TestPortForwardRecoversAfterFailedTargetDial(t *testing.T) {
 
 	fwdAddr := fmt.Sprintf("127.0.0.1:%d", hostPort)
 
-	// Step 1: connect once while nothing listens on targetPort, forcing the
+	// Step 2: connect once while nothing listens on targetPort, forcing the
 	// internal dial to the target to fail.
 	conn1, err := net.DialTimeout("tcp", fwdAddr, 5*time.Second)
 	if err != nil {
@@ -90,23 +77,25 @@ func TestPortForwardRecoversAfterFailedTargetDial(t *testing.T) {
 	}
 	defer func() { _ = conn1.Close() }()
 
-	// Step 2: deterministically prove the failed dial has already been
-	// processed. Both the buggy and fixed implementations close this first
-	// connection immediately after the target dial fails (only what happens
-	// to the accept loop afterward differs), so observing the close here -
-	// bounded by a deadline instead of an arbitrary sleep - is a reliable,
-	// version-independent synchronization point.
+	// Step 3: wait until PortForward processes the failed target dial and closes
+	// conn1. A timeout only proves our deadline expired, so require a non-timeout
+	// read error before starting the target listener.
 	if err := conn1.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
 		t.Fatalf("failed to set read deadline: %v", err)
 	}
 	buf := make([]byte, 1)
-	if _, err := conn1.Read(buf); err == nil {
+	_, readErr := conn1.Read(buf)
+	if readErr == nil {
 		t.Fatalf("expected connection to be closed after failed target dial, but read succeeded")
+	}
+	var netErr net.Error
+	if errors.As(readErr, &netErr) && netErr.Timeout() {
+		t.Fatalf("timed out waiting for PortForward to close conn1 after the failed target dial: %v", readErr)
 	}
 	_ = conn1.Close()
 
-	// Step 3: bring the target up and prove the SAME PortForward instance
-	// can still serve a new connection.
+	// Step 4: bring the target up on the same port and prove the same
+	// PortForward instance can still serve a new connection.
 	targetLn, err = net.Listen("tcp", fmt.Sprintf(":%d", targetPort))
 	if err != nil {
 		t.Fatalf("failed to start target listener: %v", err)
