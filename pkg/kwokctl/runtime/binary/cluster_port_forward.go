@@ -79,7 +79,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 					"err", err,
 					"port", targetPort,
 				)
-				return
+				continue
 			}
 			go func() {
 				defer func() {
