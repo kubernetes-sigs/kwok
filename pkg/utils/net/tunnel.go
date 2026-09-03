@@ -24,7 +24,11 @@ import (
 
 // Tunnel create tunnels for two streams.
 func Tunnel(ctx context.Context, c1, c2 io.ReadWriter, buf1, buf2 []byte) error {
-	errCh := make(chan error)
+	// Buffered so that both senders can complete even when this function
+	// returns without receiving their results, which the two ctx.Done() paths
+	// below do. On an unbuffered channel those goroutines block on the send
+	// forever once the caller closes the streams.
+	errCh := make(chan error, 2)
 	go func() {
 		_, err := io.CopyBuffer(c2, c1, buf1)
 		errCh <- err
