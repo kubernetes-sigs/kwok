@@ -17,12 +17,28 @@ limitations under the License.
 package cluster
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
+
+func TestPrintClusterInfoHint(t *testing.T) {
+	var out strings.Builder
+	printClusterInfoHint(&out, "example")
+
+	want := `You can now use your cluster with:
+
+	kubectl cluster-info --context kwok-example
+
+Thanks for using kwok!
+`
+	if got := out.String(); got != want {
+		t.Fatalf("printClusterInfoHint() = %q, want %q", got, want)
+	}
+}
 
 func TestMutationComponentPatches(t *testing.T) {
 	flags := &flagpole{
