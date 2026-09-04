@@ -1,0 +1,92 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: cpu-resource-slice-repair
+spec:
+  resourceRef:
+    apiGroup: resource.k8s.io/v1
+    kind: ResourceSlice
+  selector:
+    matchExpressions:
+    - cel:
+        expression: >-
+          !has(self.metadata.deletionTimestamp)
+    - cel:
+        expression: >-
+          self.spec.driver == 'dra.cpu'
+    - cel:
+        expression: >-
+          has(self.metadata.annotations) && 'kwok.x-k8s.io/dra-cpu' in self.metadata.annotations && 'kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations && 'kwok.x-k8s.io/dra-cpu-mode' in self.metadata.annotations
+    - cel:
+        expression: >-
+          self.metadata.annotations['kwok.x-k8s.io/dra-cpu'].matches('^[1-9][0-9]{0,3}$')
+    - cel:
+        expression: >-
+          self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'].matches('^[1-9][0-9]{0,2}$')
+    - cel:
+        expression: >-
+          self.metadata.annotations['kwok.x-k8s.io/dra-cpu-mode'] in ['grouped', 'individual']
+    - cel:
+        expression: >-
+          int(self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa']) <= int(self.metadata.annotations['kwok.x-k8s.io/dra-cpu'])
+    - cel:
+        expression: >-
+          !has(self.spec.devices) || size(self.spec.devices) != (self.metadata.annotations['kwok.x-k8s.io/dra-cpu-mode'] == 'individual' ? int(self.metadata.annotations['kwok.x-k8s.io/dra-cpu']) : int(self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'])) || self.spec.devices[0].name != (self.metadata.annotations['kwok.x-k8s.io/dra-cpu-mode'] == 'individual' ? 'cpudev000' : 'cpudevnuma000')
+  steps:
+  - patch:
+      root: spec
+      template: |
+        {{ $cpus := atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu") }}
+        {{ $numaNodes := atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu-numa") }}
+        {{ $mode := index .metadata.annotations "kwok.x-k8s.io/dra-cpu-mode" }}
+        {{ $base := div $cpus $numaNodes }}
+        {{ $rem := mod $cpus $numaNodes }}
+        {{ $big := mul $rem (add $base 1) }}
+        devices:
+        {{ if eq $mode "individual" }}
+        {{ range $index := until $cpus }}
+        {{ $numaNodeID := ternary (div $index (add $base 1)) (add $rem (div (sub $index $big) $base)) (lt $index $big) }}
+        - name: cpudev{{ printf "%03d" $index }}
+          attributes:
+            resource.kubernetes.io/numaNode:
+              int: {{ $numaNodeID }}
+            dra.cpu/cpuID:
+              int: {{ $index }}
+            dra.cpu/coreID:
+              int: {{ $index }}
+            dra.cpu/coreType:
+              string: standard
+            dra.cpu/cacheL3ID:
+              int: {{ $numaNodeID }}
+            dra.cpu/numaNodeID:
+              int: {{ $numaNodeID }}
+            dra.cpu/socketID:
+              int: {{ $numaNodeID }}
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.net/numaNode:
+              int: {{ $numaNodeID }}
+        {{ end }}
+        {{ else }}
+        {{ range $numaNodeID := until $numaNodes }}
+        {{ $groupCPUs := add $base (ternary 1 0 (lt $numaNodeID $rem)) }}
+        - name: cpudevnuma{{ printf "%03d" $numaNodeID }}
+          allowMultipleAllocations: true
+          attributes:
+            resource.kubernetes.io/numaNode:
+              int: {{ $numaNodeID }}
+            dra.cpu/numCPUs:
+              int: {{ $groupCPUs }}
+            dra.cpu/numaNodeID:
+              int: {{ $numaNodeID }}
+            dra.cpu/socketID:
+              int: {{ $numaNodeID }}
+            dra.cpu/smtEnabled:
+              bool: false
+            dra.net/numaNode:
+              int: {{ $numaNodeID }}
+          capacity:
+            dra.cpu/cpu:
+              value: {{ $groupCPUs | Quote }}
+        {{ end }}
+        {{ end }}

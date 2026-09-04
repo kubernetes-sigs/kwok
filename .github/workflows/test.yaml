@@ -102,6 +102,25 @@ jobs:
       run: |
         ./hack/e2e-test.sh e2e/kwok/single
 
+  test-kwok-dra-cpu-e2e:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    - name: Set up Go
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: go.mod
+
+    - name: Install Helm
+      shell: bash
+      run: |
+        ./hack/requirements.sh helm
+
+    - name: Test e2e dra cpu
+      shell: bash
+      run: |
+        PATH=$(pwd)/bin:${PATH} ./hack/e2e-test.sh e2e/kwok/dra-cpu
+
   test-kwok:
     strategy:
       fail-fast: false

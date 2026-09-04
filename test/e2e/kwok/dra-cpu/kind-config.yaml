@@ -1,0 +1,18 @@
+# Kind cluster for comparing the kwok DRA CPU simulation with the real
+# dra-driver-cpu:
+# - DRAConsumableCapacity gates the consumable-capacity allocation used by
+#   the grouped CPU device mode (enabled by default since Kubernetes 1.36,
+#   set explicitly for older node images).
+# - The containerd NRI plugin is required by dra-driver-cpu for CPU pinning
+#   (enabled by default since containerd 2.0, set explicitly for older
+#   node images).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+featureGates:
+  DRAConsumableCapacity: true
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.nri.v1.nri"]
+    disable = false
+nodes:
+- role: control-plane
