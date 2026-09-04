@@ -20,6 +20,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strings"
@@ -457,12 +458,16 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	if log.IsTerminal() && flags.Kubeconfig != "" && !rt.IsDryRun() {
-		_, _ = fmt.Fprintf(os.Stderr, `You can now use your cluster with:
+		printClusterInfoHint(os.Stderr, name)
+	}
+	return nil
+}
+
+func printClusterInfoHint(w io.Writer, name string) {
+	_, _ = fmt.Fprintf(w, `You can now use your cluster with:
 
 	kubectl cluster-info --context %s
 
 Thanks for using kwok!
-`, name)
-	}
-	return nil
+`, config.ClusterName(name))
 }
