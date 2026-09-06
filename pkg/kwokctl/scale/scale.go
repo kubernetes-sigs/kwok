@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -140,6 +141,15 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		return ri.List(ctx, opts)
 	})
 	deleteCount := 0
+	var deleteErrors []error
+	deleteResource := func(name string) {
+		err := ri.Delete(ctx, name, metav1.DeleteOptions{})
+		if err != nil {
+			deleteErrors = append(deleteErrors, fmt.Errorf("failed to delete resource %q: %w", name, err))
+			return
+		}
+		deleteCount++
+	}
 	objs := make([]softInfo, 0, conf.Replicas)
 	sorted := false
 	err = listPager.EachListItem(ctx, metav1.ListOptions{
@@ -166,15 +176,8 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 			sorted = true
 		}
 
-		deleteCount++
-
 		if len(objs) == 0 {
-			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
-			if err != nil {
-				logger.Error("Delete resource",
-					"err", err,
-				)
-			}
+			deleteResource(obj.GetName())
 			return nil
 		}
 
@@ -182,22 +185,12 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		endObj := objs[len(objs)-1]
 		if endObj.Less(obj.GetCreationTimestamp(), obj.GetName()) {
 			// Delete the last object.
-			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
-			if err != nil {
-				logger.Error("Delete resource",
-					"err", err,
-				)
-			}
+			deleteResource(obj.GetName())
 			return nil
 		}
 
 		// Delete the end object.
-		err = ri.Delete(ctx, endObj.Name, metav1.DeleteOptions{})
-		if err != nil {
-			logger.Error("Delete resource",
-				"err", err,
-			)
-		}
+		deleteResource(endObj.Name)
 
 		// Find the index of the new object to be inserted.
 		index, _ := sort.Find(len(objs), func(i int) int {
@@ -209,12 +202,7 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 
 		if index == len(objs) {
 			// Delete the last object.
-			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
-			if err != nil {
-				logger.Error("Delete resource",
-					"err", err,
-				)
-			}
+			deleteResource(obj.GetName())
 			return nil
 		}
 		// Insert the new object.
@@ -234,6 +222,11 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 			"counter", deleteCount,
 			"elapsed", time.Since(start),
 		)
+	}
+	if err := errors.Join(deleteErrors...); err != nil {
+		return err
+	}
+	if deleteCount > 0 {
 		return nil
 	}
 
