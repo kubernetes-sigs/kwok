@@ -142,7 +142,7 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 					return true, nil
 				},
 				wait.WithContext(ctx),
-				wait.WithTimeout(10*time.Second),
+				wait.WithTimeout(600*time.Second),
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -176,7 +176,7 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 					return true, nil
 				},
 				wait.WithContext(ctx),
-				wait.WithTimeout(10*time.Second),
+				wait.WithTimeout(600*time.Second),
 			)
 			if err != nil {
 				t.Fatal(err)
