@@ -29,6 +29,7 @@ import (
 // BuildNodeReadinessControllerComponentConfig is the configuration for building a node-readiness-controller component.
 type BuildNodeReadinessControllerComponentConfig struct {
 	Runtime        string
+	ProjectName    string
 	Image          string
 	RawManifests   []string
 	Version        version.Version
@@ -49,6 +50,7 @@ func BuildNodeReadinessControllerComponent(conf BuildNodeReadinessControllerComp
 
 	var args []string
 	var volumes []internalversion.Volume
+	var metric *internalversion.ComponentMetric
 
 	volumes = append(volumes,
 		internalversion.Volume{
@@ -76,7 +78,16 @@ func BuildNodeReadinessControllerComponent(conf BuildNodeReadinessControllerComp
 	args = append(args,
 		"--kubeconfig="+kubeconfigPath,
 		"--leader-elect=false",
+		"--metrics-bind-address=:8080",
+		"--metrics-secure=false",
 	)
+
+	metric = &internalversion.ComponentMetric{
+		Scheme:             "http",
+		Host:               conf.ProjectName + "-" + consts.ComponentNodeReadinessController + ":8080",
+		Path:               metricsPath,
+		InsecureSkipVerify: true,
+	}
 
 	if conf.Verbosity != log.LevelInfo {
 		args = append(args, "--zap-log-level="+format.String(log.ToZapLevel(conf.Verbosity)))
@@ -93,6 +104,7 @@ func BuildNodeReadinessControllerComponent(conf BuildNodeReadinessControllerComp
 		Args:    args,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		Metric:  metric,
 	}
 
 	if len(conf.RawManifests) != 0 {
