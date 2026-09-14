@@ -17,6 +17,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# Go 1.27 aliases encoding/json.RawMessage to jsontext.Value, which gen-crd-api-reference-docs@v0.3.0 cannot handle.
+export GOEXPERIMENT=nojsonv2
+
 DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(realpath "${DIR}/..")"
