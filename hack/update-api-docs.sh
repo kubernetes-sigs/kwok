@@ -24,17 +24,19 @@ ROOT_DIR="$(realpath "${DIR}/..")"
 function gendoc() {
   local confdir="${ROOT_DIR}/hack/api_docs"
 
-  go run github.com/ahmetb/gen-crd-api-reference-docs@v0.3.0 \
-    -template-dir "${confdir}" \
-    -config "${confdir}/config.json" \
+  go run github.com/elastic/crd-ref-docs@v0.3.0 \
+    --templates-dir "${confdir}" \
+    --config "${confdir}/config.yaml" \
+    --renderer markdown \
+    --output-mode single \
     "$@"
 }
 
 function check() {
   echo "Update api docs"
   gendoc \
-    -api-dir "sigs.k8s.io/kwok/pkg/apis/" \
-    -out-file "site/content/en/docs/generated/apis.md"
+    --source-path ./pkg/apis \
+    --output-path "site/content/en/docs/generated/apis.md"
 }
 
 cd "${ROOT_DIR}" && check
