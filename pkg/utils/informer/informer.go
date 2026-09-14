@@ -100,10 +100,10 @@ func (i *Informer[T, L]) Sync(ctx context.Context, opt Option, events chan<- Eve
 
 func (i *Informer[T, L]) listWatch(ctx context.Context) *cache.ListWatch {
 	return &cache.ListWatch{
-		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
+		ListWithContextFunc: func(_ context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 			return i.ListFunc(ctx, opts)
 		},
-		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
+		WatchFuncWithContext: func(_ context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 			return i.WatchFunc(ctx, opts)
 		},
 	}
@@ -172,11 +172,11 @@ func newCacheInformer[T runtime.Object](ctx context.Context, listWatch cache.Lis
 	}
 
 	listWatcher := &cache.ListWatch{
-		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
+		ListWithContextFunc: func(_ context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 			opt.setup(&opts)
 			return listWatch.ListWithContext(ctx, opts)
 		},
-		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
+		WatchFuncWithContext: func(_ context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 			opt.setup(&opts)
 			return listWatch.WatchWithContext(ctx, opts)
 		},
@@ -206,11 +206,11 @@ func (i *Informer[T, L]) Watch(ctx context.Context, opt Option, events chan<- Ev
 func newDummyInformer[T runtime.Object](ctx context.Context, listWatch cache.ListerWatcherWithContext, opt Option, events chan<- Event[T]) *cache.Reflector {
 	var t T
 	listWatcher := &cache.ListWatch{
-		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
+		ListWithContextFunc: func(_ context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 			opt.setup(&opts)
 			return listWatch.ListWithContext(ctx, opts)
 		},
-		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
+		WatchFuncWithContext: func(_ context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 			opt.setup(&opts)
 			return listWatch.WatchWithContext(ctx, opts)
 		},

@@ -17,7 +17,7 @@ dependencies:
     match: "GO_VERSION="
 
 - name: "golangci"
-  version: 2.12.2
+  version: 2.13.2
   refPaths:
   - path: .github/workflows/golangci-lint.yaml
     match: "GOLANGCI_VERSION: "
