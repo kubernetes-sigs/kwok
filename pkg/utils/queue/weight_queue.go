@@ -17,6 +17,7 @@ limitations under the License.
 package queue
 
 import (
+	"slices"
 	"sort"
 	"sync"
 
@@ -95,8 +96,7 @@ func (q *weightQueue[T]) step() bool {
 	}
 
 	var added bool
-	for i := len(q.orders) - 1; i >= 0; i-- {
-		weight := q.orders[i]
+	for _, weight := range slices.Backward(q.orders) {
 		queue := q.queues[weight]
 		times := weight
 		for j := 0; j != times; j++ {

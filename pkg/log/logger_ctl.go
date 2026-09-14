@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog" //nolint:depguard
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -94,8 +95,7 @@ func (c *ctlHandler) Handle(_ context.Context, r slog.Record) error {
 
 	if c.attrsStr == nil {
 		attrs := make([]string, 0, len(c.attrs))
-		for i := len(c.attrs) - 1; i >= 0; i-- {
-			attr := c.attrs[i]
+		for _, attr := range slices.Backward(c.attrs) {
 			attrs = append(attrs, attr.Key+"="+formatValue(attr.Value))
 		}
 		attrsStr := strings.Join(attrs, " ")

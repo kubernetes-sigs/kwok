@@ -17,6 +17,7 @@ limitations under the License.
 package queue
 
 import (
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -139,8 +140,7 @@ func (q *weightDelayingQueue[T]) next() (t T, weight int, ok bool, wait *time.Du
 		q.orders = orders
 	}
 
-	for i := len(q.orders) - 1; i >= 0; i-- {
-		weight := q.orders[i]
+	for _, weight := range slices.Backward(q.orders) {
 		h := q.heaps[weight]
 		k, v, ok := h.Peek()
 		if !ok {

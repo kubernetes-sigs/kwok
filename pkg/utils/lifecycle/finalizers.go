@@ -66,8 +66,7 @@ func finalizersRemove(metaFinalizers []string, finalizers []internalversion.Fina
 		finalizersValue = append(finalizersValue, finalizer.Value)
 	}
 
-	for i := len(metaFinalizers) - 1; i >= 0; i-- {
-		metaFinalizer := metaFinalizers[i]
+	for i, metaFinalizer := range slices.Backward(metaFinalizers) {
 		if !slices.Contains(finalizersValue, metaFinalizer) {
 			continue
 		}
