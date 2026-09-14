@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
 
@@ -121,10 +119,8 @@ func Test_getPodAttaches(t *testing.T) {
 			args: args{
 				rules: []*internalversion.Attach{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test",
-							Namespace: "default",
-						},
+						Name:      "test",
+						Namespace: "default",
 						Spec: internalversion.AttachSpec{
 							Attaches: []internalversion.AttachConfig{
 								{
@@ -149,9 +145,7 @@ func Test_getPodAttaches(t *testing.T) {
 				rules: []*internalversion.Attach{},
 				clusterRules: []*internalversion.ClusterAttach{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "cluster-test",
-						},
+						Name: "cluster-test",
 						Spec: internalversion.ClusterAttachSpec{
 							Attaches: []internalversion.AttachConfig{
 								{
@@ -174,10 +168,8 @@ func Test_getPodAttaches(t *testing.T) {
 			args: args{
 				rules: []*internalversion.Attach{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test-2",
-							Namespace: "default",
-						},
+						Name:      "test-2",
+						Namespace: "default",
 						Spec: internalversion.AttachSpec{
 							Attaches: []internalversion.AttachConfig{
 								{
@@ -201,9 +193,7 @@ func Test_getPodAttaches(t *testing.T) {
 				rules: []*internalversion.Attach{},
 				clusterRules: []*internalversion.ClusterAttach{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "cluster-test",
-						},
+						Name: "cluster-test",
 						Spec: internalversion.ClusterAttachSpec{
 							Selector: &internalversion.ObjectSelector{
 								MatchNamespaces: []string{"test"},

@@ -37,10 +37,8 @@ func TestNodeLeaseController(t *testing.T) {
 	now := time.Now()
 	clientset := fake.NewClientset(
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "lease1",
-				Namespace: corev1.NamespaceNodeLease,
-			},
+			Name:      "lease1",
+			Namespace: corev1.NamespaceNodeLease,
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity:       new("lease1"),
 				RenewTime:            new(metav1.NewMicroTime(now.Add(-61 * time.Second))),
@@ -48,10 +46,8 @@ func TestNodeLeaseController(t *testing.T) {
 			},
 		},
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "lease2",
-				Namespace: corev1.NamespaceNodeLease,
-			},
+			Name:      "lease2",
+			Namespace: corev1.NamespaceNodeLease,
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity:       new("lease2"),
 				RenewTime:            new(metav1.NewMicroTime(now)),
@@ -59,10 +55,8 @@ func TestNodeLeaseController(t *testing.T) {
 			},
 		},
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "lease3",
-				Namespace: corev1.NamespaceNodeLease,
-			},
+			Name:      "lease3",
+			Namespace: corev1.NamespaceNodeLease,
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity:       new("lease3"),
 				RenewTime:            new(metav1.NewMicroTime(now.Add(-61 * time.Second))),

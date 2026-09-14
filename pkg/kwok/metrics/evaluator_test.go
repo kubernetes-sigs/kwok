@@ -31,9 +31,7 @@ func TestNodeEvaluation(t *testing.T) {
 	now := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	n := &corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			CreationTimestamp: metav1.Time{Time: now.Add(-24 * time.Hour)},
-		},
+		CreationTimestamp: metav1.Time{Time: now.Add(-24 * time.Hour)},
 	}
 	exp := "( Now().UnixSecond() - node.metadata.creationTimestamp.UnixSecond() ) * node.StartedContainersTotal() / 10.0"
 
@@ -75,10 +73,8 @@ func TestResourceEvaluation(t *testing.T) {
 		},
 	}
 	p := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Annotations: map[string]string{
-				"cpu_usage": "10m",
-			},
+		Annotations: map[string]string{
+			"cpu_usage": "10m",
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{

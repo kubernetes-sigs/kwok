@@ -41,11 +41,9 @@ import (
 func TestNodeController(t *testing.T) {
 	clientset := fake.NewClientset(
 		&corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "node0",
-				Annotations: map[string]string{
-					"node": "true",
-				},
+			Name: "node0",
+			Annotations: map[string]string{
+				"node": "true",
 			},
 			Status: corev1.NodeStatus{
 				Addresses: []corev1.NodeAddress{
@@ -65,9 +63,7 @@ func TestNodeController(t *testing.T) {
 			},
 		},
 		&corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "other-node",
-			},
+			Name:   "other-node",
 			Status: corev1.NodeStatus{},
 		},
 	)

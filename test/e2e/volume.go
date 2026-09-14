@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
@@ -60,7 +59,7 @@ func deleteProvisionedPV(ctx context.Context, client *resources.Resources, pvc *
 	if pvName == "" {
 		return
 	}
-	_ = client.Delete(ctx, &corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: pvName}})
+	_ = client.Delete(ctx, &corev1.PersistentVolume{Name: pvName})
 }
 
 // CaseVolumeProvisioner creates a feature that exercises the complete PV/PVC
@@ -75,9 +74,7 @@ func deleteProvisionedPV(ctx context.Context, client *resources.Resources, pvc *
 func CaseVolumeProvisioner(nodeName, namespace string) *features.FeatureBuilder {
 	scName := kwokStorageClassName
 	sc := &storagev1.StorageClass{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: scName,
-		},
+		Name: scName,
 		// Use a provisioner name that no real controller will respond to so
 		// that only the kwok stage handles provisioning.
 		Provisioner: kwokVolumeProvisioner,
@@ -110,10 +107,8 @@ func CaseVolumeProvisioner(nodeName, namespace string) *features.FeatureBuilder 
 	pod.Spec.Volumes = []corev1.Volume{
 		{
 			Name: "data",
-			VolumeSource: corev1.VolumeSource{
-				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: pvc.Name,
-				},
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc.Name,
 			},
 		},
 	}
@@ -334,10 +329,8 @@ func CasePVCBeforePod(nodeName, namespace string) *features.FeatureBuilder {
 	pod.Spec.Volumes = []corev1.Volume{
 		{
 			Name: "data",
-			VolumeSource: corev1.VolumeSource{
-				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: pvc.Name,
-				},
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc.Name,
 			},
 		},
 	}
@@ -425,10 +418,8 @@ func CasePodPVCSimultaneous(nodeName, namespace string) *features.FeatureBuilder
 	pod.Spec.Volumes = []corev1.Volume{
 		{
 			Name: "data",
-			VolumeSource: corev1.VolumeSource{
-				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: pvc.Name,
-				},
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc.Name,
 			},
 		},
 	}
@@ -523,10 +514,8 @@ func CasePodFirstThenPVC(nodeName, namespace string) *features.FeatureBuilder {
 	pod.Spec.Volumes = []corev1.Volume{
 		{
 			Name: "data",
-			VolumeSource: corev1.VolumeSource{
-				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: pvc.Name,
-				},
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc.Name,
 			},
 		},
 	}

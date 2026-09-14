@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
 
@@ -121,10 +119,8 @@ func Test_getPodsForward(t *testing.T) {
 			args: args{
 				rules: []*internalversion.PortForward{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test",
-							Namespace: "default",
-						},
+						Name:      "test",
+						Namespace: "default",
 						Spec: internalversion.PortForwardSpec{
 							Forwards: []internalversion.Forward{
 								{
@@ -149,9 +145,7 @@ func Test_getPodsForward(t *testing.T) {
 				rules: []*internalversion.PortForward{},
 				clusterRules: []*internalversion.ClusterPortForward{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "cluster-test",
-						},
+						Name: "cluster-test",
 						Spec: internalversion.ClusterPortForwardSpec{
 							Forwards: []internalversion.Forward{
 								{
@@ -174,10 +168,8 @@ func Test_getPodsForward(t *testing.T) {
 			args: args{
 				rules: []*internalversion.PortForward{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test-2",
-							Namespace: "default",
-						},
+						Name:      "test-2",
+						Namespace: "default",
 						Spec: internalversion.PortForwardSpec{
 							Forwards: []internalversion.Forward{
 								{
@@ -201,9 +193,7 @@ func Test_getPodsForward(t *testing.T) {
 				rules: []*internalversion.PortForward{},
 				clusterRules: []*internalversion.ClusterPortForward{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "cluster-test",
-						},
+						Name: "cluster-test",
 						Spec: internalversion.ClusterPortForwardSpec{
 							Selector: &internalversion.ObjectSelector{
 								MatchNamespaces: []string{"test"},

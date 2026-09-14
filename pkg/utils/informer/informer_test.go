@@ -30,20 +30,16 @@ func TestInformerSync(t *testing.T) {
 
 	fakeClient := fake.NewClientset(
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "lease0",
-				Namespace: "default",
-			},
+			Name:      "lease0",
+			Namespace: "default",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease0"),
 				RenewTime:      new(metav1.NewMicroTime(now)),
 			},
 		},
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "lease1",
-				Namespace: "default",
-			},
+			Name:      "lease1",
+			Namespace: "default",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease1"),
 				RenewTime:      new(metav1.NewMicroTime(now)),
@@ -90,10 +86,8 @@ func TestInformerWatch(t *testing.T) {
 
 	fakeClient := fake.NewClientset(
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "lease0",
-				Namespace: "default",
-			},
+			Name:      "lease0",
+			Namespace: "default",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease0"),
 				RenewTime:      new(metav1.NewMicroTime(now)),
@@ -112,9 +106,7 @@ func TestInformerWatch(t *testing.T) {
 
 	_, _ = cli.Create(ctx,
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "lease1",
-			},
+			Name: "lease1",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease1"),
 				RenewTime:      new(metav1.NewMicroTime(now)),
@@ -127,9 +119,7 @@ func TestInformerWatch(t *testing.T) {
 
 	_, _ = cli.Update(ctx,
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "lease1",
-			},
+			Name: "lease1",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease1"),
 				RenewTime:      new(metav1.NewMicroTime(now.Add(1 * time.Second))),
@@ -190,10 +180,8 @@ func TestInformerWatchWithCache(t *testing.T) {
 
 	fakeClient := fake.NewClientset(
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "lease0",
-				Namespace: "default",
-			},
+			Name:      "lease0",
+			Namespace: "default",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease0"),
 				RenewTime:      new(metav1.NewMicroTime(now)),
@@ -212,9 +200,7 @@ func TestInformerWatchWithCache(t *testing.T) {
 
 	_, _ = cli.Create(ctx,
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "lease1",
-			},
+			Name: "lease1",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease1"),
 				RenewTime:      new(metav1.NewMicroTime(now)),
@@ -233,9 +219,7 @@ func TestInformerWatchWithCache(t *testing.T) {
 
 	_, _ = cli.Update(ctx,
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "lease1",
-			},
+			Name: "lease1",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease1"),
 				RenewTime:      new(metav1.NewMicroTime(now.Add(1 * time.Second))),
@@ -254,9 +238,7 @@ func TestInformerWatchWithCache(t *testing.T) {
 
 	_, _ = cli.Update(ctx,
 		&coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "lease1",
-			},
+			Name: "lease1",
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity: new("lease1"),
 				RenewTime:      new(metav1.NewMicroTime(now.Add(2 * time.Second))),

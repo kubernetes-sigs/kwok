@@ -53,16 +53,12 @@ const (
 func TestPodController(t *testing.T) {
 	clientset := fake.NewClientset(
 		&corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:              "node0",
-				CreationTimestamp: metav1.Now(),
-			},
+			Name:              "node0",
+			CreationTimestamp: metav1.Now(),
 		},
 		&corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:              "node1",
-				CreationTimestamp: metav1.Now(),
-			},
+			Name:              "node1",
+			CreationTimestamp: metav1.Now(),
 			Spec: corev1.NodeSpec{
 				PodCIDR: secondPodCIDR,
 			},
@@ -76,11 +72,9 @@ func TestPodController(t *testing.T) {
 			},
 		},
 		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:              "pod0",
-				Namespace:         "default",
-				CreationTimestamp: metav1.Now(),
-			},
+			Name:              "pod0",
+			Namespace:         "default",
+			CreationTimestamp: metav1.Now(),
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
@@ -95,11 +89,9 @@ func TestPodController(t *testing.T) {
 			},
 		},
 		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:              "xxxx",
-				Namespace:         "default",
-				CreationTimestamp: metav1.Now(),
-			},
+			Name:              "xxxx",
+			Namespace:         "default",
+			CreationTimestamp: metav1.Now(),
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
@@ -114,11 +106,9 @@ func TestPodController(t *testing.T) {
 			},
 		},
 		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:              "pod-with-host-network",
-				Namespace:         "default",
-				CreationTimestamp: metav1.Now(),
-			},
+			Name:              "pod-with-host-network",
+			Namespace:         "default",
+			CreationTimestamp: metav1.Now(),
 			Spec: corev1.PodSpec{
 				HostNetwork: true,
 				Containers: []corev1.Container{
@@ -134,11 +124,9 @@ func TestPodController(t *testing.T) {
 			},
 		},
 		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:              "pod-with-node1",
-				Namespace:         "default",
-				CreationTimestamp: metav1.Now(),
-			},
+			Name:              "pod-with-node1",
+			Namespace:         "default",
+			CreationTimestamp: metav1.Now(),
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
@@ -284,11 +272,9 @@ func TestPodController(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	_, err = clientset.CoreV1().Pods("default").Create(ctx, &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:              "pod1",
-			Namespace:         "default",
-			CreationTimestamp: metav1.Now(),
-		},
+		Name:              "pod1",
+		Namespace:         "default",
+		CreationTimestamp: metav1.Now(),
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{

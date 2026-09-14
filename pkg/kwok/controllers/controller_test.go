@@ -40,31 +40,25 @@ import (
 func TestController(t *testing.T) {
 	nodes := []runtime.Object{
 		&corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "node-0",
-				Labels: map[string]string{
-					"manage-by-kwok": "true",
-				},
+			Name: "node-0",
+			Labels: map[string]string{
+				"manage-by-kwok": "true",
 			},
 			Status: corev1.NodeStatus{
 				Phase: corev1.NodePending,
 			},
 		},
 		&corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "node-1",
-				Annotations: map[string]string{
-					"manage-by-kwok": "true",
-				},
+			Name: "node-1",
+			Annotations: map[string]string{
+				"manage-by-kwok": "true",
 			},
 			Status: corev1.NodeStatus{
 				Phase: corev1.NodePending,
 			},
 		},
 		&corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "node-2",
-			},
+			Name: "node-2",
 			Status: corev1.NodeStatus{
 				Phase: corev1.NodePending,
 			},

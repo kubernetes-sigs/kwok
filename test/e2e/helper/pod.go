@@ -18,7 +18,6 @@ package helper
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // PodBuilder is a builder for pod.
@@ -30,10 +29,8 @@ type PodBuilder struct {
 func NewPodBuilder(name string) *PodBuilder {
 	return &PodBuilder{
 		pod: &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: "default",
-			},
+			Name:      name,
+			Namespace: "default",
 			Spec: corev1.PodSpec{
 				InitContainers: []corev1.Container{
 					{

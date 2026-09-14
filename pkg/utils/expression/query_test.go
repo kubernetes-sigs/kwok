@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestQuery_Execute(t *testing.T) {
@@ -61,10 +60,8 @@ func TestQuery_Execute(t *testing.T) {
 			args: args{
 				src: ".metadata.annotations[\"x\"]",
 				v: &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Annotations: map[string]string{
-							"x": "",
-						},
+					Annotations: map[string]string{
+						"x": "",
 					},
 				},
 			},
@@ -121,10 +118,8 @@ func TestQuery_Execute(t *testing.T) {
 			args: args{
 				src: ".metadata.finalizers.[]",
 				v: &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Finalizers: []string{
-							"test",
-						},
+					Finalizers: []string{
+						"test",
 					},
 				},
 			},

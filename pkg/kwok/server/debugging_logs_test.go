@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
 
@@ -121,10 +119,8 @@ func Test_getPodLogs(t *testing.T) {
 			args: args{
 				rules: []*internalversion.Logs{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test",
-							Namespace: "default",
-						},
+						Name:      "test",
+						Namespace: "default",
 						Spec: internalversion.LogsSpec{
 							Logs: []internalversion.Log{
 								{
@@ -149,9 +145,7 @@ func Test_getPodLogs(t *testing.T) {
 				rules: []*internalversion.Logs{},
 				clusterRules: []*internalversion.ClusterLogs{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "cluster-test",
-						},
+						Name: "cluster-test",
 						Spec: internalversion.ClusterLogsSpec{
 							Logs: []internalversion.Log{
 								{
@@ -174,10 +168,8 @@ func Test_getPodLogs(t *testing.T) {
 			args: args{
 				rules: []*internalversion.Logs{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test-2",
-							Namespace: "default",
-						},
+						Name:      "test-2",
+						Namespace: "default",
 						Spec: internalversion.LogsSpec{
 							Logs: []internalversion.Log{
 								{
@@ -201,9 +193,7 @@ func Test_getPodLogs(t *testing.T) {
 				rules: []*internalversion.Logs{},
 				clusterRules: []*internalversion.ClusterLogs{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "cluster-test",
-						},
+						Name: "cluster-test",
 						Spec: internalversion.ClusterLogsSpec{
 							Selector: &internalversion.ObjectSelector{
 								MatchNamespaces: []string{"test"},

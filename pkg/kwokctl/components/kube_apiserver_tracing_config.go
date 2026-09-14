@@ -17,9 +17,7 @@ limitations under the License.
 package components
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiserverv1alpha1 "k8s.io/apiserver/pkg/apis/apiserver/v1alpha1"
-	tracingapi "k8s.io/component-base/tracing/api/v1"
 
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
@@ -27,14 +25,10 @@ import (
 // BuildKubeApiserverTracing builds a apiserverTracingConfig file from the given parameters.
 func BuildKubeApiserverTracing(conf BuildKubeApiserverTracingConfig) (string, error) {
 	c := &apiserverv1alpha1.TracingConfiguration{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "TracingConfiguration",
-			APIVersion: apiserverv1alpha1.ConfigSchemeGroupVersion.String(),
-		},
-		TracingConfiguration: tracingapi.TracingConfiguration{
-			Endpoint:               &conf.Endpoint,
-			SamplingRatePerMillion: new(int32(1000000)),
-		},
+		Kind:                   "TracingConfiguration",
+		APIVersion:             apiserverv1alpha1.ConfigSchemeGroupVersion.String(),
+		Endpoint:               &conf.Endpoint,
+		SamplingRatePerMillion: new(int32(1000000)),
 	}
 	data, err := yaml.Marshal(c)
 	if err != nil {

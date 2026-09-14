@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -70,9 +69,7 @@ func Test_newInt64From_Get(t *testing.T) {
 				},
 				event: &Event{
 					Data: &corev1.Pod{
-						ObjectMeta: metav1.ObjectMeta{
-							DeletionGracePeriodSeconds: new(int64(1)),
-						},
+						DeletionGracePeriodSeconds: new(int64(1)),
 					},
 				},
 			},
@@ -89,9 +86,7 @@ func Test_newInt64From_Get(t *testing.T) {
 				},
 				event: &Event{
 					Data: &corev1.Pod{
-						ObjectMeta: metav1.ObjectMeta{
-							Generation: 1,
-						},
+						Generation: 1,
 					},
 				},
 			},
@@ -108,10 +103,8 @@ func Test_newInt64From_Get(t *testing.T) {
 				},
 				event: &Event{
 					Data: &corev1.Pod{
-						ObjectMeta: metav1.ObjectMeta{
-							Annotations: map[string]string{
-								"x": "1",
-							},
+						Annotations: map[string]string{
+							"x": "1",
 						},
 					},
 				},

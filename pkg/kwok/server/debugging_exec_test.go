@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
 
@@ -121,10 +119,8 @@ func Test_getExecTarget(t *testing.T) {
 			args: args{
 				rules: []*internalversion.Exec{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test",
-							Namespace: "default",
-						},
+						Name:      "test",
+						Namespace: "default",
 						Spec: internalversion.ExecSpec{
 							Execs: []internalversion.ExecTarget{
 								{
@@ -149,9 +145,7 @@ func Test_getExecTarget(t *testing.T) {
 				rules: []*internalversion.Exec{},
 				clusterRules: []*internalversion.ClusterExec{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "cluster-test",
-						},
+						Name: "cluster-test",
 						Spec: internalversion.ClusterExecSpec{
 							Execs: []internalversion.ExecTarget{
 								{
@@ -174,10 +168,8 @@ func Test_getExecTarget(t *testing.T) {
 			args: args{
 				rules: []*internalversion.Exec{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test-2",
-							Namespace: "default",
-						},
+						Name:      "test-2",
+						Namespace: "default",
 						Spec: internalversion.ExecSpec{
 							Execs: []internalversion.ExecTarget{
 								{
@@ -201,9 +193,7 @@ func Test_getExecTarget(t *testing.T) {
 				rules: []*internalversion.Exec{},
 				clusterRules: []*internalversion.ClusterExec{
 					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "cluster-test",
-						},
+						Name: "cluster-test",
 						Spec: internalversion.ClusterExecSpec{
 							Selector: &internalversion.ObjectSelector{
 								MatchNamespaces: []string{"test"},
