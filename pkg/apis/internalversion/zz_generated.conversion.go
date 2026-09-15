@@ -22,7 +22,7 @@ limitations under the License.
 package internalversion
 
 import (
-	json "encoding/json"
+	jsontext "encoding/json/jsontext"
 	unsafe "unsafe"
 
 	resource "k8s.io/apimachinery/pkg/api/resource"
@@ -2039,7 +2039,7 @@ func Convert_v1alpha1_KwokctlConfigurationStatus_To_internalversion_KwokctlConfi
 
 func autoConvert_internalversion_KwokctlResource_To_v1alpha1_KwokctlResource(in *KwokctlResource, out *configv1alpha1.KwokctlResource, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	out.Parameters = *(*json.RawMessage)(unsafe.Pointer(&in.Parameters))
+	out.Parameters = *(*jsontext.Value)(unsafe.Pointer(&in.Parameters))
 	out.Template = in.Template
 	return nil
 }
@@ -2052,7 +2052,7 @@ func Convert_internalversion_KwokctlResource_To_v1alpha1_KwokctlResource(in *Kwo
 func autoConvert_v1alpha1_KwokctlResource_To_internalversion_KwokctlResource(in *configv1alpha1.KwokctlResource, out *KwokctlResource, s conversion.Scope) error {
 	// INFO: in.TypeMeta opted out of conversion generation
 	out.ObjectMeta = in.ObjectMeta
-	out.Parameters = *(*json.RawMessage)(unsafe.Pointer(&in.Parameters))
+	out.Parameters = *(*jsontext.Value)(unsafe.Pointer(&in.Parameters))
 	out.Template = in.Template
 	return nil
 }
