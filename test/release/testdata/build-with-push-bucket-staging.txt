@@ -3,7 +3,7 @@ GOOS=<OS> \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/<OS>/<ARCH>/kwok \
   ./cmd/kwok
@@ -17,7 +17,7 @@ GOOS=<OS> \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/<OS>/<ARCH>/kwokctl \
   ./cmd/kwokctl

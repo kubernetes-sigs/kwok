@@ -29,7 +29,7 @@ import (
 )
 
 type Interface interface {
-	Discovery() discovery.DiscoveryInterface
+	Discovery() discovery.DiscoveryInterfaces
 	KwokV1alpha1() kwokv1alpha1.KwokV1alpha1Interface
 }
 
@@ -45,7 +45,7 @@ func (c *Clientset) KwokV1alpha1() kwokv1alpha1.KwokV1alpha1Interface {
 }
 
 // Discovery retrieves the DiscoveryClient
-func (c *Clientset) Discovery() discovery.DiscoveryInterface {
+func (c *Clientset) Discovery() discovery.DiscoveryInterfaces {
 	if c == nil {
 		return nil
 	}

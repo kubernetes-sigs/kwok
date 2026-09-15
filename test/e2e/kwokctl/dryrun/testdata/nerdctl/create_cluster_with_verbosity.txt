@@ -7,15 +7,15 @@ touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
 cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 nerdctl pull registry.k8s.io/etcd:3.6.10-0
-nerdctl pull registry.k8s.io/kube-apiserver:v1.36.1
+nerdctl pull registry.k8s.io/kube-apiserver:v1.37.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
 apiVersion: apiserver.config.k8s.io/v1alpha1
 endpoint: kwok-<CLUSTER_NAME>-jaeger:4317
 kind: TracingConfiguration
 samplingRatePerMillion: 1000000
 EOF
-nerdctl pull registry.k8s.io/kubectl:v1.36.1
-nerdctl pull registry.k8s.io/kube-controller-manager:v1.36.1
+nerdctl pull registry.k8s.io/kubectl:v1.37.0
+nerdctl pull registry.k8s.io/kube-controller-manager:v1.37.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
 apiVersion: kubescheduler.config.k8s.io/v1
 clientConnection:
@@ -253,7 +253,7 @@ nerdctl \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml:/etc/kubernetes/audit-policy.yaml:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log:/var/log/kubernetes/audit/audit.log \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml:/etc/kubernetes/apiserver-tracing-config.yaml:ro \
-  registry.k8s.io/kube-apiserver:v1.36.1 \
+  registry.k8s.io/kube-apiserver:v1.37.0 \
   --etcd-prefix=/registry \
   --allow-privileged=true \
   --endpoint-reconciler-type=none \
@@ -293,7 +293,7 @@ nerdctl \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
-  registry.k8s.io/kubectl:v1.36.1 \
+  registry.k8s.io/kubectl:v1.37.0 \
   proxy \
   --accept-hosts=^*$ \
   --address=0.0.0.0 \
@@ -311,7 +311,7 @@ nerdctl \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
-  registry.k8s.io/kube-controller-manager:v1.36.1 \
+  registry.k8s.io/kube-controller-manager:v1.37.0 \
   --node-monitor-period=25s \
   --node-monitor-grace-period=3m20s \
   --kubeconfig=/etc/kubernetes/kubeconfig.yaml \

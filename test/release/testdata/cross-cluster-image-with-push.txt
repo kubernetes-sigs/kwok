@@ -1,8 +1,8 @@
 docker \
   buildx \
   build \
-  --build-arg=kube_version=v1.36.1 \
-  --tag=image-prefix/cluster:<VERSION>-k8s.v1.36.1 \
+  --build-arg=kube_version=v1.37.0 \
+  --tag=image-prefix/cluster:<VERSION>-k8s.v1.37.0 \
   --platform=linux/amd64 \
   --platform=linux/arm64 \
   --push \
@@ -12,8 +12,8 @@ docker \
 docker \
   buildx \
   build \
-  --build-arg=kube_version=v1.35.5 \
-  --tag=image-prefix/cluster:<VERSION>-k8s.v1.35.5 \
+  --build-arg=kube_version=v1.36.4 \
+  --tag=image-prefix/cluster:<VERSION>-k8s.v1.36.4 \
   --platform=linux/amd64 \
   --platform=linux/arm64 \
   --push \
@@ -23,8 +23,8 @@ docker \
 docker \
   buildx \
   build \
-  --build-arg=kube_version=v1.34.8 \
-  --tag=image-prefix/cluster:<VERSION>-k8s.v1.34.8 \
+  --build-arg=kube_version=v1.35.8 \
+  --tag=image-prefix/cluster:<VERSION>-k8s.v1.35.8 \
   --platform=linux/amd64 \
   --platform=linux/arm64 \
   --push \

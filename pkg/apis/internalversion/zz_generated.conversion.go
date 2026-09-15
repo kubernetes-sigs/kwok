@@ -25,7 +25,6 @@ import (
 	jsontext "encoding/json/jsontext"
 	unsafe "unsafe"
 
-	resource "k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -906,8 +905,7 @@ func Convert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(in *v1alpha1.Cl
 }
 
 func autoConvert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(in *ClusterExecSpec, out *v1alpha1.ClusterExecSpec, s conversion.Scope) error {
-	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Execs = *(*[]v1alpha1.ExecTarget)(unsafe.Pointer(&in.Execs))
+	*out = *(*v1alpha1.ClusterExecSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -917,8 +915,7 @@ func Convert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(in *Clu
 }
 
 func autoConvert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(in *v1alpha1.ClusterExecSpec, out *ClusterExecSpec, s conversion.Scope) error {
-	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Execs = *(*[]ExecTarget)(unsafe.Pointer(&in.Execs))
+	*out = *(*ClusterExecSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1026,8 +1023,7 @@ func Convert_v1alpha1_ClusterPortForward_To_internalversion_ClusterPortForward(i
 }
 
 func autoConvert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwardSpec(in *ClusterPortForwardSpec, out *v1alpha1.ClusterPortForwardSpec, s conversion.Scope) error {
-	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Forwards = *(*[]v1alpha1.Forward)(unsafe.Pointer(&in.Forwards))
+	*out = *(*v1alpha1.ClusterPortForwardSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1037,8 +1033,7 @@ func Convert_internalversion_ClusterPortForwardSpec_To_v1alpha1_ClusterPortForwa
 }
 
 func autoConvert_v1alpha1_ClusterPortForwardSpec_To_internalversion_ClusterPortForwardSpec(in *v1alpha1.ClusterPortForwardSpec, out *ClusterPortForwardSpec, s conversion.Scope) error {
-	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Forwards = *(*[]Forward)(unsafe.Pointer(&in.Forwards))
+	*out = *(*ClusterPortForwardSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1076,8 +1071,7 @@ func Convert_v1alpha1_ClusterResourceUsage_To_internalversion_ClusterResourceUsa
 }
 
 func autoConvert_internalversion_ClusterResourceUsageSpec_To_v1alpha1_ClusterResourceUsageSpec(in *ClusterResourceUsageSpec, out *v1alpha1.ClusterResourceUsageSpec, s conversion.Scope) error {
-	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Usages = *(*[]v1alpha1.ResourceUsageContainer)(unsafe.Pointer(&in.Usages))
+	*out = *(*v1alpha1.ClusterResourceUsageSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1087,8 +1081,7 @@ func Convert_internalversion_ClusterResourceUsageSpec_To_v1alpha1_ClusterResourc
 }
 
 func autoConvert_v1alpha1_ClusterResourceUsageSpec_To_internalversion_ClusterResourceUsageSpec(in *v1alpha1.ClusterResourceUsageSpec, out *ClusterResourceUsageSpec, s conversion.Scope) error {
-	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Usages = *(*[]ResourceUsageContainer)(unsafe.Pointer(&in.Usages))
+	*out = *(*ClusterResourceUsageSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1166,12 +1159,7 @@ func Convert_v1alpha1_Component_To_internalversion_Component(in *configv1alpha1.
 }
 
 func autoConvert_internalversion_ComponentMetric_To_v1alpha1_ComponentMetric(in *ComponentMetric, out *configv1alpha1.ComponentMetric, s conversion.Scope) error {
-	out.Scheme = in.Scheme
-	out.Host = in.Host
-	out.Path = in.Path
-	out.CertPath = in.CertPath
-	out.KeyPath = in.KeyPath
-	out.InsecureSkipVerify = in.InsecureSkipVerify
+	*out = *(*configv1alpha1.ComponentMetric)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1181,12 +1169,7 @@ func Convert_internalversion_ComponentMetric_To_v1alpha1_ComponentMetric(in *Com
 }
 
 func autoConvert_v1alpha1_ComponentMetric_To_internalversion_ComponentMetric(in *configv1alpha1.ComponentMetric, out *ComponentMetric, s conversion.Scope) error {
-	out.Scheme = in.Scheme
-	out.Host = in.Host
-	out.Path = in.Path
-	out.CertPath = in.CertPath
-	out.KeyPath = in.KeyPath
-	out.InsecureSkipVerify = in.InsecureSkipVerify
+	*out = *(*ComponentMetric)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1242,8 +1225,7 @@ func Convert_v1alpha1_ComponentPatches_To_internalversion_ComponentPatches(in *c
 }
 
 func autoConvert_internalversion_Env_To_v1alpha1_Env(in *Env, out *configv1alpha1.Env, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Value = in.Value
+	*out = *(*configv1alpha1.Env)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1253,8 +1235,7 @@ func Convert_internalversion_Env_To_v1alpha1_Env(in *Env, out *configv1alpha1.En
 }
 
 func autoConvert_v1alpha1_Env_To_internalversion_Env(in *configv1alpha1.Env, out *Env, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Value = in.Value
+	*out = *(*Env)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1264,8 +1245,7 @@ func Convert_v1alpha1_Env_To_internalversion_Env(in *configv1alpha1.Env, out *En
 }
 
 func autoConvert_internalversion_EnvVar_To_v1alpha1_EnvVar(in *EnvVar, out *v1alpha1.EnvVar, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Value = in.Value
+	*out = *(*v1alpha1.EnvVar)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1275,8 +1255,7 @@ func Convert_internalversion_EnvVar_To_v1alpha1_EnvVar(in *EnvVar, out *v1alpha1
 }
 
 func autoConvert_v1alpha1_EnvVar_To_internalversion_EnvVar(in *v1alpha1.EnvVar, out *EnvVar, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Value = in.Value
+	*out = *(*EnvVar)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1314,7 +1293,7 @@ func Convert_v1alpha1_Exec_To_internalversion_Exec(in *v1alpha1.Exec, out *Exec,
 }
 
 func autoConvert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(in *ExecSpec, out *v1alpha1.ExecSpec, s conversion.Scope) error {
-	out.Execs = *(*[]v1alpha1.ExecTarget)(unsafe.Pointer(&in.Execs))
+	*out = *(*v1alpha1.ExecSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1324,7 +1303,7 @@ func Convert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(in *ExecSpec, out *v1
 }
 
 func autoConvert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(in *v1alpha1.ExecSpec, out *ExecSpec, s conversion.Scope) error {
-	out.Execs = *(*[]ExecTarget)(unsafe.Pointer(&in.Execs))
+	*out = *(*ExecSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1334,8 +1313,7 @@ func Convert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(in *v1alpha1.ExecSpec
 }
 
 func autoConvert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(in *ExecTarget, out *v1alpha1.ExecTarget, s conversion.Scope) error {
-	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
-	out.Local = (*v1alpha1.ExecTargetLocal)(unsafe.Pointer(in.Local))
+	*out = *(*v1alpha1.ExecTarget)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1345,8 +1323,7 @@ func Convert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(in *ExecTarget, o
 }
 
 func autoConvert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(in *v1alpha1.ExecTarget, out *ExecTarget, s conversion.Scope) error {
-	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
-	out.Local = (*ExecTargetLocal)(unsafe.Pointer(in.Local))
+	*out = *(*ExecTarget)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1356,9 +1333,7 @@ func Convert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(in *v1alpha1.Exec
 }
 
 func autoConvert_internalversion_ExecTargetLocal_To_v1alpha1_ExecTargetLocal(in *ExecTargetLocal, out *v1alpha1.ExecTargetLocal, s conversion.Scope) error {
-	out.WorkDir = in.WorkDir
-	out.Envs = *(*[]v1alpha1.EnvVar)(unsafe.Pointer(&in.Envs))
-	out.SecurityContext = (*v1alpha1.SecurityContext)(unsafe.Pointer(in.SecurityContext))
+	*out = *(*v1alpha1.ExecTargetLocal)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1368,9 +1343,7 @@ func Convert_internalversion_ExecTargetLocal_To_v1alpha1_ExecTargetLocal(in *Exe
 }
 
 func autoConvert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal(in *v1alpha1.ExecTargetLocal, out *ExecTargetLocal, s conversion.Scope) error {
-	out.WorkDir = in.WorkDir
-	out.Envs = *(*[]EnvVar)(unsafe.Pointer(&in.Envs))
-	out.SecurityContext = (*SecurityContext)(unsafe.Pointer(in.SecurityContext))
+	*out = *(*ExecTargetLocal)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1380,7 +1353,7 @@ func Convert_v1alpha1_ExecTargetLocal_To_internalversion_ExecTargetLocal(in *v1a
 }
 
 func autoConvert_internalversion_ExpressionCEL_To_v1alpha1_ExpressionCEL(in *ExpressionCEL, out *v1alpha1.ExpressionCEL, s conversion.Scope) error {
-	out.Expression = in.Expression
+	*out = *(*v1alpha1.ExpressionCEL)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1390,7 +1363,7 @@ func Convert_internalversion_ExpressionCEL_To_v1alpha1_ExpressionCEL(in *Express
 }
 
 func autoConvert_v1alpha1_ExpressionCEL_To_internalversion_ExpressionCEL(in *v1alpha1.ExpressionCEL, out *ExpressionCEL, s conversion.Scope) error {
-	out.Expression = in.Expression
+	*out = *(*ExpressionCEL)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1418,7 +1391,7 @@ func autoConvert_v1alpha1_ExpressionFrom_To_internalversion_ExpressionFrom(in *v
 }
 
 func autoConvert_internalversion_ExpressionJQ_To_v1alpha1_ExpressionJQ(in *ExpressionJQ, out *v1alpha1.ExpressionJQ, s conversion.Scope) error {
-	out.Expression = in.Expression
+	*out = *(*v1alpha1.ExpressionJQ)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1428,7 +1401,7 @@ func Convert_internalversion_ExpressionJQ_To_v1alpha1_ExpressionJQ(in *Expressio
 }
 
 func autoConvert_v1alpha1_ExpressionJQ_To_internalversion_ExpressionJQ(in *v1alpha1.ExpressionJQ, out *ExpressionJQ, s conversion.Scope) error {
-	out.Expression = in.Expression
+	*out = *(*ExpressionJQ)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1438,9 +1411,7 @@ func Convert_v1alpha1_ExpressionJQ_To_internalversion_ExpressionJQ(in *v1alpha1.
 }
 
 func autoConvert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out *configv1alpha1.ExtraArgs, s conversion.Scope) error {
-	out.Key = in.Key
-	out.Value = (*string)(unsafe.Pointer(in.Value))
-	out.Override = in.Override
+	*out = *(*configv1alpha1.ExtraArgs)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1450,9 +1421,7 @@ func Convert_internalversion_ExtraArgs_To_v1alpha1_ExtraArgs(in *ExtraArgs, out 
 }
 
 func autoConvert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(in *configv1alpha1.ExtraArgs, out *ExtraArgs, s conversion.Scope) error {
-	out.Key = in.Key
-	out.Value = (*string)(unsafe.Pointer(in.Value))
-	out.Override = in.Override
+	*out = *(*ExtraArgs)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1462,7 +1431,7 @@ func Convert_v1alpha1_ExtraArgs_To_internalversion_ExtraArgs(in *configv1alpha1.
 }
 
 func autoConvert_internalversion_FinalizerItem_To_v1alpha1_FinalizerItem(in *FinalizerItem, out *v1alpha1.FinalizerItem, s conversion.Scope) error {
-	out.Value = in.Value
+	*out = *(*v1alpha1.FinalizerItem)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1472,7 +1441,7 @@ func Convert_internalversion_FinalizerItem_To_v1alpha1_FinalizerItem(in *Finaliz
 }
 
 func autoConvert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(in *v1alpha1.FinalizerItem, out *FinalizerItem, s conversion.Scope) error {
-	out.Value = in.Value
+	*out = *(*FinalizerItem)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1482,9 +1451,7 @@ func Convert_v1alpha1_FinalizerItem_To_internalversion_FinalizerItem(in *v1alpha
 }
 
 func autoConvert_internalversion_Forward_To_v1alpha1_Forward(in *Forward, out *v1alpha1.Forward, s conversion.Scope) error {
-	out.Ports = *(*[]int32)(unsafe.Pointer(&in.Ports))
-	out.Target = (*v1alpha1.ForwardTarget)(unsafe.Pointer(in.Target))
-	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
+	*out = *(*v1alpha1.Forward)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1494,9 +1461,7 @@ func Convert_internalversion_Forward_To_v1alpha1_Forward(in *Forward, out *v1alp
 }
 
 func autoConvert_v1alpha1_Forward_To_internalversion_Forward(in *v1alpha1.Forward, out *Forward, s conversion.Scope) error {
-	out.Ports = *(*[]int32)(unsafe.Pointer(&in.Ports))
-	out.Target = (*ForwardTarget)(unsafe.Pointer(in.Target))
-	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
+	*out = *(*Forward)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1506,8 +1471,7 @@ func Convert_v1alpha1_Forward_To_internalversion_Forward(in *v1alpha1.Forward, o
 }
 
 func autoConvert_internalversion_ForwardTarget_To_v1alpha1_ForwardTarget(in *ForwardTarget, out *v1alpha1.ForwardTarget, s conversion.Scope) error {
-	out.Port = in.Port
-	out.Address = in.Address
+	*out = *(*v1alpha1.ForwardTarget)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1517,8 +1481,7 @@ func Convert_internalversion_ForwardTarget_To_v1alpha1_ForwardTarget(in *Forward
 }
 
 func autoConvert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget(in *v1alpha1.ForwardTarget, out *ForwardTarget, s conversion.Scope) error {
-	out.Port = in.Port
-	out.Address = in.Address
+	*out = *(*ForwardTarget)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1528,7 +1491,7 @@ func Convert_v1alpha1_ForwardTarget_To_internalversion_ForwardTarget(in *v1alpha
 }
 
 func autoConvert_internalversion_ImpersonationConfig_To_v1alpha1_ImpersonationConfig(in *ImpersonationConfig, out *v1alpha1.ImpersonationConfig, s conversion.Scope) error {
-	out.Username = in.Username
+	*out = *(*v1alpha1.ImpersonationConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1538,7 +1501,7 @@ func Convert_internalversion_ImpersonationConfig_To_v1alpha1_ImpersonationConfig
 }
 
 func autoConvert_v1alpha1_ImpersonationConfig_To_internalversion_ImpersonationConfig(in *v1alpha1.ImpersonationConfig, out *ImpersonationConfig, s conversion.Scope) error {
-	out.Username = in.Username
+	*out = *(*ImpersonationConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2018,7 +1981,7 @@ func Convert_v1alpha1_KwokctlConfigurationOptions_To_internalversion_KwokctlConf
 }
 
 func autoConvert_internalversion_KwokctlConfigurationStatus_To_v1alpha1_KwokctlConfigurationStatus(in *KwokctlConfigurationStatus, out *configv1alpha1.KwokctlConfigurationStatus, s conversion.Scope) error {
-	out.Version = in.Version
+	*out = *(*configv1alpha1.KwokctlConfigurationStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2028,7 +1991,7 @@ func Convert_internalversion_KwokctlConfigurationStatus_To_v1alpha1_KwokctlConfi
 }
 
 func autoConvert_v1alpha1_KwokctlConfigurationStatus_To_internalversion_KwokctlConfigurationStatus(in *configv1alpha1.KwokctlConfigurationStatus, out *KwokctlConfigurationStatus, s conversion.Scope) error {
-	out.Version = in.Version
+	*out = *(*KwokctlConfigurationStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2217,9 +2180,7 @@ func Convert_v1alpha1_Metric_To_internalversion_Metric(in *v1alpha1.Metric, out 
 }
 
 func autoConvert_internalversion_MetricBucket_To_v1alpha1_MetricBucket(in *MetricBucket, out *v1alpha1.MetricBucket, s conversion.Scope) error {
-	out.Le = in.Le
-	out.Value = in.Value
-	out.Hidden = in.Hidden
+	*out = *(*v1alpha1.MetricBucket)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2229,9 +2190,7 @@ func Convert_internalversion_MetricBucket_To_v1alpha1_MetricBucket(in *MetricBuc
 }
 
 func autoConvert_v1alpha1_MetricBucket_To_internalversion_MetricBucket(in *v1alpha1.MetricBucket, out *MetricBucket, s conversion.Scope) error {
-	out.Le = in.Le
-	out.Value = in.Value
-	out.Hidden = in.Hidden
+	*out = *(*MetricBucket)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2241,13 +2200,7 @@ func Convert_v1alpha1_MetricBucket_To_internalversion_MetricBucket(in *v1alpha1.
 }
 
 func autoConvert_internalversion_MetricConfig_To_v1alpha1_MetricConfig(in *MetricConfig, out *v1alpha1.MetricConfig, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Help = in.Help
-	out.Kind = v1alpha1.Kind(in.Kind)
-	out.Labels = *(*[]v1alpha1.MetricLabel)(unsafe.Pointer(&in.Labels))
-	out.Value = in.Value
-	out.Buckets = *(*[]v1alpha1.MetricBucket)(unsafe.Pointer(&in.Buckets))
-	out.Dimension = v1alpha1.Dimension(in.Dimension)
+	*out = *(*v1alpha1.MetricConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2257,13 +2210,7 @@ func Convert_internalversion_MetricConfig_To_v1alpha1_MetricConfig(in *MetricCon
 }
 
 func autoConvert_v1alpha1_MetricConfig_To_internalversion_MetricConfig(in *v1alpha1.MetricConfig, out *MetricConfig, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Help = in.Help
-	out.Kind = Kind(in.Kind)
-	out.Labels = *(*[]MetricLabel)(unsafe.Pointer(&in.Labels))
-	out.Value = in.Value
-	out.Buckets = *(*[]MetricBucket)(unsafe.Pointer(&in.Buckets))
-	out.Dimension = Dimension(in.Dimension)
+	*out = *(*MetricConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2273,8 +2220,7 @@ func Convert_v1alpha1_MetricConfig_To_internalversion_MetricConfig(in *v1alpha1.
 }
 
 func autoConvert_internalversion_MetricLabel_To_v1alpha1_MetricLabel(in *MetricLabel, out *v1alpha1.MetricLabel, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Value = in.Value
+	*out = *(*v1alpha1.MetricLabel)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2284,8 +2230,7 @@ func Convert_internalversion_MetricLabel_To_v1alpha1_MetricLabel(in *MetricLabel
 }
 
 func autoConvert_v1alpha1_MetricLabel_To_internalversion_MetricLabel(in *v1alpha1.MetricLabel, out *MetricLabel, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Value = in.Value
+	*out = *(*MetricLabel)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2295,8 +2240,7 @@ func Convert_v1alpha1_MetricLabel_To_internalversion_MetricLabel(in *v1alpha1.Me
 }
 
 func autoConvert_internalversion_MetricSpec_To_v1alpha1_MetricSpec(in *MetricSpec, out *v1alpha1.MetricSpec, s conversion.Scope) error {
-	out.Path = in.Path
-	out.Metrics = *(*[]v1alpha1.MetricConfig)(unsafe.Pointer(&in.Metrics))
+	*out = *(*v1alpha1.MetricSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2306,8 +2250,7 @@ func Convert_internalversion_MetricSpec_To_v1alpha1_MetricSpec(in *MetricSpec, o
 }
 
 func autoConvert_v1alpha1_MetricSpec_To_internalversion_MetricSpec(in *v1alpha1.MetricSpec, out *MetricSpec, s conversion.Scope) error {
-	out.Path = in.Path
-	out.Metrics = *(*[]MetricConfig)(unsafe.Pointer(&in.Metrics))
+	*out = *(*MetricSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2317,8 +2260,7 @@ func Convert_v1alpha1_MetricSpec_To_internalversion_MetricSpec(in *v1alpha1.Metr
 }
 
 func autoConvert_internalversion_ObjectSelector_To_v1alpha1_ObjectSelector(in *ObjectSelector, out *v1alpha1.ObjectSelector, s conversion.Scope) error {
-	out.MatchNamespaces = *(*[]string)(unsafe.Pointer(&in.MatchNamespaces))
-	out.MatchNames = *(*[]string)(unsafe.Pointer(&in.MatchNames))
+	*out = *(*v1alpha1.ObjectSelector)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2328,8 +2270,7 @@ func Convert_internalversion_ObjectSelector_To_v1alpha1_ObjectSelector(in *Objec
 }
 
 func autoConvert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector(in *v1alpha1.ObjectSelector, out *ObjectSelector, s conversion.Scope) error {
-	out.MatchNamespaces = *(*[]string)(unsafe.Pointer(&in.MatchNamespaces))
-	out.MatchNames = *(*[]string)(unsafe.Pointer(&in.MatchNames))
+	*out = *(*ObjectSelector)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2339,10 +2280,7 @@ func Convert_v1alpha1_ObjectSelector_To_internalversion_ObjectSelector(in *v1alp
 }
 
 func autoConvert_internalversion_Port_To_v1alpha1_Port(in *Port, out *configv1alpha1.Port, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Port = in.Port
-	out.HostPort = in.HostPort
-	out.Protocol = configv1alpha1.Protocol(in.Protocol)
+	*out = *(*configv1alpha1.Port)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2352,10 +2290,7 @@ func Convert_internalversion_Port_To_v1alpha1_Port(in *Port, out *configv1alpha1
 }
 
 func autoConvert_v1alpha1_Port_To_internalversion_Port(in *configv1alpha1.Port, out *Port, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Port = in.Port
-	out.HostPort = in.HostPort
-	out.Protocol = Protocol(in.Protocol)
+	*out = *(*Port)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2393,7 +2328,7 @@ func Convert_v1alpha1_PortForward_To_internalversion_PortForward(in *v1alpha1.Po
 }
 
 func autoConvert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(in *PortForwardSpec, out *v1alpha1.PortForwardSpec, s conversion.Scope) error {
-	out.Forwards = *(*[]v1alpha1.Forward)(unsafe.Pointer(&in.Forwards))
+	*out = *(*v1alpha1.PortForwardSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2403,7 +2338,7 @@ func Convert_internalversion_PortForwardSpec_To_v1alpha1_PortForwardSpec(in *Por
 }
 
 func autoConvert_v1alpha1_PortForwardSpec_To_internalversion_PortForwardSpec(in *v1alpha1.PortForwardSpec, out *PortForwardSpec, s conversion.Scope) error {
-	out.Forwards = *(*[]Forward)(unsafe.Pointer(&in.Forwards))
+	*out = *(*PortForwardSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2441,8 +2376,7 @@ func Convert_v1alpha1_ResourceUsage_To_internalversion_ResourceUsage(in *v1alpha
 }
 
 func autoConvert_internalversion_ResourceUsageContainer_To_v1alpha1_ResourceUsageContainer(in *ResourceUsageContainer, out *v1alpha1.ResourceUsageContainer, s conversion.Scope) error {
-	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
-	out.Usage = *(*map[string]v1alpha1.ResourceUsageValue)(unsafe.Pointer(&in.Usage))
+	*out = *(*v1alpha1.ResourceUsageContainer)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2452,8 +2386,7 @@ func Convert_internalversion_ResourceUsageContainer_To_v1alpha1_ResourceUsageCon
 }
 
 func autoConvert_v1alpha1_ResourceUsageContainer_To_internalversion_ResourceUsageContainer(in *v1alpha1.ResourceUsageContainer, out *ResourceUsageContainer, s conversion.Scope) error {
-	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
-	out.Usage = *(*map[string]ResourceUsageValue)(unsafe.Pointer(&in.Usage))
+	*out = *(*ResourceUsageContainer)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2463,7 +2396,7 @@ func Convert_v1alpha1_ResourceUsageContainer_To_internalversion_ResourceUsageCon
 }
 
 func autoConvert_internalversion_ResourceUsageSpec_To_v1alpha1_ResourceUsageSpec(in *ResourceUsageSpec, out *v1alpha1.ResourceUsageSpec, s conversion.Scope) error {
-	out.Usages = *(*[]v1alpha1.ResourceUsageContainer)(unsafe.Pointer(&in.Usages))
+	*out = *(*v1alpha1.ResourceUsageSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2473,7 +2406,7 @@ func Convert_internalversion_ResourceUsageSpec_To_v1alpha1_ResourceUsageSpec(in 
 }
 
 func autoConvert_v1alpha1_ResourceUsageSpec_To_internalversion_ResourceUsageSpec(in *v1alpha1.ResourceUsageSpec, out *ResourceUsageSpec, s conversion.Scope) error {
-	out.Usages = *(*[]ResourceUsageContainer)(unsafe.Pointer(&in.Usages))
+	*out = *(*ResourceUsageSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2483,8 +2416,7 @@ func Convert_v1alpha1_ResourceUsageSpec_To_internalversion_ResourceUsageSpec(in 
 }
 
 func autoConvert_internalversion_ResourceUsageValue_To_v1alpha1_ResourceUsageValue(in *ResourceUsageValue, out *v1alpha1.ResourceUsageValue, s conversion.Scope) error {
-	out.Value = (*resource.Quantity)(unsafe.Pointer(in.Value))
-	out.Expression = (*string)(unsafe.Pointer(in.Expression))
+	*out = *(*v1alpha1.ResourceUsageValue)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2494,8 +2426,7 @@ func Convert_internalversion_ResourceUsageValue_To_v1alpha1_ResourceUsageValue(i
 }
 
 func autoConvert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue(in *v1alpha1.ResourceUsageValue, out *ResourceUsageValue, s conversion.Scope) error {
-	out.Value = (*resource.Quantity)(unsafe.Pointer(in.Value))
-	out.Expression = (*string)(unsafe.Pointer(in.Expression))
+	*out = *(*ResourceUsageValue)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2505,8 +2436,7 @@ func Convert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue(i
 }
 
 func autoConvert_internalversion_SecurityContext_To_v1alpha1_SecurityContext(in *SecurityContext, out *v1alpha1.SecurityContext, s conversion.Scope) error {
-	out.RunAsUser = (*int64)(unsafe.Pointer(in.RunAsUser))
-	out.RunAsGroup = (*int64)(unsafe.Pointer(in.RunAsGroup))
+	*out = *(*v1alpha1.SecurityContext)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2516,8 +2446,7 @@ func Convert_internalversion_SecurityContext_To_v1alpha1_SecurityContext(in *Sec
 }
 
 func autoConvert_v1alpha1_SecurityContext_To_internalversion_SecurityContext(in *v1alpha1.SecurityContext, out *SecurityContext, s conversion.Scope) error {
-	out.RunAsUser = (*int64)(unsafe.Pointer(in.RunAsUser))
-	out.RunAsGroup = (*int64)(unsafe.Pointer(in.RunAsGroup))
+	*out = *(*SecurityContext)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2527,9 +2456,7 @@ func Convert_v1alpha1_SecurityContext_To_internalversion_SecurityContext(in *v1a
 }
 
 func autoConvert_internalversion_SelectorJQ_To_v1alpha1_SelectorJQ(in *SelectorJQ, out *v1alpha1.SelectorJQ, s conversion.Scope) error {
-	out.Key = in.Key
-	out.Operator = v1alpha1.SelectorOperator(in.Operator)
-	out.Values = *(*[]string)(unsafe.Pointer(&in.Values))
+	*out = *(*v1alpha1.SelectorJQ)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2539,9 +2466,7 @@ func Convert_internalversion_SelectorJQ_To_v1alpha1_SelectorJQ(in *SelectorJQ, o
 }
 
 func autoConvert_v1alpha1_SelectorJQ_To_internalversion_SelectorJQ(in *v1alpha1.SelectorJQ, out *SelectorJQ, s conversion.Scope) error {
-	out.Key = in.Key
-	out.Operator = SelectorOperator(in.Operator)
-	out.Values = *(*[]string)(unsafe.Pointer(&in.Values))
+	*out = *(*SelectorJQ)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2579,10 +2504,7 @@ func Convert_v1alpha1_Stage_To_internalversion_Stage(in *v1alpha1.Stage, out *St
 }
 
 func autoConvert_internalversion_StageApply_To_v1alpha1_StageApply(in *StageApply, out *v1alpha1.StageApply, s conversion.Scope) error {
-	out.Template = in.Template
-	out.Subresource = in.Subresource
-	out.Type = (*v1alpha1.StagePatchType)(unsafe.Pointer(in.Type))
-	out.Impersonation = (*v1alpha1.ImpersonationConfig)(unsafe.Pointer(in.Impersonation))
+	*out = *(*v1alpha1.StageApply)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2592,10 +2514,7 @@ func Convert_internalversion_StageApply_To_v1alpha1_StageApply(in *StageApply, o
 }
 
 func autoConvert_v1alpha1_StageApply_To_internalversion_StageApply(in *v1alpha1.StageApply, out *StageApply, s conversion.Scope) error {
-	out.Template = in.Template
-	out.Subresource = in.Subresource
-	out.Type = (*StagePatchType)(unsafe.Pointer(in.Type))
-	out.Impersonation = (*ImpersonationConfig)(unsafe.Pointer(in.Impersonation))
+	*out = *(*StageApply)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2663,9 +2582,7 @@ func Convert_v1alpha1_StageDelay_To_internalversion_StageDelay(in *v1alpha1.Stag
 }
 
 func autoConvert_internalversion_StageEvent_To_v1alpha1_StageEvent(in *StageEvent, out *v1alpha1.StageEvent, s conversion.Scope) error {
-	out.Type = in.Type
-	out.Reason = in.Reason
-	out.Message = in.Message
+	*out = *(*v1alpha1.StageEvent)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2675,9 +2592,7 @@ func Convert_internalversion_StageEvent_To_v1alpha1_StageEvent(in *StageEvent, o
 }
 
 func autoConvert_v1alpha1_StageEvent_To_internalversion_StageEvent(in *v1alpha1.StageEvent, out *StageEvent, s conversion.Scope) error {
-	out.Type = in.Type
-	out.Reason = in.Reason
-	out.Message = in.Message
+	*out = *(*StageEvent)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2687,9 +2602,7 @@ func Convert_v1alpha1_StageEvent_To_internalversion_StageEvent(in *v1alpha1.Stag
 }
 
 func autoConvert_internalversion_StageFinalizers_To_v1alpha1_StageFinalizers(in *StageFinalizers, out *v1alpha1.StageFinalizers, s conversion.Scope) error {
-	out.Add = *(*[]v1alpha1.FinalizerItem)(unsafe.Pointer(&in.Add))
-	out.Remove = *(*[]v1alpha1.FinalizerItem)(unsafe.Pointer(&in.Remove))
-	out.Empty = in.Empty
+	*out = *(*v1alpha1.StageFinalizers)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2699,9 +2612,7 @@ func Convert_internalversion_StageFinalizers_To_v1alpha1_StageFinalizers(in *Sta
 }
 
 func autoConvert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers(in *v1alpha1.StageFinalizers, out *StageFinalizers, s conversion.Scope) error {
-	out.Add = *(*[]FinalizerItem)(unsafe.Pointer(&in.Add))
-	out.Remove = *(*[]FinalizerItem)(unsafe.Pointer(&in.Remove))
-	out.Empty = in.Empty
+	*out = *(*StageFinalizers)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2711,11 +2622,7 @@ func Convert_v1alpha1_StageFinalizers_To_internalversion_StageFinalizers(in *v1a
 }
 
 func autoConvert_internalversion_StagePatch_To_v1alpha1_StagePatch(in *StagePatch, out *v1alpha1.StagePatch, s conversion.Scope) error {
-	out.Subresource = in.Subresource
-	out.Root = in.Root
-	out.Template = in.Template
-	out.Type = (*v1alpha1.StagePatchType)(unsafe.Pointer(in.Type))
-	out.Impersonation = (*v1alpha1.ImpersonationConfig)(unsafe.Pointer(in.Impersonation))
+	*out = *(*v1alpha1.StagePatch)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2725,11 +2632,7 @@ func Convert_internalversion_StagePatch_To_v1alpha1_StagePatch(in *StagePatch, o
 }
 
 func autoConvert_v1alpha1_StagePatch_To_internalversion_StagePatch(in *v1alpha1.StagePatch, out *StagePatch, s conversion.Scope) error {
-	out.Subresource = in.Subresource
-	out.Root = in.Root
-	out.Template = in.Template
-	out.Type = (*StagePatchType)(unsafe.Pointer(in.Type))
-	out.Impersonation = (*ImpersonationConfig)(unsafe.Pointer(in.Impersonation))
+	*out = *(*StagePatch)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2739,8 +2642,7 @@ func Convert_v1alpha1_StagePatch_To_internalversion_StagePatch(in *v1alpha1.Stag
 }
 
 func autoConvert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef(in *StageResourceRef, out *v1alpha1.StageResourceRef, s conversion.Scope) error {
-	out.APIGroup = in.APIGroup
-	out.Kind = in.Kind
+	*out = *(*v1alpha1.StageResourceRef)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2750,8 +2652,7 @@ func Convert_internalversion_StageResourceRef_To_v1alpha1_StageResourceRef(in *S
 }
 
 func autoConvert_v1alpha1_StageResourceRef_To_internalversion_StageResourceRef(in *v1alpha1.StageResourceRef, out *StageResourceRef, s conversion.Scope) error {
-	out.APIGroup = in.APIGroup
-	out.Kind = in.Kind
+	*out = *(*StageResourceRef)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2884,11 +2785,7 @@ func autoConvert_v1alpha1_StageSpec_To_internalversion_StageSpec(in *v1alpha1.St
 }
 
 func autoConvert_internalversion_StageStep_To_v1alpha1_StageStep(in *StageStep, out *v1alpha1.StageStep, s conversion.Scope) error {
-	out.Patch = (*v1alpha1.StagePatch)(unsafe.Pointer(in.Patch))
-	out.Event = (*v1alpha1.StageEvent)(unsafe.Pointer(in.Event))
-	out.Finalizers = (*v1alpha1.StageFinalizers)(unsafe.Pointer(in.Finalizers))
-	out.Delete = in.Delete
-	out.Apply = (*v1alpha1.StageApply)(unsafe.Pointer(in.Apply))
+	*out = *(*v1alpha1.StageStep)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2898,11 +2795,7 @@ func Convert_internalversion_StageStep_To_v1alpha1_StageStep(in *StageStep, out 
 }
 
 func autoConvert_v1alpha1_StageStep_To_internalversion_StageStep(in *v1alpha1.StageStep, out *StageStep, s conversion.Scope) error {
-	out.Patch = (*StagePatch)(unsafe.Pointer(in.Patch))
-	out.Event = (*StageEvent)(unsafe.Pointer(in.Event))
-	out.Finalizers = (*StageFinalizers)(unsafe.Pointer(in.Finalizers))
-	out.Delete = in.Delete
-	out.Apply = (*StageApply)(unsafe.Pointer(in.Apply))
+	*out = *(*StageStep)(unsafe.Pointer(in))
 	return nil
 }
 
