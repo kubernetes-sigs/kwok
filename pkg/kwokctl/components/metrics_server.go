@@ -61,14 +61,14 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 
 	var metricsHost string
 	var metricsPort uint32
-	switch GetRuntimeMode(conf.Runtime) {
-	case RuntimeModeNative:
+	switch GetRuntimeNetwork(conf.Runtime) {
+	case RuntimeNetworkHost:
 		metricsHost = utilsnet.LocalAddress
 		metricsPort = conf.Port
-	case RuntimeModeContainer:
+	case RuntimeNetworkBridge:
 		metricsHost = conf.ProjectName + "-" + consts.ComponentMetricsServer
 		metricsPort = 4443
-	case RuntimeModeCluster:
+	case RuntimeNetworkCluster:
 		metricsHost = utilsnet.LocalAddress
 		metricsPort = 4443
 	}
@@ -100,13 +100,26 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		)
 
 		args = append(args,
-			"--bind-address="+conf.BindAddress,
-			"--secure-port=4443",
 			"--kubeconfig="+kubeconfigPath,
 			"--authentication-kubeconfig="+kubeconfigPath,
 			"--authorization-kubeconfig="+kubeconfigPath,
 			"--tls-cert-file="+pkiAdminCertPath,
 			"--tls-private-key-file="+pkiAdminKeyPath,
+		)
+	} else {
+		args = append(args,
+			"--kubeconfig="+conf.KubeconfigPath,
+			"--authentication-kubeconfig="+conf.KubeconfigPath,
+			"--authorization-kubeconfig="+conf.KubeconfigPath,
+			"--tls-cert-file="+conf.AdminCertPath,
+			"--tls-private-key-file="+conf.AdminKeyPath,
+		)
+	}
+
+	if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
+		args = append(args,
+			"--bind-address="+conf.BindAddress,
+			"--secure-port=4443",
 		)
 		ports = append(
 			ports,
@@ -129,11 +142,6 @@ func BuildMetricsServerComponent(conf BuildMetricsServerComponentConfig) (compon
 		args = append(args,
 			"--bind-address="+conf.BindAddress,
 			"--secure-port="+format.String(conf.Port),
-			"--kubeconfig="+conf.KubeconfigPath,
-			"--authentication-kubeconfig="+conf.KubeconfigPath,
-			"--authorization-kubeconfig="+conf.KubeconfigPath,
-			"--tls-cert-file="+conf.AdminCertPath,
-			"--tls-private-key-file="+conf.AdminKeyPath,
 		)
 		ports = append(
 			ports,

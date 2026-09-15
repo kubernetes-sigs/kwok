@@ -77,6 +77,15 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 		)
 		args = append(args,
 			"--kubeconfig="+kubeconfigPath,
+		)
+	} else {
+		args = append(args,
+			"--kubeconfig="+conf.KubeconfigPath,
+		)
+	}
+
+	if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
+		args = append(args,
 			"--port=8001",
 		)
 		ports = append(
@@ -90,7 +99,6 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 		)
 	} else {
 		args = append(args,
-			"--kubeconfig="+conf.KubeconfigPath,
 			"--port="+format.String(conf.Port),
 		)
 		ports = append(

@@ -33,9 +33,12 @@ import (
 func (c *Cluster) setup(ctx context.Context, env *env) error {
 	conf := &env.kwokctlConfig.Options
 	if !file.Exists(env.pkiPath) {
-		sans := []string{
-			c.Name() + "-kube-apiserver",
-			c.Name() + "-kwok-controller",
+		var sans []string
+		if !c.isHostNetwork {
+			sans = []string{
+				c.Name() + "-kube-apiserver",
+				c.Name() + "-kwok-controller",
+			}
 		}
 		ips, err := utilsnet.GetAllIPs()
 		if err != nil {
@@ -119,12 +122,35 @@ func (c *Cluster) Install(ctx context.Context) error {
 		return err
 	}
 
-	err = c.setupPorts(ctx,
-		env.usedPorts,
-		&env.kwokctlConfig.Options.KubeApiserverPort,
-	)
-	if err != nil {
-		return err
+	if c.isHostNetwork {
+		err = c.setupPorts(ctx,
+			env.usedPorts,
+			&env.kwokctlConfig.Options.EtcdPeerPort,
+			&env.kwokctlConfig.Options.EtcdPort,
+			&env.kwokctlConfig.Options.KubeApiserverPort,
+			&env.kwokctlConfig.Options.KwokControllerPort,
+		)
+		if err != nil {
+			return err
+		}
+
+		if env.kwokctlConfig.Options.JaegerPort != 0 {
+			err = c.setupPorts(ctx,
+				env.usedPorts,
+				&env.kwokctlConfig.Options.JaegerOtlpGrpcPort,
+			)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		err = c.setupPorts(ctx,
+			env.usedPorts,
+			&env.kwokctlConfig.Options.KubeApiserverPort,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = c.addEtcd(ctx, env)
@@ -260,14 +286,26 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 		return err
 	}
 
-	inClusterKubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
-		ProjectName:  c.Name(),
-		SecurePort:   conf.SecurePort,
-		Address:      env.scheme + "://" + c.Name() + "-kube-apiserver:" + format.String(env.inClusterPort),
-		CACrtPath:    env.inClusterCaCertPath,
-		AdminCrtPath: env.inClusterAdminCertPath,
-		AdminKeyPath: env.inClusterAdminKeyPath,
-	}))
+	var inClusterKubeconfigData []byte
+	if c.isHostNetwork {
+		inClusterKubeconfigData, err = kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
+			ProjectName:  c.Name(),
+			SecurePort:   conf.SecurePort,
+			Address:      env.scheme + "://" + utilsnet.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
+			CACrtPath:    env.inClusterCaCertPath,
+			AdminCrtPath: env.inClusterAdminCertPath,
+			AdminKeyPath: env.inClusterAdminKeyPath,
+		}))
+	} else {
+		inClusterKubeconfigData, err = kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
+			ProjectName:  c.Name(),
+			SecurePort:   conf.SecurePort,
+			Address:      env.scheme + "://" + c.Name() + "-kube-apiserver:" + format.String(env.inClusterPort),
+			CACrtPath:    env.inClusterCaCertPath,
+			AdminCrtPath: env.inClusterAdminCertPath,
+			AdminKeyPath: env.inClusterAdminKeyPath,
+		}))
+	}
 	if err != nil {
 		return err
 	}
@@ -292,9 +330,11 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 		return err
 	}
 
-	err = c.createNetwork(ctx)
-	if err != nil {
-		return err
+	if !c.isHostNetwork {
+		err = c.createNetwork(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = wait.Poll(ctx, func(ctx context.Context) (bool, error) {
@@ -324,9 +364,11 @@ func (c *Cluster) Uninstall(ctx context.Context) error {
 		return err
 	}
 
-	err = c.deleteNetwork(ctx)
-	if err != nil {
-		return err
+	if !c.isHostNetwork {
+		err = c.deleteNetwork(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = c.Cluster.Uninstall(ctx)

@@ -48,7 +48,7 @@ func BuildJaegerComponent(conf BuildJaegerComponentConfig) (component internalve
 		"--collector.otlp.enabled=true",
 	)
 
-	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+	if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 		ports = append(
 			ports,
 			internalversion.Port{
