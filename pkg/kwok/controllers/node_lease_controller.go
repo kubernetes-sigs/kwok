@@ -236,10 +236,8 @@ func (c *NodeLeaseController) onNodeManaged(nodeName string) {
 // ensureLease creates a lease if it does not exist
 func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string) (*coordinationv1.Lease, error) {
 	lease := &coordinationv1.Lease{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      leaseName,
-			Namespace: corev1.NamespaceNodeLease,
-		},
+		Name:      leaseName,
+		Namespace: corev1.NamespaceNodeLease,
 		Spec: coordinationv1.LeaseSpec{
 			HolderIdentity:       &c.holderIdentity,
 			LeaseDurationSeconds: new(int32(c.leaseDurationSeconds)),

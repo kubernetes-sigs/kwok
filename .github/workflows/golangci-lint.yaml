@@ -6,7 +6,7 @@ on:
     - main
 
 env:
-  GOLANGCI_VERSION: "2.12.2"
+  GOLANGCI_VERSION: "2.13.2"
 
 permissions:
   contents: read

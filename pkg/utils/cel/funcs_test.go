@@ -57,9 +57,7 @@ func TestUnixSecond(t *testing.T) {
 
 func TestSinceSecond(t *testing.T) {
 	n := &corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			CreationTimestamp: metav1.Time{Time: expectedTime},
-		},
+		CreationTimestamp: metav1.Time{Time: expectedTime},
 	}
 	refVal := runAndCheckExpressionWithData(t, "SinceSecond(node)", map[string]any{
 		"node": n,

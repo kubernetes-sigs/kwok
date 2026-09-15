@@ -22,7 +22,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	json "encoding/json"
+	jsontext "encoding/json/jsontext"
 
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -51,7 +51,7 @@ func (in *ResourcePatch) DeepCopyInto(out *ResourcePatch) {
 	out.Target = in.Target
 	if in.Template != nil {
 		in, out := &in.Template, &out.Template
-		*out = make(json.RawMessage, len(*in))
+		*out = make(jsontext.Value, len(*in))
 		copy(*out, *in)
 	}
 	return

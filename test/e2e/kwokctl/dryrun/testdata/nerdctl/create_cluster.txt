@@ -4,9 +4,9 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 nerdctl pull registry.k8s.io/etcd:3.6.10-0
-nerdctl pull registry.k8s.io/kube-apiserver:v1.36.1
-nerdctl pull registry.k8s.io/kube-controller-manager:v1.36.1
-nerdctl pull registry.k8s.io/kube-scheduler:v1.36.1
+nerdctl pull registry.k8s.io/kube-apiserver:v1.37.0
+nerdctl pull registry.k8s.io/kube-controller-manager:v1.37.0
+nerdctl pull registry.k8s.io/kube-scheduler:v1.37.0
 nerdctl pull registry.k8s.io/kwok/kwok:v0.9.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
@@ -84,7 +84,7 @@ nerdctl \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
-  registry.k8s.io/kube-apiserver:v1.36.1 \
+  registry.k8s.io/kube-apiserver:v1.37.0 \
   --etcd-prefix=/registry \
   --allow-privileged=true \
   --endpoint-reconciler-type=none \
@@ -119,7 +119,7 @@ nerdctl \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
-  registry.k8s.io/kube-controller-manager:v1.36.1 \
+  registry.k8s.io/kube-controller-manager:v1.37.0 \
   --node-monitor-period=25s \
   --node-monitor-grace-period=3m20s \
   --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
@@ -140,7 +140,7 @@ nerdctl \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
-  registry.k8s.io/kube-scheduler:v1.36.1 \
+  registry.k8s.io/kube-scheduler:v1.37.0 \
   --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
   --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics \
   --bind-address=0.0.0.0 \

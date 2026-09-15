@@ -3,7 +3,7 @@ GOOS=linux \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/linux/amd64/kwok \
   ./cmd/kwok
@@ -12,7 +12,7 @@ GOOS=linux \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/linux/amd64/kwokctl \
   ./cmd/kwokctl
@@ -21,7 +21,7 @@ GOOS=linux \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/linux/arm64/kwok \
   ./cmd/kwok
@@ -30,7 +30,7 @@ GOOS=linux \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/linux/arm64/kwokctl \
   ./cmd/kwokctl
@@ -39,7 +39,7 @@ GOOS=darwin \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/darwin/amd64/kwok \
   ./cmd/kwok
@@ -48,7 +48,7 @@ GOOS=darwin \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/darwin/amd64/kwokctl \
   ./cmd/kwokctl
@@ -57,7 +57,7 @@ GOOS=darwin \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/darwin/arm64/kwok \
   ./cmd/kwok
@@ -66,7 +66,7 @@ GOOS=darwin \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/darwin/arm64/kwokctl \
   ./cmd/kwokctl
@@ -75,7 +75,7 @@ GOOS=windows \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/windows/amd64/kwok.exe \
   ./cmd/kwok
@@ -84,7 +84,7 @@ GOOS=windows \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/windows/amd64/kwokctl.exe \
   ./cmd/kwokctl
@@ -93,7 +93,7 @@ GOOS=windows \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/windows/arm64/kwok.exe \
   ./cmd/kwok
@@ -102,7 +102,7 @@ GOOS=windows \
   go \
   build \
   -ldflags \
-  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.36.1 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
+  '-X sigs.k8s.io/kwok/pkg/consts.Version=<VERSION> -X sigs.k8s.io/kwok/pkg/consts.KubeVersion=v1.37.0 -X sigs.k8s.io/kwok/pkg/consts.ImagePrefix=image-prefix' \
   -o \
   ./bin/windows/arm64/kwokctl.exe \
   ./cmd/kwokctl

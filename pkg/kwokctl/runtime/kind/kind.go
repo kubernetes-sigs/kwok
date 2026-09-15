@@ -23,7 +23,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -472,10 +471,8 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 	}
 
 	c := kindv1alpha4.Cluster{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Cluster",
-			APIVersion: "kind.x-k8s.io/v1alpha4",
-		},
+		Kind:          "Cluster",
+		APIVersion:    "kind.x-k8s.io/v1alpha4",
 		FeatureGates:  featureGates,
 		RuntimeConfig: runtimeConfig,
 
@@ -497,10 +494,8 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 
 func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta3.ClusterConfiguration, error) {
 	c := kubeadmv1beta3.ClusterConfiguration{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ClusterConfiguration",
-			APIVersion: "kubeadm.k8s.io/v1beta3",
-		},
+		Kind:       "ClusterConfiguration",
+		APIVersion: "kubeadm.k8s.io/v1beta3",
 		Etcd: kubeadmv1beta3.Etcd{
 			Local: &kubeadmv1beta3.LocalEtcd{
 				DataDir: "/var/lib/etcd",

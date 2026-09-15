@@ -18,7 +18,6 @@ package helper
 
 import (
 	rbacv1 "k8s.io/api/rbac/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type ClusterRoleBuilder struct {
@@ -28,7 +27,7 @@ type ClusterRoleBuilder struct {
 func NewClusterRoleBuilder(name string) *ClusterRoleBuilder {
 	return &ClusterRoleBuilder{
 		role: &rbacv1.ClusterRole{
-			ObjectMeta: metav1.ObjectMeta{Name: name},
+			Name: name,
 		},
 	}
 }
@@ -49,7 +48,7 @@ type ClusterRoleBindingBuilder struct {
 func NewClusterRoleBindingBuilder(name string) *ClusterRoleBindingBuilder {
 	return &ClusterRoleBindingBuilder{
 		binding: &rbacv1.ClusterRoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: name},
+			Name: name,
 		},
 	}
 }

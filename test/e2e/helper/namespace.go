@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/e2e-framework/pkg/env"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 )
@@ -37,9 +36,7 @@ func CreateNamespace(name string) env.Func {
 		resource := client.Resources()
 
 		err = resource.Create(ctx, &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
+			Name: name,
 		})
 		if err != nil {
 			return ctx, fmt.Errorf("create namespace func: %w", err)
@@ -64,9 +61,7 @@ func DeleteNamespace(name string) env.Func {
 
 		resource := client.Resources()
 		err = resource.Delete(ctx, &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
+			Name: name,
 		})
 		if err != nil {
 			return ctx, fmt.Errorf("delete namespace func: %w", err)

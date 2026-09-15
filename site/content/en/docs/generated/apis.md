@@ -2340,6 +2340,11 @@ HostPathType
 </thead>
 <tbody>
 <tr>
+<td><code>&#34;&#34;</code></td>
+<td><p>For backwards compatible, leave it empty if unset</p>
+</td>
+</tr>
+<tr>
 <td><code>&#34;BlockDevice&#34;</code></td>
 <td><p>A block device must exist at the given path</p>
 </td>
@@ -2374,11 +2379,6 @@ as needed with file mode 0644, having the same group and ownership with Kubelet.
 <tr>
 <td><code>&#34;Socket&#34;</code></td>
 <td><p>A UNIX socket must exist at the given path</p>
-</td>
-</tr>
-<tr>
-<td><code>&#34;&#34;</code></td>
-<td><p>For backwards compatible, leave it empty if unset</p>
 </td>
 </tr>
 </tbody>

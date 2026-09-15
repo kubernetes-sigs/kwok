@@ -44,9 +44,7 @@ func TestStageController(t *testing.T) {
 	scheme.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.PersistentVolume{})
 	client := fake.NewSimpleDynamicClient(scheme,
 		&corev1.PersistentVolume{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "pv-0",
-			},
+			Name: "pv-0",
 			Status: corev1.PersistentVolumeStatus{
 				Phase: corev1.VolumePending,
 			},
@@ -57,9 +55,7 @@ func TestStageController(t *testing.T) {
 
 	lc, _ := lifecycle.NewLifecycle([]*internalversion.Stage{
 		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "pv-available",
-			},
+			Name: "pv-available",
 			Spec: internalversion.StageSpec{
 				Selector: &internalversion.StageSelector{
 					MatchExpressions: []internalversion.MatchExpression{
@@ -139,9 +135,7 @@ func TestStageControllerWithCreateStep(t *testing.T) {
 	scheme.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.PersistentVolume{})
 	client := fake.NewSimpleDynamicClient(scheme,
 		&corev1.PersistentVolume{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "pv-0",
-			},
+			Name: "pv-0",
 		},
 	)
 
@@ -149,9 +143,7 @@ func TestStageControllerWithCreateStep(t *testing.T) {
 
 	lc, _ := lifecycle.NewLifecycle([]*internalversion.Stage{
 		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "pv-create",
-			},
+			Name: "pv-create",
 			Spec: internalversion.StageSpec{
 				Selector: &internalversion.StageSelector{
 					MatchExpressions: []internalversion.MatchExpression{

@@ -34,7 +34,7 @@ var (
 
 	// KubeVersion is the version of Kubernetes.
 	// It will be overwritten during the `make build` process.
-	KubeVersion                = "1.36.1"
+	KubeVersion                = "1.37.0"
 	KubeBinaryPrefix           = "https://dl.k8s.io/release"
 	KubeBinaryUnofficialPrefix = "https://github.com/kwok-ci/k8s/releases/download"
 	KubeImagePrefix            = "registry.k8s.io"
@@ -44,7 +44,7 @@ var (
 	KectlVersion      = "0.0.10"
 	KectlBinaryPrefix = "https://github.com/kwok-ci/kectl/releases/download"
 
-	KindVersion         = "0.32.0"
+	KindVersion         = "0.33.0"
 	KindBinaryPrefix    = "https://github.com/kubernetes-sigs/kind/releases/download"
 	KindNodeImagePrefix = "docker.io/kindest"
 

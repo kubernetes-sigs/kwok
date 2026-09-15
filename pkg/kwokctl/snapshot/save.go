@@ -327,8 +327,8 @@ func (s *Saver) buildResourcePatch(ctx context.Context, event watch.Event, patch
 		}
 		return nil, fmt.Errorf("error status: %s: %s", obj.Reason, obj.Message)
 	case metav1.Object:
-		rp := recording.ResourcePatch{}
-		rp.TypeMeta = recording.ResourcePatchType
+		rp := recording.ResourcePatch{
+			TypeMeta: recording.ResourcePatchType}
 		rp.SetTargetGroupVersionResource(gvr)
 		rp.SetTargetName(obj.GetName(), obj.GetNamespace())
 		now := s.clock.Now()

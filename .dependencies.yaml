@@ -7,7 +7,7 @@ dependencies:
     match: sigs.k8s.io/zeitgeist@v
 
 - name: "golang"
-  version: 1.26.0
+  version: 1.27.1
   refPaths:
   - path: go.mod
     match: "go "
@@ -17,7 +17,7 @@ dependencies:
     match: "GO_VERSION="
 
 - name: "golangci"
-  version: 2.12.2
+  version: 2.13.2
   refPaths:
   - path: .github/workflows/golangci-lint.yaml
     match: "GOLANGCI_VERSION: "
@@ -27,7 +27,7 @@ dependencies:
     match: "golangci-lint@v"
 
 - name: "kind"
-  version: 0.32.0
+  version: 0.33.0
   refPaths:
   - path: hack/requirements.sh
     match: "KIND_VERSION="
@@ -35,7 +35,7 @@ dependencies:
     match: "KindVersion"
 
 - name: "kubernetes"
-  version: 1.36.1
+  version: 1.37.0
   refPaths:
   - path: supported_releases.txt
     match: ""
@@ -45,7 +45,7 @@ dependencies:
     match: "KUBE_VERSION="
 
 - name: "kubernetes-library"
-  version: 0.36.1
+  version: 0.37.0
   refPaths:
   - path: go.mod
     match: k8s.io

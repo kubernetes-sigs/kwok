@@ -21,8 +21,6 @@ import (
 )
 
 // lists from https://github.com/kubernetes/kubernetes/blob/493c5a49deef9bb85842f8d7b154b546505fd594/cmd/kubeadm/app/constants/constants.go#L510
-//
-//nolint:goconst
 var etcdVersions = map[int]string{
 	8:  "3.0.17",
 	9:  "3.1.12",

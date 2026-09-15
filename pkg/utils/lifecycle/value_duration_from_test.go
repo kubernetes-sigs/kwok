@@ -75,9 +75,7 @@ func Test_newDurationFrom_Get(t *testing.T) {
 				},
 				event: &Event{
 					Data: &corev1.Pod{
-						ObjectMeta: metav1.ObjectMeta{
-							DeletionTimestamp: &nowPlugOneSecond,
-						},
+						DeletionTimestamp: &nowPlugOneSecond,
 					},
 				},
 			},
@@ -93,9 +91,7 @@ func Test_newDurationFrom_Get(t *testing.T) {
 				},
 				event: &Event{
 					Data: &corev1.Pod{
-						ObjectMeta: metav1.ObjectMeta{
-							Annotations: map[string]string{"custom-duration": "7s"},
-						},
+						Annotations: map[string]string{"custom-duration": "7s"},
 					},
 				},
 			},
@@ -111,9 +107,7 @@ func Test_newDurationFrom_Get(t *testing.T) {
 				},
 				event: &Event{
 					Data: &corev1.Pod{
-						ObjectMeta: metav1.ObjectMeta{
-							Annotations: map[string]string{"custom-duration": "7s"},
-						},
+						Annotations: map[string]string{"custom-duration": "7s"},
 					},
 				},
 			},

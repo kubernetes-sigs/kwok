@@ -64,10 +64,8 @@ func ConvertToPod(component internalversion.Component) corev1.Pod {
 			s.Type = new(corev1.HostPathFile)
 		}
 		volumes = append(volumes, corev1.Volume{
-			Name: name,
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &s,
-			},
+			Name:     name,
+			HostPath: &s,
 		})
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
 			Name:      name,
@@ -77,14 +75,10 @@ func ConvertToPod(component internalversion.Component) corev1.Pod {
 	}
 
 	p := corev1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      component.Name,
-			Namespace: metav1.NamespaceSystem,
-		},
+		Kind:       "Pod",
+		APIVersion: "v1",
+		Name:       component.Name,
+		Namespace:  metav1.NamespaceSystem,
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{

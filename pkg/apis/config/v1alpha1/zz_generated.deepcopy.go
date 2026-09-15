@@ -22,7 +22,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	json "encoding/json"
+	jsontext "encoding/json/jsontext"
 
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -448,7 +448,7 @@ func (in *KwokctlResource) DeepCopyInto(out *KwokctlResource) {
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
 	if in.Parameters != nil {
 		in, out := &in.Parameters, &out.Parameters
-		*out = make(json.RawMessage, len(*in))
+		*out = make(jsontext.Value, len(*in))
 		copy(*out, *in)
 	}
 	return

@@ -18,7 +18,6 @@ package helper
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // NodeBuilder is a builder to build a node.
@@ -30,15 +29,13 @@ type NodeBuilder struct {
 func NewNodeBuilder(name string) *NodeBuilder {
 	return &NodeBuilder{
 		node: &corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-				Annotations: map[string]string{
-					"kwok.x-k8s.io/node":                   "fake",
-					"metrics.k8s.io/resource-metrics-path": "/metrics/nodes/" + name + "/metrics/resource",
-				},
-				Labels: map[string]string{
-					"type": "kwok",
-				},
+			Name: name,
+			Annotations: map[string]string{
+				"kwok.x-k8s.io/node":                   "fake",
+				"metrics.k8s.io/resource-metrics-path": "/metrics/nodes/" + name + "/metrics/resource",
+			},
+			Labels: map[string]string{
+				"type": "kwok",
 			},
 			Spec: corev1.NodeSpec{
 				PodCIDR: "10.10.0.0/24",

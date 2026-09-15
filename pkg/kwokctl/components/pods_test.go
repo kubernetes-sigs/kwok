@@ -73,11 +73,9 @@ func TestConvertToPod(t *testing.T) {
 					Volumes: []corev1.Volume{
 						{
 							Name: "v1",
-							VolumeSource: corev1.VolumeSource{
-								HostPath: &corev1.HostPathVolumeSource{
-									Path: "/tmp",
-									Type: new(corev1.HostPathFile),
-								},
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/tmp",
+								Type: new(corev1.HostPathFile),
 							},
 						},
 					},
@@ -134,7 +132,7 @@ func TestConvertFromPod(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Name: "n1", Namespace: "kube-system"},
 					Spec: corev1.PodSpec{
 						Volumes: []corev1.Volume{
-							{Name: "v1", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/tmp"}}},
+							{Name: "v1", HostPath: &corev1.HostPathVolumeSource{Path: "/tmp"}},
 						},
 						SecurityContext: &corev1.PodSecurityContext{
 							RunAsUser:  new(int64),

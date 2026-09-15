@@ -23,7 +23,7 @@ import (
 
 // Encoder is a YAML encoder.
 type Encoder struct {
-	printCount int64
+	printCount atomic.Int64
 	w          io.Writer
 }
 
@@ -38,7 +38,7 @@ var separator = []byte("---\n")
 
 // Encode prints the object as YAML.
 func (p *Encoder) Encode(obj any) error {
-	count := atomic.AddInt64(&p.printCount, 1)
+	count := p.printCount.Add(1)
 	if count > 1 {
 		if _, err := p.w.Write(separator); err != nil {
 			return err

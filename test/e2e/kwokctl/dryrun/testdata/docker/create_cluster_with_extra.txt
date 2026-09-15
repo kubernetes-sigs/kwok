@@ -4,9 +4,9 @@ mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 # Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
 mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
 docker pull registry.k8s.io/etcd:3.6.10-0
-docker pull registry.k8s.io/kube-apiserver:v1.36.1
-docker pull registry.k8s.io/kube-controller-manager:v1.36.1
-docker pull registry.k8s.io/kube-scheduler:v1.36.1
+docker pull registry.k8s.io/kube-apiserver:v1.37.0
+docker pull registry.k8s.io/kube-controller-manager:v1.37.0
+docker pull registry.k8s.io/kube-scheduler:v1.37.0
 docker pull registry.k8s.io/kwok/kwok:v0.9.0
 docker pull docker.io/prom/prometheus:v3.12.0
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
@@ -166,7 +166,7 @@ docker \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
   --volume=<ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/apiserver:/extras/tmp \
   --env=TEST_KEY=TEST_VALUE \
-  registry.k8s.io/kube-apiserver:v1.36.1 \
+  registry.k8s.io/kube-apiserver:v1.37.0 \
   --etcd-prefix=/registry \
   --allow-privileged=true \
   --endpoint-reconciler-type=none \
@@ -206,7 +206,7 @@ docker \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
   --volume=<ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/controller-manager:/extras/tmp \
   --env=TEST_KEY=TEST_VALUE \
-  registry.k8s.io/kube-controller-manager:v1.36.1 \
+  registry.k8s.io/kube-controller-manager:v1.37.0 \
   --node-monitor-period=25s \
   --node-monitor-grace-period=3m20s \
   --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
@@ -233,7 +233,7 @@ docker \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
   --volume=<ROOT_DIR>/test/e2e/kwokctl/dryrun/extras/scheduler:/extras/tmp \
   --env=TEST_KEY=TEST_VALUE \
-  registry.k8s.io/kube-scheduler:v1.36.1 \
+  registry.k8s.io/kube-scheduler:v1.37.0 \
   --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
   --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics \
   --bind-address=0.0.0.0 \
