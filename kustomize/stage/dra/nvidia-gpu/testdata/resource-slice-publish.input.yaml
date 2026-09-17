@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-node-0
+  uid: "aaaa-bbbb-cccc-dddd"
+  annotations:
+    kwok.x-k8s.io/node: fake
+    kwok.x-k8s.io/dra-nvidia-gpu: "2"
+  labels:
+    type: kwok
+status:
+  phase: Running
+  conditions:
+  - type: Ready
+    status: "True"

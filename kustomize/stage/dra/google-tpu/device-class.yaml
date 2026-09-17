@@ -1,0 +1,9 @@
+apiVersion: resource.k8s.io/v1
+kind: DeviceClass
+metadata:
+  name: tpu.google.com
+spec:
+  selectors:
+  - cel:
+      expression: >-
+        device.driver == "tpu.google.com"

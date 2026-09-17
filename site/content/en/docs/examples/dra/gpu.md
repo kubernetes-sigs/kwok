@@ -1,38 +1,23 @@
 ---
-title: "DRA"
+title: "GPU"
 ---
 
-# DRA (Dynamic Resource Allocation)
+# Simulate GPUs
 
-More information about DRA can be found at [here](https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/).
+Simulates a fake GPU driver named `gpu.kwok.x-k8s.io` with the [GPU simulation stages].
+See [Setup Cluster] first.
 
-## Setup Cluster
+## Install the GPU Simulation Stages
 
-Create a cluster with DRA feature enabled
 ```bash
-kwokctl create cluster --kube-feature-gates="kube:DynamicResourceAllocation=true" --kube-runtime-config="resource.k8s.io/v1beta1=true"
+kubectl apply -k "https://github.com/kubernetes-sigs/kwok/kustomize/stage/dra/gpu"
 ```
-
-## Create Device Class
-
-Create a DeviceClass for GPU resources
-```bash
-kubectl apply -f - <<EOF
-apiVersion: resource.k8s.io/v1beta1
-kind: DeviceClass
-metadata:
-  name: kwok.x-k8s.io
-spec:
-  selectors:
-  - cel:
-      expression: device.driver == 'gpu.kwok.x-k8s'
-EOF
-```
-
 
 ## Create GPU Node
 
-Create a fake GPU node
+Create a fake GPU node with the `kwok.x-k8s.io/dra-gpu` annotation set to the number of fake GPUs.
+Optionally, the `kwok.x-k8s.io/dra-gpu-memory` annotation sets the memory capacity of each device (defaults to `16Gi`).
+
 ```bash
 kubectl apply -f - <<EOF
 apiVersion: v1
@@ -41,6 +26,8 @@ metadata:
   annotations:
     node.alpha.kubernetes.io/ttl: "0"
     kwok.x-k8s.io/node: fake
+    kwok.x-k8s.io/dra-gpu: "8"
+    kwok.x-k8s.io/dra-gpu-memory: "24Gi"
   labels:
     beta.kubernetes.io/arch: amd64
     beta.kubernetes.io/os: linux
@@ -61,12 +48,10 @@ status:
     cpu: 96
     memory: 1T
     pods: 110
-    kwok.x-k8s.io/gpu: 8
   capacity:
     cpu: 96
     memory: 1T
     pods: 110
-    kwok.x-k8s.io/gpu: 8
   nodeInfo:
     architecture: amd64
     bootID: ""
@@ -81,55 +66,24 @@ status:
   phase: Running
 EOF
 ```
-## Create Resource Slice
 
-Create a ResourceSlice representing a GPU device
+## Check Resource Slice
+
+The `gpu-resource-slice-publish` Stage publishes a ResourceSlice for the node
 ```bash
-kubectl apply -f - <<EOF
-apiVersion: resource.k8s.io/v1beta1
-kind: ResourceSlice
-metadata:
-  name: kwok-node-0.internal-gpu.kwok.copc4l8
-spec:
-  devices:
-  - basic:
-      attributes:
-        architecture:
-          string: Ada Lovelace
-        brand:
-          string: Kwok
-        cudaComputeCapability:
-          version: 8.9.0
-        cudaDriverVersion:
-          version: 12.9.0
-        driverVersion:
-          version: 575.57.8
-        index:
-          int: 0
-        minor:
-          int: 0
-        productName:
-          string: Kwok L4
-        type:
-          string: gpu
-      capacity:
-        memory:
-          value: 23034Mi
-    name: gpu-0
-  driver: gpu.kwok.x-k8s
-  nodeName: kwok-node-0
-  pool:
-    name: kwok-node-0
-    resourceSliceCount: 1
-EOF
+kubectl get resourceslice
+NAME                            NODE          DRIVER              POOL          AGE
+kwok-node-0-gpu.kwok.x-k8s.io   kwok-node-0   gpu.kwok.x-k8s.io   kwok-node-0   1s
 ```
+
+The ResourceSlice is owned by the node, so it will be garbage collected when the node is deleted.
 
 ## Create Resource Claim Template
 
 Create a ResourceClaimTemplate for requesting a single GPU
 ```bash
 kubectl apply -f - <<EOF
-apiVersion: resource.k8s.io/v1beta1
+apiVersion: resource.k8s.io/v1
 kind: ResourceClaimTemplate
 metadata:
   name: single-gpu
@@ -138,7 +92,8 @@ spec:
     devices:
       requests:
       - name: gpu
-        deviceClassName: kwok.x-k8s.io
+        exactly:
+          deviceClassName: gpu.kwok.x-k8s.io
 EOF
 ```
 
@@ -196,7 +151,6 @@ NAME                                   STATE                AGE
 fake-pod-7589f9b49f-pcjtg-gpu0-qjzpj   allocated,reserved   61m
 ```
 
-
 ## Check Pod
 
 To check the status of the Pod
@@ -205,3 +159,6 @@ kubectl get pod
 NAME                        READY   STATUS    RESTARTS   AGE
 fake-pod-7589f9b49f-pcjtg   1/1     Running   0          61m
 ```
+
+[GPU simulation stages]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/stage/dra/gpu
+[Setup Cluster]: {{< relref "/docs/examples/dra#setup-cluster" >}}

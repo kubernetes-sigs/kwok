@@ -1,0 +1,52 @@
+apiGroup: v1
+kind: Node
+name: kwok-node-0
+stages:
+- next:
+  - data:
+      apiVersion: resource.k8s.io/v1
+      kind: ResourceSlice
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-google-tpu: "2"
+          kwok.x-k8s.io/dra-google-tpu-gen: v6e
+        name: kwok-node-0-tpu.google.com
+        ownerReferences:
+        - apiVersion: v1
+          kind: Node
+          name: kwok-node-0
+          uid: aaaa-bbbb-cccc-dddd
+      spec:
+        devices:
+        - attributes:
+            index:
+              int: 0
+            tpuGen:
+              string: v6e
+            uuid:
+              string: tpu-aaaa-bbbb-cccc-dddd
+          name: accel0
+        - attributes:
+            index:
+              int: 1
+            tpuGen:
+              string: v6e
+            uuid:
+              string: tpu-aaaa-bbbb-cccc-dddd
+          name: accel1
+        driver: tpu.google.com
+        nodeName: kwok-node-0
+        pool:
+          generation: 1
+          name: kwok-node-0
+          resourceSliceCount: 1
+    kind: apply
+    type: application/apply-patch+yaml
+  - data:
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-google-tpu-published: v6e/2
+    kind: patch
+    type: application/merge-patch+json
+  stage: google-tpu-resource-slice-publish
+  weight: 0
