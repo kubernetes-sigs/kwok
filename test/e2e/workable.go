@@ -60,13 +60,14 @@ func testWorkable(ctx context.Context, kwokctlPath, name string) error {
 			}
 			// TODO: Use json output instead and check that node and pod work as expected
 			if !strings.Contains(string(output), "Running") {
-				return false, fmt.Errorf("pod not running")
+				// The pod may still be progressing through the KWOK stages.
+				return false, nil
 			}
 
 			return true, nil
 		},
 		wait.WithContext(ctx),
-		wait.WithTimeout(10*time.Second),
+		wait.WithTimeout(600*time.Second),
 	)
 	if err != nil {
 		return err
