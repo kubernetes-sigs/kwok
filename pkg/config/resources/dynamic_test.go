@@ -52,16 +52,23 @@ func (s *fakeSyncer) Watch(_ context.Context, opts metav1.ListOptions) (watch.In
 	return s.watcher, nil
 }
 
+// newConfigMap returns a ConfigMap with the given name and resource version.
+func newConfigMap(name, resourceVersion string) *corev1.ConfigMap {
+	obj := &corev1.ConfigMap{}
+	obj.Name = name
+	obj.ResourceVersion = resourceVersion
+	return obj
+}
+
 func TestDynamicGetterVersionFollowsStore(t *testing.T) {
 	ctx := t.Context()
 
+	list := &corev1.ConfigMapList{}
+	list.ResourceVersion = "1"
+	list.Items = []corev1.ConfigMap{*newConfigMap("a", "1")}
+
 	syncer := &fakeSyncer{
-		list: &corev1.ConfigMapList{
-			ListMeta: metav1.ListMeta{ResourceVersion: "1"},
-			Items: []corev1.ConfigMap{
-				{ObjectMeta: metav1.ObjectMeta{Name: "a", ResourceVersion: "1"}},
-			},
-		},
+		list:    list,
 		watcher: watch.NewFake(),
 	}
 
@@ -108,17 +115,19 @@ func TestDynamicGetterVersionFollowsStore(t *testing.T) {
 	expect([]string{"a"})
 
 	version := getter.Version()
-	syncer.watcher.Add(&corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "b", ResourceVersion: "2"}})
+	syncer.watcher.Add(newConfigMap("b", "2"))
 	waitForVersionChange(version)
 	expect([]string{"a", "b"})
 
 	version = getter.Version()
-	syncer.watcher.Modify(&corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "b", ResourceVersion: "3", Labels: map[string]string{"k": "v"}}})
+	modified := newConfigMap("b", "3")
+	modified.Labels = map[string]string{"k": "v"}
+	syncer.watcher.Modify(modified)
 	waitForVersionChange(version)
 	expect([]string{"a", "b"})
 
 	version = getter.Version()
-	syncer.watcher.Delete(&corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "a", ResourceVersion: "4"}})
+	syncer.watcher.Delete(newConfigMap("a", "4"))
 	waitForVersionChange(version)
 	expect([]string{"b"})
 
