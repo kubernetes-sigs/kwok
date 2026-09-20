@@ -18,6 +18,8 @@ package resources
 
 import (
 	"context"
+	"strconv"
+	"sync/atomic"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -64,6 +66,11 @@ type dynamicGetter[O any, T runtime.Object, L runtime.Object] struct {
 
 	store      cache.Store
 	controller cache.Controller
+
+	// version is bumped by the informer event handlers, which run after the
+	// store has been updated, so a Getter that caches on Version() never
+	// keeps a snapshot that is missing an object the store already has.
+	version atomic.Uint64
 }
 
 func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
@@ -80,13 +87,13 @@ func (c *dynamicGetter[O, T, L]) Start(ctx context.Context) error {
 		ObjectType: t,
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj any) {
-				c.sync()
+				c.update()
 			},
 			UpdateFunc: func(oldObj, newObj any) {
-				c.sync()
+				c.update()
 			},
 			DeleteFunc: func(obj any) {
-				c.sync()
+				c.update()
 			},
 		},
 	})
@@ -108,12 +115,25 @@ func (c *dynamicGetter[O, T, L]) Get() O {
 	return data
 }
 
+// Version returns a value that changes whenever the store has changed.
+//
+// It is deliberately not the informer's LastSyncResourceVersion: the reflector
+// advances that as soon as an event is queued, before the object is written to
+// the store, so a Get in that window would cache a snapshot without the object
+// under the new version and keep returning it until the next event.
 func (c *dynamicGetter[O, T, L]) Version() string {
-	return c.controller.LastSyncResourceVersion()
+	return strconv.FormatUint(c.version.Load(), 10)
 }
 
 func (c *dynamicGetter[O, T, L]) Sync() <-chan struct{} {
 	return c.syncCh
+}
+
+// update is called by the informer event handlers once the store has been
+// updated, and invalidates the cached snapshot before waking up the consumers.
+func (c *dynamicGetter[O, T, L]) update() {
+	c.version.Add(1)
+	c.sync()
 }
 
 func (c *dynamicGetter[O, T, L]) sync() {
