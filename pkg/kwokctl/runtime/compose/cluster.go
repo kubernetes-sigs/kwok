@@ -35,6 +35,7 @@ type Cluster struct {
 
 	isNerdctl               bool
 	canNerdctlUnlessStopped *bool
+	isHostNetwork           bool
 }
 
 // NewDockerCluster creates a new Runtime for docker.
@@ -77,6 +78,15 @@ func NewFinchCluster(name, workdir string) (runtime.Runtime, error) {
 		Cluster:   runtime.NewCluster(name, workdir),
 		runtime:   consts.RuntimeTypeFinch,
 		isNerdctl: true,
+	}, nil
+}
+
+// NewDockerHostCluster creates a new Runtime for docker with host networking.
+func NewDockerHostCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster:       runtime.NewCluster(name, workdir),
+		runtime:       consts.RuntimeTypeDocker,
+		isHostNetwork: true,
 	}, nil
 }
 
