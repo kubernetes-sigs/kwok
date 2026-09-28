@@ -19,12 +19,16 @@ package e2e
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 	"testing"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
@@ -41,17 +45,33 @@ import (
 //go:embed jsonpatch.yaml
 var jsonpatchCase []byte
 
-// CaseJsonpatch creates a feature that tests jsonpatch
-func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
-	const key = "kwok.x-k8s.io/test-jsonpatch-available"
+const (
+	// jsonpatchKey is the annotation the Stages in jsonpatch.yaml select on.
+	jsonpatchKey = "kwok.x-k8s.io/test-jsonpatch-available"
+	// jsonpatchTouchKey is an annotation that is rewritten to trigger a new
+	// event for an object without changing anything the Stages select on.
+	jsonpatchTouchKey = "kwok.x-k8s.io/test-jsonpatch-touch"
+	// jsonpatchTimeout bounds each wait for a Stage patch to be applied.
+	jsonpatchTimeout = 2 * time.Minute
+)
 
+// CaseJsonpatch creates a feature that tests jsonpatch.
+//
+// kwok matches Stages against an object only when it receives an event for
+// that object, and nothing re-evaluates existing objects when the set of
+// Stages changes. The Stages created here can therefore become effective
+// after the last event of their target has already been processed, in which
+// case the target is never patched on its own. Every wait in this feature
+// touches its target between polls so that kwok evaluates it again against
+// the Stages it currently has.
+func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 	node := helper.NewNodeBuilder(nodeName).
-		WithAnnotation(key, "status").
+		WithAnnotation(jsonpatchKey, "status").
 		Build()
 	pod0 := helper.NewPodBuilder("pod0").
 		WithNamespace(namespace).
 		WithNodeName(nodeName).
-		WithAnnotation(key, "status").
+		WithAnnotation(jsonpatchKey, "status").
 		Build()
 
 	return features.New("Jsonpatch Stage").
@@ -88,26 +108,25 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 				ss = append(ss, s)
 			}
 
-			err = wait.For(
-				func(ctx context.Context) (done bool, err error) {
-					var item v1alpha1.Stage
-					if err = client.Get(ctx, ss[0].Name, ss[0].Namespace, &item); err != nil {
-						logger.Error("failed to list stage",
-							"err", err,
-						)
-						return false, nil
-					}
+			// The first Stage selects itself, so it is both a rule and a
+			// target and can be processed as a target before it is visible
+			// as a rule.
+			err = waitForJsonpatch(ctx, client, ss[0], func(ctx context.Context) (bool, error) {
+				var item v1alpha1.Stage
+				if err := client.Get(ctx, ss[0].Name, ss[0].Namespace, &item); err != nil {
+					logger.Error("failed to get stage",
+						"err", err,
+					)
+					return false, nil
+				}
 
-					if item.Annotations[key] != "True" {
-						logger.Info("waiting for stage to be ready")
-						return false, nil
-					}
+				if item.Annotations[jsonpatchKey] != "True" {
+					logger.Info("waiting for stage to be patched")
+					return false, nil
+				}
 
-					return true, nil
-				},
-				wait.WithContext(ctx),
-				wait.WithTimeout(600*time.Second),
-			)
+				return true, nil
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -124,26 +143,22 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 
 			logger := log.FromContext(ctx)
 
-			err = wait.For(
-				func(ctx context.Context) (done bool, err error) {
-					var item corev1.Node
-					if err = client.Get(ctx, node.Name, node.Namespace, &item); err != nil {
-						logger.Error("failed to list node",
-							"err", err,
-						)
-						return false, nil
-					}
+			err = waitForJsonpatch(ctx, client, node, func(ctx context.Context) (bool, error) {
+				var item corev1.Node
+				if err := client.Get(ctx, node.Name, node.Namespace, &item); err != nil {
+					logger.Error("failed to get node",
+						"err", err,
+					)
+					return false, nil
+				}
 
-					if item.Status.Phase != corev1.NodeTerminated {
-						logger.Info("waiting for node to be changed")
-						return false, nil
-					}
+				if item.Status.Phase != corev1.NodeTerminated {
+					logger.Info("waiting for node to be patched")
+					return false, nil
+				}
 
-					return true, nil
-				},
-				wait.WithContext(ctx),
-				wait.WithTimeout(10*time.Second),
-			)
+				return true, nil
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -158,26 +173,22 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 
 			logger := log.FromContext(ctx)
 
-			err = wait.For(
-				func(ctx context.Context) (done bool, err error) {
-					var item corev1.Pod
-					if err = client.Get(ctx, pod0.Name, pod0.Namespace, &item); err != nil {
-						logger.Error("failed to list pod",
-							"err", err,
-						)
-						return false, nil
-					}
+			err = waitForJsonpatch(ctx, client, pod0, func(ctx context.Context) (bool, error) {
+				var item corev1.Pod
+				if err := client.Get(ctx, pod0.Name, pod0.Namespace, &item); err != nil {
+					logger.Error("failed to get pod",
+						"err", err,
+					)
+					return false, nil
+				}
 
-					if item.Status.Phase != corev1.PodFailed {
-						logger.Info("waiting for node to be changed")
-						return false, nil
-					}
+				if item.Status.Phase != corev1.PodFailed {
+					logger.Info("waiting for pod to be patched")
+					return false, nil
+				}
 
-					return true, nil
-				},
-				wait.WithContext(ctx),
-				wait.WithTimeout(10*time.Second),
-			)
+				return true, nil
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -186,4 +197,51 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 		}).
 		Assess("delete pod", helper.DeletePod(pod0)).
 		Assess("delete node", helper.DeleteNode(node))
+}
+
+// waitForJsonpatch waits until check reports that obj has been patched by its
+// Stage. Between polls it touches obj so that kwok receives a new event for it
+// and matches it again against the Stages it currently has, which makes the
+// wait independent of whether the Stage was already loaded when obj was first
+// processed.
+func waitForJsonpatch(ctx context.Context, client *resources.Resources, obj k8s.Object, check func(ctx context.Context) (bool, error)) error {
+	logger := log.FromContext(ctx)
+
+	return wait.For(
+		func(ctx context.Context) (bool, error) {
+			done, err := check(ctx)
+			if err != nil || done {
+				return done, err
+			}
+
+			if err := touchObject(ctx, client, obj); err != nil {
+				logger.Error("failed to touch object",
+					"err", err,
+				)
+			}
+			return false, nil
+		},
+		wait.WithContext(ctx),
+		wait.WithTimeout(jsonpatchTimeout),
+	)
+}
+
+// touchObject rewrites an annotation on obj that no Stage selects on, so that
+// the apiserver emits a new event for obj.
+func touchObject(ctx context.Context, client *resources.Resources, obj k8s.Object) error {
+	data, err := json.Marshal(map[string]any{
+		"metadata": map[string]any{
+			"annotations": map[string]string{
+				jsonpatchTouchKey: strconv.FormatInt(time.Now().UnixNano(), 10),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return client.Patch(ctx, obj, k8s.Patch{
+		PatchType: types.MergePatchType,
+		Data:      data,
+	})
 }
