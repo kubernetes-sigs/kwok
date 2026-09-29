@@ -83,7 +83,7 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
 	for _, port := range ports {
 		if port != nil && *port == 0 {
-			p, err := utilsnet.GetUnusedPort(ctx, used)
+			p, err := c.GetUnusedPort(ctx, used)
 			if err != nil {
 				return err
 			}
