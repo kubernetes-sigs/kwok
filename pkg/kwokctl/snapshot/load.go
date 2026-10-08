@@ -226,22 +226,16 @@ func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 
 	// If there are pending objects waiting for this object, apply them.
 	if pendingObjs, ok := l.pending[key]; ok {
+		delete(l.pending, key)
 		for _, pendingObj := range pendingObjs {
-			// If the pending object has only one owner reference, or all the owner references exist, apply it.
-			if len(pendingObj.GetOwnerReferences()) == 1 || l.hasAllOwnerReferences(pendingObj) {
-				// update owner references
-				l.updateOwnerReferences(pendingObj)
-
-				// apply the object
-				newObj = l.apply(ctx, pendingObj)
-				if newObj != nil {
-					key := uniqueKeyFromMetadata(pendingObj)
-					l.exist[key] = newObj.GetUID()
-				}
+			if _, restored := l.exist[uniqueKeyFromMetadata(pendingObj)]; restored {
+				continue
+			}
+			if l.hasAllOwnerReferences(pendingObj) {
+				// Restoring a dependent can unblock its own dependents.
+				l.load(ctx, pendingObj)
 			}
 		}
-		// Remove the pending objects
-		delete(l.pending, key)
 	}
 }
 
