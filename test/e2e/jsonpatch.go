@@ -19,12 +19,15 @@ package e2e
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"testing"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
@@ -88,6 +91,26 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 				ss = append(ss, s)
 			}
 
+			data, err := json.Marshal(map[string]any{
+				"metadata": map[string]any{
+					"annotations": map[string]string{
+						key: "False",
+					},
+				},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = client.Patch(ctx, ss[0], k8s.Patch{
+				PatchType: types.MergePatchType,
+				Data:      data,
+			})
+
+			if err != nil {
+				t.Fatal(err)
+			}
+
 			err = wait.For(
 				func(ctx context.Context) (done bool, err error) {
 					var item v1alpha1.Stage
@@ -106,7 +129,7 @@ func CaseJsonpatch(nodeName string, namespace string) *features.FeatureBuilder {
 					return true, nil
 				},
 				wait.WithContext(ctx),
-				wait.WithTimeout(600*time.Second),
+				wait.WithTimeout(10*time.Second),
 			)
 			if err != nil {
 				t.Fatal(err)
