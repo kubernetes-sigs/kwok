@@ -17,12 +17,125 @@ limitations under the License.
 package net
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"io"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 )
+
+type errorReader struct {
+	err error
+}
+
+func (r errorReader) Read([]byte) (int, error) {
+	return 0, r.err
+}
+
+type errorWriter struct {
+	err error
+}
+
+func (w errorWriter) Write([]byte) (int, error) {
+	return 0, w.err
+}
+
+func TestTunnelReturnsCopyError(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		writeErr bool
+		reverse  bool
+	}{
+		{name: "first stream read"},
+		{name: "second stream read", reverse: true},
+		{name: "second stream write", writeErr: true},
+		{name: "first stream write", writeErr: true, reverse: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := t.Context()
+			blocked := newBlockedStream()
+			defer blocked.unblock()
+			copyErr := errors.New("copy failed")
+			var reader io.Reader = errorReader{err: copyErr}
+			var writer io.Writer = io.Discard
+			if tc.writeErr {
+				reader = strings.NewReader("request")
+				writer = errorWriter{err: copyErr}
+			}
+			c1 := struct {
+				io.Reader
+				io.Writer
+			}{reader, io.Discard}
+			c2 := struct {
+				io.Reader
+				io.Writer
+			}{blocked, writer}
+			done := make(chan error, 1)
+			go func() {
+				if tc.reverse {
+					done <- Tunnel(ctx, c2, c1, nil, nil)
+				} else {
+					done <- Tunnel(ctx, c1, c2, nil, nil)
+				}
+			}()
+			select {
+			case err := <-done:
+				if !errors.Is(err, copyErr) {
+					t.Fatalf("Tunnel returned %v, want %v", err, copyErr)
+				}
+			case <-time.After(3 * time.Second):
+				t.Fatal("Tunnel waited for the other stream after a copy error")
+			}
+		})
+	}
+}
+
+func TestTunnelDrainsOtherStreamAfterEOF(t *testing.T) {
+	ctx := t.Context()
+	r, w := io.Pipe()
+	defer func() {
+		_ = r.Close()
+		_ = w.Close()
+	}()
+	var response bytes.Buffer
+	c1 := struct {
+		io.Reader
+		io.Writer
+	}{strings.NewReader(""), &response}
+	c2 := struct {
+		io.Reader
+		io.Writer
+	}{r, io.Discard}
+	done := make(chan error, 1)
+	go func() {
+		done <- Tunnel(ctx, c1, c2, nil, nil)
+	}()
+	select {
+	case err := <-done:
+		t.Fatalf("Tunnel returned before the response: %v", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+	if _, err := io.WriteString(w, "response"); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("Tunnel did not return after both streams reached EOF")
+	}
+	if response.String() != "response" {
+		t.Fatalf("response = %q, want %q", response.String(), "response")
+	}
+}
 
 // blockedStream is an io.ReadWriter whose Read blocks until unblock is called,
 // which keeps a Tunnel copy goroutine in flight while the test cancels the
