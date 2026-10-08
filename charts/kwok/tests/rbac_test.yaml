@@ -1,0 +1,29 @@
+suite: rbac
+templates:
+- templates/role.yaml
+- templates/role_binding.yaml
+- templates/service_account.yaml
+- templates/flow_schema.yaml
+release:
+  name: kwok
+  namespace: kube-system
+tests:
+- it: binds the ClusterRole to the chart ServiceAccount in the release namespace
+  release:
+    namespace: kwok-system
+  set:
+    fullnameOverride: fake-kubelet
+  template: templates/role_binding.yaml
+  asserts:
+  - equal:
+      path: roleRef
+      value:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: fake-kubelet
+  - equal:
+      path: subjects
+      value:
+      - kind: ServiceAccount
+        name: fake-kubelet
+        namespace: kwok-system
