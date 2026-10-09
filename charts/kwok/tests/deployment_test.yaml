@@ -1,0 +1,201 @@
+suite: deployment
+templates:
+- templates/deployment.yaml
+release:
+  name: kwok
+  namespace: kube-system
+tests:
+- it: renders nothing when the deployment is disabled
+  set:
+    enableDeployment: false
+  asserts:
+  - hasDocuments:
+      count: 0
+
+- it: sets the replica count
+  set:
+    replicas: 3
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+
+- it: uses the image repository, tag and pull policy from values
+  set:
+    image:
+      repository: registry.example.com/kwok
+      tag: v1.2.3
+      pullPolicy: Always
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].image
+      value: registry.example.com/kwok:v1.2.3
+  - equal:
+      path: spec.template.spec.containers[0].imagePullPolicy
+      value: Always
+
+- it: falls back to the chart appVersion when image.tag is empty
+  chart:
+    appVersion: v9.9.9
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].image
+      value: registry.k8s.io/kwok/kwok:v9.9.9
+
+- it: sets the container and pod security contexts separately
+  set:
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].securityContext
+      value:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+  - equal:
+      path: spec.template.spec.securityContext
+      value:
+        runAsNonRoot: true
+        runAsUser: 65532
+
+- it: sets imagePullSecrets
+  set:
+    imagePullSecrets:
+    - name: regcred
+  asserts:
+  - equal:
+      path: spec.template.spec.imagePullSecrets
+      value:
+      - name: regcred
+
+- it: replaces the default env list instead of appending to it
+  set:
+    env:
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: LOG_LEVEL
+      value: debug
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].env
+      value:
+      - name: POD_IP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      - name: LOG_LEVEL
+        value: debug
+
+- it: appends extra volumes and mounts after the configuration ones
+  set:
+    volumes:
+    - name: stages
+      configMap:
+        name: custom-stages
+    volumeMounts:
+    - name: stages
+      mountPath: /etc/kwok/stages
+      readOnly: true
+  asserts:
+  - lengthEqual:
+      path: spec.template.spec.volumes
+      count: 2
+  - equal:
+      path: spec.template.spec.volumes[0].name
+      value: kwok-config
+  - equal:
+      path: spec.template.spec.volumes[1]
+      value:
+        name: stages
+        configMap:
+          name: custom-stages
+  - lengthEqual:
+      path: spec.template.spec.containers[0].volumeMounts
+      count: 2
+  - equal:
+      path: spec.template.spec.containers[0].volumeMounts[0].name
+      value: kwok-config
+  - equal:
+      path: spec.template.spec.containers[0].volumeMounts[1]
+      value:
+        name: stages
+        mountPath: /etc/kwok/stages
+        readOnly: true
+
+- it: sets the nodeSelector
+  set:
+    nodeSelector:
+      kubernetes.io/os: linux
+  asserts:
+  - equal:
+      path: spec.template.spec.nodeSelector
+      value:
+        kubernetes.io/os: linux
+
+- it: sets the affinity
+  set:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+  asserts:
+  - equal:
+      path: spec.template.spec.affinity
+      value:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+
+- it: replaces the default tolerations
+  set:
+    tolerations:
+    - key: dedicated
+      operator: Equal
+      value: kwok
+      effect: NoSchedule
+  asserts:
+  - equal:
+      path: spec.template.spec.tolerations
+      value:
+      - key: dedicated
+        operator: Equal
+        value: kwok
+        effect: NoSchedule
+
+- it: runs in the host network when hostNetwork is true
+  set:
+    hostNetwork: true
+  asserts:
+  - equal:
+      path: spec.template.spec.hostNetwork
+      value: true
+
+- it: sets the container resources
+  set:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].resources
+      value:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 256Mi
