@@ -398,26 +398,32 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 		args = append(args, "--entrypoint="+entrypoint)
 	}
 
-	network := c.Name()
-	if network != "" {
-		args = append(args, "--network="+network)
+	if c.isHostNetwork {
+		args = append(args, "--network=host")
+	} else {
+		network := c.Name()
+		if network != "" {
+			args = append(args, "--network="+network)
+		}
 	}
 
 	if component.User != "" {
 		args = append(args, "--user="+component.User)
 	}
 
-	switch c.runtime {
-	case consts.RuntimeTypeDocker:
-		for _, link := range component.Links {
-			args = append(args, "--link="+c.Name()+"-"+link)
+	if !c.isHostNetwork {
+		switch c.runtime {
+		case consts.RuntimeTypeDocker:
+			for _, link := range component.Links {
+				args = append(args, "--link="+c.Name()+"-"+link)
+			}
+		case consts.RuntimeTypePodman:
+			for _, link := range component.Links {
+				args = append(args, "--requires="+c.Name()+"-"+link)
+			}
+		default:
+			// Nerdctl does not support --link and --requires
 		}
-	case consts.RuntimeTypePodman:
-		for _, link := range component.Links {
-			args = append(args, "--requires="+c.Name()+"-"+link)
-		}
-	default:
-		// Nerdctl does not support --link and --requires
 	}
 
 	switch c.runtime {
@@ -441,15 +447,17 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 
 	args = append(args, c.labelArgs()...)
 
-	for _, port := range component.Ports {
-		if port.HostPort == 0 {
-			continue
+	if !c.isHostNetwork {
+		for _, port := range component.Ports {
+			if port.HostPort == 0 {
+				continue
+			}
+			protocol := port.Protocol
+			if protocol == "" {
+				protocol = internalversion.ProtocolTCP
+			}
+			args = append(args, "--publish="+format.String(port.HostPort)+":"+format.String(port.Port)+"/"+strings.ToLower(string(protocol)))
 		}
-		protocol := port.Protocol
-		if protocol == "" {
-			protocol = internalversion.ProtocolTCP
-		}
-		args = append(args, "--publish="+format.String(port.HostPort)+":"+format.String(port.Port)+"/"+strings.ToLower(string(protocol)))
 	}
 	for _, volume := range component.Volumes {
 		if volume.ReadOnly {
