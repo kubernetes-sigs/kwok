@@ -35,7 +35,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
 	"sigs.k8s.io/kwok/pkg/utils/format"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
+	"sigs.k8s.io/kwok/pkg/utils/sets"
 	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -67,15 +69,18 @@ type Cluster struct {
 	dryRun  bool
 	conf    *internalversion.KwokctlConfiguration
 
+	lastUnusedPort uint32
+
 	clientset client.Clientset
 }
 
 // NewCluster creates a new cluster
 func NewCluster(name, workdir string) *Cluster {
 	return &Cluster{
-		name:    config.ClusterName(name),
-		workdir: workdir,
-		dryRun:  dryrun.DryRun,
+		name:           config.ClusterName(name),
+		workdir:        workdir,
+		dryRun:         dryrun.DryRun,
+		lastUnusedPort: 32767,
 	}
 }
 
@@ -480,4 +485,19 @@ func (c *Cluster) GetClientset(ctx context.Context) (client.Clientset, error) {
 // IsDryRun returns true if the runtime is in dry-run mode
 func (c *Cluster) IsDryRun() bool {
 	return c.dryRun
+}
+
+// GetUnusedPort returns an unused port on the local machine.
+// In dry-run mode, ports are allocated deterministically without probing the
+// host or considering ports used by other clusters, so that the output is
+// stable regardless of the environment.
+func (c *Cluster) GetUnusedPort(ctx context.Context, used sets.Sets[uint32]) (uint32, error) {
+	if !c.IsDryRun() {
+		return utilsnet.GetUnusedPort(ctx, used)
+	}
+	if c.lastUnusedPort <= 10000 {
+		return 0, fmt.Errorf("unable to get an unused port")
+	}
+	c.lastUnusedPort--
+	return c.lastUnusedPort, nil
 }

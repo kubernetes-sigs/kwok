@@ -194,7 +194,7 @@ func (c *Cluster) KectlInCluster(ctx context.Context, args ...string) error {
 		}, args...)...)
 	}
 
-	unused, err := utilsnet.GetUnusedPort(ctx, nil)
+	unused, err := c.GetUnusedPort(ctx, nil)
 	if err != nil {
 		return err
 	}
