@@ -56,6 +56,7 @@ func (c *Cluster) addNodeReadinessController(ctx context.Context, env *env) (err
 	}
 
 	nodeReadinessControllerComponent, err := components.BuildNodeReadinessControllerComponent(components.BuildNodeReadinessControllerComponentConfig{
+		ProjectName:    c.Name(),
 		Runtime:        conf.Runtime,
 		Workdir:        env.workdir,
 		Image:          conf.NodeReadinessControllerImage,

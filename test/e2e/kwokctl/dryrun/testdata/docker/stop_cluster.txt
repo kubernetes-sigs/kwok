@@ -24,6 +24,10 @@ docker \
   --time=0
 docker \
   stop \
+  kwok-<CLUSTER_NAME>-node-readiness-controller \
+  --time=0
+docker \
+  stop \
   kwok-<CLUSTER_NAME>-kube-apiserver \
   --time=0
 docker \
