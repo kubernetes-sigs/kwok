@@ -1,0 +1,46 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: gpu-resource-slice-repair
+spec:
+  resourceRef:
+    apiGroup: resource.k8s.io/v1
+    kind: ResourceSlice
+  selector:
+    matchExpressions:
+    - cel:
+        expression: >-
+          !has(self.metadata.deletionTimestamp)
+    - cel:
+        expression: >-
+          self.spec.driver == 'gpu.kwok.x-k8s.io'
+    - cel:
+        expression: >-
+          has(self.metadata.annotations) && 'kwok.x-k8s.io/dra-gpu' in self.metadata.annotations && 'kwok.x-k8s.io/dra-gpu-memory' in self.metadata.annotations
+    - cel:
+        expression: >-
+          !has(self.spec.devices) || size(self.spec.devices) != int(self.metadata.annotations['kwok.x-k8s.io/dra-gpu']) || self.spec.devices[0].capacity.memory.value != self.metadata.annotations['kwok.x-k8s.io/dra-gpu-memory']
+  steps:
+  - patch:
+      root: spec
+      template: |
+        {{ $count := index .metadata.annotations "kwok.x-k8s.io/dra-gpu" }}
+        {{ $memory := index .metadata.annotations "kwok.x-k8s.io/dra-gpu-memory" }}
+        devices:
+        {{ range $index := until (atoi $count) }}
+        - name: gpu-{{ $index }}
+          attributes:
+            type:
+              string: gpu
+            index:
+              int: {{ $index }}
+            brand:
+              string: Kwok
+            productName:
+              string: Kwok GPU
+            driverVersion:
+              version: "1.0.0"
+          capacity:
+            memory:
+              value: {{ $memory | Quote }}
+        {{ end }}
