@@ -22,35 +22,43 @@ import (
 	"io"
 )
 
-// Tunnel create tunnels for two streams.
-func Tunnel(ctx context.Context, c1, c2 io.ReadWriter, buf1, buf2 []byte) error {
+// BufferPool provides reusable buffers for tunnel copies.
+// Its methods must be safe to call concurrently.
+type BufferPool interface {
+	Get() []byte
+	Put([]byte)
+}
+
+// Tunnel creates tunnels for two streams. A nil pool uses io.CopyBuffer's default
+// buffer. Each copy retains its buffer until it finishes, even if Tunnel returns
+// early. Callers must close the streams to unblock pending copies after return.
+func Tunnel(ctx context.Context, c1, c2 io.ReadWriter, pool BufferPool) error {
 	// Buffered so that both senders can complete even when this function
-	// returns without receiving their results, which the two ctx.Done() paths
-	// below do. On an unbuffered channel those goroutines block on the send
-	// forever once the caller closes the streams.
+	// returns without receiving their results. On an unbuffered channel those
+	// goroutines block on the send forever once the caller closes the streams.
 	errCh := make(chan error, 2)
-	go func() {
-		_, err := io.CopyBuffer(c2, c1, buf1)
+	copyStream := func(dst io.Writer, src io.Reader) {
+		var buf []byte
+		if pool != nil {
+			buf = pool.Get()
+			defer pool.Put(buf)
+		}
+		_, err := io.CopyBuffer(dst, src, buf)
 		errCh <- err
-	}()
-	go func() {
-		_, err := io.CopyBuffer(c1, c2, buf2)
-		errCh <- err
-	}()
+	}
+	go copyStream(c2, c1)
+	go copyStream(c1, c2)
 	select {
 	case <-ctx.Done():
 		// Do nothing
 	case err1 := <-errCh:
+		if err1 != nil {
+			return err1
+		}
 		select {
 		case <-ctx.Done():
-			if err1 != nil {
-				return err1
-			}
 			// Do nothing
 		case err2 := <-errCh:
-			if err1 != nil {
-				return err1
-			}
 			return err2
 		}
 	}

@@ -17,12 +17,125 @@ limitations under the License.
 package net
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"io"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 )
+
+type errorReader struct {
+	err error
+}
+
+func (r errorReader) Read([]byte) (int, error) {
+	return 0, r.err
+}
+
+type errorWriter struct {
+	err error
+}
+
+func (w errorWriter) Write([]byte) (int, error) {
+	return 0, w.err
+}
+
+func TestTunnelReturnsCopyError(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		writeErr bool
+		reverse  bool
+	}{
+		{name: "first stream read"},
+		{name: "second stream read", reverse: true},
+		{name: "second stream write", writeErr: true},
+		{name: "first stream write", writeErr: true, reverse: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := t.Context()
+			blocked := newBlockedStream()
+			defer blocked.unblock()
+			copyErr := errors.New("copy failed")
+			var reader io.Reader = errorReader{err: copyErr}
+			var writer io.Writer = io.Discard
+			if tc.writeErr {
+				reader = strings.NewReader("request")
+				writer = errorWriter{err: copyErr}
+			}
+			c1 := struct {
+				io.Reader
+				io.Writer
+			}{reader, io.Discard}
+			c2 := struct {
+				io.Reader
+				io.Writer
+			}{blocked, writer}
+			done := make(chan error, 1)
+			go func() {
+				if tc.reverse {
+					done <- Tunnel(ctx, c2, c1, nil)
+				} else {
+					done <- Tunnel(ctx, c1, c2, nil)
+				}
+			}()
+			select {
+			case err := <-done:
+				if !errors.Is(err, copyErr) {
+					t.Fatalf("Tunnel returned %v, want %v", err, copyErr)
+				}
+			case <-time.After(3 * time.Second):
+				t.Fatal("Tunnel waited for the other stream after a copy error")
+			}
+		})
+	}
+}
+
+func TestTunnelDrainsOtherStreamAfterEOF(t *testing.T) {
+	ctx := t.Context()
+	r, w := io.Pipe()
+	defer func() {
+		_ = r.Close()
+		_ = w.Close()
+	}()
+	var response bytes.Buffer
+	c1 := struct {
+		io.Reader
+		io.Writer
+	}{strings.NewReader(""), &response}
+	c2 := struct {
+		io.Reader
+		io.Writer
+	}{r, io.Discard}
+	done := make(chan error, 1)
+	go func() {
+		done <- Tunnel(ctx, c1, c2, nil)
+	}()
+	select {
+	case err := <-done:
+		t.Fatalf("Tunnel returned before the response: %v", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+	if _, err := io.WriteString(w, "response"); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("Tunnel did not return after both streams reached EOF")
+	}
+	if response.String() != "response" {
+		t.Fatalf("response = %q, want %q", response.String(), "response")
+	}
+}
 
 // blockedStream is an io.ReadWriter whose Read blocks until unblock is called,
 // which keeps a Tunnel copy goroutine in flight while the test cancels the
@@ -74,7 +187,7 @@ func runTunnel(ctx context.Context, c1, c2 io.ReadWriter) <-chan struct{} {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		_ = Tunnel(ctx, c1, c2, make([]byte, 32), make([]byte, 32))
+		_ = Tunnel(ctx, c1, c2, nil)
 	}()
 	return done
 }
@@ -125,4 +238,148 @@ func TestTunnelDoesNotLeakWhenCanceledAfterTheFirstCopyFinishes(t *testing.T) {
 	c2.unblock()
 
 	waitForGoroutines(t, baseline, 3*time.Second)
+}
+
+// trackingBufferPool records when a buffer becomes available for reuse.
+type trackingBufferPool struct {
+	borrowed chan []byte
+	released chan []byte
+}
+
+func (p *trackingBufferPool) Get() []byte {
+	buf := make([]byte, 32)
+	p.borrowed <- buf
+	return buf
+}
+
+func (p *trackingBufferPool) Put(buf []byte) {
+	p.released <- buf
+}
+
+// holdingBufferReader keeps the buffer passed to Read until explicitly released.
+type holdingBufferReader struct {
+	started chan []byte
+	resume  chan struct{}
+}
+
+func (r *holdingBufferReader) Read(buf []byte) (int, error) {
+	r.started <- buf
+	<-r.resume
+	buf[0] = 'x'
+	return 1, io.EOF
+}
+
+type triggeredReader struct {
+	trigger chan struct{}
+	err     error
+}
+
+func (r triggeredReader) Read([]byte) (int, error) {
+	<-r.trigger
+	return 0, r.err
+}
+
+func TestTunnelRetainsBuffersUntilCopyFinishes(t *testing.T) {
+	for _, mode := range []string{"copy error", "canceled", "deadline"} {
+		for _, reverse := range []bool{false, true} {
+			name := mode
+			if reverse {
+				name += " reversed"
+			}
+			t.Run(name, func(t *testing.T) {
+				pool := &trackingBufferPool{
+					borrowed: make(chan []byte, 2),
+					released: make(chan []byte, 2),
+				}
+				held := &holdingBufferReader{
+					started: make(chan []byte, 1),
+					resume:  make(chan struct{}, 1),
+				}
+				defer close(held.resume)
+				trigger := make(chan struct{})
+				copyErr := errors.New("copy failed")
+				firstErr := error(io.EOF)
+				if mode == "copy error" {
+					firstErr = copyErr
+				}
+				c1 := struct {
+					io.Reader
+					io.Writer
+				}{triggeredReader{trigger: trigger, err: firstErr}, io.Discard}
+				c2 := struct {
+					io.Reader
+					io.Writer
+				}{held, io.Discard}
+				ctx, cancel := context.WithCancel(t.Context())
+				if mode == "deadline" {
+					cancel()
+					ctx, cancel = context.WithTimeout(t.Context(), 100*time.Millisecond)
+				}
+				defer cancel()
+				done := make(chan error, 1)
+				go func() {
+					if reverse {
+						done <- Tunnel(ctx, c2, c1, pool)
+					} else {
+						done <- Tunnel(ctx, c1, c2, pool)
+					}
+				}()
+				var heldBuffer []byte
+				select {
+				case heldBuffer = <-held.started:
+				case <-time.After(3 * time.Second):
+					t.Fatal("copy did not start reading into its buffer")
+				}
+				close(trigger)
+				if mode == "canceled" {
+					cancel()
+				}
+				select {
+				case err := <-done:
+					want := copyErr
+					if mode == "canceled" {
+						want = nil
+					} else if mode == "deadline" {
+						want = context.DeadlineExceeded
+					}
+					if !errors.Is(err, want) {
+						t.Fatalf("Tunnel returned %v, want %v", err, want)
+					}
+				case <-time.After(3 * time.Second):
+					t.Fatal("Tunnel waited for the blocked copy")
+				}
+				// A completed direction may release its buffer. The blocked Read
+				// must retain its own buffer even after Tunnel has returned.
+				returned := map[*byte]bool{}
+				for range 2 {
+					select {
+					case buf := <-pool.released:
+						if &buf[0] == &heldBuffer[0] {
+							t.Fatal("buffer returned to pool while a copy still holds it")
+						}
+						returned[&buf[0]] = true
+					default:
+					}
+				}
+				held.resume <- struct{}{}
+				for len(returned) < 2 {
+					select {
+					case buf := <-pool.released:
+						if returned[&buf[0]] {
+							t.Fatal("copy returned its buffer more than once")
+						}
+						returned[&buf[0]] = true
+					case <-time.After(3 * time.Second):
+						t.Fatal("completed copies did not return both buffers")
+					}
+				}
+				for range 2 {
+					buf := <-pool.borrowed
+					if !returned[&buf[0]] {
+						t.Fatal("copy did not return its borrowed buffer")
+					}
+				}
+			})
+		}
+	}
 }
