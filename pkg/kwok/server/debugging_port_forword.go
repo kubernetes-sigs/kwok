@@ -69,13 +69,7 @@ func (s *Server) PortForward(ctx context.Context, name string, uid string, port 
 			_ = dial.Close()
 		}()
 
-		buf1 := s.bufPool.Get()
-		buf2 := s.bufPool.Get()
-		defer func() {
-			s.bufPool.Put(buf1)
-			s.bufPool.Put(buf2)
-		}()
-		return utilsnet.Tunnel(ctx, stream, dial, buf1, buf2)
+		return utilsnet.Tunnel(ctx, stream, dial, s.bufPool)
 	}
 
 	return errors.New("no target or command")

@@ -86,7 +86,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 					_ = target.Close()
 					_ = conn.Close()
 				}()
-				err = utilsnet.Tunnel(ctx, conn, target, nil, nil)
+				err = utilsnet.Tunnel(ctx, conn, target, nil)
 				if err != nil {
 					logger.Warn("failed tunneling port",
 						"err", err,

@@ -45,17 +45,11 @@ func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io
 
 	// Create a two way tunnel for pty and stream.
 	go func() {
-		buf1 := s.bufPool.Get()
-		buf2 := s.bufPool.Get()
-		defer func() {
-			s.bufPool.Put(buf1)
-			s.bufPool.Put(buf2)
-		}()
 		stm := struct {
 			io.Reader
 			io.Writer
 		}{in, out}
-		err := utilsnet.Tunnel(ctx, pty, stm, buf1, buf2)
+		err := utilsnet.Tunnel(ctx, pty, stm, s.bufPool)
 		if err != nil {
 			logger.Error("failed to tunnel",
 				"err", err,
