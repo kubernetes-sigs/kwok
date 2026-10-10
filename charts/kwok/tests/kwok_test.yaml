@@ -1,0 +1,48 @@
+suite: configuration
+templates:
+- templates/kwok.yaml
+release:
+  name: kwok
+  namespace: kube-system
+tests:
+- it: merges an option override into the defaults
+  set:
+    config:
+      options:
+        manageAllNodes: true
+        cidr: 10.1.0.0/16
+  asserts:
+  - matchRegex:
+      path: data["kwok.yaml"]
+      pattern: "(?m)^  manageAllNodes: true$"
+  - matchRegex:
+      path: data["kwok.yaml"]
+      pattern: "(?m)^  cidr: 10.1.0.0/16$"
+  - matchRegex:
+      path: data["kwok.yaml"]
+      pattern: "(?m)^  nodeLeaseDurationSeconds: 40$"
+
+- it: clears a default option with an empty override
+  set:
+    config:
+      options:
+        manageNodesWithAnnotationSelector: ""
+        manageNodesWithLabelSelector: type=kwok
+  asserts:
+  - matchRegex:
+      path: data["kwok.yaml"]
+      pattern: "(?m)^  manageNodesWithAnnotationSelector: \"\"$"
+  - matchRegex:
+      path: data["kwok.yaml"]
+      pattern: "(?m)^  manageNodesWithLabelSelector: type=kwok$"
+
+- it: replaces the default enableCRDs list instead of appending to it
+  set:
+    config:
+      options:
+        enableCRDs:
+        - Stage
+  asserts:
+  - matchRegex:
+      path: data["kwok.yaml"]
+      pattern: "(?m)^  enableCRDs:\n  - Stage\n  enableContentionProfiling"

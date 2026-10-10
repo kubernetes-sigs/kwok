@@ -42,6 +42,31 @@ tests:
       path: spec.template.spec.containers[0].image
       value: registry.k8s.io/kwok/kwok:v9.9.9
 
+- it: adds podAnnotations alongside the configuration checksum
+  set:
+    podAnnotations:
+      prometheus.io/scrape: "true"
+  asserts:
+  - equal:
+      path: spec.template.metadata.annotations["prometheus.io/scrape"]
+      value: "true"
+  - exists:
+      path: spec.template.metadata.annotations["checksum/config"]
+
+- it: adds podLabels alongside the selector labels
+  set:
+    podLabels:
+      team: sim
+  asserts:
+  - equal:
+      path: spec.template.metadata.labels
+      value:
+        app.kubernetes.io/name: kwok
+        app.kubernetes.io/instance: kwok
+        team: sim
+  - notExists:
+      path: spec.selector.matchLabels.team
+
 - it: sets the container and pod security contexts separately
   set:
     securityContext:

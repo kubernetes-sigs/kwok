@@ -51,6 +51,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+KwokConfiguration mounted into the kwok container
+*/}}
+{{- define "kwok.config" -}}
+{{- mergeOverwrite ($.Files.Get "conf/kwok.yaml" | fromYaml) (.Values.config | default dict) | toYaml }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "kwok.serviceAccountName" -}}
