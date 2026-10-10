@@ -36,15 +36,32 @@ import (
 
 func TestLoaderRestoresOwnerChain(t *testing.T) {
 	for _, tc := range []struct {
-		names       []string
-		sharedOwner bool
+		name   string
+		names  []string
+		owners map[string][]string
 	}{
-		{names: []string{"parent", "child", "grandchild"}},
-		{names: []string{"grandchild", "child", "parent"}},
-		{names: []string{"child", "grandchild", "parent"}},
-		{names: []string{"child", "grandchild", "parent"}, sharedOwner: true},
+		{
+			name:   "ordered",
+			names:  []string{"parent", "child", "grandchild"},
+			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child"}},
+		},
+		{
+			name:   "reversed",
+			names:  []string{"grandchild", "child", "parent"},
+			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child"}},
+		},
+		{
+			name:   "mixed",
+			names:  []string{"child", "grandchild", "parent"},
+			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child"}},
+		},
+		{
+			name:   "shared-owner",
+			names:  []string{"child", "grandchild", "parent"},
+			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child", "parent"}},
+		},
 	} {
-		t.Run(fmt.Sprintf("%s/shared-owner=%t", strings.Join(tc.names, "/"), tc.sharedOwner), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := t.Context()
 			gv := schema.GroupVersion{Version: "v1"}
 			gvr := gv.WithResource("configmaps")
@@ -67,16 +84,12 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 				restMapper: mapper, dynamicClient: dynamicClient, loadConfig: LoadConfig{NoFilers: true},
 			}
 			var input strings.Builder
-			owners := map[string][]string{"child": {"parent"}, "grandchild": {"child"}}
-			if tc.sharedOwner {
-				owners["grandchild"] = append(owners["grandchild"], "parent")
-			}
 			for _, name := range tc.names {
 				fmt.Fprintf(&input, "---\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: %s\n  namespace: default\n  uid: original-%s\n", name, name)
-				if len(owners[name]) != 0 {
+				if len(tc.owners[name]) != 0 {
 					input.WriteString("  ownerReferences:\n")
 				}
-				for _, owner := range owners[name] {
+				for _, owner := range tc.owners[name] {
 					fmt.Fprintf(&input, "  - apiVersion: v1\n    kind: ConfigMap\n    name: %s\n    uid: original-%s\n", owner, owner)
 				}
 			}
@@ -89,10 +102,10 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 					t.Fatalf("%s was not restored: %v", name, err)
 				}
 				refs := obj.GetOwnerReferences()
-				if len(refs) != len(owners[name]) {
-					t.Fatalf("%s owner references = %v, want owners %v", name, refs, owners[name])
+				if len(refs) != len(tc.owners[name]) {
+					t.Fatalf("%s owner references = %v, want owners %v", name, refs, tc.owners[name])
 				}
-				for i, owner := range owners[name] {
+				for i, owner := range tc.owners[name] {
 					if refs[i].UID != types.UID("restored-"+owner) {
 						t.Fatalf("%s owner reference = %v, want UID restored-%s", name, refs[i], owner)
 					}
