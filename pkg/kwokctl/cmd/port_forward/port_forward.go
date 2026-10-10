@@ -108,12 +108,12 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		return err
 	}
 
-	port, err := strconv.ParseUint(hostPort, 0, 0)
+	port, err := parseLocalPort(hostPort)
 	if err != nil {
 		return err
 	}
 
-	cancel, err := rt.PortForward(ctx, args[0], containerPort, uint32(port))
+	cancel, err := rt.PortForward(ctx, args[0], containerPort, port)
 	if err != nil {
 		return err
 	}
@@ -122,6 +122,11 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 	<-ctx.Done()
 
 	return nil
+}
+
+func parseLocalPort(raw string) (uint32, error) {
+	port, err := strconv.ParseUint(raw, 10, 16)
+	return uint32(port), err
 }
 
 func splitParts(rawport string) (hostPort string, containerPort string, err error) {
