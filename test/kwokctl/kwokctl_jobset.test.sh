@@ -34,7 +34,9 @@ function main() {
     kubectl create -f "${DIR}/jobset-case.yaml"
 
     if ! kubectl wait --for=create job/sample-jobset-workers-0 --timeout=60s; then
-      kwokctl logs jobset --name "${name}"
+      echo "Error: JobSet child Job was not created within 60s" >&2
+      kwokctl logs jobset --name "${name}" >&2 || true
+      exit 1
     fi
 
     kubectl get jobsets,job,pod
