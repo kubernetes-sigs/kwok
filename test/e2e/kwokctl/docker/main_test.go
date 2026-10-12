@@ -73,6 +73,7 @@ func TestMain(m *testing.M) {
 			"--kube-controller-manager-port=10260",
 			"--jaeger-port=16686",
 			"--enable=scheduler-plugins",
+			"--enable=node-readiness-controller",
 			"--config="+path.Join(rootDir, "test/e2e"),
 			"--config="+path.Join(rootDir, "kustomize/metrics/usage"),
 		)...),
