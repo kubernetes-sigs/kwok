@@ -67,6 +67,16 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 				ReadOnly:  true,
 			},
 		)
+		args = append(args,
+			"--config.file=/etc/prometheus/prometheus.yaml",
+		)
+	} else {
+		args = append(args,
+			"--config.file="+conf.ConfigPath,
+		)
+	}
+
+	if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 		ports = append(
 			ports,
 			internalversion.Port{
@@ -82,7 +92,6 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			Path:   metricsPath,
 		}
 		args = append(args,
-			"--config.file=/etc/prometheus/prometheus.yaml",
 			"--web.listen-address="+conf.BindAddress+":9090",
 		)
 	} else {
@@ -101,7 +110,6 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			Path:   metricsPath,
 		}
 		args = append(args,
-			"--config.file="+conf.ConfigPath,
 			"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),
 		)
 	}

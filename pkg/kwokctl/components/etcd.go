@@ -84,6 +84,13 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			"--data-dir=/etcd-data",
 		)
 
+	} else {
+		args = append(args,
+			"--data-dir="+conf.DataPath,
+		)
+	}
+
+	if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 		ports = append(
 			ports,
 			internalversion.Port{
@@ -133,7 +140,6 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		)
 
 		args = append(args,
-			"--data-dir="+conf.DataPath,
 			"--initial-advertise-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
 			"--listen-peer-urls=http://"+conf.BindAddress+":"+etcdPeerPortStr,
 			"--advertise-client-urls=http://"+conf.BindAddress+":"+etcdClientPortStr,
