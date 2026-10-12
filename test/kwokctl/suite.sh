@@ -92,6 +92,35 @@ function retry() {
   done
 }
 
+# Wait until the admission webhooks for the resources in a manifest can be reached,
+# using a server-side dry run so nothing is persisted.
+# Only errors from the apiserver failing to connect to a webhook are retried,
+# any other error (validation, authorization, TLS, missing CRD) fails immediately.
+function wait_for_webhook_admission() {
+  local manifest="${1}"
+  local timeout="${2:-60}"
+  local unavailable='failed calling webhook.*(connection refused|no such host|i/o timeout|connection reset by peer|context deadline exceeded|EOF)'
+  local start="${SECONDS}"
+  local out
+  while true; do
+    if out="$(kubectl create --dry-run=server -f "${manifest}" 2>&1)"; then
+      echo "Webhook admission is ready after $((SECONDS - start))s" >&2
+      return 0
+    fi
+    if ! [[ "${out}" =~ ${unavailable} ]]; then
+      echo "Error: Server-side dry run of ${manifest} failed:" >&2
+      echo "${out}" >&2
+      return 1
+    fi
+    if [[ $((SECONDS - start)) -ge "${timeout}" ]]; then
+      echo "Error: Webhook admission is not ready after ${timeout}s:" >&2
+      echo "${out}" >&2
+      return 1
+    fi
+    sleep 1
+  done
+}
+
 GOOS="$(go env GOOS)"
 GOARCH="$(go env GOARCH)"
 

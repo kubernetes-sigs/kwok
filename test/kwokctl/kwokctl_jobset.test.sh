@@ -27,10 +27,15 @@ function main() {
 
     kwokctl scale node --replicas 1 --name "${name}"
 
-    sleep 5
+    if ! wait_for_webhook_admission "${DIR}/jobset-case.yaml" 60; then
+      kwokctl logs jobset --name "${name}"
+      exit 1
+    fi
     kubectl create -f "${DIR}/jobset-case.yaml"
 
-    sleep 5
+    if ! kubectl wait --for=create job/sample-jobset-workers-0 --timeout=60s; then
+      kwokctl logs jobset --name "${name}"
+    fi
 
     kubectl get jobsets,job,pod
 
