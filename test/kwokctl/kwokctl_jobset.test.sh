@@ -27,8 +27,9 @@ function main() {
 
     kwokctl scale node --replicas 1 --name "${name}"
 
-    if ! wait_for_webhook_admission "${DIR}/jobset-case.yaml" 60; then
-      kwokctl logs jobset --name "${name}"
+    # JobSet's /readyz only succeeds once its webhook server accepts TLS connections.
+    if ! wait_for_component_ready docker "${name}" jobset 8081 /readyz 60; then
+      kwokctl logs jobset --name "${name}" >&2 || true
       exit 1
     fi
     kubectl create -f "${DIR}/jobset-case.yaml"

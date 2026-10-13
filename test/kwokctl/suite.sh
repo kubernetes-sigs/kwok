@@ -92,28 +92,25 @@ function retry() {
   done
 }
 
-# Wait until the admission webhooks for the resources in a manifest can be reached,
-# using a server-side dry run so nothing is persisted.
-# Only errors from the apiserver failing to connect to a webhook are retried,
-# any other error (validation, authorization, TLS, missing CRD) fails immediately.
-function wait_for_webhook_admission() {
-  local manifest="${1}"
-  local timeout="${2:-60}"
-  local unavailable='failed calling webhook.*(connection refused|no such host|i/o timeout|connection reset by peer|context deadline exceeded|EOF)'
+# Wait until the readiness endpoint of a component returns success.
+# The request is sent from the kwok-controller container, which shares the cluster network.
+function wait_for_component_ready() {
+  local runtime="${1}"
+  local name="${2}"
+  local component="${3}"
+  local port="${4}"
+  local url_path="${5}"
+  local timeout="${6:-60}"
+  local url="http://kwok-${name}-${component}:${port}${url_path}"
   local start="${SECONDS}"
   local out
   while true; do
-    if out="$(kubectl create --dry-run=server -f "${manifest}" 2>&1)"; then
-      echo "Webhook admission is ready after $((SECONDS - start))s" >&2
+    if out="$("${runtime}" exec "kwok-${name}-kwok-controller" wget -q -T 5 -O - "${url}" 2>&1)"; then
+      echo "Component ${component} is ready after $((SECONDS - start))s" >&2
       return 0
     fi
-    if ! [[ "${out}" =~ ${unavailable} ]]; then
-      echo "Error: Server-side dry run of ${manifest} failed:" >&2
-      echo "${out}" >&2
-      return 1
-    fi
     if [[ $((SECONDS - start)) -ge "${timeout}" ]]; then
-      echo "Error: Webhook admission is not ready after ${timeout}s:" >&2
+      echo "Error: Component ${component} is not ready after ${timeout}s: ${url}" >&2
       echo "${out}" >&2
       return 1
     fi
