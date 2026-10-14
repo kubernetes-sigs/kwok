@@ -17,8 +17,14 @@ limitations under the License.
 package server
 
 import (
+	"context"
+	"errors"
+	"io"
+	"net"
 	"reflect"
+	"sync"
 	"testing"
+	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
@@ -225,5 +231,101 @@ func Test_getPodsForward(t *testing.T) {
 				t.Errorf("getPodsForward() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+// failingPortForwardStream keeps client input open after its output fails.
+type failingPortForwardStream struct {
+	reader *io.PipeReader
+	err    error
+	closed chan struct{}
+	once   sync.Once
+}
+
+func (s *failingPortForwardStream) Read(buf []byte) (int, error) {
+	return s.reader.Read(buf)
+}
+
+func (s *failingPortForwardStream) Write([]byte) (int, error) {
+	return 0, s.err
+}
+
+func (s *failingPortForwardStream) Close() error {
+	s.once.Do(func() {
+		_ = s.reader.Close()
+		close(s.closed)
+	})
+	return nil
+}
+
+func TestPortForwardReturnsCopyErrorAndClosesConnections(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = listener.Close() }()
+	targetDone := make(chan error, 1)
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			targetDone <- err
+			return
+		}
+		defer func() { _ = conn.Close() }()
+		if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+			targetDone <- err
+			return
+		}
+		if _, err := io.WriteString(conn, "response"); err != nil {
+			targetDone <- err
+			return
+		}
+		var buf [1]byte
+		_, err = conn.Read(buf[:])
+		targetDone <- err
+	}()
+
+	addr := listener.Addr().(*net.TCPAddr)
+	s, err := NewServer(Config{
+		PortForwards: []*internalversion.PortForward{{
+			Name: "test", Namespace: "default",
+			Spec: internalversion.PortForwardSpec{Forwards: []internalversion.Forward{{
+				Ports:  []int32{8080},
+				Target: &internalversion.ForwardTarget{Address: "127.0.0.1", Port: int32(addr.Port)},
+			}}},
+		}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader, writer := io.Pipe()
+	defer func() { _ = writer.Close() }()
+	copyErr := errors.New("client output failed")
+	stream := &failingPortForwardStream{reader: reader, err: copyErr, closed: make(chan struct{})}
+	defer func() { _ = stream.Close() }()
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- s.PortForward(ctx, "test/default", "", 8080, stream) }()
+	select {
+	case err := <-done:
+		if !errors.Is(err, copyErr) {
+			t.Fatalf("PortForward returned %v, want %v", err, copyErr)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("PortForward waited for cancellation after client output failed")
+	}
+	select {
+	case <-stream.closed:
+	default:
+		t.Fatal("PortForward did not close the client stream")
+	}
+	select {
+	case err := <-targetDone:
+		if !errors.Is(err, io.EOF) {
+			t.Fatalf("target Read returned %v, want EOF after connection cleanup", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("PortForward did not close the target connection")
 	}
 }
