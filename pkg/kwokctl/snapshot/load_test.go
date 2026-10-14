@@ -56,6 +56,16 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child"}},
 		},
 		{
+			name:   "duplicate-resources",
+			names:  []string{"parent", "child", "grandchild", "parent", "child", "grandchild"},
+			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child"}},
+		},
+		{
+			name:   "shared-owner-reversed",
+			names:  []string{"grandchild", "child", "parent"},
+			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child", "parent"}},
+		},
+		{
 			name:   "shared-owner",
 			names:  []string{"child", "grandchild", "parent"},
 			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child", "parent"}},

@@ -195,6 +195,11 @@ func (l *Loader) finishLoad(ctx context.Context, startTime time.Time) error {
 }
 
 func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
+	key := uniqueKeyFromMetadata(obj)
+	if _, restored := l.exist[key]; restored {
+		return
+	}
+
 	// If the object has owner references, we need to wait until all the owner references are created.
 	if ownerReferences := obj.GetOwnerReferences(); len(ownerReferences) != 0 {
 		allExist := true
@@ -221,20 +226,13 @@ func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 	}
 
 	// Record the new uid
-	key := uniqueKeyFromMetadata(obj)
 	l.exist[key] = newObj.GetUID()
 
 	// If there are pending objects waiting for this object, apply them.
 	if pendingObjs, ok := l.pending[key]; ok {
 		delete(l.pending, key)
 		for _, pendingObj := range pendingObjs {
-			if _, restored := l.exist[uniqueKeyFromMetadata(pendingObj)]; restored {
-				continue
-			}
-			if l.hasAllOwnerReferences(pendingObj) {
-				// Restoring a dependent can unblock its own dependents.
-				l.load(ctx, pendingObj)
-			}
+			l.load(ctx, pendingObj)
 		}
 	}
 }
@@ -344,20 +342,6 @@ var defaultRetry = wait.Backoff{
 	Duration: 1 * time.Second,
 	Factor:   1.0,
 	Jitter:   0.1,
-}
-
-func (l *Loader) hasAllOwnerReferences(obj *unstructured.Unstructured) bool {
-	ownerReferences := obj.GetOwnerReferences()
-	if len(ownerReferences) == 0 {
-		return true
-	}
-	for _, ownerReference := range ownerReferences {
-		key := uniqueKeyFromOwnerReference(ownerReference)
-		if _, ok := l.exist[key]; !ok {
-			return false
-		}
-	}
-	return true
 }
 
 type ownerReference struct {
