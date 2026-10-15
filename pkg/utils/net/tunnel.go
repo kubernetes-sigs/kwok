@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net"
 )
 
 // BufferPool provides reusable buffers for tunnel copies.
@@ -31,12 +32,20 @@ type BufferPool interface {
 
 // Tunnel creates tunnels for two streams. A nil pool uses io.CopyBuffer's default
 // buffer. Each copy retains its buffer until it finishes, even if Tunnel returns
-// early. Callers must close the streams to unblock pending copies after return.
+// early. On EOF, Tunnel calls the destination's CloseWrite method, if present,
+// and drains the reverse direction. A copy timeout also drains the reverse
+// direction if CloseWrite succeeds, then returns the timeout. Other errors
+// return immediately. Callers must close the streams to unblock pending copies
+// after return.
 func Tunnel(ctx context.Context, c1, c2 io.ReadWriter, pool BufferPool) error {
 	// Buffered so that both senders can complete even when this function
 	// returns without receiving their results. On an unbuffered channel those
 	// goroutines block on the send forever once the caller closes the streams.
-	errCh := make(chan error, 2)
+	type result struct {
+		err   error
+		fatal bool
+	}
+	errCh := make(chan result, 2)
 	copyStream := func(dst io.Writer, src io.Reader) {
 		var buf []byte
 		if pool != nil {
@@ -44,26 +53,39 @@ func Tunnel(ctx context.Context, c1, c2 io.ReadWriter, pool BufferPool) error {
 			defer pool.Put(buf)
 		}
 		_, err := io.CopyBuffer(dst, src, buf)
-		errCh <- err
+		var netErr net.Error
+		if cw, ok := dst.(interface{ CloseWrite() error }); ok &&
+			(err == nil || errors.As(err, &netErr) && netErr.Timeout()) {
+			if closeErr := cw.CloseWrite(); closeErr != nil {
+				errCh <- result{err: errors.Join(err, closeErr), fatal: true}
+				return
+			}
+			errCh <- result{err: err}
+			return
+		}
+		errCh <- result{err: err, fatal: err != nil}
 	}
 	go copyStream(c2, c1)
 	go copyStream(c1, c2)
-	select {
-	case <-ctx.Done():
-		// Do nothing
-	case err1 := <-errCh:
-		if err1 != nil {
-			return err1
-		}
+	var copyErr error
+	for range 2 {
 		select {
 		case <-ctx.Done():
-			// Do nothing
-		case err2 := <-errCh:
-			return err2
+			if copyErr != nil {
+				return copyErr
+			}
+			if err := ctx.Err(); !errors.Is(err, context.Canceled) {
+				return err
+			}
+			return nil
+		case r := <-errCh:
+			if r.fatal {
+				return r.err
+			}
+			if copyErr == nil {
+				copyErr = r.err
+			}
 		}
 	}
-	if err := ctx.Err(); err != nil && !errors.Is(err, context.Canceled) {
-		return err
-	}
-	return nil
+	return copyErr
 }

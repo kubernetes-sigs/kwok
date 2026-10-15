@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
+	"github.com/moby/spdystream"
 	"k8s.io/cri-streaming/pkg/streaming/portforward"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -69,10 +70,29 @@ func (s *Server) PortForward(ctx context.Context, name string, uid string, port 
 			_ = dial.Close()
 		}()
 
-		return utilsnet.Tunnel(ctx, stream, dial, s.bufPool)
+		var tunnelStream io.ReadWriter = stream
+		if spdyStream, ok := stream.(*spdystream.Stream); ok {
+			tunnelStream = spdyHalfCloseStream{spdyStream}
+			defer func() {
+				// Close sends FIN only; Reset also unblocks a pending upload
+				// when Tunnel returns on an error or context cancellation.
+				_ = spdyStream.Reset()
+			}()
+		}
+		return utilsnet.Tunnel(ctx, tunnelStream, dial, s.bufPool)
 	}
 
 	return errors.New("no target or command")
+}
+
+// spdyHalfCloseStream exposes SPDY's directional FIN as CloseWrite. Other
+// io.ReadWriteClosers may close both directions, so they must not use this adapter.
+type spdyHalfCloseStream struct {
+	*spdystream.Stream
+}
+
+func (s spdyHalfCloseStream) CloseWrite() error {
+	return s.Close()
 }
 
 // getPortForward handles a new restful port forward request. It determines the
