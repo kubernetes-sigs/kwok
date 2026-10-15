@@ -21,6 +21,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/format"
@@ -90,6 +91,7 @@ func ConvertToPod(component internalversion.Component) corev1.Pod {
 					Env:             env,
 					Ports:           ports,
 					VolumeMounts:    volumeMounts,
+					ReadinessProbe:  convertToPodProbe(component.ReadinessProbe),
 				},
 			},
 			Volumes: volumes,
@@ -151,12 +153,51 @@ func ConvertFromPod(p corev1.Pod) internalversion.Component {
 	}
 
 	return internalversion.Component{
-		Name:    p.Name,
-		Image:   container.Image,
-		Args:    container.Args,
-		Command: container.Command,
-		Ports:   ports,
-		Volumes: volumes,
-		Envs:    envs,
+		Name:           p.Name,
+		Image:          container.Image,
+		Args:           container.Args,
+		Command:        container.Command,
+		Ports:          ports,
+		Volumes:        volumes,
+		Envs:           envs,
+		ReadinessProbe: convertFromPodProbe(container.ReadinessProbe),
 	}
+}
+
+// convertToPodProbe converts a component probe to a container probe.
+// A probe without a handler is kept without one, so the pod fails validation instead of becoming ready.
+func convertToPodProbe(probe *internalversion.ComponentProbe) *corev1.Probe {
+	if probe == nil {
+		return nil
+	}
+	p := &corev1.Probe{
+		TimeoutSeconds: probe.TimeoutSeconds,
+		// The kubelet default period of 10s would delay readiness noticeably.
+		PeriodSeconds: 1,
+	}
+	if probe.HTTPGet != nil {
+		p.HTTPGet = &corev1.HTTPGetAction{
+			Path:   probe.HTTPGet.Path,
+			Port:   intstr.FromInt32(int32(probe.HTTPGet.Port)),
+			Scheme: corev1.URISchemeHTTP,
+		}
+	}
+	return p
+}
+
+// convertFromPodProbe converts a container probe to a component probe.
+func convertFromPodProbe(probe *corev1.Probe) *internalversion.ComponentProbe {
+	if probe == nil {
+		return nil
+	}
+	p := &internalversion.ComponentProbe{
+		TimeoutSeconds: probe.TimeoutSeconds,
+	}
+	if probe.HTTPGet != nil && probe.HTTPGet.Port.Type == intstr.Int {
+		p.HTTPGet = &internalversion.ComponentHTTPGetAction{
+			Path: probe.HTTPGet.Path,
+			Port: uint32(probe.HTTPGet.Port.IntValue()),
+		}
+	}
+	return p
 }

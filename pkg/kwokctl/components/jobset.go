@@ -27,6 +27,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// jobsetHealthProbePort is the default health probe port of the jobset controller manager.
+const jobsetHealthProbePort = 8081
+
 // BuildJobSetComponentConfig is the configuration for building a jobset component.
 type BuildJobSetComponentConfig struct {
 	Runtime        string
@@ -125,6 +128,14 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		// /readyz only succeeds after the webhook certificates are ready and the webhook server has started.
+		ReadinessProbe: &internalversion.ComponentProbe{
+			HTTPGet: &internalversion.ComponentHTTPGetAction{
+				Path: "/readyz",
+				Port: jobsetHealthProbePort,
+			},
+			TimeoutSeconds: 5,
+		},
 	}
 
 	if len(conf.RawManifests) != 0 {

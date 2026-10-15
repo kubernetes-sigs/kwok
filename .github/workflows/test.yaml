@@ -225,6 +225,12 @@ jobs:
       run: |
         PATH=$(pwd)/bin:${PATH} ./hack/e2e-test.sh kwokctl/kwokctl_jobset
 
+    - name: Test Component Readiness
+      if: ${{ matrix.kwokctl-runtime == 'docker' }}
+      shell: bash
+      run: |
+        PATH=$(pwd)/bin:${PATH} ./hack/e2e-test.sh kwokctl/kwokctl_component_readiness
+
     - name: Test LWS
       if: ${{ matrix.kwokctl-runtime == 'docker' }}
       shell: bash

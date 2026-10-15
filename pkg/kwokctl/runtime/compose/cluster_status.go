@@ -21,8 +21,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"strconv"
 	"time"
 
+	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
@@ -88,9 +91,36 @@ func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.Co
 		return runtime.ComponentStatusStopped, nil
 	}
 
-	// TODO: check if the component is ready
+	component, err := c.GetComponent(ctx, name)
+	if err != nil {
+		return runtime.ComponentStatusUnknown, err
+	}
 
-	return runtime.ComponentStatusReady, nil
+	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, c.Name()+"-"+name, c.probeRoundTrip(name)), nil
+}
+
+// probeRoundTrip returns a function that sends a probe request to the component over the cluster network.
+// The application image may not contain any network tools, so the request is relayed by nc
+// in the kwok-controller container, which shares the cluster network.
+func (c *Cluster) probeRoundTrip(name string) runtime.ProbeRoundTripFunc {
+	return func(ctx context.Context, port uint32, request []byte) ([]byte, error) {
+		// nc -w bounds the connect and the final read inside the container,
+		// since killing the exec client does not stop the process in the container.
+		timeout := 1
+		if deadline, ok := ctx.Deadline(); ok {
+			timeout = max(timeout, int(math.Ceil(time.Until(deadline).Seconds())))
+		}
+
+		out := bytes.NewBuffer(nil)
+		// Stderr is left unset so that it is included in the returned error.
+		ctx = utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{
+			In:  bytes.NewReader(request),
+			Out: out,
+		})
+		err := c.Exec(ctx, c.runtime, "exec", "-i", c.Name()+"-"+consts.ComponentKwokController,
+			"nc", "-w", strconv.Itoa(timeout), c.Name()+"-"+name, strconv.FormatUint(uint64(port), 10))
+		return out.Bytes(), err
+	}
 }
 
 func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (running bool, exist bool) {

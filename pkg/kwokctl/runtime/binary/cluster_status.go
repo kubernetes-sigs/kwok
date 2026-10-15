@@ -86,14 +86,11 @@ func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.Co
 	}
 
 	running := c.isRunning(ctx, component)
-	if !running {
-		return runtime.ComponentStatusStopped, nil
-	}
-
-	// TODO: check if the component is ready
-
-	return runtime.ComponentStatusReady, nil
+	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, probeHost, runtime.DialProbeRoundTrip(probeHost)), nil
 }
+
+// probeHost is the address used to reach components running on the host.
+const probeHost = "127.0.0.1"
 
 func (c *Cluster) isRunning(ctx context.Context, component internalversion.Component) bool {
 	return c.ForkExecIsRunning(ctx, component.WorkDir, component.Binary)
