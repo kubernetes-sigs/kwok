@@ -638,3 +638,123 @@ func TestComponentStatusWithProbe(t *testing.T) {
 		})
 	}
 }
+
+// serveRaw starts a listener whose connections read the request and then run write.
+func serveRaw(t *testing.T, write func(conn net.Conn)) uint32 {
+	t.Helper()
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = listener.Close()
+	})
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			go func() {
+				defer func() {
+					_ = conn.Close()
+				}()
+				buf := make([]byte, 4096)
+				_, _ = conn.Read(buf)
+				write(conn)
+			}()
+		}
+	}()
+	return listenerPort(t, listener.Addr())
+}
+
+func TestCheckReadinessProbeOversizedResponse(t *testing.T) {
+	tests := []struct {
+		name    string
+		write   func(conn net.Conn)
+		wantErr bool
+	}{
+		{
+			// The header block is read up to a limit, rather than until the probe times out.
+			name: "endless headers",
+			write: func(conn net.Conn) {
+				_, _ = io.WriteString(conn, "HTTP/1.1 200 OK\r\n")
+				for {
+					if _, err := io.WriteString(conn, "X-Padding: "+strings.Repeat("a", 1000)+"\r\n"); err != nil {
+						return
+					}
+				}
+			},
+			wantErr: true,
+		},
+		{
+			name: "oversized header line",
+			write: func(conn net.Conn) {
+				_, _ = io.WriteString(conn, "HTTP/1.1 200 OK\r\nX-Padding: "+strings.Repeat("a", 2*maxProbeResponse)+"\r\n\r\n")
+			},
+			wantErr: true,
+		},
+		{
+			// The body is never read.
+			name: "endless body",
+			write: func(conn net.Conn) {
+				_, _ = io.WriteString(conn, "HTTP/1.1 200 OK\r\n\r\n")
+				for {
+					if _, err := io.WriteString(conn, strings.Repeat("b", 4096)); err != nil {
+						return
+					}
+				}
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			port := serveRaw(t, tt.write)
+			checkNoGoroutineLeak(t)
+			probe := httpGetProbe(port, "/readyz")
+			probe.TimeoutSeconds = 10
+
+			start := time.Now()
+			err := CheckReadinessProbe(context.Background(), probe, "127.0.0.1", DialProbe("127.0.0.1"))
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("CheckReadinessProbe() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if errors.Is(err, context.DeadlineExceeded) {
+				t.Fatalf("CheckReadinessProbe() error = %v, want it to end before the timeout", err)
+			}
+			if elapsed := time.Since(start); elapsed > 5*time.Second {
+				t.Fatalf("probe returned after %v, want it to end before the timeout", elapsed)
+			}
+		})
+	}
+}
+
+func TestCheckReadinessProbeSendsNoCredentials(t *testing.T) {
+	type request struct {
+		certificates int
+		headers      http.Header
+	}
+	got := make(chan request, 1)
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got <- request{certificates: len(r.TLS.PeerCertificates), headers: r.Header.Clone()}
+	}))
+	// The server asks for a client certificate, which the probe must not present.
+	server.TLS = &tls.Config{ClientAuth: tls.RequestClientCert, MinVersion: tls.VersionTLS12}
+	server.StartTLS()
+	t.Cleanup(server.Close)
+
+	err := CheckReadinessProbe(context.Background(), httpsGetProbe(listenerPort(t, server.Listener.Addr()), "/readyz"),
+		"127.0.0.1", DialProbe("127.0.0.1"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := <-got
+	if r.certificates != 0 {
+		t.Errorf("client certificates = %d, want none", r.certificates)
+	}
+	for _, header := range []string{"Authorization", "Cookie", "Proxy-Authorization"} {
+		if v := r.headers.Get(header); v != "" {
+			t.Errorf("%s = %q, want none", header, v)
+		}
+	}
+}

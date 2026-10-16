@@ -95,6 +95,9 @@ func BuildSchedulerPluginsControllerComponent(conf BuildSchedulerPluginsControll
 		Volumes: volumes,
 		WorkDir: conf.Workdir,
 		Metric:  metric,
+		// /readyz succeeds once the manager serves, as it does for the upstream deployment.
+		// It is served on the default of --probeAddr.
+		ReadinessProbe: addonReadinessProbe(conf.Version, schedulerPluginsReadyzVersion, defaultHealthProbePort),
 	}
 
 	if len(conf.RawManifests) != 0 {

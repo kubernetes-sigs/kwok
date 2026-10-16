@@ -19,6 +19,7 @@ package compose
 import (
 	"context"
 	"errors"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -32,6 +33,7 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
@@ -310,18 +312,23 @@ func TestInspectComponentProbeLongClusterName(t *testing.T) {
 }
 
 func TestInspectComponentProbeWithoutAddress(t *testing.T) {
-	// Without an address on the cluster network, the container name is used, and the probe still fails closed.
+	// Without an address on the cluster network, a container name too long to resolve is not relayed,
+	// and the probe fails closed with an error that says why.
 	f := newFakeComposeWithName(t, "kwokctl-readiness-docker-1-37-0", testKwokController, testKubectlProxy)
 	f.set(t, consts.ComponentKwokController, "running")
 	f.set(t, consts.ComponentKubeApiserverInsecureProxy, "running", "ready")
 
 	got, err := f.inspect(t, consts.ComponentKubeApiserverInsecureProxy)
-	if err != nil || got != runtime.ComponentStatusRunning {
-		t.Fatalf("status = %v, %v, want %v", got, err, runtime.ComponentStatusRunning)
+	if !errors.Is(err, errProbeAddressUnavailable) || got != runtime.ComponentStatusRunning {
+		t.Fatalf("status = %v, %v, want %v, %v", got, err, runtime.ComponentStatusRunning, errProbeAddressUnavailable)
 	}
-	want := []string{f.Name() + "-kwok-controller nc " + f.Name() + "-kube-apiserver-insecure-proxy:8001"}
-	if got := f.requests(t); strings.Join(got, "\n") != strings.Join(want, "\n") {
-		t.Errorf("relayed requests = %q, want %q", got, want)
+	if got := f.requests(t); len(got) != 0 {
+		t.Errorf("relayed requests = %q, want none", got)
+	}
+
+	ready, err := f.Ready(context.Background())
+	if ready {
+		t.Fatalf("Ready() = %v, %v, want false", ready, err)
 	}
 }
 
@@ -560,5 +567,79 @@ func TestInspectComponentHTTPSProbeRelayTimeout(t *testing.T) {
 	// The relay is killed once the probe times out, even though its peer keeps the connection open.
 	if elapsed := time.Since(start); elapsed < 900*time.Millisecond || elapsed > 4*time.Second {
 		t.Errorf("probe took %v, want about the probe timeout", elapsed)
+	}
+}
+
+func TestInspectComponentProbeRelayPeerKeepsConnection(t *testing.T) {
+	requireOnLinux(t)
+	// The peer answers and keeps the connection open, so nc does not exit on its own.
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan struct{})
+	t.Cleanup(func() {
+		close(done)
+		_ = listener.Close()
+	})
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			go func() {
+				buf := make([]byte, 4096)
+				_, _ = conn.Read(buf)
+				_, _ = io.WriteString(conn, "HTTP/1.0 200 OK\r\n\r\n")
+				<-done
+				_ = conn.Close()
+			}()
+		}
+	}()
+	port := uint32(listener.Addr().(*net.TCPAddr).Port)
+
+	f := newFakeCompose(t, testKwokController, probeComponent(port, internalversion.URISchemeHTTP, 15))
+	f.checkNoLeak(t)
+	f.set(t, consts.ComponentKwokController, "running")
+	f.set(t, consts.ComponentKubeApiserver, "running")
+	f.setRelay(t, consts.ComponentKubeApiserver)
+
+	start := time.Now()
+	got, err := f.inspect(t, consts.ComponentKubeApiserver)
+	if err != nil || got != runtime.ComponentStatusReady {
+		t.Fatalf("status = %v, %v, want %v", got, err, runtime.ComponentStatusReady)
+	}
+	// The relay is killed shortly after the response, rather than when the probe times out.
+	if elapsed := time.Since(start); elapsed > probeRelayCloseGrace+3*time.Second {
+		t.Errorf("probe took %v, want it to end after the close grace", elapsed)
+	}
+}
+
+func TestInspectComponentPatchedProbeConflict(t *testing.T) {
+	// The endpoint would answer, but the patched arguments keep the real one from answering the probe.
+	apiserver := probeComponent(6443, internalversion.URISchemeHTTPS, 5)
+	apiserver.Args = []string{"--secure-port=6443", "--authorization-mode=AlwaysAllow"}
+	f := newFakeCompose(t, testKwokController, apiserver)
+	f.set(t, consts.ComponentKwokController, "running")
+	f.set(t, consts.ComponentKubeApiserver, "running", "ready")
+	f.setIP(t, consts.ComponentKubeApiserver, "172.18.0.3")
+
+	got, err := f.inspect(t, consts.ComponentKubeApiserver)
+	if !errors.Is(err, components.ErrReadinessProbeConflict) || got != runtime.ComponentStatusRunning {
+		t.Fatalf("status = %v, %v, want %v, %v", got, err, runtime.ComponentStatusRunning, components.ErrReadinessProbeConflict)
+	}
+	if got := f.requests(t); len(got) != 0 {
+		t.Errorf("relayed requests = %q, want none", got)
+	}
+	ready, err := f.Ready(context.Background())
+	if ready {
+		t.Fatalf("Ready() = %v, %v, want false", ready, err)
+	}
+
+	f.set(t, consts.ComponentKubeApiserver, "stopped")
+	got, err = f.inspect(t, consts.ComponentKubeApiserver)
+	if err != nil || got != runtime.ComponentStatusStopped {
+		t.Fatalf("status of a stopped component = %v, %v, want %v", got, err, runtime.ComponentStatusStopped)
 	}
 }

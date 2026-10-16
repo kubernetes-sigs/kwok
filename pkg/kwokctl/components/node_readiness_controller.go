@@ -93,6 +93,9 @@ func BuildNodeReadinessControllerComponent(conf BuildNodeReadinessControllerComp
 		Args:    args,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		// /readyz succeeds once the manager serves, as it does for the upstream deployment.
+		// It is served on the default of --health-probe-bind-address.
+		ReadinessProbe: addonReadinessProbe(conf.Version, nodeReadinessControllerReadyzVersion, defaultHealthProbePort),
 	}
 
 	if len(conf.RawManifests) != 0 {

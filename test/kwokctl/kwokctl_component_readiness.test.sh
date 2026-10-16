@@ -250,6 +250,16 @@ function assert_frozen() {
   esac
 }
 
+# test_probe_follows_freeze checks that a probed component is not ready while frozen, and ready once resumed.
+function test_probe_follows_freeze() {
+  local name="${1}"
+  local component="${2}"
+  freeze "${component}" || return 1
+  wait_component_status "${name}" "${component}" NotReady || return 1
+  resume "${component}" || return 1
+  wait_component_status "${name}" "${component}" Ready || return 1
+}
+
 # test_wait_blocks_until_resumed checks that --wait blocks while the component does not answer.
 function test_wait_blocks_until_resumed() {
   local name="${1}"
@@ -305,6 +315,9 @@ function test_docker() {
   docker stop "kwok-${name}-jobset" || return 1
   wait_component_status "${name}" jobset Stopped || return 1
 
+  test_probe_follows_freeze "${name}" kube-scheduler || return 1
+  test_probe_follows_freeze "${name}" kube-controller-manager || return 1
+
   # kube-apiserver is probed over HTTPS through the nc relay.
   # This runs last, since components may lose their leader lease while kube-apiserver is frozen.
   freeze kube-apiserver || return 1
@@ -320,6 +333,9 @@ function test_binary() {
 
   kill -KILL "$(cat "${KWOK_WORKDIR}/clusters/${name}/pids/kwok-controller.pid")" || return 1
   wait_component_status "${name}" kwok-controller Stopped || return 1
+
+  test_probe_follows_freeze "${name}" kube-scheduler || return 1
+  test_probe_follows_freeze "${name}" kube-controller-manager || return 1
 
   # The proxy process keeps running, but cannot serve while kube-apiserver does not answer.
   # This runs last, since components may lose their leader lease while kube-apiserver is frozen.
@@ -373,7 +389,7 @@ function main() {
 
     assert_all_ready "${name}" "after --wait" || exit 1
 
-    # Components without a probe keep the previous behavior.
+    # kube-scheduler is probed on binary and docker, and runs under kubeadm on kind.
     if [[ "$(component_status "${name}" kube-scheduler)" != "Ready" ]]; then
       echo "kube-scheduler should be Ready"
       exit 1

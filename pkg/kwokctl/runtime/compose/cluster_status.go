@@ -26,11 +26,13 @@ import (
 	"math"
 	"net"
 	"os"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
@@ -114,20 +116,78 @@ func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.Co
 		}
 	}
 
-	host := c.probeHost(status, name)
+	if component.ReadinessProbe == nil {
+		return runtime.ComponentStatusReady, nil
+	}
+	// Arguments that keep the probe from succeeding are reported, rather than probed.
+	if err := components.ReadinessProbeConflict(component); err != nil {
+		return runtime.ComponentStatusRunning, err
+	}
+	host, err := c.probeHost(status, name)
+	if err != nil {
+		return runtime.ComponentStatusRunning, err
+	}
 	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, host, c.probeDial(host)), nil
 }
+
+// maxDNSLabelLength is the longest name that can be resolved as a single DNS label.
+const maxDNSLabelLength = 63
 
 // probeHost returns the address of the component on the cluster network.
 // The container name is a single DNS label, which cannot be resolved once it is longer than 63 characters,
 // as it is for long cluster names, so the IP address is preferred.
-func (c *Cluster) probeHost(status *inspectStatus, name string) string {
-	if status != nil {
-		if network, ok := status.NetworkSettings.Networks[c.Name()]; ok && network.IPAddress != "" {
-			return network.IPAddress
+func (c *Cluster) probeHost(status *inspectStatus, name string) (string, error) {
+	if ip := status.networkAddress(c.Name()); ip != "" {
+		return ip, nil
+	}
+	host := c.Name() + "-" + name
+	if len(host) > maxDNSLabelLength {
+		return "", fmt.Errorf("%w: %s has no address on network %s, and its container name is too long to resolve",
+			errProbeAddressUnavailable, name, c.Name())
+	}
+	return host, nil
+}
+
+// errProbeAddressUnavailable is returned when a readiness probe is configured but its target cannot be addressed.
+var errProbeAddressUnavailable = errors.New("readiness probe target has no usable address")
+
+// nerdctlNetworksLabel lists the networks of a nerdctl container, in the order they were attached.
+const nerdctlNetworksLabel = "nerdctl/networks"
+
+// networkAddress returns the IP address of the container on the given network, or "" if it has none.
+// Docker, Podman and nerdctl since v2.4 key the networks by name. Earlier nerdctl releases key them
+// by interface, "unknown-eth<i>" for the i-th network the container was attached to, which is resolved
+// through the networks label, as nerdctl itself does since v2.4.
+// No other network is ever used, so the address cannot belong to another network.
+func (s *inspectStatus) networkAddress(network string) string {
+	if s == nil {
+		return ""
+	}
+	endpoint, ok := s.NetworkSettings.Networks[network]
+	if !ok {
+		var networks []string
+		if json.Unmarshal([]byte(s.Config.Labels[nerdctlNetworksLabel]), &networks) == nil {
+			if i := slices.Index(networks, network); i >= 0 {
+				endpoint, ok = s.NetworkSettings.Networks["unknown-eth"+strconv.Itoa(i)]
+			}
 		}
 	}
-	return c.Name() + "-" + name
+	if !ok {
+		return ""
+	}
+	if ip := net.ParseIP(endpoint.IPAddress); ip != nil && ip.To4() != nil && reachableIP(ip) {
+		return ip.String()
+	}
+	if ip := net.ParseIP(endpoint.GlobalIPv6Address); ip != nil && ip.To4() == nil && reachableIP(ip) {
+		return ip.String()
+	}
+	return ""
+}
+
+// reachableIP reports whether another container on the network can reach ip.
+// A link-local address would also need the zone of the interface, which the inspect result does not have.
+func reachableIP(ip net.IP) bool {
+	return !ip.IsUnspecified() && !ip.IsLoopback() && !ip.IsLinkLocalUnicast() && !ip.IsMulticast()
 }
 
 // errProbeRelayUnavailable is returned when a readiness probe is configured but cannot be relayed.
@@ -266,11 +326,17 @@ type inspectStatus struct {
 	State struct {
 		Running bool
 	}
-	NetworkSettings struct {
-		Networks map[string]struct {
-			IPAddress string
-		}
+	Config struct {
+		Labels map[string]string
 	}
+	NetworkSettings struct {
+		Networks map[string]inspectEndpoint
+	}
+}
+
+type inspectEndpoint struct {
+	IPAddress         string
+	GlobalIPv6Address string
 }
 
 func checkInspect(raw []byte) (bool, error) {

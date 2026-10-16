@@ -18,6 +18,7 @@ package binary
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -28,6 +29,8 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 )
@@ -75,10 +78,19 @@ func newTLSProbeTarget(t *testing.T, address string, ready *atomic.Bool) uint32 
 // newTestCluster returns a cluster with a single component that is running as the current test process.
 func newTestCluster(t *testing.T, bindAddress string, probe *internalversion.ComponentProbe) *Cluster {
 	t.Helper()
-	workdir := t.TempDir()
-	binary := utilspath.Join(workdir, "bin", "fake-component")
+	return newTestClusterWithComponent(t, bindAddress, internalversion.Component{
+		Name:           "fake-component",
+		ReadinessProbe: probe,
+	})
+}
 
-	pidPath := utilspath.Join(workdir, "pids", "fake-component.pid")
+// newTestClusterWithComponent returns a cluster with the given component, running as the current test process.
+func newTestClusterWithComponent(t *testing.T, bindAddress string, component internalversion.Component) *Cluster {
+	t.Helper()
+	workdir := t.TempDir()
+	binary := utilspath.Join(workdir, "bin", component.Name)
+
+	pidPath := utilspath.Join(workdir, "pids", component.Name+".pid")
 	if err := os.MkdirAll(utilspath.Dir(pidPath), 0o750); err != nil {
 		t.Fatal(err)
 	}
@@ -86,6 +98,8 @@ func newTestCluster(t *testing.T, bindAddress string, probe *internalversion.Com
 		t.Fatal(err)
 	}
 
+	component.Binary = binary
+	component.WorkDir = workdir
 	c := &Cluster{
 		Cluster: runtime.NewCluster("test", workdir),
 	}
@@ -93,14 +107,7 @@ func newTestCluster(t *testing.T, bindAddress string, probe *internalversion.Com
 		Options: internalversion.KwokctlConfigurationOptions{
 			BindAddress: bindAddress,
 		},
-		Components: []internalversion.Component{
-			{
-				Name:           "fake-component",
-				Binary:         binary,
-				WorkDir:        workdir,
-				ReadinessProbe: probe,
-			},
-		},
+		Components: []internalversion.Component{component},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -260,5 +267,34 @@ func TestProbeHost(t *testing.T) {
 				t.Errorf("probeHost(%q) = %q, want %q", tt.bindAddress, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestInspectComponentPatchedProbeConflict(t *testing.T) {
+	// Even an endpoint that answers is not trusted, since the patched arguments keep the real one from answering.
+	var ready atomic.Bool
+	ready.Store(true)
+	port := newTLSProbeTarget(t, "127.0.0.1", &ready)
+	c := newTestClusterWithComponent(t, "0.0.0.0", internalversion.Component{
+		Name: consts.ComponentKubeApiserver,
+		Args: []string{"--secure-port=" + strconv.Itoa(int(port)), "--anonymous-auth=false"},
+		ReadinessProbe: &internalversion.ComponentProbe{
+			HTTPGet: &internalversion.ComponentHTTPGetAction{
+				Path:   "/readyz",
+				Port:   port,
+				Scheme: internalversion.URISchemeHTTPS,
+			},
+		},
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	status, err := c.InspectComponent(ctx, consts.ComponentKubeApiserver)
+	if !errors.Is(err, components.ErrReadinessProbeConflict) || status != runtime.ComponentStatusRunning {
+		t.Fatalf("InspectComponent() = %v, %v, want %v, %v", status, err, runtime.ComponentStatusRunning, components.ErrReadinessProbeConflict)
+	}
+	isReady, err := c.Ready(ctx)
+	if isReady {
+		t.Fatalf("Ready() = %v, %v, want false", isReady, err)
 	}
 }

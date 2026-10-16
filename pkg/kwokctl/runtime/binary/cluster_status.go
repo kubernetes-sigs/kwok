@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
@@ -92,6 +93,12 @@ func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.Co
 	}
 
 	running := c.isRunning(ctx, component)
+	if running {
+		// Arguments that keep the probe from succeeding are reported, rather than probed.
+		if err := components.ReadinessProbeConflict(component); err != nil {
+			return runtime.ComponentStatusRunning, err
+		}
+	}
 	host := probeHost(config.Options.BindAddress)
 	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, host, runtime.DialProbe(host)), nil
 }

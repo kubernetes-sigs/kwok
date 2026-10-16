@@ -304,3 +304,317 @@ func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
 		})
 	}
 }
+
+func httpsReadinessProbe(path string, port uint32) *internalversion.ComponentProbe {
+	probe := httpGetReadinessProbe(path, port)
+	probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
+	return probe
+}
+
+func TestBuildKubeControllerManagerComponentReadinessProbe(t *testing.T) {
+	tests := []struct {
+		name    string
+		runtime string
+		version version.Version
+		secure  bool
+		want    *internalversion.ComponentProbe
+		wantArg string
+	}{
+		{
+			name:    "secure container port",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 37, 0),
+			secure:  true,
+			want:    httpsReadinessProbe("/healthz", 10257),
+			wantArg: "--secure-port=10257",
+		},
+		{
+			name:    "secure native port",
+			runtime: consts.RuntimeTypeBinary,
+			version: version.NewVersion(1, 37, 0),
+			secure:  true,
+			want:    httpsReadinessProbe("/healthz", testNativePort),
+			wantArg: "--secure-port=32000",
+		},
+		{
+			name:    "first release that allows the health paths",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 13, 0),
+			secure:  true,
+			want:    httpsReadinessProbe("/healthz", 10257),
+			wantArg: "--secure-port=10257",
+		},
+		{
+			// Without --authorization-always-allow-paths, an anonymous probe is not authorized.
+			name:    "secure port before the health paths are allowed",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 12, 10),
+			secure:  true,
+			want:    nil,
+		},
+		{
+			name:    "insecure container port",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 12, 10),
+			want:    httpGetReadinessProbe("/healthz", 10252),
+			wantArg: "--port=10252",
+		},
+		{
+			name:    "insecure native port",
+			runtime: consts.RuntimeTypeBinary,
+			version: version.NewVersion(1, 10, 13),
+			want:    httpGetReadinessProbe("/healthz", testNativePort),
+			wantArg: "--port=32000",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			component, err := BuildKubeControllerManagerComponent(BuildKubeControllerManagerComponentConfig{
+				Runtime:           tt.runtime,
+				ProjectName:       "kwok-test",
+				Version:           tt.version,
+				BindAddress:       "0.0.0.0",
+				Port:              testNativePort,
+				SecurePort:        tt.secure,
+				KubeAuthorization: tt.secure,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(component.ReadinessProbe, tt.want) {
+				t.Fatalf("ReadinessProbe = %#v, want %#v", component.ReadinessProbe, tt.want)
+			}
+			if tt.want == nil {
+				return
+			}
+			if !hasPort(component, tt.want.HTTPGet.Port) {
+				t.Errorf("probe port %d is not one of the component ports %#v", tt.want.HTTPGet.Port, component.Ports)
+			}
+			if !slices.Contains(component.Args, tt.wantArg) {
+				t.Errorf("args %q do not contain %q", component.Args, tt.wantArg)
+			}
+		})
+	}
+}
+
+func TestBuildKubeSchedulerComponentReadinessProbe(t *testing.T) {
+	before := previousRelease(kubeSchedulerReadyzVersion)
+	tests := []struct {
+		name       string
+		runtime    string
+		version    version.Version
+		secure     bool
+		configPath string
+		want       *internalversion.ComponentProbe
+		wantArg    string
+	}{
+		{
+			name:    "readyz on the secure container port",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 37, 0),
+			secure:  true,
+			want:    httpsReadinessProbe("/readyz", 10259),
+			wantArg: "--secure-port=10259",
+		},
+		{
+			name:    "first release with readyz",
+			runtime: consts.RuntimeTypeBinary,
+			version: kubeSchedulerReadyzVersion,
+			secure:  true,
+			want:    httpsReadinessProbe("/readyz", testNativePort),
+			wantArg: "--secure-port=32000",
+		},
+		{
+			name:    "healthz before readyz",
+			runtime: consts.RuntimeTypeDocker,
+			version: before,
+			secure:  true,
+			want:    httpsReadinessProbe("/healthz", 10259),
+			wantArg: "--secure-port=10259",
+		},
+		{
+			name:    "oldest secure release",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 13, 12),
+			secure:  true,
+			want:    httpsReadinessProbe("/healthz", 10259),
+			wantArg: "--secure-port=10259",
+		},
+		{
+			// The scheduler-plugins image reports its own version, and serves /healthz.
+			name:    "scheduler-plugins image",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(0, 34, 7),
+			secure:  true,
+			want:    httpsReadinessProbe("/healthz", 10259),
+			wantArg: "--secure-port=10259",
+		},
+		{
+			name:       "secure port with a configuration file",
+			runtime:    consts.RuntimeTypeDocker,
+			version:    version.NewVersion(1, 37, 0),
+			secure:     true,
+			configPath: "/scheduler.yaml",
+			want:       httpsReadinessProbe("/readyz", 10259),
+			wantArg:    "--secure-port=10259",
+		},
+		{
+			name:    "insecure container port",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 12, 10),
+			want:    httpGetReadinessProbe("/healthz", 10251),
+			wantArg: "--port=10251",
+		},
+		{
+			name:    "insecure native port",
+			runtime: consts.RuntimeTypeBinary,
+			version: version.NewVersion(1, 10, 13),
+			want:    httpGetReadinessProbe("/healthz", testNativePort),
+			wantArg: "--port=32000",
+		},
+		{
+			// The insecure serving flags are ignored with a configuration file.
+			name:       "insecure port with a configuration file",
+			runtime:    consts.RuntimeTypeDocker,
+			version:    version.NewVersion(1, 12, 10),
+			configPath: "/scheduler.yaml",
+			want:       nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			component, err := BuildKubeSchedulerComponent(BuildKubeSchedulerComponentConfig{
+				Runtime:     tt.runtime,
+				ProjectName: "kwok-test",
+				Version:     tt.version,
+				BindAddress: "0.0.0.0",
+				Port:        testNativePort,
+				SecurePort:  tt.secure,
+				ConfigPath:  tt.configPath,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(component.ReadinessProbe, tt.want) {
+				t.Fatalf("ReadinessProbe = %#v, want %#v", component.ReadinessProbe, tt.want)
+			}
+			if tt.want == nil {
+				return
+			}
+			if !hasPort(component, tt.want.HTTPGet.Port) {
+				t.Errorf("probe port %d is not one of the component ports %#v", tt.want.HTTPGet.Port, component.Ports)
+			}
+			if !slices.Contains(component.Args, tt.wantArg) {
+				t.Errorf("args %q do not contain %q", component.Args, tt.wantArg)
+			}
+		})
+	}
+}
+
+func TestBuildAddonComponentReadinessProbe(t *testing.T) {
+	tests := []struct {
+		name  string
+		build func(v version.Version, healthProbePort uint32) (internalversion.Component, error)
+		// verified is the earliest release whose /readyz was verified.
+		verified version.Version
+	}{
+		{
+			name: consts.ComponentKueue,
+			build: func(v version.Version, port uint32) (internalversion.Component, error) {
+				return BuildKueueComponent(BuildKueueComponentConfig{Runtime: consts.RuntimeTypeDocker, Version: v, HealthProbePort: port})
+			},
+			verified: version.NewVersion(0, 18, 1),
+		},
+		{
+			name: consts.ComponentLWS,
+			build: func(v version.Version, port uint32) (internalversion.Component, error) {
+				return BuildLWSComponent(BuildLWSComponentConfig{Runtime: consts.RuntimeTypeDocker, Version: v, HealthProbePort: port})
+			},
+			verified: version.NewVersion(0, 9, 0),
+		},
+		{
+			name: consts.ComponentNodeReadinessController,
+			build: func(v version.Version, _ uint32) (internalversion.Component, error) {
+				return BuildNodeReadinessControllerComponent(BuildNodeReadinessControllerComponentConfig{Runtime: consts.RuntimeTypeDocker, Version: v})
+			},
+			verified: version.NewVersion(0, 3, 0),
+		},
+		{
+			name: consts.ComponentSchedulerPlugins,
+			build: func(v version.Version, _ uint32) (internalversion.Component, error) {
+				return BuildSchedulerPluginsControllerComponent(BuildSchedulerPluginsControllerComponentConfig{Runtime: consts.RuntimeTypeDocker, Version: v})
+			},
+			verified: version.NewVersion(0, 34, 7),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, c := range []struct {
+				version version.Version
+				want    *internalversion.ComponentProbe
+			}{
+				{tt.verified, httpGetReadinessProbe("/readyz", 8081)},
+				{version.NewVersion(tt.verified.Major, tt.verified.Minor+1, 0), httpGetReadinessProbe("/readyz", 8081)},
+				// An earlier release is not probed.
+				{previousRelease(tt.verified), nil},
+				// An unknown version is taken as the latest, as it is everywhere in kwokctl.
+				{version.Unknown, httpGetReadinessProbe("/readyz", 8081)},
+			} {
+				component, err := tt.build(c.version, 8081)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.DeepEqual(component.ReadinessProbe, c.want) {
+					t.Errorf("version %s: ReadinessProbe = %#v, want %#v", c.version, component.ReadinessProbe, c.want)
+				}
+			}
+		})
+	}
+
+	// The port comes from the configuration, and a configuration that turns the probes off is not probed.
+	component, err := BuildKueueComponent(BuildKueueComponentConfig{Runtime: consts.RuntimeTypeDocker, Version: version.NewVersion(0, 18, 1), HealthProbePort: 9081})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := httpGetReadinessProbe("/readyz", 9081); !reflect.DeepEqual(component.ReadinessProbe, want) {
+		t.Errorf("ReadinessProbe = %#v, want %#v", component.ReadinessProbe, want)
+	}
+	component, err = BuildLWSComponent(BuildLWSComponentConfig{Runtime: consts.RuntimeTypeDocker, Version: version.NewVersion(0, 9, 0)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if component.ReadinessProbe != nil {
+		t.Errorf("ReadinessProbe = %#v, want none without a health probe port", component.ReadinessProbe)
+	}
+}
+
+// previousRelease returns the release before v.
+func previousRelease(v version.Version) version.Version {
+	if v.Patch > 0 {
+		return version.NewVersion(v.Major, v.Minor, v.Patch-1)
+	}
+	return version.NewVersion(v.Major, v.Minor-1, 0)
+}
+
+func TestHealthProbePortFromConfig(t *testing.T) {
+	tests := []struct {
+		config string
+		want   uint32
+	}{
+		{config: "apiVersion: config.kueue.x-k8s.io/v1beta2\nkind: Configuration\nhealth:\n  healthProbeBindAddress: :8081\n", want: 8081},
+		{config: "health:\n  healthProbeBindAddress: 0.0.0.0:9081\n", want: 9081},
+		// Unset, the configuration API defaults it to :8081.
+		{config: "apiVersion: config.lws.x-k8s.io/v1alpha1\nkind: Configuration\nleaderElection:\n  leaderElect: false\n", want: 8081},
+		{config: "health: {}\n", want: 8081},
+		// "0" turns the endpoint off.
+		{config: "health:\n  healthProbeBindAddress: \"0\"\n", want: 0},
+		{config: "health:\n  healthProbeBindAddress: \"\"\n", want: 0},
+		{config: "health:\n  healthProbeBindAddress: :http\n", want: 0},
+		{config: "health: [", want: 0},
+	}
+	for _, tt := range tests {
+		if got := HealthProbePortFromConfig(tt.config); got != tt.want {
+			t.Errorf("HealthProbePortFromConfig(%q) = %d, want %d", tt.config, got, tt.want)
+		}
+	}
+}
