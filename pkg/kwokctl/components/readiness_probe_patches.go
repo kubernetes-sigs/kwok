@@ -108,7 +108,7 @@ func checkAlwaysAllowPaths(flags map[string]string, probe *internalversion.Compo
 // where each entry matches exactly, or by prefix if it ends in "*", and the leading "/" is optional.
 func alwaysAllowed(paths, path string) bool {
 	path = strings.TrimPrefix(path, "/")
-	for _, p := range strings.Split(paths, ",") {
+	for p := range strings.SplitSeq(paths, ",") {
 		p = strings.TrimPrefix(p, "/")
 		if prefix, ok := strings.CutSuffix(p, "*"); ok {
 			if strings.HasPrefix(path, prefix) {
@@ -215,7 +215,7 @@ func ReadinessProbeConflict(component internalversion.Component) error {
 
 // probedURL returns the first plain HTTP URL of a list that listens on all interfaces.
 func probedURL(urls string) (*url.URL, bool) {
-	for _, raw := range strings.Split(urls, ",") {
+	for raw := range strings.SplitSeq(urls, ",") {
 		u, err := url.Parse(raw)
 		if err != nil || u.Scheme != "http" || !listensOnAllInterfaces(u.Hostname()) {
 			continue
@@ -230,7 +230,7 @@ func probedURL(urls string) (*url.URL, bool) {
 
 // servesPlainHTTP reports whether a list of URLs has a plain HTTP URL on port.
 func servesPlainHTTP(urls string, port uint32) bool {
-	for _, raw := range strings.Split(urls, ",") {
+	for raw := range strings.SplitSeq(urls, ",") {
 		u, err := url.Parse(raw)
 		if err != nil || u.Scheme != "http" {
 			continue

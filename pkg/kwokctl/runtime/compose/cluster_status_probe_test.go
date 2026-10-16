@@ -367,7 +367,7 @@ func (f *fakeCompose) leaked(t *testing.T) []string {
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		t.Fatal(err)
 	}
-	for _, pid := range strings.Fields(string(data)) {
+	for pid := range strings.FieldsSeq(string(data)) {
 		// A zombie is gone, since it holds no resources but its exit status.
 		stat, err := os.ReadFile("/proc/" + pid + "/stat")
 		if err == nil && !strings.Contains(string(stat), ") Z ") {
@@ -375,7 +375,7 @@ func (f *fakeCompose) leaked(t *testing.T) []string {
 		}
 	}
 	buf := make([]byte, 1<<20)
-	for _, stack := range strings.Split(string(buf[:goruntime.Stack(buf, true)]), "\n\n") {
+	for stack := range strings.SplitSeq(string(buf[:goruntime.Stack(buf, true)]), "\n\n") {
 		if strings.Contains(stack, "compose.(*Cluster).probeDial") ||
 			strings.Contains(stack, "compose.(*probeRelayConn)") ||
 			strings.Contains(stack, "kwokctl/runtime/probe.go") {
