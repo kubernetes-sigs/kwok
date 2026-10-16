@@ -36,9 +36,11 @@ import (
 
 func TestLoaderRestoresOwnerChain(t *testing.T) {
 	for _, tc := range []struct {
-		name   string
-		names  []string
-		owners map[string][]string
+		name         string
+		names        []string
+		owners       map[string][]string
+		pendingOwner string
+		failCreate   string
 	}{
 		{
 			name:   "ordered",
@@ -70,6 +72,18 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 			names:  []string{"child", "grandchild", "parent"},
 			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child", "parent"}},
 		},
+		{
+			name:         "three-owners-last-missing",
+			names:        []string{"grandchild", "parent", "child"},
+			owners:       map[string][]string{"grandchild": {"parent", "child", "missing"}},
+			pendingOwner: "missing",
+		},
+		{
+			name:       "three-owners-create-failure",
+			names:      []string{"grandchild", "parent", "child", "other"},
+			owners:     map[string][]string{"grandchild": {"parent", "child", "other"}},
+			failCreate: "grandchild",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := t.Context()
@@ -82,6 +96,9 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 			dynamicClient.PrependReactor("create", "configmaps", func(action clienttesting.Action) (bool, runtime.Object, error) {
 				obj := action.(clienttesting.CreateAction).GetObject().(*unstructured.Unstructured)
 				createCalls[obj.GetName()]++
+				if obj.GetName() == tc.failCreate {
+					return true, nil, apierrors.NewBadRequest("simulated create failure")
+				}
 				created := obj.DeepCopy()
 				created.SetUID(types.UID("restored-" + obj.GetName()))
 				if err := dynamicClient.Tracker().Create(gvr, created, "default"); err != nil {
@@ -106,8 +123,39 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 			if err := loader.Load(ctx, utilsyaml.NewDecoder(strings.NewReader(input.String()))); err != nil {
 				t.Fatal(err)
 			}
-			for _, name := range []string{"parent", "child", "grandchild"} {
+			if tc.pendingOwner != "" {
+				key := uniqueKey{APIVersion: "v1", Kind: "ConfigMap", Name: tc.pendingOwner, UID: types.UID("original-" + tc.pendingOwner)}
+				if pending := loader.pending[key]; len(pending) != 1 {
+					t.Errorf("pending objects for %s = %d, want 1", tc.pendingOwner, len(pending))
+				}
+				if len(loader.pending) != 1 {
+					t.Errorf("pending owners = %d, want 1", len(loader.pending))
+				}
+			} else if len(loader.pending) != 0 {
+				t.Errorf("pending owners = %d, want 0", len(loader.pending))
+			}
+			wantFailed := 0
+			if tc.failCreate != "" {
+				wantFailed = 1
+			}
+			if loader.failedCounter != wantFailed {
+				t.Errorf("failed resources = %d, want %d", loader.failedCounter, wantFailed)
+			}
+			for _, name := range tc.names {
 				obj, err := dynamicClient.Resource(gvr).Namespace("default").Get(ctx, name, metav1.GetOptions{})
+				if name == tc.failCreate || (name == "grandchild" && tc.pendingOwner != "") {
+					if !apierrors.IsNotFound(err) {
+						t.Errorf("%s should not be restored, got error %v", name, err)
+					}
+					wantCreates := 0
+					if name == tc.failCreate {
+						wantCreates = 1
+					}
+					if createCalls[name] != wantCreates {
+						t.Errorf("%s was created %d times, want %d", name, createCalls[name], wantCreates)
+					}
+					continue
+				}
 				if err != nil {
 					t.Fatalf("%s was not restored: %v", name, err)
 				}

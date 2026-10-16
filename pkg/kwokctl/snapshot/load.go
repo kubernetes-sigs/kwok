@@ -202,17 +202,13 @@ func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 
 	// If the object has owner references, we need to wait until all the owner references are created.
 	if ownerReferences := obj.GetOwnerReferences(); len(ownerReferences) != 0 {
-		allExist := true
 		for _, ownerReference := range ownerReferences {
-			key := uniqueKeyFromOwnerReference(ownerReference)
-			if _, ok := l.exist[key]; !ok {
-				allExist = false
-				l.pending[key] = append(l.pending[key], obj)
+			ownerKey := uniqueKeyFromOwnerReference(ownerReference)
+			if _, ok := l.exist[ownerKey]; !ok {
+				// Wait for one owner at a time, then re-check the remaining owners.
+				l.pending[ownerKey] = append(l.pending[ownerKey], obj)
+				return
 			}
-		}
-		// early return if not all owner references exist
-		if !allExist {
-			return
 		}
 
 		// update owner references
