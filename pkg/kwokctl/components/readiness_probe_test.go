@@ -18,6 +18,7 @@ package components
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -171,5 +172,135 @@ func TestConvertToPodComponentReadinessProbe(t *testing.T) {
 	}
 	if !pod.Spec.HostNetwork {
 		t.Fatal("pod must use the host network for the probe to reach the component port")
+	}
+}
+
+func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
+	https := func(path string, port uint32) *internalversion.ComponentProbe {
+		probe := httpGetReadinessProbe(path, port)
+		probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
+		return probe
+	}
+	tests := []struct {
+		name          string
+		runtime       string
+		version       version.Version
+		secure        bool
+		authorization bool
+		want          *internalversion.ComponentProbe
+		wantArg       string
+	}{
+		{
+			name:          "readyz on the secure container port",
+			runtime:       consts.RuntimeTypeDocker,
+			version:       version.NewVersion(1, 37, 0),
+			secure:        true,
+			authorization: true,
+			want:          https("/readyz", 6443),
+			wantArg:       "--secure-port=6443",
+		},
+		{
+			name:          "readyz on the secure native port",
+			runtime:       consts.RuntimeTypeBinary,
+			version:       version.NewVersion(1, 37, 0),
+			secure:        true,
+			authorization: true,
+			want:          https("/readyz", testNativePort),
+			wantArg:       "--secure-port=32000",
+		},
+		{
+			name:          "first release with readyz",
+			runtime:       consts.RuntimeTypeDocker,
+			version:       version.NewVersion(1, 16, 0),
+			secure:        true,
+			authorization: true,
+			want:          https("/readyz", 6443),
+			wantArg:       "--secure-port=6443",
+		},
+		{
+			name:          "healthz before readyz",
+			runtime:       consts.RuntimeTypeDocker,
+			version:       version.NewVersion(1, 15, 12),
+			secure:        true,
+			authorization: true,
+			want:          https("/healthz", 6443),
+			wantArg:       "--secure-port=6443",
+		},
+		{
+			name:          "healthz on the secure native port before readyz",
+			runtime:       consts.RuntimeTypeBinary,
+			version:       version.NewVersion(1, 13, 12),
+			secure:        true,
+			authorization: true,
+			want:          https("/healthz", testNativePort),
+			wantArg:       "--secure-port=32000",
+		},
+		{
+			name:    "insecure container port",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 12, 10),
+			want:    httpGetReadinessProbe("/healthz", 8080),
+			wantArg: "--insecure-port=8080",
+		},
+		{
+			name:    "insecure native port",
+			runtime: consts.RuntimeTypeBinary,
+			version: version.NewVersion(1, 10, 13),
+			want:    httpGetReadinessProbe("/healthz", testNativePort),
+			wantArg: "--insecure-port=32000",
+		},
+		{
+			name:    "insecure port with readyz",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 19, 16),
+			want:    httpGetReadinessProbe("/readyz", 8080),
+			wantArg: "--insecure-port=8080",
+		},
+		{
+			// Anonymous requests are rejected with the AlwaysAllow authorizer, so the probe could never succeed.
+			name:    "secure port without authorization",
+			runtime: consts.RuntimeTypeDocker,
+			version: version.NewVersion(1, 37, 0),
+			secure:  true,
+			want:    nil,
+		},
+		{
+			name:    "secure native port without authorization",
+			runtime: consts.RuntimeTypeBinary,
+			version: version.NewVersion(1, 16, 15),
+			secure:  true,
+			want:    nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			component, err := BuildKubeApiserverComponent(BuildKubeApiserverComponentConfig{
+				Runtime:           tt.runtime,
+				ProjectName:       "kwok-test",
+				Version:           tt.version,
+				BindAddress:       "0.0.0.0",
+				Port:              testNativePort,
+				EtcdAddress:       "127.0.0.1",
+				SecurePort:        tt.secure,
+				KubeAuthorization: tt.authorization,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(component.ReadinessProbe, tt.want) {
+				t.Fatalf("ReadinessProbe = %#v, want %#v", component.ReadinessProbe, tt.want)
+			}
+			if tt.want == nil {
+				return
+			}
+
+			// The probe must target the port kube-apiserver serves on, with the scheme it serves.
+			if !hasPort(component, tt.want.HTTPGet.Port) {
+				t.Errorf("probe port %d is not one of the component ports %#v", tt.want.HTTPGet.Port, component.Ports)
+			}
+			if !slices.Contains(component.Args, tt.wantArg) {
+				t.Errorf("args %q do not contain %q", component.Args, tt.wantArg)
+			}
+		})
 	}
 }

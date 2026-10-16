@@ -304,6 +304,13 @@ function test_docker() {
 
   docker stop "kwok-${name}-jobset" || return 1
   wait_component_status "${name}" jobset Stopped || return 1
+
+  # kube-apiserver is probed over HTTPS through the nc relay.
+  # This runs last, since components may lose their leader lease while kube-apiserver is frozen.
+  freeze kube-apiserver || return 1
+  wait_component_status "${name}" kube-apiserver NotReady || return 1
+  resume kube-apiserver || return 1
+  wait_component_status "${name}" kube-apiserver Ready || return 1
 }
 
 function test_binary() {
@@ -317,8 +324,10 @@ function test_binary() {
   # The proxy process keeps running, but cannot serve while kube-apiserver does not answer.
   # This runs last, since components may lose their leader lease while kube-apiserver is frozen.
   freeze kube-apiserver || return 1
+  wait_component_status "${name}" kube-apiserver NotReady || return 1
   wait_component_status "${name}" kube-apiserver-insecure-proxy NotReady || return 1
   resume kube-apiserver || return 1
+  wait_component_status "${name}" kube-apiserver Ready || return 1
   wait_component_status "${name}" kube-apiserver-insecure-proxy Ready || return 1
 }
 

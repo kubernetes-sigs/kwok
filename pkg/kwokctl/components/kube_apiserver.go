@@ -63,6 +63,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
+	var probePort uint32
 
 	if conf.EtcdPort == 0 {
 		conf.EtcdPort = 2379
@@ -193,6 +194,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				KeyPath:            pkiAdminKeyPath,
 				InsecureSkipVerify: true,
 			}
+			probePort = 6443
 		} else {
 			ports = append(
 				ports,
@@ -228,6 +230,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				KeyPath:            conf.AdminKeyPath,
 				InsecureSkipVerify: true,
 			}
+			probePort = conf.Port
 		}
 	} else {
 		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
@@ -250,6 +253,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				Host:   conf.ProjectName + "-" + consts.ComponentKubeApiserver + ":8080",
 				Path:   metricsPath,
 			}
+			probePort = 8080
 		} else {
 			ports = append(
 				ports,
@@ -269,6 +273,7 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 				Host:   utilsnet.LocalAddress + ":" + format.String(conf.Port),
 				Path:   metricsPath,
 			}
+			probePort = conf.Port
 		}
 	}
 
@@ -327,16 +332,40 @@ func BuildKubeApiserverComponent(conf BuildKubeApiserverComponentConfig) (compon
 	}
 
 	return internalversion.Component{
-		Name:    consts.ComponentKubeApiserver,
-		Version: conf.Version.String(),
-		Links:   links,
-		Command: []string{consts.ComponentKubeApiserver},
-		Ports:   ports,
-		Volumes: volumes,
-		Args:    args,
-		Binary:  conf.Binary,
-		Image:   conf.Image,
-		Metric:  metric,
-		WorkDir: conf.Workdir,
+		Name:           consts.ComponentKubeApiserver,
+		Version:        conf.Version.String(),
+		Links:          links,
+		Command:        []string{consts.ComponentKubeApiserver},
+		Ports:          ports,
+		Volumes:        volumes,
+		Args:           args,
+		Binary:         conf.Binary,
+		Image:          conf.Image,
+		Metric:         metric,
+		ReadinessProbe: kubeApiserverReadinessProbe(conf, probePort),
+		WorkDir:        conf.Workdir,
 	}, nil
+}
+
+// kubeApiserverReadinessProbe returns the readiness probe of kube-apiserver serving on port,
+// or nil if its health endpoints cannot be reached without credentials, which the probe does not send.
+//
+// The insecure port serves them to anyone. On the secure port, RBAC allows them to anonymous requests,
+// through the system:public-info-viewer role since Kubernetes 1.14, and the system:discovery role before.
+// Without authorization, kube-apiserver uses the AlwaysAllow authorizer, with which it turns anonymous
+// authentication off, so every probe would fail with 401 Unauthorized.
+func kubeApiserverReadinessProbe(conf BuildKubeApiserverComponentConfig, port uint32) *internalversion.ComponentProbe {
+	if conf.SecurePort && !conf.KubeAuthorization {
+		return nil
+	}
+	// /readyz was added in Kubernetes 1.16, before which /healthz is the only health endpoint.
+	path := "/healthz"
+	if conf.Version.GTE(version.NewVersion(1, 16, 0)) {
+		path = "/readyz"
+	}
+	probe := httpGetReadinessProbe(path, port)
+	if conf.SecurePort {
+		probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
+	}
+	return probe
 }

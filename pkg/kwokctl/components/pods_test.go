@@ -199,6 +199,33 @@ func TestConvertFromPod(t *testing.T) {
 	}
 }
 
+func TestConvertFromPodReadinessProbeExplicitHTTP(t *testing.T) {
+	got := ConvertFromPod(corev1.Pod{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					ReadinessProbe: &corev1.Probe{
+						HTTPGet: &corev1.HTTPGetAction{
+							Path:   "/healthz",
+							Port:   intstr.FromInt32(8080),
+							Scheme: corev1.URISchemeHTTP,
+						},
+					},
+				},
+			},
+		},
+	}).ReadinessProbe
+	want := &internalversion.ComponentProbe{
+		HTTPGet: &internalversion.ComponentHTTPGetAction{
+			Path: "/healthz",
+			Port: 8080,
+		},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("ReadinessProbe = %#v, want %#v", got, want)
+	}
+}
+
 func TestConvertToPodReadinessProbe(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -227,6 +254,45 @@ func TestConvertToPodReadinessProbe(t *testing.T) {
 				},
 				TimeoutSeconds: 5,
 				PeriodSeconds:  1,
+			},
+		},
+		{
+			name: "https get",
+			probe: &internalversion.ComponentProbe{
+				HTTPGet: &internalversion.ComponentHTTPGetAction{
+					Path:   "/readyz",
+					Port:   6443,
+					Scheme: internalversion.URISchemeHTTPS,
+				},
+				TimeoutSeconds: 5,
+			},
+			want: &corev1.Probe{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:   "/readyz",
+					Port:   intstr.FromInt32(6443),
+					Scheme: corev1.URISchemeHTTPS,
+				},
+				TimeoutSeconds: 5,
+				PeriodSeconds:  1,
+			},
+		},
+		{
+			// Kept as is, so that the pod fails validation instead of being probed with another scheme.
+			name: "unsupported scheme",
+			probe: &internalversion.ComponentProbe{
+				HTTPGet: &internalversion.ComponentHTTPGetAction{
+					Path:   "/readyz",
+					Port:   6443,
+					Scheme: "https",
+				},
+			},
+			want: &corev1.Probe{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:   "/readyz",
+					Port:   intstr.FromInt32(6443),
+					Scheme: "https",
+				},
+				PeriodSeconds: 1,
 			},
 		},
 		{

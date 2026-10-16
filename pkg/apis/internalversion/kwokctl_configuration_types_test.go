@@ -46,6 +46,30 @@ func TestComponentReadinessProbeConversion(t *testing.T) {
 				TimeoutSeconds: 5,
 			},
 		},
+		{
+			name: "https get",
+			raw:  `{"name":"kube-apiserver","readinessProbe":{"httpGet":{"path":"/readyz","port":6443,"scheme":"HTTPS"},"timeoutSeconds":5}}`,
+			want: &ComponentProbe{
+				HTTPGet: &ComponentHTTPGetAction{
+					Path:   "/readyz",
+					Port:   6443,
+					Scheme: URISchemeHTTPS,
+				},
+				TimeoutSeconds: 5,
+			},
+		},
+		{
+			// Rejected when the probe runs, rather than when the configuration is loaded.
+			name: "unsupported scheme",
+			raw:  `{"name":"kube-apiserver","readinessProbe":{"httpGet":{"path":"/readyz","port":6443,"scheme":"TCP"}}}`,
+			want: &ComponentProbe{
+				HTTPGet: &ComponentHTTPGetAction{
+					Path:   "/readyz",
+					Port:   6443,
+					Scheme: "TCP",
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -627,7 +627,24 @@ type ComponentHTTPGetAction struct {
 	// Port is the number of the port to access on the component.
 	// This must be a valid port number, 0 < x < 65536.
 	Port uint32 `json:"port"`
+
+	// Scheme to use for connecting to the component. Must be HTTP or HTTPS.
+	// Defaults to HTTP.
+	// Like the kubelet, an HTTPS probe does not verify the server certificate.
+	// +optional
+	Scheme URIScheme `json:"scheme,omitempty"`
 }
+
+// URIScheme identifies the scheme used for connection to a component for a readiness probe.
+// +enum
+type URIScheme string
+
+const (
+	// URISchemeHTTP means that the scheme used will be http://
+	URISchemeHTTP URIScheme = "HTTP"
+	// URISchemeHTTPS means that the scheme used will be https://
+	URISchemeHTTPS URIScheme = "HTTPS"
+)
 
 // Env represents an environment variable present in a Container.
 type Env struct {

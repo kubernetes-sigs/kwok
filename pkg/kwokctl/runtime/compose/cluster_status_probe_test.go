@@ -19,9 +19,14 @@ package compose
 import (
 	"context"
 	"errors"
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	goruntime "runtime"
+	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -38,6 +43,9 @@ import (
 // The relay behaves like the real one: a Go server cancels a request whose client half-closed,
 // which nc does at the end of its input, and nc only exits once its input ends.
 // Like the musl resolver of the kwok-controller image, nc cannot resolve a label longer than 63 characters.
+// With <container>.relay, nc instead relays bytes in both directions to the same port on 127.0.0.1,
+// so that a test server can answer, over TLS or not.
+// The PID of every process started by the relay is appended to the pids file.
 const fakeRuntime = `#!/usr/bin/env bash
 state="$(dirname "${0}")"
 case "${1}" in
@@ -70,6 +78,15 @@ exec)
       target="$(basename "${ip}" .ip)"
     fi
   done
+  echo "${$}" >>"${state}/pids"
+  if [[ -f "${state}/${target}.relay" ]]; then
+    exec 3<>"/dev/tcp/127.0.0.1/${8}" || exit 1
+    # An asynchronous command reads /dev/null unless its input is redirected.
+    cat <&0 >&3 2>/dev/null &
+    echo "${!}" >>"${state}/pids"
+    # Only the output is relayed by this process, so killing it ends the output.
+    exec cat <&3
+  fi
   while IFS= read -r line && [[ "${line}" != $'\r' ]]; do :; done
   if read -r -t 1 -n 1 _ || [[ "${?}" -gt 128 ]]; then
     if [[ -f "${state}/${target}.ready" ]]; then
@@ -131,7 +148,7 @@ func newFakeComposeWithName(t *testing.T, name string, components ...internalver
 func (f *fakeCompose) set(t *testing.T, component string, states ...string) {
 	t.Helper()
 	container := f.Name() + "-" + component
-	for _, s := range []string{"running", "stopped", "ready", "ip"} {
+	for _, s := range []string{"running", "stopped", "ready", "ip", "relay"} {
 		_ = os.Remove(utilspath.Join(f.state, container+"."+s))
 	}
 	for _, s := range states {
@@ -305,5 +322,243 @@ func TestInspectComponentProbeWithoutAddress(t *testing.T) {
 	want := []string{f.Name() + "-kwok-controller nc " + f.Name() + "-kube-apiserver-insecure-proxy:8001"}
 	if got := f.requests(t); strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Errorf("relayed requests = %q, want %q", got, want)
+	}
+}
+
+// setRelay makes nc relay to a test server listening on 127.0.0.1 at the probed port.
+func (f *fakeCompose) setRelay(t *testing.T, component string) {
+	t.Helper()
+	if err := os.WriteFile(utilspath.Join(f.state, f.Name()+"-"+component+".relay"), nil, 0o640); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// checkNoLeak fails the test if a relay process or a relay goroutine is still running at its end.
+func (f *fakeCompose) checkNoLeak(t *testing.T) {
+	t.Helper()
+	t.Cleanup(func() {
+		t.Helper()
+		deadline := time.Now().Add(5 * time.Second)
+		for {
+			leaked := f.leaked(t)
+			if len(leaked) == 0 {
+				return
+			}
+			if time.Now().After(deadline) {
+				t.Errorf("leaked: %q", leaked)
+				return
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+	})
+}
+
+func (f *fakeCompose) leaked(t *testing.T) []string {
+	t.Helper()
+	var leaked []string
+	data, err := os.ReadFile(utilspath.Join(f.state, "pids"))
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		t.Fatal(err)
+	}
+	for _, pid := range strings.Fields(string(data)) {
+		// A zombie is gone, since it holds no resources but its exit status.
+		stat, err := os.ReadFile("/proc/" + pid + "/stat")
+		if err == nil && !strings.Contains(string(stat), ") Z ") {
+			leaked = append(leaked, "process "+pid)
+		}
+	}
+	buf := make([]byte, 1<<20)
+	for _, stack := range strings.Split(string(buf[:goruntime.Stack(buf, true)]), "\n\n") {
+		if strings.Contains(stack, "compose.(*Cluster).probeDial") ||
+			strings.Contains(stack, "compose.(*probeRelayConn)") ||
+			strings.Contains(stack, "kwokctl/runtime/probe.go") {
+			leaked = append(leaked, stack)
+		}
+	}
+	return leaked
+}
+
+// newTLSProbeTarget starts an HTTPS server with a self-signed certificate whose /readyz succeeds only while ready is true.
+func newTLSProbeTarget(t *testing.T, ready *atomic.Bool) uint32 {
+	t.Helper()
+	server := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.Path != "/readyz" || !ready.Load() {
+			rw.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		_, _ = rw.Write([]byte("ok"))
+	}))
+	t.Cleanup(server.Close)
+	return uint32(server.Listener.Addr().(*net.TCPAddr).Port)
+}
+
+func probeComponent(port uint32, scheme internalversion.URIScheme, timeoutSeconds int32) internalversion.Component {
+	return internalversion.Component{
+		Name: consts.ComponentKubeApiserver,
+		ReadinessProbe: &internalversion.ComponentProbe{
+			HTTPGet: &internalversion.ComponentHTTPGetAction{
+				Path:   "/readyz",
+				Port:   port,
+				Scheme: scheme,
+			},
+			TimeoutSeconds: timeoutSeconds,
+		},
+	}
+}
+
+func requireOnLinux(t *testing.T) {
+	t.Helper()
+	if goruntime.GOOS != "linux" {
+		t.Skip("the relay processes are checked through /proc")
+	}
+}
+
+func TestInspectComponentHTTPSProbeRelayed(t *testing.T) {
+	requireOnLinux(t)
+	var ready atomic.Bool
+	port := newTLSProbeTarget(t, &ready)
+
+	f := newFakeComposeWithName(t, "kwokctl-readiness-docker-1-37-0", testKwokController,
+		probeComponent(port, internalversion.URISchemeHTTPS, 5))
+	f.checkNoLeak(t)
+	f.set(t, consts.ComponentKwokController, "running")
+	f.set(t, consts.ComponentKubeApiserver, "running")
+	f.setIP(t, consts.ComponentKubeApiserver, "172.18.0.3")
+	f.setRelay(t, consts.ComponentKubeApiserver)
+
+	got, err := f.inspect(t, consts.ComponentKubeApiserver)
+	if err != nil || got != runtime.ComponentStatusRunning {
+		t.Fatalf("status with a failing probe = %v, %v, want %v", got, err, runtime.ComponentStatusRunning)
+	}
+
+	ready.Store(true)
+	start := time.Now()
+	got, err = f.inspect(t, consts.ComponentKubeApiserver)
+	if err != nil || got != runtime.ComponentStatusReady {
+		t.Fatalf("status with a succeeding probe = %v, %v, want %v", got, err, runtime.ComponentStatusReady)
+	}
+	// The relay ends with the response, rather than when the probe times out.
+	if elapsed := time.Since(start); elapsed > 3*time.Second {
+		t.Errorf("probe took %v, want it to end once the response arrives", elapsed)
+	}
+
+	// TLS runs over nc, which only connects to the address of the component on the cluster network.
+	request := f.Name() + "-kwok-controller nc 172.18.0.3:" + strconv.FormatUint(uint64(port), 10)
+	want := []string{request, request}
+	if got := f.requests(t); strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("relayed requests = %q, want %q", got, want)
+	}
+}
+
+func TestInspectComponentHTTPProbeOfHTTPSEndpointRelayed(t *testing.T) {
+	requireOnLinux(t)
+	var ready atomic.Bool
+	ready.Store(true)
+	port := newTLSProbeTarget(t, &ready)
+
+	// A probe without a scheme keeps using HTTP, which an HTTPS endpoint rejects.
+	f := newFakeCompose(t, testKwokController, probeComponent(port, "", 5))
+	f.checkNoLeak(t)
+	f.set(t, consts.ComponentKwokController, "running")
+	f.set(t, consts.ComponentKubeApiserver, "running")
+	f.setRelay(t, consts.ComponentKubeApiserver)
+
+	got, err := f.inspect(t, consts.ComponentKubeApiserver)
+	if err != nil || got != runtime.ComponentStatusRunning {
+		t.Fatalf("status = %v, %v, want %v", got, err, runtime.ComponentStatusRunning)
+	}
+}
+
+func TestInspectComponentHTTPSProbeRelayEOF(t *testing.T) {
+	requireOnLinux(t)
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := uint32(listener.Addr().(*net.TCPAddr).Port)
+	_ = listener.Close()
+
+	tests := []struct {
+		name  string
+		setup func(f *fakeCompose)
+	}{
+		{
+			// nc fails to connect and exits without output.
+			name: "connection refused",
+			setup: func(f *fakeCompose) {
+				f.set(t, consts.ComponentKwokController, "running")
+				f.set(t, consts.ComponentKubeApiserver, "running")
+				f.setRelay(t, consts.ComponentKubeApiserver)
+			},
+		},
+		{
+			// The exec fails before nc starts.
+			name: "relay container stopped",
+			setup: func(f *fakeCompose) {
+				f.set(t, consts.ComponentKwokController, "stopped")
+				f.set(t, consts.ComponentKubeApiserver, "running")
+				f.setRelay(t, consts.ComponentKubeApiserver)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := newFakeCompose(t, testKwokController, probeComponent(port, internalversion.URISchemeHTTPS, 30))
+			f.checkNoLeak(t)
+			tt.setup(f)
+
+			start := time.Now()
+			got, err := f.inspect(t, consts.ComponentKubeApiserver)
+			if err != nil || got != runtime.ComponentStatusRunning {
+				t.Fatalf("status = %v, %v, want %v", got, err, runtime.ComponentStatusRunning)
+			}
+			// The end of the relay output fails the probe at once, rather than when it times out.
+			if elapsed := time.Since(start); elapsed > 5*time.Second {
+				t.Errorf("probe took %v, want it to end with the relay", elapsed)
+			}
+		})
+	}
+}
+
+func TestInspectComponentHTTPSProbeRelayTimeout(t *testing.T) {
+	requireOnLinux(t)
+	// The server accepts the connection and never answers the TLS handshake.
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan struct{})
+	t.Cleanup(func() {
+		close(done)
+		_ = listener.Close()
+	})
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			go func() {
+				<-done
+				_ = conn.Close()
+			}()
+		}
+	}()
+	port := uint32(listener.Addr().(*net.TCPAddr).Port)
+
+	f := newFakeCompose(t, testKwokController, probeComponent(port, internalversion.URISchemeHTTPS, 1))
+	f.checkNoLeak(t)
+	f.set(t, consts.ComponentKwokController, "running")
+	f.set(t, consts.ComponentKubeApiserver, "running")
+	f.setRelay(t, consts.ComponentKubeApiserver)
+
+	start := time.Now()
+	got, err := f.inspect(t, consts.ComponentKubeApiserver)
+	if err != nil || got != runtime.ComponentStatusRunning {
+		t.Fatalf("status = %v, %v, want %v", got, err, runtime.ComponentStatusRunning)
+	}
+	// The relay is killed once the probe times out, even though its peer keeps the connection open.
+	if elapsed := time.Since(start); elapsed < 900*time.Millisecond || elapsed > 4*time.Second {
+		t.Errorf("probe took %v, want about the probe timeout", elapsed)
 	}
 }

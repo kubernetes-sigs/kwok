@@ -93,7 +93,7 @@ func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.Co
 
 	running := c.isRunning(ctx, component)
 	host := probeHost(config.Options.BindAddress)
-	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, host, runtime.DialProbeRoundTrip(host)), nil
+	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, host, runtime.DialProbe(host)), nil
 }
 
 // probeHost returns the address used to reach a component listening on bindAddress.

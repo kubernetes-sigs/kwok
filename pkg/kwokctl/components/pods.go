@@ -176,10 +176,15 @@ func convertToPodProbe(probe *internalversion.ComponentProbe) *corev1.Probe {
 		PeriodSeconds: 1,
 	}
 	if probe.HTTPGet != nil {
+		// An unsupported scheme is kept as is, so the pod fails validation.
+		scheme := corev1.URIScheme(probe.HTTPGet.Scheme)
+		if scheme == "" {
+			scheme = corev1.URISchemeHTTP
+		}
 		p.HTTPGet = &corev1.HTTPGetAction{
 			Path:   probe.HTTPGet.Path,
 			Port:   intstr.FromInt32(int32(probe.HTTPGet.Port)),
-			Scheme: corev1.URISchemeHTTP,
+			Scheme: scheme,
 		}
 	}
 	return p
@@ -197,6 +202,10 @@ func convertFromPodProbe(probe *corev1.Probe) *internalversion.ComponentProbe {
 		p.HTTPGet = &internalversion.ComponentHTTPGetAction{
 			Path: probe.HTTPGet.Path,
 			Port: uint32(probe.HTTPGet.Port.IntValue()),
+		}
+		// HTTP is the default, so it is left unset.
+		if probe.HTTPGet.Scheme != corev1.URISchemeHTTP {
+			p.HTTPGet.Scheme = internalversion.URIScheme(probe.HTTPGet.Scheme)
 		}
 	}
 	return p

@@ -2119,6 +2119,22 @@ uint32
 This must be a valid port number, 0 &lt; x &lt; 65536.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scheme</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.URIScheme">
+URIScheme
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Scheme to use for connecting to the component. Must be HTTP or HTTPS.
+Defaults to HTTP.
+Like the kubelet, an HTTPS probe does not verify the server certificate.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="config.kwok.x-k8s.io/v1alpha1.ComponentMetric">
@@ -4379,6 +4395,38 @@ int32
 <p>SamplingRatePerMillion is the number of samples to collect per million spans.
 Recommended is unset. If unset, sampler respects its parent span&rsquo;s sampling
 rate, but otherwise never samples.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.URIScheme">
+URIScheme
+(<code>string</code> alias)
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.URIScheme"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ComponentHTTPGetAction">ComponentHTTPGetAction</a>
+</p>
+<p>
+<p>URIScheme identifies the scheme used for connection to a component for a readiness probe.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&#34;HTTP&#34;</code></td>
+<td><p>URISchemeHTTP means that the scheme used will be http://</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;HTTPS&#34;</code></td>
+<td><p>URISchemeHTTPS means that the scheme used will be https://</p>
 </td>
 </tr>
 </tbody>

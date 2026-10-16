@@ -22,7 +22,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math"
+	"net"
 	"os"
 	"strconv"
 	"sync"
@@ -113,7 +115,7 @@ func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.Co
 	}
 
 	host := c.probeHost(status, name)
-	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, host, c.probeRoundTrip(host)), nil
+	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, host, c.probeDial(host)), nil
 }
 
 // probeHost returns the address of the component on the cluster network.
@@ -131,11 +133,15 @@ func (c *Cluster) probeHost(status *inspectStatus, name string) string {
 // errProbeRelayUnavailable is returned when a readiness probe is configured but cannot be relayed.
 var errProbeRelayUnavailable = errors.New("readiness probe requires " + consts.ComponentKwokController + " to be enabled")
 
-// probeRoundTrip returns a function that sends a probe request to host over the cluster network.
-// The application image may not contain any network tools, so the request is relayed by nc
+// probeRelayCloseGrace is how long closing a relay waits for nc to exit on its own before the exec is killed.
+const probeRelayCloseGrace = time.Second
+
+// probeDial returns a function that connects to host over the cluster network.
+// The application image may not contain any network tools, so the connection is relayed by nc
 // in the kwok-controller container, which shares the cluster network.
-func (c *Cluster) probeRoundTrip(host string) runtime.ProbeRoundTripFunc {
-	return func(ctx context.Context, port uint32, request []byte) ([]byte, error) {
+// nc only relays the bytes, so TLS runs over the relay, between kwokctl and the component.
+func (c *Cluster) probeDial(host string) runtime.ProbeDialFunc {
+	return func(ctx context.Context, port uint32) (net.Conn, error) {
 		// nc -w bounds the connect and the final read inside the container,
 		// since killing the exec client does not stop the process in the container.
 		timeout := 1
@@ -143,68 +149,88 @@ func (c *Cluster) probeRoundTrip(host string) runtime.ProbeRoundTripFunc {
 			timeout = max(timeout, int(math.Ceil(time.Until(deadline).Seconds())))
 		}
 
-		// The input of nc is kept open until the response headers arrive. At the end of its input nc half-closes
+		// The input of nc is kept open until the connection is closed. At the end of its input nc half-closes
 		// the connection, and Go servers, such as kubectl proxy, cancel the request when the client half-closes.
 		// An *os.File is passed to the process as is, so the input can stay open while the process runs.
 		in, inWriter, err := os.Pipe()
 		if err != nil {
 			return nil, err
 		}
-		var closeOnce sync.Once
-		closeInput := func() {
-			closeOnce.Do(func() {
-				_ = inWriter.Close()
-			})
-		}
-		// Also end the input when the probe times out, so that the relay never outlives the probe.
-		stop := context.AfterFunc(ctx, closeInput)
-		defer func() {
-			stop()
-			closeInput()
-			_ = in.Close()
-		}()
-		// The request is far smaller than the pipe buffer, so this does not block.
-		_, err = inWriter.Write(request)
-		if err != nil {
-			return nil, err
-		}
+		outReader, out := io.Pipe()
 
-		out := &probeResponseWriter{
-			onHeaders: closeInput,
+		execCtx, cancel := context.WithCancel(ctx)
+		conn := &probeRelayConn{
+			in:     inWriter,
+			out:    outReader,
+			cancel: cancel,
+			done:   make(chan struct{}),
 		}
 		// Stderr is left unset so that it is included in the returned error.
-		ctx = utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{
+		execCtx = utilsexec.WithIOStreams(execCtx, utilsexec.IOStreams{
 			In:  in,
 			Out: out,
 		})
-		err = c.Exec(ctx, c.runtime, "exec", "-i", c.Name()+"-"+consts.ComponentKwokController,
-			"nc", "-w", strconv.Itoa(timeout), host, strconv.FormatUint(uint64(port), 10))
-		return out.Bytes(), err
+		go func() {
+			defer close(conn.done)
+			err := c.Exec(execCtx, c.runtime, "exec", "-i", c.Name()+"-"+consts.ComponentKwokController,
+				"nc", "-w", strconv.Itoa(timeout), host, strconv.FormatUint(uint64(port), 10))
+			_ = in.Close()
+			if err == nil {
+				err = io.EOF
+			}
+			_ = out.CloseWithError(err)
+		}()
+		return conn, nil
 	}
 }
 
-// probeResponseWriter collects a relayed response and calls onHeaders once its header block is complete,
-// which is all the probe needs to decide.
-// It does not embed the buffer, whose ReadFrom would be used by io.Copy and only return at the end of the output.
-type probeResponseWriter struct {
-	buf       bytes.Buffer
-	onHeaders func()
-	done      bool
+// probeRelayConn is a connection relayed through the standard streams of an exec.
+type probeRelayConn struct {
+	in     *os.File
+	out    *io.PipeReader
+	cancel context.CancelFunc
+	done   chan struct{}
+
+	closeOnce sync.Once
 }
 
-func (w *probeResponseWriter) Write(p []byte) (int, error) {
-	n, err := w.buf.Write(p)
-	if !w.done && bytes.Contains(w.buf.Bytes(), []byte("\r\n\r\n")) {
-		w.done = true
-		w.onHeaders()
-	}
-	return n, err
+func (r *probeRelayConn) Read(p []byte) (int, error) {
+	return r.out.Read(p)
 }
 
-// Bytes returns the response collected so far.
-func (w *probeResponseWriter) Bytes() []byte {
-	return w.buf.Bytes()
+func (r *probeRelayConn) Write(p []byte) (int, error) {
+	return r.in.Write(p)
 }
+
+// Close ends the input of nc and waits for the exec to exit,
+// killing it if nc has not exited on its own shortly after.
+func (r *probeRelayConn) Close() error {
+	r.closeOnce.Do(func() {
+		_ = r.in.Close()
+		// Unblocks the exec if it is writing output that is no longer read.
+		_ = r.out.Close()
+		timer := time.NewTimer(probeRelayCloseGrace)
+		defer timer.Stop()
+		select {
+		case <-r.done:
+		case <-timer.C:
+		}
+		r.cancel()
+		<-r.done
+	})
+	return nil
+}
+
+func (r *probeRelayConn) LocalAddr() net.Addr                { return probeRelayAddr{} }
+func (r *probeRelayConn) RemoteAddr() net.Addr               { return probeRelayAddr{} }
+func (r *probeRelayConn) SetDeadline(_ time.Time) error      { return errors.ErrUnsupported }
+func (r *probeRelayConn) SetReadDeadline(_ time.Time) error  { return errors.ErrUnsupported }
+func (r *probeRelayConn) SetWriteDeadline(_ time.Time) error { return errors.ErrUnsupported }
+
+type probeRelayAddr struct{}
+
+func (probeRelayAddr) Network() string { return "nc" }
+func (probeRelayAddr) String() string  { return "nc" }
 
 func (c *Cluster) inspectComponent(ctx context.Context, componentName string) (running bool, exist bool) {
 	status, exist := c.inspect(ctx, componentName)

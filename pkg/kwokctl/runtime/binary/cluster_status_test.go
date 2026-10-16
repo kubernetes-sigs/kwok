@@ -52,6 +52,26 @@ func newProbeTarget(t *testing.T, address string, ready *atomic.Bool) uint32 {
 	return uint32(listener.Addr().(*net.TCPAddr).Port)
 }
 
+// newTLSProbeTarget is like newProbeTarget, but serves HTTPS with a self-signed certificate.
+func newTLSProbeTarget(t *testing.T, address string, ready *atomic.Bool) uint32 {
+	t.Helper()
+	listener, err := net.Listen("tcp", net.JoinHostPort(address, "0"))
+	if err != nil {
+		t.Skipf("cannot listen on %s: %v", address, err)
+	}
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.Path != "/readyz" || !ready.Load() {
+			rw.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		_, _ = rw.Write([]byte("ok"))
+	}))
+	server.Listener = listener
+	server.StartTLS()
+	t.Cleanup(server.Close)
+	return uint32(listener.Addr().(*net.TCPAddr).Port)
+}
+
 // newTestCluster returns a cluster with a single component that is running as the current test process.
 func newTestCluster(t *testing.T, bindAddress string, probe *internalversion.ComponentProbe) *Cluster {
 	t.Helper()
@@ -152,6 +172,39 @@ func TestInspectComponentReadinessProbe(t *testing.T) {
 				t.Fatalf("status after the endpoint fails again = %v, want %v", got, runtime.ComponentStatusRunning)
 			}
 		})
+	}
+}
+
+func TestInspectComponentHTTPSReadinessProbe(t *testing.T) {
+	var ready atomic.Bool
+	port := newTLSProbeTarget(t, "127.0.0.1", &ready)
+	probe := &internalversion.ComponentProbe{
+		HTTPGet: &internalversion.ComponentHTTPGetAction{
+			Path:   "/readyz",
+			Port:   port,
+			Scheme: internalversion.URISchemeHTTPS,
+		},
+	}
+	c := newTestCluster(t, "0.0.0.0", probe)
+
+	if got := inspect(t, c); got != runtime.ComponentStatusRunning {
+		t.Fatalf("status with a failing endpoint = %v, want %v", got, runtime.ComponentStatusRunning)
+	}
+
+	ready.Store(true)
+	if got := inspect(t, c); got != runtime.ComponentStatusReady {
+		t.Fatalf("status with a succeeding endpoint = %v, want %v", got, runtime.ComponentStatusReady)
+	}
+
+	// The same endpoint probed over HTTP is not ready.
+	c = newTestCluster(t, "0.0.0.0", &internalversion.ComponentProbe{
+		HTTPGet: &internalversion.ComponentHTTPGetAction{
+			Path: "/readyz",
+			Port: port,
+		},
+	})
+	if got := inspect(t, c); got != runtime.ComponentStatusRunning {
+		t.Fatalf("status of an HTTP probe = %v, want %v", got, runtime.ComponentStatusRunning)
 	}
 }
 
