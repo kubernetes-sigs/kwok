@@ -104,3 +104,17 @@ var (
 func GetRuntimeMode(runtime string) string {
 	return runtimeTypeMap[runtime]
 }
+
+// readinessProbeTimeoutSeconds leaves room for the container runtimes, where each check is relayed through an exec.
+const readinessProbeTimeoutSeconds = 5
+
+// httpGetReadinessProbe returns a readiness probe that sends an HTTP GET request to the given path and port.
+func httpGetReadinessProbe(path string, port uint32) *internalversion.ComponentProbe {
+	return &internalversion.ComponentProbe{
+		HTTPGet: &internalversion.ComponentHTTPGetAction{
+			Path: path,
+			Port: port,
+		},
+		TimeoutSeconds: readinessProbeTimeoutSeconds,
+	}
+}

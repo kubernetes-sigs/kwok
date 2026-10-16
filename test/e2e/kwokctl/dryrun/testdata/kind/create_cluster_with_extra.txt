@@ -119,6 +119,13 @@ spec:
       hostPort: 10247
       name: http
       protocol: TCP
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: 10247
+        scheme: HTTP
+      periodSeconds: 1
+      timeoutSeconds: 5
     resources: {}
     volumeMounts:
     - mountPath: /etc/kubernetes/kubeconfig.yaml
@@ -196,6 +203,13 @@ spec:
       hostPort: 9090
       name: http
       protocol: TCP
+    readinessProbe:
+      httpGet:
+        path: /-/ready
+        port: 9090
+        scheme: HTTP
+      periodSeconds: 1
+      timeoutSeconds: 5
     resources: {}
     volumeMounts:
     - mountPath: /etc/prometheus/prometheus.yaml

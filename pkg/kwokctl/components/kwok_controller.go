@@ -58,6 +58,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
 	var metricsDiscovery *internalversion.ComponentMetric
+	var readinessProbe *internalversion.ComponentProbe
 
 	if conf.ManageNodesWithAnnotationSelector == "" {
 		args = append(args,
@@ -119,6 +120,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--server-address="+conf.BindAddress+":10247",
 			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
+		readinessProbe = httpGetReadinessProbe("/healthz", 10247)
 	} else {
 		ports = append(
 			ports,
@@ -140,6 +142,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--server-address="+conf.BindAddress+":"+format.String(conf.Port),
 			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
+		readinessProbe = httpGetReadinessProbe("/healthz", conf.Port)
 	}
 
 	var metricsHost string
@@ -194,6 +197,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 		Image:            conf.Image,
 		Metric:           metric,
 		MetricsDiscovery: metricsDiscovery,
+		ReadinessProbe:   readinessProbe,
 		WorkDir:          conf.Workdir,
 	}
 }
