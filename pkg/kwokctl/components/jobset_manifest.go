@@ -17,9 +17,15 @@ limitations under the License.
 package components
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	utilyaml "sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
 // BuildJobSetManifestConfig is the config for BuildJobSetManifest.
@@ -77,4 +83,36 @@ func BuildJobSetManifest(conf BuildJobSetManifestConfig) ([]string, error) {
 		return nil, fmt.Errorf("failed to transform jobset manifest: %w", err)
 	}
 	return result, nil
+}
+
+// webhookServicePaths returns the service path of every admission webhook in the manifests.
+func webhookServicePaths(manifests []string) ([]string, error) {
+	var paths []string
+	for _, manifest := range manifests {
+		reader := utilyaml.NewDecoder(bufio.NewReader(strings.NewReader(manifest)))
+		for {
+			obj, err := reader.DecodeUnstructured()
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			if err != nil {
+				return nil, fmt.Errorf("failed to read yaml document: %w", err)
+			}
+			if obj.GetAPIVersion() != "admissionregistration.k8s.io/v1" ||
+				(obj.GetKind() != "MutatingWebhookConfiguration" && obj.GetKind() != "ValidatingWebhookConfiguration") {
+				continue
+			}
+			// As in transformWebhookClientConfigs, a configuration without a list has no webhooks.
+			webhooks, _ := obj.Object["webhooks"].([]any)
+			for _, webhook := range webhooks {
+				webhook, ok := webhook.(map[string]any)
+				if !ok {
+					continue
+				}
+				path, _, _ := unstructured.NestedString(webhook, "clientConfig", "service", "path")
+				paths = append(paths, path)
+			}
+		}
+	}
+	return paths, nil
 }

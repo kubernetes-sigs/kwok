@@ -643,3 +643,71 @@ func TestInspectComponentPatchedProbeConflict(t *testing.T) {
 		t.Fatalf("status of a stopped component = %v, %v, want %v", got, err, runtime.ComponentStatusStopped)
 	}
 }
+
+func TestInspectComponentJobSetWebhookRegistration(t *testing.T) {
+	requireOnLinux(t)
+	caCertPath := utilspath.Join(t.TempDir(), "ca.crt")
+	if err := os.WriteFile(caCertPath, []byte("ca"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	jobset, err := components.BuildJobSetComponent(components.BuildJobSetComponentConfig{
+		Runtime:     consts.RuntimeTypeDocker,
+		ProjectName: "kwok-test",
+		CaCertPath:  caCertPath,
+		RawManifests: []string{`apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: jobset-validating-webhook-configuration
+webhooks:
+- name: vpod.kb.io
+  clientConfig:
+    service:
+      name: jobset-webhook-service
+      namespace: jobset-system
+      path: /validate--v1-pod
+`},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	probe := jobset.ReadinessProbe.HTTPGet
+	if probe.Scheme != internalversion.URISchemeHTTPS || probe.Port != 9443 || probe.Path != "/validate--v1-pod" {
+		t.Fatalf("ReadinessProbe = %#v, want an HTTPS GET of /validate--v1-pod on 9443", probe)
+	}
+
+	// The webhook server listens before the webhook is registered, so the path is not found at first,
+	// as it is for jobset between the start of its webhook server and the registration of its webhooks.
+	mux := http.NewServeMux()
+	server := httptest.NewTLSServer(mux)
+	t.Cleanup(server.Close)
+	// The relay connects to the probed port on 127.0.0.1, where 9443 may be taken, so the test server's port is probed.
+	probe.Port = uint32(server.Listener.Addr().(*net.TCPAddr).Port)
+
+	f := newFakeCompose(t, testKwokController, jobset)
+	f.checkNoLeak(t)
+	f.set(t, consts.ComponentKwokController, "running")
+	f.set(t, consts.ComponentJobSet, "running")
+	f.setIP(t, consts.ComponentJobSet, "172.18.0.5")
+	f.setRelay(t, consts.ComponentJobSet)
+
+	got, err := f.inspect(t, consts.ComponentJobSet)
+	if err != nil || got != runtime.ComponentStatusRunning {
+		t.Fatalf("status before the webhook is registered = %v, %v, want %v", got, err, runtime.ComponentStatusRunning)
+	}
+
+	// Like a controller-runtime webhook, the registered handler answers a GET without a body with 200
+	// and an AdmissionReview that rejects it. So 200 shows that the webhook is registered and served,
+	// not that it admits anything.
+	mux.HandleFunc(probe.Path, func(rw http.ResponseWriter, req *http.Request) {
+		if req.ContentLength > 0 {
+			t.Errorf("probe sent a body of %d bytes, want none", req.ContentLength)
+		}
+		rw.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(rw, `{"response":{"uid":"","allowed":false,"status":{"message":"request body is empty","code":400}}}`)
+	})
+
+	got, err = f.inspect(t, consts.ComponentJobSet)
+	if err != nil || got != runtime.ComponentStatusReady {
+		t.Fatalf("status after the webhook is registered = %v, %v, want %v", got, err, runtime.ComponentStatusReady)
+	}
+}
