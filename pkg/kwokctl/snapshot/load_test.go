@@ -36,11 +36,11 @@ import (
 
 func TestLoaderRestoresOwnerChain(t *testing.T) {
 	for _, tc := range []struct {
-		name         string
-		names        []string
-		owners       map[string][]string
-		pendingOwner string
-		failCreate   string
+		name             string
+		names            []string
+		owners           map[string][]string
+		wantPendingOwner string
+		createErrorFor   string
 	}{
 		{
 			name:   "ordered",
@@ -73,16 +73,16 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 			owners: map[string][]string{"child": {"parent"}, "grandchild": {"child", "parent"}},
 		},
 		{
-			name:         "three-owners-last-missing",
-			names:        []string{"grandchild", "parent", "child"},
-			owners:       map[string][]string{"grandchild": {"parent", "child", "missing"}},
-			pendingOwner: "missing",
+			name:             "three-owners-last-owner-omitted",
+			names:            []string{"grandchild", "parent", "child"},
+			owners:           map[string][]string{"grandchild": {"parent", "child", "missing"}},
+			wantPendingOwner: "missing",
 		},
 		{
-			name:       "three-owners-create-failure",
-			names:      []string{"grandchild", "parent", "child", "other"},
-			owners:     map[string][]string{"grandchild": {"parent", "child", "other"}},
-			failCreate: "grandchild",
+			name:           "three-owners-all-present-dependent-create-fails",
+			names:          []string{"grandchild", "parent", "child", "other"},
+			owners:         map[string][]string{"grandchild": {"parent", "child", "other"}},
+			createErrorFor: "grandchild",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -96,7 +96,7 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 			dynamicClient.PrependReactor("create", "configmaps", func(action clienttesting.Action) (bool, runtime.Object, error) {
 				obj := action.(clienttesting.CreateAction).GetObject().(*unstructured.Unstructured)
 				createCalls[obj.GetName()]++
-				if obj.GetName() == tc.failCreate {
+				if obj.GetName() == tc.createErrorFor {
 					return true, nil, apierrors.NewBadRequest("simulated create failure")
 				}
 				created := obj.DeepCopy()
@@ -123,10 +123,10 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 			if err := loader.Load(ctx, utilsyaml.NewDecoder(strings.NewReader(input.String()))); err != nil {
 				t.Fatal(err)
 			}
-			if tc.pendingOwner != "" {
-				key := uniqueKey{APIVersion: "v1", Kind: "ConfigMap", Name: tc.pendingOwner, UID: types.UID("original-" + tc.pendingOwner)}
+			if tc.wantPendingOwner != "" {
+				key := uniqueKey{APIVersion: "v1", Kind: "ConfigMap", Name: tc.wantPendingOwner, UID: types.UID("original-" + tc.wantPendingOwner)}
 				if pending := loader.pending[key]; len(pending) != 1 {
-					t.Errorf("pending objects for %s = %d, want 1", tc.pendingOwner, len(pending))
+					t.Errorf("pending objects for %s = %d, want 1", tc.wantPendingOwner, len(pending))
 				}
 				if len(loader.pending) != 1 {
 					t.Errorf("pending owners = %d, want 1", len(loader.pending))
@@ -135,7 +135,7 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 				t.Errorf("pending owners = %d, want 0", len(loader.pending))
 			}
 			wantFailed := 0
-			if tc.failCreate != "" {
+			if tc.createErrorFor != "" {
 				wantFailed = 1
 			}
 			if loader.failedCounter != wantFailed {
@@ -143,12 +143,12 @@ func TestLoaderRestoresOwnerChain(t *testing.T) {
 			}
 			for _, name := range tc.names {
 				obj, err := dynamicClient.Resource(gvr).Namespace("default").Get(ctx, name, metav1.GetOptions{})
-				if name == tc.failCreate || (name == "grandchild" && tc.pendingOwner != "") {
+				if name == tc.createErrorFor || (name == "grandchild" && tc.wantPendingOwner != "") {
 					if !apierrors.IsNotFound(err) {
 						t.Errorf("%s should not be restored, got error %v", name, err)
 					}
 					wantCreates := 0
-					if name == tc.failCreate {
+					if name == tc.createErrorFor {
 						wantCreates = 1
 					}
 					if createCalls[name] != wantCreates {
