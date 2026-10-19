@@ -27,6 +27,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// kueueReadyzVersion is the earliest kueue release whose /readyz was verified with kwokctl.
+var kueueReadyzVersion = version.NewVersion(0, 18, 1)
+
 // BuildKueueComponentConfig is the configuration for building a kueue component.
 type BuildKueueComponentConfig struct {
 	Runtime           string

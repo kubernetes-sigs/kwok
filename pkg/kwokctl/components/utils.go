@@ -136,17 +136,6 @@ func controlPlaneReadinessProbe(secure bool, args []string, path string, port ui
 	return probe
 }
 
-// kubeSchedulerReadyzVersion is the first Kubernetes release whose kube-scheduler serves /readyz.
-var kubeSchedulerReadyzVersion = version.NewVersion(1, 31, 0)
-
-// The earliest add-on releases whose /readyz was verified with kwokctl.
-var (
-	kueueReadyzVersion                   = version.NewVersion(0, 18, 1)
-	lwsReadyzVersion                     = version.NewVersion(0, 9, 0)
-	nodeReadinessControllerReadyzVersion = version.NewVersion(0, 3, 0)
-	schedulerPluginsReadyzVersion        = version.NewVersion(0, 34, 7)
-)
-
 // addonReadinessProbe returns the readiness probe of an add-on that serves /readyz on port,
 // which was verified for its release minimum.
 // Earlier releases are not probed, so that an endpoint they may not serve does not keep them not ready.

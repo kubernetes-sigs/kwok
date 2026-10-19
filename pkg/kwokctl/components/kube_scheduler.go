@@ -25,6 +25,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// kubeSchedulerReadyzVersion is the first Kubernetes release whose kube-scheduler serves /readyz.
+var kubeSchedulerReadyzVersion = version.NewVersion(1, 31, 0)
+
 // BuildKubeSchedulerComponentConfig is the configuration for building a kube-scheduler component.
 type BuildKubeSchedulerComponentConfig struct {
 	Runtime          string

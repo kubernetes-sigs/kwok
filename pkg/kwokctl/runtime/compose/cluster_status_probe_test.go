@@ -646,26 +646,9 @@ func TestInspectComponentPatchedProbeConflict(t *testing.T) {
 
 func TestInspectComponentJobSetWebhookRegistration(t *testing.T) {
 	requireOnLinux(t)
-	caCertPath := utilspath.Join(t.TempDir(), "ca.crt")
-	if err := os.WriteFile(caCertPath, []byte("ca"), 0o600); err != nil {
-		t.Fatal(err)
-	}
 	jobset, err := components.BuildJobSetComponent(components.BuildJobSetComponentConfig{
 		Runtime:     consts.RuntimeTypeDocker,
 		ProjectName: "kwok-test",
-		CaCertPath:  caCertPath,
-		RawManifests: []string{`apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: jobset-validating-webhook-configuration
-webhooks:
-- name: vpod.kb.io
-  clientConfig:
-    service:
-      name: jobset-webhook-service
-      namespace: jobset-system
-      path: /validate--v1-pod
-`},
 	})
 	if err != nil {
 		t.Fatal(err)

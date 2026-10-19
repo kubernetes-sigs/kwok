@@ -27,6 +27,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// lwsReadyzVersion is the earliest lws release whose /readyz was verified with kwokctl.
+var lwsReadyzVersion = version.NewVersion(0, 9, 0)
+
 // BuildLWSComponentConfig is the configuration for building an lws component.
 type BuildLWSComponentConfig struct {
 	Runtime       string

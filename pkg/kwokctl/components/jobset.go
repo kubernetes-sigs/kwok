@@ -20,7 +20,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
-	"slices"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -29,8 +28,6 @@ import (
 )
 
 const (
-	// jobsetHealthProbePort is the default health probe port of the jobset controller manager.
-	jobsetHealthProbePort = 8081
 	// jobsetWebhookPort is the port of the jobset webhook server.
 	jobsetWebhookPort = 9443
 	// jobsetLastWebhookPath is the path of the webhook that jobset registers last.
@@ -137,6 +134,8 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		// The webhook path is probed instead of /readyz, which succeeds before the webhooks are registered.
+		ReadinessProbe: jobsetReadinessProbe(),
 	}
 
 	if len(conf.RawManifests) != 0 {
@@ -160,44 +159,17 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 	} else {
 		component.ManifestContents = []string{}
 	}
-
-	component.ReadinessProbe, err = jobsetReadinessProbe(component.ManifestContents)
-	if err != nil {
-		return internalversion.Component{}, err
-	}
 	return component, nil
 }
 
-// jobsetReadinessProbe returns the readiness probe of jobset with the given manifests.
+// jobsetReadinessProbe returns the readiness probe of jobset.
 //
 // The /readyz of jobset succeeds once its webhook server listens, which can be before its webhooks
-// are registered, when the API server gets 404 calling them. So with admission webhooks, the probe
-// gets the path of the webhook registered last instead. A webhook answers a GET without a body
-// with 200 and a rejected AdmissionReview, which shows that it is registered, not that it admits anything.
-func jobsetReadinessProbe(manifests []string) (*internalversion.ComponentProbe, error) {
-	paths, err := webhookServicePaths(manifests)
-	if err != nil {
-		return nil, err
-	}
-	if len(paths) == 0 {
-		return &internalversion.ComponentProbe{
-			HTTPGet: &internalversion.ComponentHTTPGetAction{
-				Path: "/readyz",
-				Port: jobsetHealthProbePort,
-			},
-			TimeoutSeconds: 5,
-		}, nil
-	}
-	if !slices.Contains(paths, jobsetLastWebhookPath) {
-		return nil, fmt.Errorf("jobset manifests configure the admission webhooks %q, but not %q, which readiness is checked on",
-			paths, jobsetLastWebhookPath)
-	}
-	return &internalversion.ComponentProbe{
-		HTTPGet: &internalversion.ComponentHTTPGetAction{
-			Path:   jobsetLastWebhookPath,
-			Port:   jobsetWebhookPort,
-			Scheme: internalversion.URISchemeHTTPS,
-		},
-		TimeoutSeconds: 5,
-	}, nil
+// are registered, when the API server gets 404 calling them. So the probe gets the path of the webhook
+// that jobset registers last instead. A webhook answers a GET without a body with 200 and a rejected
+// AdmissionReview, which shows that it is registered, not that it admits anything.
+func jobsetReadinessProbe() *internalversion.ComponentProbe {
+	probe := httpGetReadinessProbe(jobsetLastWebhookPath, jobsetWebhookPort)
+	probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
+	return probe
 }

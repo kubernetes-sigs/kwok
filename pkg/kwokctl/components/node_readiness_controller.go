@@ -26,6 +26,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// nodeReadinessControllerReadyzVersion is the earliest node-readiness-controller release whose /readyz was verified with kwokctl.
+var nodeReadinessControllerReadyzVersion = version.NewVersion(0, 3, 0)
+
 // BuildNodeReadinessControllerComponentConfig is the configuration for building a node-readiness-controller component.
 type BuildNodeReadinessControllerComponentConfig struct {
 	Runtime        string

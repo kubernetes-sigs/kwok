@@ -24,6 +24,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// schedulerPluginsReadyzVersion is the earliest scheduler-plugins release whose /readyz was verified with kwokctl.
+var schedulerPluginsReadyzVersion = version.NewVersion(0, 34, 7)
+
 // BuildSchedulerPluginsControllerComponentConfig is the configuration for building the scheduler-plugins controller component.
 type BuildSchedulerPluginsControllerComponentConfig struct {
 	Runtime        string

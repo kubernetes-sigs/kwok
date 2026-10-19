@@ -22,7 +22,7 @@ function main() {
   for release in "${all_releases[@]}"; do
     name="test-kwokctl-jobset-${release}"
 
-    # --wait blocks until JobSet's /readyz passes, which requires its webhook server to be serving.
+    # --wait blocks until JobSet serves the webhook it registers last, so all of its webhooks are registered.
     kwokctl create cluster --name "${name}" \
       --runtime=docker --enable jobset --wait=2m
 
