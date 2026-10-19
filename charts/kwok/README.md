@@ -44,6 +44,7 @@ The following table lists the configurable parameters of the kwok chart and thei
 | env[1].valueFrom.fieldRef.fieldPath | string | `"status.hostIP"` |  |
 | fullnameOverride | string | `"kwok-controller"` | Override the `fullname` of the chart. |
 | hostNetwork | bool | `false` | Change `hostNetwork` to `true` if you want to deploy in a kind cluster. |
+| image.digest | string | `""` | Image digest, for example `sha256:...`. When set, it pins the image and takes precedence over `tag`. |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy. |
 | image.repository | string | `"registry.k8s.io/kwok/kwok"` | Image repository. |
 | image.tag | string | `""` | Overrides the image tag whose default is {{ .Chart.AppVersion }}. |

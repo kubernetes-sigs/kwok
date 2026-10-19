@@ -42,6 +42,44 @@ tests:
       path: spec.template.spec.containers[0].image
       value: registry.k8s.io/kwok/kwok:v9.9.9
 
+- it: renders an integer image.tag as written
+  set:
+    image:
+      tag: 1
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].image
+      value: registry.k8s.io/kwok/kwok:1
+
+- it: renders a float image.tag as written
+  set:
+    image:
+      tag: 1.2
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].image
+      value: registry.k8s.io/kwok/kwok:1.2
+
+- it: pins the image by digest when image.digest is set
+  set:
+    image:
+      repository: registry.example.com/kwok
+      digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].image
+      value: registry.example.com/kwok@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+- it: prefers image.digest over image.tag
+  set:
+    image:
+      tag: v1.2.3
+      digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[0].image
+      value: registry.k8s.io/kwok/kwok@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
 - it: adds podAnnotations alongside the configuration checksum
   set:
     podAnnotations:
