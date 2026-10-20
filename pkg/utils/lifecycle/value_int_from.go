@@ -100,6 +100,8 @@ func (d *int64From) Get(ctx context.Context, event *Event) (int64, bool, error) 
 				return n, true, nil
 			}
 			return 0, false, nil
+		case int:
+			return int64(t), true, nil
 		case float64: // TODO: don't use float
 			return int64(t), true, nil
 		}
