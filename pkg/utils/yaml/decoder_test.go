@@ -19,6 +19,8 @@ package yaml
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -102,6 +104,51 @@ spec:
 				t.Errorf("expected vs got:\n%s", cmp.Diff(want, got))
 			}
 		})
+	}
+}
+
+func TestDecodeUnstructuredListOrder(t *testing.T) {
+	data := `
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: first
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: second
+    namespace: first
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    name: third
+    namespace: first
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fourth
+  namespace: first
+`
+	decoder := NewDecoder(bytes.NewBufferString(data))
+	got := []string{}
+	for {
+		obj, err := decoder.DecodeUnstructured()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			t.Fatalf("DecodeUnstructured() unexpected error: %v", err)
+		}
+		got = append(got, obj.GetName())
+	}
+
+	want := []string{"first", "second", "third", "fourth"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("items of a List must be decoded in order:\n%s", diff)
 	}
 }
 
