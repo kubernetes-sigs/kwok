@@ -36,7 +36,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        image: {{ include "kwok.image" . | quote }}
         args:
         - --config=/root/.kwok/kwok.yaml
         - --node-ip=$(POD_IP)

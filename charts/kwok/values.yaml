@@ -5,6 +5,8 @@ image:
   repository: registry.k8s.io/kwok/kwok
   # -- Overrides the image tag whose default is {{ .Chart.AppVersion }}.
   tag: ""
+  # -- Image digest, for example `sha256:...`. When set, it pins the image and takes precedence over `tag`.
+  digest: ""
 
 # -- Image pull secrets.
 imagePullSecrets: []
