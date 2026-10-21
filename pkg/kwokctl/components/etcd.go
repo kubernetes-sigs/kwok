@@ -55,6 +55,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 	var ports []internalversion.Port
 	var envs []internalversion.Env
 	var metric *internalversion.ComponentMetric
+	var readinessProbe *internalversion.ComponentProbe
 
 	quantity, err := resource.ParseQuantity(conf.QuotaBackendSize)
 	if err != nil {
@@ -112,6 +113,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			Host:   conf.ProjectName + "-" + consts.ComponentEtcd + ":2379",
 			Path:   metricsPath,
 		}
+		readinessProbe = httpGetReadinessProbe("/health", 2379)
 	} else {
 		etcdPeerPortStr := format.String(conf.PeerPort)
 		etcdClientPortStr := format.String(conf.Port)
@@ -146,6 +148,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			Host:   utilsnet.LocalAddress + ":" + etcdClientPortStr,
 			Path:   metricsPath,
 		}
+		readinessProbe = httpGetReadinessProbe("/health", conf.Port)
 	}
 
 	if conf.Version.GTE(version.NewVersion(3, 4, 0)) {
@@ -185,5 +188,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
 		Envs:    envs,
+		// /health is served by every supported etcd release, back to v3.0.
+		ReadinessProbe: readinessProbe,
 	}, nil
 }

@@ -56,6 +56,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
+	var probePort uint32
 
 	if conf.KubeFeatureGates != "" {
 		args = append(args,
@@ -136,6 +137,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				KeyPath:            pkiAdminKeyPath,
 				InsecureSkipVerify: true,
 			}
+			probePort = 10257
 		} else {
 			args = append(args,
 				"--bind-address="+conf.BindAddress,
@@ -158,6 +160,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				KeyPath:            conf.AdminKeyPath,
 				InsecureSkipVerify: true,
 			}
+			probePort = conf.Port
 		}
 
 		// TODO: Support disable insecure port
@@ -184,6 +187,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				Host:   conf.ProjectName + "-" + consts.ComponentKubeControllerManager + ":10252",
 				Path:   metricsPath,
 			}
+			probePort = 10252
 		} else {
 			args = append(args,
 				"--address="+conf.BindAddress,
@@ -203,6 +207,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 				Host:   utilsnet.LocalAddress + ":" + format.String(conf.Port),
 				Path:   metricsPath,
 			}
+			probePort = conf.Port
 		}
 
 		args = append(args,
@@ -249,5 +254,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
 		Metric:  metric,
+		// kube-controller-manager serves no /readyz, and /healthz includes its leader election.
+		ReadinessProbe: controlPlaneReadinessProbe(conf.SecurePort, args, "/healthz", probePort),
 	}, nil
 }

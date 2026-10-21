@@ -45,6 +45,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 	var args []string
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
+	var readinessProbe *internalversion.ComponentProbe
 
 	args = append(args,
 		"proxy",
@@ -88,6 +89,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
+		readinessProbe = httpGetReadinessProbe("/healthz", 8001)
 	} else {
 		args = append(args,
 			"--kubeconfig="+conf.KubeconfigPath,
@@ -102,6 +104,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
+		readinessProbe = httpGetReadinessProbe("/healthz", conf.Port)
 	}
 
 	if conf.Verbosity != log.LevelInfo {
@@ -120,5 +123,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 		Image:   conf.Image,
 		Ports:   ports,
 		WorkDir: conf.Workdir,
+		// /healthz is proxied to kube-apiserver, so it also checks that the proxy can reach it.
+		ReadinessProbe: readinessProbe,
 	}, nil
 }

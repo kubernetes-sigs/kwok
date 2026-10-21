@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
+	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
 var (
@@ -103,4 +104,44 @@ var (
 // GetRuntimeMode returns the mode of runtime.
 func GetRuntimeMode(runtime string) string {
 	return runtimeTypeMap[runtime]
+}
+
+// readinessProbeTimeoutSeconds leaves room for the container runtimes, where each check is relayed through an exec.
+const readinessProbeTimeoutSeconds = 5
+
+// httpGetReadinessProbe returns a readiness probe that sends an HTTP GET request to the given path and port.
+func httpGetReadinessProbe(path string, port uint32) *internalversion.ComponentProbe {
+	return &internalversion.ComponentProbe{
+		HTTPGet: &internalversion.ComponentHTTPGetAction{
+			Path: path,
+			Port: port,
+		},
+		TimeoutSeconds: readinessProbeTimeoutSeconds,
+	}
+}
+
+// controlPlaneReadinessProbe returns the readiness probe of kube-controller-manager or kube-scheduler serving path on port,
+// or nil if path cannot be reached without credentials, which the probe does not send.
+// On the secure port, only the paths in --authorization-always-allow-paths skip the delegated authorization,
+// which kwokctl sets for kube-controller-manager since Kubernetes 1.13, and always for kube-scheduler.
+func controlPlaneReadinessProbe(secure bool, args []string, path string, port uint32) *internalversion.ComponentProbe {
+	probe := httpGetReadinessProbe(path, port)
+	if secure {
+		flags := parseFlags(args)
+		if _, ok := flags["authorization-always-allow-paths"]; !ok || checkAlwaysAllowPaths(flags, probe) != nil {
+			return nil
+		}
+		probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
+	}
+	return probe
+}
+
+// addonReadinessProbe returns the readiness probe of an add-on that serves /readyz on port,
+// which was verified for its release minimum.
+// Earlier releases are not probed, so that an endpoint they may not serve does not keep them not ready.
+func addonReadinessProbe(v, minimum version.Version, port uint32) *internalversion.ComponentProbe {
+	if port == 0 || v.LT(minimum) {
+		return nil
+	}
+	return httpGetReadinessProbe("/readyz", port)
 }

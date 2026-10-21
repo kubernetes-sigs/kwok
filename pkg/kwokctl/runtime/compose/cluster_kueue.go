@@ -59,6 +59,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 
 	kueueConfigPath := c.GetWorkdirPath(runtime.Kueue)
 
+	var healthProbePort uint32
 	if !c.IsDryRun() {
 		kueueConfigData, err := components.BuildKueueConfig(rawManifests)
 		if err != nil {
@@ -68,6 +69,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 		if err != nil {
 			return fmt.Errorf("failed to write kueue yaml: %w", err)
 		}
+		healthProbePort = components.HealthProbePortFromConfig(kueueConfigData)
 	}
 
 	kueueComponent, err := components.BuildKueueComponent(components.BuildKueueComponentConfig{
@@ -84,6 +86,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 		AdminKeyPath:      env.adminKeyPath,
 		KubeconfigPath:    env.inClusterOnHostKubeconfigPath,
 		ConfigPath:        kueueConfigPath,
+		HealthProbePort:   healthProbePort,
 		Verbosity:         env.verbosity,
 		KubeApiserverPort: conf.KubeApiserverPort,
 	})

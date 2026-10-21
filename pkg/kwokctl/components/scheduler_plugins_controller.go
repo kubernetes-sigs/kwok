@@ -24,6 +24,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// schedulerPluginsReadyzVersion is the earliest scheduler-plugins release whose /readyz was verified with kwokctl.
+var schedulerPluginsReadyzVersion = version.NewVersion(0, 34, 7)
+
 // BuildSchedulerPluginsControllerComponentConfig is the configuration for building the scheduler-plugins controller component.
 type BuildSchedulerPluginsControllerComponentConfig struct {
 	Runtime        string
@@ -95,6 +98,9 @@ func BuildSchedulerPluginsControllerComponent(conf BuildSchedulerPluginsControll
 		Volumes: volumes,
 		WorkDir: conf.Workdir,
 		Metric:  metric,
+		// /readyz succeeds once the manager serves, as it does for the upstream deployment.
+		// It is served on the default of --probeAddr.
+		ReadinessProbe: addonReadinessProbe(conf.Version, schedulerPluginsReadyzVersion, defaultHealthProbePort),
 	}
 
 	if len(conf.RawManifests) != 0 {

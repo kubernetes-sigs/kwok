@@ -27,6 +27,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// kueueReadyzVersion is the earliest kueue release whose /readyz was verified with kwokctl.
+var kueueReadyzVersion = version.NewVersion(0, 18, 1)
+
 // BuildKueueComponentConfig is the configuration for building a kueue component.
 type BuildKueueComponentConfig struct {
 	Runtime           string
@@ -43,8 +46,10 @@ type BuildKueueComponentConfig struct {
 	AdminCertPath     string
 	AdminKeyPath      string
 	ConfigPath        string
-	KubeconfigPath    string
-	Verbosity         log.Level
+	// HealthProbePort is the port of the health probes set by the configuration, or 0 if they are not served.
+	HealthProbePort uint32
+	KubeconfigPath  string
+	Verbosity       log.Level
 }
 
 // BuildKueueComponent builds a kueue component.
@@ -168,6 +173,8 @@ func BuildKueueComponent(conf BuildKueueComponentConfig) (component internalvers
 		Ports:   ports,
 		WorkDir: conf.Workdir,
 		Envs:    envs,
+		// /readyz only succeeds after the webhook certificates are ready and the webhook server has started.
+		ReadinessProbe: addonReadinessProbe(conf.Version, kueueReadyzVersion, conf.HealthProbePort),
 	}
 
 	if len(conf.RawManifests) != 0 {
