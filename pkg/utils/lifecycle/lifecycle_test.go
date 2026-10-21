@@ -23,7 +23,6 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
@@ -70,6 +69,17 @@ func TestLifecycleJitterDurationFrom(t *testing.T) {
 			want:  []time.Duration{time.Second, 3 * time.Second},
 		},
 		{
+			name:  "empty expression uses fixed jitter",
+			from:  &internalversion.ExpressionFrom{},
+			fixed: &fixedMilliseconds,
+			want:  []time.Duration{time.Second, 3 * time.Second},
+		},
+		{
+			name: "empty expression without fixed jitter",
+			from: &internalversion.ExpressionFrom{},
+			want: []time.Duration{time.Second},
+		},
+		{
 			name: "no jitter",
 			want: []time.Duration{time.Second},
 		},
@@ -89,9 +99,8 @@ func TestLifecycleJitterDurationFrom(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			event := &lifecycle.Event{Data: &corev1.Pod{ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{"jitter": "7s"},
-			}}}
+			event := &lifecycle.Event{Data: &corev1.Pod{
+				Annotations: map[string]string{"jitter": "7s"}}}
 			stage, err := stages.Match(context.Background(), event)
 			if err != nil {
 				t.Fatal(err)

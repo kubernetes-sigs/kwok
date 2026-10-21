@@ -272,7 +272,7 @@ func (s *Stage) init(event *Event) error {
 
 		if delay.JitterDurationMilliseconds != nil || delay.JitterDurationFrom != nil {
 			var jitterDurationFrom *internalversion.ExpressionFrom
-			if delay.JitterDurationFrom != nil {
+			if delay.JitterDurationFrom != nil && (delay.JitterDurationFrom.JQ != nil || delay.JitterDurationFrom.CEL != nil) {
 				jitterDurationFrom = delay.JitterDurationFrom
 			}
 			var jitterDuration *time.Duration
