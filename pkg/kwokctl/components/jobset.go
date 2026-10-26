@@ -134,8 +134,11 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
-		// The webhook path is probed instead of /readyz, which succeeds before the webhooks are registered.
-		ReadinessProbe: jobsetReadinessProbe(),
+		// The webhook path is probed over HTTPS instead of /readyz, which succeeds once the webhook server
+		// listens but before the webhooks are registered, when the API server gets 404 calling them. So the
+		// probe gets the path of the webhook that jobset registers last. A webhook answers a GET without a body
+		// with 200 and a rejected AdmissionReview, which shows that it is registered, not that it admits anything.
+		ReadinessProbe: httpGetReadinessProbe(internalversion.URISchemeHTTPS, jobsetLastWebhookPath, jobsetWebhookPort),
 	}
 
 	if len(conf.RawManifests) != 0 {
@@ -160,16 +163,4 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		component.ManifestContents = []string{}
 	}
 	return component, nil
-}
-
-// jobsetReadinessProbe returns the readiness probe of jobset.
-//
-// The /readyz of jobset succeeds once its webhook server listens, which can be before its webhooks
-// are registered, when the API server gets 404 calling them. So the probe gets the path of the webhook
-// that jobset registers last instead. A webhook answers a GET without a body with 200 and a rejected
-// AdmissionReview, which shows that it is registered, not that it admits anything.
-func jobsetReadinessProbe() *internalversion.ComponentProbe {
-	probe := httpGetReadinessProbe(jobsetLastWebhookPath, jobsetWebhookPort)
-	probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
-	return probe
 }

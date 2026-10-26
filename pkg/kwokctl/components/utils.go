@@ -109,12 +109,17 @@ func GetRuntimeMode(runtime string) string {
 // readinessProbeTimeoutSeconds leaves room for the container runtimes, where each check is relayed through an exec.
 const readinessProbeTimeoutSeconds = 5
 
-// httpGetReadinessProbe returns a readiness probe that sends an HTTP GET request to the given path and port.
-func httpGetReadinessProbe(path string, port uint32) *internalversion.ComponentProbe {
+// httpGetReadinessProbe returns a readiness probe that sends an HTTP GET for path on port using scheme.
+// HTTP is the default scheme and is left unset, matching how component probes are represented elsewhere.
+func httpGetReadinessProbe(scheme internalversion.URIScheme, path string, port uint32) *internalversion.ComponentProbe {
+	if scheme == internalversion.URISchemeHTTP {
+		scheme = ""
+	}
 	return &internalversion.ComponentProbe{
 		HTTPGet: &internalversion.ComponentHTTPGetAction{
-			Path: path,
-			Port: port,
+			Scheme: scheme,
+			Path:   path,
+			Port:   port,
 		},
 		TimeoutSeconds: readinessProbeTimeoutSeconds,
 	}
@@ -125,15 +130,15 @@ func httpGetReadinessProbe(path string, port uint32) *internalversion.ComponentP
 // On the secure port, only the paths in --authorization-always-allow-paths skip the delegated authorization,
 // which kwokctl sets for kube-controller-manager since Kubernetes 1.13, and always for kube-scheduler.
 func controlPlaneReadinessProbe(secure bool, args []string, path string, port uint32) *internalversion.ComponentProbe {
-	probe := httpGetReadinessProbe(path, port)
 	if secure {
+		probe := httpGetReadinessProbe(internalversion.URISchemeHTTPS, path, port)
 		flags := parseFlags(args)
 		if _, ok := flags["authorization-always-allow-paths"]; !ok || checkAlwaysAllowPaths(flags, probe) != nil {
 			return nil
 		}
-		probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
+		return probe
 	}
-	return probe
+	return httpGetReadinessProbe(internalversion.URISchemeHTTP, path, port)
 }
 
 // addonReadinessProbe returns the readiness probe of an add-on that serves /readyz on port,
@@ -143,5 +148,5 @@ func addonReadinessProbe(v, minimum version.Version, port uint32) *internalversi
 	if port == 0 || v.LT(minimum) {
 		return nil
 	}
-	return httpGetReadinessProbe("/readyz", port)
+	return httpGetReadinessProbe(internalversion.URISchemeHTTP, "/readyz", port)
 }

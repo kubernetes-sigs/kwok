@@ -120,7 +120,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--server-address="+conf.BindAddress+":10247",
 			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
-		readinessProbe = httpGetReadinessProbe("/healthz", 10247)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 10247)
 	} else {
 		ports = append(
 			ports,
@@ -142,7 +142,7 @@ func BuildKwokControllerComponent(conf BuildKwokControllerComponentConfig) (comp
 			"--server-address="+conf.BindAddress+":"+format.String(conf.Port),
 			"--node-lease-duration-seconds="+format.String(conf.NodeLeaseDurationSeconds),
 		)
-		readinessProbe = httpGetReadinessProbe("/healthz", conf.Port)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", conf.Port)
 	}
 
 	var metricsHost string

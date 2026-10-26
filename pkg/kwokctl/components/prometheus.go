@@ -86,7 +86,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			"--config.file=/etc/prometheus/prometheus.yaml",
 			"--web.listen-address="+conf.BindAddress+":9090",
 		)
-		readinessProbe = httpGetReadinessProbe("/-/ready", 9090)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/-/ready", 9090)
 	} else {
 		ports = append(
 			ports,
@@ -106,7 +106,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			"--config.file="+conf.ConfigPath,
 			"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),
 		)
-		readinessProbe = httpGetReadinessProbe("/-/ready", conf.Port)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/-/ready", conf.Port)
 	}
 
 	if conf.Verbosity != log.LevelInfo {

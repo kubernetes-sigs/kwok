@@ -363,9 +363,9 @@ func kubeApiserverReadinessProbe(conf BuildKubeApiserverComponentConfig, port ui
 	if conf.Version.GTE(version.NewVersion(1, 16, 0)) {
 		path = "/readyz"
 	}
-	probe := httpGetReadinessProbe(path, port)
+	scheme := internalversion.URISchemeHTTP
 	if conf.SecurePort {
-		probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
+		scheme = internalversion.URISchemeHTTPS
 	}
-	return probe
+	return httpGetReadinessProbe(scheme, path, port)
 }

@@ -89,7 +89,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
-		readinessProbe = httpGetReadinessProbe("/healthz", 8001)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 8001)
 	} else {
 		args = append(args,
 			"--kubeconfig="+conf.KubeconfigPath,
@@ -104,7 +104,7 @@ func BuildKubectlProxyComponent(conf BuildKubectlProxyComponentConfig) (componen
 				Protocol: internalversion.ProtocolTCP,
 			},
 		)
-		readinessProbe = httpGetReadinessProbe("/healthz", conf.Port)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", conf.Port)
 	}
 
 	if conf.Verbosity != log.LevelInfo {

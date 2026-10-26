@@ -99,21 +99,21 @@ func TestBuildComponentReadinessProbe(t *testing.T) {
 		runtime   string
 		want      *internalversion.ComponentProbe
 	}{
-		{consts.ComponentKwokController, consts.RuntimeTypeBinary, httpGetReadinessProbe("/healthz", testNativePort)},
-		{consts.ComponentKwokController, consts.RuntimeTypeDocker, httpGetReadinessProbe("/healthz", 10247)},
-		{consts.ComponentKwokController, consts.RuntimeTypeKind, httpGetReadinessProbe("/healthz", 10247)},
+		{consts.ComponentKwokController, consts.RuntimeTypeBinary, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", testNativePort)},
+		{consts.ComponentKwokController, consts.RuntimeTypeDocker, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 10247)},
+		{consts.ComponentKwokController, consts.RuntimeTypeKind, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 10247)},
 
 		// kind runs the etcd that kubeadm manages, so the etcd builder is only used by binary and compose.
-		{consts.ComponentEtcd, consts.RuntimeTypeBinary, httpGetReadinessProbe("/health", testNativePort)},
-		{consts.ComponentEtcd, consts.RuntimeTypeDocker, httpGetReadinessProbe("/health", 2379)},
+		{consts.ComponentEtcd, consts.RuntimeTypeBinary, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/health", testNativePort)},
+		{consts.ComponentEtcd, consts.RuntimeTypeDocker, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/health", 2379)},
 
-		{consts.ComponentPrometheus, consts.RuntimeTypeBinary, httpGetReadinessProbe("/-/ready", testNativePort)},
-		{consts.ComponentPrometheus, consts.RuntimeTypeDocker, httpGetReadinessProbe("/-/ready", 9090)},
-		{consts.ComponentPrometheus, consts.RuntimeTypeKind, httpGetReadinessProbe("/-/ready", 9090)},
+		{consts.ComponentPrometheus, consts.RuntimeTypeBinary, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/-/ready", testNativePort)},
+		{consts.ComponentPrometheus, consts.RuntimeTypeDocker, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/-/ready", 9090)},
+		{consts.ComponentPrometheus, consts.RuntimeTypeKind, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/-/ready", 9090)},
 
-		{consts.ComponentKubeApiserverInsecureProxy, consts.RuntimeTypeBinary, httpGetReadinessProbe("/healthz", testNativePort)},
-		{consts.ComponentKubeApiserverInsecureProxy, consts.RuntimeTypeDocker, httpGetReadinessProbe("/healthz", 8001)},
-		{consts.ComponentKubeApiserverInsecureProxy, consts.RuntimeTypeKind, httpGetReadinessProbe("/healthz", 8001)},
+		{consts.ComponentKubeApiserverInsecureProxy, consts.RuntimeTypeBinary, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", testNativePort)},
+		{consts.ComponentKubeApiserverInsecureProxy, consts.RuntimeTypeDocker, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 8001)},
+		{consts.ComponentKubeApiserverInsecureProxy, consts.RuntimeTypeKind, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 8001)},
 
 		// The query endpoint only serves the UI, and the admin health endpoint is not configured.
 		{consts.ComponentJaeger, consts.RuntimeTypeBinary, nil},
@@ -176,11 +176,6 @@ func TestConvertToPodComponentReadinessProbe(t *testing.T) {
 }
 
 func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
-	https := func(path string, port uint32) *internalversion.ComponentProbe {
-		probe := httpGetReadinessProbe(path, port)
-		probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
-		return probe
-	}
 	tests := []struct {
 		name          string
 		runtime       string
@@ -196,7 +191,7 @@ func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
 			version:       version.NewVersion(1, 37, 0),
 			secure:        true,
 			authorization: true,
-			want:          https("/readyz", 6443),
+			want:          httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/readyz", 6443),
 			wantArg:       "--secure-port=6443",
 		},
 		{
@@ -205,7 +200,7 @@ func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
 			version:       version.NewVersion(1, 37, 0),
 			secure:        true,
 			authorization: true,
-			want:          https("/readyz", testNativePort),
+			want:          httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/readyz", testNativePort),
 			wantArg:       "--secure-port=32000",
 		},
 		{
@@ -214,7 +209,7 @@ func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
 			version:       version.NewVersion(1, 16, 0),
 			secure:        true,
 			authorization: true,
-			want:          https("/readyz", 6443),
+			want:          httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/readyz", 6443),
 			wantArg:       "--secure-port=6443",
 		},
 		{
@@ -223,7 +218,7 @@ func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
 			version:       version.NewVersion(1, 15, 12),
 			secure:        true,
 			authorization: true,
-			want:          https("/healthz", 6443),
+			want:          httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/healthz", 6443),
 			wantArg:       "--secure-port=6443",
 		},
 		{
@@ -232,28 +227,28 @@ func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
 			version:       version.NewVersion(1, 13, 12),
 			secure:        true,
 			authorization: true,
-			want:          https("/healthz", testNativePort),
+			want:          httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/healthz", testNativePort),
 			wantArg:       "--secure-port=32000",
 		},
 		{
 			name:    "insecure container port",
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(1, 12, 10),
-			want:    httpGetReadinessProbe("/healthz", 8080),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 8080),
 			wantArg: "--insecure-port=8080",
 		},
 		{
 			name:    "insecure native port",
 			runtime: consts.RuntimeTypeBinary,
 			version: version.NewVersion(1, 10, 13),
-			want:    httpGetReadinessProbe("/healthz", testNativePort),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", testNativePort),
 			wantArg: "--insecure-port=32000",
 		},
 		{
 			name:    "insecure port with readyz",
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(1, 19, 16),
-			want:    httpGetReadinessProbe("/readyz", 8080),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTP, "/readyz", 8080),
 			wantArg: "--insecure-port=8080",
 		},
 		{
@@ -305,12 +300,6 @@ func TestBuildKubeApiserverComponentReadinessProbe(t *testing.T) {
 	}
 }
 
-func httpsReadinessProbe(path string, port uint32) *internalversion.ComponentProbe {
-	probe := httpGetReadinessProbe(path, port)
-	probe.HTTPGet.Scheme = internalversion.URISchemeHTTPS
-	return probe
-}
-
 func TestBuildKubeControllerManagerComponentReadinessProbe(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -325,7 +314,7 @@ func TestBuildKubeControllerManagerComponentReadinessProbe(t *testing.T) {
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(1, 37, 0),
 			secure:  true,
-			want:    httpsReadinessProbe("/healthz", 10257),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/healthz", 10257),
 			wantArg: "--secure-port=10257",
 		},
 		{
@@ -333,7 +322,7 @@ func TestBuildKubeControllerManagerComponentReadinessProbe(t *testing.T) {
 			runtime: consts.RuntimeTypeBinary,
 			version: version.NewVersion(1, 37, 0),
 			secure:  true,
-			want:    httpsReadinessProbe("/healthz", testNativePort),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/healthz", testNativePort),
 			wantArg: "--secure-port=32000",
 		},
 		{
@@ -341,7 +330,7 @@ func TestBuildKubeControllerManagerComponentReadinessProbe(t *testing.T) {
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(1, 13, 0),
 			secure:  true,
-			want:    httpsReadinessProbe("/healthz", 10257),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/healthz", 10257),
 			wantArg: "--secure-port=10257",
 		},
 		{
@@ -356,14 +345,14 @@ func TestBuildKubeControllerManagerComponentReadinessProbe(t *testing.T) {
 			name:    "insecure container port",
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(1, 12, 10),
-			want:    httpGetReadinessProbe("/healthz", 10252),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 10252),
 			wantArg: "--port=10252",
 		},
 		{
 			name:    "insecure native port",
 			runtime: consts.RuntimeTypeBinary,
 			version: version.NewVersion(1, 10, 13),
-			want:    httpGetReadinessProbe("/healthz", testNativePort),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", testNativePort),
 			wantArg: "--port=32000",
 		},
 	}
@@ -413,7 +402,7 @@ func TestBuildKubeSchedulerComponentReadinessProbe(t *testing.T) {
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(1, 37, 0),
 			secure:  true,
-			want:    httpsReadinessProbe("/readyz", 10259),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/readyz", 10259),
 			wantArg: "--secure-port=10259",
 		},
 		{
@@ -421,7 +410,7 @@ func TestBuildKubeSchedulerComponentReadinessProbe(t *testing.T) {
 			runtime: consts.RuntimeTypeBinary,
 			version: kubeSchedulerReadyzVersion,
 			secure:  true,
-			want:    httpsReadinessProbe("/readyz", testNativePort),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/readyz", testNativePort),
 			wantArg: "--secure-port=32000",
 		},
 		{
@@ -429,7 +418,7 @@ func TestBuildKubeSchedulerComponentReadinessProbe(t *testing.T) {
 			runtime: consts.RuntimeTypeDocker,
 			version: before,
 			secure:  true,
-			want:    httpsReadinessProbe("/healthz", 10259),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/healthz", 10259),
 			wantArg: "--secure-port=10259",
 		},
 		{
@@ -437,7 +426,7 @@ func TestBuildKubeSchedulerComponentReadinessProbe(t *testing.T) {
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(1, 13, 12),
 			secure:  true,
-			want:    httpsReadinessProbe("/healthz", 10259),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/healthz", 10259),
 			wantArg: "--secure-port=10259",
 		},
 		{
@@ -446,7 +435,7 @@ func TestBuildKubeSchedulerComponentReadinessProbe(t *testing.T) {
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(0, 34, 7),
 			secure:  true,
-			want:    httpsReadinessProbe("/healthz", 10259),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/healthz", 10259),
 			wantArg: "--secure-port=10259",
 		},
 		{
@@ -455,21 +444,21 @@ func TestBuildKubeSchedulerComponentReadinessProbe(t *testing.T) {
 			version:    version.NewVersion(1, 37, 0),
 			secure:     true,
 			configPath: "/scheduler.yaml",
-			want:       httpsReadinessProbe("/readyz", 10259),
+			want:       httpGetReadinessProbe(internalversion.URISchemeHTTPS, "/readyz", 10259),
 			wantArg:    "--secure-port=10259",
 		},
 		{
 			name:    "insecure container port",
 			runtime: consts.RuntimeTypeDocker,
 			version: version.NewVersion(1, 12, 10),
-			want:    httpGetReadinessProbe("/healthz", 10251),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", 10251),
 			wantArg: "--port=10251",
 		},
 		{
 			name:    "insecure native port",
 			runtime: consts.RuntimeTypeBinary,
 			version: version.NewVersion(1, 10, 13),
-			want:    httpGetReadinessProbe("/healthz", testNativePort),
+			want:    httpGetReadinessProbe(internalversion.URISchemeHTTP, "/healthz", testNativePort),
 			wantArg: "--port=32000",
 		},
 		{
@@ -553,12 +542,12 @@ func TestBuildAddonComponentReadinessProbe(t *testing.T) {
 				version version.Version
 				want    *internalversion.ComponentProbe
 			}{
-				{tt.verified, httpGetReadinessProbe("/readyz", 8081)},
-				{version.NewVersion(tt.verified.Major, tt.verified.Minor+1, 0), httpGetReadinessProbe("/readyz", 8081)},
+				{tt.verified, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/readyz", 8081)},
+				{version.NewVersion(tt.verified.Major, tt.verified.Minor+1, 0), httpGetReadinessProbe(internalversion.URISchemeHTTP, "/readyz", 8081)},
 				// An earlier release is not probed.
 				{previousRelease(tt.verified), nil},
 				// An unknown version is taken as the latest, as it is everywhere in kwokctl.
-				{version.Unknown, httpGetReadinessProbe("/readyz", 8081)},
+				{version.Unknown, httpGetReadinessProbe(internalversion.URISchemeHTTP, "/readyz", 8081)},
 			} {
 				component, err := tt.build(c.version, 8081)
 				if err != nil {
@@ -576,7 +565,7 @@ func TestBuildAddonComponentReadinessProbe(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := httpGetReadinessProbe("/readyz", 9081); !reflect.DeepEqual(component.ReadinessProbe, want) {
+	if want := httpGetReadinessProbe(internalversion.URISchemeHTTP, "/readyz", 9081); !reflect.DeepEqual(component.ReadinessProbe, want) {
 		t.Errorf("ReadinessProbe = %#v, want %#v", component.ReadinessProbe, want)
 	}
 	component, err = BuildLWSComponent(BuildLWSComponentConfig{Runtime: consts.RuntimeTypeDocker, Version: version.NewVersion(0, 9, 0)})

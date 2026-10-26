@@ -113,7 +113,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			Host:   conf.ProjectName + "-" + consts.ComponentEtcd + ":2379",
 			Path:   metricsPath,
 		}
-		readinessProbe = httpGetReadinessProbe("/health", 2379)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/health", 2379)
 	} else {
 		etcdPeerPortStr := format.String(conf.PeerPort)
 		etcdClientPortStr := format.String(conf.Port)
@@ -148,7 +148,7 @@ func BuildEtcdComponent(conf BuildEtcdComponentConfig) (component internalversio
 			Host:   utilsnet.LocalAddress + ":" + etcdClientPortStr,
 			Path:   metricsPath,
 		}
-		readinessProbe = httpGetReadinessProbe("/health", conf.Port)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/health", conf.Port)
 	}
 
 	if conf.Version.GTE(version.NewVersion(3, 4, 0)) {
