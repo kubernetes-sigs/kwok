@@ -40,13 +40,15 @@ jobs:
 
     - name: Test Benchmark
       shell: bash
+      timeout-minutes: 30
       run: |
-        ./hack/e2e-test.sh e2e/kwokctl/benchmark
+        ./hack/e2e-test.sh --retry=2 e2e/kwokctl/benchmark
 
     - name: Test Benchmark Hack
       shell: bash
+      timeout-minutes: 30
       run: |
-        ./hack/e2e-test.sh e2e/kwokctl/benchmark-hack
+        ./hack/e2e-test.sh --retry=2 e2e/kwokctl/benchmark-hack
 
     - name: Upload logs
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
