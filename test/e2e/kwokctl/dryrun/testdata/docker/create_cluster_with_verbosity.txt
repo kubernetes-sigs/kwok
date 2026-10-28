@@ -54,8 +54,8 @@ docker pull registry.k8s.io/kueue/kueueviz-backend:v0.18.1
 docker pull registry.k8s.io/kueue/kueueviz-frontend:v0.18.1
 docker pull registry.k8s.io/jobset/jobset:v0.12.0
 # Download https://github.com/kubernetes-sigs/jobset/releases/download/v0.12.0/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/4bb02b1bfadb99929cbef68ca0bfe81cb98de0ea63ad3b7bfb5592f8f0af768f.yaml
-docker pull registry.k8s.io/lws/lws:v0.9.0
-# Download https://github.com/kubernetes-sigs/lws/releases/download/v0.9.0/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/9e7adc39b4c73d4acf9df0e1c11fa9784f2495df024dbb0f6268e8073d7641c2.yaml
+docker pull registry.k8s.io/lws/lws:v1.0.0
+# Download https://github.com/kubernetes-sigs/lws/releases/download/v1.0.0/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/cf8cc2df19cf91b7bf39dcbcf71c1d26a305bfdaa31ddc4fec2cd3077d5c3003.yaml
 docker pull registry.k8s.io/descheduler/descheduler:v0.36.0
 # Build github.com/kubernetes-sigs/descheduler/kubernetes/deployment?ref=v0.36.0 by kubectl kustomize to <ROOT_DIR>/workdir/cache/manifest/8f83406e4a180f058e2e7ec9fcbba2b829ee6225b52e716de6825c44cad62c8d.yaml
 docker pull registry.k8s.io/node-readiness-controller/node-readiness-controller:v0.3.0
@@ -454,7 +454,7 @@ docker \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/lws.yaml:/controller_manager_config.yaml:ro \
-  registry.k8s.io/lws/lws:v0.9.0 \
+  registry.k8s.io/lws/lws:v1.0.0 \
   --config=/controller_manager_config.yaml \
   --kubeconfig=/etc/kubernetes/kubeconfig.yaml
 docker \
