@@ -420,12 +420,50 @@ type Component struct {
 	// MetricsDiscovery is the metrics discovery of the component.
 	MetricsDiscovery *ComponentMetric
 
+	// ReadinessProbe is the probe used to check whether the component is ready.
+	ReadinessProbe *ComponentProbe
+
 	// ManifestContents is the rendered manifest that should be applied for the component.
 	ManifestContents []string
 
 	// Version is the version of the component.
 	Version string
 }
+
+// ComponentProbe describes a check performed against a component to determine whether it is ready.
+type ComponentProbe struct {
+	// HTTPGet specifies the HTTP request to perform.
+	HTTPGet *ComponentHTTPGetAction
+
+	// TimeoutSeconds is the number of seconds after which a single probe check times out.
+	// Defaults to 1 second.
+	TimeoutSeconds int32
+}
+
+// ComponentHTTPGetAction describes an HTTP GET request sent to a component.
+type ComponentHTTPGetAction struct {
+	// Path to access on the HTTP server.
+	Path string
+
+	// Port is the number of the port to access on the component.
+	// This must be a valid port number, 0 < x < 65536.
+	Port uint32
+
+	// Scheme to use for connecting to the component. Must be HTTP or HTTPS.
+	// Defaults to HTTP.
+	// Like the kubelet, an HTTPS probe does not verify the server certificate.
+	Scheme URIScheme
+}
+
+// URIScheme identifies the scheme used for connection to a component for a readiness probe.
+type URIScheme string
+
+const (
+	// URISchemeHTTP means that the scheme used will be http://
+	URISchemeHTTP URIScheme = "HTTP"
+	// URISchemeHTTPS means that the scheme used will be https://
+	URISchemeHTTPS URIScheme = "HTTPS"
+)
 
 // Env represents an environment variable present in a Container.
 type Env struct {

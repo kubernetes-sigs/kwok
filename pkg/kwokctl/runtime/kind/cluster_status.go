@@ -120,9 +120,16 @@ func (c *Cluster) inspectComponent(ctx context.Context, name string) (ready bool
 		return false, false, false, err
 	}
 
-	pod, err := typedClient.CoreV1().
+	return inspectPod(ctx, typedClient, c.getComponentName(name))
+}
+
+// inspectPod returns the status of the component pod.
+// The pod is ready only when the kubelet reports all of its containers as ready,
+// so any readiness probe configured on the pod is honored.
+func inspectPod(ctx context.Context, client kubernetes.Interface, podName string) (ready bool, running bool, exist bool, err error) {
+	pod, err := client.CoreV1().
 		Pods(metav1.NamespaceSystem).
-		Get(ctx, c.getComponentName(name), metav1.GetOptions{})
+		Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, false, false, nil

@@ -25,6 +25,9 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// kubeSchedulerReadyzVersion is the first Kubernetes release whose kube-scheduler serves /readyz.
+var kubeSchedulerReadyzVersion = version.NewVersion(1, 31, 0)
+
 // BuildKubeSchedulerComponentConfig is the configuration for building a kube-scheduler component.
 type BuildKubeSchedulerComponentConfig struct {
 	Runtime          string
@@ -52,6 +55,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
+	var probePort uint32
 
 	if conf.KubeFeatureGates != "" {
 		args = append(args,
@@ -138,6 +142,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				KeyPath:            pkiAdminKeyPath,
 				InsecureSkipVerify: true,
 			}
+			probePort = 10259
 		} else {
 			args = append(args,
 				"--bind-address="+conf.BindAddress,
@@ -160,6 +165,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				KeyPath:            conf.AdminKeyPath,
 				InsecureSkipVerify: true,
 			}
+			probePort = conf.Port
 		}
 		// TODO: Support disable insecure port
 		//	args = append(args,
@@ -185,6 +191,7 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				Host:   conf.ProjectName + "-" + consts.ComponentKubeScheduler + ":10251",
 				Path:   metricsPath,
 			}
+			probePort = 10251
 		} else {
 			args = append(args,
 				"--address="+conf.BindAddress,
@@ -204,6 +211,12 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 				Host:   utilsnet.LocalAddress + ":" + format.String(conf.Port),
 				Path:   metricsPath,
 			}
+			probePort = conf.Port
+		}
+		// The insecure serving flags are ignored when a configuration file is given,
+		// which sets the address in healthzBindAddress instead.
+		if conf.ConfigPath != "" {
+			probePort = 0
 		}
 
 		// TODO: Support disable secure port
@@ -229,13 +242,29 @@ func BuildKubeSchedulerComponent(conf BuildKubeSchedulerComponentConfig) (compon
 		Links: []string{
 			consts.ComponentKubeApiserver,
 		},
-		Command: []string{consts.ComponentKubeScheduler},
-		Volumes: volumes,
-		Args:    args,
-		Binary:  conf.Binary,
-		Image:   conf.Image,
-		Ports:   ports,
-		WorkDir: conf.Workdir,
-		Metric:  metric,
+		Command:        []string{consts.ComponentKubeScheduler},
+		Volumes:        volumes,
+		Args:           args,
+		Binary:         conf.Binary,
+		Image:          conf.Image,
+		Ports:          ports,
+		WorkDir:        conf.Workdir,
+		Metric:         metric,
+		ReadinessProbe: kubeSchedulerReadinessProbe(conf, args, probePort),
 	}, nil
+}
+
+// kubeSchedulerReadinessProbe returns the readiness probe of kube-scheduler serving on port,
+// or nil if it cannot be probed.
+func kubeSchedulerReadinessProbe(conf BuildKubeSchedulerComponentConfig, args []string, port uint32) *internalversion.ComponentProbe {
+	if port == 0 {
+		return nil
+	}
+	// /readyz, which also waits for the event handlers to sync, was added in Kubernetes 1.31.
+	// The scheduler-plugins image reports its own version, which falls back to /healthz, also served by it.
+	path := "/healthz"
+	if conf.Version.GTE(kubeSchedulerReadyzVersion) {
+		path = "/readyz"
+	}
+	return controlPlaneReadinessProbe(conf.SecurePort, args, path, port)
 }

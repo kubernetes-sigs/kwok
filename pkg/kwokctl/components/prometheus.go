@@ -48,6 +48,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 	var volumes []internalversion.Volume
 	var ports []internalversion.Port
 	var metric *internalversion.ComponentMetric
+	var readinessProbe *internalversion.ComponentProbe
 
 	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
 		volumes = append(volumes,
@@ -85,6 +86,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			"--config.file=/etc/prometheus/prometheus.yaml",
 			"--web.listen-address="+conf.BindAddress+":9090",
 		)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/-/ready", 9090)
 	} else {
 		ports = append(
 			ports,
@@ -104,6 +106,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 			"--config.file="+conf.ConfigPath,
 			"--web.listen-address="+conf.BindAddress+":"+format.String(conf.Port),
 		)
+		readinessProbe = httpGetReadinessProbe(internalversion.URISchemeHTTP, "/-/ready", conf.Port)
 	}
 
 	if conf.Verbosity != log.LevelInfo {
@@ -134,5 +137,7 @@ func BuildPrometheusComponent(conf BuildPrometheusComponentConfig) (component in
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
 		Metric:  metric,
+		// /-/ready fails until Prometheus has finished loading its storage.
+		ReadinessProbe: readinessProbe,
 	}, nil
 }

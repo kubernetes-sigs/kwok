@@ -19,6 +19,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -104,9 +105,21 @@ func GetComponentPatches(conf *internalversion.KwokctlConfiguration, componentNa
 }
 
 // ApplyComponentPatches applies patches to a component.
+// A readiness probe whose port the patched arguments move follows it.
+// One that they keep from succeeding is kept, so the component is never reported ready unprobed,
+// and a warning says why it will stay not ready.
 func ApplyComponentPatches(ctx context.Context, component *internalversion.Component, patches []internalversion.ComponentPatches) {
+	original := slices.Clone(component.Args)
 	for _, patch := range patches {
 		applyComponentPatch(ctx, component, patch)
+	}
+	err := components.ReconcileReadinessProbe(component, original)
+	if err != nil {
+		logger := log.FromContext(ctx)
+		logger.Warn("The component may stay not ready, as componentsPatches conflict with its readiness probe",
+			"component", component.Name,
+			"reason", err,
+		)
 	}
 }
 
