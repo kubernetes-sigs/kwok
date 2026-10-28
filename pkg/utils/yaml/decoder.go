@@ -82,7 +82,7 @@ func (d *Decoder) DecodeUnstructured() (*unstructured.Unstructured, error) {
 			return nil
 		})
 		// Reverse the slice to keep the order.
-		utilsslices.Reverse(d.buf)
+		d.buf = utilsslices.Reverse(d.buf)
 		return d.DecodeUnstructured()
 	}
 
