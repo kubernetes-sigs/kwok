@@ -195,19 +195,20 @@ func (l *Loader) finishLoad(ctx context.Context, startTime time.Time) error {
 }
 
 func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
+	key := uniqueKeyFromMetadata(obj)
+	if _, restored := l.exist[key]; restored {
+		return
+	}
+
 	// If the object has owner references, we need to wait until all the owner references are created.
 	if ownerReferences := obj.GetOwnerReferences(); len(ownerReferences) != 0 {
-		allExist := true
 		for _, ownerReference := range ownerReferences {
-			key := uniqueKeyFromOwnerReference(ownerReference)
-			if _, ok := l.exist[key]; !ok {
-				allExist = false
-				l.pending[key] = append(l.pending[key], obj)
+			ownerKey := uniqueKeyFromOwnerReference(ownerReference)
+			if _, ok := l.exist[ownerKey]; !ok {
+				// Wait for one owner at a time, then re-check the remaining owners.
+				l.pending[ownerKey] = append(l.pending[ownerKey], obj)
+				return
 			}
-		}
-		// early return if not all owner references exist
-		if !allExist {
-			return
 		}
 
 		// update owner references
@@ -221,27 +222,14 @@ func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 	}
 
 	// Record the new uid
-	key := uniqueKeyFromMetadata(obj)
 	l.exist[key] = newObj.GetUID()
 
 	// If there are pending objects waiting for this object, apply them.
 	if pendingObjs, ok := l.pending[key]; ok {
-		for _, pendingObj := range pendingObjs {
-			// If the pending object has only one owner reference, or all the owner references exist, apply it.
-			if len(pendingObj.GetOwnerReferences()) == 1 || l.hasAllOwnerReferences(pendingObj) {
-				// update owner references
-				l.updateOwnerReferences(pendingObj)
-
-				// apply the object
-				newObj = l.apply(ctx, pendingObj)
-				if newObj != nil {
-					key := uniqueKeyFromMetadata(pendingObj)
-					l.exist[key] = newObj.GetUID()
-				}
-			}
-		}
-		// Remove the pending objects
 		delete(l.pending, key)
+		for _, pendingObj := range pendingObjs {
+			l.load(ctx, pendingObj)
+		}
 	}
 }
 
@@ -350,20 +338,6 @@ var defaultRetry = wait.Backoff{
 	Duration: 1 * time.Second,
 	Factor:   1.0,
 	Jitter:   0.1,
-}
-
-func (l *Loader) hasAllOwnerReferences(obj *unstructured.Unstructured) bool {
-	ownerReferences := obj.GetOwnerReferences()
-	if len(ownerReferences) == 0 {
-		return true
-	}
-	for _, ownerReference := range ownerReferences {
-		key := uniqueKeyFromOwnerReference(ownerReference)
-		if _, ok := l.exist[key]; !ok {
-			return false
-		}
-	}
-	return true
 }
 
 type ownerReference struct {
