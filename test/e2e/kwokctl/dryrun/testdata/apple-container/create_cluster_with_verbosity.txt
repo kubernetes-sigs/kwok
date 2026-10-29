@@ -1,0 +1,550 @@
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+# Generate PKI to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs
+touch <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log
+cp <ROOT_DIR>/test/kwokctl/audit-policy.yaml <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml
+mkdir -p <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/etcd
+container image pull registry.k8s.io/etcd:3.6.10-0
+container image pull registry.k8s.io/kube-apiserver:v1.37.0
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml
+apiVersion: apiserver.config.k8s.io/v1alpha1
+endpoint: kwok-<CLUSTER_NAME>-jaeger:4317
+kind: TracingConfiguration
+samplingRatePerMillion: 1000000
+EOF
+container image pull registry.k8s.io/kubectl:v1.37.0
+container image pull registry.k8s.io/kube-controller-manager:v1.37.0
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+clientConnection:
+  acceptContentTypes: ""
+  burst: 0
+  contentType: ""
+  kubeconfig: /etc/kubernetes/kubeconfig.yaml
+  qps: 0
+kind: KubeSchedulerConfiguration
+leaderElection:
+  leaderElect: null
+  leaseDuration: 0s
+  renewDeadline: 0s
+  resourceLock: ""
+  resourceName: ""
+  resourceNamespace: ""
+  retryPeriod: 0s
+EOF
+container image pull registry.k8s.io/scheduler-plugins/kube-scheduler:v0.34.7
+container image pull registry.k8s.io/kwok/kwok:v0.9.0
+container image pull registry.k8s.io/metrics-server/metrics-server:v0.8.1
+# Download https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml to <ROOT_DIR>/workdir/cache/manifest/49813f4ec9caba92a73718bf218a6a07e283942ec2088fe8d58ac793f5f6998b.yaml
+container image pull docker.io/prom/prometheus:v3.12.0
+container image pull docker.io/jaegertracing/all-in-one:1.76.0
+container image pull registry.k8s.io/scheduler-plugins/controller:v0.34.7
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/install/all-in-one.yaml to <ROOT_DIR>/workdir/cache/manifest/309ba2d77709ffdefe8aa82c544005c5956165abce45a44c8ce42dfdd5701780.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/capacityscheduling/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/eda30957f44d40b62ae09ee8b1bd01c8d8589fd20c1ed23c3ebaaf0b701ff26b.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/coscheduling/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/6cfaedb711ee13766b67d761f7455e1196f83ba4d154a09bdc8ac53bcd63c2d3.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/appgroup/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/5237ee84ac947b31465dd1756fe14b18c89cfb545feb91916857e5060c51b1aa.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/networktopology/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/e266412bf740d9d6641d54f7a9c032fe633d6ed92e9e4f3658b6599c58b54aa2.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/sysched/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/0b92760f424b9d058e9ac76fb74b53a0c10c0011b6f7fa093d0142ea6dfe4404.yaml
+# Download https://github.com/kubernetes-sigs/scheduler-plugins/raw/refs/tags/v0.34.7/manifests/noderesourcetopology/crd.yaml to <ROOT_DIR>/workdir/cache/manifest/864cc21a8033acc2835c06cbe95b86601dcb44b4834216aa512c1ae375d63174.yaml
+container image pull registry.k8s.io/kueue/kueue:v0.18.1
+# Download https://github.com/kubernetes-sigs/kueue/releases/download/v0.18.1/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/e37e8a5909d99434b78ace5aa708fc2b7623b6e8d77d04c7c3af29f3812dee72.yaml
+container image pull registry.k8s.io/kueue/kueueviz-backend:v0.18.1
+container image pull registry.k8s.io/kueue/kueueviz-frontend:v0.18.1
+container image pull registry.k8s.io/jobset/jobset:v0.12.0
+# Download https://github.com/kubernetes-sigs/jobset/releases/download/v0.12.0/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/4bb02b1bfadb99929cbef68ca0bfe81cb98de0ea63ad3b7bfb5592f8f0af768f.yaml
+container image pull registry.k8s.io/lws/lws:v0.9.0
+# Download https://github.com/kubernetes-sigs/lws/releases/download/v0.9.0/manifests.yaml to <ROOT_DIR>/workdir/cache/manifest/9e7adc39b4c73d4acf9df0e1c11fa9784f2495df024dbb0f6268e8073d7641c2.yaml
+container image pull registry.k8s.io/descheduler/descheduler:v0.36.0
+# Build github.com/kubernetes-sigs/descheduler/kubernetes/deployment?ref=v0.36.0 by kubectl kustomize to <ROOT_DIR>/workdir/cache/manifest/8f83406e4a180f058e2e7ec9fcbba2b829ee6225b52e716de6825c44cad62c8d.yaml
+container image pull registry.k8s.io/node-readiness-controller/node-readiness-controller:v0.3.0
+# Download https://github.com/kubernetes-sigs/node-readiness-controller/releases/download/v0.3.0/crds.yaml to <ROOT_DIR>/workdir/cache/manifest/9f030108410b33574d7c374995a799319f37841f25199e8365261278b9870430.yaml
+# Download https://github.com/kubernetes-sigs/node-readiness-controller/releases/download/v0.3.0/install.yaml to <ROOT_DIR>/workdir/cache/manifest/de22b75880ff02d128fe1d54f7c9db422aa321b23002ce8ce42e6840cf234a28.yaml
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml
+global:
+  evaluation_interval: 15s
+  scrape_interval: 15s
+  scrape_timeout: 10s
+scrape_configs:
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: etcd
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-etcd:2379
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: kube-apiserver
+  metrics_path: /metrics
+  scheme: https
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kube-apiserver:6443
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: kube-controller-manager
+  metrics_path: /metrics
+  scheme: https
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kube-controller-manager:10257
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: kube-scheduler
+  metrics_path: /metrics
+  scheme: https
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kube-scheduler:10259
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
+- http_sd_configs:
+  - url: http://kwok-<CLUSTER_NAME>-kwok-controller:10247/discovery/prometheus
+  job_name: kwok-controller-metrics-discovery
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: kwok-controller
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-kwok-controller:10247
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: metrics-server
+  metrics_path: /metrics
+  scheme: https
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-metrics-server:4443
+  tls_config:
+    cert_file: /etc/kubernetes/pki/admin.crt
+    insecure_skip_verify: true
+    key_file: /etc/kubernetes/pki/admin.key
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: prometheus
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+  - targets:
+    - 127.0.0.1:9090
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: scheduler-plugins
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-scheduler-plugins:8080
+EOF
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt
+    server: https://127.0.0.1:32766
+  name: kwok-<CLUSTER_NAME>
+contexts:
+- context:
+    cluster: kwok-<CLUSTER_NAME>
+    user: kwok-<CLUSTER_NAME>
+  name: kwok-<CLUSTER_NAME>
+current-context: kwok-<CLUSTER_NAME>
+kind: Config
+users:
+- name: kwok-<CLUSTER_NAME>
+  user:
+    client-certificate: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt
+    client-key: <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key
+EOF
+cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /etc/kubernetes/pki/ca.crt
+    server: https://kwok-<CLUSTER_NAME>-kube-apiserver:6443
+  name: kwok-<CLUSTER_NAME>
+contexts:
+- context:
+    cluster: kwok-<CLUSTER_NAME>
+    user: kwok-<CLUSTER_NAME>
+  name: kwok-<CLUSTER_NAME>
+current-context: kwok-<CLUSTER_NAME>
+kind: Config
+users:
+- name: kwok-<CLUSTER_NAME>
+  user:
+    client-certificate: /etc/kubernetes/pki/admin.crt
+    client-key: /etc/kubernetes/pki/admin.key
+EOF
+# Save cluster config to <ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml
+container \
+  network \
+  create \
+  kwok-<CLUSTER_NAME>
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-etcd \
+  --entrypoint=etcd \
+  --network=kwok-<CLUSTER_NAME> \
+  registry.k8s.io/etcd:3.6.10-0 \
+  --name=node0 \
+  --auto-compaction-retention=1 \
+  --quota-backend-bytes=8589934592 \
+  --data-dir=/etcd-data \
+  --initial-advertise-peer-urls=http://0.0.0.0:2380 \
+  --listen-peer-urls=http://0.0.0.0:2380 \
+  --advertise-client-urls=http://0.0.0.0:2379 \
+  --listen-client-urls=http://0.0.0.0:2379 \
+  --initial-cluster=node0=http://0.0.0.0:2380 \
+  --experimental-enable-distributed-tracing=true \
+  --experimental-distributed-tracing-address=kwok-<CLUSTER_NAME>-jaeger:4317 \
+  --experimental-distributed-tracing-sampling-rate=1000000
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-jaeger \
+  --network=kwok-<CLUSTER_NAME> \
+  --publish=16686:16686/tcp \
+  docker.io/jaegertracing/all-in-one:1.76.0 \
+  --collector.otlp.enabled=true \
+  --query.http-server.host-port=0.0.0.0:16686 \
+  --collector.otlp.grpc.host-port=0.0.0.0:4317
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kube-apiserver \
+  --entrypoint=kube-apiserver \
+  --network=kwok-<CLUSTER_NAME> \
+  --publish=32766:6443/tcp \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/audit.yaml:/etc/kubernetes/audit-policy.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/logs/audit.log:/var/log/kubernetes/audit/audit.log \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/apiserver-tracing-config.yaml:/etc/kubernetes/apiserver-tracing-config.yaml:ro \
+  registry.k8s.io/kube-apiserver:v1.37.0 \
+  --etcd-prefix=/registry \
+  --allow-privileged=true \
+  --endpoint-reconciler-type=none \
+  --max-requests-inflight=0 \
+  --max-mutating-requests-inflight=0 \
+  --enable-priority-and-fairness=false \
+  --etcd-servers=http://kwok-<CLUSTER_NAME>-etcd:2379 \
+  --authorization-mode=Node,RBAC \
+  --bind-address=0.0.0.0 \
+  --secure-port=6443 \
+  --tls-cert-file=/etc/kubernetes/pki/admin.crt \
+  --tls-private-key-file=/etc/kubernetes/pki/admin.key \
+  --client-ca-file=/etc/kubernetes/pki/ca.crt \
+  --service-account-key-file=/etc/kubernetes/pki/admin.key \
+  --service-account-signing-key-file=/etc/kubernetes/pki/admin.key \
+  --service-account-issuer=https://kubernetes.default.svc.cluster.local \
+  --proxy-client-key-file=/etc/kubernetes/pki/admin.key \
+  --proxy-client-cert-file=/etc/kubernetes/pki/admin.crt \
+  --requestheader-client-ca-file=/etc/kubernetes/pki/ca.crt \
+  --requestheader-allowed-names=kwok-ca \
+  --requestheader-username-headers=X-Remote-User \
+  --requestheader-group-headers=X-Remote-Group \
+  --requestheader-extra-headers-prefix=X-Remote-Extra- \
+  --audit-policy-file=/etc/kubernetes/audit-policy.yaml \
+  --audit-log-path=/var/log/kubernetes/audit/audit.log \
+  --tracing-config-file=/etc/kubernetes/apiserver-tracing-config.yaml
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kube-apiserver-insecure-proxy \
+  --entrypoint=kubectl \
+  --network=kwok-<CLUSTER_NAME> \
+  --publish=6080:8001/tcp \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/kubectl:v1.37.0 \
+  proxy \
+  --accept-hosts=^*$ \
+  --address=0.0.0.0 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --port=8001
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kube-controller-manager \
+  --entrypoint=kube-controller-manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/kube-controller-manager:v1.37.0 \
+  --node-monitor-period=25s \
+  --node-monitor-grace-period=3m20s \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics \
+  --bind-address=0.0.0.0 \
+  --secure-port=10257 \
+  --root-ca-file=/etc/kubernetes/pki/ca.crt \
+  --service-account-private-key-file=/etc/kubernetes/pki/admin.key \
+  --kube-api-qps=5000 \
+  --kube-api-burst=10000
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kube-scheduler \
+  --entrypoint=kube-scheduler \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/scheduler.yaml:/etc/kubernetes/scheduler.yaml:ro \
+  registry.k8s.io/scheduler-plugins/kube-scheduler:v0.34.7 \
+  --config=/etc/kubernetes/scheduler.yaml \
+  --authorization-always-allow-paths=/healthz,/readyz,/livez,/metrics \
+  --bind-address=0.0.0.0 \
+  --secure-port=10259 \
+  --kube-api-qps=5000 \
+  --kube-api-burst=10000
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kwok-controller \
+  --entrypoint=kwok \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kwok.yaml:~/.kwok/kwok.yaml:ro \
+  registry.k8s.io/kwok/kwok:v0.9.0 \
+  --manage-all-nodes=true \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --config=~/.kwok/kwok.yaml \
+  --tls-cert-file=/etc/kubernetes/pki/admin.crt \
+  --tls-private-key-file=/etc/kubernetes/pki/admin.key \
+  --node-ip= \
+  --node-name=kwok-<CLUSTER_NAME>-kwok-controller \
+  --node-port=10247 \
+  --server-address=0.0.0.0:10247 \
+  --node-lease-duration-seconds=200 \
+  --tracing-endpoint=kwok-<CLUSTER_NAME>-jaeger:4317 \
+  --tracing-sampling-rate-per-million=1000000
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-scheduler-plugins \
+  --entrypoint=controller \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/scheduler-plugins/controller:v0.34.7 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --metricsAddr=:8080
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kueue \
+  --entrypoint=/manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kueue/metrics/certs/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kueue/metrics/certs/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kueue/metrics/certs/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/visibility/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/visibility/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/visibility/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kueue.yaml:/controller_manager_config.yaml:ro \
+  --env=NAMESPACE=kueue-system \
+  registry.k8s.io/kueue/kueue:v0.18.1 \
+  --config=/controller_manager_config.yaml \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-jobset \
+  --entrypoint=/manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/jobset.yaml:/controller_manager_config.yaml:ro \
+  registry.k8s.io/jobset/jobset:v0.12.0 \
+  --config=/controller_manager_config.yaml \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-lws \
+  --entrypoint=/manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/tmp/k8s-webhook-server/serving-certs/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/tmp/k8s-webhook-server/serving-certs/tls.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/tmp/k8s-webhook-server/serving-certs/tls.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/lws.yaml:/controller_manager_config.yaml:ro \
+  registry.k8s.io/lws/lws:v0.9.0 \
+  --config=/controller_manager_config.yaml \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-descheduler \
+  --entrypoint=/bin/descheduler \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/descheduler.yaml:/policy-config-file.yaml:ro \
+  registry.k8s.io/descheduler/descheduler:v0.36.0 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --descheduling-interval=5m \
+  --policy-config-file=/policy-config-file.yaml
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-node-readiness-controller \
+  --entrypoint=/manager \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/node-readiness-controller/node-readiness-controller:v0.3.0 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --leader-elect=false
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-metrics-server \
+  --entrypoint=/metrics-server \
+  --network=kwok-<CLUSTER_NAME> \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/etc/kubernetes/kubeconfig.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/metrics-server/metrics-server:v0.8.1 \
+  --kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP \
+  --kubelet-use-node-status-port \
+  --kubelet-insecure-tls \
+  --metric-resolution=15s \
+  --bind-address=0.0.0.0 \
+  --secure-port=4443 \
+  --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --authentication-kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --authorization-kubeconfig=/etc/kubernetes/kubeconfig.yaml \
+  --tls-cert-file=/etc/kubernetes/pki/admin.crt \
+  --tls-private-key-file=/etc/kubernetes/pki/admin.key
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-prometheus \
+  --entrypoint=prometheus \
+  --network=kwok-<CLUSTER_NAME> \
+  --publish=9090:9090/tcp \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  docker.io/prom/prometheus:v3.12.0 \
+  --config.file=/etc/prometheus/prometheus.yaml \
+  --web.listen-address=0.0.0.0:9090
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kueueviz-backend \
+  --network=kwok-<CLUSTER_NAME> \
+  --publish=32765:8080/tcp \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig:/home/nonroot/.kube/config:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/ca.crt:/etc/kubernetes/pki/ca.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.crt:/etc/kubernetes/pki/admin.crt:ro \
+  --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
+  registry.k8s.io/kueue/kueueviz-backend:v0.18.1
+container \
+  create \
+  --name=kwok-<CLUSTER_NAME>-kueueviz-frontend \
+  --network=kwok-<CLUSTER_NAME> \
+  --publish=18080:8080/tcp \
+  --env=REACT_APP_WEBSOCKET_URL=ws://localhost:32765 \
+  registry.k8s.io/kueue/kueueviz-frontend:v0.18.1
+# Add context kwok-<CLUSTER_NAME> to ~/.kube/config
+container \
+  start \
+  kwok-<CLUSTER_NAME>-etcd
+container \
+  start \
+  kwok-<CLUSTER_NAME>-jaeger
+container \
+  start \
+  kwok-<CLUSTER_NAME>-kube-apiserver
+container \
+  start \
+  kwok-<CLUSTER_NAME>-kube-apiserver-insecure-proxy
+container \
+  start \
+  kwok-<CLUSTER_NAME>-kube-controller-manager
+container \
+  start \
+  kwok-<CLUSTER_NAME>-kube-scheduler
+container \
+  start \
+  kwok-<CLUSTER_NAME>-kwok-controller
+container \
+  start \
+  kwok-<CLUSTER_NAME>-scheduler-plugins
+container \
+  start \
+  kwok-<CLUSTER_NAME>-kueue
+container \
+  start \
+  kwok-<CLUSTER_NAME>-jobset
+container \
+  start \
+  kwok-<CLUSTER_NAME>-lws
+container \
+  start \
+  kwok-<CLUSTER_NAME>-descheduler
+container \
+  start \
+  kwok-<CLUSTER_NAME>-node-readiness-controller
+container \
+  start \
+  kwok-<CLUSTER_NAME>-metrics-server
+container \
+  start \
+  kwok-<CLUSTER_NAME>-prometheus
+container \
+  start \
+  kwok-<CLUSTER_NAME>-kueueviz-backend
+container \
+  start \
+  kwok-<CLUSTER_NAME>-kueueviz-frontend
+# Set up manifest for metrics-server
+# Set up manifest for scheduler-plugins
+# Set up manifest for kueue
+# Set up manifest for jobset
+# Set up manifest for lws
+# Set up manifest for descheduler
+# Set up manifest for node-readiness-controller

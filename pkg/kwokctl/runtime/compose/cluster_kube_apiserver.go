@@ -30,7 +30,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-apiserver
-	err = c.EnsureImage(ctx, c.runtime, conf.KubeApiserverImage)
+	err = c.ensureImage(ctx, conf.KubeApiserverImage)
 	if err != nil {
 		return err
 	}

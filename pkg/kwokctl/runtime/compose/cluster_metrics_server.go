@@ -31,7 +31,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.MetricsServerImage)
+	err = c.ensureImage(ctx, conf.MetricsServerImage)
 	if err != nil {
 		return err
 	}

@@ -18,9 +18,11 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -57,7 +59,9 @@ func executeCommand(args []string, absPath string, clusterName string, kwokctlPa
 	testdataPath := utilspath.Join(rootDir, absPath)
 	expected, err := os.ReadFile(testdataPath)
 	if err != nil {
-		return "", err
+		if !os.IsNotExist(err) {
+			return "", fmt.Errorf("read expected output from %s: %w", testdataPath, err)
+		}
 	}
 	cmd := exec.Command(kwokctlPath, args...)
 	output, err := cmd.Output()
@@ -69,9 +73,13 @@ func executeCommand(args []string, absPath string, clusterName string, kwokctlPa
 	got = formatCmdOutput(got, clusterName, rootDir)
 	if diff := cmp.Diff(got, want); diff != "" {
 		if updateTestdata {
+			err = os.MkdirAll(filepath.Dir(testdataPath), fs.FileMode(0755))
+			if err != nil {
+				return "", fmt.Errorf("create directory for testdata: %w", err)
+			}
 			err = os.WriteFile(testdataPath, []byte(got), fs.FileMode(0644))
 			if err != nil {
-				return "", err
+				return "", fmt.Errorf("write testdata to %s: %w", testdataPath, err)
 			}
 		} else {
 			return diff, nil

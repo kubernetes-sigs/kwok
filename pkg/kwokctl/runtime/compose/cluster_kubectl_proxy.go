@@ -33,7 +33,7 @@ func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kubectl
-	err = c.EnsureImage(ctx, c.runtime, conf.KubectlImage)
+	err = c.ensureImage(ctx, conf.KubectlImage)
 	if err != nil {
 		return err
 	}

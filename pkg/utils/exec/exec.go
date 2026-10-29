@@ -24,6 +24,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"sigs.k8s.io/kwok/pkg/log"
 )
 
 // IOStreams contains the standard streams.
@@ -241,6 +243,15 @@ func Command(ctx context.Context, name string, args ...string) (cmd *Cmd, err er
 	err = cmd.Start()
 	if err != nil {
 		return nil, fmt.Errorf("cmd start: %s %s: %w", name, strings.Join(args, " "), err)
+	}
+
+	logger := log.FromContext(ctx)
+	if logger.Level() <= log.LevelDebug {
+		logger.Debug("Executing command",
+			"cmd", name,
+			"args", args,
+			"pid", cmd.Process.Pid,
+		)
 	}
 
 	if opt.Wait {

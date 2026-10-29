@@ -34,7 +34,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kwok-controller
-	err = c.EnsureImage(ctx, c.runtime, conf.KwokControllerImage)
+	err = c.ensureImage(ctx, conf.KwokControllerImage)
 	if err != nil {
 		return err
 	}

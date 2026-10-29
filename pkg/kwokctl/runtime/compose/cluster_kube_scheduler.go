@@ -48,7 +48,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		kubeSchedulerImage = conf.SchedulerPluginsSchedulerImage
 	}
 
-	err = c.EnsureImage(ctx, c.runtime, kubeSchedulerImage)
+	err = c.ensureImage(ctx, kubeSchedulerImage)
 	if err != nil {
 		return err
 	}
