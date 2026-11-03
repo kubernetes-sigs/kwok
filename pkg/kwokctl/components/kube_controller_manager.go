@@ -114,7 +114,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 			)
 		}
 
-		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+		if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 			args = append(args,
 				"--bind-address="+conf.BindAddress,
 				"--secure-port=10257",
@@ -165,7 +165,7 @@ func BuildKubeControllerManagerComponent(conf BuildKubeControllerManagerComponen
 		//		"--port=0",
 		//	)
 	} else {
-		if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+		if GetRuntimeNetwork(conf.Runtime) != RuntimeNetworkHost {
 			args = append(args,
 				"--address="+conf.BindAddress,
 				"--port=10252",
