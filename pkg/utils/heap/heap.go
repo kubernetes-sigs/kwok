@@ -35,7 +35,13 @@ func NewHeap[K cmp.Ordered, T comparable]() *Heap[K, T] {
 }
 
 // Push adds an item to the queue.
+// If the item is already in the queue, its key is updated instead.
 func (h *Heap[K, T]) Push(key K, data T) {
+	if entry, ok := h.indexes[data]; ok {
+		entry.key = key
+		heap.Fix(&h.entries, entry.index)
+		return
+	}
 	entry := &waitEntry[K, T]{key: key, data: data}
 	heap.Push(&h.entries, entry)
 	h.indexes[data] = entry

@@ -143,3 +143,26 @@ func TestRemoveFromEmptyHeap(t *testing.T) {
 		t.Errorf("Len() = %d; want 0", h.Len())
 	}
 }
+
+func TestPushExistingItemUpdatesKey(t *testing.T) {
+	h := NewHeap[int, string]()
+	h.Push(1, "one")
+	h.Push(3, "three")
+	h.Push(5, "one")
+
+	if h.Len() != 2 {
+		t.Fatalf("Len() = %d; want 2", h.Len())
+	}
+
+	key, data, _ := h.Pop()
+	if key != 3 || data != "three" {
+		t.Errorf("Pop() = %d, %s; want 3, three", key, data)
+	}
+
+	if !h.Remove("one") {
+		t.Errorf("Remove() = false; want true")
+	}
+	if h.Len() != 0 {
+		t.Errorf("Len() = %d; want 0", h.Len())
+	}
+}
