@@ -159,10 +159,38 @@ func TestPushExistingItemUpdatesKey(t *testing.T) {
 		t.Errorf("Pop() = %d, %s; want 3, three", key, data)
 	}
 
+	key, data, _ = h.Peek()
+	if key != 5 || data != "one" {
+		t.Errorf("Peek() = %d, %s; want 5, one", key, data)
+	}
+
 	if !h.Remove("one") {
 		t.Errorf("Remove() = false; want true")
 	}
 	if h.Len() != 0 {
 		t.Errorf("Len() = %d; want 0", h.Len())
+	}
+}
+
+func TestPushExistingItemLowersKey(t *testing.T) {
+	h := NewHeap[int, string]()
+	h.Push(1, "one")
+	h.Push(3, "three")
+	h.Push(5, "five")
+	h.Push(0, "five")
+
+	if h.Len() != 3 {
+		t.Fatalf("Len() = %d; want 3", h.Len())
+	}
+
+	want := []struct {
+		key  int
+		data string
+	}{{0, "five"}, {1, "one"}, {3, "three"}}
+	for _, w := range want {
+		key, data, _ := h.Pop()
+		if key != w.key || data != w.data {
+			t.Errorf("Pop() = %d, %s; want %d, %s", key, data, w.key, w.data)
+		}
 	}
 }
