@@ -18,8 +18,10 @@ package e2e
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -41,8 +43,9 @@ func CaseKwokctlPortForward(kwokctlPath, clusterName string) *features.FeatureBu
 			}
 
 			defer func() {
+				// The reaper in exec.Command may have already reaped a child that exited on its own.
 				err = cmd.Process.Kill()
-				if err != nil {
+				if err != nil && !errors.Is(err, os.ErrProcessDone) {
 					t.Fatal(err)
 				}
 			}()

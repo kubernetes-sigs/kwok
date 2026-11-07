@@ -63,6 +63,14 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 				"err", err,
 			)
 		}
+		if !ready {
+			// Self-heal: startComponent no-ops running components, so this only restarts exited ones.
+			if err := c.startComponents(ctx); err != nil {
+				logger.Debug("Failed to restart components",
+					"err", err,
+				)
+			}
+		}
 		return ready, nil
 	},
 		wait.WithTimeout(timeout),

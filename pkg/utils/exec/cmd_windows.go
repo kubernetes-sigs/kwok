@@ -21,7 +21,6 @@ package exec
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"syscall"
 
@@ -45,8 +44,20 @@ func command(ctx context.Context, name string, arg ...string) *exec.Cmd {
 }
 
 func isRunning(pid int) bool {
-	_, err := os.FindProcess(pid)
-	return err == nil
+	// os.FindProcess also succeeds for exited processes whose object is kept
+	// alive by an open handle, so check the handle's signaled state instead.
+	handle, err := windows.OpenProcess(windows.SYNCHRONIZE, false, uint32(pid))
+	if err != nil {
+		return false
+	}
+	defer func() {
+		_ = windows.CloseHandle(handle)
+	}()
+	event, err := windows.WaitForSingleObject(handle, 0)
+	if err != nil {
+		return false
+	}
+	return event == uint32(windows.WAIT_TIMEOUT)
 }
 
 func setUser(cmd *exec.Cmd, uid, gid *int64) error {
