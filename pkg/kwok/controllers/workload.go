@@ -79,23 +79,44 @@ func workloadPodActive(pod *corev1.Pod) bool {
 		len(pod.Spec.Containers) != 0
 }
 
+func workloadPodOwnerEqual(a, b *corev1.Pod) bool {
+	aOwner := metav1.GetControllerOf(a)
+	bOwner := metav1.GetControllerOf(b)
+	if aOwner == nil || bOwner == nil {
+		return aOwner == nil && bOwner == nil
+	}
+	return aOwner.APIVersion == bOwner.APIVersion &&
+		aOwner.Kind == bOwner.Kind &&
+		aOwner.Name == bOwner.Name &&
+		aOwner.UID == bOwner.UID
+}
+
 func (r *workloadResolver) updatePod(pod *corev1.Pod) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	key := workloadPodKey(pod)
 	if workloadPodActive(pod) {
+		if oldPod, ok := r.pods[key]; ok && workloadPodOwnerEqual(oldPod, pod) {
+			return
+		}
 		r.pods[key] = pod.DeepCopy()
-	} else {
-		delete(r.pods, key)
+		r.version++
+		return
 	}
-	r.version++
+	if _, ok := r.pods[key]; ok {
+		delete(r.pods, key)
+		r.version++
+	}
 }
 
 func (r *workloadResolver) deletePod(pod *corev1.Pod) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	delete(r.pods, workloadPodKey(pod))
-	r.version++
+	key := workloadPodKey(pod)
+	if _, ok := r.pods[key]; ok {
+		delete(r.pods, key)
+		r.version++
+	}
 }
 
 func (r *workloadResolver) invalidate() {
@@ -143,32 +164,32 @@ func (r *workloadResolver) identityForPod(pod *corev1.Pod) workloadIdentity {
 	identity := ownerIdentity(pod.Namespace, owner, pod.CreationTimestamp)
 	switch {
 	case owner.APIVersion == appsv1.SchemeGroupVersion.String() && owner.Kind == "ReplicaSet":
-		if replicaSet, ok := r.replicaSets.GetWithNamespace(owner.Name, pod.Namespace); ok {
+		if replicaSet, ok := r.replicaSets.GetWithNamespace(owner.Name, pod.Namespace); ok && replicaSet.UID == owner.UID {
 			identity.created = replicaSet.CreationTimestamp
 			if parent := metav1.GetControllerOf(replicaSet); parent != nil &&
 				parent.APIVersion == appsv1.SchemeGroupVersion.String() && parent.Kind == "Deployment" {
 				created := replicaSet.CreationTimestamp
-				if deployment, ok := r.deployments.GetWithNamespace(parent.Name, pod.Namespace); ok {
+				if deployment, ok := r.deployments.GetWithNamespace(parent.Name, pod.Namespace); ok && deployment.UID == parent.UID {
 					created = deployment.CreationTimestamp
 				}
 				return ownerIdentity(pod.Namespace, parent, created)
 			}
 		}
 	case owner.APIVersion == appsv1.SchemeGroupVersion.String() && owner.Kind == "StatefulSet":
-		if statefulSet, ok := r.statefulSets.GetWithNamespace(owner.Name, pod.Namespace); ok {
+		if statefulSet, ok := r.statefulSets.GetWithNamespace(owner.Name, pod.Namespace); ok && statefulSet.UID == owner.UID {
 			identity.created = statefulSet.CreationTimestamp
 		}
 	case owner.APIVersion == appsv1.SchemeGroupVersion.String() && owner.Kind == "DaemonSet":
-		if daemonSet, ok := r.daemonSets.GetWithNamespace(owner.Name, pod.Namespace); ok {
+		if daemonSet, ok := r.daemonSets.GetWithNamespace(owner.Name, pod.Namespace); ok && daemonSet.UID == owner.UID {
 			identity.created = daemonSet.CreationTimestamp
 		}
 	case owner.APIVersion == batchv1.SchemeGroupVersion.String() && owner.Kind == "Job":
-		if job, ok := r.jobs.GetWithNamespace(owner.Name, pod.Namespace); ok {
+		if job, ok := r.jobs.GetWithNamespace(owner.Name, pod.Namespace); ok && job.UID == owner.UID {
 			identity.created = job.CreationTimestamp
 			if parent := metav1.GetControllerOf(job); parent != nil &&
 				parent.APIVersion == batchv1.SchemeGroupVersion.String() && parent.Kind == "CronJob" {
 				created := job.CreationTimestamp
-				if cronJob, ok := r.cronJobs.GetWithNamespace(parent.Name, pod.Namespace); ok {
+				if cronJob, ok := r.cronJobs.GetWithNamespace(parent.Name, pod.Namespace); ok && cronJob.UID == parent.UID {
 					created = cronJob.CreationTimestamp
 				}
 				return ownerIdentity(pod.Namespace, parent, created)

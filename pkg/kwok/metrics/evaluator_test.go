@@ -19,6 +19,7 @@ package metrics
 import (
 	"context"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -95,7 +96,12 @@ func TestResourceEvaluation(t *testing.T) {
 
 	exp := `( Quantity("10m") + Quantity(pod.metadata.annotations["cpu_usage"]) + node.status.allocatable["cpu"] + pod.spec.containers[0].resources.requests["cpu"] ) * 1.5 * 10`
 
-	env, err := NewEnvironment(EnvironmentConfig{})
+	env, err := NewEnvironment(EnvironmentConfig{
+		WorkloadForPod: func(*corev1.Pod) *Workload {
+			t.Fatal("ordinary resource metrics must not resolve workload context")
+			return nil
+		},
+	})
 	if err != nil {
 		t.Fatalf("failed to instantiate node Evaluator: %v", err)
 	}
@@ -211,5 +217,31 @@ func TestWorkloadFallbackAndResultCache(t *testing.T) {
 	actualFallback, err := fallbackEval.EvaluateString(context.Background(), Data{Pod: pod})
 	if err != nil || actualFallback != "Pod/pod" {
 		t.Fatalf("expected Pod compatibility workload, got %q, err %v", actualFallback, err)
+	}
+}
+
+func TestWorkloadContextDisabled(t *testing.T) {
+	env, err := NewEnvironment(EnvironmentConfig{
+		WorkloadContextDisabledReason: "manage-single-node mode does not provide cluster-wide membership",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	eval, err := env.Compile(`double(size(pod.spec.containers))`)
+	if err != nil {
+		t.Fatalf("ordinary pod expression should compile: %v", err)
+	}
+	value, err := eval.EvaluateFloat64(context.Background(), Data{Pod: &corev1.Pod{
+		Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "container"}}},
+	}})
+	if err != nil || value != 1 {
+		t.Fatalf("ordinary pod expression = %v, %v; want 1, nil", value, err)
+	}
+
+	_, err = env.Compile(`double(workload.replicas)`)
+	if err == nil || !strings.Contains(err.Error(), "workload metric context is unavailable") ||
+		!strings.Contains(err.Error(), "manage-single-node mode") {
+		t.Fatalf("workload expression error = %v, want explicit disabled-context error", err)
 	}
 }

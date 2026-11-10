@@ -112,6 +112,7 @@ type deferredRetryState struct {
 const (
 	deferredInitialRetryDelay  = 30 * time.Second
 	deferredPeriodicRetryDelay = 3 * time.Minute
+	contextRetryDelay          = time.Second
 )
 
 // PodControllerConfig is the configuration for the PodController
@@ -287,6 +288,7 @@ func (c *PodController) deferredRetryWorker(ctx context.Context) {
 }
 
 func (c *PodController) contextRetryWorker(ctx context.Context) {
+	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
 		ref, ok := c.contextRetryQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
@@ -294,6 +296,17 @@ func (c *PodController) contextRetryWorker(ctx context.Context) {
 		}
 		pod, err := c.typedClient.CoreV1().Pods(ref.Namespace).Get(ctx, ref.Name, metav1.GetOptions{})
 		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			if ctx.Err() != nil {
+				return
+			}
+			logger.Warn("Failed to get pod for context retry",
+				"err", err,
+				"pod", ref,
+			)
+			c.scheduleContextRetryRef(ref, contextRetryDelay)
 			continue
 		}
 		select {
@@ -556,7 +569,7 @@ func (c *PodController) nodeContextAvailable(pod *corev1.Pod) bool {
 }
 
 func (c *PodController) scheduleContextRetry(pod *corev1.Pod) {
-	c.scheduleContextRetryRef(log.KObj(pod), time.Second)
+	c.scheduleContextRetryRef(log.KObj(pod), contextRetryDelay)
 }
 
 func (c *PodController) scheduleContextRetryRef(ref log.ObjectRef, delay time.Duration) {

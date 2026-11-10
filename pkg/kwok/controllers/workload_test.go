@@ -86,13 +86,13 @@ func TestWorkloadResolverDeploymentRollout(t *testing.T) {
 	created := metav1.NewTime(time.Now().Add(-time.Hour))
 	deploymentOwner := workloadControllerOwner(appsv1.SchemeGroupVersion.String(), "Deployment", "deployment", "deployment-uid")
 	replicaSets := workloadObjectGetter[*appsv1.ReplicaSet]{items: map[string]*appsv1.ReplicaSet{
-		"default/old": {ObjectMeta: metav1.ObjectMeta{Name: "old", Namespace: "default", OwnerReferences: []metav1.OwnerReference{deploymentOwner}}},
-		"default/new": {ObjectMeta: metav1.ObjectMeta{Name: "new", Namespace: "default", OwnerReferences: []metav1.OwnerReference{deploymentOwner}}},
+		"default/old": {ObjectMeta: metav1.ObjectMeta{Name: "old", Namespace: "default", UID: "old-uid", OwnerReferences: []metav1.OwnerReference{deploymentOwner}}},
+		"default/new": {ObjectMeta: metav1.ObjectMeta{Name: "new", Namespace: "default", UID: "new-uid", OwnerReferences: []metav1.OwnerReference{deploymentOwner}}},
 	}}
 	resolver := newWorkloadResolver(
 		replicaSets,
 		workloadObjectGetter[*appsv1.Deployment]{items: map[string]*appsv1.Deployment{
-			"default/deployment": {ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "default", CreationTimestamp: created}},
+			"default/deployment": {ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "default", UID: "deployment-uid", CreationTimestamp: created}},
 		}},
 		workloadObjectGetter[*appsv1.StatefulSet]{items: map[string]*appsv1.StatefulSet{}},
 		workloadObjectGetter[*appsv1.DaemonSet]{items: map[string]*appsv1.DaemonSet{}},
@@ -138,7 +138,7 @@ func TestWorkloadResolverDeploymentRollout(t *testing.T) {
 func TestWorkloadResolverKindsAndInactivePods(t *testing.T) {
 	cronJobOwner := workloadControllerOwner(batchv1.SchemeGroupVersion.String(), "CronJob", "cron", "cron-uid")
 	jobs := workloadObjectGetter[*batchv1.Job]{items: map[string]*batchv1.Job{
-		"default/job": {ObjectMeta: metav1.ObjectMeta{Name: "job", Namespace: "default", OwnerReferences: []metav1.OwnerReference{cronJobOwner}}},
+		"default/job": {ObjectMeta: metav1.ObjectMeta{Name: "job", Namespace: "default", UID: "job-uid", OwnerReferences: []metav1.OwnerReference{cronJobOwner}}},
 	}}
 	resolver := testWorkloadResolver(workloadObjectGetter[*appsv1.ReplicaSet]{items: map[string]*appsv1.ReplicaSet{}}, jobs)
 	now := time.Now()
@@ -183,6 +183,154 @@ func TestWorkloadResolverKindsAndInactivePods(t *testing.T) {
 
 func ptrOwner(owner metav1.OwnerReference) *metav1.OwnerReference {
 	return &owner
+}
+
+func TestWorkloadResolverPodInvalidation(t *testing.T) {
+	resolver := testWorkloadResolver(workloadObjectGetter[*appsv1.ReplicaSet]{items: map[string]*appsv1.ReplicaSet{}}, workloadObjectGetter[*batchv1.Job]{items: map[string]*batchv1.Job{}})
+	now := time.Now()
+	pod := metricPod("pod", "pod-uid", now, nil)
+	pod.ResourceVersion = "1"
+	resolver.updatePod(pod)
+	resolver.ResolveWorkload(pod)
+
+	updated := pod.DeepCopy()
+	updated.ResourceVersion = "2"
+	updated.Status.Conditions = append(updated.Status.Conditions, corev1.PodCondition{Type: corev1.PodReady})
+	resolver.updatePod(updated)
+	if resolver.version != 1 || resolver.cacheVersion != 1 {
+		t.Fatalf("status-only update invalidated resolver: version=%d cacheVersion=%d", resolver.version, resolver.cacheVersion)
+	}
+	if stored := resolver.pods[workloadPodKey(pod)]; stored.ResourceVersion != "1" {
+		t.Fatalf("status-only update replaced stored pod: resourceVersion=%q", stored.ResourceVersion)
+	}
+
+	inactive := metricPod("inactive", "inactive-uid", now, nil)
+	inactive.Status.Phase = corev1.PodSucceeded
+	resolver.updatePod(inactive)
+	resolver.deletePod(metricPod("unknown", "unknown-uid", now, nil))
+	if resolver.version != 1 {
+		t.Fatalf("inactive absent pod or unknown delete invalidated resolver: version=%d", resolver.version)
+	}
+
+	updated.Status.Phase = corev1.PodSucceeded
+	resolver.updatePod(updated)
+	if resolver.version != 2 || len(resolver.pods) != 0 {
+		t.Fatalf("active-to-inactive transition did not invalidate membership: version=%d pods=%d", resolver.version, len(resolver.pods))
+	}
+
+	updated.Status.Phase = corev1.PodRunning
+	resolver.updatePod(updated)
+	if resolver.version != 3 || len(resolver.pods) != 1 {
+		t.Fatalf("inactive-to-active transition did not invalidate membership: version=%d pods=%d", resolver.version, len(resolver.pods))
+	}
+
+	owner := workloadControllerOwner(appsv1.SchemeGroupVersion.String(), "StatefulSet", "stateful", "stateful-uid")
+	updated.OwnerReferences = []metav1.OwnerReference{owner}
+	resolver.updatePod(updated)
+	if resolver.version != 4 {
+		t.Fatalf("owner transition did not invalidate resolver: version=%d", resolver.version)
+	}
+	if storedOwner := metav1.GetControllerOf(resolver.pods[workloadPodKey(updated)]); storedOwner == nil || storedOwner.UID != owner.UID {
+		t.Fatalf("owner transition did not replace stored pod: %#v", storedOwner)
+	}
+}
+
+func TestWorkloadResolverDirectOwnerUIDMismatch(t *testing.T) {
+	now := time.Now()
+	replacementCreated := metav1.NewTime(now.Add(-time.Hour))
+	parentOwner := workloadControllerOwner(appsv1.SchemeGroupVersion.String(), "Deployment", "deployment", "deployment-uid")
+	cronJobOwner := workloadControllerOwner(batchv1.SchemeGroupVersion.String(), "CronJob", "cronjob", "cronjob-uid")
+	resolver := newWorkloadResolver(
+		workloadObjectGetter[*appsv1.ReplicaSet]{items: map[string]*appsv1.ReplicaSet{
+			"default/replicaset": {ObjectMeta: metav1.ObjectMeta{Name: "replicaset", Namespace: "default", UID: "replacement-uid", CreationTimestamp: replacementCreated, OwnerReferences: []metav1.OwnerReference{parentOwner}}},
+		}},
+		workloadObjectGetter[*appsv1.Deployment]{items: map[string]*appsv1.Deployment{}},
+		workloadObjectGetter[*appsv1.StatefulSet]{items: map[string]*appsv1.StatefulSet{
+			"default/statefulset": {ObjectMeta: metav1.ObjectMeta{Name: "statefulset", Namespace: "default", UID: "replacement-uid", CreationTimestamp: replacementCreated}},
+		}},
+		workloadObjectGetter[*appsv1.DaemonSet]{items: map[string]*appsv1.DaemonSet{
+			"default/daemonset": {ObjectMeta: metav1.ObjectMeta{Name: "daemonset", Namespace: "default", UID: "replacement-uid", CreationTimestamp: replacementCreated}},
+		}},
+		workloadObjectGetter[*batchv1.Job]{items: map[string]*batchv1.Job{
+			"default/job": {ObjectMeta: metav1.ObjectMeta{Name: "job", Namespace: "default", UID: "replacement-uid", CreationTimestamp: replacementCreated, OwnerReferences: []metav1.OwnerReference{cronJobOwner}}},
+		}},
+		workloadObjectGetter[*batchv1.CronJob]{items: map[string]*batchv1.CronJob{}},
+	)
+
+	tests := []struct {
+		kind       string
+		apiVersion string
+		name       string
+	}{
+		{kind: "ReplicaSet", apiVersion: appsv1.SchemeGroupVersion.String(), name: "replicaset"},
+		{kind: "StatefulSet", apiVersion: appsv1.SchemeGroupVersion.String(), name: "statefulset"},
+		{kind: "DaemonSet", apiVersion: appsv1.SchemeGroupVersion.String(), name: "daemonset"},
+		{kind: "Job", apiVersion: batchv1.SchemeGroupVersion.String(), name: "job"},
+	}
+	for i, test := range tests {
+		t.Run(test.kind, func(t *testing.T) {
+			owner := workloadControllerOwner(test.apiVersion, test.kind, test.name, "original-uid")
+			pod := metricPod(test.name+"-pod", fmt.Sprintf("pod-uid-%d", i), now, &owner)
+			resolver.updatePod(pod)
+			workload := resolver.ResolveWorkload(pod)
+			if workload.Kind != test.kind || workload.Name != test.name || workload.UID != "original-uid" {
+				t.Fatalf("direct owner mismatch changed identity: %#v", workload)
+			}
+			if !workload.CreationTimestamp.Equal(&pod.CreationTimestamp) {
+				t.Fatalf("direct owner mismatch used replacement timestamp: %v", workload.CreationTimestamp)
+			}
+		})
+	}
+}
+
+func TestWorkloadResolverParentOwnerUIDMismatch(t *testing.T) {
+	now := time.Now()
+	directCreated := metav1.NewTime(now.Add(-time.Hour))
+	replacementCreated := metav1.NewTime(now.Add(-2 * time.Hour))
+	deploymentOwner := workloadControllerOwner(appsv1.SchemeGroupVersion.String(), "Deployment", "deployment", "deployment-original-uid")
+	cronJobOwner := workloadControllerOwner(batchv1.SchemeGroupVersion.String(), "CronJob", "cronjob", "cronjob-original-uid")
+	resolver := newWorkloadResolver(
+		workloadObjectGetter[*appsv1.ReplicaSet]{items: map[string]*appsv1.ReplicaSet{
+			"default/replicaset": {ObjectMeta: metav1.ObjectMeta{Name: "replicaset", Namespace: "default", UID: "replicaset-uid", CreationTimestamp: directCreated, OwnerReferences: []metav1.OwnerReference{deploymentOwner}}},
+		}},
+		workloadObjectGetter[*appsv1.Deployment]{items: map[string]*appsv1.Deployment{
+			"default/deployment": {ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "default", UID: "deployment-replacement-uid", CreationTimestamp: replacementCreated}},
+		}},
+		workloadObjectGetter[*appsv1.StatefulSet]{items: map[string]*appsv1.StatefulSet{}},
+		workloadObjectGetter[*appsv1.DaemonSet]{items: map[string]*appsv1.DaemonSet{}},
+		workloadObjectGetter[*batchv1.Job]{items: map[string]*batchv1.Job{
+			"default/job": {ObjectMeta: metav1.ObjectMeta{Name: "job", Namespace: "default", UID: "job-uid", CreationTimestamp: directCreated, OwnerReferences: []metav1.OwnerReference{cronJobOwner}}},
+		}},
+		workloadObjectGetter[*batchv1.CronJob]{items: map[string]*batchv1.CronJob{
+			"default/cronjob": {ObjectMeta: metav1.ObjectMeta{Name: "cronjob", Namespace: "default", UID: "cronjob-replacement-uid", CreationTimestamp: replacementCreated}},
+		}},
+	)
+
+	tests := []struct {
+		name       string
+		directKind string
+		directUID  string
+		parentKind string
+		parentUID  string
+		apiVersion string
+	}{
+		{name: "replicaset", directKind: "ReplicaSet", directUID: "replicaset-uid", parentKind: "Deployment", parentUID: "deployment-original-uid", apiVersion: appsv1.SchemeGroupVersion.String()},
+		{name: "job", directKind: "Job", directUID: "job-uid", parentKind: "CronJob", parentUID: "cronjob-original-uid", apiVersion: batchv1.SchemeGroupVersion.String()},
+	}
+	for i, test := range tests {
+		t.Run(test.parentKind, func(t *testing.T) {
+			owner := workloadControllerOwner(test.apiVersion, test.directKind, test.name, test.directUID)
+			pod := metricPod(test.name+"-pod", fmt.Sprintf("parent-pod-uid-%d", i), now, &owner)
+			resolver.updatePod(pod)
+			workload := resolver.ResolveWorkload(pod)
+			if workload.Kind != test.parentKind || workload.UID != test.parentUID {
+				t.Fatalf("parent owner mismatch changed identity: %#v", workload)
+			}
+			if !workload.CreationTimestamp.Equal(&directCreated) {
+				t.Fatalf("parent owner mismatch used replacement timestamp: %v", workload.CreationTimestamp)
+			}
+		})
+	}
 }
 
 func TestWorkloadResolverConcurrentUpdates(t *testing.T) {

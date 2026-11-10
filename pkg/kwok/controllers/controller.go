@@ -231,7 +231,7 @@ func (c *Controller) init(ctx context.Context) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to watch pods: %w", err)
 	}
-	if c.conf.EnableMetrics {
+	if c.conf.EnableMetrics && c.WorkloadContextEnabled() {
 		err = c.initWorkloadResolver(ctx)
 		if err != nil {
 			return err
@@ -767,6 +767,11 @@ func (c *Controller) ResolveWorkload(pod *corev1.Pod) *metrics.Workload {
 		return metrics.WorkloadForPod(pod)
 	}
 	return c.workloads.ResolveWorkload(pod)
+}
+
+// WorkloadContextEnabled reports whether this controller observes cluster-wide pod membership.
+func (c *Controller) WorkloadContextEnabled() bool {
+	return c.conf.ManageSingleNode == ""
 }
 
 // StartedContainersTotal returns the total number of containers started

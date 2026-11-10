@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -35,6 +36,9 @@ import (
 // EnvironmentConfig holds configuration for a cel program
 type EnvironmentConfig struct {
 	EnableResultCache bool
+
+	// WorkloadContextDisabledReason disables the workload CEL variable and explains why.
+	WorkloadContextDisabledReason string
 
 	Now                    func() time.Time
 	StartedContainersTotal func(nodeName string) int64
@@ -65,10 +69,12 @@ func NewEnvironment(conf EnvironmentConfig) (*Environment, error) {
 	conversions := slices.Clone(cel.DefaultConversions)
 	funcs := maps.Clone(cel.DefaultFuncs)
 	methods := maps.Clone(cel.FuncsToMethods(cel.DefaultFuncs))
-	types = append(types, Workload{})
-	methods["SinceSecond"] = append(methods["SinceSecond"], func(workload *Workload) float64 {
-		return time.Since(workload.CreationTimestamp.Time).Seconds()
-	})
+	if conf.WorkloadContextDisabledReason == "" {
+		types = append(types, Workload{})
+		methods["SinceSecond"] = append(methods["SinceSecond"], func(workload *Workload) float64 {
+			return time.Since(workload.CreationTimestamp.Time).Seconds()
+		})
+	}
 
 	if conf.Now != nil {
 		funcs[nowOldName] = []any{conf.Now}
@@ -123,17 +129,20 @@ func NewEnvironment(conf EnvironmentConfig) (*Environment, error) {
 		funcs[startedContainersTotalName] = append(funcs[startedContainersTotalName], startedContainersTotal, startedContainersTotalByNode)
 	}
 
+	vars := map[string]any{
+		"node":      corev1.Node{},
+		"pod":       corev1.Pod{},
+		"container": corev1.Container{},
+	}
+	if conf.WorkloadContextDisabledReason == "" {
+		vars["workload"] = Workload{}
+	}
 	env, err := cel.NewEnvironment(cel.EnvironmentConfig{
 		Types:       types,
 		Conversions: conversions,
 		Methods:     methods,
 		Funcs:       funcs,
-		Vars: map[string]any{
-			"node":      corev1.Node{},
-			"pod":       corev1.Pod{},
-			"container": corev1.Container{},
-			"workload":  Workload{},
-		},
+		Vars:        vars,
 	})
 	if err != nil {
 		return nil, err
@@ -158,10 +167,15 @@ type Environment struct {
 	resultCacheVer *int64
 }
 
+var workloadIdentifierPattern = regexp.MustCompile(`\bworkload\b`)
+
 // Compile is responsible for compiling a cel program
 func (e *Environment) Compile(src string) (*Evaluator, error) {
 	program, err := e.env.Compile(src)
 	if err != nil {
+		if e.conf.WorkloadContextDisabledReason != "" && workloadIdentifierPattern.MatchString(src) {
+			return nil, fmt.Errorf("workload metric context is unavailable: %s: %w", e.conf.WorkloadContextDisabledReason, err)
+		}
 		return nil, fmt.Errorf("failed to compile metric expression: %w", err)
 	}
 
@@ -169,6 +183,7 @@ func (e *Environment) Compile(src string) (*Evaluator, error) {
 		program:        program,
 		latestCacheVer: e.resultCacheVer,
 		workloadForPod: e.conf.WorkloadForPod,
+		usesWorkload:   workloadIdentifierPattern.MatchString(src),
 	}
 	return evaluator, nil
 }
@@ -188,6 +203,8 @@ type Evaluator struct {
 	latestCacheVer *int64
 	cacheVer       int64
 	workloadForPod func(*corev1.Pod) *Workload
+	// Conservatively include any expression containing the workload identifier.
+	usesWorkload bool
 
 	cache    map[string]cel.Val
 	cacheMut sync.Mutex
@@ -211,7 +228,7 @@ func resultUniqueKey(node *corev1.Node, pod *corev1.Pod, container *corev1.Conta
 }
 
 func (e *Evaluator) evaluate(ctx context.Context, data Data) (cel.Val, error) {
-	if data.Workload == nil && data.Pod != nil {
+	if e.usesWorkload && data.Workload == nil && data.Pod != nil {
 		if e.workloadForPod != nil {
 			data.Workload = e.workloadForPod(data.Pod)
 		}
@@ -295,6 +312,11 @@ type Workload struct {
 // WorkloadResolver optionally resolves a pod to its metric-bearing workload.
 type WorkloadResolver interface {
 	ResolveWorkload(pod *corev1.Pod) *Workload
+}
+
+// WorkloadContextProvider reports whether cluster-wide workload context is available.
+type WorkloadContextProvider interface {
+	WorkloadContextEnabled() bool
 }
 
 // GetCreationTimestamp allows workload.SinceSecond() in CEL expressions.

@@ -18,14 +18,18 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
+	clienttesting "k8s.io/client-go/testing"
 	fakeclock "k8s.io/utils/clock/testing"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -236,6 +240,87 @@ func TestMissingNodeContextSchedulesRetry(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 	t.Fatal("missing node context did not schedule a retry")
+}
+
+func TestContextRetryWorkerRetriesTransientGetError(t *testing.T) {
+	clock := fakeclock.NewFakeClock(time.Now())
+	pod := allocatedPod("pod", "node-a", "250m", "250m")
+	client := fake.NewClientset(pod)
+	var gets atomic.Int32
+	client.PrependReactor("get", "pods", func(clienttesting.Action) (bool, runtime.Object, error) {
+		if gets.Add(1) == 1 {
+			return true, nil, errors.New("temporary get failure")
+		}
+		return false, nil, nil
+	})
+	controller, err := NewPodController(PodControllerConfig{
+		Clock:                clock,
+		TypedClient:          client,
+		PlayStageParallelism: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	controller.preprocessChan = make(chan *corev1.Pod, 1)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go controller.contextRetryWorker(ctx)
+	controller.contextRetryQueue.Add(log.KObj(pod))
+
+	deadline := time.Now().Add(time.Second)
+	for gets.Load() != 1 && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	if gets.Load() != 1 {
+		t.Fatal("initial context retry GET was not attempted")
+	}
+	time.Sleep(10 * time.Millisecond)
+	clock.Step(contextRetryDelay)
+	select {
+	case got := <-controller.preprocessChan:
+		if got.Name != pod.Name {
+			t.Fatalf("retried pod = %s, want %s", got.Name, pod.Name)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("transient GET error was not retried")
+	}
+}
+
+func TestContextRetryWorkerDropsNotFound(t *testing.T) {
+	clock := fakeclock.NewFakeClock(time.Now())
+	client := fake.NewClientset()
+	var gets atomic.Int32
+	client.PrependReactor("get", "pods", func(clienttesting.Action) (bool, runtime.Object, error) {
+		gets.Add(1)
+		return false, nil, nil
+	})
+	controller, err := NewPodController(PodControllerConfig{
+		Clock:                clock,
+		TypedClient:          client,
+		PlayStageParallelism: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	controller.preprocessChan = make(chan *corev1.Pod, 1)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go controller.contextRetryWorker(ctx)
+	controller.contextRetryQueue.Add(log.KRef("default", "missing"))
+
+	deadline := time.Now().Add(time.Second)
+	for gets.Load() != 1 && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	if gets.Load() != 1 {
+		t.Fatal("context retry GET was not attempted")
+	}
+	time.Sleep(10 * time.Millisecond)
+	clock.Step(2 * contextRetryDelay)
+	time.Sleep(10 * time.Millisecond)
+	if got := gets.Load(); got != 1 {
+		t.Fatalf("NotFound GET attempts = %d, want 1", got)
+	}
 }
 
 func waitForQueueItem(t *testing.T, queue interface {

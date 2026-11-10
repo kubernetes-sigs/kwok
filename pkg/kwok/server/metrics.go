@@ -38,14 +38,19 @@ func (s *Server) initCEL() error {
 	}
 
 	var workloadForPod func(*corev1.Pod) *metrics.Workload
-	if resolver, ok := s.dataSource.(metrics.WorkloadResolver); ok {
+	workloadContextDisabledReason := ""
+	if provider, ok := s.dataSource.(metrics.WorkloadContextProvider); ok && !provider.WorkloadContextEnabled() {
+		workloadContextDisabledReason = "the data source does not provide cluster-wide workload membership"
+	}
+	if resolver, ok := s.dataSource.(metrics.WorkloadResolver); ok && workloadContextDisabledReason == "" {
 		workloadForPod = resolver.ResolveWorkload
 	}
 
 	env, err := metrics.NewEnvironment(metrics.EnvironmentConfig{
-		EnableResultCache:      true,
-		StartedContainersTotal: s.dataSource.StartedContainersTotal,
-		WorkloadForPod:         workloadForPod,
+		EnableResultCache:             true,
+		WorkloadContextDisabledReason: workloadContextDisabledReason,
+		StartedContainersTotal:        s.dataSource.StartedContainersTotal,
+		WorkloadForPod:                workloadForPod,
 
 		ContainerResourceUsage: s.containerResourceUsage,
 		PodResourceUsage:       s.podResourceUsage,
