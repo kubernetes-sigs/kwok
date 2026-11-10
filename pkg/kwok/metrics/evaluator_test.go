@@ -19,6 +19,7 @@ package metrics
 import (
 	"context"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -95,7 +96,12 @@ func TestResourceEvaluation(t *testing.T) {
 
 	exp := `( Quantity("10m") + Quantity(pod.metadata.annotations["cpu_usage"]) + node.status.allocatable["cpu"] + pod.spec.containers[0].resources.requests["cpu"] ) * 1.5 * 10`
 
-	env, err := NewEnvironment(EnvironmentConfig{})
+	env, err := NewEnvironment(EnvironmentConfig{
+		WorkloadForPod: func(*corev1.Pod) *Workload {
+			t.Fatal("ordinary resource metrics must not resolve workload context")
+			return nil
+		},
+	})
 	if err != nil {
 		t.Fatalf("failed to instantiate node Evaluator: %v", err)
 	}
@@ -117,5 +123,125 @@ func TestResourceEvaluation(t *testing.T) {
 	expected := 1.8
 	if math.Abs(actual-expected) > epsilon {
 		t.Errorf("expected %v, got %v", expected, actual)
+	}
+}
+
+func TestWorkloadEvaluation(t *testing.T) {
+	created := metav1.NewTime(time.Now().Add(-time.Minute))
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Name: "pod", Namespace: "default", UID: "pod-uid", CreationTimestamp: created},
+		Spec:       corev1.PodSpec{Containers: []corev1.Container{{Name: "container"}}},
+	}
+	workload := &Workload{
+		APIVersion:        "apps/v1",
+		Kind:              "Deployment",
+		Namespace:         "default",
+		Name:              "example",
+		UID:               "deployment-uid",
+		Replicas:          4,
+		PodIndex:          2,
+		CreationTimestamp: created,
+		Version:           1,
+	}
+	env, err := NewEnvironment(EnvironmentConfig{WorkloadForPod: func(*corev1.Pod) *Workload { return workload }})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	eval, err := env.Compile(`double(workload.replicas * 100 + workload.podIndex) + (workload.SinceSecond() > 0.0 ? 1.0 : 0.0)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual, err := eval.EvaluateFloat64(context.Background(), Data{Pod: pod})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actual != 403 {
+		t.Fatalf("expected workload fields and SinceSecond to evaluate to 403, got %v", actual)
+	}
+
+	identity, err := env.Compile(`workload.apiVersion + "/" + workload.kind + "/" + workload.namespace + "/" + workload.name + "/" + workload.uid`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actualIdentity, err := identity.EvaluateString(context.Background(), Data{Pod: pod})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actualIdentity != "apps/v1/Deployment/default/example/deployment-uid" {
+		t.Fatalf("unexpected workload identity %q", actualIdentity)
+	}
+
+	normalized, err := env.Compile(`800.0 / double(workload.replicas) / double(size(pod.spec.containers)) * (1.0 + double(workload.podIndex) * 0.0)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actualNormalized, err := normalized.EvaluateFloat64(context.Background(), Data{Pod: pod})
+	if err != nil || actualNormalized != 200 {
+		t.Fatalf("expected normalized workload usage 200, got %v, err %v", actualNormalized, err)
+	}
+}
+
+func TestWorkloadFallbackAndResultCache(t *testing.T) {
+	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod", Namespace: "default", UID: "pod-uid"}}
+	workload := &Workload{Replicas: 2, Version: 1}
+	env, err := NewEnvironment(EnvironmentConfig{
+		EnableResultCache: true,
+		WorkloadForPod:    func(*corev1.Pod) *Workload { return workload },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	eval, err := env.Compile(`double(workload.replicas)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual, err := eval.EvaluateFloat64(context.Background(), Data{Pod: pod})
+	if err != nil || actual != 2 {
+		t.Fatalf("expected initial replicas 2, got %v, err %v", actual, err)
+	}
+	workload = &Workload{Replicas: 3, Version: 2}
+	actual, err = eval.EvaluateFloat64(context.Background(), Data{Pod: pod})
+	if err != nil || actual != 3 {
+		t.Fatalf("expected workload version to invalidate cached result, got %v, err %v", actual, err)
+	}
+
+	fallbackEnv, err := NewEnvironment(EnvironmentConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fallbackEval, err := fallbackEnv.Compile(`workload.kind + "/" + workload.name`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actualFallback, err := fallbackEval.EvaluateString(context.Background(), Data{Pod: pod})
+	if err != nil || actualFallback != "Pod/pod" {
+		t.Fatalf("expected Pod compatibility workload, got %q, err %v", actualFallback, err)
+	}
+}
+
+func TestWorkloadContextDisabled(t *testing.T) {
+	env, err := NewEnvironment(EnvironmentConfig{
+		WorkloadContextDisabledReason: "manage-single-node mode does not provide cluster-wide membership",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	eval, err := env.Compile(`double(size(pod.spec.containers))`)
+	if err != nil {
+		t.Fatalf("ordinary pod expression should compile: %v", err)
+	}
+	value, err := eval.EvaluateFloat64(context.Background(), Data{Pod: &corev1.Pod{
+		Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "container"}}},
+	}})
+	if err != nil || value != 1 {
+		t.Fatalf("ordinary pod expression = %v, %v; want 1, nil", value, err)
+	}
+
+	_, err = env.Compile(`double(workload.replicas)`)
+	if err == nil || !strings.Contains(err.Error(), "workload metric context is unavailable") ||
+		!strings.Contains(err.Error(), "manage-single-node mode") {
+		t.Fatalf("workload expression error = %v, want explicit disabled-context error", err)
 	}
 }

@@ -33,7 +33,8 @@ const (
 	sinceSecondName = "SinceSecond"
 	unixSecondName  = "UnixSecond"
 
-	quantityName = "Quantity"
+	quantityName    = "Quantity"
+	podRequestsName = "PodRequests"
 )
 
 var (
@@ -85,6 +86,7 @@ var (
 		sinceSecondName: {sinceSecond[*corev1.Node], sinceSecond[*corev1.Pod]},
 		unixSecondName:  {unixSecond},
 		quantityName:    {NewQuantityFromString},
+		podRequestsName: {podRequests, podRequestsWithStatus},
 	}
 )
 

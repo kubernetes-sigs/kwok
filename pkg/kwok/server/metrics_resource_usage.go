@@ -34,6 +34,14 @@ type cumulative struct {
 	value float64
 }
 
+func updateCumulative(c cumulative, now time.Time, rate float64) cumulative {
+	if !c.time.IsZero() {
+		c.value += now.Sub(c.time).Seconds() * rate
+	}
+	c.time = now
+	return c
+}
+
 func (s *Server) containerResourceCumulativeUsage(resourceName, podNamespace, podName, containerName string) float64 {
 	key := fmt.Sprintf("%s/%s/%s/%s", resourceName, podNamespace, podName, containerName)
 	v := s.containerResourceUsage(resourceName, podNamespace, podName, containerName)
@@ -41,12 +49,7 @@ func (s *Server) containerResourceCumulativeUsage(resourceName, podNamespace, po
 	now := time.Now()
 	s.cumulativesMut.Lock()
 	defer s.cumulativesMut.Unlock()
-	c, ok := s.cumulatives[key]
-	if ok {
-		c.value += now.Sub(c.time).Seconds() * v
-	}
-
-	c.time = now
+	c := updateCumulative(s.cumulatives[key], now, v)
 	s.cumulatives[key] = c
 
 	return c.value
@@ -97,12 +100,7 @@ func (s *Server) nodeResourceCumulativeUsage(resourceName, nodeName string) floa
 	key := nodeName
 	s.cumulativesMut.Lock()
 	defer s.cumulativesMut.Unlock()
-	c, ok := s.cumulatives[key]
-	if ok {
-		c.value += now.Sub(c.time).Seconds() * sum
-	}
-
-	c.time = now
+	c := updateCumulative(s.cumulatives[key], now, sum)
 	s.cumulatives[key] = c
 
 	return c.value

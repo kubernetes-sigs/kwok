@@ -24,6 +24,7 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config/resources"
@@ -36,9 +37,20 @@ func (s *Server) initCEL() error {
 		return fmt.Errorf("CEL environment already initialized")
 	}
 
+	var workloadForPod func(*corev1.Pod) *metrics.Workload
+	workloadContextDisabledReason := ""
+	if provider, ok := s.dataSource.(metrics.WorkloadContextProvider); ok && !provider.WorkloadContextEnabled() {
+		workloadContextDisabledReason = "the data source does not provide cluster-wide workload membership"
+	}
+	if resolver, ok := s.dataSource.(metrics.WorkloadResolver); ok && workloadContextDisabledReason == "" {
+		workloadForPod = resolver.ResolveWorkload
+	}
+
 	env, err := metrics.NewEnvironment(metrics.EnvironmentConfig{
-		EnableResultCache:      true,
-		StartedContainersTotal: s.dataSource.StartedContainersTotal,
+		EnableResultCache:             true,
+		WorkloadContextDisabledReason: workloadContextDisabledReason,
+		StartedContainersTotal:        s.dataSource.StartedContainersTotal,
+		WorkloadForPod:                workloadForPod,
 
 		ContainerResourceUsage: s.containerResourceUsage,
 		PodResourceUsage:       s.podResourceUsage,

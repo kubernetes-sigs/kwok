@@ -22,6 +22,7 @@ import (
 	"maps"
 	"math/rand"
 	"reflect"
+	"regexp"
 	"slices"
 	"time"
 
@@ -197,8 +198,9 @@ func NewStage(s *internalversion.Stage) *Stage {
 	}
 
 	stage := &Stage{
-		name:   s.Name,
-		config: s,
+		name:                   s.Name,
+		config:                 s,
+		usesPodResourceContext: stageUsesPodResourceContext(s),
 	}
 
 	return stage
@@ -320,7 +322,8 @@ type Stage struct {
 
 	immediateNextStage bool
 
-	config *internalversion.Stage
+	config                 *internalversion.Stage
+	usesPodResourceContext bool
 
 	env *cel.Environment
 }
@@ -331,6 +334,7 @@ type Event struct {
 	Labels       labels.Set
 	Annotations  labels.Set
 	Data         any
+	CELVariables map[string]any
 	jsonStandard any
 }
 
@@ -348,26 +352,53 @@ func (m *Event) toJSONStandard() any {
 }
 
 func (m *Event) toCELStandard() map[string]any {
+	vars := make(map[string]any, len(m.CELVariables)+1)
+	maps.Copy(vars, m.CELVariables)
 	if v, ok := m.Data.(*unstructured.Unstructured); ok {
-		return map[string]any{
-			"self": v.Object,
-		}
+		vars["self"] = v.Object
+		return vars
 	}
-	return map[string]any{
-		"self": m.Data,
-	}
+	vars["self"] = m.Data
+	return vars
 }
 
 func (m *Event) toCELStandardTypeOnly() map[string]any {
-	if _, ok := m.Data.(*unstructured.Unstructured); ok {
-		return map[string]any{
-			"self": map[string]any{},
+	vars := make(map[string]any, len(m.CELVariables)+1)
+	for name, value := range m.CELVariables {
+		if value == nil {
+			continue
 		}
+		vars[name] = reflect.Zero(reflect.TypeOf(value)).Interface()
+	}
+	if _, ok := m.Data.(*unstructured.Unstructured); ok {
+		vars["self"] = map[string]any{}
+		return vars
 	}
 
-	return map[string]any{
-		"self": reflect.Zero(reflect.TypeOf(m.Data)).Interface(),
+	vars["self"] = reflect.Zero(reflect.TypeOf(m.Data)).Interface()
+	return vars
+}
+
+var podResourceContextPattern = regexp.MustCompile(`\b(?:nodeAllocatedRequests\b|node\s*(?:\.|\[))`)
+
+func stageUsesPodResourceContext(stage *internalversion.Stage) bool {
+	for _, expression := range stage.Spec.Selector.MatchExpressions {
+		if expression.CEL != nil && podResourceContextPattern.MatchString(expression.CEL.Expression) {
+			return true
+		}
 	}
+	if stage.Spec.WeightFrom != nil && stage.Spec.WeightFrom.CEL != nil && podResourceContextPattern.MatchString(stage.Spec.WeightFrom.CEL.Expression) {
+		return true
+	}
+	if stage.Spec.Delay != nil {
+		if stage.Spec.Delay.DurationFrom != nil && stage.Spec.Delay.DurationFrom.CEL != nil && podResourceContextPattern.MatchString(stage.Spec.Delay.DurationFrom.CEL.Expression) {
+			return true
+		}
+		if stage.Spec.Delay.JitterDurationFrom != nil && stage.Spec.Delay.JitterDurationFrom.CEL != nil && podResourceContextPattern.MatchString(stage.Spec.Delay.JitterDurationFrom.CEL.Expression) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Stage) match(ctx context.Context, event *Event) (bool, error) {
@@ -515,6 +546,11 @@ func (s *Stage) Name() string {
 // ImmediateNextStage returns whether the stage is immediate next stage.
 func (s *Stage) ImmediateNextStage() bool {
 	return s.immediateNextStage
+}
+
+// UsesPodResourceContext returns whether this stage evaluates pod node or allocation context.
+func (s *Stage) UsesPodResourceContext() bool {
+	return s.usesPodResourceContext
 }
 
 // Weight returns the weight of the stage.

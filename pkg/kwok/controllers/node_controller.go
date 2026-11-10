@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -60,6 +61,7 @@ type NodeController struct {
 	disregardStatusWithLabelSelector      labels.Selector
 	onNodeManagedFunc                     func(nodeName string)
 	onNodeUnmanagedFunc                   func(nodeName string)
+	onNodeAllocatableChangedFunc          func(nodeName string)
 	nodesSets                             utilsmaps.SyncMap[string, *NodeInfo]
 	renderer                              gotpl.Renderer
 	preprocessChan                        chan *corev1.Node
@@ -82,6 +84,7 @@ type NodeControllerConfig struct {
 	ImpersonatingTypedClient              client.TypedClientImpersonator
 	OnNodeManagedFunc                     func(nodeName string)
 	OnNodeUnmanagedFunc                   func(nodeName string)
+	OnNodeAllocatableChangedFunc          func(nodeName string)
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
 	NodeIP                                string
@@ -98,6 +101,8 @@ type NodeControllerConfig struct {
 // NodeInfo is the collection of necessary node information
 type NodeInfo struct {
 	StartedContainer atomic.Int64
+	allocatableMut   sync.Mutex
+	allocatable      corev1.ResourceList
 }
 
 // NewNodeController creates a new fake nodes controller
@@ -130,6 +135,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		onNodeManagedFunc:                     conf.OnNodeManagedFunc,
 		onNodeUnmanagedFunc:                   conf.OnNodeUnmanagedFunc,
+		onNodeAllocatableChangedFunc:          conf.OnNodeAllocatableChangedFunc,
 		nodeIP:                                conf.NodeIP,
 		nodeName:                              conf.NodeName,
 		nodePort:                              conf.NodePort,
@@ -197,7 +203,7 @@ loop:
 			case informer.Added, informer.Modified, informer.Sync:
 				node := event.Object
 				if c.need(node) {
-					c.putNodeInfo(node)
+					allocatableChanged := c.putNodeInfo(node)
 					if c.readOnly(node.Name) {
 						logger.Debug("Skip node",
 							"reason", "read only",
@@ -210,6 +216,9 @@ loop:
 
 					if c.onNodeManagedFunc != nil && event.Type != informer.Modified {
 						c.onNodeManagedFunc(node.Name)
+					}
+					if allocatableChanged && c.onNodeAllocatableChangedFunc != nil {
+						c.onNodeAllocatableChangedFunc(node.Name)
 					}
 				}
 			case informer.Deleted:
@@ -520,8 +529,19 @@ func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, p
 }
 
 // putNodeInfo puts node info
-func (c *NodeController) putNodeInfo(node *corev1.Node) {
-	c.nodesSets.Store(node.Name, &NodeInfo{})
+func (c *NodeController) putNodeInfo(node *corev1.Node) bool {
+	nodeInfo, loaded := c.nodesSets.LoadOrStore(node.Name, &NodeInfo{
+		allocatable: node.Status.Allocatable.DeepCopy(),
+	})
+	if !loaded {
+		return false
+	}
+
+	nodeInfo.allocatableMut.Lock()
+	defer nodeInfo.allocatableMut.Unlock()
+	changed := !resourceListsEqual(nodeInfo.allocatable, node.Status.Allocatable)
+	nodeInfo.allocatable = node.Status.Allocatable.DeepCopy()
+	return changed
 }
 
 // deleteNodeInfo deletes node info

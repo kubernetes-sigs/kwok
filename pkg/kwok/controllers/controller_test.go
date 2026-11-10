@@ -263,3 +263,46 @@ func TestController(t *testing.T) {
 		})
 	}
 }
+
+func TestControllerWorkloadContextEnabled(t *testing.T) {
+	tests := []struct {
+		name    string
+		conf    Config
+		enabled bool
+	}{
+		{name: "single node", conf: Config{ManageSingleNode: "node-a"}, enabled: false},
+		{name: "all nodes", conf: Config{ManageAllNodes: true}, enabled: true},
+		{name: "selected nodes", conf: Config{ManageNodesWithLabelSelector: "kwok"}, enabled: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			controller, err := NewController(test.conf)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := controller.WorkloadContextEnabled(); got != test.enabled {
+				t.Fatalf("WorkloadContextEnabled() = %v, want %v", got, test.enabled)
+			}
+		})
+	}
+}
+
+func TestControllerSingleNodeSkipsWorkloadResolver(t *testing.T) {
+	controller, err := NewController(Config{
+		TypedClient:      fake.NewClientset(),
+		ManageSingleNode: "node-a",
+		EnableMetrics:    true,
+		EnablePodCache:   true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	if err := controller.init(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if controller.workloads != nil || controller.replicaSetsInformer != nil || controller.jobsInformer != nil {
+		t.Fatal("single-node controller initialized workload resolver informers")
+	}
+}
