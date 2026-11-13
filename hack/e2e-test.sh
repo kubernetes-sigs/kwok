@@ -21,6 +21,7 @@ test_dir=$(realpath "${DIR}"/../test)
 
 TARGETS=()
 SKIPS=()
+RETRY=0
 
 function filter_skip() {
   cat | while read -r line; do
@@ -69,8 +70,9 @@ function all_cases() {
 }
 
 function usage() {
-  echo "Usage: ${0} [cases...] [--help]"
+  echo "Usage: ${0} [cases...] [--retry=N] [--help]"
   echo "  Empty argument will run all cases."
+  echo "  --retry=N  Re-run each failed case up to N more times (default 0)."
   echo "  CASES:"
   for c in $(shell_cases | filter_skip); do
     echo "    ${c}"
@@ -96,6 +98,22 @@ function args() {
         [[ "${arg#*=}" != "${arg}" ]] && SKIPS+=("${arg#*=}") || { SKIPS+=("${2}") && shift; } || :
         shift
         ;;
+      --retry | --retry=*)
+        if [[ "${arg}" == "--retry" ]]; then
+          RETRY="${2}"
+          shift
+        else
+          RETRY="${arg#*=}"
+        fi
+        shift
+        if [[ ! "${RETRY}" =~ ^[0-9]+$ ]]; then
+          echo "Error: Invalid value for --retry: ${RETRY}"
+          usage
+          exit 1
+        fi
+        # Force base 10 so leading zeros are not read as octal.
+        RETRY=$((10#${RETRY}))
+        ;;
       -*)
         echo "Error: Unknown argument: ${arg}"
         usage
@@ -113,56 +131,63 @@ function args() {
   fi
 }
 
-function main() {
-  local failed=()
+function run_target() {
+  local target="${1}"
   local test_case
   local test_path
+  if [[ "${target}" == "e2e/"* ]]; then
+    if [[ "${target}" == *"@"* ]]; then
+      test_case="${target##*@}"
+      test_path="${target%@*}"
+      go test -timeout=1h -v -test.v "sigs.k8s.io/kwok/test/${test_path}" -test.run "^Test${test_case}\$" -args --v=6
+    else
+      go test -timeout=1h -v -test.v "sigs.k8s.io/kwok/test/${target}" -args --v=6
+    fi
+  else
+    "${test_dir}/${target}.test.sh"
+  fi
+}
+
+function main() {
+  local failed=()
+  local attempt
+  local attempts=$((RETRY + 1))
   for target in "${TARGETS[@]}"; do
     echo "================================================================================"
-    if [[ "${target}" == "e2e/"* ]]; then
-      echo "Testing ${target}..."
-      if [[ "${target}" == *"@"* ]]; then
-        test_case="${target##*@}"
-        test_path="${target%@*}"
-        if ! go test -timeout=1h -v -test.v "sigs.k8s.io/kwok/test/${test_path}" -test.run "^Test${test_case}\$" -args --v=6; then
-          failed+=("${target}")
-          echo "------------------------------"
-          echo "Test ${target} failed."
-        else
-          echo "------------------------------"
-          echo "Test ${target} passed."
-        fi
+    if [[ "${target}" != "e2e/"* ]]; then
+      target="${target%.test.sh}"
+      test="${test_dir}/${target}.test.sh"
+      if [[ ! -x "${test}" ]]; then
+        echo "Error: Test ${test} not found."
+        failed+=("${test}")
         continue
       fi
+    fi
 
-      if ! go test -timeout=1h -v -test.v "sigs.k8s.io/kwok/test/${target}" -args --v=6; then
-        failed+=("${target}")
-        echo "------------------------------"
-        echo "Test ${target} failed."
+    attempt=1
+    while true; do
+      if [[ "${RETRY}" -eq 0 ]]; then
+        echo "Testing ${target}..."
       else
+        echo "Testing ${target} (attempt ${attempt} of ${attempts})..."
+      fi
+      if run_target "${target}"; then
         echo "------------------------------"
         echo "Test ${target} passed."
+        if [[ "${attempt}" -gt 1 ]]; then
+          echo "Test ${target} passed on retry (attempt ${attempt} of ${attempts})."
+        fi
+        break
       fi
-      continue
-    fi
-
-    target="${target%.test.sh}"
-    test="${test_dir}/${target}.test.sh"
-    if [[ ! -x "${test}" ]]; then
-      echo "Error: Test ${test} not found."
-      failed+=("${test}")
-      continue
-    fi
-
-    echo "Testing ${target}..."
-    if ! "${test_dir}/${target}.test.sh"; then
-      failed+=("${target}")
       echo "------------------------------"
-      echo "Test ${target} failed."
-    else
-      echo "------------------------------"
-      echo "Test ${target} passed."
-    fi
+      if [[ "${attempt}" -ge "${attempts}" ]]; then
+        failed+=("${target}")
+        echo "Test ${target} failed."
+        break
+      fi
+      echo "Test ${target} failed (attempt ${attempt} of ${attempts}), retrying..."
+      attempt=$((attempt + 1))
+    done
   done
   echo "================================================================================"
 

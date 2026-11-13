@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os/exec"
+	"os"
 	"testing"
 	"time"
 
@@ -28,7 +28,20 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/features"
 )
 
-func readerPodYaml(start, end int) io.Reader {
+// startKectlPut starts `kwokctl kectl put` fed from in, whose producer ends once
+// the process is stopped and in is closed.
+func startKectlPut(ctx context.Context, kwokctlPath, name string, in io.ReadCloser) (*kwokctlProcess, error) {
+	p := newKwokctl(ctx, kwokctlPath, "--name", name, "kectl", "put", "--path", "-")
+	p.cmd.Stdin = in
+	p.cmd.Stderr = os.Stderr
+	p.pipes = append(p.pipes, in)
+	if err := p.start(); err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+func readerPodYaml(start, end int) io.ReadCloser {
 	r, w := io.Pipe()
 	go func() {
 		defer func() {
@@ -59,16 +72,17 @@ status:
 `
 
 func scaleCreatePodWithHack(ctx context.Context, t *testing.T, kwokctlPath string, name string, size, gap, tolerance int) error {
-	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kectl", "put", "--path", "-")
-	scaleCmd.Stdin = readerPodYaml(0, size)
+	startPut := func() (*kwokctlProcess, error) {
+		return startKectlPut(ctx, kwokctlPath, name, readerPodYaml(0, size))
+	}
 
-	if err := waitResource(ctx, t, kwokctlPath, name, "Pod", "Running", size, gap, tolerance, scaleCmd.Start); err != nil {
+	if err := waitResource(ctx, t, kwokctlPath, name, "Pod", "Running", size, gap, tolerance, startPut); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
 	return nil
 }
 
-func readerPodDeleteYaml(start, end int) io.Reader {
+func readerPodDeleteYaml(start, end int) io.ReadCloser {
 	r, w := io.Pipe()
 	go func() {
 		now := time.Now().UTC().Format(time.RFC3339)
@@ -99,19 +113,19 @@ spec:
 `
 
 func scaleDeletePodWithHack(ctx context.Context, t *testing.T, kwokctlPath string, name string, size int) error {
-	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kectl", "put", "--path", "-")
-	scaleCmd.Stdin = readerPodDeleteYaml(0, size)
-	err := scaleCmd.Start()
+	scaleCmd, err := startKectlPut(ctx, kwokctlPath, name, readerPodDeleteYaml(0, size))
 	if err != nil {
 		return err
 	}
-	if err := waitDeleteResource(ctx, t, kwokctlPath, name, "Pod"); err != nil {
+	defer scaleCmd.stop()
+
+	if err := waitDeleteResource(ctx, t, kwokctlPath, name, "Pod", scaleCmd); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
 	return nil
 }
 
-func readerNodeYaml(start, end int) io.Reader {
+func readerNodeYaml(start, end int) io.ReadCloser {
 	r, w := io.Pipe()
 	go func() {
 		defer func() {
@@ -154,10 +168,11 @@ status:
 `
 
 func scaleCreateNodeWithHack(ctx context.Context, t *testing.T, kwokctlPath string, name string, size, gap, tolerance int) error {
-	scaleCmd := exec.CommandContext(ctx, kwokctlPath, "--name", name, "kectl", "put", "--path", "-")
-	scaleCmd.Stdin = readerNodeYaml(0, size)
+	startPut := func() (*kwokctlProcess, error) {
+		return startKectlPut(ctx, kwokctlPath, name, readerNodeYaml(0, size))
+	}
 
-	if err := waitResource(ctx, t, kwokctlPath, name, "Node", "Ready", size, gap, tolerance, scaleCmd.Start); err != nil {
+	if err := waitResource(ctx, t, kwokctlPath, name, "Node", "Ready", size, gap, tolerance, startPut); err != nil {
 		return fmt.Errorf("failed to wait for resource: %w", err)
 	}
 	return nil
