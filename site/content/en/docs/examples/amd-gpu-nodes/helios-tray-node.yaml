@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    kwok.x-k8s.io/node: fake
+  labels:
+    type: kwok
+    kubernetes.io/hostname: amd-helios-tray-node
+    kubernetes.io/os: linux
+    kubernetes.io/arch: amd64
+    feature.node.kubernetes.io/amd-gpu: "true"
+    amd.com/gpu.vram: 432G
+    beta.amd.com/gpu.vram: 432G
+    beta.amd.com/gpu.vram.432G: "4"
+  name: amd-helios-tray-node
+spec:
+  taints: # Avoid scheduling actual running pods to fake Node
+  - key: kwok.x-k8s.io/node
+    value: fake
+    effect: NoSchedule
+status:
+  allocatable:
+    cpu: "192"
+    memory: 2Ti
+    pods: "110"
+    ephemeral-storage: 8Ti
+    amd.com/gpu: "4"
+  capacity:
+    cpu: "192"
+    memory: 2Ti
+    pods: "110"
+    ephemeral-storage: 8Ti
+    amd.com/gpu: "4"
