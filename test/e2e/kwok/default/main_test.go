@@ -46,6 +46,10 @@ func TestMain(m *testing.M) {
 	deploy := pwd
 	crs := path.Join(rootDir, "kustomize/stage/fast")
 	volumeProvisionerStages := path.Join(rootDir, "kustomize/stage/volume/fast")
+	draGPUStages := path.Join(rootDir, "kustomize/stage/dra/gpu")
+	draCPUStages := path.Join(rootDir, "kustomize/stage/dra/cpu")
+	draNvidiaGPUStages := path.Join(rootDir, "kustomize/stage/dra/nvidia-gpu")
+	draGoogleTPUStages := path.Join(rootDir, "kustomize/stage/dra/google-tpu")
 	testEnv.Setup(
 		helper.BuildKwokImage(rootDir, testImage, consts.RuntimeTypeDocker),
 		envfuncs.CreateCluster(kind.NewProvider(), clusterName),
@@ -55,6 +59,10 @@ func TestMain(m *testing.M) {
 		helper.WaitForAllPodsReady(),
 		helper.CreateByKustomize(crs),
 		helper.CreateByKustomize(volumeProvisionerStages),
+		helper.CreateByKustomize(draGPUStages),
+		helper.CreateByKustomize(draCPUStages),
+		helper.CreateByKustomize(draNvidiaGPUStages),
+		helper.CreateByKustomize(draGoogleTPUStages),
 		helper.CreateNamespace(namespace),
 	)
 	testEnv.Finish(

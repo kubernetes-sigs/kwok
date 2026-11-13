@@ -1,0 +1,66 @@
+apiGroup: v1
+kind: Node
+name: kwok-node-0
+stages:
+- next:
+  - data:
+      apiVersion: resource.k8s.io/v1
+      kind: ResourceSlice
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-gpu: "2"
+          kwok.x-k8s.io/dra-gpu-memory: 16Gi
+        name: kwok-node-0-gpu.kwok.x-k8s.io
+        ownerReferences:
+        - apiVersion: v1
+          kind: Node
+          name: kwok-node-0
+          uid: aaaa-bbbb-cccc-dddd
+      spec:
+        devices:
+        - attributes:
+            brand:
+              string: Kwok
+            driverVersion:
+              version: 1.0.0
+            index:
+              int: 0
+            productName:
+              string: Kwok GPU
+            type:
+              string: gpu
+          capacity:
+            memory:
+              value: 16Gi
+          name: gpu-0
+        - attributes:
+            brand:
+              string: Kwok
+            driverVersion:
+              version: 1.0.0
+            index:
+              int: 1
+            productName:
+              string: Kwok GPU
+            type:
+              string: gpu
+          capacity:
+            memory:
+              value: 16Gi
+          name: gpu-1
+        driver: gpu.kwok.x-k8s.io
+        nodeName: kwok-node-0
+        pool:
+          generation: 1
+          name: kwok-node-0
+          resourceSliceCount: 1
+    kind: apply
+    type: application/apply-patch+yaml
+  - data:
+      metadata:
+        annotations:
+          kwok.x-k8s.io/dra-gpu-published: 16Gi/2
+    kind: patch
+    type: application/merge-patch+json
+  stage: gpu-resource-slice-publish
+  weight: 0

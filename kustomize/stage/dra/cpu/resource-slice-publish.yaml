@@ -1,0 +1,114 @@
+apiVersion: kwok.x-k8s.io/v1alpha1
+kind: Stage
+metadata:
+  name: cpu-resource-slice-publish
+spec:
+  resourceRef:
+    apiGroup: v1
+    kind: Node
+  selector:
+    matchExpressions:
+    - cel:
+        expression: >-
+          !has(self.metadata.deletionTimestamp)
+    - key: '.status.conditions.[] | select( .type == "Ready" ) | .status'
+      operator: 'In'
+      values:
+      - 'True'
+    - cel:
+        expression: >-
+          has(self.metadata.annotations) && 'kwok.x-k8s.io/dra-cpu' in self.metadata.annotations
+    - cel:
+        expression: >-
+          self.metadata.annotations['kwok.x-k8s.io/dra-cpu'].matches('^[1-9][0-9]{0,3}$')
+    - cel:
+        expression: >-
+          !('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations) || self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'].matches('^[1-9][0-9]{0,2}$')
+    - cel:
+        expression: >-
+          int('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'] : '1') <= int(self.metadata.annotations['kwok.x-k8s.io/dra-cpu'])
+    - cel:
+        expression: >-
+          (('kwok.x-k8s.io/dra-cpu-mode' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-mode'] : 'grouped') == 'individual' ? int(self.metadata.annotations['kwok.x-k8s.io/dra-cpu']) : int('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'] : '1')) <= 128
+    - cel:
+        expression: >-
+          !('kwok.x-k8s.io/dra-cpu-published' in self.metadata.annotations) || self.metadata.annotations['kwok.x-k8s.io/dra-cpu-published'] != ('kwok.x-k8s.io/dra-cpu-mode' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-mode'] : 'grouped') + '/' + ('kwok.x-k8s.io/dra-cpu-numa' in self.metadata.annotations ? self.metadata.annotations['kwok.x-k8s.io/dra-cpu-numa'] : '1') + '/' + self.metadata.annotations['kwok.x-k8s.io/dra-cpu']
+  steps:
+  - apply:
+      template: |
+        {{ $nodeName := .metadata.name }}
+        {{ $cpus := atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu") }}
+        {{ $numaNodes := atoi (index .metadata.annotations "kwok.x-k8s.io/dra-cpu-numa" | default "1") }}
+        {{ $mode := index .metadata.annotations "kwok.x-k8s.io/dra-cpu-mode" | default "grouped" }}
+        {{ $cpusPerNuma := int (ceil (divf $cpus $numaNodes)) }}
+        apiVersion: resource.k8s.io/v1
+        kind: ResourceSlice
+        metadata:
+          name: {{ $nodeName }}-dra.cpu
+          annotations:
+            kwok.x-k8s.io/dra-cpu: {{ $cpus | Quote }}
+            kwok.x-k8s.io/dra-cpu-numa: {{ $numaNodes | Quote }}
+            kwok.x-k8s.io/dra-cpu-mode: {{ $mode | Quote }}
+          ownerReferences:
+          - apiVersion: v1
+            kind: Node
+            name: {{ $nodeName | Quote }}
+            uid: {{ .metadata.uid | Quote }}
+        spec:
+          driver: dra.cpu
+          nodeName: {{ $nodeName | Quote }}
+          pool:
+            name: {{ $nodeName | Quote }}
+            generation: 1
+            resourceSliceCount: 1
+          devices:
+          {{ if eq $mode "individual" }}
+          {{ range $index := until $cpus }}
+          {{ $numaNodeID := div $index $cpusPerNuma }}
+          - name: cpudev{{ printf "%03d" $index }}
+            attributes:
+              dra.cpu/cpuID:
+                int: {{ $index }}
+              dra.cpu/coreID:
+                int: {{ $index }}
+              dra.cpu/coreType:
+                string: standard
+              dra.cpu/cacheL3ID:
+                int: {{ $numaNodeID }}
+              dra.cpu/numaNodeID:
+                int: {{ $numaNodeID }}
+              dra.cpu/socketID:
+                int: {{ $numaNodeID }}
+              dra.cpu/smtEnabled:
+                bool: false
+              dra.net/numaNode:
+                int: {{ $numaNodeID }}
+          {{ end }}
+          {{ else }}
+          {{ range $numaNodeID := until $numaNodes }}
+          {{ $groupCPUs := min $cpusPerNuma (sub $cpus (mul $numaNodeID $cpusPerNuma)) }}
+          - name: cpudevnuma{{ printf "%03d" $numaNodeID }}
+            allowMultipleAllocations: true
+            attributes:
+              dra.cpu/numCPUs:
+                int: {{ $groupCPUs }}
+              dra.cpu/numaNodeID:
+                int: {{ $numaNodeID }}
+              dra.cpu/socketID:
+                int: {{ $numaNodeID }}
+              dra.cpu/smtEnabled:
+                bool: false
+              dra.net/numaNode:
+                int: {{ $numaNodeID }}
+            capacity:
+              dra.cpu/cpu:
+                value: {{ $groupCPUs | Quote }}
+          {{ end }}
+          {{ end }}
+  - patch:
+      root: metadata
+      template: |
+        {{ $mode := index .metadata.annotations "kwok.x-k8s.io/dra-cpu-mode" | default "grouped" }}
+        {{ $numaNodes := index .metadata.annotations "kwok.x-k8s.io/dra-cpu-numa" | default "1" }}
+        annotations:
+          kwok.x-k8s.io/dra-cpu-published: {{ printf "%s/%s/%s" $mode $numaNodes (index .metadata.annotations "kwok.x-k8s.io/dra-cpu") | Quote }}
