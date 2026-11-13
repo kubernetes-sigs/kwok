@@ -154,10 +154,12 @@ func runE(ctx context.Context, flags *flagpole) error {
 
 	var writer io.Writer = press
 
-	startTime := time.Now()
-	writer = recording.NewWriteHook(writer, func(b []byte) []byte {
-		return recording.ReplaceTimeToRelative(startTime, b)
-	})
+	if flags.Record {
+		startTime := time.Now()
+		writer = recording.NewWriteHook(writer, func(b []byte) []byte {
+			return recording.ReplaceTimeToRelative(startTime, b)
+		})
+	}
 
 	encoder := yaml.NewEncoder(writer)
 
