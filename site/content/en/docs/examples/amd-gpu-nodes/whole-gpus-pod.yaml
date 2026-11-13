@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: whole-gpus-pod
+  namespace: default
+spec:
+  nodeSelector:
+    amd.com/gpu.product-name: AMD_Instinct_MI300X
+  containers:
+  - name: fake-container
+    image: fake-image
+    resources:
+      limits:
+        amd.com/gpu: "8"
+  tolerations:
+  - key: "kwok.x-k8s.io/node"
+    operator: "Exists"
+    effect: "NoSchedule"
