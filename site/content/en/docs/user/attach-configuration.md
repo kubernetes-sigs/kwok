@@ -80,5 +80,5 @@ The `attaches` field of ClusterAttach has the same semantic with the one in Atta
 <img width="700px" src="/img/demo/attach.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
-[Attach]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Attach
-[ClusterAttach]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterAttach
+[Attach]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.Attach" >}}
+[ClusterAttach]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.ClusterAttach" >}}

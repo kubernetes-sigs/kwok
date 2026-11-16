@@ -1,0 +1,4 @@
+{{/* Keep the old hint behavior: the theme's version is deprecated and no longer renders inner markdown. */}}
+<blockquote class="book-hint {{ .Get 0 }}">
+  {{ .Inner | .Page.RenderString }}
+</blockquote>

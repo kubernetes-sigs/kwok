@@ -1,0 +1,76 @@
+.gh-label {
+  display: inline-block;
+  padding: 0 10px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 18px;
+  border: 1px solid transparent;
+  border-radius: 2em;
+}
+
+a.active {
+  color: var(--color-link);
+}
+
+a.ancestor {
+  color: var(--color-visited-link);
+}
+
+code {
+  padding: 0 .25rem;
+  background: var(--gray-200);
+  border-radius: .25rem;
+  font-size: .875em;
+  word-break: break-word;
+}
+
+.markdown {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 400;
+    line-height: 1.2;
+    margin-top: 1.5em;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Numbered headings from h2 to h4 */
+.book-page .markdown {
+  > h2 {
+    counter-increment: h2;
+    counter-reset: h3;
+
+    &::before {
+      content: counter(h2) ". ";
+    }
+  }
+
+  > h3 {
+    counter-increment: h3;
+    counter-reset: h4;
+
+    &::before {
+      content: counter(h2) "." counter(h3) ". ";
+    }
+  }
+
+  > h4 {
+    counter-increment: h4;
+    counter-reset: h5;
+
+    &::before {
+      content: counter(h2) "." counter(h3) "." counter(h4) ". ";
+    }
+  }
+}
+
+/* Keep pages without ToC (e.g. bookToc: false) from overflowing on narrow screens */
+@media screen and (max-width: 56rem) {
+  .book-page:last-child {
+    margin-inline-end: 0;
+  }
+}
