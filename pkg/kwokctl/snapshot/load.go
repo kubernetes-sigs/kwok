@@ -59,6 +59,11 @@ type uniqueKey struct {
 	UID        types.UID
 }
 
+type resourceKey struct {
+	uniqueKey
+	Namespace string
+}
+
 // Loader loads the resources to cluster
 // This way does not delete existing resources in the cluster,
 // which will handle the ownerReference so that the resources remain relative to each other
@@ -68,8 +73,9 @@ type Loader struct {
 	successCounter int
 	failedCounter  int
 
-	exist   map[uniqueKey]types.UID
-	pending map[uniqueKey][]*unstructured.Unstructured
+	restored map[resourceKey]struct{}
+	exist    map[uniqueKey]types.UID
+	pending  map[uniqueKey][]*unstructured.Unstructured
 
 	restMapper    meta.RESTMapper
 	dynamicClient dynamic.Interface
@@ -89,6 +95,7 @@ func NewLoader(loadConfig LoadConfig) (*Loader, error) {
 	}
 
 	l := &Loader{
+		restored:      make(map[resourceKey]struct{}),
 		exist:         make(map[uniqueKey]types.UID),
 		pending:       make(map[uniqueKey][]*unstructured.Unstructured),
 		restMapper:    restMapper,
@@ -196,7 +203,9 @@ func (l *Loader) finishLoad(ctx context.Context, startTime time.Time) error {
 
 func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 	key := uniqueKeyFromMetadata(obj)
-	if _, restored := l.exist[key]; restored {
+	// Manifests without UIDs can contain the same resource name in different namespaces.
+	restoredKey := resourceKey{uniqueKey: key, Namespace: obj.GetNamespace()}
+	if _, restored := l.restored[restoredKey]; restored {
 		return
 	}
 
@@ -221,7 +230,9 @@ func (l *Loader) load(ctx context.Context, obj *unstructured.Unstructured) {
 		return
 	}
 
-	// Record the new uid
+	l.restored[restoredKey] = struct{}{}
+
+	// Owner references identify owners by their original UID, without a namespace.
 	l.exist[key] = newObj.GetUID()
 
 	// If there are pending objects waiting for this object, apply them.
