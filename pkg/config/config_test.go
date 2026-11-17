@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -59,6 +60,83 @@ func TestConfig(t *testing.T) {
 
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Error(diff)
+	}
+}
+
+func TestLoadKwokConfigurationAppliesDefaults(t *testing.T) {
+	config := filepath.Join(t.TempDir(), "config.yaml")
+	data := `apiVersion: kwok.io/v1alpha1
+kind: KwokConfiguration
+options:
+  nodeLeaseParallelism: 8
+`
+	if err := os.WriteFile(config, []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	objs, err := Load(context.Background(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(objs) != 1 {
+		t.Fatalf("got %d objects, want 1", len(objs))
+	}
+	conf, ok := objs[0].(*internalversion.KwokConfiguration)
+	if !ok {
+		t.Fatalf("unexpected type %T", objs[0])
+	}
+
+	// A field the document does not write keeps its default.
+	if conf.Options.CIDR != "10.0.0.0/24" {
+		t.Errorf("CIDR = %q, want the default 10.0.0.0/24", conf.Options.CIDR)
+	}
+	if conf.Options.PodPlayStageParallelism != 4 {
+		t.Errorf("PodPlayStageParallelism = %d, want the default 4", conf.Options.PodPlayStageParallelism)
+	}
+	// A field the document does write keeps the document's value.
+	if conf.Options.NodeLeaseParallelism != 8 {
+		t.Errorf("NodeLeaseParallelism = %d, want 8", conf.Options.NodeLeaseParallelism)
+	}
+}
+
+func TestLoadKwokConfigurationDefaultsAfterMerge(t *testing.T) {
+	config := filepath.Join(t.TempDir(), "config.yaml")
+	// The second document does not write cidr, so the first one's value must
+	// survive the merge instead of being replaced by the default.
+	data := `apiVersion: kwok.io/v1alpha1
+kind: KwokConfiguration
+options:
+  cidr: 10.1.0.0/24
+---
+apiVersion: kwok.io/v1alpha1
+kind: KwokConfiguration
+options:
+  nodeLeaseParallelism: 8
+`
+	if err := os.WriteFile(config, []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	objs, err := Load(context.Background(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(objs) != 1 {
+		t.Fatalf("got %d objects, want 1", len(objs))
+	}
+	conf, ok := objs[0].(*internalversion.KwokConfiguration)
+	if !ok {
+		t.Fatalf("unexpected type %T", objs[0])
+	}
+
+	if conf.Options.CIDR != "10.1.0.0/24" {
+		t.Errorf("CIDR = %q, want the value from the first document", conf.Options.CIDR)
+	}
+	if conf.Options.NodeLeaseParallelism != 8 {
+		t.Errorf("NodeLeaseParallelism = %d, want 8", conf.Options.NodeLeaseParallelism)
+	}
+	if conf.Options.PodPlayStageParallelism != 4 {
+		t.Errorf("PodPlayStageParallelism = %d, want the default 4", conf.Options.PodPlayStageParallelism)
 	}
 }
 

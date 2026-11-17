@@ -128,6 +128,21 @@ func GetKwokConfiguration(ctx context.Context) (conf *internalversion.KwokConfig
 	return conf
 }
 
+func convertToInternalKwokConfiguration(config *configv1alpha1.KwokConfiguration) (*internalversion.KwokConfiguration, error) {
+	obj := setKwokConfigurationDefaults(config)
+	return internalversion.ConvertToInternalKwokConfiguration(obj)
+}
+
+func setKwokConfigurationDefaults(config *configv1alpha1.KwokConfiguration) *configv1alpha1.KwokConfiguration {
+	if config == nil {
+		config = &configv1alpha1.KwokConfiguration{}
+	}
+
+	configv1alpha1.SetObjectDefaults_KwokConfiguration(config)
+
+	return config
+}
+
 func convertToInternalKwokctlConfiguration(config *configv1alpha1.KwokctlConfiguration) (*internalversion.KwokctlConfiguration, error) {
 	obj := setKwokctlConfigurationDefaults(config)
 	return internalversion.ConvertToInternalKwokctlConfiguration(obj)

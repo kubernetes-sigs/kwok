@@ -95,7 +95,7 @@ var configHandlers = map[string]configHandler{
 	configv1alpha1.KwokConfigurationKind: {
 		Unmarshal:        unmarshalConfig[*configv1alpha1.KwokConfiguration],
 		Marshal:          marshalConfig,
-		MutateToInternal: mergeAndMutateToInternalConfig(internalversion.ConvertToInternalKwokConfiguration),
+		MutateToInternal: mergeAndMutateToInternalConfig(convertToInternalKwokConfiguration),
 		MutateToVersiond: mutateToVersiondConfig(internalversion.ConvertToV1alpha1KwokConfiguration),
 	},
 	configv1alpha1.KwokctlConfigurationKind: {
