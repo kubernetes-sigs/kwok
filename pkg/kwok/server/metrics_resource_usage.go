@@ -29,6 +29,12 @@ import (
 	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
+// nodeCumulativeKey identifies a node's running total for one resource, so each resource of a node keeps its own total.
+type nodeCumulativeKey struct {
+	resource string
+	node     string
+}
+
 type cumulative struct {
 	time  time.Time
 	value float64
@@ -94,16 +100,16 @@ func (s *Server) nodeResourceCumulativeUsage(resourceName, nodeName string) floa
 	}
 
 	now := time.Now()
-	key := nodeName
+	key := nodeCumulativeKey{resource: resourceName, node: nodeName}
 	s.cumulativesMut.Lock()
 	defer s.cumulativesMut.Unlock()
-	c, ok := s.cumulatives[key]
+	c, ok := s.nodeCumulatives[key]
 	if ok {
 		c.value += now.Sub(c.time).Seconds() * sum
 	}
 
 	c.time = now
-	s.cumulatives[key] = c
+	s.nodeCumulatives[key] = c
 
 	return c.value
 }

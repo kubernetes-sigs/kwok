@@ -78,8 +78,9 @@ type Server struct {
 
 	metricsUpdateHandler utilsmaps.SyncMap[string, *metrics.UpdateHandler]
 
-	cumulatives    map[string]cumulative
-	cumulativesMut sync.Mutex
+	cumulatives     map[string]cumulative
+	nodeCumulatives map[nodeCumulativeKey]cumulative
+	cumulativesMut  sync.Mutex
 
 	env *metrics.Environment
 
@@ -140,7 +141,8 @@ func NewServer(conf Config) (*Server, error) {
 		resourceUsages:        resources.NewStaticGetter(conf.ResourceUsages),
 		metrics:               resources.NewStaticGetter(conf.Metrics),
 
-		cumulatives: map[string]cumulative{},
+		cumulatives:     map[string]cumulative{},
+		nodeCumulatives: map[nodeCumulativeKey]cumulative{},
 
 		dataSource:      conf.DataSource,
 		podCacheGetter:  conf.PodCacheGetter,
