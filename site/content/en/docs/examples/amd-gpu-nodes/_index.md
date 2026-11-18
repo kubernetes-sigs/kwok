@@ -21,7 +21,7 @@ can be tested without the hardware.
 | `amd-mi355x-cpx-node` | MI355X server with each GPU in CPX compute and NPS2 memory partition mode | 64 | 36G VRAM, 32 CUs |
 | `amd-helios-tray-node` | One compute tray of an AMD Helios rack (MI455X) | 4 | 432G VRAM |
 
-The labels follow the AMD node labeller (`amd.com/gpu.*` and `beta.amd.com/gpu.*`, with values from `amdgpu.ids`),
+The labels follow the AMD node labeller (`amd.com/gpu.*`, with values as the labeller reports them),
 and the resource is named as the AMD device plugin does with its default `resource_naming_strategy` (`single`).
 A partitioned GPU shows up as one device per partition, each reporting its share of the GPU's VRAM and CUs.
 
@@ -47,7 +47,7 @@ kubectl get nodes -L amd.com/gpu.product-name -L amd.com/gpu.compute-memory-part
 NAME                   STATUS   ROLES    AGE   VERSION       GPU.PRODUCT-NAME      GPU.COMPUTE-MEMORY-PARTITION
 amd-helios-tray-node   Ready    <none>   5s    kwok-v0.8.0
 amd-mi300x-node        Ready    <none>   5s    kwok-v0.8.0   AMD_Instinct_MI300X   spx_nps1
-amd-mi355x-cpx-node    Ready    <none>   5s    kwok-v0.8.0   AMD_Instinct_MI355X   cpx_nps2
+amd-mi355x-cpx-node    Ready    <none>   5s    kwok-v0.8.0   AMD_Instinct_MI355_OAM   cpx_nps2
 ```
 
 ## Schedule pods
@@ -64,13 +64,6 @@ NAME             READY   STATUS    RESTARTS   AGE   IP         NODE             
 partition-pod    1/1     Running   0          1s    10.0.0.2   amd-mi355x-cpx-node   <none>           <none>
 whole-gpus-pod   1/1     Running   0          1s    10.0.0.1   amd-mi300x-node       <none>           <none>
 ```
-
-## More nodes
-
-The manifests were generated with [fake_gpu_nodes.py](https://github.com/openinferencefabric/oif/tree/24d3d6e/tools/fake-gpu),
-a standard-library Python script that writes any number of these nodes: MI300X, MI325X, MI350X, MI355X and MI350P servers,
-Helios racks of 18 trays, the SPX, DPX, QPX and CPX compute modes with the NPS memory modes each GPU supports,
-and the device plugin's `mixed` and `product` resource naming (for example `amd.com/cpx_nps2`).
 
 {{< details "mi300x-node.yaml" >}}
 
