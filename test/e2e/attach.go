@@ -19,6 +19,7 @@ package e2e
 import (
 	"bytes"
 	"context"
+	"errors"
 	"os"
 	"strings"
 	"testing"
@@ -68,8 +69,9 @@ func CaseAttach(kwokctlPath, clusterName, nodeName, namespace, tmpDir string) *f
 				t.Fatal(err)
 			}
 			defer func() {
+				// The reaper in exec.Command may have already reaped a child that exited on its own.
 				err = cmd.Process.Kill()
-				if err != nil {
+				if err != nil && !errors.Is(err, os.ErrProcessDone) {
 					t.Fatal(err)
 				}
 			}()
