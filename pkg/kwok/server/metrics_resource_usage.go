@@ -29,25 +29,39 @@ import (
 	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
+// containerCumulativeKey identifies a container's running total for one resource.
+type containerCumulativeKey struct {
+	resource  string
+	namespace string
+	pod       string
+	container string
+}
+
+// nodeCumulativeKey identifies a node's running total for one resource, so each resource of a node keeps its own total.
+type nodeCumulativeKey struct {
+	resource string
+	node     string
+}
+
 type cumulative struct {
 	time  time.Time
 	value float64
 }
 
 func (s *Server) containerResourceCumulativeUsage(resourceName, podNamespace, podName, containerName string) float64 {
-	key := fmt.Sprintf("%s/%s/%s/%s", resourceName, podNamespace, podName, containerName)
+	key := containerCumulativeKey{resource: resourceName, namespace: podNamespace, pod: podName, container: containerName}
 	v := s.containerResourceUsage(resourceName, podNamespace, podName, containerName)
 
 	now := time.Now()
-	s.cumulativesMut.Lock()
-	defer s.cumulativesMut.Unlock()
-	c, ok := s.cumulatives[key]
+	s.containerCumulativesMut.Lock()
+	defer s.containerCumulativesMut.Unlock()
+	c, ok := s.containerCumulatives[key]
 	if ok {
 		c.value += now.Sub(c.time).Seconds() * v
 	}
 
 	c.time = now
-	s.cumulatives[key] = c
+	s.containerCumulatives[key] = c
 
 	return c.value
 }
@@ -94,16 +108,16 @@ func (s *Server) nodeResourceCumulativeUsage(resourceName, nodeName string) floa
 	}
 
 	now := time.Now()
-	key := nodeName
-	s.cumulativesMut.Lock()
-	defer s.cumulativesMut.Unlock()
-	c, ok := s.cumulatives[key]
+	key := nodeCumulativeKey{resource: resourceName, node: nodeName}
+	s.nodeCumulativesMut.Lock()
+	defer s.nodeCumulativesMut.Unlock()
+	c, ok := s.nodeCumulatives[key]
 	if ok {
 		c.value += now.Sub(c.time).Seconds() * sum
 	}
 
 	c.time = now
-	s.cumulatives[key] = c
+	s.nodeCumulatives[key] = c
 
 	return c.value
 }
