@@ -22,6 +22,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 )
 
 func TestApplyComponentArgsOverride(t *testing.T) {
@@ -164,6 +166,102 @@ func TestApplyComponentPatch(t *testing.T) {
 			applyComponentPatch(context.TODO(), &tt.component, tt.patch)
 			if !reflect.DeepEqual(tt.wantArgs, tt.component.Args) {
 				t.Errorf("Exist is not expact! key:%s want args:%s, got args:%s", tt.patch.ExtraArgs[0].Key, tt.wantArgs, tt.component.Args)
+			}
+		})
+	}
+}
+
+func TestApplyComponentPatchesReadinessProbe(t *testing.T) {
+	newComponent := func() internalversion.Component {
+		return internalversion.Component{
+			Name: consts.ComponentKubeApiserver,
+			Args: []string{"--bind-address=0.0.0.0", "--secure-port=6443"},
+			ReadinessProbe: &internalversion.ComponentProbe{
+				HTTPGet: &internalversion.ComponentHTTPGetAction{
+					Path:   "/readyz",
+					Port:   6443,
+					Scheme: internalversion.URISchemeHTTPS,
+				},
+			},
+		}
+	}
+	value := func(s string) *string { return &s }
+
+	tests := []struct {
+		name     string
+		patches  []internalversion.ComponentPatches
+		wantPort uint32
+		// wantConflict is true if the patched component must stay not ready.
+		wantConflict bool
+	}{
+		{
+			name:     "no patches",
+			wantPort: 6443,
+		},
+		{
+			name: "patches of another component",
+			patches: []internalversion.ComponentPatches{{
+				Name:      consts.ComponentKubeScheduler,
+				ExtraArgs: []internalversion.ExtraArgs{{Key: "secure-port", Value: value("0")}},
+			}},
+			wantPort: 6443,
+		},
+		{
+			// An override replaces the argument in place, which must still be noticed.
+			name: "port overridden",
+			patches: []internalversion.ComponentPatches{{
+				Name:      consts.ComponentKubeApiserver,
+				ExtraArgs: []internalversion.ExtraArgs{{Key: "secure-port", Value: value("7443"), Override: true}},
+			}},
+			wantPort: 7443,
+		},
+		{
+			name: "port appended",
+			patches: []internalversion.ComponentPatches{{
+				Name:      consts.ComponentKubeApiserver,
+				ExtraArgs: []internalversion.ExtraArgs{{Key: "secure-port", Value: value("7443")}},
+			}},
+			wantPort: 7443,
+		},
+		{
+			name: "anonymous authentication disabled",
+			patches: []internalversion.ComponentPatches{{
+				Name:      consts.ComponentKubeApiserver,
+				ExtraArgs: []internalversion.ExtraArgs{{Key: "anonymous-auth", Value: value("false")}},
+			}},
+			wantPort:     6443,
+			wantConflict: true,
+		},
+		{
+			name: "anonymous authentication overridden",
+			patches: []internalversion.ComponentPatches{{
+				Name:      consts.ComponentKubeApiserver,
+				ExtraArgs: []internalversion.ExtraArgs{{Key: "anonymous-auth", Value: value("false"), Override: true}},
+			}},
+			// The override has no argument to replace, so the probe keeps working.
+			wantPort: 6443,
+		},
+		{
+			name: "secure port overridden to zero",
+			patches: []internalversion.ComponentPatches{{
+				Name:      consts.ComponentKubeApiserver,
+				ExtraArgs: []internalversion.ExtraArgs{{Key: "secure-port", Value: value("0"), Override: true}},
+			}},
+			wantPort:     6443,
+			wantConflict: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			component := newComponent()
+			ApplyComponentPatches(context.Background(), &component, tt.patches)
+			// The probe is never removed, so that the component is never reported ready unprobed.
+			if component.ReadinessProbe == nil || component.ReadinessProbe.HTTPGet.Port != tt.wantPort {
+				t.Fatalf("ReadinessProbe = %#v, want port %d", component.ReadinessProbe, tt.wantPort)
+			}
+			err := components.ReadinessProbeConflict(component)
+			if (err != nil) != tt.wantConflict {
+				t.Fatalf("ReadinessProbeConflict() = %v, want a conflict %v", err, tt.wantConflict)
 			}
 		})
 	}

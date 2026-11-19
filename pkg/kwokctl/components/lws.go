@@ -27,22 +27,27 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// lwsReadyzVersion is the earliest lws release whose /readyz was verified with kwokctl.
+var lwsReadyzVersion = version.NewVersion(0, 9, 0)
+
 // BuildLWSComponentConfig is the configuration for building an lws component.
 type BuildLWSComponentConfig struct {
-	Runtime        string
-	ProjectName    string
-	Binary         string
-	Image          string
-	RawManifests   []string
-	Version        version.Version
-	Workdir        string
-	BindAddress    string
-	CaCertPath     string
-	AdminCertPath  string
-	AdminKeyPath   string
-	ConfigPath     string
-	KubeconfigPath string
-	Verbosity      log.Level
+	Runtime       string
+	ProjectName   string
+	Binary        string
+	Image         string
+	RawManifests  []string
+	Version       version.Version
+	Workdir       string
+	BindAddress   string
+	CaCertPath    string
+	AdminCertPath string
+	AdminKeyPath  string
+	ConfigPath    string
+	// HealthProbePort is the port of the health probes set by the configuration, or 0 if they are not served.
+	HealthProbePort uint32
+	KubeconfigPath  string
+	Verbosity       log.Level
 }
 
 // BuildLWSComponent builds an lws component.
@@ -125,6 +130,8 @@ func BuildLWSComponent(conf BuildLWSComponentConfig) (component internalversion.
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		// /readyz succeeds once the manager serves, as it does for the upstream deployment.
+		ReadinessProbe: addonReadinessProbe(conf.Version, lwsReadyzVersion, conf.HealthProbePort),
 	}
 
 	if len(conf.RawManifests) != 0 {
