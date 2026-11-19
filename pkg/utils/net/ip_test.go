@@ -119,6 +119,26 @@ func TestAddCIDR(t *testing.T) {
 			},
 			want: "2001:db8:0:2::1/64",
 		},
+		{
+			// index*2^hostBits here is 16385*2^50, which overflows int64.
+			// The offset must still be added across the whole address and
+			// not silently truncated to its low 64 bits.
+			name: "ipv6 /78 large index overflowing int64",
+			args: args{
+				cidr:  "2001:db8::/78",
+				index: 16385,
+			},
+			want: "2001:db8:0:1:4::/78",
+		},
+		{
+			// 288676*2^46 also overflows int64.
+			name: "ipv6 /82 large index overflowing int64",
+			args: args{
+				cidr:  "2001:db8::/82",
+				index: 288676,
+			},
+			want: "2001:db8:0:1:19e9::/82",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
