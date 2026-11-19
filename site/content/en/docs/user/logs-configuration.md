@@ -82,5 +82,5 @@ The `logs` field of ClusterLogs has the same semantic with the one in Logs.
 <img width="700px" src="/img/demo/logs.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
-[Logs]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Logs
-[ClusterLogs]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterLogs
+[Logs]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.Logs" >}}
+[ClusterLogs]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.ClusterLogs" >}}

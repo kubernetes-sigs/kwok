@@ -23,6 +23,7 @@
       <input type="checkbox" id="section-{{ .Identifier }}" class="toggle" {{ if $checked }}checked{{ end }} />
       <label for="section-{{ .Identifier }}" class="flex justify-between">
         {{ template "book-menu-link" (dict "page" $page "menuEntries" .) }}
+        <svg class="book-icon" aria-hidden="true">{{ partial "docs/icon" "chevron-right" }}</svg>
       </label>
     {{ else }}
       {{ template "book-menu-link" (dict "page" $page "menuEntries" .) }}
@@ -67,9 +68,11 @@
       {{ $title }}
     </a>
   {{ else }}
-    <strong>
-      {{ $title }}
-    </strong>
+    <a role="button">
+      <strong>
+        {{ $title }}
+      </strong>
+    </a>
   {{ end }}
 
   {{ end }}

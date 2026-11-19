@@ -5,7 +5,7 @@ publish = "public/"
 command = "make build"
 
 [build.environment]
-HUGO_VERSION = "0.136.5"
+HUGO_VERSION = "0.170.0"
 
 [context.production.environment]
 # this controls our robots.txt

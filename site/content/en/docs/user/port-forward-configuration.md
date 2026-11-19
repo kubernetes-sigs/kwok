@@ -91,5 +91,5 @@ The `forwards` field of ClusterPortForward has the same semantic with the one in
 <img width="700px" src="/img/demo/port-forward.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
-[PortForward]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.PortForward
-[ClusterPortForward]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterPortForward
+[PortForward]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.PortForward" >}}
+[ClusterPortForward]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.ClusterPortForward" >}}
