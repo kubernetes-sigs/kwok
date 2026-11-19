@@ -22,7 +22,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -68,9 +67,9 @@ func (d fakeDataSource) StartedContainersTotal(string) int64 {
 }
 
 func TestNodeResourceCumulativeUsagePerResource(t *testing.T) {
-	node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node-0"}}
+	node := &corev1.Node{Name: "node-0"}
 	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Name: "pod-0", Namespace: "default"},
+		Name: "pod-0", Namespace: "default",
 		Spec: corev1.PodSpec{
 			NodeName:   "node-0",
 			Containers: []corev1.Container{{Name: "c"}},
