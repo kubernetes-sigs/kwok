@@ -105,12 +105,12 @@ func TestNodeResourceCumulativeUsagePerResource(t *testing.T) {
 	s.nodeResourceCumulativeUsage("nvidia.com/gpu", "node-0")
 
 	// Move every recorded start time one second into the past.
-	s.cumulativesMut.Lock()
+	s.nodeCumulativesMut.Lock()
 	for k, c := range s.nodeCumulatives {
 		c.time = c.time.Add(-time.Second)
 		s.nodeCumulatives[k] = c
 	}
-	s.cumulativesMut.Unlock()
+	s.nodeCumulativesMut.Unlock()
 
 	gotCPU := s.nodeResourceCumulativeUsage("cpu", "node-0")
 	gotGPU := s.nodeResourceCumulativeUsage("nvidia.com/gpu", "node-0")
