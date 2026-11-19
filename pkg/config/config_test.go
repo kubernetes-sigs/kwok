@@ -140,6 +140,63 @@ options:
 	}
 }
 
+func TestLoadKwokConfigurationMergeSyncOptions(t *testing.T) {
+	const data = `apiVersion: kwok.io/v1alpha1
+kind: KwokConfiguration
+options:
+  enablePodsOnNodeSyncListPager: false
+  enablePodsOnNodeSyncStreamWatch: true
+---
+apiVersion: kwok.io/v1alpha1
+kind: KwokConfiguration
+options:
+  nodeLeaseParallelism: 8
+`
+	tests := []struct {
+		name            string
+		overrides       string
+		wantListPager   bool
+		wantStreamWatch bool
+	}{
+		{
+			name:            "omitted options preserve earlier values",
+			wantStreamWatch: true,
+		},
+		{
+			name: "explicit options override earlier values",
+			overrides: `  enablePodsOnNodeSyncListPager: true
+  enablePodsOnNodeSyncStreamWatch: false
+`,
+			wantListPager: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "config.yaml")
+			if err := os.WriteFile(path, []byte(data+tt.overrides), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			objs, err := Load(context.Background(), path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(objs) != 1 {
+				t.Fatalf("got %d objects, want 1", len(objs))
+			}
+			conf, ok := objs[0].(*internalversion.KwokConfiguration)
+			if !ok {
+				t.Fatalf("unexpected type %T", objs[0])
+			}
+			if got := conf.Options.EnablePodsOnNodeSyncListPager; got != tt.wantListPager {
+				t.Errorf("EnablePodsOnNodeSyncListPager = %t, want %t", got, tt.wantListPager)
+			}
+			if got := conf.Options.EnablePodsOnNodeSyncStreamWatch; got != tt.wantStreamWatch {
+				t.Errorf("EnablePodsOnNodeSyncStreamWatch = %t, want %t", got, tt.wantStreamWatch)
+			}
+		})
+	}
+}
+
 func Test_loadRaw(t *testing.T) {
 	tests := []struct {
 		name    string
