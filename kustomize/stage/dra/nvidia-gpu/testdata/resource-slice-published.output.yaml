@@ -1,0 +1,4 @@
+apiGroup: v1
+kind: Node
+name: kwok-node-0
+stages: []

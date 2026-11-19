@@ -54,6 +54,12 @@ func TestVolumeProvisioner(t *testing.T) {
 	testEnv.Test(t, f0)
 }
 
+func TestDRA(t *testing.T) {
+	f0 := e2e.CaseDRA(envconf.RandomName("node", 16), namespace).
+		Feature()
+	testEnv.Test(t, f0)
+}
+
 func TestPVCBeforePod(t *testing.T) {
 	f0 := e2e.CasePVCBeforePod(envconf.RandomName("node", 16), namespace).
 		Feature()
