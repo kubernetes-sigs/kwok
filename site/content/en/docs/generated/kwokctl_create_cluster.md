@@ -78,7 +78,7 @@ kwokctl create cluster [flags]
                                                  (default "docker.io/prom/prometheus:v3.12.0")
       --prometheus-port uint32                  Port to expose Prometheus metrics
       --quiet-pull                              Pull without printing progress information
-      --runtime string                          Runtime of the cluster (binary or docker or finch or kind or kind-finch or kind-lima or kind-nerdctl or kind-podman or lima or nerdctl or podman)
+      --runtime string                          Runtime of the cluster (apple-container or binary or docker or finch or kind or kind-finch or kind-lima or kind-nerdctl or kind-podman or lima or nerdctl or podman)
       --secure-port                             The apiserver port on which to serve HTTPS with authentication and authorization, is not available before Kubernetes 1.13.0 (default true)
       --timeout duration                        Timeout for waiting for the cluster to be created
       --wait duration                           Wait for the cluster to be ready

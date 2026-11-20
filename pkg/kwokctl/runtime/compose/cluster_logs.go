@@ -84,7 +84,12 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	}
 
 	infoPath := utilspath.Join(dir, c.runtime+"-info.txt")
-	err = c.WriteToPath(ctx, infoPath, []string{c.runtime, "info"})
+	infoCommand := []string{c.runtime, "info"}
+	if c.isAppleContainer {
+		// Apple's container CLI has no info subcommand.
+		infoCommand = []string{c.runtime, "system", "status"}
+	}
+	err = c.WriteToPath(ctx, infoPath, infoCommand)
 	if err != nil {
 		return err
 	}

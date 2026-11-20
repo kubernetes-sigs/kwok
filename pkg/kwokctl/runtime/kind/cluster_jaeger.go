@@ -37,7 +37,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	if conf.JaegerPort != 0 {
-		err = c.EnsureImage(ctx, c.runtime, conf.JaegerImage)
+		err = c.ensureImage(ctx, conf.JaegerImage)
 		if err != nil {
 			return err
 		}

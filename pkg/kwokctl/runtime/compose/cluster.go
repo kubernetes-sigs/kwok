@@ -18,6 +18,7 @@ package compose
 
 import (
 	"context"
+	"errors"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -35,6 +36,8 @@ type Cluster struct {
 
 	isNerdctl               bool
 	canNerdctlUnlessStopped *bool
+
+	isAppleContainer bool
 }
 
 // NewDockerCluster creates a new Runtime for docker.
@@ -80,10 +83,25 @@ func NewFinchCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
+// NewAppleContainerCluster creates a new Runtime for Apple container.
+func NewAppleContainerCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster:          runtime.NewCluster(name, workdir),
+		runtime:          "container",
+		isAppleContainer: true,
+	}, nil
+}
+
 // Available  checks whether the runtime is available.
 func (c *Cluster) Available(ctx context.Context) error {
 	if c.IsDryRun() {
 		return nil
+	}
+	if c.isAppleContainer {
+		if !isSupportAppleContainer() {
+			return errors.New("apple-container requires macOS 26 or later")
+		}
+		return c.Exec(ctx, c.runtime, "system", "status")
 	}
 	return c.Exec(ctx, c.runtime, "version")
 }
@@ -214,4 +232,11 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 		conf.PrometheusImage,
 		conf.MetricsServerImage,
 	}, nil
+}
+
+func (c *Cluster) ensureImage(ctx context.Context, image string) error {
+	if c.isAppleContainer {
+		return c.EnsureImage(ctx, []string{c.runtime, "image"}, image)
+	}
+	return c.EnsureImage(ctx, []string{c.runtime}, image)
 }

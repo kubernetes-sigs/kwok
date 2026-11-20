@@ -35,7 +35,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kueue
-	err = c.EnsureImage(ctx, c.runtime, conf.KueueImage)
+	err = c.ensureImage(ctx, conf.KueueImage)
 	if err != nil {
 		return err
 	}
@@ -102,12 +102,12 @@ func (c *Cluster) addKueueviz(ctx context.Context, env *env) (err error) {
 
 	conf := &env.kwokctlConfig.Options
 	// Configure the kueueviz
-	err = c.EnsureImage(ctx, c.runtime, conf.KueuevizBackendImage)
+	err = c.ensureImage(ctx, conf.KueuevizBackendImage)
 	if err != nil {
 		return err
 	}
 
-	err = c.EnsureImage(ctx, c.runtime, conf.KueuevizFrontendImage)
+	err = c.ensureImage(ctx, conf.KueuevizFrontendImage)
 	if err != nil {
 		return err
 	}

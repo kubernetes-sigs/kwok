@@ -287,6 +287,22 @@ func (c *Cluster) deleteNetwork(ctx context.Context) error {
 }
 
 func (c *Cluster) inspectNetwork(ctx context.Context, name string) (exist bool) {
+	if c.isAppleContainer {
+		buf := bytes.NewBuffer(nil)
+		ctx := utilsexec.WithIOStreams(ctx, utilsexec.IOStreams{
+			Out: buf,
+		})
+		err := c.Exec(ctx, c.runtime, "network", "inspect", name)
+		if err != nil {
+			// TODO: check if network exists or other error
+			return false
+		}
+		if strings.TrimSpace(buf.String()) == "[]" {
+			return false
+		}
+
+		return true
+	}
 	err := c.Exec(ctx, c.runtime, "network", "inspect", name)
 	if err != nil {
 		// TODO: check if network exists or other error
@@ -390,7 +406,10 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 
 	args := []string{"create",
 		"--name=" + c.Name() + "-" + componentName,
-		"--pull=never",
+	}
+
+	if !c.isAppleContainer {
+		args = append(args, "--pull=never")
 	}
 
 	entrypoint := strings.Join(component.Command, " ")

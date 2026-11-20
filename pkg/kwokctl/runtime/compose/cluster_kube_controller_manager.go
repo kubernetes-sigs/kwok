@@ -33,7 +33,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the kube-controller-manager
-	err = c.EnsureImage(ctx, c.runtime, conf.KubeControllerManagerImage)
+	err = c.ensureImage(ctx, conf.KubeControllerManagerImage)
 	if err != nil {
 		return err
 	}

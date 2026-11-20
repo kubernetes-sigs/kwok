@@ -27,7 +27,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the etcd
-	err = c.EnsureImage(ctx, c.runtime, conf.EtcdImage)
+	err = c.ensureImage(ctx, conf.EtcdImage)
 	if err != nil {
 		return err
 	}

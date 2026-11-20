@@ -17,10 +17,14 @@ limitations under the License.
 package image
 
 import (
+	"archive/tar"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -36,13 +40,27 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+// Format is the image archive format used when exporting images.
+type Format string
+
+const (
+	// FormatDocker exports images as Docker image tarball format.
+	FormatDocker Format = "docker"
+	// FormatOCI exports images as OCI-compatible tar archive.
+	FormatOCI Format = "oci"
+)
+
 // Pull pulls an image from a registry.
-func Pull(ctx context.Context, cacheDir, src, dest string, quiet bool) error {
+func Pull(ctx context.Context, cacheDir, src, dest string, quiet bool, format Format) error {
 	logger := log.FromContext(ctx)
 	logger = logger.With(
 		"image", src,
 	)
 	logger.Info("Pull")
+
+	if format == "" {
+		format = FormatDocker
+	}
 
 	var transport = remote.DefaultTransport
 	transport = httpseek.NewMustReaderTransport(transport, func(req *http.Request, retry int, err error) error {
@@ -92,10 +110,98 @@ func Pull(ctx context.Context, cacheDir, src, dest string, quiet bool) error {
 		img = cache.Image(img, cache.NewFilesystemCache(cacheDir))
 	}
 
-	err = crane.Save(img, src, dest)
-	if err != nil {
-		return fmt.Errorf("saving tarball %s: %w", dest, err)
+	switch format {
+	case FormatOCI:
+		err = saveOCIArchive(img, dest)
+		if err != nil {
+			return fmt.Errorf("saving oci archive %s: %w", dest, err)
+		}
+	default:
+		err = crane.Save(img, src, dest)
+		if err != nil {
+			return fmt.Errorf("saving tarball %s: %w", dest, err)
+		}
 	}
 
 	return nil
+}
+
+func saveOCIArchive(img containerregistryv1.Image, dest string) error {
+	layoutDir, err := os.MkdirTemp(filepath.Dir(dest), "oci-layout-")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.RemoveAll(layoutDir)
+	}()
+
+	err = crane.SaveOCI(img, layoutDir)
+	if err != nil {
+		return err
+	}
+
+	return tarDir(layoutDir, dest)
+}
+
+func tarDir(srcDir, dest string) error {
+	out, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = out.Close()
+	}()
+
+	tw := tar.NewWriter(out)
+	defer func() {
+		_ = tw.Close()
+	}()
+
+	return filepath.Walk(srcDir, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+
+		rel, err := filepath.Rel(srcDir, path)
+		if err != nil {
+			return err
+		}
+		if rel == "." {
+			return nil
+		}
+
+		header, err := tar.FileInfoHeader(info, "")
+		if err != nil {
+			return err
+		}
+		header.Name = filepath.ToSlash(rel)
+		if info.IsDir() {
+			header.Name += "/"
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			link, err := os.Readlink(path)
+			if err != nil {
+				return err
+			}
+			header.Linkname = link
+		}
+
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+		if info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
+
+		f, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = f.Close()
+		}()
+
+		_, err = io.Copy(tw, f)
+		return err
+	})
 }

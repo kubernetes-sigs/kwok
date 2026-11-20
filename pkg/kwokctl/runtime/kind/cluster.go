@@ -181,3 +181,7 @@ func (c *Cluster) ListImages(ctx context.Context) ([]string, error) {
 		conf.MetricsServerImage,
 	}, nil
 }
+
+func (c *Cluster) ensureImage(ctx context.Context, image string) error {
+	return c.EnsureImage(ctx, []string{c.runtime}, image)
+}

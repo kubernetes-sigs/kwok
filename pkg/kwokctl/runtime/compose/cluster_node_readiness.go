@@ -33,7 +33,7 @@ func (c *Cluster) addNodeReadinessController(ctx context.Context, env *env) (err
 	conf := &env.kwokctlConfig.Options
 
 	// Configure the node-readiness-controller
-	err = c.EnsureImage(ctx, c.runtime, conf.NodeReadinessControllerImage)
+	err = c.ensureImage(ctx, conf.NodeReadinessControllerImage)
 	if err != nil {
 		return err
 	}

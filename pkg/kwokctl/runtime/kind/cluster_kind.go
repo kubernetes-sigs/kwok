@@ -37,7 +37,7 @@ func (c *Cluster) addKind(ctx context.Context, env *env) (err error) {
 	logger := log.FromContext(ctx)
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.KindNodeImage)
+	err = c.ensureImage(ctx, conf.KindNodeImage)
 	if err != nil {
 		logger.Warn("Failed to ensure kind node image, attempting to build locally",
 			"image", conf.KindNodeImage,

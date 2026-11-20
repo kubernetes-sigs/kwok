@@ -57,7 +57,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 
 	conf := &env.kwokctlConfig.Options
 
-	err = c.EnsureImage(ctx, c.runtime, conf.PrometheusImage)
+	err = c.ensureImage(ctx, conf.PrometheusImage)
 	if err != nil {
 		return err
 	}

@@ -86,17 +86,18 @@ const (
 
 var (
 	runtimeTypeMap = map[string]string{
-		consts.RuntimeTypeBinary:      RuntimeModeNative,
-		consts.RuntimeTypeDocker:      RuntimeModeContainer,
-		consts.RuntimeTypePodman:      RuntimeModeContainer,
-		consts.RuntimeTypeNerdctl:     RuntimeModeContainer,
-		consts.RuntimeTypeLima:        RuntimeModeContainer,
-		consts.RuntimeTypeFinch:       RuntimeModeContainer,
-		consts.RuntimeTypeKind:        RuntimeModeCluster,
-		consts.RuntimeTypeKindPodman:  RuntimeModeCluster,
-		consts.RuntimeTypeKindNerdctl: RuntimeModeCluster,
-		consts.RuntimeTypeKindLima:    RuntimeModeCluster,
-		consts.RuntimeTypeKindFinch:   RuntimeModeCluster,
+		consts.RuntimeTypeBinary:         RuntimeModeNative,
+		consts.RuntimeTypeDocker:         RuntimeModeContainer,
+		consts.RuntimeTypePodman:         RuntimeModeContainer,
+		consts.RuntimeTypeNerdctl:        RuntimeModeContainer,
+		consts.RuntimeTypeLima:           RuntimeModeContainer,
+		consts.RuntimeTypeFinch:          RuntimeModeContainer,
+		consts.RuntimeTypeAppleContainer: RuntimeModeContainer,
+		consts.RuntimeTypeKind:           RuntimeModeCluster,
+		consts.RuntimeTypeKindPodman:     RuntimeModeCluster,
+		consts.RuntimeTypeKindNerdctl:    RuntimeModeCluster,
+		consts.RuntimeTypeKindLima:       RuntimeModeCluster,
+		consts.RuntimeTypeKindFinch:      RuntimeModeCluster,
 	}
 )
 
