@@ -131,3 +131,60 @@ func TestLifecycleJitterDurationFrom(t *testing.T) {
 		})
 	}
 }
+
+func TestLifecycleWeightFromJQ(t *testing.T) {
+	for _, tt := range []struct {
+		name       string
+		expression string
+		wantWeight int64
+		wantNames  []string
+	}{
+		{"constant zero", "0", 0, []string{"fallback"}},
+		{"arithmetic zero", "1 - 1", 0, []string{"fallback"}},
+		{"parsed zero", ".metadata.annotations.weight | tonumber", 0, []string{"fallback"}},
+		{"positive integer", "7", 7, []string{"dynamic", "fallback"}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			lc, err := lifecycle.NewLifecycle([]*internalversion.Stage{
+				{
+					Name: "dynamic",
+					Spec: internalversion.StageSpec{
+						Selector: &internalversion.StageSelector{},
+						Weight:   99,
+						WeightFrom: &internalversion.ExpressionFrom{
+							JQ: &internalversion.ExpressionJQ{Expression: tt.expression},
+						},
+					},
+				},
+				{
+					Name: "fallback",
+					Spec: internalversion.StageSpec{
+						Selector: &internalversion.StageSelector{},
+						Weight:   1,
+					},
+				},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			event := &lifecycle.Event{Data: &corev1.Pod{
+				Annotations: map[string]string{"weight": "0"},
+			}}
+			stages, err := lc.ListAllPossible(context.Background(), event)
+			if err != nil {
+				t.Fatal(err)
+			}
+			names := make([]string, 0, len(stages))
+			for _, stage := range stages {
+				names = append(names, stage.Name())
+			}
+			if !slices.Equal(names, tt.wantNames) {
+				t.Errorf("possible stages = %v, want %v", names, tt.wantNames)
+			}
+			weight, ok, err := lc[0].Weight(context.Background(), event)
+			if err != nil || !ok || weight != tt.wantWeight {
+				t.Errorf("dynamic weight = (%d, %t, %v), want (%d, true, nil)", weight, ok, err, tt.wantWeight)
+			}
+		})
+	}
+}
