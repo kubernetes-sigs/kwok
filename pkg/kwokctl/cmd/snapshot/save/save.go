@@ -105,7 +105,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("unsupport format %q", flags.Format)
+		return fmt.Errorf("unsupported format %q", flags.Format)
 	}
 	return nil
 }
