@@ -69,7 +69,6 @@ func (c *StagesManager) run(ctx context.Context) {
 	}
 }
 
-//nolint:govet
 func (c *StagesManager) manage(ctx context.Context) {
 	set := sets.NewSets[internalversion.StageResourceRef]()
 	for _, stage := range c.stageGetter.Get() {
@@ -101,6 +100,7 @@ func (c *StagesManager) manage(ctx context.Context) {
 		cancelctx, cancel := context.WithCancelCause(ctx)
 		err := c.startFunc(cancelctx, ref, lifecycle)
 		if err != nil {
+			cancel(err)
 			logger.Error("failed to start controller",
 				"err", err,
 				"ref", ref,
