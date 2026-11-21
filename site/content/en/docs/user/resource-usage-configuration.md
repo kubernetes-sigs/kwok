@@ -36,7 +36,7 @@ spec:
 ```
 
 To associate a ResourceUsage with a certain pod to be simulated, users must ensure `metadata.name` and `metadata.namespace` 
-are inconsistent with the name and namespace of the target pod.
+are consistent with the name and namespace of the target pod.
 
 The resource usages of a pod are specified via `usages` field.
 The `usages` field are organized by groups, with each corresponding to a collection of containers that shares a same resource usage simulation setting.
