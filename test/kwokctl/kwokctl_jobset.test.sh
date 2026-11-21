@@ -27,10 +27,18 @@ function main() {
 
     kwokctl scale node --replicas 1 --name "${name}"
 
-    sleep 5
+    # JobSet's /readyz only succeeds once its webhook server accepts TLS connections.
+    if ! wait_for_component_ready docker "${name}" jobset 8081 /readyz 60; then
+      kwokctl logs jobset --name "${name}" >&2 || true
+      exit 1
+    fi
     kubectl create -f "${DIR}/jobset-case.yaml"
 
-    sleep 5
+    if ! kubectl wait --for=create job/sample-jobset-workers-0 --timeout=60s; then
+      echo "Error: JobSet child Job was not created within 60s" >&2
+      kwokctl logs jobset --name "${name}" >&2 || true
+      exit 1
+    fi
 
     kubectl get jobsets,job,pod
 
