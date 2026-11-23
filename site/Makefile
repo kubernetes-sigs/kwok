@@ -13,10 +13,8 @@
 # limitations under the License.
 
 HUGO_VERSION = $(shell grep -E '^[[:space:]]*HUGO_VERSION' ../netlify.toml | cut -d '=' -f 2 | tr -d '[:space:]' | tr -d '"')
-HUGO_IMAGE   = ghcr.io/gohugoio/hugo:v$(HUGO_VERSION)
-HUGO_BINARY  = $(shell which hugo)
-HUGO_DOCKER  = docker run --rm -i --volume $(realpath $(CURDIR)/..):/src -p 1313:1313 --workdir /src/site --entrypoint=hugo $(HUGO_IMAGE)
-HUGO		 = $(if $(HUGO_BINARY),$(HUGO_BINARY),$(HUGO_DOCKER))
+# The theme's SCSS needs the extended edition, which requires cgo.
+HUGO		 = CGO_ENABLED=1 go run -tags extended github.com/gohugoio/hugo@v$(HUGO_VERSION)
 
 .PHONY: serve
 serve:
