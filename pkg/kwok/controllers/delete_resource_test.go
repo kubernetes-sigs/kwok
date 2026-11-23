@@ -38,15 +38,15 @@ import (
 func TestDeleteResourceIsIdempotent(t *testing.T) {
 	ctx := context.Background()
 
-	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod", Namespace: "default"}}
-	node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node"}}
+	pod := &corev1.Pod{Name: "pod", Namespace: "default"}
+	node := &corev1.Node{Name: "node"}
 	typedClient := kubefake.NewClientset(pod, node)
 
 	scheme := runtime.NewScheme()
 	if err := corev1.AddToScheme(scheme); err != nil {
 		t.Fatal(err)
 	}
-	pv := &corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: "volume"}}
+	pv := &corev1.PersistentVolume{Name: "volume"}
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(scheme, pv)
 	gvr := corev1.SchemeGroupVersion.WithResource("persistentvolumes")
 	stageController := &StageController{dynamicClient: dynamicClient, gvr: gvr}
@@ -194,7 +194,7 @@ func newDeleteResourceErrorCases(t *testing.T, checkOptions func(ktesting.Action
 					checkOptions(action)
 					return true, nil, deleteErr
 				})
-				return (&PodController{typedClient: client}).deleteResource(ctx, &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod", Namespace: "default"}})
+				return (&PodController{typedClient: client}).deleteResource(ctx, &corev1.Pod{Name: "pod", Namespace: "default"})
 			},
 		},
 		{
@@ -205,7 +205,7 @@ func newDeleteResourceErrorCases(t *testing.T, checkOptions func(ktesting.Action
 					checkOptions(action)
 					return true, nil, deleteErr
 				})
-				return (&NodeController{typedClient: client}).deleteResource(ctx, &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node"}})
+				return (&NodeController{typedClient: client}).deleteResource(ctx, &corev1.Node{Name: "node"})
 			},
 		},
 		{
