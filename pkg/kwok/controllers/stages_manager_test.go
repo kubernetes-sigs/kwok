@@ -27,8 +27,7 @@ import (
 )
 
 func TestStagesManagerCancelsFailedStarts(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	ref := internalversion.StageResourceRef{Kind: "Pod"}
 	getter := &stagesManagerTestGetter{
@@ -60,8 +59,7 @@ func TestStagesManagerCancelsFailedStarts(t *testing.T) {
 }
 
 func TestStagesManagerKeepsSuccessfulRetryRunningUntilRemoval(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	ref := internalversion.StageResourceRef{Kind: "Pod"}
 	getter := &stagesManagerTestGetter{
