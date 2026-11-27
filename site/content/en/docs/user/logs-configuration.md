@@ -28,6 +28,8 @@ spec:
     - <string>
     logsFile: <string>
     previousLogsFile: <string>
+    logsContent: <string>
+    previousLogsContent: <string>
     follow: <bool>
 ```
 The logs simulation setting of a pod is specified via `logs` field.
@@ -39,7 +41,14 @@ Each group consists of a list of container names (`containers`) and the shared s
 If `containers` is not given in a group, the `logsFile` and `follow` in that group will be applied to all containers of the target pod.
 {{< /hint >}}
 
-The `logsFile` field specifies the file path of the logs. If the `logsFile` field is not set, this item will be ignored.
+The `logsFile` field specifies the file path of the logs.
+The `logsContent` field specifies the content of the logs inline, it is used only if the `logsFile` field is not set.
+The `previousLogsContent` field specifies the content of the previous terminated container logs inline, it is used only if the `previousLogsFile` field is not set.
+
+{{< hint "info" >}}
+The inline content is written as is, so the `timestamps`, `sinceSeconds` and `sinceTime` options of the logs request have no effect on it.
+{{< /hint >}}
+
 The `follow` field specifies whether to follow the logs. If the `follow` field is not set, the `follow` field will default to false.
 
 ### ClusterLogs
@@ -64,6 +73,8 @@ spec:
     - <string>
     logsFile: <string>
     previousLogsFile: <string>
+    logsContent: <string>
+    previousLogsContent: <string>
     follow: <bool>
 ```
 

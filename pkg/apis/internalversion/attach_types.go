@@ -41,4 +41,6 @@ type AttachConfig struct {
 	Containers []string
 	// LogsFile is the file from which the attach starts
 	LogsFile string
+	// LogsContent is the content to show on attach when LogsFile is not specified
+	LogsContent string
 }

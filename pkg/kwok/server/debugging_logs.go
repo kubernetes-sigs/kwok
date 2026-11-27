@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"reflect"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
@@ -47,6 +48,18 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 		return err
 	}
 
+	logsFile, logsContent := log.LogsFile, log.LogsContent
+	if logOptions.Previous {
+		logsFile, logsContent = log.PreviousLogsFile, log.PreviousLogsContent
+	}
+
+	if logsFile == "" {
+		// The content has no timestamps, so the timestamps and since options are not applicable.
+		logsContent = tailLogsContent(logsContent, logOptions.TailLines)
+		logsContent = limitLogsContent(logsContent, logOptions.LimitBytes)
+		return readLogsContent(ctx, logsContent, logOptions.Follow, stdout)
+	}
+
 	opts := &crilogs.LogOptions{
 		TailLines:  logOptions.TailLines,
 		LimitBytes: logOptions.LimitBytes,
@@ -58,11 +71,6 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 	}
 	if logOptions.SinceTime != nil && logOptions.SinceTime.After(opts.Since) {
 		opts.Since = logOptions.SinceTime.Time
-	}
-
-	logsFile := log.LogsFile
-	if logOptions.Previous {
-		logsFile = log.PreviousLogsFile
 	}
 
 	return readLogs(ctx, logsFile, opts, stdout, stderr)
@@ -162,6 +170,50 @@ func findLogInLogs(containerName string, logs []internalversion.Log) (*internalv
 
 func readLogs(ctx context.Context, logsFile string, opts *crilogs.LogOptions, stdout, stderr io.Writer) error {
 	return crilogs.ReadLogs(ctx, logsFile, "", opts, runtimeServiceStub{}, stdout, stderr)
+}
+
+// readLogsContent writes the content to stdout,
+// if follow is true, it blocks until the connection is closed by the client.
+func readLogsContent(ctx context.Context, logsContent string, follow bool, stdout io.Writer) error {
+	if logsContent != "" {
+		if _, err := io.WriteString(stdout, logsContent); err != nil {
+			return err
+		}
+	}
+	if follow {
+		<-ctx.Done()
+	}
+	return nil
+}
+
+// tailLogsContent returns the last tailLines lines of the content.
+func tailLogsContent(logsContent string, tailLines *int64) string {
+	if tailLines == nil {
+		return logsContent
+	}
+	if *tailLines <= 0 {
+		return ""
+	}
+	// The trailing newline belongs to the last line.
+	idx := len(strings.TrimSuffix(logsContent, "\n"))
+	for n := *tailLines; n > 0; n-- {
+		idx = strings.LastIndexByte(logsContent[:idx], '\n')
+		if idx < 0 {
+			return logsContent
+		}
+	}
+	return logsContent[idx+1:]
+}
+
+// limitLogsContent returns the first limitBytes bytes of the content.
+func limitLogsContent(logsContent string, limitBytes *int64) string {
+	if limitBytes == nil || *limitBytes >= int64(len(logsContent)) {
+		return logsContent
+	}
+	if *limitBytes <= 0 {
+		return ""
+	}
+	return logsContent[:*limitBytes]
 }
 
 type runtimeServiceStub struct {

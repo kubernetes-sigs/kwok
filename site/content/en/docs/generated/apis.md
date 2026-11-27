@@ -4400,6 +4400,17 @@ string
 <p>LogsFile is the file from which the attach starts</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>logsContent</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LogsContent is the content to show on attach when LogsFile is not specified</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.AttachSpec">
@@ -5664,6 +5675,28 @@ string
 </td>
 <td>
 <p>PreviousLogsFile is the file containing previous container logs</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>logsContent</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LogsContent is the content to show as logs when LogsFile is not specified</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>previousLogsContent</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>PreviousLogsContent is the content to show as previous container logs when PreviousLogsFile is not specified</p>
 </td>
 </tr>
 <tr>

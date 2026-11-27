@@ -17,8 +17,11 @@ limitations under the License.
 package server
 
 import (
+	"bytes"
+	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 )
@@ -226,4 +229,93 @@ func Test_getPodLogs(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_tailLogsContent(t *testing.T) {
+	ptr := func(i int64) *int64 { return &i }
+	tests := []struct {
+		name      string
+		content   string
+		tailLines *int64
+		want      string
+	}{
+		{name: "no tail", content: "a\nb\nc\n", tailLines: nil, want: "a\nb\nc\n"},
+		{name: "tail zero", content: "a\nb\nc\n", tailLines: ptr(0), want: ""},
+		{name: "tail one", content: "a\nb\nc\n", tailLines: ptr(1), want: "c\n"},
+		{name: "tail two", content: "a\nb\nc\n", tailLines: ptr(2), want: "b\nc\n"},
+		{name: "tail all", content: "a\nb\nc\n", tailLines: ptr(3), want: "a\nb\nc\n"},
+		{name: "tail more than lines", content: "a\nb\nc\n", tailLines: ptr(10), want: "a\nb\nc\n"},
+		{name: "tail without trailing newline", content: "a\nb\nc", tailLines: ptr(1), want: "c"},
+		{name: "tail empty content", content: "", tailLines: ptr(1), want: ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tailLogsContent(tt.content, tt.tailLines); got != tt.want {
+				t.Errorf("tailLogsContent() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_limitLogsContent(t *testing.T) {
+	ptr := func(i int64) *int64 { return &i }
+	tests := []struct {
+		name       string
+		content    string
+		limitBytes *int64
+		want       string
+	}{
+		{name: "no limit", content: "a\nb\n", limitBytes: nil, want: "a\nb\n"},
+		{name: "limit zero", content: "a\nb\n", limitBytes: ptr(0), want: ""},
+		{name: "limit part", content: "a\nb\n", limitBytes: ptr(3), want: "a\nb"},
+		{name: "limit more than content", content: "a\nb\n", limitBytes: ptr(10), want: "a\nb\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := limitLogsContent(tt.content, tt.limitBytes); got != tt.want {
+				t.Errorf("limitLogsContent() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_readLogsContent(t *testing.T) {
+	t.Run("no follow", func(t *testing.T) {
+		buf := bytes.NewBuffer(nil)
+		err := readLogsContent(context.Background(), "a\nb\n", false, buf)
+		if err != nil {
+			t.Fatalf("readLogsContent() error = %v", err)
+		}
+		if got := buf.String(); got != "a\nb\n" {
+			t.Errorf("readLogsContent() = %q, want %q", got, "a\nb\n")
+		}
+	})
+
+	t.Run("follow until context done", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		buf := bytes.NewBuffer(nil)
+		done := make(chan error, 1)
+		go func() {
+			done <- readLogsContent(ctx, "a\n", true, buf)
+		}()
+
+		select {
+		case <-done:
+			t.Fatal("readLogsContent() returned before context done")
+		case <-time.After(100 * time.Millisecond):
+		}
+
+		cancel()
+		select {
+		case err := <-done:
+			if err != nil {
+				t.Fatalf("readLogsContent() error = %v", err)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("readLogsContent() did not return after context done")
+		}
+		if got := buf.String(); got != "a\n" {
+			t.Errorf("readLogsContent() = %q, want %q", got, "a\n")
+		}
+	})
 }

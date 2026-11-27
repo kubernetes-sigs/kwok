@@ -27,6 +27,7 @@ spec:
   - containers:
     - <string>
     logsFile: <string>
+    logsContent: <string>
 ```
 
 To associate an Attach with a certain pod to be simulated, users must ensure `metadata.name` and `metadata.namespace`
@@ -40,7 +41,8 @@ Each group consists of a list of container names (`containers`) and the shared a
 If `containers` is not given in a group, the `logsFile` in that group will be applied to all containers of the target pod.
 {{< /hint >}}
 
-The `logsFile` field specifies the file path of the logs. If the `logsFile` field is not set, this item will be ignored.
+The `logsFile` field specifies the file path of the logs.
+The `logsContent` field specifies the content to show on attach inline, it is used only if the `logsFile` field is not set.
 
 ### ClusterAttach
 
@@ -63,6 +65,7 @@ spec:
   - containers:
     - <string>
     logsFile: <string>
+    logsContent: <string>
 ```
 
 Compared to Attach, whose `metadata.name` and `metadata.namespace` are required to match the associated pod,
