@@ -26,13 +26,3 @@ serve:
 .PHONY: build
 build:
 	$(HUGO) --enableGitInfo --buildFuture --minify
-
-.PHONY: links
-links:
-	@echo "Creating symlinks"
-	@mkdir -p ./static/img/demo
-	@for f in ../demo/*.svg; do \
-		ln -s ../../../"$$f" ./static/img/demo/; \
-	done
-	@ ln -s ../../logo/kwok.png ./static/favicon.png
-	@ ln -s ../../logo/kwok.svg ./static/favicon.svg

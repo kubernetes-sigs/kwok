@@ -152,8 +152,8 @@ metadata:
 <img width="700px" src="/img/demo/resource-usage.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
-[ResourceUsage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ResourceUsage
-[ClusterResourceUsage]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage
+[ResourceUsage]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.ResourceUsage" >}}
+[ClusterResourceUsage]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.ClusterResourceUsage" >}}
 [Quantity value]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes
 [CEL expression]: https://github.com/google/cel-spec/blob/master/doc/langdef.md
 [Metrics]: {{< relref "/docs/user/metrics-configuration" >}}

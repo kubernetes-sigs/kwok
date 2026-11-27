@@ -32,8 +32,8 @@
         {{- end }}
       </td>
       <td>
-        <a class="flex align-center" href="{{ $root.Site.Params.BookRepo }}/{{ $root.Site.Params.BookEditPath }}/assets/{{ .Name }}" target="_blank" rel="noopener">
-          <img src="{{ "svg/edit.svg" | relURL }}" class="book-icon" alt="Edit" />
+        <a class="flex align-center" href="{{ $root.Site.Params.BookRepo }}/{{ $root.Site.Params.BookEditPath }}/assets/{{ .Name }}" target="_blank" rel="noopener" aria-label="Edit">
+          <svg class="book-icon" aria-hidden="true">{{ partial "docs/icon" "edit" }}</svg>
         </a>
       </td>
     </tr>

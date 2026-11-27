@@ -18,7 +18,7 @@ This will install the latest version of `kwokctl` and `kwok` binaries.
 
 {{< tabs "install-with-package-manager" >}}
 
-{{< tab "Homebrew" >}}
+{{% tab "Homebrew" %}}
 
 On Linux/MacOS systems you can install kwok/kwokctl via [brew](https://formulae.brew.sh/formula/kwok):
 
@@ -26,9 +26,9 @@ On Linux/MacOS systems you can install kwok/kwokctl via [brew](https://formulae.
 brew install kwok
 ```
 
-{{< /tab >}}
+{{% /tab %}}
 
-{{< tab "WinGet" >}}
+{{% tab "WinGet" %}}
 
 On Windows systems you can install kwok/kwokctl via winget:
 
@@ -37,7 +37,7 @@ winget install --id=Kubernetes.kwok -e
 winget install --id=Kubernetes.kwokctl -e
 ```
 
-{{< /tab >}}
+{{% /tab %}}
 
 {{< /tabs >}}
 

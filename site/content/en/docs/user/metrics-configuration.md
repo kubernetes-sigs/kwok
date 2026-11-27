@@ -69,6 +69,6 @@ For readers' convenience, we also mirror the documents here with some additional
 Please refer to [Metrics for kubelet's `/metrics/resource` endpoint][ResourceUsage] for a detailed.
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
-[Metrics]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Metrics
+[Metrics]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.Metrics" >}}
 [CEL expressions]: {{< relref "/docs/user/cel-expressions" >}}
 [ResourceUsage]: {{< relref "/docs/user/resource-usage-configuration" >}}

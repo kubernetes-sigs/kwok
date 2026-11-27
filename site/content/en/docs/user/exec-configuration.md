@@ -90,5 +90,5 @@ The `execs` field of ClusterExec has the same semantic with the one in Exec.
 <img width="700px" src="/img/demo/exec.svg">
 
 [configuration]: {{< relref "/docs/user/configuration" >}}
-[Exec]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Exec
-[ClusterExec]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterExec
+[Exec]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.Exec" >}}
+[ClusterExec]: {{< relref "/docs/generated/apis#kwok.x-k8s.io/v1alpha1.ClusterExec" >}}
