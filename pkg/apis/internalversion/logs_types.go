@@ -43,6 +43,10 @@ type Log struct {
 	LogsFile string
 	// PreviousLogsFile is the file containing previous container logs
 	PreviousLogsFile string
+	// LogsContent is the content to show as logs when LogsFile is not specified
+	LogsContent string
+	// PreviousLogsContent is the content to show as previous container logs when PreviousLogsFile is not specified
+	PreviousLogsContent string
 	// Follow up if true
 	Follow bool
 }

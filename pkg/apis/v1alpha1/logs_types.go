@@ -69,6 +69,10 @@ type Log struct {
 	LogsFile *string `json:"logsFile,omitempty"`
 	// PreviousLogsFile is the file containing previous container logs
 	PreviousLogsFile *string `json:"previousLogsFile,omitempty"`
+	// LogsContent is the content to show as logs when LogsFile is not specified
+	LogsContent *string `json:"logsContent,omitempty"`
+	// PreviousLogsContent is the content to show as previous container logs when PreviousLogsFile is not specified
+	PreviousLogsContent *string `json:"previousLogsContent,omitempty"`
 	// Follow up if true
 	Follow *bool `json:"follow,omitempty"`
 }

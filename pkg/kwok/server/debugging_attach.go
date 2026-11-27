@@ -46,13 +46,16 @@ func (s *Server) AttachContainer(ctx context.Context, name string, uid string, c
 		return err
 	}
 
+	if attach.LogsFile == "" {
+		return readLogsContent(ctx, attach.LogsContent, true, stdout)
+	}
+
 	opts := &crilogs.LogOptions{
 		TailLines: new(int64),
 		Follow:    true,
 	}
 
-	logsFile := attach.LogsFile
-	return readLogs(ctx, logsFile, opts, stdout, stderr)
+	return readLogs(ctx, attach.LogsFile, opts, stdout, stderr)
 }
 
 func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {
