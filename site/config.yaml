@@ -346,6 +346,10 @@ menu:
   - identifier: injectfailure
     pageRef: "/docs/examples/injectfailure"
     parent: examples-simulation
+  - identifier: amd-gpu-nodes
+    title: "AMD GPU Nodes"
+    pageRef: "/docs/examples/amd-gpu-nodes"
+    parent: examples-simulation
 
   after:
   - identifier: blog
