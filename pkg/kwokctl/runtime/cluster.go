@@ -27,6 +27,7 @@ import (
 	nodeheartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
 	nodeheartbeatwithlease "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat-with-lease"
 	podfast "sigs.k8s.io/kwok/kustomize/stage/pod/fast"
+	volumefast "sigs.k8s.io/kwok/kustomize/stage/volume/fast"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/apis/v1alpha1"
 	"sigs.k8s.io/kwok/pkg/config"
@@ -206,6 +207,12 @@ func (c *Cluster) Save(ctx context.Context) error {
 				return err
 			}
 			objs = appendIntoInternalObjects(objs, defaultPodStages...)
+
+			defaultVolumeStages, err := getDefaultVolumeStages()
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, defaultVolumeStages...)
 		} else {
 			objs = appendIntoInternalObjects(objs, stages...)
 		}
@@ -335,6 +342,15 @@ func getDefaultPodStages() ([]config.InternalObject, error) {
 		podfast.DefaultPodReady,
 		podfast.DefaultPodComplete,
 		podfast.DefaultPodDelete,
+	}, config.UnmarshalWithType[config.InternalObject, string])
+}
+
+func getDefaultVolumeStages() ([]config.InternalObject, error) {
+	return utilsslices.MapWithError([]string{
+		volumefast.DefaultPVBind,
+		volumefast.DefaultPVDelete,
+		volumefast.DefaultPVCDelete,
+		volumefast.DefaultPVCProvision,
 	}, config.UnmarshalWithType[config.InternalObject, string])
 }
 
