@@ -113,10 +113,13 @@ func addBytes(b []byte, hostBits int, index int64) []byte {
 		return b
 	}
 
-	// Use fast path with addBytesInt when result fits in int64 (up to 2^63-1)
-	offset := index << hostBits
-	if offset > 0 && offset <= 1<<62-1 {
-		return addBytesInt(b, offset)
+	// Use fast path with addBytesInt when index<<hostBits is guaranteed to fit
+	// in an int64 (bounded by 2^62-1) without overflowing. The shift itself must
+	// not be used to test this: once index<<hostBits overflows int64 it silently
+	// drops the high bits and can wrap to a small positive value, which would
+	// otherwise take the fast path with a truncated offset and produce a wrong IP.
+	if index > 0 && hostBits < 62 && index <= 1<<(62-hostBits)-1 {
+		return addBytesInt(b, index<<hostBits)
 	}
 
 	offsetBytes := leftShiftInt(index, hostBits)
