@@ -20,6 +20,7 @@ import (
 	"context"
 	"runtime"
 	"testing"
+	"time"
 
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
@@ -81,9 +82,14 @@ func CaseRestart(kwokctlPath, clusterName string, clusterRuntime string, rootDir
 			return ctx
 		}).
 		Assess("test start", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			_, err := utilsexec.Command(ctx, kwokctlPath, "start", "cluster", "--name", clusterName)
+			_, err := utilsexec.Command(ctx, kwokctlPath, "start", "cluster", "--name", clusterName, "--wait=15m")
 			if err != nil {
 				t.Fatal(err)
+			}
+
+			err = waitComponentsReady(ctx, kwokctlPath, clusterName, 30*time.Second)
+			if err != nil {
+				t.Fatalf("cluster is not ready after start --wait: %v", err)
 			}
 
 			_, err = helper.WaitForAllNodesReady()(ctx, cfg)

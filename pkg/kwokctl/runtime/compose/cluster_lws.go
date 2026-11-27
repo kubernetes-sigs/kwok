@@ -59,6 +59,7 @@ func (c *Cluster) addLWS(ctx context.Context, env *env) (err error) {
 
 	lwsConfigPath := c.GetWorkdirPath(runtime.LWS)
 
+	var healthProbePort uint32
 	if !c.IsDryRun() {
 		lwsConfigData, err := components.BuildLWSConfig(rawManifests)
 		if err != nil {
@@ -69,22 +70,24 @@ func (c *Cluster) addLWS(ctx context.Context, env *env) (err error) {
 		if err != nil {
 			return fmt.Errorf("failed to write lws yaml: %w", err)
 		}
+		healthProbePort = components.HealthProbePortFromConfig(lwsConfigData)
 	}
 
 	lwsComponent, err := components.BuildLWSComponent(components.BuildLWSComponentConfig{
-		Runtime:        conf.Runtime,
-		ProjectName:    c.Name(),
-		Workdir:        env.workdir,
-		Image:          conf.LWSImage,
-		RawManifests:   rawManifests,
-		Version:        lwsVersion,
-		BindAddress:    utilsnet.PublicAddress,
-		CaCertPath:     env.caCertPath,
-		AdminCertPath:  env.adminCertPath,
-		AdminKeyPath:   env.adminKeyPath,
-		ConfigPath:     lwsConfigPath,
-		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
-		Verbosity:      env.verbosity,
+		Runtime:         conf.Runtime,
+		ProjectName:     c.Name(),
+		Workdir:         env.workdir,
+		Image:           conf.LWSImage,
+		RawManifests:    rawManifests,
+		Version:         lwsVersion,
+		BindAddress:     utilsnet.PublicAddress,
+		CaCertPath:      env.caCertPath,
+		AdminCertPath:   env.adminCertPath,
+		AdminKeyPath:    env.adminKeyPath,
+		ConfigPath:      lwsConfigPath,
+		HealthProbePort: healthProbePort,
+		KubeconfigPath:  env.inClusterOnHostKubeconfigPath,
+		Verbosity:       env.verbosity,
 	})
 	if err != nil {
 		return err

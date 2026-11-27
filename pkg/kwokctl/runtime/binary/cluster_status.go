@@ -18,11 +18,14 @@ package binary
 
 import (
 	"context"
+	"net"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/kwokctl/components"
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/log"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -80,19 +83,37 @@ func (c *Cluster) WaitReady(ctx context.Context, timeout time.Duration) error {
 
 // InspectComponent returns the status of the component
 func (c *Cluster) InspectComponent(ctx context.Context, name string) (runtime.ComponentStatus, error) {
+	config, err := c.Config(ctx)
+	if err != nil {
+		return runtime.ComponentStatusUnknown, err
+	}
 	component, err := c.GetComponent(ctx, name)
 	if err != nil {
 		return runtime.ComponentStatusUnknown, err
 	}
 
 	running := c.isRunning(ctx, component)
-	if !running {
-		return runtime.ComponentStatusStopped, nil
+	if running {
+		// Arguments that keep the probe from succeeding are reported, rather than probed.
+		if err := components.ReadinessProbeConflict(component); err != nil {
+			return runtime.ComponentStatusRunning, err
+		}
 	}
+	host := probeHost(config.Options.BindAddress)
+	return runtime.ComponentStatusWithProbe(ctx, running, component.ReadinessProbe, host, runtime.DialProbe(host)), nil
+}
 
-	// TODO: check if the component is ready
-
-	return runtime.ComponentStatusReady, nil
+// probeHost returns the address used to reach a component listening on bindAddress.
+// Components bound to all interfaces are reached over loopback.
+func probeHost(bindAddress string) string {
+	ip := net.ParseIP(bindAddress)
+	switch {
+	case bindAddress == "", ip != nil && ip.IsUnspecified() && ip.To4() != nil:
+		return utilsnet.LocalAddress
+	case ip != nil && ip.IsUnspecified():
+		return net.IPv6loopback.String()
+	}
+	return bindAddress
 }
 
 func (c *Cluster) isRunning(ctx context.Context, component internalversion.Component) bool {

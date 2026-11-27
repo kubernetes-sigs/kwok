@@ -27,6 +27,15 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
 
+const (
+	// jobsetWebhookPort is the port of the jobset webhook server.
+	jobsetWebhookPort = 9443
+	// jobsetLastWebhookPath is the path of the webhook that jobset registers last.
+	// Its webhooks are registered one after another, after the webhook server may have started,
+	// so a response other than 404 on this path means that all of them are being served.
+	jobsetLastWebhookPath = "/validate--v1-pod"
+)
+
 // BuildJobSetComponentConfig is the configuration for building a jobset component.
 type BuildJobSetComponentConfig struct {
 	Runtime        string
@@ -125,6 +134,11 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 		Binary:  conf.Binary,
 		Image:   conf.Image,
 		WorkDir: conf.Workdir,
+		// The webhook path is probed over HTTPS instead of /readyz, which succeeds once the webhook server
+		// listens but before the webhooks are registered, when the API server gets 404 calling them. So the
+		// probe gets the path of the webhook that jobset registers last. A webhook answers a GET without a body
+		// with 200 and a rejected AdmissionReview, which shows that it is registered, not that it admits anything.
+		ReadinessProbe: httpGetReadinessProbe(internalversion.URISchemeHTTPS, jobsetLastWebhookPath, jobsetWebhookPort),
 	}
 
 	if len(conf.RawManifests) != 0 {
@@ -135,7 +149,7 @@ func BuildJobSetComponent(conf BuildJobSetComponentConfig) (component internalve
 
 		for _, rawManifest := range conf.RawManifests {
 			manifestContents, err := BuildJobSetManifest(BuildJobSetManifestConfig{
-				Port:         9443,
+				Port:         jobsetWebhookPort,
 				ExternalName: conf.ProjectName + "-" + consts.ComponentJobSet,
 				CABundle:     base64.StdEncoding.EncodeToString(caData),
 				RawManifest:  rawManifest,

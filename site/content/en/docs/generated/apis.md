@@ -2037,6 +2037,21 @@ ComponentMetric
 </tr>
 <tr>
 <td>
+<code>readinessProbe</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ComponentProbe">
+ComponentProbe
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ReadinessProbe is the probe used to check whether the component is ready.
+If not set, a running component is considered ready.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>manifestContents</code>
 <em>
 []string
@@ -2057,6 +2072,67 @@ string
 <td>
 <em>(Optional)</em>
 <p>Version is the version of the component.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.ComponentHTTPGetAction">
+ComponentHTTPGetAction
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.ComponentHTTPGetAction"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ComponentProbe">ComponentProbe</a>
+</p>
+<p>
+<p>ComponentHTTPGetAction describes an HTTP GET request sent to a component.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>path</code>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Path to access on the HTTP server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code>
+<em>
+uint32
+</em>
+</td>
+<td>
+<p>Port is the number of the port to access on the component.
+This must be a valid port number, 0 &lt; x &lt; 65536.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheme</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.URIScheme">
+URIScheme
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Scheme to use for connecting to the component. Must be HTTP or HTTPS.
+Defaults to HTTP.
+Like the kubelet, an HTTPS probe does not verify the server certificate.</p>
 </td>
 </tr>
 </tbody>
@@ -2215,6 +2291,54 @@ string
 </td>
 <td>
 <p>ExtraEnvs is the extra environment variables to be patched on the component.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.ComponentProbe">
+ComponentProbe
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.ComponentProbe"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.Component">Component</a>
+</p>
+<p>
+<p>ComponentProbe describes a check performed against a component to determine whether it is ready.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>httpGet</code>
+<em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ComponentHTTPGetAction">
+ComponentHTTPGetAction
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTPGet specifies the HTTP request to perform.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>timeoutSeconds</code>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TimeoutSeconds is the number of seconds after which a single probe check times out.
+Defaults to 1 second.</p>
 </td>
 </tr>
 </tbody>
@@ -4271,6 +4395,38 @@ int32
 <p>SamplingRatePerMillion is the number of samples to collect per million spans.
 Recommended is unset. If unset, sampler respects its parent span&rsquo;s sampling
 rate, but otherwise never samples.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config.kwok.x-k8s.io/v1alpha1.URIScheme">
+URIScheme
+(<code>string</code> alias)
+<a href="#config.kwok.x-k8s.io%2fv1alpha1.URIScheme"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#config.kwok.x-k8s.io/v1alpha1.ComponentHTTPGetAction">ComponentHTTPGetAction</a>
+</p>
+<p>
+<p>URIScheme identifies the scheme used for connection to a component for a readiness probe.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&#34;HTTP&#34;</code></td>
+<td><p>URISchemeHTTP means that the scheme used will be http://</p>
+</td>
+</tr>
+<tr>
+<td><code>&#34;HTTPS&#34;</code></td>
+<td><p>URISchemeHTTPS means that the scheme used will be https://</p>
 </td>
 </tr>
 </tbody>

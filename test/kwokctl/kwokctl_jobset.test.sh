@@ -22,15 +22,27 @@ function main() {
   for release in "${all_releases[@]}"; do
     name="test-kwokctl-jobset-${release}"
 
+    # --wait blocks until JobSet serves the webhook it registers last, so all of its webhooks are registered.
     kwokctl create cluster --name "${name}" \
-      --runtime=docker --enable jobset
+      --runtime=docker --enable jobset --wait=2m
+
+    # --wait logs a timeout but does not fail, so check JobSet explicitly.
+    if [[ "$(kwokctl get components --name "${name}" --output wide | awk '$1 == "jobset" { print $2 }')" != "Ready" ]]; then
+      echo "JobSet is not ready"
+      kwokctl get components --name "${name}" --output wide
+      kwokctl logs jobset --name "${name}"
+      exit 1
+    fi
 
     kwokctl scale node --replicas 1 --name "${name}"
 
-    sleep 5
     kubectl create -f "${DIR}/jobset-case.yaml"
 
-    sleep 5
+    if ! kubectl wait --for=create job/sample-jobset-workers-0 --timeout=60s; then
+      echo "JobSet child job was not created"
+      kubectl get jobsets,job,pod
+      exit 1
+    fi
 
     kubectl get jobsets,job,pod
 

@@ -19,9 +19,12 @@ package e2e
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
+	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 
@@ -54,4 +57,52 @@ func CaseGetClustersStatus(kwokctlPath, clusterName string) *features.FeatureBui
 			t.Fatalf("cluster %q not found in output %q", clusterName, output)
 			return ctx
 		})
+}
+
+// waitComponentsReady waits until kwokctl reports every component of the cluster as Ready.
+// kwokctl --wait logs a timeout without failing, so its exit code alone does not prove readiness.
+func waitComponentsReady(ctx context.Context, kwokctlPath, clusterName string, timeout time.Duration) error {
+	var lastErr error
+	err := wait.For(
+		func(ctx context.Context) (bool, error) {
+			lastErr = checkComponentsReady(ctx, kwokctlPath, clusterName)
+			return lastErr == nil, nil
+		},
+		wait.WithContext(ctx),
+		wait.WithTimeout(timeout),
+		wait.WithInterval(time.Second),
+	)
+	if err != nil && lastErr != nil {
+		return lastErr
+	}
+	return err
+}
+
+func checkComponentsReady(ctx context.Context, kwokctlPath, clusterName string) error {
+	buf := &bytes.Buffer{}
+	_, err := utilsexec.Command(utilsexec.WithAllWriteTo(ctx, buf), kwokctlPath, "get", "components", "--name", clusterName, "--output", "wide")
+	if err != nil {
+		return fmt.Errorf("failed to get components: %w: %s", err, buf.String())
+	}
+
+	output := strings.TrimSpace(buf.String())
+	var count int
+	var notReady []string
+	for line := range strings.SplitSeq(output, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 || fields[0] == "NAME" {
+			continue
+		}
+		count++
+		if fields[1] != "Ready" {
+			notReady = append(notReady, fields[0]+"="+fields[1])
+		}
+	}
+	if count == 0 {
+		return fmt.Errorf("no components found in output %q", output)
+	}
+	if len(notReady) != 0 {
+		return fmt.Errorf("components are not ready: %v", notReady)
+	}
+	return nil
 }

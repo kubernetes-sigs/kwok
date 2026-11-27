@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
+	"strconv"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -84,4 +86,33 @@ func rewriteConfig(config string, modifyFunc func(map[string]any) error) (string
 	}
 
 	return string(modifiedConfigBytes), nil
+}
+
+// defaultHealthProbePort is the port that controller managers serve their health probes on
+// when their configuration does not set health.healthProbeBindAddress.
+const defaultHealthProbePort = 8081
+
+// HealthProbePortFromConfig returns the port of the health probe endpoint of a controller manager configuration,
+// or 0 if the endpoint is disabled or its address cannot be parsed.
+func HealthProbePortFromConfig(config string) uint32 {
+	var c struct {
+		Health struct {
+			HealthProbeBindAddress *string `json:"healthProbeBindAddress"`
+		} `json:"health"`
+	}
+	if err := utilyaml.Unmarshal([]byte(config), &c); err != nil {
+		return 0
+	}
+	if c.Health.HealthProbeBindAddress == nil {
+		return defaultHealthProbePort
+	}
+	_, port, err := net.SplitHostPort(*c.Health.HealthProbeBindAddress)
+	if err != nil {
+		return 0
+	}
+	p, err := strconv.ParseUint(port, 10, 16)
+	if err != nil {
+		return 0
+	}
+	return uint32(p)
 }
