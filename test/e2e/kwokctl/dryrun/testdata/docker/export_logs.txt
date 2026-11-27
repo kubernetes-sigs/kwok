@@ -50,3 +50,8 @@ docker \
   kwok-<CLUSTER_NAME>-scheduler-plugins \
   ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/scheduler-plugins.log \
   2>&1
+docker \
+  logs \
+  kwok-<CLUSTER_NAME>-node-readiness-controller \
+  ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/export/logs/components/node-readiness-controller.log \
+  2>&1

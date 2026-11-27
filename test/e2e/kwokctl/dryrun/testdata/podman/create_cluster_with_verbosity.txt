@@ -158,6 +158,15 @@ scrape_configs:
   static_configs:
   - targets:
     - kwok-<CLUSTER_NAME>-scheduler-plugins:8080
+- enable_http2: true
+  follow_redirects: true
+  honor_timestamps: true
+  job_name: node-readiness-controller
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+  - targets:
+    - kwok-<CLUSTER_NAME>-node-readiness-controller:8080
 EOF
 cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kubeconfig.yaml
 apiVersion: v1
@@ -504,7 +513,9 @@ podman \
   --volume=<ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/pki/admin.key:/etc/kubernetes/pki/admin.key:ro \
   registry.k8s.io/node-readiness-controller/node-readiness-controller:v0.3.0 \
   --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
-  --leader-elect=false
+  --leader-elect=false \
+  --metrics-bind-address=:8080 \
+  --metrics-secure=false
 podman \
   create \
   --name=kwok-<CLUSTER_NAME>-metrics-server \

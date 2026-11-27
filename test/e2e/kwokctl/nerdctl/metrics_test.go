@@ -33,6 +33,7 @@ func TestMetrics(t *testing.T) {
 		consts.ComponentPrometheus,
 		consts.ComponentMetricsServer,
 		consts.ComponentSchedulerPlugins,
+		consts.ComponentNodeReadinessController,
 	).Feature()
 	testEnv.Test(t, f0)
 }
