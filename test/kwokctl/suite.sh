@@ -92,6 +92,32 @@ function retry() {
   done
 }
 
+# Wait until the readiness endpoint of a component returns success.
+# The request is sent from the kwok-controller container, which shares the cluster network.
+function wait_for_component_ready() {
+  local runtime="${1}"
+  local name="${2}"
+  local component="${3}"
+  local port="${4}"
+  local url_path="${5}"
+  local timeout="${6:-60}"
+  local url="http://kwok-${name}-${component}:${port}${url_path}"
+  local start="${SECONDS}"
+  local out
+  while true; do
+    if out="$("${runtime}" exec "kwok-${name}-kwok-controller" wget -q -T 5 -O - "${url}" 2>&1)"; then
+      echo "Component ${component} is ready after $((SECONDS - start))s" >&2
+      return 0
+    fi
+    if [[ $((SECONDS - start)) -ge "${timeout}" ]]; then
+      echo "Error: Component ${component} is not ready after ${timeout}s: ${url}" >&2
+      echo "${out}" >&2
+      return 1
+    fi
+    sleep 1
+  done
+}
+
 GOOS="$(go env GOOS)"
 GOARCH="$(go env GOARCH)"
 
